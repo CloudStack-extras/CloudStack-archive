@@ -4056,6 +4056,7 @@ public class ManagementServerImpl implements ManagementServer {
         Object accountId = c.getCriteria(Criteria.ACCOUNTID);
         Object podId = c.getCriteria(Criteria.PODID);
         Object keyword = c.getCriteria(Criteria.KEYWORD);
+        Object vType = c.getCriteria(Criteria.VTYPE);
         
         SearchBuilder<VlanVO> sb = _vlanDao.createSearchBuilder();
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
@@ -4100,6 +4101,11 @@ public class ManagementServerImpl implements ManagementServer {
         	if (podId != null) {
         		sc.setJoinParameters("podVlanMapSearch", "podId", podId);
         	}
+        	
+        	if(vType != null){
+        		sc.setParameters("vlanType", vType);
+        	}
+        	
         }
 
         return _vlanDao.search(sc, searchFilter);
