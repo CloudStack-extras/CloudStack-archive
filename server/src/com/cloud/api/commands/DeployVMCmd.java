@@ -28,6 +28,8 @@ import com.cloud.api.BaseCmd;
 import com.cloud.api.ServerApiException;
 import com.cloud.async.executor.DeployVMResultObject;
 import com.cloud.dc.DataCenterVO;
+import com.cloud.dc.VlanVO;
+import com.cloud.dc.Vlan.VlanType;
 import com.cloud.network.security.NetworkGroupVO;
 import com.cloud.serializer.SerializerHelper;
 import com.cloud.server.ManagementServer;
@@ -56,6 +58,7 @@ public class DeployVMCmd extends BaseCmd {
         s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.USER_ID, Boolean.FALSE));
         s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.DOMAIN_ID, Boolean.FALSE));
         s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.NETWORK_GROUP_LIST, Boolean.FALSE));
+        s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.VLAN_DB_ID, Boolean.FALSE));
 
     }
 
@@ -79,6 +82,7 @@ public class DeployVMCmd extends BaseCmd {
         Long diskOfferingId = (Long)params.get(BaseCmd.Properties.DISK_OFFERING_ID.getName());
         Long templateId = (Long)params.get(BaseCmd.Properties.TEMPLATE_ID.getName());
         Long domainId = (Long)params.get(BaseCmd.Properties.DOMAIN_ID.getName());
+        Long userSpecifiedVlanDbId = (Long)params.get(BaseCmd.Properties.VLAN_DB_ID.getName());
         Account account = (Account)params.get(BaseCmd.Properties.ACCOUNT_OBJ.getName());
         String accountName = (String)params.get(BaseCmd.Properties.ACCOUNT.getName());
         String displayName = (String)params.get(BaseCmd.Properties.DISPLAY_NAME.getName());
@@ -86,6 +90,7 @@ public class DeployVMCmd extends BaseCmd {
         String userData = (String) params.get(BaseCmd.Properties.USER_DATA.getName());
         String networkGroupList = (String)params.get(BaseCmd.Properties.NETWORK_GROUP_LIST.getName());
 
+        userSpecifiedVlanDbId = Long.parseLong("1");
         String password = null;
         Long accountId = null;
 
@@ -94,6 +99,16 @@ public class DeployVMCmd extends BaseCmd {
             throw new ServerApiException(BaseCmd.VM_INVALID_PARAM_ERROR, "Unable to find template with id " + templateId);
         }
 
+        if(userSpecifiedVlanDbId!=null)
+        {
+        	//check if vlan exists and type=direct attached
+        	VlanVO vlan = getManagementServer().findVlanById(userSpecifiedVlanDbId);
+        	
+        	if(vlan==null || !vlan.getVlanType().equals(VlanType.DirectAttached))
+        	{
+        		throw new ServerApiException(BaseCmd.VM_INVALID_PARAM_ERROR,"Please specify a valid direct attached vlan");
+        	}
+        }
     	if (diskOfferingId != null) {
     	    DiskOfferingVO diskOffering = getManagementServer().findDiskOfferingById(diskOfferingId);
     	    if ((diskOffering == null) || !DiskOfferingVO.Type.Disk.equals(diskOffering.getType())) {
@@ -157,7 +172,7 @@ public class DeployVMCmd extends BaseCmd {
     		long jobId = mgr.deployVirtualMachineAsync(userId.longValue(), accountId.longValue(), zoneId.longValue(),
     				serviceOfferingId.longValue(),
     				templateId.longValue(), diskOfferingId, 
-    				null, password, displayName, group, userData, groups);
+    				null, password, displayName, group, userData, groups,userSpecifiedVlanDbId);
 
     		long vmId = 0;
     		if (jobId == 0) {

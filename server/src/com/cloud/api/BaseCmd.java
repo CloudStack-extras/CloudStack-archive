@@ -319,6 +319,7 @@ public abstract class BaseCmd {
         VLAN_ID("vlanname", BaseCmd.TYPE_STRING, "vlanName"),
         VLAN_DB_ID("vlanid", BaseCmd.TYPE_LONG, "vlanId"),
         VLAN("vlan", BaseCmd.TYPE_STRING, "vlan"),
+        VLAN_TYPE("vlantype", BaseCmd.TYPE_STRING, "vlantype"),
         VNET("vlan", BaseCmd.TYPE_STRING, "vlan"),
         //VIRTUAL_MACHINE_PASSWORD("virtualmachinepassword", BaseCmd.TYPE_STRING, "virtualMachinePassword"),
         VOLUME_ID("volumeid", BaseCmd.TYPE_LONG, "volumeId"), // FIXME: this is an array of longs

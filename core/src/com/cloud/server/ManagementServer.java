@@ -626,13 +626,14 @@ public interface ManagementServer {
      * @param groupName user-supplied groupname to be shown in the UI or returned in the API
      * @param userData user-supplied base64-encoded data that can be retrieved by the instance from the virtual router
      * @return VirtualMachine if successfully deployed, null otherwise
+     * @return userSpecifiedVlanDbId - optional vlan for the vm specified by the user
      * @throws InvalidParameterValueException if the parameter values are incorrect.
      * @throws ExecutionException
      * @throws StorageUnavailableException
      * @throws ConcurrentOperationException
      */
-    UserVm deployVirtualMachine(long userId, long accountId, long dataCenterId, long serviceOfferingId, long templateId, Long diskOfferingId, String domain, String password, String displayName, String group, String userData, String [] groups, long startEventId) throws ResourceAllocationException, InvalidParameterValueException, InternalErrorException, InsufficientStorageCapacityException, PermissionDeniedException, ExecutionException, StorageUnavailableException, ConcurrentOperationException;
-    long deployVirtualMachineAsync(long userId, long accountId, long dataCenterId, long serviceOfferingId, long templateId, Long diskOfferingId, String domain, String password, String displayName, String group, String userData, String [] groups) throws InvalidParameterValueException, PermissionDeniedException;
+    UserVm deployVirtualMachine(long userId, long accountId, long dataCenterId, long serviceOfferingId, long templateId, Long diskOfferingId, String domain, String password, String displayName, String group, String userData, String [] groups, long startEventId, Long userSpecifiedVlanDbId) throws ResourceAllocationException, InvalidParameterValueException, InternalErrorException, InsufficientStorageCapacityException, PermissionDeniedException, ExecutionException, StorageUnavailableException, ConcurrentOperationException;
+    long deployVirtualMachineAsync(long userId, long accountId, long dataCenterId, long serviceOfferingId, long templateId, Long diskOfferingId, String domain, String password, String displayName, String group, String userData, String [] groups, Long userSpecifiedVlanDbId) throws InvalidParameterValueException, PermissionDeniedException;
     
     /**
      * Starts a Virtual Machine

@@ -43,6 +43,7 @@ public class ListVlanIpRangesCmd extends BaseCmd {
     static {
     	s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.ID, Boolean.FALSE));
     	s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.VLAN, Boolean.FALSE));
+    	s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.VLAN_TYPE, Boolean.FALSE));
     	s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.NAME, Boolean.FALSE));
         s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.ZONE_ID, Boolean.FALSE));
         s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.ACCOUNT, Boolean.FALSE));
@@ -72,7 +73,7 @@ public class ListVlanIpRangesCmd extends BaseCmd {
     	String keyword = (String)params.get(BaseCmd.Properties.KEYWORD.getName());
     	Integer page = (Integer)params.get(BaseCmd.Properties.PAGE.getName());
     	Integer pageSize = (Integer)params.get(BaseCmd.Properties.PAGESIZE.getName());
-        
+        String vlanType = (String)params.get(BaseCmd.Properties.VLAN_TYPE.getName());
     	
     	Long startIndex = Long.valueOf(0);
     	int pageSizeNum = 50;
@@ -107,7 +108,8 @@ public class ListVlanIpRangesCmd extends BaseCmd {
         	c.addCriteria(Criteria.VLAN, vlanId);
         	c.addCriteria(Criteria.DATACENTERID, zoneId);
         	c.addCriteria(Criteria.ACCOUNTID, accountId);
-        	c.addCriteria(Criteria.PODID, podId);        	
+        	c.addCriteria(Criteria.PODID, podId);       
+        	c.addCriteria(Criteria.VTYPE, vlanType);
     	}
     	
     	List<? extends VlanVO> vlans = getManagementServer().searchForVlans(c);

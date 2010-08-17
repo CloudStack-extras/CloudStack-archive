@@ -2383,7 +2383,7 @@ public class UserVmManagerImpl implements UserVmManager {
     
     @DB
     @Override
-	public UserVmVO createDirectlyAttachedVM(Long vmId, long userId, AccountVO account, DataCenterVO dc, ServiceOfferingVO offering, VMTemplateVO template, DiskOfferingVO diskOffering, String displayName, String group, String userData, List<StoragePoolVO> a, List<NetworkGroupVO>  networkGroups, long startEventId) throws InternalErrorException, ResourceAllocationException {
+	public UserVmVO createDirectlyAttachedVM(Long vmId, long userId, AccountVO account, DataCenterVO dc, ServiceOfferingVO offering, VMTemplateVO template, DiskOfferingVO diskOffering, String displayName, String group, String userData, List<StoragePoolVO> a, List<NetworkGroupVO>  networkGroups, long startEventId, Long userSpecifiedVlanDbId) throws InternalErrorException, ResourceAllocationException {
     	
     	long accountId = account.getId();
 	    long dataCenterId = dc.getId();
@@ -2431,7 +2431,7 @@ public class UserVmManagerImpl implements UserVmManager {
 	        UserVmVO vm = null;
 	    	
 	    	final String name = VirtualMachineName.getVmName(vmId, accountId, _instance);
-	
+
 	        final String[] macAddresses = _dcDao.getNextAvailableMacAddressPair(dc.getId());
 	        long routerId = -1;
 	        long poolId = 0;
@@ -2439,18 +2439,29 @@ public class UserVmManagerImpl implements UserVmManager {
 	        DomainRouterVO router = null;
             Set<Long> avoids = new HashSet<Long>();
             VlanVO guestVlan = null;
-            List<VlanVO> vlansForAccount = _vlanDao.listVlansForAccountByType(dc.getId(), account.getId(), VlanType.DirectAttached);
-           
+            List<VlanVO> vlansForAccount = null;
             boolean forAccount = false;
-            if (vlansForAccount.size() > 0) {
-            	forAccount = true;
-            	guestVlan = vlansForAccount.get(0);//FIXME: iterate over all vlans
+            
+            if(userSpecifiedVlanDbId==null)
+            {
+            	vlansForAccount = _vlanDao.listVlansForAccountByType(dc.getId(), account.getId(), VlanType.DirectAttached);
+            
+		        if (vlansForAccount.size() > 0) {
+		        	forAccount = true;
+		        	guestVlan = vlansForAccount.get(0);//FIXME: iterate over all vlans
+		        }
             }
+            else
+            {
+            	guestVlan = _vlanDao.findById(userSpecifiedVlanDbId);
+            }
+            
             while ((pod = _agentMgr.findPod(template, offering, dc, account.getId(), avoids)) != null) {
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Attempting to create direct attached vm in pod " + pod.first().getName());
                 }
-                if (!forAccount) {
+                
+                if (userSpecifiedVlanDbId==null && !forAccount) {
                 	List<VlanVO> vlansForPod = _vlanDao.listVlansForPodByType(pod.first().getId(), VlanType.DirectAttached);
                 	if (vlansForPod.size() < 1) {
                 		avoids.add(pod.first().getId());

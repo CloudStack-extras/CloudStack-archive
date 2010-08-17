@@ -2191,7 +2191,7 @@ public class ManagementServerImpl implements ManagementServer {
 
     @Override
     public UserVm deployVirtualMachine(long userId, long accountId, long dataCenterId, long serviceOfferingId, long templateId, Long diskOfferingId,
-            String domain, String password, String displayName, String group, String userData, String [] networkGroups, long startEventId) throws ResourceAllocationException, InvalidParameterValueException, InternalErrorException,
+            String domain, String password, String displayName, String group, String userData, String [] networkGroups, long startEventId, Long userSpecifiedVlanDbId) throws ResourceAllocationException, InvalidParameterValueException, InternalErrorException,
             InsufficientStorageCapacityException, PermissionDeniedException, ExecutionException, StorageUnavailableException, ConcurrentOperationException {
 
         saveStartedEvent(userId, accountId, EventTypes.EVENT_VM_CREATE, "Deploying Vm", startEventId);
@@ -2302,7 +2302,7 @@ public class ManagementServerImpl implements ManagementServer {
             		}
             	} else {
             		try {
-            			created = _vmMgr.createDirectlyAttachedVM(vmId, userId, account, dc, offering, template, diskOffering, displayName, group, userData, a, networkGroupVOs, startEventId);
+            			created = _vmMgr.createDirectlyAttachedVM(vmId, userId, account, dc, offering, template, diskOffering, displayName, group, userData, a, networkGroupVOs, startEventId, userSpecifiedVlanDbId);
             		} catch (ResourceAllocationException rae) {
             			throw rae;
             		}
@@ -2422,7 +2422,7 @@ public class ManagementServerImpl implements ManagementServer {
 
     @Override
     public long deployVirtualMachineAsync(long userId, long accountId, long dataCenterId, long serviceOfferingId, long templateId,
-            Long diskOfferingId, String domain, String password, String displayName, String group, String userData, String [] networkGroups)  throws InvalidParameterValueException, PermissionDeniedException {
+            Long diskOfferingId, String domain, String password, String displayName, String group, String userData, String [] networkGroups, Long userSpecifiedVlanDbId)  throws InvalidParameterValueException, PermissionDeniedException {
 
     	AccountVO account = _accountDao.findById(accountId);
         if (account == null) {
@@ -2516,7 +2516,7 @@ public class ManagementServerImpl implements ManagementServer {
         long eventId = saveScheduledEvent(userId, accountId, EventTypes.EVENT_VM_CREATE, "deploying Vm");
         
         DeployVMParam param = new DeployVMParam(userId, accountId, dataCenterId, serviceOfferingId, templateId, diskOfferingId, domain, password,
-                displayName, group, userData, networkGroups, eventId);
+                displayName, group, userData, networkGroups, eventId, userSpecifiedVlanDbId);
         Gson gson = GsonHelper.getBuilder().create();
 
         AsyncJobVO job = new AsyncJobVO();
