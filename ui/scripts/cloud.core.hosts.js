@@ -596,7 +596,7 @@ function showHostsTab() {
 			    isValid &= validateString("Password", dialogBox.find("#host_password"), dialogBox.find("#host_password_errormsg"));						
 			    if(clusterRadio == "new_cluster_radio")
 			        isValid &= validateString("Cluster name", dialogBox.find("#new_cluster_name"), dialogBox.find("#new_cluster_name_errormsg"));					
-			    if (!isValid) return;
+			    //if (!isValid) return;
 				
 			    var array1 = [];
 				
