@@ -223,7 +223,6 @@
         <include name="**/*.html" />
         <include name="**/*.js"/>
         <include name="**/*.jsp"/>
-        <include name="**/*.properties"/>
         <exclude name="**/.classpath" />
         <exclude name="**/.project" />
       </fileset>
@@ -237,7 +236,6 @@
         <exclude name="**/*.html" />
         <exclude name="**/*.js"/>
         <exclude name="**/*.jsp"/>
-        <exclude name="**/*.properties"/>
         <exclude name="**/.classpath" />
         <exclude name="**/.project" />
       </fileset>
