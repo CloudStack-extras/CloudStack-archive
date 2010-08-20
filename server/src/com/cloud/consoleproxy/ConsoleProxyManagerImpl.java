@@ -2345,7 +2345,7 @@ public class ConsoleProxyManagerImpl implements ConsoleProxyManager, VirtualMach
 
         boolean useLocalStorage = Boolean.parseBoolean((String) params.get(Config.SystemVMUseLocalStorage.key()));
         _serviceOffering = new ServiceOfferingVO("Fake Offering For DomP", 1, _proxyRamSize, 0, 0, 0, false, null, NetworkOffering.GuestIpType.Virtualized,
-                useLocalStorage, true, null);
+                useLocalStorage, true, null, null);
         _serviceOffering.setUniqueName("Cloud.com-ConsoleProxy");
         _serviceOffering = _offeringDao.persistSystemServiceOffering(_serviceOffering);
         _template = _templateDao.findConsoleProxyTemplate();

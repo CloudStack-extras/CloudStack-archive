@@ -44,6 +44,10 @@ public class ClusterVO {
     @Column(name="pod_id")
     long podId;
     
+    @Column(name="hypervisor_type")
+    String hypervisorType;
+    
+    
     public ClusterVO() {
     }
     
@@ -67,6 +71,14 @@ public class ClusterVO {
 
     public long getPodId() {
         return podId;
+    }
+    
+    public String getHypervisorType() {
+    	return hypervisorType;
+    }
+    
+    public void setHypervisorType(String hy) {
+    	hypervisorType = hy;
     }
     
     public ClusterVO(long clusterId) {
