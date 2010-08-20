@@ -685,6 +685,7 @@ public class UserVmManagerImpl implements UserVmManager {
         }
         
         boolean started = false;
+       
         Transaction txn = Transaction.currentTxn();
         try {
             
@@ -735,6 +736,11 @@ public class UserVmManagerImpl implements UserVmManager {
 	        VolumeVO vol = rootVols.get(0);
 
 	        List<VolumeVO> vols = _volsDao.findCreatedByInstance(vm.getId());
+	        List<VolumeVO> vos = new ArrayList<VolumeVO>();
+	        /*compete with take snapshot*/
+	        for (VolumeVO userVmVol : vols) {
+	        	vos.add(_volsDao.lock(userVmVol.getId(), true));
+	        }
 
             Answer answer = null;
             int retry = _retry;
@@ -2216,7 +2222,7 @@ public class UserVmManagerImpl implements UserVmManager {
     @Override @DB
     public SnapshotVO createTemplateSnapshot(long userId, long volumeId) {
         SnapshotVO createdSnapshot = null;
-        VolumeVO volume = _volsDao.findById(volumeId);
+        VolumeVO volume = _volsDao.lock(volumeId, true);
         
         Long id = null;
         
