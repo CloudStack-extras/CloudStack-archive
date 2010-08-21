@@ -1702,6 +1702,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory {
 
         host.setDataCenterId(dc.getId());
         host.setPodId(podId);
+        
         host.setClusterId(clusterId);
         host.setPrivateIpAddress(startup.getPrivateIpAddress());
         host.setPrivateNetmask(startup.getPrivateNetmask());

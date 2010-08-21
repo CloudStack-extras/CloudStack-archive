@@ -22,6 +22,7 @@ public class KvmDummyResourceBase extends ServerResourceBase implements ServerRe
 	private String _podId;
 	private String _guid;
 	private String _agentIp;
+	private String _clusterId;
 	@Override
 	public Type getType() {
 		// TODO Auto-generated method stub
@@ -38,6 +39,7 @@ public class KvmDummyResourceBase extends ServerResourceBase implements ServerRe
 		cmd.setPrivateIpAddress(_agentIp);
 		cmd.setStorageIpAddress(_agentIp);
 		cmd.setVersion(KvmDummyResourceBase.class.getPackage().getImplementationVersion());
+		cmd.setCluster(_clusterId);
 		return new StartupCommand[] { cmd };
 	}
 
@@ -65,6 +67,7 @@ public class KvmDummyResourceBase extends ServerResourceBase implements ServerRe
 		_podId = (String)params.get("pod");
 		_guid = (String)params.get("guid");
 		_agentIp = (String)params.get("agentIp");
+		_clusterId = (String)params.get("cluster");
 		return true;
 	}
 }

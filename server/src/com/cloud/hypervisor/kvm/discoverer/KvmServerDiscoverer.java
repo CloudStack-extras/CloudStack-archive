@@ -126,14 +126,17 @@ public class KvmServerDiscoverer extends DiscovererBase implements Discoverer,
 			}
 			
 			/*Is a KVM host?*/
+			s_logger.debug("test kvm is enabled");
 			sshSession = sshConnection.openSession();
 			sshSession.execCommand("lsmod|grep kvm >& /dev/null");
+			Thread.sleep(10000);
 			if (sshSession.getExitStatus() != 0) {
 				s_logger.debug("It's not a KVM enabled machine");
 				return null;
 			}
 			sshSession.close();
-			Thread.sleep(10000);
+			
+			s_logger.debug("scp setupagent");
 			SCPClient scp = new SCPClient(sshConnection);
 			scp.put(_setupAgentPath, "/usr/bin", "0755");
 			
@@ -146,10 +149,16 @@ public class KvmServerDiscoverer extends DiscovererBase implements Discoverer,
 			KvmDummyResourceBase kvmResource = new KvmDummyResourceBase();
 			Map<String, Object> params = new HashMap<String, Object>();
 			
+			String cluster = null;
+			if (clusterId != null) {
+				cluster = Long.toString(clusterId);
+			}
+	            
 			params.put("zone", Long.toString(dcId));
 			params.put("pod", Long.toString(podId));
 			params.put("guid", guid);
 			params.put("agentIp", agentIp);
+			params.put("cluster", cluster);
 			kvmResource.configure("kvm agent", params);
 			kvmResource.setRemoteAgent(true);
 			resources.put(kvmResource, details);
