@@ -121,11 +121,20 @@ public class KvmServerDiscoverer extends DiscovererBase implements Discoverer,
 
 			sshConnection.connect(null, 60000, 60000);
 			if (!sshConnection.authenticateWithPassword(username, password)) {
-				throw new Exception("Unable to authenticate");
+				s_logger.debug("Failed to authenticate");
+				return null;
+			}
+			
+			/*Is a KVM host?*/
+			sshSession = sshConnection.openSession();
+			sshSession.execCommand("lsmod|grep kvm >& /dev/null");
+			if (sshSession.getExitStatus() != 0) {
+				s_logger.debug("It's not a KVM enabled machine");
+				return null;
 			}
 			SCPClient scp = new SCPClient(sshConnection);
 			scp.put(_setupAgentPath, "/usr/bin", "0755");
-			sshSession = sshConnection.openSession();
+			
 			/*running setup script in background, because we will restart agent network, that may cause connection lost*/
 			s_logger.debug("/usr/bin/setup_agent.sh " + " -h " + _hostIp + " -z " + dcId + " -p " + podId + " -u " + guid);
 			sshSession.execCommand("/usr/bin/setup_agent.sh " + " -h " + _hostIp + " -z " + dcId + " -p " + podId + " -u " + guid + " 1>&2" );

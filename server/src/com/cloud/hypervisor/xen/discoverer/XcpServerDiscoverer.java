@@ -117,7 +117,7 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
             if (conn == null) {
                 String msg = "Unable to get a connection to " + url;
                 s_logger.debug(msg);
-                throw new RuntimeException(msg);
+                return null;
             }
             
             String pod;
