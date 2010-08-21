@@ -624,7 +624,7 @@
                     <h2>
                         <strong>Step 2:</strong> Select a Service</h2>
                     <p>
-                        Please select the CPU, Memory, and Storage requirements you need for your new Virtual
+                        Please select the CPU, Memory, and requirements you need for your new Virtual
                         Instance.</p>
                 </div>
                 <div class="rev_wizmid_contentbox">
@@ -646,6 +646,19 @@
                             Service Offerings :</div>
                         <ol id="wizard_service_offering">
                         </ol>
+						<div class="revwiz_formcontent_title" style="margin-top:15px;">
+                            Network :</div>
+							<p>
+                        Please select the network you wish to attach your virtual instance to.  Once attached, you will no longer be able to choose a different network.</p>
+                           <ol>
+                           		<li>
+                                    <label style="font-size:11px; font-weight:normal;" for="wizard_network_groups">
+                                        Select your network:</label>
+                                    <select class="select" id="wizard_network_vlans">
+                                    </select>
+                                </li>
+                           </ol>
+
                         <ol id="wizard_network_groups_container" style="display:none; margin-top:10px;">
                             <li>
                                 <label for="wizard_network_groups">
@@ -832,6 +845,12 @@
                             <div class="rev_wiz_reviewlabel">
                                 Service Offering:</div>
                             <div class="rev_wiz_reviewanswers" id="wizard_review_service_offering">
+                            </div>
+                        </div>
+						<div class="rev_wiz_reviewlist" id="wizard_review_network_vlan_p" >
+                            <div class="rev_wiz_reviewlabel">
+                                Network:</div>
+                            <div class="rev_wiz_reviewanswers" id="wizard_review_network_vlan">
                             </div>
                         </div>
                         <div class="rev_wiz_reviewlist" id="wizard_review_network_groups_p" style="display:none">

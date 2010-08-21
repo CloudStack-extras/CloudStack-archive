@@ -1260,7 +1260,21 @@ function showInstancesTab(p_domainId, p_account) {
 					}
 				}					    
 			}
-		});					
+		});	
+
+		$.ajax({					
+			data: "command=listVlanIpRanges&vlantype=DirectAttached&response=json",		
+			dataType: "json",
+			success: function(json) {					
+				var items = json.listvlaniprangesresponse.vlaniprange;					
+				var networkVlansSelect = vmPopup.find("#wizard_network_vlans").empty();	
+				if (items != null && items.length > 0) {
+					for (var i = 0; i < items.length; i++) {
+						networkVlansSelect.append("<option value='" + sanitizeXSS(items[i].id) + "'> VLAN " + sanitizeXSS(items[i].vlan) + "</option>"); 
+					}
+				}					    
+			}
+		});		
 		
 	    $.ajax({
 			data: "command=listServiceOfferings&response=json",
@@ -1615,6 +1629,7 @@ function showInstancesTab(p_domainId, p_account) {
 			thisPopup.find("#wizard_review_zone").text(thisPopup.find("#wizard_zone option:selected").text());
 			thisPopup.find("#wizard_review_name").text(thisPopup.find("#wizard_vm_name").val());
 			thisPopup.find("#wizard_review_group").text(thisPopup.find("#wizard_vm_group").val());
+			thisPopup.find("#wizard_review_network_vlan").text(thisPopup.find("#wizard_network_vlans option:selected").text());
 			
 			if(thisPopup.find("#wizard_network_groups_container").css("display") != "none" && thisPopup.find("#wizard_network_groups").val() != null) {
 			    var networkGroupList = thisPopup.find("#wizard_network_groups").val().join(",");
@@ -1629,6 +1644,7 @@ function showInstancesTab(p_domainId, p_account) {
 			// Create a new VM!!!!
 			var moreCriteria = [];								
 			moreCriteria.push("&zoneId="+thisPopup.find("#wizard_zone").val());
+			moreCriteria.push("&vlanId="+thisPopup.find("#wizard_network_vlans").val());
 			
 			var name = trim(thisPopup.find("#wizard_vm_name").val());
 			if (name != null && name.length > 0) 

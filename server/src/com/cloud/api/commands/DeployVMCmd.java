@@ -90,7 +90,6 @@ public class DeployVMCmd extends BaseCmd {
         String userData = (String) params.get(BaseCmd.Properties.USER_DATA.getName());
         String networkGroupList = (String)params.get(BaseCmd.Properties.NETWORK_GROUP_LIST.getName());
 
-        userSpecifiedVlanDbId = Long.parseLong("1");
         String password = null;
         Long accountId = null;
 

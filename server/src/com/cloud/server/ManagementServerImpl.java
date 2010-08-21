@@ -4062,6 +4062,7 @@ public class ManagementServerImpl implements ManagementServer {
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("vlan", sb.entity().getVlanId(), SearchCriteria.Op.EQ);
         sb.and("dataCenterId", sb.entity().getDataCenterId(), SearchCriteria.Op.EQ);
+        sb.and("vlanType", sb.entity().getVlanType(), SearchCriteria.Op.EQ);
        
         if (accountId != null) {
         	SearchBuilder<AccountVlanMapVO> accountVlanMapSearch = _accountVlanMapDao.createSearchBuilder();

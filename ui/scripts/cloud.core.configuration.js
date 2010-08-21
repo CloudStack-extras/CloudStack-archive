@@ -665,10 +665,7 @@ function showConfigurationTab() {
 					isTagged = thisDialog.find("#add_publicip_vlan_tagged").val() == "tagged";
 				}
 				
-				if (isDirect && isTagged) 
-					isValid &= validateString("Account", thisDialog.find("#add_publicip_vlan_account"), thisDialog.find("#add_publicip_vlan_account_errormsg"), false); //required
-				else
-				    isValid &= validateString("Account", thisDialog.find("#add_publicip_vlan_account"), thisDialog.find("#add_publicip_vlan_account_errormsg"), true); //optional
+				isValid &= validateString("Account", thisDialog.find("#add_publicip_vlan_account"), thisDialog.find("#add_publicip_vlan_account_errormsg"), true); //optional
 				
 				if (isTagged) {
 					isValid &= validateNumber("VLAN", thisDialog.find("#add_publicip_vlan_vlan"), thisDialog.find("#add_publicip_vlan_vlan_errormsg"), 2, 4095);
@@ -687,8 +684,9 @@ function showConfigurationTab() {
 				}
 				
 				var directParams = "";
-				if (isDirect && isTagged) {
-					directParams = "&domainId="+trim(thisDialog.find("#add_publicip_vlan_domain").val())+"&account="+trim(thisDialog.find("#add_publicip_vlan_account").val());
+				var account = trim(thisDialog.find("#add_publicip_vlan_account").val());
+				if (isDirect && isTagged && account != null && account.length > 0) {
+					directParams = "&domainId="+trim(thisDialog.find("#add_publicip_vlan_domain").val())+"&account="+account;
 				} else if (isDirect && !isTagged) {
 					directParams = "&podId="+trim(thisDialog.find("#add_publicip_vlan_pod").val());
 				} else if (!isDirect && (dialogAddVlanForZone.find("#add_publicip_vlan_scope").val()=="account-specific")) {  //public VLAN, account-specific
