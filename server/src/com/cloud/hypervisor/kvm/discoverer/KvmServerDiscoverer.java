@@ -132,11 +132,15 @@ public class KvmServerDiscoverer extends DiscovererBase implements Discoverer,
 				s_logger.debug("It's not a KVM enabled machine");
 				return null;
 			}
+			sshSession.close();
+			
 			SCPClient scp = new SCPClient(sshConnection);
 			scp.put(_setupAgentPath, "/usr/bin", "0755");
 			
+			
 			/*running setup script in background, because we will restart agent network, that may cause connection lost*/
 			s_logger.debug("/usr/bin/setup_agent.sh " + " -h " + _hostIp + " -z " + dcId + " -p " + podId + " -u " + guid);
+			sshSession = sshConnection.openSession();
 			sshSession.execCommand("/usr/bin/setup_agent.sh " + " -h " + _hostIp + " -z " + dcId + " -p " + podId + " -u " + guid + " 1>&2" );
 			
 			KvmDummyResourceBase kvmResource = new KvmDummyResourceBase();
