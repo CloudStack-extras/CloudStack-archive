@@ -133,7 +133,7 @@ public class KvmServerDiscoverer extends DiscovererBase implements Discoverer,
 				return null;
 			}
 			sshSession.close();
-			
+			Thread.sleep(10000);
 			SCPClient scp = new SCPClient(sshConnection);
 			scp.put(_setupAgentPath, "/usr/bin", "0755");
 			
