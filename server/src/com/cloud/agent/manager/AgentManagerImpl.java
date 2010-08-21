@@ -1703,7 +1703,8 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory {
         host.setDataCenterId(dc.getId());
         host.setPodId(podId);
         
-        host.setClusterId(clusterId);
+        if (clusterId != null) /*Hack for kvm, kvm agent should report cluster id */
+        	host.setClusterId(clusterId);
         host.setPrivateIpAddress(startup.getPrivateIpAddress());
         host.setPrivateNetmask(startup.getPrivateNetmask());
         host.setPrivateMacAddress(startup.getPrivateMacAddress());
