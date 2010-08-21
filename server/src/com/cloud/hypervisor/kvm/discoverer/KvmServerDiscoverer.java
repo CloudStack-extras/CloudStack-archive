@@ -156,7 +156,7 @@ public class KvmServerDiscoverer extends DiscovererBase implements Discoverer,
 	            
 			params.put("zone", Long.toString(dcId));
 			params.put("pod", Long.toString(podId));
-			params.put("guid", guid);
+			params.put("guid", guid + "-LibvirtComputingResource"); /*tail added by agent.java*/
 			params.put("agentIp", agentIp);
 			params.put("cluster", cluster);
 			kvmResource.configure("kvm agent", params);
