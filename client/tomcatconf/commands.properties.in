@@ -90,7 +90,7 @@ listDiskOfferings=com.cloud.api.commands.ListDiskOfferingsCmd;15
 #### vlan commands
 createVlanIpRange=com.cloud.api.commands.CreateVlanIpRangeCmd;1
 deleteVlanIpRange=com.cloud.api.commands.DeleteVlanIpRangeCmd;1
-listVlanIpRanges=com.cloud.api.commands.ListVlanIpRangesCmd;1
+listVlanIpRanges=com.cloud.api.commands.ListVlanIpRangesCmd;15
 
 #### address commands
 associateIpAddress=com.cloud.api.commands.AssociateIPAddrCmd;15
