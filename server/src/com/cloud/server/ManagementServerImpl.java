@@ -4063,12 +4063,14 @@ public class ManagementServerImpl implements ManagementServer {
         sb.and("vlan", sb.entity().getVlanId(), SearchCriteria.Op.EQ);
         sb.and("dataCenterId", sb.entity().getDataCenterId(), SearchCriteria.Op.EQ);
         sb.and("vlanType", sb.entity().getVlanType(), SearchCriteria.Op.EQ);
-       
+
+        /*
         if (accountId != null) {
         	SearchBuilder<AccountVlanMapVO> accountVlanMapSearch = _accountVlanMapDao.createSearchBuilder();
         	accountVlanMapSearch.and("accountId", accountVlanMapSearch.entity().getAccountId(), SearchCriteria.Op.EQ);
         	sb.join("accountVlanMapSearch", accountVlanMapSearch, sb.entity().getId(), accountVlanMapSearch.entity().getVlanDbId());
         }
+        */
         
         if (podId != null) {
         	SearchBuilder<PodVlanMapVO> podVlanMapSearch = _podVlanMapDao.createSearchBuilder();
@@ -4094,11 +4096,12 @@ public class ManagementServerImpl implements ManagementServer {
         	if (dataCenterId != null) {
             	sc.setParameters("dataCenterId", dataCenterId);
         	}
-        	
+
+        	/*
         	if (accountId != null) {
         		sc.setJoinParameters("accountVlanMapSearch", "accountId", accountId);
         	}
-        	
+        	*/
         	if (podId != null) {
         		sc.setJoinParameters("podVlanMapSearch", "podId", podId);
         	}
