@@ -803,21 +803,6 @@ public class ManagementServerImpl implements ManagementServer {
             s_logger.debug("Attempting to log in user: " + username + " in domain " + domainId);
         }
 
-        UserAccount userAccount = _userAccountDao.getUserAccount(username, domainId);
-        if (userAccount == null) {
-            if (s_logger.isDebugEnabled()) {
-                s_logger.debug("Unable to find user with name " + username + " in domain " + domainId);
-            }
-            return null;
-        }
-
-        if (!userAccount.getState().equals("enabled") || !userAccount.getAccountState().equals("enabled")) {
-            if (s_logger.isInfoEnabled()) {
-                s_logger.info("user " + username + " in domain " + domainId + " is disabled/locked (or account is disabled/locked), returning null");
-            }
-            return null;
-        }
-
         // We only use the first adapter even if multiple have been
         // configured
         Enumeration<UserAuthenticator> en = _userAuthenticators.enumeration();
@@ -825,6 +810,20 @@ public class ManagementServerImpl implements ManagementServer {
         boolean authenticated = authenticator.authenticate(username, password, domainId);
 
         if (authenticated) {
+        	UserAccount userAccount = _userAccountDao.getUserAccount(username, domainId);
+            if (userAccount == null) {
+                if (s_logger.isDebugEnabled()) {
+                    s_logger.debug("Unable to find user with name " + username + " in domain " + domainId);
+                }
+                return null;
+            }
+
+            if (!userAccount.getState().equals("enabled") || !userAccount.getAccountState().equals("enabled")) {
+                if (s_logger.isInfoEnabled()) {
+                    s_logger.info("user " + username + " in domain " + domainId + " is disabled/locked (or account is disabled/locked), returning null");
+                }
+                return null;
+            }
         	return userAccount;
         } else {
         	return null;
