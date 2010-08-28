@@ -134,8 +134,12 @@ function showTemplatesTab() {
 	var formatSelect = $("#add_template_format").empty();
 	if (getHypervisorType() == "kvm") {
 		formatSelect.append("<option value='QCOW2'>QCOW2</option>");
+		formatSelect.append("<option value='VHD'>VHD</option>");
+		formatSelect.append("<option value='VMDK'>VMDK</option>");
 	} else if (getHypervisorType() == "xenserver") {
 		formatSelect.append("<option value='VHD'>VHD</option>");
+		formatSelect.append("<option value='QCOW2'>QCOW2</option>");
+		formatSelect.append("<option value='VMDK'>VMDK</option>");
 	}
 			
 	$("#template_action_new").bind("click", function(event) {		 
