@@ -437,9 +437,11 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
 			}
 		}
 		
+	
         toBeDownloaded.addAll(allTemplates);
         
 		for (VMTemplateVO tmplt: allTemplates) {
+			s_logger.info("all tempalte: " + tmplt.getDisplayText());
 			String uniqueName = tmplt.getUniqueName();
 			VMTemplateHostVO tmpltHost = _vmTemplateHostDao.findByHostTemplate(sserverId, tmplt.getId());
 			if (templateInfo.containsKey(uniqueName)) {

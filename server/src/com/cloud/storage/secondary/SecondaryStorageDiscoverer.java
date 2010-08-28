@@ -160,6 +160,10 @@ public class SecondaryStorageDiscoverer extends DiscovererBase implements Discov
         }
         srs.put(storage, details);
         
+        
+		associateTemplatesToZone(0, dcId);
+	
+        
         return srs;
     }
     
