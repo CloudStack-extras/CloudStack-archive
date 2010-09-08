@@ -98,6 +98,10 @@ hard_deps = [
 	  'org.apache.commons.collections.ProxyMap',
 	  "commons-collections.jar",
 	),
+	(
+	  'org.apache.commons.dbcp.DbcpException',
+	  "commons-dbcp.jar",
+	),
 ]
 
 
