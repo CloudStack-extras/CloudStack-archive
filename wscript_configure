@@ -82,9 +82,18 @@ systemjars = {
 # (classname,fedora package name,ubuntu package name)
 # when adding a package name here, also add to the spec or debian control file
 hard_deps = [
-	('java.io.FileOutputStream',"java-devel","openjdk-6-jdk"),
-	('javax.servlet.http.Cookie',"tomcat6-servlet-2.5-api","libservlet2.5-java","(if on Windows,did you set TOMCAT_HOME to point to your Tomcat setup?)"),
-	('org.apache.naming.resources.Constants',"tomcat6-lib","libtomcat6-java","(if on Windows,did you set TOMCAT_HOME to point to your Tomcat setup?)"),
+	(
+	  'java.io.FileOutputStream',
+	  "JDK",
+	),
+	(
+	  'javax.servlet.http.Cookie',
+	  "Tomcat servlet.jar"
+	),
+	(
+	  'org.apache.naming.resources.Constants',
+	  'Tomcat catalina.jar'
+	),
 ]
 
 
@@ -273,11 +282,10 @@ if conf.env.DISTRO in ["Windows"]:
 no_java_class = lambda x: conf.check_java_class(x,with_classpath=conf.env.CLASSPATH) != 0
 def require_dependency(javacls,packagenames):
 	if no_java_class(javacls):
-		conf.fatal("Cannot find the Java class %s (available in the distro packages: %s)"%(
-			javacls, ", ".join(packagenames)))
+		conf.fatal("Cannot find the Java class %s.  The %s package provides it.  Please place the required JAR files in %s."%(javacls, packagenames, conf.env.SYSTEMJAVADIR))
 def check_dependencies(deps):
 	for d in deps:
-		cls,pkgs = d[0],d[1:]
+		cls,pkgs = d[0],d[1]
 		require_dependency(cls,pkgs)
 
 if not getattr(Options.options, 'NODEPCHECK', ''): check_dependencies(hard_deps)
