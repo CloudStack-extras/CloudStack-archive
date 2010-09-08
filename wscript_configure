@@ -114,6 +114,10 @@ hard_deps = [
 	  'org.apache.commons.pool.PoolUtils',
 	  "commons-pool.jar",
 	),
+	(
+	  'org.apache.commons.httpclient.util.DateParser',
+	  "commons-httpclient.jar",
+	),
 ]
 
 
