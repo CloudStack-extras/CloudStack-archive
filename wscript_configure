@@ -32,6 +32,7 @@ systemjars = {
 	'Fedora':
 	(
 		"tomcat6-servlet-2.5-api.jar",
+		"trilead-ssh2.jar",
 		#"tomcat6/catalina.jar", # all supported distros put the file there
 	),
 	'CentOS':
@@ -121,6 +122,10 @@ hard_deps = [
 	(
 	  'org.apache.ws.commons.util.Base64',
 	  "ws-commons-util.jar",
+	),
+	(
+	  'com.trilead.ssh2.SCPClient',
+	  "trilead-ssh2.jar",
 	),
 ]
 

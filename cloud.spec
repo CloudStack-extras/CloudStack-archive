@@ -35,6 +35,7 @@ BuildRequires: commons-httpclient
 BuildRequires: jpackage-utils
 BuildRequires: gcc
 BuildRequires: glibc-devel
+BuildRequires: trilead-ssh2
 
 %global _premium %(tar jtvmf %{SOURCE0} '*/cloudstack-proprietary/' --occurrence=1 2>/dev/null | wc -l)
 
@@ -136,6 +137,7 @@ as a service.
 Summary:   Cloud.com core library
 Requires: java >= 1.6.0
 Requires: %{name}-utils = %{version}-%{release}, %{name}-deps = %{version}-%{release}
+Requires: trilead-ssh2
 Group:     System Environment/Libraries
 Obsoletes: vmops-core < %{version}-%{release}
 %description core
@@ -252,6 +254,7 @@ access into virtual machines managed by the Cloud.com CloudStack.
 Summary:   Cloud.com test suite
 Requires: java >= 1.6.0
 Requires: %{name}-utils = %{version}-%{release}, %{name}-deps = %{version}-%{release}, wget
+Requires: trilead-ssh2
 Group:     System Environment/Libraries
 Obsoletes: vmops-test < %{version}-%{release}
 %description test
@@ -511,7 +514,6 @@ fi
 %{_javadir}/%{name}-junit-4.8.1.jar
 %{_javadir}/%{name}-libvirt-0.4.5.jar
 %{_javadir}/%{name}-log4j.jar
-%{_javadir}/%{name}-trilead-ssh2-build213.jar
 %{_javadir}/%{name}-cglib.jar
 %{_javadir}/%{name}-mysql-connector-java-5.1.7-bin.jar
 %{_javadir}/%{name}-xenserver-5.5.0-1.jar
