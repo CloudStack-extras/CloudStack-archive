@@ -267,7 +267,6 @@ deps = " ".join( Utils.to_list(
 	deps/cloud-apache-log4j-extras-1.0.jar
 	deps/cloud-libvirt-0.4.5.jar
 	deps/cloud-jna.jar
-	deps/cloud-cglib.jar
 	"""
 ) )
 thirdparties = " ".join( Utils.to_list(

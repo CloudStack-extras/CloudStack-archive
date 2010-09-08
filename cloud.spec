@@ -39,6 +39,7 @@ BuildRequires: trilead-ssh2
 BuildRequires: xmlrpc3-client
 BuildRequires: xmlrpc3-common
 BuildRequires: junit4
+BuildRequires: cglib
 
 %global _premium %(tar jtvmf %{SOURCE0} '*/cloudstack-proprietary/' --occurrence=1 2>/dev/null | wc -l)
 
@@ -50,6 +51,7 @@ intelligent cloud implementation.
 Summary:   Cloud.com utility library
 Requires: java >= 1.6.0
 Requires: junit4
+Requires: cglib
 Group:     System Environment/Libraries
 Obsoletes: vmops-utils < %{version}-%{release}
 %description utils
@@ -521,7 +523,6 @@ fi
 %{_javadir}/%{name}-jna.jar
 %{_javadir}/%{name}-libvirt-0.4.5.jar
 %{_javadir}/%{name}-log4j.jar
-%{_javadir}/%{name}-cglib.jar
 %{_javadir}/%{name}-mysql-connector-java-5.1.7-bin.jar
 %{_javadir}/%{name}-xenserver-5.5.0-1.jar
 %doc README

@@ -37,6 +37,8 @@ systemjars = {
 		"xmlrpc3-common.jar",
 		"xmlrpc3-client.jar",
 		"junit4.jar",
+		"objectweb-asm/asm.jar",
+		"cglib.jar",
 		#"tomcat6/catalina.jar", # all supported distros put the file there
 	),
 	'CentOS':
@@ -146,6 +148,14 @@ hard_deps = [
 	(
 	  'junit.framework.TestCase',
 	  "junit4.jar",
+	),
+	(
+	  'org.objectweb.asm.Type',
+	  "asm.jar",
+	),
+	(
+	  'net.sf.cglib.proxy.Enhancer',
+	  "cglib.jar",
 	),
 ]
 
