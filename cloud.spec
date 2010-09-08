@@ -36,6 +36,8 @@ BuildRequires: jpackage-utils
 BuildRequires: gcc
 BuildRequires: glibc-devel
 BuildRequires: trilead-ssh2
+BuildRequires: xmlrpc3-client
+BuildRequires: xmlrpc3-common
 
 %global _premium %(tar jtvmf %{SOURCE0} '*/cloudstack-proprietary/' --occurrence=1 2>/dev/null | wc -l)
 
@@ -69,6 +71,8 @@ Requires: java >= 1.6.0
 Obsoletes: vmops-server < %{version}-%{release}
 Requires: %{name}-utils = %{version}-%{release}, %{name}-core = %{version}-%{release}, %{name}-deps = %{version}-%{release}, tomcat6-servlet-2.5-api
 Requires: commons-codec
+Requires: xmlrpc3-client
+Requires: xmlrpc3-common
 Group:     System Environment/Libraries
 %description server
 The Cloud.com server libraries provide a set of Java classes used
@@ -140,6 +144,8 @@ Requires: java >= 1.6.0
 Requires: %{name}-utils = %{version}-%{release}, %{name}-deps = %{version}-%{release}
 Requires: trilead-ssh2
 Requires: commons-codec
+Requires: xmlrpc3-client
+Requires: xmlrpc3-common
 Group:     System Environment/Libraries
 Obsoletes: vmops-core < %{version}-%{release}
 %description core
@@ -281,6 +287,8 @@ Obsoletes: %{name}-premium-vendor-zynga < %{version}-%{release}
 Requires: java >= 1.6.0
 Requires: %{name}-utils = %{version}-%{release}
 Requires: %{name}-premium-deps
+Requires: xmlrpc3-client
+Requires: xmlrpc3-common
 License:   CSL 1.1
 Group:     System Environment/Libraries
 %description premium
@@ -515,8 +523,6 @@ fi
 %{_javadir}/%{name}-cglib.jar
 %{_javadir}/%{name}-mysql-connector-java-5.1.7-bin.jar
 %{_javadir}/%{name}-xenserver-5.5.0-1.jar
-%{_javadir}/%{name}-xmlrpc-common-3.*.jar
-%{_javadir}/%{name}-xmlrpc-client-3.*.jar
 %doc README
 %doc HACKING
 %doc debian/copyright
