@@ -265,7 +265,6 @@ deps = " ".join( Utils.to_list(
 	deps/cloud-log4j.jar
 	deps/cloud-gson-1.3.jar
 	deps/cloud-apache-log4j-extras-1.0.jar
-	deps/cloud-jna.jar
 	"""
 ) )
 thirdparties = " ".join( Utils.to_list(

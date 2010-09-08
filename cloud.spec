@@ -517,12 +517,10 @@ fi
 %files deps
 %defattr(0644,root,root,0755)
 %{_javadir}/%{name}-apache-log4j-extras-1.0.jar
-%{_javadir}/%{name}-backport-util-concurrent-3.0.jar
 %{_javadir}/%{name}-ehcache.jar
 %{_javadir}/%{name}-email.jar
 %{_javadir}/%{name}-gson-1.3.jar
 %{_javadir}/%{name}-httpcore-4.0.jar
-%{_javadir}/%{name}-jna.jar
 %{_javadir}/%{name}-log4j.jar
 %{_javadir}/%{name}-mysql-connector-java-5.1.7-bin.jar
 %{_javadir}/%{name}-xenserver-5.5.0-1.jar
