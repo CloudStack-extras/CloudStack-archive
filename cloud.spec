@@ -40,6 +40,7 @@ BuildRequires: xmlrpc3-client
 BuildRequires: xmlrpc3-common
 BuildRequires: junit4
 BuildRequires: cglib
+BuildRequires: libvirt-java
 
 %global _premium %(tar jtvmf %{SOURCE0} '*/cloudstack-proprietary/' --occurrence=1 2>/dev/null | wc -l)
 
@@ -220,6 +221,7 @@ Requires: commons-pool
 Requires: commons-dbcp
 Requires: jakarta-commons-logging
 Requires: libvirt
+Requires: libvirt-java
 Requires: /usr/sbin/libvirtd
 Requires: jpackage-utils
 Requires: %{name}-daemonize
@@ -521,7 +523,6 @@ fi
 %{_javadir}/%{name}-gson-1.3.jar
 %{_javadir}/%{name}-httpcore-4.0.jar
 %{_javadir}/%{name}-jna.jar
-%{_javadir}/%{name}-libvirt-0.4.5.jar
 %{_javadir}/%{name}-log4j.jar
 %{_javadir}/%{name}-mysql-connector-java-5.1.7-bin.jar
 %{_javadir}/%{name}-xenserver-5.5.0-1.jar

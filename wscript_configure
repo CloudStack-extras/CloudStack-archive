@@ -39,6 +39,7 @@ systemjars = {
 		"junit4.jar",
 		"objectweb-asm/asm.jar",
 		"cglib.jar",
+		"libvirt.jar",
 		#"tomcat6/catalina.jar", # all supported distros put the file there
 	),
 	'CentOS':
@@ -156,6 +157,10 @@ hard_deps = [
 	(
 	  'net.sf.cglib.proxy.Enhancer',
 	  "cglib.jar",
+	),
+	(
+	  'org.libvirt.StorageVol',
+	  "libvirt.jar",
 	),
 ]
 
