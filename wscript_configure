@@ -110,6 +110,10 @@ hard_deps = [
 	  'org.apache.commons.logging.Log',
 	  "commons-logging-api.jar",
 	),
+	(
+	  'org.apache.commons.pool.PoolUtils',
+	  "commons-pool.jar",
+	),
 ]
 
 
