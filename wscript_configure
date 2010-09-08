@@ -102,6 +102,10 @@ hard_deps = [
 	  'org.apache.commons.dbcp.DbcpException',
 	  "commons-dbcp.jar",
 	),
+	(
+	  'org.apache.commons.logging.LogFactory',
+	  "commons-logging.jar",
+	),
 ]
 
 
