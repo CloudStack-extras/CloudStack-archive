@@ -118,6 +118,10 @@ hard_deps = [
 	  'org.apache.commons.httpclient.util.DateParser',
 	  "commons-httpclient.jar",
 	),
+	(
+	  'org.apache.ws.commons.util.Base64',
+	  "ws-commons-util.jar",
+	),
 ]
 
 
