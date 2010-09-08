@@ -94,6 +94,10 @@ hard_deps = [
 	  'org.apache.naming.resources.Constants',
 	  'Tomcat catalina.jar'
 	),
+	(
+	  'org.apache.commons.collections.ProxyMap',
+	  "commons-collections.jar",
+	),
 ]
 
 
