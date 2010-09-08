@@ -21,7 +21,8 @@ Vendor:    Cloud.com, Inc. <sqa@cloud.com>
 Packager:  Manuel Amador (Rudd-O) <manuel@cloud.com>
 Group:     System Environment/Libraries
 # FIXME do groups for every single one of the subpackages
-Source0:   %{name}-%{_ver}.tar.bz2
+# This fixes subissue #2 raised in https://bugzilla.redhat.com/show_bug.cgi?id=630179
+Source0:   http://download.cloud.com/foss/fedora/proposed/%{name}-%{_ver}.tar.bz2
 BuildRoot: %{_tmppath}/%{name}-%{_ver}-%{release}-build
 
 BuildRequires: java-1.6.0-openjdk-devel
