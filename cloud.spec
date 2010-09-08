@@ -28,7 +28,7 @@ BuildRoot: %{_tmppath}/%{name}-%{_ver}-%{release}-build
 BuildRequires: java-1.6.0-openjdk-devel
 BuildRequires: tomcat6
 BuildRequires: ws-commons-util
-#BuildRequires: commons-codec
+BuildRequires: commons-codec
 BuildRequires: commons-dbcp
 BuildRequires: commons-collections
 BuildRequires: commons-httpclient
@@ -68,6 +68,7 @@ Summary:   Cloud.com server library
 Requires: java >= 1.6.0
 Obsoletes: vmops-server < %{version}-%{release}
 Requires: %{name}-utils = %{version}-%{release}, %{name}-core = %{version}-%{release}, %{name}-deps = %{version}-%{release}, tomcat6-servlet-2.5-api
+Requires: commons-codec
 Group:     System Environment/Libraries
 %description server
 The Cloud.com server libraries provide a set of Java classes used
@@ -138,6 +139,7 @@ Summary:   Cloud.com core library
 Requires: java >= 1.6.0
 Requires: %{name}-utils = %{version}-%{release}, %{name}-deps = %{version}-%{release}
 Requires: trilead-ssh2
+Requires: commons-codec
 Group:     System Environment/Libraries
 Obsoletes: vmops-core < %{version}-%{release}
 %description core
@@ -160,7 +162,6 @@ Requires: %{name}-python = %{version}-%{release}
 # Requires: %{name}-agent
 Requires: tomcat6
 Requires: ws-commons-util
-#Requires: commons-codec
 Requires: commons-dbcp
 Requires: commons-collections
 Requires: commons-httpclient
@@ -204,7 +205,6 @@ Requires: %{name}-agent-scripts = %{version}-%{release}
 Requires: %{name}-vnet = %{version}-%{release}
 Requires: %{name}-python = %{version}-%{release}
 Requires: commons-httpclient
-#Requires: commons-codec
 Requires: commons-collections
 Requires: commons-pool
 Requires: commons-dbcp
@@ -231,7 +231,6 @@ Summary:   Cloud.com console proxy
 Requires: java >= 1.6.0
 Requires: %{name}-utils = %{version}-%{release}, %{name}-core = %{version}-%{release}, %{name}-deps = %{version}-%{release}, %{name}-agent = %{version}-%{release}
 Requires: commons-httpclient
-#Requires: commons-codec
 Requires: commons-collections
 Requires: commons-pool
 Requires: commons-dbcp
@@ -503,7 +502,6 @@ fi
 
 %files deps
 %defattr(0644,root,root,0755)
-%{_javadir}/%{name}-commons-codec-1.4.jar
 %{_javadir}/%{name}-apache-log4j-extras-1.0.jar
 %{_javadir}/%{name}-backport-util-concurrent-3.0.jar
 %{_javadir}/%{name}-ehcache.jar

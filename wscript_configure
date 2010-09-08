@@ -33,6 +33,7 @@ systemjars = {
 	(
 		"tomcat6-servlet-2.5-api.jar",
 		"trilead-ssh2.jar",
+		"commons-codec.jar",
 		#"tomcat6/catalina.jar", # all supported distros put the file there
 	),
 	'CentOS':
@@ -126,6 +127,10 @@ hard_deps = [
 	(
 	  'com.trilead.ssh2.SCPClient',
 	  "trilead-ssh2.jar",
+	),
+	(
+	  'org.apache.commons.codec.binary.Base64',
+	  "commons-codec.jar",
 	),
 ]
 
