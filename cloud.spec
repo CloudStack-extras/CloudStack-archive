@@ -38,6 +38,7 @@ BuildRequires: glibc-devel
 BuildRequires: trilead-ssh2
 BuildRequires: xmlrpc3-client
 BuildRequires: xmlrpc3-common
+BuildRequires: junit4
 
 %global _premium %(tar jtvmf %{SOURCE0} '*/cloudstack-proprietary/' --occurrence=1 2>/dev/null | wc -l)
 
@@ -48,6 +49,7 @@ intelligent cloud implementation.
 %package utils
 Summary:   Cloud.com utility library
 Requires: java >= 1.6.0
+Requires: junit4
 Group:     System Environment/Libraries
 Obsoletes: vmops-utils < %{version}-%{release}
 %description utils
@@ -517,7 +519,6 @@ fi
 %{_javadir}/%{name}-gson-1.3.jar
 %{_javadir}/%{name}-httpcore-4.0.jar
 %{_javadir}/%{name}-jna.jar
-%{_javadir}/%{name}-junit-4.8.1.jar
 %{_javadir}/%{name}-libvirt-0.4.5.jar
 %{_javadir}/%{name}-log4j.jar
 %{_javadir}/%{name}-cglib.jar

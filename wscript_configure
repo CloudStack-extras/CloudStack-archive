@@ -36,6 +36,7 @@ systemjars = {
 		"commons-codec.jar",
 		"xmlrpc3-common.jar",
 		"xmlrpc3-client.jar",
+		"junit4.jar",
 		#"tomcat6/catalina.jar", # all supported distros put the file there
 	),
 	'CentOS':
@@ -141,6 +142,10 @@ hard_deps = [
 	(
 	  'org.apache.xmlrpc.client.util.ClientFactory',
 	  "xmlrpc3-client.jar",
+	),
+	(
+	  'junit.framework.TestCase',
+	  "junit4.jar",
 	),
 ]
 
