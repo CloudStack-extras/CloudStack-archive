@@ -106,6 +106,10 @@ hard_deps = [
 	  'org.apache.commons.logging.LogFactory',
 	  "commons-logging.jar",
 	),
+	(
+	  'org.apache.commons.logging.Log',
+	  "commons-logging-api.jar",
+	),
 ]
 
 
