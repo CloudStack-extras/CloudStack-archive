@@ -43,6 +43,7 @@ systemjars = {
 		"log4j.jar",
 		"jta.jar",
 		"mysql-connector-java.jar",
+		"javamail/mail.jar",
 		#"tomcat6/catalina.jar", # all supported distros put the file there
 	),
 	'CentOS':
@@ -176,6 +177,10 @@ hard_deps = [
 	(
 	  'com.mysql.jdbc.Util',
 	  "mysql-connector-java.jar",
+	),
+	(
+	  'com.sun.mail.smtp.SMTPSSLTransport',
+	  "mail.jar",
 	),
 ]
 

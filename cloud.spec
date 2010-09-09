@@ -43,6 +43,7 @@ BuildRequires: cglib
 BuildRequires: libvirt-java
 BuildRequires: log4j
 BuildRequires: mysql-connector-java
+BuildRequires: javamail
 
 %global _premium %(tar jtvmf %{SOURCE0} '*/cloudstack-proprietary/' --occurrence=1 2>/dev/null | wc -l)
 
@@ -83,6 +84,7 @@ Requires: commons-codec
 Requires: xmlrpc3-client
 Requires: xmlrpc3-common
 Requires: log4j
+Requires: javamail
 Group:     System Environment/Libraries
 %description server
 The Cloud.com server libraries provide a set of Java classes used
@@ -527,7 +529,6 @@ fi
 %defattr(0644,root,root,0755)
 %{_javadir}/%{name}-apache-log4j-extras-1.0.jar
 %{_javadir}/%{name}-ehcache.jar
-%{_javadir}/%{name}-email.jar
 %{_javadir}/%{name}-gson-1.3.jar
 %{_javadir}/%{name}-httpcore-4.0.jar
 %{_javadir}/%{name}-xenserver-5.5.0-1.jar
