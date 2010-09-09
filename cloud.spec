@@ -531,7 +531,6 @@ fi
 %{_javadir}/%{name}-ehcache.jar
 %{_javadir}/%{name}-gson-1.3.jar
 %{_javadir}/%{name}-httpcore-4.0.jar
-%{_javadir}/%{name}-xenserver-5.5.0-1.jar
 %doc README
 %doc HACKING
 %doc debian/copyright
