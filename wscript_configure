@@ -41,6 +41,8 @@ systemjars = {
 		"cglib.jar",
 		"libvirt.jar",
 		"log4j.jar",
+		"jta.jar",
+		"mysql-connector-java.jar",
 		#"tomcat6/catalina.jar", # all supported distros put the file there
 	),
 	'CentOS':
@@ -166,6 +168,14 @@ hard_deps = [
 	(
 	  'org.apache.log4j.Logger',
 	  "log4j.jar",
+	),
+	(
+	  'javax.transaction.Status',
+	  "jta.jar",
+	),
+	(
+	  'com.mysql.jdbc.Util',
+	  "mysql-connector-java.jar",
 	),
 ]
 
