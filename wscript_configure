@@ -40,6 +40,7 @@ systemjars = {
 		"objectweb-asm/asm.jar",
 		"cglib.jar",
 		"libvirt.jar",
+		"log4j.jar",
 		#"tomcat6/catalina.jar", # all supported distros put the file there
 	),
 	'CentOS':
@@ -161,6 +162,10 @@ hard_deps = [
 	(
 	  'org.libvirt.StorageVol',
 	  "libvirt.jar",
+	),
+	(
+	  'org.apache.log4j.Logger',
+	  "log4j.jar",
 	),
 ]
 

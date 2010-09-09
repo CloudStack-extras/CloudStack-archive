@@ -41,6 +41,7 @@ BuildRequires: xmlrpc3-common
 BuildRequires: junit4
 BuildRequires: cglib
 BuildRequires: libvirt-java
+BuildRequires: log4j
 
 %global _premium %(tar jtvmf %{SOURCE0} '*/cloudstack-proprietary/' --occurrence=1 2>/dev/null | wc -l)
 
@@ -53,6 +54,7 @@ Summary:   Cloud.com utility library
 Requires: java >= 1.6.0
 Requires: junit4
 Requires: cglib
+Requires: log4j
 Group:     System Environment/Libraries
 Obsoletes: vmops-utils < %{version}-%{release}
 %description utils
@@ -78,6 +80,7 @@ Requires: %{name}-utils = %{version}-%{release}, %{name}-core = %{version}-%{rel
 Requires: commons-codec
 Requires: xmlrpc3-client
 Requires: xmlrpc3-common
+Requires: log4j
 Group:     System Environment/Libraries
 %description server
 The Cloud.com server libraries provide a set of Java classes used
@@ -151,6 +154,7 @@ Requires: trilead-ssh2
 Requires: commons-codec
 Requires: xmlrpc3-client
 Requires: xmlrpc3-common
+Requires: log4j
 Group:     System Environment/Libraries
 Obsoletes: vmops-core < %{version}-%{release}
 %description core
@@ -266,6 +270,7 @@ Summary:   Cloud.com test suite
 Requires: java >= 1.6.0
 Requires: %{name}-utils = %{version}-%{release}, %{name}-deps = %{version}-%{release}, wget
 Requires: trilead-ssh2
+Requires: log4j
 Group:     System Environment/Libraries
 Obsoletes: vmops-test < %{version}-%{release}
 %description test
@@ -295,6 +300,7 @@ Requires: %{name}-utils = %{version}-%{release}
 Requires: %{name}-premium-deps
 Requires: xmlrpc3-client
 Requires: xmlrpc3-common
+Requires: log4j
 License:   CSL 1.1
 Group:     System Environment/Libraries
 %description premium
@@ -307,6 +313,7 @@ Requires: java >= 1.6.0
 Requires: %{name}-utils = %{version}-%{release}, %{name}-core = %{version}-%{release}, %{name}-deps = %{version}-%{release}, %{name}-server = %{version}-%{release}, %{name}-premium = %{version}-%{release}, %{name}-daemonize = %{version}-%{release}
 Requires: %{name}-setup = %{version}-%{release}
 Requires: %{name}-client = %{version}-%{release}
+Requires: log4j
 License:   CSL 1.1
 Group:     System Environment/Libraries
 %description usage
@@ -521,7 +528,6 @@ fi
 %{_javadir}/%{name}-email.jar
 %{_javadir}/%{name}-gson-1.3.jar
 %{_javadir}/%{name}-httpcore-4.0.jar
-%{_javadir}/%{name}-log4j.jar
 %{_javadir}/%{name}-mysql-connector-java-5.1.7-bin.jar
 %{_javadir}/%{name}-xenserver-5.5.0-1.jar
 %doc README
