@@ -174,11 +174,14 @@
     <compile-java jar.name="${core.jar}" top.dir="${core.dir}" classpath="core.classpath" />
   </target>
 
+  <target name="compile-httpcore" depends="-init" description="Compile the Apache HttpCore we depend on.">
+    <compile-java jar.name="cloud-httpcore.jar" top.dir="${base.dir}/httpcomponents-core-4.0.1/httpcore-onlymainsrc" classpath="utils.classpath" />
+  </target>
   <path id="server.classpath">
     <path refid="thirdparty.classpath" />
     <path refid="dist.classpath" />
   </path>
-  <target name="compile-server" depends="-init, compile-utils, compile-core" description="Compile the management server.">
+  <target name="compile-server" depends="-init, compile-utils, compile-core, compile-httpcore" description="Compile the management server.">
     <compile-java jar.name="${server.jar}" top.dir="${server.dir}" classpath="server.classpath" />
   </target>
 
