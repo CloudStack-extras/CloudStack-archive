@@ -3,7 +3,6 @@ INSERT INTO `cloud`.`vm_template` (id, unique_name, name, public, created, type,
 INSERT INTO `cloud`.`vm_template` (id, unique_name, name, public, created, type, hvm, bits, account_id, url, checksum, enable_password, display_text,  format, guest_os_id, featured, cross_zones)
     VALUES (2, 'centos53-x86_64', 'CentOS 5.3(x86_64) no GUI', 1, now(), 'ext3', 0, 64, 1, 'http://download.cloud.com/templates/builtin/f59f18fb-ae94-4f97-afd2-f84755767aca.vhd.bz2', 'b63d854a9560c013142567bbae8d98cf', 0, 'CentOS 5.3(x86_64) no GUI(xenserver)', 'VHD', 12, 1, 1);
 
-
 INSERT INTO `cloud`.`vm_template` (id, unique_name, name, public, created, type, hvm, bits, account_id, url, checksum, display_text, enable_password, format, guest_os_id, featured, cross_zones)
     VALUES (4, 'centos55-x86_64(KVM)', 'CentOS 5.5(x86_64) no GUI', 1, now(), 'ext3', 0, 64, 1, 'http://download.cloud.com/templates/builtin/eec2209b-9875-3c8d-92be-c001bd8a0faf.qcow2.bz2', '1da20ae69b54f761f3f733dce97adcc0', 'CentOS 5.5(x86_64) no GUI(KVM)', 0, 'QCOW2', 9, 1, 1);
 
@@ -85,5 +84,5 @@ INSERT INTO `cloud`.`guest_os` (id, category_id, name, display_name) VALUES (59,
 INSERT INTO `cloud`.`guest_os` (id, category_id, name, display_name) VALUES (60, 7, 'Other install media', 'Other');
 
 -- temporarily added for vmware, will be moved when vmware support is fully in-place
-INSERT INTO `cloud`.`host_master`(`type`, `service_address`, `admin`, `password`) VALUES('VSphere', '192.168.90.238', 'Administrator', 'Suite219');
+INSERT INTO `cloud`.`host_master`(`type`, `service_address`, `admin`, `password`) VALUES('VSphere', 'vsphere-1.lab.vmops.com', 'Administrator', 'Suite219');
 
