@@ -1,9 +1,11 @@
+INSERT INTO `cloud`.`vm_template` (id, unique_name, name, public, created, type, hvm, bits, account_id, url, checksum, enable_password, display_text, format, guest_os_id, featured, cross_zones)
+    VALUES (1, 'routing', 'SystemVM Template', 0, now(), 'ext3', 0, 64, 1, 'http://download.cloud.com/releases/2.0.0RC5/systemvm.vhd.bz2', '31cd7ce94fe68c973d5dc37c3349d02e', 0, 'SystemVM Template', 'VHD', 12, 0, 1);
 INSERT INTO `cloud`.`vm_template` (id, unique_name, name, public, created, type, hvm, bits, account_id, url, checksum, enable_password, display_text,  format, guest_os_id, featured, cross_zones)
-    VALUES (2, 'blank', 'BlankVM', 1, now(), 'ext3', 0, 32, 1, 'http://nfs1.lab.vmops.com/templates/vmware/blankvm.tar.bz2', '3eff7ce3d25cf9433efde8b245c63fcb', 0, 'BlankVM', 'VMDK', 47, 1, 1);
+    VALUES (2, 'blank', 'BlankVM', 1, now(), 'ext3', 0, 32, 1, 'http://nfs1.lab.vmops.com/templates/vmware/Blank.ova.bz2', '', 0, 'BlankVM', 'OVA', 47, 1, 1);
 INSERT INTO `cloud`.`vm_template` (id, unique_name, name, public, created, type, hvm, bits, account_id, url, checksum, enable_password, display_text,  format, guest_os_id, featured, cross_zones)
-    VALUES (3, 'winxpsp3', 'WindowsXP-SP3', 1, now(), 'ntfs', 0, 32, 1, 'http://nfs1.lab.vmops.com/templates/vmware/winxpsp3.tar.bz2', '4ee35bcb6d92cf3d1ffd588d0f36a65b', 0, 'WindowsXP-SP3', 'VMDK', 16, 1, 1);
+    VALUES (3, 'winxpsp3', 'WindowsXP-SP3', 1, now(), 'ntfs', 0, 32, 1, 'http://nfs1.lab.vmops.com/templates/vmware/WinXPSP3.ova.bz2', '', 0, 'WindowsXP-SP3', 'OVA', 16, 1, 1);
 INSERT INTO `cloud`.`vm_template` (id, unique_name, name, public, created, type, hvm, bits, account_id, url, checksum, enable_password, display_text,  format, guest_os_id, featured, cross_zones)
-    VALUES (4, 'centos55-x64', 'centos55-x64', 1, now(), 'ext3', 0, 64, 1, 'http://nfs1.lab.vmops.com/templates/vmware/centos55-x64.tar.bz2', 'f41b35da4e144d45c259585405e301c7', 0, 'centos55-x64', 'VMDK', 64, 1, 1);
+    VALUES (4, 'centos55-x64', 'centos55-x64', 1, now(), 'ext3', 0, 64, 1, 'http://nfs1.lab.vmops.com/templates/vmware/CentOS55-x64.ova.bz2', '', 0, 'centos55-x64', 'OVA', 64, 1, 1);
 
 INSERT INTO `cloud`.`guest_os_category` (id, name) VALUES (1, 'Windows');
 INSERT INTO `cloud`.`guest_os_category` (id, name) VALUES (2, 'Linux');
