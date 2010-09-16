@@ -150,6 +150,13 @@ public abstract class AbstractStoragePoolAllocator extends AdapterBase implement
 		if (!poolIsCorrectType(dskCh, pool, vm, offering)) {
 			return false;
 		}
+		
+		/*hypervisor type is correct*/
+		Long clusterId = pool.getClusterId();
+		ClusterVO cluster = _clusterDao.findById(clusterId);
+		if (!cluster.getHypervisorType().equalsIgnoreCase(offering.gethypervisorType())) {
+		return false;
+		}
 
 		/*hypervisor type is correct*/
 		Long clusterId = pool.getClusterId();

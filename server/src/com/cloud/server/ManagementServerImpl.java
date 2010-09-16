@@ -152,7 +152,7 @@ import com.cloud.host.HostStats;
 import com.cloud.host.HostVO;
 import com.cloud.host.Status;
 import com.cloud.host.dao.HostDao;
-import com.cloud.hypervisor.Hypervisor;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.info.ConsoleProxyInfo;
 import com.cloud.network.FirewallRuleVO;
 import com.cloud.network.IPAddressVO;
@@ -1794,6 +1794,7 @@ public class ManagementServerImpl implements ManagementServer {
         param.setDiskOfferingId(diskOfferingId);
         param.setEventId(eventId);
         param.setSize(size);
+        param.setHyperType(hyperType);
         
         Gson gson = GsonHelper.getBuilder().create();
 
@@ -4227,7 +4228,7 @@ public class ManagementServerImpl implements ManagementServer {
     }
 
     @Override
-    public List<VMTemplateVO> listTemplates(Long templateId, String name, String keyword, TemplateFilter templateFilter, boolean isIso, Boolean bootable, Long accountId, Integer pageSize, Long startIndex, Long zoneId) throws InvalidParameterValueException {
+    public List<VMTemplateVO> listTemplates(Long templateId, String name, String keyword, TemplateFilter templateFilter, boolean isIso, Boolean bootable, Long accountId, Integer pageSize, Long startIndex, Long zoneId, Hypervisor.Type hyperType) throws InvalidParameterValueException {
         VMTemplateVO template = null;
     	if (templateId != null) {
     		template = _templateDao.findById(templateId);
@@ -4256,7 +4257,7 @@ public class ManagementServerImpl implements ManagementServer {
         List<VMTemplateVO> templates = new ArrayList<VMTemplateVO>();
         
         if (template == null) {
-    		templates = _templateDao.searchTemplates(name, keyword, templateFilter, isIso, bootable, account, domain, pageSize, startIndex, zoneId);
+    		templates = _templateDao.searchTemplates(name, keyword, templateFilter, isIso, bootable, account, domain, pageSize, startIndex, zoneId, hyperType);
     	} else {
     		templates = new ArrayList<VMTemplateVO>();
     		templates.add(template);

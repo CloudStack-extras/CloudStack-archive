@@ -28,6 +28,8 @@ import com.cloud.dc.VlanVO;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ResourceAllocationException;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.offerings.NetworkOfferingVO;
 import com.cloud.service.ServiceOfferingVO;
 import com.cloud.user.AccountVO;
 import com.cloud.utils.component.Manager;
@@ -136,7 +138,7 @@ public interface NetworkManager extends Manager {
      * @param so service offering associated with this request
      * @return public ip address.
      */
-    public String assignSourceNatIpAddress(AccountVO account, DataCenterVO dc, String domain, ServiceOfferingVO so, long startEventId) throws ResourceAllocationException;
+    public String assignSourceNatIpAddress(AccountVO account, DataCenterVO dc, String domain, ServiceOfferingVO so, long startEventId, HypervisorType hyperType) throws ResourceAllocationException;
     
     /**
      * @param fwRules list of rules to be updated

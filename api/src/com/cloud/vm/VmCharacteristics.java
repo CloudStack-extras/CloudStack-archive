@@ -29,6 +29,8 @@ public class VmCharacteristics {
     Hypervisor.Type hypervisorType;
     VirtualMachine.Type type;
     Map<String, String> params;
+    Long templateId;
+    String instanceName;
     
     public VmCharacteristics(VirtualMachine.Type type) {
         this.type = type;
@@ -55,13 +57,19 @@ public class VmCharacteristics {
         return hypervisorType;
     }
     
-    public VmCharacteristics(long id, int core, int speed, long ram, Hypervisor.Type type, Map<String, String> params) {
+    public String getInstanceName() {
+    	return instanceName;
+    }
+    
+    public VmCharacteristics(long id, int core, int speed, long ram, Long templateId, Hypervisor.Type type, Map<String, String> params, String name) {
         this.core = core;
         this.speed = speed;
         this.ram = ram;
         this.hypervisorType = type;
         this.params = params;
         this.id = id;
+        this.templateId = templateId;
+        this.instanceName = name;
     }
     
     protected VmCharacteristics() {
