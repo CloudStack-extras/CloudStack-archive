@@ -329,7 +329,19 @@ public abstract class CitrixResourceBase implements StoragePoolResource, ServerR
         _guestOsType.put("Windows XP SP2 (32-bit)", "Windows XP SP2");
         _guestOsType.put("Windows XP SP3 (32-bit)", "Windows XP SP3");
         _guestOsType.put("Other install media", "Other install media");
-      
+        _guestOsType.put("Other Ubuntu (32-bit)", "Other install media");
+        _guestOsType.put("Other (32-bit)", "Other install media");
+        _guestOsType.put("Other (64-bit)", "Other install media");
+        _guestOsType.put("Ubuntu 10.04 (32-bit)", "Other install media");
+        _guestOsType.put("Ubuntu 9.10 (32-bit)", "Other install media");
+        _guestOsType.put("Ubuntu 9.04 (32-bit)", "Other install media");
+        _guestOsType.put("Ubuntu 8.10 (32-bit)", "Other install media");
+        _guestOsType.put("Ubuntu 8.04 (32-bit)", "Other install media");
+        _guestOsType.put("Ubuntu 10.04 (64-bit)", "Other install media");
+        _guestOsType.put("Ubuntu 9.10 (64-bit)", "Other install media");
+        _guestOsType.put("Ubuntu 9.04 (64-bit)", "Other install media");
+        _guestOsType.put("Ubuntu 8.10 (64-bit)", "Other install media");
+        _guestOsType.put("Ubuntu 8.04 (64-bit)", "Other install media");
     }
     
     protected boolean isRefNull(XenAPIObject object) {
@@ -2609,7 +2621,11 @@ public abstract class CitrixResourceBase implements StoragePoolResource, ServerR
     }
 
     protected String getGuestOsType(String stdType) {
-        return _guestOsType.get(stdType);
+    	String guestOSType = _guestOsType.get(stdType);
+         if (guestOSType == null) {
+        	 return "Other install media";
+         }
+         return guestOSType;
     }
 
     public boolean joinPool(String address, String username, String password) {

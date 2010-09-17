@@ -670,7 +670,7 @@ public class UserVmManagerImpl implements UserVmManager {
     		_eventDao.persist(event);
         	return null;
         } else {
-        	guestOSDescription = guestOS.getName();
+        	guestOSDescription = guestOS.getDisplayName();
         }
 
         HashSet<Host> avoid = new HashSet<Host>();
