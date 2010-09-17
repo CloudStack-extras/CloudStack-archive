@@ -29,6 +29,7 @@ import javax.ejb.Local;
 import org.apache.log4j.Logger;
 
 import com.cloud.async.AsyncInstanceCreateStatus;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.Volume.MirrorState;
@@ -64,6 +65,7 @@ public class VolumeDaoImpl extends GenericDaoBase<VolumeVO, Long> implements Vol
     
     protected static final String SELECT_VM_SQL = "SELECT DISTINCT instance_id from volumes v where v.host_id = ? and v.mirror_state = ?";
     protected static final String SELECT_VM_ID_SQL = "SELECT DISTINCT instance_id from volumes v where v.host_id = ?";
+    protected static final String SELECT_HYPERTYPE_FROM_VOLUME = "SELECT c.hypervisor_type from volumes v, storage_pool s, cluster c where v.pool_id = s.id and s.cluster_id = c.id and v.id = ?";
 
     @Override
     public List<VolumeVO> listRemovedButNotDestroyed() {
@@ -259,6 +261,28 @@ public class VolumeDaoImpl extends GenericDaoBase<VolumeVO, Long> implements Vol
     	volume.setDestroyed(false);
     	update(volumeId, volume);
     }
+    
+    @Override
+    @DB
+	public HypervisorType getHypervisorType(long volumeId) {
+		/*lookup from cluster of pool*/
+    	 Transaction txn = Transaction.currentTxn();
+         PreparedStatement pstmt = null;
+
+         try {
+             String sql = SELECT_HYPERTYPE_FROM_VOLUME;
+             pstmt = txn.prepareAutoCloseStatement(sql);
+             pstmt.setLong(1, volumeId);
+             ResultSet rs = pstmt.executeQuery();
+             if (rs.next())
+            	 return HypervisorType.getType(rs.getString(1));
+             return HypervisorType.None;
+         } catch (SQLException e) {
+             throw new CloudRuntimeException("DB Exception on: " + SELECT_HYPERTYPE_FROM_VOLUME, e);
+         } catch (Throwable e) {
+             throw new CloudRuntimeException("Caught: " + SELECT_HYPERTYPE_FROM_VOLUME, e);
+         }
+	}
     
 	protected VolumeDaoImpl() {
         AccountIdSearch = createSearchBuilder();

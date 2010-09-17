@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import com.cloud.api.BaseCmd;
 import com.cloud.api.ServerApiException;
 import com.cloud.dc.DataCenterVO;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.storage.Storage.FileSystem;
 import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.VMTemplateHostVO;
@@ -132,7 +133,7 @@ public class RegisterIsoCmd extends BaseCmd {
         
         Long templateId;
         try {
-        	templateId = getManagementServer().createTemplate(userId, zoneId, name, displayText, isPublic.booleanValue(), featured.booleanValue(), ImageFormat.ISO.toString(), FileSystem.cdfs.toString(), url, null, true, 64 /*bits*/, false, guestOSId, bootable);
+        	templateId = getManagementServer().createTemplate(userId, zoneId, name, displayText, isPublic.booleanValue(), featured.booleanValue(), ImageFormat.ISO.toString(), FileSystem.cdfs.toString(), url, null, true, 64 /*bits*/, false, guestOSId, bootable, HypervisorType.None);
         } catch (Exception ex) {
             throw new ServerApiException(BaseCmd.INTERNAL_ERROR, ex.getMessage());
         }

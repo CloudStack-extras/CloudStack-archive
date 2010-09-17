@@ -19,7 +19,7 @@ package com.cloud.host;
 
 import java.util.Date;
 
-import com.cloud.hypervisor.Hypervisor;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;;
 
 
 /**
@@ -133,7 +133,7 @@ public interface Host {
     /**
      * @return type of hypervisor
      */
-    Hypervisor.Type getHypervisorType();
+    HypervisorType getHypervisorType();
     
     /**
      * @return disconnection date

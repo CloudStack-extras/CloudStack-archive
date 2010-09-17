@@ -480,9 +480,6 @@ public class ManagementServerImpl implements ManagementServer {
 		if ("true".equalsIgnoreCase(enabled)) {
 			_networkGroupsEnabled = true;
 		}
- 		
-		String hypervisorType = _configDao.getValue("hypervisor.type");
-        _isHypervisorSnapshotCapable  = hypervisorType.equals(Hypervisor.Type.XenServer.name());
     }
 
     protected Map<String, String> getConfigs() {
@@ -1794,7 +1791,6 @@ public class ManagementServerImpl implements ManagementServer {
         param.setDiskOfferingId(diskOfferingId);
         param.setEventId(eventId);
         param.setSize(size);
-        param.setHyperType(hyperType);
         
         Gson gson = GsonHelper.getBuilder().create();
 
@@ -2279,7 +2275,7 @@ public class ManagementServerImpl implements ManagementServer {
             } else {
             	if (offering.getGuestIpType() == NetworkOffering.GuestIpType.Virtualized) {
             		try {
-            			externalIp = _networkMgr.assignSourceNatIpAddress(account, dc, domain, offering, startEventId);
+            			externalIp = _networkMgr.assignSourceNatIpAddress(account, dc, domain, offering, startEventId, template.getHypervisorType());
             		} catch (ResourceAllocationException rae) {
             			throw rae;
             		}
@@ -4228,7 +4224,7 @@ public class ManagementServerImpl implements ManagementServer {
     }
 
     @Override
-    public List<VMTemplateVO> listTemplates(Long templateId, String name, String keyword, TemplateFilter templateFilter, boolean isIso, Boolean bootable, Long accountId, Integer pageSize, Long startIndex, Long zoneId, Hypervisor.Type hyperType) throws InvalidParameterValueException {
+    public List<VMTemplateVO> listTemplates(Long templateId, String name, String keyword, TemplateFilter templateFilter, boolean isIso, Boolean bootable, Long accountId, Integer pageSize, Long startIndex, Long zoneId, HypervisorType hyperType) throws InvalidParameterValueException {
         VMTemplateVO template = null;
     	if (templateId != null) {
     		template = _templateDao.findById(templateId);
@@ -4297,7 +4293,7 @@ public class ManagementServerImpl implements ManagementServer {
 
     @Override
     public ServiceOfferingVO createServiceOffering(long userId, String name, int cpu, int ramSize, int speed, String displayText, boolean localStorageRequired, boolean offerHA, boolean useVirtualNetwork, String tags) {
-        return _configMgr.createServiceOffering(userId, name, cpu, ramSize, speed, displayText, localStorageRequired, offerHA, useVirtualNetwork, tags, null);
+        return _configMgr.createServiceOffering(userId, name, cpu, ramSize, speed, displayText, localStorageRequired, offerHA, useVirtualNetwork, tags);
     }
     
     @Override
@@ -4697,7 +4693,7 @@ public class ManagementServerImpl implements ManagementServer {
     }
 
     @Override
-    public Long createTemplate(long userId, Long zoneId, String name, String displayText, boolean isPublic, boolean featured, String format, String diskType, String url, String chksum, boolean requiresHvm, int bits, boolean enablePassword, long guestOSId, boolean bootable) throws InvalidParameterValueException,IllegalArgumentException, ResourceAllocationException {
+    public Long createTemplate(long userId, Long zoneId, String name, String displayText, boolean isPublic, boolean featured, String format, String diskType, String url, String chksum, boolean requiresHvm, int bits, boolean enablePassword, long guestOSId, boolean bootable, HypervisorType hyperType) throws InvalidParameterValueException,IllegalArgumentException, ResourceAllocationException {
         try
         {
             if (name.length() > 32)
@@ -4763,7 +4759,7 @@ public class ManagementServerImpl implements ManagementServer {
             	throw new IllegalArgumentException("Cannot use reserved names for templates");
             }
             
-            return _tmpltMgr.create(userId, zoneId, name, displayText, isPublic, featured, imgfmt, fileSystem, uri, chksum, requiresHvm, bits, enablePassword, guestOSId, bootable);
+            return _tmpltMgr.create(userId, zoneId, name, displayText, isPublic, featured, imgfmt, fileSystem, uri, chksum, requiresHvm, bits, enablePassword, guestOSId, bootable, hyperType);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Invalid URL " + url);
         }
@@ -5656,6 +5652,10 @@ public class ManagementServerImpl implements ManagementServer {
         return _storageMgr.volumeOnSharedStoragePool(volume);
     }
 
+    @Override
+    public HypervisorType getVolumeHyperType(long volumeId) {
+    	return _volumeDao.getHypervisorType(volumeId);
+    }
     @Override
     public HostPodVO findHostPodById(long podId) {
         return _hostPodDao.findById(podId);

@@ -19,6 +19,7 @@ package com.cloud.storage.dao;
 
 import java.util.List;
 
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeVO;
 import com.cloud.utils.Pair;
@@ -46,4 +47,5 @@ public interface VolumeDao extends GenericDao<VolumeVO, Long> {
     List<VolumeVO> listRemovedButNotDestroyed();
     List<VolumeVO> findCreatedByInstance(long id);
     List<VolumeVO> findByPoolId(long poolId);
+    HypervisorType getHypervisorType(long volumeId);
 }

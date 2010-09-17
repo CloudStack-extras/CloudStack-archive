@@ -154,16 +154,10 @@ public abstract class AbstractStoragePoolAllocator extends AdapterBase implement
 		/*hypervisor type is correct*/
 		Long clusterId = pool.getClusterId();
 		ClusterVO cluster = _clusterDao.findById(clusterId);
-		if (!cluster.getHypervisorType().equalsIgnoreCase(offering.gethypervisorType())) {
-		return false;
-		}
-
-		/*hypervisor type is correct*/
-		Long clusterId = pool.getClusterId();
-		ClusterVO cluster = _clusterDao.findById(clusterId);
-		if (!cluster.getHypervisorType().equalsIgnoreCase(offering.gethypervisorType())) {
+		if (!(cluster.getHypervisorType() == template.getHypervisorType())) {
 			return false;
 		}
+
 		// check the used size against the total size, skip this host if it's greater than the configured
 		// capacity check "storage.capacity.threshold"
 		if (sc != null) {
