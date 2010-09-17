@@ -381,7 +381,9 @@ public class UserVmManagerImpl implements UserVmManager {
     	AttachVolumeAnswer answer = null;
     	Long hostId = vm.getHostId();
     	if (sendCommand) {
+    		StoragePoolVO volumePool = _storagePoolDao.findById(volume.getPoolId());
     		AttachVolumeCommand cmd = new AttachVolumeCommand(true, vm.getInstanceName(), volume.getPoolType(), volume.getFolder(), volume.getPath(), volume.getName(), deviceId);
+			cmd.setPoolUuid(volumePool.getUuid());
     		
     		try {
     			answer = (AttachVolumeAnswer)_agentMgr.send(hostId, cmd);
@@ -456,7 +458,9 @@ public class UserVmManagerImpl implements UserVmManager {
     	Answer answer = null;
     	
     	if (sendCommand) {
+    		StoragePoolVO volumePool = _storagePoolDao.findById(volume.getPoolId());
 			AttachVolumeCommand cmd = new AttachVolumeCommand(false, vm.getInstanceName(), volume.getPoolType(), volume.getFolder(), volume.getPath(), volume.getName(), volume.getDeviceId());
+			cmd.setPoolUuid(volumePool.getUuid());
 			
 			try {
     			answer = _agentMgr.send(vm.getHostId(), cmd);

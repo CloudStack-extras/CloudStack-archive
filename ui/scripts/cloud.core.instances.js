@@ -1411,20 +1411,24 @@ function showInstancesTab(p_domainId, p_account) {
 	    if(zoneId == null || zoneId.length == 0)
 	        return;
 	
+	    var hypervisor = vmPopup.find("#wizard_hypervisor").val();
+	    if (hypervisor == null || hypervisor.length == 0) 
+		return;
+	    
 	    var container = vmPopup.find("#template_container");	 		    	
 		   
 	    var commandString;    		  	   
         var searchInput = vmPopup.find("#search_input").val();   
         if (selectedTemplateTypeInVmPopup != "blank") {      
             if (searchInput != null && searchInput.length > 0)                 
-                commandString = "command=listTemplates&templatefilter="+selectedTemplateTypeInVmPopup+"&zoneid="+zoneId+"&keyword="+searchInput+"&page="+currentPageInTemplateGridInVmPopup+"&response=json"; 
+                commandString = "command=listTemplates&templatefilter="+selectedTemplateTypeInVmPopup+"&zoneid="+zoneId+"&hypervisor="+hypervisor+"&keyword="+searchInput+"&page="+currentPageInTemplateGridInVmPopup+"&response=json"; 
             else
-                commandString = "command=listTemplates&templatefilter="+selectedTemplateTypeInVmPopup+"&zoneid="+zoneId+"&page="+currentPageInTemplateGridInVmPopup+"&response=json";           		    		
+                commandString = "command=listTemplates&templatefilter="+selectedTemplateTypeInVmPopup+"&zoneid="+zoneId+"&hypervisor="+hypervisor+"&page="+currentPageInTemplateGridInVmPopup+"&response=json";           		    		
 		} else {
 		    if (searchInput != null && searchInput.length > 0)                 
-                commandString = "command=listIsos&isReady=true&bootable=true&zoneid="+zoneId+"&keyword="+searchInput+"&page="+currentPageInTemplateGridInVmPopup+"&response=json";  
+                commandString = "command=listIsos&isReady=true&bootable=true&zoneid="+zoneId+"&hypervisor="+hypervisor+"&keyword="+searchInput+"&page="+currentPageInTemplateGridInVmPopup+"&response=json";  
             else
-                commandString = "command=listIsos&isReady=true&bootable=true&zoneid="+zoneId+"&page="+currentPageInTemplateGridInVmPopup+"&response=json";  
+                commandString = "command=listIsos&isReady=true&bootable=true&zoneid="+zoneId+"&hypervisor="+hypervisor+"&page="+currentPageInTemplateGridInVmPopup+"&response=json";  
 		}
 		
 		var loading = vmPopup.find("#wiz_template_loading").show();				
@@ -1503,6 +1507,13 @@ function showInstancesTab(p_domainId, p_account) {
     vmPopup.find("#wizard_zone").bind("change", function(event) {       
         var selectedZone = $(this).val();
         if(selectedZone != null && selectedZone.length > 0)
+            listTemplatesInVmPopup();         
+        return false;
+    });
+    
+    vmPopup.find("#wizard_hypervisor").bind("change", function(event) {       
+        var selectedHypervisor = $(this).val();
+        if(selectedHypervisor != null && selectedHypervisor.length > 0)
             listTemplatesInVmPopup();         
         return false;
     });
@@ -1617,6 +1628,7 @@ function showInstancesTab(p_domainId, p_account) {
 			thisPopup.find("#wizard_review_zone").text(thisPopup.find("#wizard_zone option:selected").text());
 			thisPopup.find("#wizard_review_name").text(thisPopup.find("#wizard_vm_name").val());
 			thisPopup.find("#wizard_review_group").text(thisPopup.find("#wizard_vm_group").val());
+			thisPopup.find("#wizard_review_hypervisor").text(thisPopup.find("#wizard_hypervisor option:selected").text());
 			
 			if(thisPopup.find("#wizard_network_groups_container").css("display") != "none" && thisPopup.find("#wizard_network_groups").val() != null) {
 			    var networkGroupList = thisPopup.find("#wizard_network_groups").val().join(",");
