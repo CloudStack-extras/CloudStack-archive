@@ -578,6 +578,8 @@ fi
 %files python
 %defattr(0644,root,root,0755)
 %{_prefix}/lib*/python*/site-packages/%{name}*
+%attr(0755,root,root) %{_bindir}/cloud-external-ipallocator
+%attr(0755,root,root) %{_initrddir}/cloud-external-ipallocator
 %doc README
 %doc INSTALL
 %doc HACKING
