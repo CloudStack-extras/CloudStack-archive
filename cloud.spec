@@ -42,6 +42,7 @@ BuildRequires: junit4
 BuildRequires: cglib
 BuildRequires: libvirt-java
 BuildRequires: log4j
+BuildRequires: log4j-extras
 BuildRequires: mysql-connector-java
 BuildRequires: javamail
 
@@ -57,6 +58,7 @@ Requires: java >= 1.6.0
 Requires: junit4
 Requires: cglib
 Requires: log4j
+Requires: log4j-extras
 Requires: mysql-connector-java
 Group:     System Environment/Libraries
 Obsoletes: vmops-utils < %{version}-%{release}
@@ -84,6 +86,7 @@ Requires: commons-codec
 Requires: xmlrpc3-client
 Requires: xmlrpc3-common
 Requires: log4j
+Requires: log4j-extras
 Requires: javamail
 Group:     System Environment/Libraries
 %description server
@@ -159,6 +162,7 @@ Requires: commons-codec
 Requires: xmlrpc3-client
 Requires: xmlrpc3-common
 Requires: log4j
+Requires: log4j-extras
 Group:     System Environment/Libraries
 Obsoletes: vmops-core < %{version}-%{release}
 %description core
@@ -275,6 +279,7 @@ Requires: java >= 1.6.0
 Requires: %{name}-utils = %{version}-%{release}, %{name}-deps = %{version}-%{release}, wget
 Requires: trilead-ssh2
 Requires: log4j
+Requires: log4j-extras
 Group:     System Environment/Libraries
 Obsoletes: vmops-test < %{version}-%{release}
 %description test
@@ -305,6 +310,7 @@ Requires: %{name}-premium-deps
 Requires: xmlrpc3-client
 Requires: xmlrpc3-common
 Requires: log4j
+Requires: log4j-extras
 License:   CSL 1.1
 Group:     System Environment/Libraries
 %description premium
@@ -318,6 +324,7 @@ Requires: %{name}-utils = %{version}-%{release}, %{name}-core = %{version}-%{rel
 Requires: %{name}-setup = %{version}-%{release}
 Requires: %{name}-client = %{version}-%{release}
 Requires: log4j
+Requires: log4j-extras
 License:   CSL 1.1
 Group:     System Environment/Libraries
 %description usage
@@ -527,7 +534,6 @@ fi
 
 %files deps
 %defattr(0644,root,root,0755)
-%{_javadir}/%{name}-apache-log4j-extras-1.0.jar
 %{_javadir}/%{name}-ehcache.jar
 %{_javadir}/%{name}-gson-1.3.jar
 %{_javadir}/%{name}-httpcore.jar

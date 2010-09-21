@@ -44,6 +44,7 @@ systemjars = {
 		"jta.jar",
 		"mysql-connector-java.jar",
 		"javamail/mail.jar",
+		"log4j-extras.jar",
 		#"tomcat6/catalina.jar", # all supported distros put the file there
 	),
 	'CentOS':
@@ -181,6 +182,10 @@ hard_deps = [
 	(
 	  'com.sun.mail.smtp.SMTPSSLTransport',
 	  "mail.jar",
+	),
+	(
+	  'org.apache.log4j.rolling.RollingFileAppender',
+	  "log4j-extras.jar",
 	),
 ]
 
