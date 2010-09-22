@@ -17,6 +17,7 @@
  */
 package com.cloud.vm;
 
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.storage.Volume;
 
 /**
@@ -35,6 +36,7 @@ public class DiskCharacteristics {
     private long diskOfferingId;
     private Long templateId;
     private long volumeId;
+    private HypervisorType hyperType;
     
     protected DiskCharacteristics() {
     }
@@ -118,5 +120,13 @@ public class DiskCharacteristics {
     @Override
     public String toString() {
         return new StringBuilder("DskChr[").append(type).append("|").append(size).append("|").append("]").toString();
+    }
+    
+    public void setHyperType(HypervisorType hyperType) {
+    	this.hyperType = hyperType;
+    }
+    
+    public HypervisorType getHypersorType() {
+    	return this.hyperType;
     }
 }
