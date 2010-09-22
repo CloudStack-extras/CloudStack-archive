@@ -580,6 +580,7 @@ fi
 %{_prefix}/lib*/python*/site-packages/%{name}*
 %attr(0755,root,root) %{_bindir}/cloud-external-ipallocator
 %attr(0755,root,root) %{_initrddir}/cloud-external-ipallocator
+%dir %attr(770,root,root) %{_localstatedir}/log/%{name}/ipallocator
 %doc README
 %doc INSTALL
 %doc HACKING
@@ -679,6 +680,7 @@ fi
 %doc HACKING
 %doc README.html
 %doc debian/copyright
+
 
 %files console-proxy
 %defattr(0644,root,root,0755)
