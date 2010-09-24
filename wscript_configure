@@ -45,6 +45,7 @@ systemjars = {
 		"mysql-connector-java.jar",
 		"javamail/mail.jar",
 		"log4j-extras.jar",
+		"ehcache.jar",
 		#"tomcat6/catalina.jar", # all supported distros put the file there
 	),
 	'CentOS':
@@ -186,6 +187,10 @@ hard_deps = [
 	(
 	  'org.apache.log4j.rolling.RollingFileAppender',
 	  "log4j-extras.jar",
+	),
+	(
+	  'net.sf.ehcache.Cache',
+	  "ehcache.jar",
 	),
 ]
 

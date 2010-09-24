@@ -45,6 +45,7 @@ BuildRequires: log4j
 BuildRequires: log4j-extras
 BuildRequires: mysql-connector-java
 BuildRequires: javamail
+BuildRequires: ehcache
 
 %global _premium %(tar jtvmf %{SOURCE0} '*/cloudstack-proprietary/' --occurrence=1 2>/dev/null | wc -l)
 
@@ -60,6 +61,7 @@ Requires: cglib
 Requires: log4j
 Requires: log4j-extras
 Requires: mysql-connector-java
+Requires: ehcache
 Group:     System Environment/Libraries
 Obsoletes: vmops-utils < %{version}-%{release}
 %description utils
@@ -534,7 +536,6 @@ fi
 
 %files deps
 %defattr(0644,root,root,0755)
-%{_javadir}/%{name}-ehcache.jar
 %{_javadir}/%{name}-gson-1.3.jar
 %{_javadir}/%{name}-httpcore.jar
 %doc README
