@@ -46,6 +46,7 @@ BuildRequires: log4j-extras
 BuildRequires: mysql-connector-java
 BuildRequires: javamail
 BuildRequires: ehcache
+BuildRequires: gson
 
 %global _premium %(tar jtvmf %{SOURCE0} '*/cloudstack-proprietary/' --occurrence=1 2>/dev/null | wc -l)
 
@@ -90,6 +91,7 @@ Requires: xmlrpc3-common
 Requires: log4j
 Requires: log4j-extras
 Requires: javamail
+Requires: gson
 Group:     System Environment/Libraries
 %description server
 The Cloud.com server libraries provide a set of Java classes used
@@ -165,6 +167,7 @@ Requires: xmlrpc3-client
 Requires: xmlrpc3-common
 Requires: log4j
 Requires: log4j-extras
+Requires: gson
 Group:     System Environment/Libraries
 Obsoletes: vmops-core < %{version}-%{release}
 %description core
@@ -241,6 +244,7 @@ Requires: jpackage-utils
 Requires: %{name}-daemonize
 Requires: /sbin/service
 Requires: /sbin/chkconfig
+Requires: gson
 Requires: kvm
 Requires: libcgroup
 Requires: /usr/bin/uuidgen
@@ -262,6 +266,7 @@ Requires: commons-pool
 Requires: commons-dbcp
 Requires: jakarta-commons-logging
 Requires: jpackage-utils
+Requires: gson
 Requires: %{name}-daemonize
 Requires: /sbin/service
 Requires: /sbin/chkconfig
@@ -536,7 +541,6 @@ fi
 
 %files deps
 %defattr(0644,root,root,0755)
-%{_javadir}/%{name}-gson-1.3.jar
 %{_javadir}/%{name}-httpcore.jar
 %doc README
 %doc HACKING

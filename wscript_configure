@@ -46,6 +46,7 @@ systemjars = {
 		"javamail/mail.jar",
 		"log4j-extras.jar",
 		"ehcache.jar",
+		"gson.jar",
 		#"tomcat6/catalina.jar", # all supported distros put the file there
 	),
 	'CentOS':
@@ -191,6 +192,10 @@ hard_deps = [
 	(
 	  'net.sf.ehcache.Cache',
 	  "ehcache.jar",
+	),
+	(
+	  'com.google.gson.Gson',
+	  "gson.jar",
 	),
 ]
 
