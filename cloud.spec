@@ -36,8 +36,8 @@ BuildRequires: jpackage-utils
 BuildRequires: gcc
 BuildRequires: glibc-devel
 BuildRequires: trilead-ssh2
-BuildRequires: xmlrpc3-client
-BuildRequires: xmlrpc3-common
+BuildRequires: xmlrpc3-client >= 3.1.3
+BuildRequires: xmlrpc3-common >= 3.1.3
 BuildRequires: junit4
 BuildRequires: cglib
 BuildRequires: libvirt-java
@@ -86,8 +86,8 @@ Requires: java >= 1.6.0
 Obsoletes: vmops-server < %{version}-%{release}
 Requires: %{name}-utils = %{version}-%{release}, %{name}-core = %{version}-%{release}, %{name}-deps = %{version}-%{release}, tomcat6-servlet-2.5-api
 Requires: commons-codec
-Requires: xmlrpc3-client
-Requires: xmlrpc3-common
+Requires: xmlrpc3-client >= 3.1.3
+Requires: xmlrpc3-common >= 3.1.3
 Requires: log4j
 Requires: log4j-extras
 Requires: javamail
@@ -163,8 +163,8 @@ Requires: java >= 1.6.0
 Requires: %{name}-utils = %{version}-%{release}, %{name}-deps = %{version}-%{release}
 Requires: trilead-ssh2
 Requires: commons-codec
-Requires: xmlrpc3-client
-Requires: xmlrpc3-common
+Requires: xmlrpc3-client >= 3.1.3
+Requires: xmlrpc3-common >= 3.1.3
 Requires: log4j
 Requires: log4j-extras
 Requires: gson
@@ -314,8 +314,8 @@ Obsoletes: %{name}-premium-vendor-zynga < %{version}-%{release}
 Requires: java >= 1.6.0
 Requires: %{name}-utils = %{version}-%{release}
 Requires: %{name}-premium-deps
-Requires: xmlrpc3-client
-Requires: xmlrpc3-common
+Requires: xmlrpc3-client >= 3.1.3
+Requires: xmlrpc3-common >= 3.1.3
 Requires: log4j
 Requires: log4j-extras
 License:   CSL 1.1
