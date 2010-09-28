@@ -5,7 +5,7 @@
 # we need to find a way to just disable the java repacking and line number stripping, but not the autodeps
 
 %define _ver 2.1.3
-%define _rel 2
+%define _rel 3
 
 Name:      cloud
 Summary:   Cloud.com Stack
