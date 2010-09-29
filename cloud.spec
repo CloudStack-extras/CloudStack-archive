@@ -5,10 +5,10 @@
 # we need to find a way to just disable the java repacking and line number stripping, but not the autodeps
 
 %define _ver 2.1.3
-%define _rel 3
+%define _rel 4
 
 Name:      cloud
-Summary:   Cloud.com Stack
+Summary:   Cloud.com CloudStack
 Version:   %{_ver}
 #http://fedoraproject.org/wiki/PackageNamingGuidelines#Pre-Release_packages
 %if "%{?_prerelease}" != ""
@@ -18,7 +18,6 @@ Release:   %{_rel}
 %endif
 License:   GPLv3+ with exceptions or CSL 1.1
 Vendor:    Cloud.com, Inc. <sqa@cloud.com>
-Packager:  Manuel Amador (Rudd-O) <manuel@cloud.com>
 Group:     System Environment/Libraries
 # FIXME do groups for every single one of the subpackages
 # This fixes subissue #2 raised in https://bugzilla.redhat.com/show_bug.cgi?id=630179
@@ -51,8 +50,7 @@ BuildRequires: gson
 %global _premium %(tar jtvmf %{SOURCE0} '*/cloudstack-proprietary/' --occurrence=1 2>/dev/null | wc -l)
 
 %description
-This is the Cloud.com Stack, a highly-scalable elastic, open source,
-intelligent cloud implementation.
+A highly-scalable elastic, open source, intelligent cloud implementation.
 
 %package utils
 Summary:   Cloud.com utility library
@@ -187,7 +185,6 @@ Requires: %{name}-setup = %{version}-%{release}
 Requires: %{name}-agent-scripts = %{version}-%{release}
 Requires: %{name}-python = %{version}-%{release}
 # for consoleproxy
-# Requires: %{name}-agent
 Requires: tomcat6
 Requires: ws-commons-util
 Requires: commons-dbcp
@@ -570,9 +567,10 @@ fi
 %doc debian/copyright
 
 %files setup
+%defattr(0644,root,root,0755)
 %attr(0755,root,root) %{_bindir}/%{name}-setup-databases
 %attr(0755,root,root) %{_bindir}/%{name}-migrate-databases
-%dir %{_datadir}/%{name}/setup
+%attr(0755,root,root) %dir %{_datadir}/%{name}/setup
 %{_datadir}/%{name}/setup/create-database.sql
 %{_datadir}/%{name}/setup/create-index-fk.sql
 %{_datadir}/%{name}/setup/create-schema.sql
@@ -725,20 +723,21 @@ fi
 %endif
 
 %changelog
+* Tue Sep 28 2010 Manuel Amador (Rudd-O) <manuel@vmops.com> 2.1.3-4
+- Comply with rpmlint warnings and errors
+
 * Fri Sep 24 2010 Manuel Amador (Rudd-O) <manuel@vmops.com> 2.1.3-2
 - Comply with Fedora changes here: https://bugzilla.redhat.com/show_bug.cgi?id=630179
 
 * Mon May 3 2010 Manuel Amador (Rudd-O) <manuel@vmops.com> 1.9.12
 - Bump version for RC4 release
 
-%changelog
 * Fri Apr 30 2010 Manuel Amador (Rudd-O) <manuel@vmops.com> 1.9.11
 - Rename to Cloud.com everywhere
 
 * Wed Apr 28 2010 Manuel Amador (Rudd-O) <manuel@vmops.com> 1.9.10
 - FOSS release
 
-%changelog
 * Mon Apr 05 2010 Manuel Amador (Rudd-O) <manuel@vmops.com> 1.9.8
 - RC3 branched
 
