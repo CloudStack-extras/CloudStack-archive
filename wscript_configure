@@ -202,6 +202,7 @@ hard_deps = [
 
 conf.check_tool('misc')
 conf.check_tool('java')
+conf.find_program("ant",var='ANT',mandatory=True)
 conf.check_tool("gnu_dirs")
 conf.check_tool("python")
 conf.check_python_version((2,4,0))

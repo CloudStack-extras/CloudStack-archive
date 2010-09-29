@@ -5,7 +5,7 @@
 # we need to find a way to just disable the java repacking and line number stripping, but not the autodeps
 
 %define _ver 2.1.3
-%define _rel 4
+%define _rel 5
 
 Name:      cloud
 Summary:   Cloud.com CloudStack
@@ -46,6 +46,7 @@ BuildRequires: mysql-connector-java
 BuildRequires: javamail
 BuildRequires: ehcache
 BuildRequires: gson
+BuildRequires: ant >= 1.7.0
 
 %global _premium %(tar jtvmf %{SOURCE0} '*/cloudstack-proprietary/' --occurrence=1 2>/dev/null | wc -l)
 
@@ -723,6 +724,9 @@ fi
 %endif
 
 %changelog
+* Tue Sep 28 2010 Manuel Amador (Rudd-O) <manuel@vmops.com> 2.1.3-5
+- Remove ant completely from the source and rely on the RPM package
+
 * Tue Sep 28 2010 Manuel Amador (Rudd-O) <manuel@vmops.com> 2.1.3-4
 - Comply with rpmlint warnings and errors
 
