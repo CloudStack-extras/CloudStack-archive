@@ -1182,6 +1182,14 @@ public class StorageManagerImpl implements StorageManager {
             if (hypervisorType == Hypervisor.Type.XenServer && clusterId == null) {
                 throw new IllegalArgumentException("NFS need to have clusters specified for XenServers");
             }
+        } else if (scheme.equalsIgnoreCase("gluster")) {
+        	 if (port == -1) {
+                 port = 2049;
+             }
+             pool = new StoragePoolVO(StoragePoolType.GlusterFS, storageHost, port, hostPath);
+             if (hypervisorType == Hypervisor.Type.XenServer && clusterId == null) {
+                 throw new IllegalArgumentException("Gluster need to have clusters specified for XenServers");
+             }
         } else if (scheme.equalsIgnoreCase("file")) {
             if (port == -1) {
                 port = 0;
@@ -1376,7 +1384,7 @@ public class StorageManagerImpl implements StorageManager {
     @Override
     public boolean addPoolToHost(long hostId, StoragePoolVO pool) {
         s_logger.debug("Adding pool " + pool.getName() + " to  host " + hostId);
-        if (pool.getPoolType() != StoragePoolType.NetworkFilesystem && pool.getPoolType() != StoragePoolType.Filesystem && pool.getPoolType() != StoragePoolType.IscsiLUN && pool.getPoolType() != StoragePoolType.Iscsi) {
+        if (pool.getPoolType() != StoragePoolType.GlusterFS && pool.getPoolType() != StoragePoolType.NetworkFilesystem && pool.getPoolType() != StoragePoolType.Filesystem && pool.getPoolType() != StoragePoolType.IscsiLUN && pool.getPoolType() != StoragePoolType.Iscsi) {
             return true;
         }
         ModifyStoragePoolCommand cmd = new ModifyStoragePoolCommand(true, pool);

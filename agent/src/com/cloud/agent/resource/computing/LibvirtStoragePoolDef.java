@@ -21,7 +21,7 @@ package com.cloud.agent.resource.computing;
 public class LibvirtStoragePoolDef {
 	public enum poolType {
 		ISCSI("iscsi"),
-		NFS("netfs"),
+		NETFS("netfs"),
 		DIR("dir");
 		String _poolType;
 		poolType(String poolType) {
@@ -32,20 +32,35 @@ public class LibvirtStoragePoolDef {
 			return _poolType;
 		}
 	}
+	public enum poolFormat {
+		AUTO("auto"),
+		NFS("nfs"),
+		GLUSTER("glusterfs");
+		String _poolFormat;
+		poolFormat(String poolFormat) {
+			_poolFormat = poolFormat;
+		}
+		@Override
+		public String toString() {
+			return _poolFormat;
+		}
+	}
 	private poolType _poolType;
 	private String _poolName;
 	private String _uuid;
 	private String _sourceHost;
 	private String _sourceDir;
 	private String _targetPath;
+	private poolFormat _format;
 	
-	public LibvirtStoragePoolDef(poolType type, String poolName, String uuid, String host, String dir, String targetPath) {
+	public LibvirtStoragePoolDef(poolType type, String poolName, String uuid, String host, String dir, String targetPath, poolFormat format) {
 		_poolType = type;
 		_poolName = poolName;
 		_uuid = uuid;
 		_sourceHost = host;
 		_sourceDir = dir;
 		_targetPath = targetPath;
+		_format = format;
 	}
 	
     @Override
@@ -55,10 +70,11 @@ public class LibvirtStoragePoolDef {
 		storagePoolBuilder.append("<name>" + _poolName + "</name>\n");
 		if (_uuid != null)
 			storagePoolBuilder.append("<uuid>" + _uuid + "</uuid>\n");
-		if (_poolType == poolType.NFS) {
+		if (_poolType == poolType.NETFS) {
 			storagePoolBuilder.append("<source>\n");
 			storagePoolBuilder.append("<host name='" + _sourceHost + "'/>\n");
 			storagePoolBuilder.append("<dir path='" + _sourceDir + "'/>\n");
+			storagePoolBuilder.append("<format type='" + _format + "'/>\n");
 			storagePoolBuilder.append("</source>\n");
 		}
 		storagePoolBuilder.append("<target>\n");

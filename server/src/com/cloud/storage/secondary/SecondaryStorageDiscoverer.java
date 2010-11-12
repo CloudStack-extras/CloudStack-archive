@@ -45,6 +45,7 @@ import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VMTemplateHostDao;
 import com.cloud.storage.dao.VMTemplateZoneDao;
 import com.cloud.storage.resource.DummySecondaryStorageResource;
+import com.cloud.storage.resource.GlusterSecondaryStorageResource;
 import com.cloud.storage.resource.NfsSecondaryStorageResource;
 import com.cloud.storage.template.TemplateConstants;
 import com.cloud.utils.component.Inject;
@@ -84,7 +85,8 @@ public class SecondaryStorageDiscoverer extends DiscovererBase implements Discov
     @Override
     public Map<? extends ServerResource, Map<String, String>> find(long dcId, Long podId, Long clusterId, URI uri, String username, String password) {
         if (!uri.getScheme().equalsIgnoreCase("nfs") && !uri.getScheme().equalsIgnoreCase("file")
-                && !uri.getScheme().equalsIgnoreCase("iso") && !uri.getScheme().equalsIgnoreCase("dummy")) {
+                && !uri.getScheme().equalsIgnoreCase("iso") && !uri.getScheme().equalsIgnoreCase("dummy")
+                && !uri.getScheme().equalsIgnoreCase("gluster")) {
             s_logger.debug("It's not NFS or file or ISO, so not a secondary storage server: " + uri.toString());
             return null;
         }
@@ -95,9 +97,38 @@ public class SecondaryStorageDiscoverer extends DiscovererBase implements Discov
             return createLocalSecondaryStorageResource(dcId, podId, uri);
         } else if (uri.getScheme().equalsIgnoreCase("dummy")) {
             return createDummySecondaryStorageResource(dcId, podId, uri);
+        } else if (uri.getScheme().equalsIgnoreCase("gluster")) {
+        	return createGlusterSecondaryStorageResource(dcId, podId, uri);
         } else {
             return null;
         }
+    }
+    
+    protected Map<? extends ServerResource, Map<String, String>> createGlusterSecondaryStorageResource(long dcId, Long podId, URI uri) {
+    	Map<GlusterSecondaryStorageResource, Map<String, String>> srs = new HashMap<GlusterSecondaryStorageResource, Map<String, String>>();
+    	String mountStr = NfsUtils.uri2Mount(uri);
+    	GlusterSecondaryStorageResource storage = new GlusterSecondaryStorageResource();
+              
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("mount.path", mountStr);
+        params.put("orig.url", uri.toString());
+        params.put("mount.parent", _mountParent);
+        params.put("zone", Long.toString(dcId));
+        if (podId != null) {
+            params.put("pod", podId.toString());
+        }
+        params.put("guid", uri.toString());
+        
+        try {
+            storage.configure("Storage", params);
+        } catch (ConfigurationException e) {
+            s_logger.warn("Unable to configure the storage ", e);
+            return null;
+        }
+       
+        srs.put(storage, new HashMap<String, String>());
+        
+        return srs;
     }
     
     protected Map<? extends ServerResource, Map<String, String>> createNfsSecondaryStorageResource(long dcId, Long podId, URI uri) {

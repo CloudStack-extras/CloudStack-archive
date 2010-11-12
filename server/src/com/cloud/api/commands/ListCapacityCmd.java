@@ -137,7 +137,7 @@ public class ListCapacityCmd extends BaseCmd{
         List<? extends StoragePoolVO> allStoragePools = getManagementServer().searchForStoragePools(c);
         for (StoragePoolVO pool : allStoragePools) {
         	StoragePoolType poolType = pool.getPoolType();
-        	if (!(poolType.equals(StoragePoolType.NetworkFilesystem) || poolType.equals(StoragePoolType.IscsiLUN))) {
+        	if (!(poolType.equals(StoragePoolType.NetworkFilesystem) || poolType.equals(StoragePoolType.IscsiLUN) || poolType.equals(StoragePoolType.GlusterFS))) {
         		poolIdsToIgnore.add(pool.getId());
         	}
         }

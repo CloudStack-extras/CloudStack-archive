@@ -72,7 +72,8 @@ public class Storage {
         IscsiLUN(true), //shared LUN, with a clusterfs overlay
         Iscsi(true), //for e.g., ZFS Comstar
         ISO(false),    // for iso image
-        LVM(false);    // XenServer local LVM SR
+        LVM(false),    // XenServer local LVM SR
+        GlusterFS(true);
         
         boolean shared;
         

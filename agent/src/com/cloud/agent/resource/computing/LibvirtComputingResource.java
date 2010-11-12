@@ -130,6 +130,7 @@ import com.cloud.agent.api.storage.PrimaryStorageDownloadCommand;
 import com.cloud.agent.api.to.DiskCharacteristicsTO;
 import com.cloud.agent.api.to.StoragePoolTO;
 import com.cloud.agent.api.to.VolumeTO;
+import com.cloud.agent.resource.computing.LibvirtStoragePoolDef.poolFormat;
 import com.cloud.agent.resource.computing.LibvirtStoragePoolDef.poolType;
 import com.cloud.agent.resource.computing.LibvirtStorageVolumeDef.volFormat;
 import com.cloud.agent.resource.computing.LibvirtVMDef.consoleDef;
@@ -1287,53 +1288,61 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
     
     private StoragePool getNfsSPbyURI(Connect conn, URI uri) throws LibvirtException {
-    	  String sourcePath = uri.getPath();
-    	  sourcePath = sourcePath.replace("//", "/");
-          String sourceHost = uri.getHost();
-          String uuid = UUID.nameUUIDFromBytes(new String(sourceHost + sourcePath).getBytes()).toString();
-          String targetPath = _mountPoint + File.separator + uuid;
-          StoragePool sp = null;
-          try {
-        	  sp = conn.storagePoolLookupByUUIDString(uuid);
-          }  catch (LibvirtException e) {
-          }
-          
-          if (sp == null) {
-        	  try {
-        		  File tpFile = new File(targetPath);
-        		  if (!tpFile.exists()) {
-        			  tpFile.mkdir();
-        		  }
-        		  LibvirtStoragePoolDef spd = new LibvirtStoragePoolDef(poolType.NFS, uuid, uuid,
-        				  sourceHost, sourcePath, targetPath);
-        		  s_logger.debug(spd.toString());
-        		  sp = conn.storagePoolDefineXML(spd.toString(), 0);
-        		  if (sp == null) {
-        			  s_logger.debug("Failed to define storage pool");
-        			  return null;
-        		  }
-        		  sp.create(0);
+    	String schema = uri.getScheme();
+    	String sourcePath = uri.getPath();
+    	sourcePath = sourcePath.replace("//", "/");
+    	String sourceHost = uri.getHost();
+    	String uuid = UUID.nameUUIDFromBytes(new String(sourceHost + sourcePath).getBytes()).toString();
+    	String targetPath = _mountPoint + File.separator + uuid;
+    	StoragePool sp = null;
+    	try {
+    		sp = conn.storagePoolLookupByUUIDString(uuid);
+    	}  catch (LibvirtException e) {
+    	}
 
-        		  return sp;
-        	  } catch (LibvirtException e) {
-        		  try {
-        			  if (sp != null) {
-        				  sp.undefine();
-        				  sp.free();
-        			  }
-        		  } catch (LibvirtException l) {
+    	if (sp == null) {
+    		try {
+    			File tpFile = new File(targetPath);
+    			if (!tpFile.exists()) {
+    				tpFile.mkdir();
+    			}
+    			LibvirtStoragePoolDef spd = null;
+    			if (schema.equalsIgnoreCase("nfs")) {
+    				spd = new LibvirtStoragePoolDef(poolType.NETFS, uuid, uuid,
+    						sourceHost, sourcePath, targetPath, poolFormat.AUTO);
+    			} else if (schema.equalsIgnoreCase("gluster")) {
+    				spd = new LibvirtStoragePoolDef(poolType.NETFS, uuid, uuid,
+    						sourceHost, sourcePath, targetPath, poolFormat.GLUSTER);
+    			}
+    			s_logger.debug(spd.toString());
+    			sp = conn.storagePoolDefineXML(spd.toString(), 0);
+    			if (sp == null) {
+    				s_logger.debug("Failed to define storage pool");
+    				return null;
+    			}
+    			sp.create(0);
 
-        		  }
-        		  throw e;
-        	  }
-          } else {
-        	  StoragePoolInfo spi = sp.getInfo();
-        	  if (spi.state != StoragePoolState.VIR_STORAGE_POOL_RUNNING) {
-        		  sp.create(0);
-        	  }
-        	  return sp;
-          }
+    			return sp;
+    		} catch (LibvirtException e) {
+    			try {
+    				if (sp != null) {
+    					sp.undefine();
+    					sp.free();
+    				}
+    			} catch (LibvirtException l) {
+
+    			}
+    			throw e;
+    		}
+    	} else {
+    		StoragePoolInfo spi = sp.getInfo();
+    		if (spi.state != StoragePoolState.VIR_STORAGE_POOL_RUNNING) {
+    			sp.create(0);
+    		}
+    		return sp;
+    	}
     }
+    
     protected Answer execute(final PrimaryStorageDownloadCommand cmd) {
     	 String tmplturl = cmd.getUrl();
          int index = tmplturl.lastIndexOf("/");
@@ -1409,8 +1418,36 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     
     private StoragePool createNfsStoragePool(Connect conn, StoragePoolVO pool) {
     	String targetPath = _mountPoint + File.separator + pool.getUuid();
-    	LibvirtStoragePoolDef spd = new LibvirtStoragePoolDef(poolType.NFS, pool.getUuid(), pool.getUuid(),
-    														  pool.getHostAddress(), pool.getPath(), targetPath);
+    	LibvirtStoragePoolDef spd = new LibvirtStoragePoolDef(poolType.NETFS, pool.getUuid(), pool.getUuid(),
+    														  pool.getHostAddress(), pool.getPath(), targetPath, poolFormat.AUTO);
+    	File tpFile = new File(targetPath);
+		  if (!tpFile.exists()) {
+			  tpFile.mkdir();
+		  }
+    	StoragePool sp = null;
+    	try {
+    		s_logger.debug(spd.toString());
+    		sp = conn.storagePoolDefineXML(spd.toString(), 0);
+    		sp.create(0);
+    		return sp;
+    	} catch (LibvirtException e) {
+    		s_logger.debug(e.toString());
+    		if (sp != null) {
+    			try {
+    				sp.undefine();
+    				sp.free();
+    			} catch (LibvirtException l) {
+    				s_logger.debug("Failed to define nfs storage pool with: " + l.toString());
+    			}
+    		}
+    		return null;
+    	}
+    }
+    
+    private StoragePool createGlusterStoragePool(Connect conn, StoragePoolVO pool) {
+    	String targetPath = _mountPoint + File.separator + pool.getUuid();
+    	LibvirtStoragePoolDef spd = new LibvirtStoragePoolDef(poolType.NETFS, pool.getUuid(), pool.getUuid(),
+    														  pool.getHostAddress(), pool.getPath(), targetPath, poolFormat.GLUSTER);
     	File tpFile = new File(targetPath);
 		  if (!tpFile.exists()) {
 			  tpFile.mkdir();
@@ -1446,6 +1483,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	if (sp == null) {
 			if (pool.getPoolType() == StoragePoolType.NetworkFilesystem) {
 				sp = createNfsStoragePool(conn, pool);
+			} else if (pool.getPoolType() == StoragePoolType.GlusterFS) {
+				sp = createGlusterStoragePool(conn, pool);
 			}
 			if (sp == null) {
 				s_logger.debug("Failed to create storage Pool");
