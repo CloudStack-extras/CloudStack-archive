@@ -491,7 +491,7 @@ long milliseconds = new Date().getTime();
             </li>
             <li>
                 <label for="add_storage_nfs_server">
-                    NFS Server:</label>
+                    Server:</label>
                 <input class="text" type="text" name="add_storage_nfs_server" id="add_storage_nfs_server" />
                 <div id="add_storage_nfs_server_errormsg" class="dialog_formcontent_errormsg" style="display: none;">
                 </div>

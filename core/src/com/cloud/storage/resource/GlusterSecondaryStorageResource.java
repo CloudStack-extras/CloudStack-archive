@@ -237,7 +237,7 @@ implements ServerResource {
 
 
 		s_logger.info("Mount point established at " + _parent);
-
+		_params = params;
 		try {
 			_params.put("template.parent", _parent);
 			_params.put(StorageLayer.InstanceConfigKey, _storage);
@@ -282,7 +282,7 @@ implements ServerResource {
 		}
 
 		Script command = new Script(true, "mount", _timeout, s_logger);
-		command.add("-t", "nfs");	    
+		command.add("-t", "gluster");	    
 		command.add(path);
 		command.add(mountPoint);
 		result = command.execute();

@@ -1310,19 +1310,56 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     			if (schema.equalsIgnoreCase("nfs")) {
     				spd = new LibvirtStoragePoolDef(poolType.NETFS, uuid, uuid,
     						sourceHost, sourcePath, targetPath, poolFormat.AUTO);
-    			} else if (schema.equalsIgnoreCase("gluster")) {
-    				spd = new LibvirtStoragePoolDef(poolType.NETFS, uuid, uuid,
-    						sourceHost, sourcePath, targetPath, poolFormat.GLUSTER);
-    			}
-    			s_logger.debug(spd.toString());
-    			sp = conn.storagePoolDefineXML(spd.toString(), 0);
-    			if (sp == null) {
-    				s_logger.debug("Failed to define storage pool");
-    				return null;
-    			}
-    			sp.create(0);
+    				s_logger.debug(spd.toString());
+    				sp = conn.storagePoolDefineXML(spd.toString(), 0);
+    				if (sp == null) {
+    					s_logger.debug("Failed to define storage pool");
+    					return null;
+    				}
+    				sp.create(0);
 
-    			return sp;
+    				return sp;
+    			} else if (schema.equalsIgnoreCase("gluster")) {
+    				int index = sourcePath.indexOf("/template/");
+    				String srcPath = sourcePath.substring(0, index);
+    				String templatePath = sourcePath.substring(index);
+    				/*Manullay mount gluster under target dir*/
+					Script cmd = new Script("mount", _timeout);
+					cmd.add("-t", "glusterfs");
+					cmd.add(sourceHost + ":" + srcPath);
+					cmd.add(targetPath);
+					String result = cmd.execute();
+					if (result != null) {
+						s_logger.debug("Failed to mount gluster " + result);
+						return null;
+					}
+    				if (isCentosHost()) {
+    					spd = new LibvirtStoragePoolDef(poolType.DIR, uuid, uuid,
+    							sourceHost, sourcePath, targetPath + templatePath, null);
+    					s_logger.debug(spd.toString());
+    					sp = conn.storagePoolDefineXML(spd.toString(), 0);
+    					if (sp == null) {
+    						s_logger.debug("Failed to define storage pool");
+    						return null;
+    					}
+    					sp.create(0);    			   	
+    					
+    					return sp;
+    				} else {
+    					spd = new LibvirtStoragePoolDef(poolType.NETFS, uuid, uuid,
+    							sourceHost, sourcePath, targetPath, poolFormat.GLUSTER);
+    					s_logger.debug(spd.toString());
+    					sp = conn.storagePoolDefineXML(spd.toString(), 0);
+    					if (sp == null) {
+    						s_logger.debug("Failed to define storage pool");
+    						return null;
+    					}
+    					sp.create(0);
+    					return sp;
+    				}
+
+    			}
+
     		} catch (LibvirtException e) {
     			try {
     				if (sp != null) {
@@ -1341,6 +1378,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     		}
     		return sp;
     	}
+		return null;
     }
     
     protected Answer execute(final PrimaryStorageDownloadCommand cmd) {
@@ -1445,30 +1483,75 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
     
     private StoragePool createGlusterStoragePool(Connect conn, StoragePoolVO pool) {
-    	String targetPath = _mountPoint + File.separator + pool.getUuid();
-    	LibvirtStoragePoolDef spd = new LibvirtStoragePoolDef(poolType.NETFS, pool.getUuid(), pool.getUuid(),
-    														  pool.getHostAddress(), pool.getPath(), targetPath, poolFormat.GLUSTER);
-    	File tpFile = new File(targetPath);
-		  if (!tpFile.exists()) {
-			  tpFile.mkdir();
-		  }
-    	StoragePool sp = null;
-    	try {
-    		s_logger.debug(spd.toString());
-    		sp = conn.storagePoolDefineXML(spd.toString(), 0);
-    		sp.create(0);
-    		return sp;
-    	} catch (LibvirtException e) {
-    		s_logger.debug(e.toString());
-    		if (sp != null) {
-    			try {
-    				sp.undefine();
-    				sp.free();
-    			} catch (LibvirtException l) {
-    				s_logger.debug("Failed to define nfs storage pool with: " + l.toString());
-    			}
+    	if (isCentosHost()) {
+    		String targetPath = _mountPoint + File.separator + pool.getUuid();
+    		LibvirtStoragePoolDef spd = new LibvirtStoragePoolDef(poolType.DIR, pool.getUuid(), pool.getUuid(),
+    				pool.getHostAddress(), pool.getPath(), targetPath, null);
+
+    		File tpFile = new File(targetPath);
+    		if (!tpFile.exists()) {
+    			tpFile.mkdir();
     		}
-    		return null;
+    		StoragePool sp = null;
+    		try {
+    			s_logger.debug(spd.toString());
+    			sp = conn.storagePoolDefineXML(spd.toString(), 0);
+    			
+    			sp.create(0);
+    			
+    			/*Manullay mount gluster under target dir*/
+    			Script cmd = new Script("mount", _timeout);
+    			cmd.add("-t", "glusterfs");
+    			cmd.add(pool.getHostAddress() + ":" + pool.getPath());
+    			cmd.add(targetPath);
+    			String result = cmd.execute();
+    			if (result != null) {
+    				s_logger.debug("Failed to mount gluster " + result);
+    				return null;
+    			}
+    			
+    			sp.refresh(0);
+    			
+    			return sp;
+
+    		}catch (LibvirtException e) {
+    			s_logger.debug(e.toString());
+    			if (sp != null) {
+    				try {
+    					sp.undefine();
+    					sp.free();
+    				} catch (LibvirtException l) {
+    					s_logger.debug("Failed to define nfs storage pool with: " + l.toString());
+    				}
+    			}
+    			return null;
+    		}
+    	} else {
+    		String targetPath = _mountPoint + File.separator + pool.getUuid();
+    		LibvirtStoragePoolDef spd = new LibvirtStoragePoolDef(poolType.NETFS, pool.getUuid(), pool.getUuid(),
+    				pool.getHostAddress(), pool.getPath(), targetPath, poolFormat.GLUSTER);
+    		File tpFile = new File(targetPath);
+    		if (!tpFile.exists()) {
+    			tpFile.mkdir();
+    		}
+    		StoragePool sp = null;
+    		try {
+    			s_logger.debug(spd.toString());
+    			sp = conn.storagePoolDefineXML(spd.toString(), 0);
+    			sp.create(0);
+    			return sp;
+    		} catch (LibvirtException e) {
+    			s_logger.debug(e.toString());
+    			if (sp != null) {
+    				try {
+    					sp.undefine();
+    					sp.free();
+    				} catch (LibvirtException l) {
+    					s_logger.debug("Failed to define nfs storage pool with: " + l.toString());
+    				}
+    			}
+    			return null;
+    		}
     	}
     }
     

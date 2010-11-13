@@ -1778,7 +1778,9 @@ function showStorageTab(domainId, targetTab) {
 		
 		// if hypervisor is KVM, limit the server option to NFS for now
 		if (getHypervisorType() == 'kvm') {
-			$("#dialog_add_pool").find("#add_pool_protocol").empty().html('<option value="nfs">NFS</option>');
+			poolSelect = $("#dialog_add_pool").find("#add_pool_protocol").empty()
+			poolSelect.append('<option value="gluster">GLUSTER</option>');
+			poolSelect.append('<option value="nfs">NFS</option>');
 		}
 		
 		$("#dialog_add_pool").find("#pool_zone").bind("change", function(event) {
@@ -1827,6 +1829,14 @@ function showStorageTab(domainId, targetTab) {
 			return url;
 		}
 		
+		function glusterURL(server, path) {
+		    var url;
+		    if(server.indexOf("://")==-1)
+			    url = "gluster://" + server + path;
+			else
+			    url = server + path;
+			return url;
+		}
 		function iscsiURL(server, iqn, lun) {
 		    var url;
 		    if(server.indexOf("://")==-1)
@@ -1896,6 +1906,8 @@ function showStorageTab(domainId, targetTab) {
 				    isValid &= validateString("Server", thisDialog.find("#add_pool_nfs_server"), thisDialog.find("#add_pool_nfs_server_errormsg"));	
 					if (protocol == "nfs") {
 						isValid &= validateString("Path", thisDialog.find("#add_pool_path"), thisDialog.find("#add_pool_path_errormsg"));	
+					} else if (protocol == "gluster") {
+						isValid &= validateString("Path", thisDialog.find("#add_pool_path"), thisDialog.find("#add_pool_path_errormsg"));	
 					} else {
 						isValid &= validateString("Target IQN", thisDialog.find("#add_pool_iqn"), thisDialog.find("#add_pool_iqn_errormsg"));	
 						isValid &= validateString("LUN #", thisDialog.find("#add_pool_lun"), thisDialog.find("#add_pool_lun_errormsg"));	
@@ -1936,6 +1948,11 @@ function showStorageTab(domainId, targetTab) {
 						if(path.substring(0,1)!="/")
 							path = "/" + path; 
 						url = nfsURL(server, path);
+					} else if (protocol == "gluster") {
+						var path = trim(thisDialog.find("#add_pool_path").val());
+						if(path.substring(0,1)!="/")
+							path = "/" + path; 
+						url = glusterURL(server, path);
 					} else {
 						var iqn = trim(thisDialog.find("#add_pool_iqn").val());
 						if(iqn.substring(0,1)!="/")
@@ -2045,7 +2062,7 @@ function showStorageTab(domainId, targetTab) {
 			    
 				    // validate values					
 				    var isValid = true;							    
-				    isValid &= validateString("NFS Server", thisDialog.find("#add_storage_nfs_server"), thisDialog.find("#add_storage_nfs_server_errormsg"));	
+				    isValid &= validateString("Server", thisDialog.find("#add_storage_nfs_server"), thisDialog.find("#add_storage_nfs_server_errormsg"));	
 				    isValid &= validatePath("Path", thisDialog.find("#add_storage_path"), thisDialog.find("#add_storage_path_errormsg"));					
 				    if (!isValid) return;
 						
@@ -2061,7 +2078,7 @@ function showStorageTab(domainId, targetTab) {
 				    var zoneId = thisDialog.find("#storage_zone").val();		
 				    var nfs_server = trim(thisDialog.find("#add_storage_nfs_server").val());		
 				    var path = trim(thisDialog.find("#add_storage_path").val());	    					    				    					   					
-					var url = nfsURL(nfs_server, path);    					   					
+					var url = glusterURL(nfs_server, path);    					   					
 				    
 				    thisDialog.dialog("close");					  
 				    $.ajax({
