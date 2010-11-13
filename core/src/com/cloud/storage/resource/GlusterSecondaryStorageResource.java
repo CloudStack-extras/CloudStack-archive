@@ -282,7 +282,7 @@ implements ServerResource {
 		}
 
 		Script command = new Script(true, "mount", _timeout, s_logger);
-		command.add("-t", "gluster");	    
+		command.add("-t", "glusterfs");	    
 		command.add(path);
 		command.add(mountPoint);
 		result = command.execute();
