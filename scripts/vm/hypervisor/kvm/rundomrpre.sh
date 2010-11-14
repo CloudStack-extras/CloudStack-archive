@@ -110,7 +110,7 @@ umount_raw_disk() {
     sync
     while [ $retry -gt 0 ]
     do
-        umount $path &>/dev/null
+        umount $path -f -l &>/dev/null
     	if [ $? -gt 0 ]
     	then
 	   sleep 5
@@ -266,19 +266,51 @@ then
   exit 1
 fi
 
+format_disk() {
+   diskFile=$1
+   loopdev=$(losetup -f)
+   losetup $loopdev $diskFile
+   retry=10
+   while [ $retry -gt 0 ]
+   do
+	success=$(losetup -a |grep $loopdev)		
+	if [ $? -eq 0 ]
+	then
+		break
+	fi
+        retry=$(($retry-1))
+	sleep 1
+    done
+    mkfs -t ext3 $loopdev &>/dev/null
+    retry=10
+    while [ $retry -gt 0 ]
+    do
+    	losetup -d $loopdev
+        if [ $? -eq 0 ]
+	then
+       		break 
+	fi
+        retry=$(($retry-1))
+	sleep 1
+    done
+}
 if [ "$vmtype" = "all" ]
 then
-    mount_raw_disk $vmname $rootdisk
+    tmplFile=`mktemp`
+    cp $rootdisk $tmplFile
+    format_disk $tmplFile 
+    mount_raw_disk $vmname $tmplFile
     if [ $? -gt 0 ]
     then
-        printf "Failed to mount $rootdisk"
+        printf "Failed to mount $tmplFile"
         exit $?
     fi
     cpfile=$(dirname $0)/../../../../vms/systemvm.zip
     if [ -f $cpfile ]; then
-      patch_all $vmname $(dirname $0)/patch.tgz $cpfile $cmdline $rootdisk
+      patch_all $vmname $(dirname $0)/patch.tgz $cpfile $cmdline $tmplFile
     fi
-    umount_raw_disk $vmname $rootdisk    
+    umount_raw_disk $vmname $tmplFile    
+    cp $tmplFile $rootdisk
     exit $?
 fi
 

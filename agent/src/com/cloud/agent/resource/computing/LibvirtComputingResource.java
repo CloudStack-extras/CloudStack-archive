@@ -1321,8 +1321,15 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     				return sp;
     			} else if (schema.equalsIgnoreCase("gluster")) {
     				int index = sourcePath.indexOf("/template/");
-    				String srcPath = sourcePath.substring(0, index);
-    				String templatePath = sourcePath.substring(index);
+    				String srcPath;
+    				String templatePath;
+    				if (index != -1) {   			
+    					srcPath = sourcePath.substring(0, index);
+    					templatePath = sourcePath.substring(index);
+    				} else {
+    					srcPath = sourcePath;
+    					templatePath = "";
+    				}
     				/*Manullay mount gluster under target dir*/
 					Script cmd = new Script("mount", _timeout);
 					cmd.add("-t", "glusterfs");
@@ -1331,7 +1338,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 					String result = cmd.execute();
 					if (result != null) {
 						s_logger.debug("Failed to mount gluster " + result);
-						return null;
+						
 					}
     				if (isCentosHost()) {
     					spd = new LibvirtStoragePoolDef(poolType.DIR, uuid, uuid,
@@ -2952,15 +2959,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	StoragePool rootPool = rootVol.storagePoolLookupByVolume();
     	LibvirtStorageVolumeDef volDef = new LibvirtStorageVolumeDef(UUID.randomUUID().toString(), size, volFormat.RAW, null, null);
     	StorageVol dataVol =  rootPool.storageVolCreateXML(volDef.toString(), 0);
-
-    	/*Format/create fs on this disk*/
-    	final Script command = new Script(_createvmPath, _timeout, s_logger);
-    	command.add("-f", dataVol.getKey());
-    	String result = command.execute();
-    	if (result != null) {
-    		s_logger.debug("Failed to create data disk: " + result);
-    		throw new InternalErrorException("Failed to create data disk: " + result);
-    	}
+    	
     	return dataVol;
     }
     
