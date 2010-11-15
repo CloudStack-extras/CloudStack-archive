@@ -202,11 +202,12 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
     }
     
     @Override
-    public long countBy(long clusterId, Status... statuses) {
+    public long countBy(Long clusterId, Status... statuses) {
         SearchCriteria sc = MaintenanceCountSearch.create();
         
         sc.setParameters("status", (Object[])statuses);
-        sc.setParameters("cluster", clusterId);
+        if (clusterId != null)
+        	sc.setParameters("cluster", clusterId);
         
         List<HostVO> hosts = listActiveBy(sc);
         return hosts.size();

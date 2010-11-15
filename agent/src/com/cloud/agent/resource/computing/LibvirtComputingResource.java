@@ -700,7 +700,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
 
 		
-		_can_bridge_firewall = can_bridge_firewall();
+		//_can_bridge_firewall = can_bridge_firewall();
 		
 		Network vmopsNw = null;
 		try {
@@ -803,8 +803,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 				}
 			}
 			
-			if (isDirectAttachedNetwork(router.getVlanId()))
-				default_network_rules_for_systemvm(vmName);
+			//if (isDirectAttachedNetwork(router.getVlanId()))
+			//	default_network_rules_for_systemvm(vmName);
 		} catch (LibvirtException e) {
 			if (nics != null) {
 				cleanupVMNetworks(nics);
@@ -1722,7 +1722,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 	
 	private AttachVolumeAnswer execute(AttachVolumeCommand cmd) {
 		try {
-			attachOrDetachDisk(cmd.getAttach(), cmd.getVmName(), cmd.getVolumePath());
+			String result = attachOrDetachDisk(cmd.getAttach(), cmd.getVmName(), cmd.getVolumePath());
+			if (result != null) {
+				return new AttachVolumeAnswer(cmd, result);
+			}
 		} catch (LibvirtException e) {
 			return new AttachVolumeAnswer(cmd, e.toString());
 		}
@@ -1879,7 +1882,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 			dm = _conn.domainLookupByUUID(UUID.nameUUIDFromBytes(vmName.getBytes()));
 			dconn = new Connect("qemu+tcp://" + cmd.getDestinationIp() + "/system");
 			/*Hard code lm flags: VIR_MIGRATE_LIVE(1<<0) and VIR_MIGRATE_PERSIST_DEST(1<<3)*/
-			destDomain = dm.migrate(dconn, (1<<0)|(1<<3), vmName, "tcp:" + cmd.getDestinationIp(), 0);
+			if (isCentosHost()) {
+				destDomain = dm.migrate(dconn, (1<<0)|(1<<3), vmName, null, 0);
+			} else {
+				destDomain = dm.migrate(dconn, (1<<0)|(1<<3), vmName, "tcp:" + cmd.getDestinationIp(), 0);
+			}
 		} catch (LibvirtException e) {
 			s_logger.debug("Can't migrate domain: " + e.getMessage());
 			result = e.getMessage();
@@ -1901,7 +1908,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 				_vms.put(vmName, state);
 			}
 		} else {
-			cleanupVM(vmName, getVnetId(VirtualMachineName.getVnet(vmName)));
+			if (!isDirectAttachedNetwork(VirtualMachineName.getVnet(vmName)))
+				cleanupVM(vmName, getVnetId(VirtualMachineName.getVnet(vmName)));
 		}
 
 		return new MigrateAnswer(cmd, result == null, result, null);
@@ -2064,8 +2072,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             _vms.put(vmName, State.Stopping);
         }
         try {
-        	if (isDirectAttachedNetwork(cmd.getVnet()))
-        		destroy_network_rules_for_vm(vmName);
+        	//if (isDirectAttachedNetwork(cmd.getVnet()))
+        	//	destroy_network_rules_for_vm(vmName);
             String result = stopVM(vmName, defineOps.UNDEFINE_VM);
             
             answer =  new StopAnswer(cmd, null, port, bytesSent, bytesReceived);
@@ -2238,8 +2246,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 				}
 			}
 			
-			if (isDirectAttachedNetwork(cmd.getGuestNetworkId()))
-				default_network_rules(cmd.getVmName(), cmd.getGuestIpAddress());
+			//if (isDirectAttachedNetwork(cmd.getGuestNetworkId()))
+			//	default_network_rules(cmd.getVmName(), cmd.getGuestIpAddress());
 	
 			return null;
 		} catch(LibvirtException e) {
@@ -2972,7 +2980,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
     
     private diskDef.diskBus getGuestDiskModel(String guestOSType) {
-    	if (isGuestPVEnabled(guestOSType) && !isCentosHost()) {
+    	if (isGuestPVEnabled(guestOSType)) {
     		return diskDef.diskBus.VIRTIO;
     	} else {
     		return diskDef.diskBus.IDE;

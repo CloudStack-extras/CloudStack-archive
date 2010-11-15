@@ -706,7 +706,7 @@ class SetupLiveMigration(ConfigTask):
 			startswith = stanza.split("=")[0] + '='
 			replace_or_add_line("/etc/libvirt/libvirtd.conf",startswith,stanza)
 
-		if distro is Fedora:
+		if distro in (Fedora, CentOS):
 			replace_or_add_line("/etc/sysconfig/libvirtd","LIBVIRTD_ARGS=","LIBVIRTD_ARGS=-l")
 		
 		elif distro is Ubuntu:
@@ -826,6 +826,7 @@ def config_tasks(brname):
 			SetupNetworking(brname),
 			SetupLibvirt(),
 			SetupRequiredServices(),
+			SetupLiveMigration(),
 			SetupFirewall(),
 			SetupFirewall2(brname),
 		)
