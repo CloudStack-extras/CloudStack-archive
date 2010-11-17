@@ -115,17 +115,12 @@ public class ConfigurationServerImpl implements ConfigurationServer {
 				_configDao.update("network.type", "vlan");
 				s_logger.debug("ConfigurationServer changed the network type to \"vlan\".");
 				
-				_configDao.update("hypervisor.type", "xenserver");
+				_configDao.update("hypervisor.type", "kvm");
 				s_logger.debug("ConfigurationServer changed the hypervisor type to \"xenserver\".");
 				
-				_configDao.update("secondary.storage.vm", "true");
+				_configDao.update("secondary.storage.vm", "false");
 				s_logger.debug("ConfigurationServer made secondary storage vm required.");
 				
-				_configDao.update("secstorage.encrypt.copy", "true");
-				s_logger.debug("ConfigurationServer made secondary storage copy encrypted.");
-				
-				_configDao.update("secstorage.secure.copy.cert", "realhostip");
-				s_logger.debug("ConfigurationServer made secondary storage copy use realhostip.");
 				
 	             //Add default manual snapshot policy
 	            SnapshotPolicyVO snapPolicy = new SnapshotPolicyVO(0L, "00", "GMT", (short)4, 0);
@@ -140,9 +135,9 @@ public class ConfigurationServerImpl implements ConfigurationServer {
 			String hyperVisor = _configDao.getValue("hypervisor.type");
 			if (hyperVisor.equalsIgnoreCase("KVM") && !externalIpAlloator) {
 				/*For KVM, it's enabled by default*/
-				_configDao.update("direct.attach.network.externalIpAllocator.enabled", "true");
+				_configDao.update("direct.attach.network.externalIpAllocator.enabled", "false");
 			}
-			
+			_configDao.update("direct.attach.untagged.vlan.enable", "true");
 			// Save Direct Networking service offerings
 			_configMgr.createServiceOffering(User.UID_SYSTEM, "Small Instance, Direct Networking", 1, 512, 500, "Small Instance, Direct Networking, $0.05 per hour", false, false, false, null);			
 			_configMgr.createServiceOffering(User.UID_SYSTEM, "Medium Instance, Direct Networking", 1, 1024, 1000, "Medium Instance, Direct Networking, $0.10 per hour", false, false, false, null);			
