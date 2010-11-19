@@ -168,7 +168,7 @@ public interface StorageManager extends Manager {
 	 * @return The answer for that command, could be success or failure.
 	 */
 	Answer sendToHostsOnStoragePool(Long poolId, Command cmd, String basicErrMsg);
-	Answer sendToHostsOnStoragePool(Long poolId, Command cmd, String basicErrMsg, int retriesPerHost, int pauseBeforeRetry, boolean shouldBeSnapshotCapable);
+	Answer sendToHostsOnStoragePool(Long poolId, Command cmd, String basicErrMsg, int retriesPerHost, int pauseBeforeRetry, boolean shouldBeSnapshotCapable, Long vmId);
 	
 
 	/**
@@ -273,5 +273,7 @@ public interface StorageManager extends Manager {
     VolumeVO createVolumeFromSnapshot(long userId, long accountId, long snapshotId, String volumeName, long startEventId);
 
 	void createCapacityEntry(StoragePoolVO storagePool, long allocated);
+
+	String getVmNameOnVolume(VolumeVO volume);
 
 }

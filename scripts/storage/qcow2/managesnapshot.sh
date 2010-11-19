@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# $Id: managesnapshot.sh 9132 2010-06-04 20:17:43Z manuel $ $HeadURL: svn://svn.lab.vmops.com/repos/branches/2.1.x.beta/java/scripts/storage/qcow2/managesnapshot.sh $
+# $Id: managesnapshot.sh 11601 2010-08-11 17:26:15Z kris $ $HeadURL: svn://svn.lab.vmops.com/repos/branches/2.1.refactor/java/scripts/storage/qcow2/managesnapshot.sh $
 # managesnapshot.sh -- manage snapshots for a single disk (create, destroy, rollback)
 #
 
@@ -7,6 +7,7 @@ usage() {
   printf "Usage: %s: -c <path to disk> -n <snapshot name>\n" $(basename $0) >&2
   printf "Usage: %s: -d <path to disk> -n <snapshot name>\n" $(basename $0) >&2
   printf "Usage: %s: -r <path to disk> -n <snapshot name>\n" $(basename $0) >&2
+  printf "Usage: %s: -b <path to disk> -n <snapshot name> -p <dest name>\n" $(basename $0) >&2
   exit 2
 }
 
@@ -15,13 +16,20 @@ create_snapshot() {
   local snapshotname=$2
   local failed=0
 
-  qemu-img snapshot -c $snapshotname $disk
+  if [ ! -f $disk ]
+  then
+     failed=1
+     printf "No disk $disk exist\n" >&2
+     return $failed
+  fi
+
+  cloud-qemu-img snapshot -c $snapshotname $disk
   
   if [ $? -gt 0 ]
   then
-    failed=1
+    failed=2
     printf "***Failed to create snapshot $snapshotname for path $disk\n" >&2
-    qemu-img snapshot -d $snapshotname $disk
+    cloud-qemu-img snapshot -d $snapshotname $disk
     
     if [ $? -gt 0 ]
     then
@@ -35,15 +43,37 @@ create_snapshot() {
 destroy_snapshot() {
   local disk=$1
   local snapshotname=$2
+  local deleteDir=$3
   local failed=0
 
-  qemu-img snapshot -d $snapshotname $disk
-  
+  if [ -d $disk ]
+  then
+     if [ -f $disk/$snapshotname ]
+     then
+	rm -rf $disk/$snapshotname >& /dev/null
+     fi
+
+     if [ "$deleteDir" == "1" ]
+     then
+	rm -rf %disk >& /dev/null
+     fi
+
+     return $failed
+  fi
+
+  if [ ! -f $disk ]
+  then
+     failed=1
+     printf "No disk $disk exist\n" >&2
+     return $failed
+  fi
+
+  cloud-qemu-img snapshot -d $snapshotname $disk
   if [ $? -gt 0 ]
   then
-    printf "***Failed to delete snapshot $snapshotname for path $disk\n" >&2
-    failed=1
-  fi
+     failed=2
+     printf "Failed to delete snapshot $snapshotname for path $disk\n" >&2
+  fi	
 
   return $failed 
 }
@@ -63,46 +93,79 @@ rollback_snapshot() {
   
   return $failed 
 }
+backup_snapshot() {
+  local disk=$1
+  local snapshotname=$2
+  local destPath=$3
+  local destName=$4
 
+  if [ ! -d $destPath ]
+  then
+     mkdir -p $destPath >& /dev/null
+     if [ $? -gt 0 ]
+     then
+        printf "Failed to create $destPath" >&2
+        return 3
+     fi
+  fi
+
+  # Does the snapshot exist? 
+  cloud-qemu-img snapshot -l $disk|grep -w "$snapshotname" >& /dev/null
+  if [ $? -gt 0 ]
+  then
+    printf "there is no $snapshotname on disk $disk" >&2
+    return 1
+  fi
+
+  cloud-qemu-img convert -f qcow2 -O qcow2 -s $snapshotname $disk $destPath/$destName >& /dev/null
+  if [ $? -gt 0 ]
+  then
+    printf "Failed to backup $snapshotname for disk $disk to $destPath" >&2
+    return 2
+  fi
+  return 0
+}
 #set -x
 
 cflag=
 dflag=
 rflag=
+bflag=
 nflag=
 pathval=
 snapshot=
+tmplName=
+deleteDir=
 
-while getopts 'c:d:r:n:' OPTION
+while getopts 'c:d:r:n:b:p:t:f' OPTION
 do
   case $OPTION in
   c)	cflag=1
-		pathval="$OPTARG"
-		;;
+	pathval="$OPTARG"
+	;;
   d)    dflag=1
         pathval="$OPTARG"
         ;;
   r)    rflag=1
         pathval="$OPTARG"
         ;;
+  b)    bflag=1
+        pathval="$OPTARG"
+        ;;
   n)	nflag=1
-		snapshot="$OPTARG"
-		;;
+	snapshot="$OPTARG"
+	;;
+  p)    destPath="$OPTARG"
+        ;;
+  t)    tmplName="$OPTARG"
+	;;
+  f)    deleteDir=1
+	;;
   ?)	usage
-		;;
+	;;
   esac
 done
 
-if [ "$nflag" != "1" ]
-then
-  usage
-fi
-
-if [ "$cflag$dflag$rflag" != "1" ]  
-then
-  printf "***Specify one of -c (create), -d (destroy), or -r (rollback) and a path for the target snapshot\n" >&2
-  usage
-fi
 
 if [ "$cflag" == "1" ]
 then
@@ -110,12 +173,17 @@ then
   exit $?
 elif [ "$dflag" == "1" ]
 then
-  destroy_snapshot $pathval $snapshot
+  destroy_snapshot $pathval $snapshot $deleteDir
+  exit $?
+elif [ "$bflag" == "1" ]
+then
+  backup_snapshot $pathval $snapshot $destPath $tmplName
   exit $?
 elif [ "$rflag" == "1" ]
 then
-  rollback_snapshot $pathval $snapshot
+  rollback_snapshot $pathval $snapshot $destPath
   exit $?
 fi
+
 
 exit 0

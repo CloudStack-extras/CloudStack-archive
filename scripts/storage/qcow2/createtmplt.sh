@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# $Id: createtmplt.sh 9132 2010-06-04 20:17:43Z manuel $ $HeadURL: svn://svn.lab.vmops.com/repos/branches/2.1.x.beta/java/scripts/storage/qcow2/createtmplt.sh $
+# $Id: createtmplt.sh 11601 2010-08-11 17:26:15Z kris $ $HeadURL: svn://svn.lab.vmops.com/repos/branches/2.1.refactor/java/scripts/storage/qcow2/createtmplt.sh $
 # createtmplt.sh -- install a template
 
 usage() {
@@ -9,15 +9,6 @@ usage() {
 
 #set -x
 
-rollback_if_needed() {
-  if [ $2 -gt 0 ]
-  then
-    printf "$3\n"
-    #back out all changes
-    rm -rf $1
-    exit 2
-fi
-}
 
 verify_cksum() {
   echo  "$1  $2" | md5sum  -c --status
@@ -78,16 +69,32 @@ create_from_file() {
   local tmpltfs=$1
   local tmpltimg=$2
   local tmpltname=$3
-  local volsize=$4
-  local cleanup=$5
+
 
   #copy the file to the disk
-  mv $tmpltimg /$tmpltfs/$tmpltname
+  cp $tmpltimg /$tmpltfs/$tmpltname
   
   if [ "$cleanup" == "true" ]
   then
     rm -f $tmpltimg
   fi
+  chmod a+r /$tmpltfs/$tmpltname
+}
+
+create_from_snapshot() {
+  local tmpltImg=$1
+  local snapshotName=$2
+  local tmpltfs=$3
+  local tmpltname=$4
+
+  cloud-qemu-img convert -f qcow2 -O qcow2 -s $snapshotName $tmpltImg /$tmpltfs/$tmpltname >& /dev/null
+  if [ $? -gt 0 ]
+  then
+     printf "Failed to create template /$tmplfs/$tmpltname from snapshot $snapshotName on disk $tmpltImg "
+     exit 2
+  fi
+
+  chmod a+r /$tmpltfs/$tmpltname
 }
 
 tflag=
@@ -99,8 +106,9 @@ hvm=false
 cleanup=false
 dflag=
 cflag=
+snapshotName=
 
-while getopts 'uht:n:f:s:c:d:' OPTION
+while getopts 'uht:n:f:sc:d:' OPTION
 do
   case $OPTION in
   t)	tflag=1
@@ -113,16 +121,13 @@ do
 		tmpltimg="$OPTARG"
 		;;
   s)	sflag=1
-		volsize="$OPTARG"
+		sflag=1
 		;;
   c)	cflag=1
-		cksum="$OPTARG"
+		snapshotName="$OPTARG"
 		;;
   d)	dflag=1
 		descr="$OPTARG"
-		;;
-  h)	hflag=1
-		hvm="true"
 		;;
   u)	cleanup="true"
 		;;
@@ -132,20 +137,10 @@ do
   esac
 done
 
-if [ "$tflag$nflag$fflag$sflag" != "1111" ]
-then
- usage
- exit 2
-fi
-
-if [ -n "$cksum" ]
-then
-  verify_cksum $cksum $tmpltimg
-fi
 
 if [ ! -d /$tmpltfs ] 
 then
-  mkdir /$tmpltfs
+  mkdir -p /$tmpltfs
   if [ $? -gt 0 ] 
   then
     printf "Failed to create user fs $tmpltfs\n" >&2
@@ -153,52 +148,33 @@ then
   fi
 fi
 
-tmpltimg2=$(uncompress $tmpltimg)
-tmpltimg2=$(untar $tmpltimg2 /$tmpltfs vmi-root)
-
-if [ ! -f $tmpltimg2 ] 
+if [ ! -f $tmpltimg ] 
 then
-  rollback_if_needed $tmpltfs 2 "root disk file $tmpltimg doesn't exist\n"
+  printf "root disk file $tmpltimg doesn't exist\n"
   exit 3
 fi
 
-# need the 'G' suffix on volume size
-if [ ${volsize:(-1)} != G ]
+tmpltimg=$(uncompress $tmpltimg)
+if [ $? -ne 0 ]
 then
-  volsize=${volsize}G
+  printf "failed to uncompress $tmpltimg\n"
 fi
 
-#determine source file size -- it needs to be less than or equal to volsize
-imgsize=$(ls -lh $tmpltimg2| awk -F" " '{print $5}')
-if [ ${imgsize:(-1)} == G ] 
+if [ "$sflag" == "1" ]
 then
-  imgsize=${imgsize%G} #strip out the G 
-  imgsize=${imgsize%.*} #...and any decimal part
-  let imgsize=imgsize+1 # add 1 to compensate for decimal part
-  volsizetmp=${volsize%G}
-  if [ $volsizetmp -lt $imgsize ]
-  then
-    volsize=${imgsize}G  
-  fi
+   create_from_snapshot  $tmpltimg $snapshotName $tmpltfs $tmpltname
+else
+   create_from_file $tmpltfs $tmpltimg $tmpltname
 fi
 
-tgtfile=${tmpltfs}/vmi-root-${tmpltname}
-
-create_from_file $tmpltfs $tmpltimg2 $tmpltname $volsize $cleanup
-
-tgtfilename=$(echo $tmpltimg2 | awk -F"/" '{print $NF}') 
 touch /$tmpltfs/template.properties
-rollback_if_needed $tmpltfs $? "Failed to create template.properties file"
+chmod a+r /$tmpltfs/template.properties
 echo -n "" > /$tmpltfs/template.properties
 
 today=$(date '+%m_%d_%Y')
 echo "filename=$tmpltname" > /$tmpltfs/template.properties
 echo "snapshot.name=$today" >> /$tmpltfs/template.properties
 echo "description=$descr" >> /$tmpltfs/template.properties
-echo "checksum=$cksum" >> /$tmpltfs/template.properties
-echo "hvm=$hvm" >> /$tmpltfs/template.properties
-echo "volume.size=$volsize" >> /$tmpltfs/template.properties
-
 
 if [ "$cleanup" == "true" ]
 then

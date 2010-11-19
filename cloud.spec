@@ -213,6 +213,10 @@ Requires: %{name}-daemonize
 Requires: /sbin/service
 Requires: /sbin/chkconfig
 Requires: kvm
+%if 0%{?fedora} >= 12
+Requires: cloud-qemu-system-x86
+Requires: cloud-qemu-img
+%endif
 Requires: libcgroup
 Requires: /usr/bin/uuidgen
 Requires: augeas >= 0.7.1

@@ -55,6 +55,7 @@ import org.libvirt.Connect;
 import org.libvirt.Domain;
 import org.libvirt.DomainInfo;
 import org.libvirt.DomainInterfaceStats;
+import org.libvirt.DomainSnapshot;
 import org.libvirt.LibvirtException;
 import org.libvirt.Network;
 import org.libvirt.NodeInfo;
@@ -68,12 +69,20 @@ import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.AttachIsoCommand;
 import com.cloud.agent.api.AttachVolumeAnswer;
 import com.cloud.agent.api.AttachVolumeCommand;
+import com.cloud.agent.api.BackupSnapshotAnswer;
+import com.cloud.agent.api.BackupSnapshotCommand;
 import com.cloud.agent.api.CheckHealthAnswer;
 import com.cloud.agent.api.CheckHealthCommand;
 import com.cloud.agent.api.CheckStateCommand;
 import com.cloud.agent.api.CheckVirtualMachineAnswer;
 import com.cloud.agent.api.CheckVirtualMachineCommand;
 import com.cloud.agent.api.Command;
+import com.cloud.agent.api.CreatePrivateTemplateFromSnapshotCommand;
+import com.cloud.agent.api.CreateVolumeFromSnapshotAnswer;
+import com.cloud.agent.api.CreateVolumeFromSnapshotCommand;
+import com.cloud.agent.api.DeleteSnapshotBackupAnswer;
+import com.cloud.agent.api.DeleteSnapshotBackupCommand;
+import com.cloud.agent.api.DeleteSnapshotsDirCommand;
 import com.cloud.agent.api.DeleteStoragePoolCommand;
 import com.cloud.agent.api.GetHostStatsAnswer;
 import com.cloud.agent.api.GetHostStatsCommand;
@@ -206,6 +215,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private String _versionstringpath;
     private String _patchdomrPath;
     private String _createvmPath;
+    private String _manageSnapshotPath;
+    private String _createTmplPath;
     private String _host;
     private String _dcId;
     private String _pod;
@@ -390,6 +401,13 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 			"		<target dev=''{1}'' bus=''scsi''/>" +
 			"	</disk>");
 	
+	protected static MessageFormat SnapshotXML = new MessageFormat(
+			"   <domainsnapshot>" +
+			"   	<name>{0}</name>" +
+			"  		<domain>" +
+			"			<uuid>{1}</uuid>" +
+			"		</domain>" +
+			"	</domainsnapshot>");
 	protected Connect _conn;
 	protected String _hypervisorType;
 	protected String _hypervisorURI;
@@ -408,6 +426,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 	
 	protected boolean _disconnected = true;
 	protected int _timeout;
+	protected int _snapshotTimeout = 1800000;
 	protected int _stopTimeout;
     protected static HashMap<DomainInfo.DomainState, State> s_statesTable;
     static {
@@ -570,6 +589,15 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             throw new ConfigurationException("Unable to find the createvm.sh");
         }
         s_logger.info("createvm.sh found in " + _createvmPath);
+        
+        _manageSnapshotPath = Script.findScript(storageScriptsDir, "managesnapshot.sh");
+        if (_manageSnapshotPath == null) {
+            throw new ConfigurationException("Unable to find the managesnapshot.sh");
+        }
+        _createTmplPath = Script.findScript(storageScriptsDir, "createtmplt.sh");
+        if (_createTmplPath == null) {
+            throw new ConfigurationException("Unable to find the createtmplt.sh");
+        }
         
 		String value = (String)params.get("developer");
         boolean isDeveloper = Boolean.parseBoolean(value);
@@ -1079,7 +1107,18 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                 return execute((NetworkIngressRulesCmd) cmd);
             } else if (cmd instanceof DeleteStoragePoolCommand) {
                 return execute((DeleteStoragePoolCommand) cmd);
+            } else if (cmd instanceof BackupSnapshotCommand) {
+            	return execute((BackupSnapshotCommand)cmd);
+            } else if (cmd instanceof DeleteSnapshotBackupCommand)  {
+            	return execute((DeleteSnapshotBackupCommand)cmd);        	
+            } else if (cmd instanceof DeleteSnapshotsDirCommand)  {
+            	return execute((DeleteSnapshotsDirCommand)cmd); 
+            } else if (cmd instanceof CreateVolumeFromSnapshotCommand)  {
+            	return execute((CreateVolumeFromSnapshotCommand)cmd);        	
+            } else if (cmd instanceof CreatePrivateTemplateFromSnapshotCommand)  {
+            	return execute((CreatePrivateTemplateFromSnapshotCommand)cmd);        	
             } else if (cmd instanceof RoutingCommand) {
+            
             	return _virtRouterResource.executeRequest(cmd);
             } else {
         		s_logger.warn("Unsupported command ");
@@ -1184,9 +1223,158 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
     
     protected ManageSnapshotAnswer execute(final ManageSnapshotCommand cmd) {
-    	/*TODO: no snapshot support for KVM right now, but create_private_template needs us to return true here*/
+    	String snapshotName = cmd.getSnapshotName();
+    	String VolPath = cmd.getVolumePath();
+    	String snapshotPath = cmd.getSnapshotPath();
+    	String vmName = cmd.getVmName();
+    	try {
+    		DomainInfo.DomainState state = null;
+    		Domain vm = null;
+    		if (vmName != null) {
+    			try {
+    				vm = getDomain(cmd.getVmName());
+    				state = vm.getInfo().state;
+    			} catch (LibvirtException e) {
+
+    			}
+    		}
+    		
+    		if (state == DomainInfo.DomainState.VIR_DOMAIN_RUNNING) {
+    			String vmUuid = vm.getUUIDString();
+    			Object[] args = new Object[] {snapshotName, vmUuid};
+    			String snapshot = SnapshotXML.format(args);
+    			s_logger.debug(snapshot);
+    			if (cmd.getCommandSwitch().equalsIgnoreCase(ManageSnapshotCommand.CREATE_SNAPSHOT)) {
+    				vm.snapshotCreateXML(snapshot);
+    			} else {
+    				DomainSnapshot snap = vm.snapshotLookupByName(snapshotName);
+    				snap.delete(0);
+    			}
+    		} else {
+    			/*VM is not running, create a snapshot by ourself*/
+    			final Script command = new Script(_manageSnapshotPath, _snapshotTimeout, s_logger);
+    			if (cmd.getCommandSwitch().equalsIgnoreCase(ManageSnapshotCommand.CREATE_SNAPSHOT)) {
+    				command.add("-c", VolPath);
+    			} else {
+    				command.add("-d", snapshotPath);
+    			}
+    			
+    			command.add("-n", snapshotName);
+    			String result = command.execute();
+    			if (result != null) {
+    				s_logger.debug("Failed to manage snapshot: " + result);
+    	    		return new ManageSnapshotAnswer(cmd, false, "Failed to manage snapshot: " + result);
+    			}
+    		}
+    	} catch (LibvirtException e) {
+    		s_logger.debug("Failed to manage snapshot: " + e.toString());
+    		return new ManageSnapshotAnswer(cmd, false, "Failed to manage snapshot: " + e.toString());
+    	}
    	 	return new ManageSnapshotAnswer(cmd, cmd.getSnapshotId(), cmd.getVolumePath(), true, null);
     }
+    
+    protected DeleteSnapshotBackupAnswer execute(final DeleteSnapshotBackupCommand cmd) {
+   	 Long dcId = cmd.getDataCenterId();
+        Long accountId = cmd.getAccountId();
+        Long volumeId = cmd.getVolumeId();
+   	try {
+   		StoragePool secondaryStoragePool = getNfsSPbyURI(_conn, new URI(cmd.getSecondaryStoragePoolURL()));
+			String ssPmountPath = _mountPoint + File.separator + secondaryStoragePool.getUUIDString();
+			String snapshotDestPath = ssPmountPath + File.separator + "snapshots"  + File.separator + dcId + File.separator + accountId + File.separator + volumeId;
+			
+			final Script command = new Script(_manageSnapshotPath, _snapshotTimeout, s_logger);
+			command.add("-d", snapshotDestPath);
+			command.add("-n", cmd.getSnapshotName());
+			
+			command.execute();
+   	} catch (LibvirtException e) {
+   		return new DeleteSnapshotBackupAnswer(cmd, false, e.toString());
+   	} catch (URISyntaxException e) {
+   		return new DeleteSnapshotBackupAnswer(cmd, false, e.toString());
+		}
+   	return new DeleteSnapshotBackupAnswer(cmd, true, null);
+   }
+   
+   protected Answer execute(DeleteSnapshotsDirCommand cmd) {
+   	 Long dcId = cmd.getDataCenterId();
+        Long accountId = cmd.getAccountId();
+        Long volumeId = cmd.getVolumeId();
+   	try {
+   		StoragePool secondaryStoragePool = getNfsSPbyURI(_conn, new URI(cmd.getSecondaryStoragePoolURL()));
+			String ssPmountPath = _mountPoint + File.separator + secondaryStoragePool.getUUIDString();
+			String snapshotDestPath = ssPmountPath + File.separator + "snapshots" + File.separator +  dcId + File.separator + accountId + File.separator + volumeId;
+			
+			final Script command = new Script(_manageSnapshotPath, _snapshotTimeout, s_logger);
+			command.add("-d", snapshotDestPath);
+			command.add("-n", cmd.getSnapshotName());
+			command.add("-f");
+			command.execute();
+   	} catch (LibvirtException e) {
+   		return new Answer(cmd, false, e.toString());
+   	} catch (URISyntaxException e) {
+   		return new Answer(cmd, false, e.toString());
+		}
+   	return new Answer(cmd, true, null);
+   }
+   
+   protected CreateVolumeFromSnapshotAnswer execute(final CreateVolumeFromSnapshotCommand cmd) {
+   	String snapshotPath = cmd.getSnapshotUuid();
+   	String primaryUuid = cmd.getPrimaryStoragePoolNameLabel();
+   	String primaryPath = _mountPoint + File.separator + primaryUuid;
+   	String volUuid = UUID.randomUUID().toString();
+   	String volPath = primaryPath + File.separator + volUuid;
+   	String result = Script.runSimpleBashScript("cp " + snapshotPath + " " + volPath);
+   	if (result != null) {
+   		return new CreateVolumeFromSnapshotAnswer(cmd, false, result, null);
+   	}
+   	return new CreateVolumeFromSnapshotAnswer(cmd, true, "", volPath);
+   }
+   
+   protected CreatePrivateTemplateAnswer execute(final CreatePrivateTemplateFromSnapshotCommand cmd) {
+   	 String orignalTmplPath = cmd.getOrigTemplateInstallPath();
+   	 String templateFolder =  cmd.getAccountId() + File.separator + cmd.getNewTemplateId();
+   	 String templateInstallFolder = "template/tmpl/" + templateFolder;
+   	 String snapshotPath = cmd.getSnapshotUuid();
+   	 String tmplName = UUID.randomUUID().toString();
+   	 String tmplFileName = tmplName + ".qcow2";
+   	 StoragePool secondaryPool;
+   	 try {
+   		 secondaryPool = getNfsSPbyURI(_conn, new URI(cmd.getSecondaryStoragePoolURL()));
+   		 /*TODO: assuming all the storage pools mounted under _mountPoint, the mount point should be got from pool.dumpxml*/
+   		 String templatePath = _mountPoint + File.separator + secondaryPool.getUUIDString() + File.separator + templateInstallFolder;	 
+   		 _storage.mkdirs(templatePath);
+   		 
+   		 String tmplPath = templateInstallFolder + File.separator + tmplFileName;
+   		 Script command = new Script(_createTmplPath, _snapshotTimeout, s_logger);
+   		 command.add("-t", templatePath);
+   		 command.add("-n", tmplFileName);
+   		 command.add("-f", snapshotPath);
+   		 String result = command.execute();
+
+   		 Map<String, Object> params = new HashMap<String, Object>();
+   		 params.put(StorageLayer.InstanceConfigKey, _storage);
+   		 Processor qcow2Processor = new QCOW2Processor();
+   		 qcow2Processor.configure("QCOW2 Processor", params);
+   		 FormatInfo info = qcow2Processor.process(templatePath, null, tmplName);
+
+   		 TemplateLocation loc = new TemplateLocation(_storage, templatePath);
+   		 loc.create(1, true, tmplName);
+   		 loc.addFormat(info);
+   		 loc.save();
+   		 
+   		 return new CreatePrivateTemplateAnswer(cmd, true, "", tmplPath, info.virtualSize, tmplName, info.format);
+		} catch (LibvirtException e) {
+			return new CreatePrivateTemplateAnswer(cmd, false, e.getMessage(), null, 0, null, null);
+		} catch (URISyntaxException e) {
+			return new CreatePrivateTemplateAnswer(cmd, false, e.getMessage(), null, 0, null, null);
+		} catch (ConfigurationException e) {
+			return new CreatePrivateTemplateAnswer(cmd, false, e.getMessage(), null, 0, null, null);
+		} catch (InternalErrorException e) {
+			return new CreatePrivateTemplateAnswer(cmd, false, e.getMessage(), null, 0, null, null);
+		} catch (IOException e) {
+			return new CreatePrivateTemplateAnswer(cmd, false, e.getMessage(), null, 0, null, null);
+		}	 
+   }
     
     protected GetStorageStatsAnswer execute(final GetStorageStatsCommand cmd) {
     	StoragePool sp = null;
@@ -1337,34 +1525,20 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 					cmd.add(targetPath);
 					String result = cmd.execute();
 					if (result != null) {
-						s_logger.debug("Failed to mount gluster " + result);
-						
+						s_logger.debug("Failed to mount gluster " + result);						
 					}
-    				if (isCentosHost()) {
-    					spd = new LibvirtStoragePoolDef(poolType.DIR, uuid, uuid,
-    							sourceHost, sourcePath, targetPath + templatePath, null);
-    					s_logger.debug(spd.toString());
-    					sp = conn.storagePoolDefineXML(spd.toString(), 0);
-    					if (sp == null) {
-    						s_logger.debug("Failed to define storage pool");
-    						return null;
-    					}
-    					sp.create(0);    			   	
-    					
-    					return sp;
-    				} else {
-    					spd = new LibvirtStoragePoolDef(poolType.NETFS, uuid, uuid,
-    							sourceHost, sourcePath, targetPath, poolFormat.GLUSTER);
-    					s_logger.debug(spd.toString());
-    					sp = conn.storagePoolDefineXML(spd.toString(), 0);
-    					if (sp == null) {
-    						s_logger.debug("Failed to define storage pool");
-    						return null;
-    					}
-    					sp.create(0);
-    					return sp;
-    				}
 
+					spd = new LibvirtStoragePoolDef(poolType.DIR, uuid, uuid,
+							sourceHost, sourcePath, targetPath + templatePath, null);
+					s_logger.debug(spd.toString());
+					sp = conn.storagePoolDefineXML(spd.toString(), 0);
+					if (sp == null) {
+						s_logger.debug("Failed to define storage pool");
+						return null;
+					}
+					sp.create(0);    			   	
+
+					return sp;   			
     			}
 
     		} catch (LibvirtException e) {
@@ -1387,6 +1561,68 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	}
 		return null;
     }
+    
+    protected BackupSnapshotAnswer execute(final BackupSnapshotCommand cmd) {
+   	 Long dcId = cmd.getDataCenterId();
+        Long accountId = cmd.getAccountId();
+        Long volumeId = cmd.getVolumeId();
+        String secondaryStoragePoolURL = cmd.getSecondaryStoragePoolURL();
+        String snapshotName = cmd.getSnapshotName();
+        String snapshotPath = cmd.getSnapshotUuid();
+        String snapshotDestPath = null;
+        String vmName = cmd.getVmName();
+
+        try {
+			StoragePool secondaryStoragePool = getNfsSPbyURI(_conn, new URI(secondaryStoragePoolURL));
+			String ssPmountPath = _mountPoint + File.separator + secondaryStoragePool.getUUIDString();
+			snapshotDestPath = ssPmountPath + File.separator + "snapshots" + File.separator +  dcId + File.separator + accountId + File.separator + volumeId; 
+			Script command = new Script(_manageSnapshotPath, _snapshotTimeout, s_logger);
+			command.add("-b", snapshotPath);
+			command.add("-n", snapshotName);
+			command.add("-p", snapshotDestPath);
+			command.add("-t", snapshotName);
+			String result = command.execute();
+			if (result != null) {
+				s_logger.debug("Failed to backup snaptshot: " + result);
+				return new BackupSnapshotAnswer(cmd, false, result, null);
+			}
+			/*Delete the snapshot on primary*/
+			
+			DomainInfo.DomainState state = null;
+			Domain vm = null;
+			if (vmName != null) {
+				try {
+					vm = getDomain(cmd.getVmName());
+					state = vm.getInfo().state;
+				} catch (LibvirtException e) {
+					
+				}
+			}
+			
+			if (state == DomainInfo.DomainState.VIR_DOMAIN_RUNNING) {
+				String vmUuid = vm.getUUIDString();
+				Object[] args = new Object[] {snapshotName, vmUuid};
+				String snapshot = SnapshotXML.format(args);
+				s_logger.debug(snapshot);
+				DomainSnapshot snap = vm.snapshotLookupByName(snapshotName);
+				snap.delete(0);
+			} else {
+				command = new Script(_manageSnapshotPath, _snapshotTimeout, s_logger);   			
+   			command.add("-d", snapshotPath);  			
+   			command.add("-n", snapshotName);
+   			result = command.execute();
+   			if (result != null) {
+   				s_logger.debug("Failed to backup snapshot: " + result);
+   	    		return new BackupSnapshotAnswer(cmd, false, "Failed to backup snapshot: " + result, null);
+   			}
+			}
+		} catch (LibvirtException e) {
+			return new BackupSnapshotAnswer(cmd, false, e.toString(), null);
+		} catch (URISyntaxException e) {
+			return new BackupSnapshotAnswer(cmd, false, e.toString(), null);
+		}
+		return new BackupSnapshotAnswer(cmd, true, null, snapshotDestPath + File.separator + snapshotName);
+   }
     
     protected Answer execute(final PrimaryStorageDownloadCommand cmd) {
     	 String tmplturl = cmd.getUrl();
@@ -1490,75 +1726,48 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
     
     private StoragePool createGlusterStoragePool(Connect conn, StoragePoolVO pool) {
-    	if (isCentosHost()) {
-    		String targetPath = _mountPoint + File.separator + pool.getUuid();
-    		LibvirtStoragePoolDef spd = new LibvirtStoragePoolDef(poolType.DIR, pool.getUuid(), pool.getUuid(),
-    				pool.getHostAddress(), pool.getPath(), targetPath, null);
 
-    		File tpFile = new File(targetPath);
-    		if (!tpFile.exists()) {
-    			tpFile.mkdir();
-    		}
-    		StoragePool sp = null;
-    		try {
-    			s_logger.debug(spd.toString());
-    			sp = conn.storagePoolDefineXML(spd.toString(), 0);
-    			
-    			sp.create(0);
-    			
-    			/*Manullay mount gluster under target dir*/
-    			Script cmd = new Script("mount", _timeout);
-    			cmd.add("-t", "glusterfs");
-    			cmd.add(pool.getHostAddress() + ":" + pool.getPath());
-    			cmd.add(targetPath);
-    			String result = cmd.execute();
-    			if (result != null) {
-    				s_logger.debug("Failed to mount gluster " + result);
-    				return null;
-    			}
-    			
-    			sp.refresh(0);
-    			
-    			return sp;
+    	String targetPath = _mountPoint + File.separator + pool.getUuid();
+    	LibvirtStoragePoolDef spd = new LibvirtStoragePoolDef(poolType.DIR, pool.getUuid(), pool.getUuid(),
+    			pool.getHostAddress(), pool.getPath(), targetPath, null);
 
-    		}catch (LibvirtException e) {
-    			s_logger.debug(e.toString());
-    			if (sp != null) {
-    				try {
-    					sp.undefine();
-    					sp.free();
-    				} catch (LibvirtException l) {
-    					s_logger.debug("Failed to define nfs storage pool with: " + l.toString());
-    				}
-    			}
+    	File tpFile = new File(targetPath);
+    	if (!tpFile.exists()) {
+    		tpFile.mkdir();
+    	}
+    	StoragePool sp = null;
+    	try {
+    		s_logger.debug(spd.toString());
+    		sp = conn.storagePoolDefineXML(spd.toString(), 0);
+
+    		sp.create(0);
+
+    		/*Manullay mount gluster under target dir*/
+    		Script cmd = new Script("mount", _timeout);
+    		cmd.add("-t", "glusterfs");
+    		cmd.add(pool.getHostAddress() + ":" + pool.getPath());
+    		cmd.add(targetPath);
+    		String result = cmd.execute();
+    		if (result != null) {
+    			s_logger.debug("Failed to mount gluster " + result);
     			return null;
     		}
-    	} else {
-    		String targetPath = _mountPoint + File.separator + pool.getUuid();
-    		LibvirtStoragePoolDef spd = new LibvirtStoragePoolDef(poolType.NETFS, pool.getUuid(), pool.getUuid(),
-    				pool.getHostAddress(), pool.getPath(), targetPath, poolFormat.GLUSTER);
-    		File tpFile = new File(targetPath);
-    		if (!tpFile.exists()) {
-    			tpFile.mkdir();
-    		}
-    		StoragePool sp = null;
-    		try {
-    			s_logger.debug(spd.toString());
-    			sp = conn.storagePoolDefineXML(spd.toString(), 0);
-    			sp.create(0);
-    			return sp;
-    		} catch (LibvirtException e) {
-    			s_logger.debug(e.toString());
-    			if (sp != null) {
-    				try {
-    					sp.undefine();
-    					sp.free();
-    				} catch (LibvirtException l) {
-    					s_logger.debug("Failed to define nfs storage pool with: " + l.toString());
-    				}
+
+    		sp.refresh(0);
+
+    		return sp;
+
+    	}catch (LibvirtException e) {
+    		s_logger.debug(e.toString());
+    		if (sp != null) {
+    			try {
+    				sp.undefine();
+    				sp.free();
+    			} catch (LibvirtException l) {
+    				s_logger.debug("Failed to define nfs storage pool with: " + l.toString());
     			}
-    			return null;
     		}
+    		return null;
     	}
     }
     
@@ -2319,7 +2528,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 			Iterator<Map.Entry<String, String>> itr = entrySet.iterator();
 			while (itr.hasNext()) {
 				Map.Entry<String, String> entry = itr.next();
-				if (entry.getValue().equalsIgnoreCase(sourceFile)) {
+				if ((entry.getValue() != null) && (entry.getValue().equalsIgnoreCase(sourceFile))) {
 					diskDev = entry.getKey();
 					break;
 				}
@@ -2896,16 +3105,21 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
     
     private String getHypervisorPath() {
-    	if (_conn == null)
-    		return null;
-    	
-    	LibvirtCapXMLParser parser = new LibvirtCapXMLParser();
-    	try {
-    		parser.parseCapabilitiesXML(_conn.getCapabilities());
-    	} catch (LibvirtException e) {
+    	File f =new File("/usr/bin/cloud-qemu-system-x86_64");
+    	if (f.exists()) {
+    		return "/usr/bin/cloud-qemu-system-x86_64";
+    	} else {
+    		if (_conn == null)
+    			return null;
 
+    		LibvirtCapXMLParser parser = new LibvirtCapXMLParser();
+    		try {
+    			parser.parseCapabilitiesXML(_conn.getCapabilities());
+    		} catch (LibvirtException e) {
+
+    		}
+    		return parser.getEmulator();
     	}
-    	return parser.getEmulator();
     }
     
     private String getGuestType(String vmName) {
