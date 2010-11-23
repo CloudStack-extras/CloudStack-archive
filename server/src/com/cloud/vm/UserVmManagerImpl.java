@@ -1018,11 +1018,15 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, VirtualM
                 //Configuration cpu.uservm.cap is not available in default installation. Using this parameter is not encouraged
                 
                 int cpuWeight = _maxWeight; //cpu_weight
-                
-                // weight based allocation
-                cpuWeight = (int)((offering.getSpeed()*0.99) / (float)host.getSpeed() * _maxWeight);
-                if (cpuWeight > _maxWeight) {
-                	cpuWeight = _maxWeight;
+                if(host.getHypervisorType() == HypervisorType.VmWare) {
+                	// VMware will do relative weighting based on CPU speed in Mhz
+                	cpuWeight = offering.getSpeed();
+                } else {
+	                // weight based allocation
+	                cpuWeight = (int)((offering.getSpeed()*0.99) / (float)host.getSpeed() * _maxWeight);
+	                if (cpuWeight > _maxWeight) {
+	                	cpuWeight = _maxWeight;
+	                }
                 }
 
                 int bits;
