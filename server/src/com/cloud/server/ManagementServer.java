@@ -695,7 +695,7 @@ public interface ManagementServer {
 	 * @param VirtualMachine vm
 	 * @return the vnc port if found; -1 if unable to find.
 	 */
-	int getVncPort(VirtualMachine vm);
+	Pair<String, Integer> getVncPort(VirtualMachine vm);
 
 	/**
 	 * Search for domains owned by the given domainId/domainName (those parameters are wrapped
