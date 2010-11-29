@@ -75,9 +75,8 @@ public class FirewallRuleVO implements FirewallRule {
 	public FirewallRuleVO() {
 	}
 	
-	public FirewallRuleVO(Long id, Long groupId, String publicIpAddress, String publicPort, String privateIpAddress, String privatePort, boolean enabled, String protocol,
+	public FirewallRuleVO(Long groupId, String publicIpAddress, String publicPort, String privateIpAddress, String privatePort, boolean enabled, String protocol,
 			boolean forwarding, String algorithm) {
-	    this.id = id;
 	    this.groupId = groupId;
 	    this.publicIpAddress = publicIpAddress;
 	    this.publicPort = publicPort;
@@ -89,10 +88,11 @@ public class FirewallRuleVO implements FirewallRule {
 	}
 	
 	public FirewallRuleVO(FirewallRuleVO fwRule) {
-		this(fwRule.getId(), fwRule.getGroupId(), fwRule.getPublicIpAddress(), 
+		this(fwRule.getGroupId(), fwRule.getPublicIpAddress(), 
 			 fwRule.getPublicPort(), fwRule.getPrivateIpAddress(), 
 			 fwRule.getPrivatePort(), fwRule.isEnabled(), fwRule.getProtocol(),
 			 fwRule.isForwarding(), fwRule.getAlgorithm());
+		id = fwRule.id; 
 	}
 
 	@Override

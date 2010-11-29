@@ -2781,11 +2781,11 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             }
         	vpnVO = new RemoteAccessVpnVO(account.getId(), cmd.getZoneId(), publicIp, range[0], newIpRange, sharedSecret);
         	vpnVO = _remoteAccessVpnDao.persist(vpnVO);
-        	FirewallRuleVO rule = new FirewallRuleVO(null, null, publicIp, NetUtils.VPN_PORT, guestIpRange[0], NetUtils.VPN_PORT, true, NetUtils.UDP_PROTO, false, null);
+        	FirewallRuleVO rule = new FirewallRuleVO(null, publicIp, NetUtils.VPN_PORT, guestIpRange[0], NetUtils.VPN_PORT, true, NetUtils.UDP_PROTO, false, null);
         	_rulesDao.persist(rule);
-        	rule = new FirewallRuleVO(null, null, publicIp, NetUtils.VPN_NATT_PORT, guestIpRange[0], NetUtils.VPN_NATT_PORT, true, NetUtils.UDP_PROTO, false, null);
+        	rule = new FirewallRuleVO(null, publicIp, NetUtils.VPN_NATT_PORT, guestIpRange[0], NetUtils.VPN_NATT_PORT, true, NetUtils.UDP_PROTO, false, null);
         	_rulesDao.persist(rule);
-        	rule = new FirewallRuleVO(null, null, publicIp, NetUtils.VPN_L2TP_PORT, guestIpRange[0], NetUtils.VPN_L2TP_PORT, true, NetUtils.UDP_PROTO, false, null);
+        	rule = new FirewallRuleVO(null, publicIp, NetUtils.VPN_L2TP_PORT, guestIpRange[0], NetUtils.VPN_L2TP_PORT, true, NetUtils.UDP_PROTO, false, null);
         	_rulesDao.persist(rule);
         	txn.commit();
         	return vpnVO;
