@@ -598,9 +598,9 @@ function initAddExternalFirewallButton($button, $midmenuItem1) {
 				
 				var ip = $thisDialog.find("#ip").val();
 		        if(ip.indexOf("http://")==-1)
-		            url.push(todb("http://"+ip));		            
+		            url.push("http://"+ip);		            
 		        else
-		            url.push(todb(ip));		                   
+		            url.push(ip);		                   
 				
 				var isQuestionMarkAdded = false;
 				
@@ -613,7 +613,7 @@ function initAddExternalFirewallButton($button, $midmenuItem1) {
 				    else {
 				        url.push("&");
 				    }  				    
-				    url.push("publicInterface="+todb(publicInterface)); 
+				    url.push("publicInterface="+publicInterface); 
 				}
 				    
 				var privateInterface = $thisDialog.find("#private_interface").val();
@@ -625,7 +625,7 @@ function initAddExternalFirewallButton($button, $midmenuItem1) {
 				    else {
 				        url.push("&");
 				    }  		
-				    url.push("privateInterface="+todb(privateInterface)); 
+				    url.push("privateInterface="+privateInterface); 
 				}
 				    
 				var publicZone = $thisDialog.find("#public_zone").val();
@@ -637,7 +637,7 @@ function initAddExternalFirewallButton($button, $midmenuItem1) {
 				    else {
 				        url.push("&");
 				    }  		
-				    url.push("publicZone="+todb(publicZone)); 
+				    url.push("publicZone="+publicZone); 
 				}
 				
 				var privateZone = $thisDialog.find("#private_zone").val();
@@ -649,10 +649,10 @@ function initAddExternalFirewallButton($button, $midmenuItem1) {
 				    else {
 				        url.push("&");
 				    }  		
-				    url.push("privateZone="+todb(privateZone)); 	
+				    url.push("privateZone="+privateZone); 	
 				}			
 				
-				array1.push("&url="+url.join(""));		
+				array1.push("&url="+todb(url.join("")));		
 				//*** construct URL (end)	***					
 										
 				$.ajax({
@@ -743,9 +743,9 @@ function initAddLoadBalancerButton($button, $midmenuItem1) {
 				
 				var ip = $thisDialog.find("#ip").val();
 		        if(ip.indexOf("http://")==-1)
-		            url.push(todb("http://"+ip));		            
+		            url.push("http://"+ip);		            
 		        else
-		            url.push(todb(ip));		                   
+		            url.push(ip);		                   
 				
 				var isQuestionMarkAdded = false;
 				
@@ -758,7 +758,7 @@ function initAddLoadBalancerButton($button, $midmenuItem1) {
 				    else {
 				        url.push("&");
 				    }  				    
-				    url.push("publicInterface="+todb(publicInterface)); 
+				    url.push("publicInterface="+publicInterface); 
 				}
 				    
 				var privateInterface = $thisDialog.find("#private_interface").val();
@@ -770,10 +770,10 @@ function initAddLoadBalancerButton($button, $midmenuItem1) {
 				    else {
 				        url.push("&");
 				    }  		
-				    url.push("privateInterface="+todb(privateInterface)); 
+				    url.push("privateInterface="+privateInterface); 
 				}
 				  				
-				array1.push("&url="+url.join(""));		
+				array1.push("&url="+todb(url.join("")));		
 				//*** construct URL (end)	***					
 								
 				$.ajax({
