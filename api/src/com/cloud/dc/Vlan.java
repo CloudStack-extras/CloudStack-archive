@@ -21,7 +21,8 @@ package com.cloud.dc;
 public interface Vlan {
 	public enum VlanType {
 		DirectAttached,
-		VirtualNetwork
+		VirtualNetwork, 
+		SystemVM
 	}
 	
 	public final static String UNTAGGED = "untagged";

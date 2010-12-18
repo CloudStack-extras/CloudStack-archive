@@ -232,8 +232,10 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         
         if (vlanUse == VlanType.DirectAttached) {
             addr.setState(IpAddress.State.Allocated);
-        } else {
+        } else if (vlanUse == VlanType.VirtualNetwork){
             addr.setAssociatedNetworkId(networkId);
+        } else {
+        	addr.setState(IpAddress.State.Allocated);
         }
         
         if (!_ipAddressDao.update(addr.getAddress(), addr)) {

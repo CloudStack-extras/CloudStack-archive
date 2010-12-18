@@ -71,7 +71,16 @@ public class PublicNetworkGuru extends AdapterBase implements NetworkGuru {
     
     protected void getIp(NicProfile nic, DataCenter dc, VirtualMachineProfile<? extends VirtualMachine> vm, Network network) throws InsufficientVirtualNetworkCapcityException, InsufficientAddressCapacityException, ConcurrentOperationException {
         if (nic.getIp4Address() == null) {
-            PublicIp ip = _networkMgr.assignPublicIpAddress(dc.getId(), vm.getOwner(), VlanType.VirtualNetwork, null);
+        	VlanType vlanType = VlanType.VirtualNetwork;
+        	switch(vm.getVirtualMachine().getType()) {
+        	case ConsoleProxy:
+        	case SecondaryStorageVm:
+        		vlanType = VlanType.SystemVM;
+        		break;
+        	default:
+        		break;
+        	}
+            PublicIp ip = _networkMgr.assignPublicIpAddress(dc.getId(), vm.getOwner(), vlanType, null);
             nic.setIp4Address(ip.getAddress());
             nic.setGateway(ip.getGateway());
             nic.setNetmask(ip.getNetmask());
