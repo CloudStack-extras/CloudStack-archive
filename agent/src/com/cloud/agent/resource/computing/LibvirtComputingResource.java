@@ -1485,6 +1485,13 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	StoragePool sp = null;
     	try {
     		sp = conn.storagePoolLookupByUUIDString(uuid);
+    		if (sp != null) {
+    			if (sp.getInfo().state != StoragePoolState.VIR_STORAGE_POOL_RUNNING) {
+    				sp.delete(0);
+    				sp.undefine();
+    				sp = null;
+    			}
+    		}
     	}  catch (LibvirtException e) {
     	}
 
