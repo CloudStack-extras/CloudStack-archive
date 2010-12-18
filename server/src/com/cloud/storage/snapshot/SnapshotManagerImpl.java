@@ -236,7 +236,7 @@ public class SnapshotManagerImpl implements SnapshotManager {
         
         ImageFormat format = getImageFormat(volume.getId());
         if (format != null) {
-            if (!(format == ImageFormat.VHD || format == ImageFormat.ISO || format == ImageFormat.QCOW2)) {
+            if (!(format == ImageFormat.VHD || format == ImageFormat.ISO)) {
                 // We only create snapshots for root disks created from templates or ISOs.
                 s_logger.error("Currently, a snapshot can be taken from a Root Disk only if it is created from a 1) template in VHD format or 2) from an ISO.");
                 runSnap = false;
@@ -373,14 +373,11 @@ public class SnapshotManagerImpl implements SnapshotManager {
             preSnapshotPath = preSnapshotVO.getPath();
 
         }
-        String vmName = null;
-        if (vmInstance != null) {
-        	vmName = vmInstance.getInstanceName();
-        }
+
         // Send a ManageSnapshotCommand to the agent
-        ManageSnapshotCommand cmd = new ManageSnapshotCommand(ManageSnapshotCommand.CREATE_SNAPSHOT, id, volume.getPath(), preSnapshotPath, snapshotName, vmName);
+        ManageSnapshotCommand cmd = new ManageSnapshotCommand(ManageSnapshotCommand.CREATE_SNAPSHOT, id, volume.getPath(), preSnapshotPath, snapshotName);
         String basicErrMsg = "Failed to create snapshot for volume: " + volume.getId();
-        ManageSnapshotAnswer answer = (ManageSnapshotAnswer) _storageMgr.sendToHostsOnStoragePool(volume.getPoolId(), cmd, basicErrMsg, _totalRetries, _pauseInterval, _shouldBeSnapshotCapable, volume.getInstanceId());
+        ManageSnapshotAnswer answer = (ManageSnapshotAnswer) _storageMgr.sendToHostsOnStoragePool(volume.getPoolId(), cmd, basicErrMsg, _totalRetries, _pauseInterval, _shouldBeSnapshotCapable);
 
         txn = Transaction.currentTxn();
         txn.start();
@@ -587,7 +584,6 @@ public class SnapshotManagerImpl implements SnapshotManager {
                 
             }
         }
-        String vmName = _storageMgr.getVmNameOnVolume(volume);
         String firstBackupUuid = volume.getFirstSnapshotBackupUuid();
         boolean isVolumeInactive = _storageMgr.volumeInactive(volume);
         BackupSnapshotCommand backupSnapshotCommand =
@@ -598,13 +594,11 @@ public class SnapshotManagerImpl implements SnapshotManager {
                                       volumeId,
                                       volume.getPath(),
                                       snapshotUuid,
-                                      snapshot.getName(),
                                       prevSnapshotUuid,
                                       prevBackupUuid,
                                       firstBackupUuid,
                                       isFirstSnapshotOfRootVolume,
-                                      isVolumeInactive,
-                                      vmName);
+                                      isVolumeInactive);
         
         String backedUpSnapshotUuid = null;
         // By default, assume failed.
@@ -615,7 +609,7 @@ public class SnapshotManagerImpl implements SnapshotManager {
                                                                                                   basicErrMsg,
                                                                                                   _totalRetries,
                                                                                                   _pauseInterval,
-                                                                                                  _shouldBeSnapshotCapable, volume.getInstanceId());
+                                                                                                  _shouldBeSnapshotCapable);
         if (answer != null && answer.getResult()) {
             backedUpSnapshotUuid = answer.getBackupSnapshotName();
             if (backedUpSnapshotUuid != null) {
@@ -780,7 +774,7 @@ public class SnapshotManagerImpl implements SnapshotManager {
                 details = "Unable find template id: " + templateId + " for root disk volumeId: " + volumeId;
                 s_logger.error(details);
             }
-            else if (template.getFormat() == ImageFormat.VHD || template.getFormat() == ImageFormat.QCOW2) {
+            else if (template.getFormat() == ImageFormat.VHD) {
                 // We support creating snapshots of Root Disk created from template only in VHD format.
                 VMTemplateStoragePoolVO templateStoragePoolVO = _templatePoolDao.findByPoolTemplate(volume.getPoolId(), templateId);
                 if (templateStoragePoolVO != null) {
@@ -805,7 +799,7 @@ public class SnapshotManagerImpl implements SnapshotManager {
                                                                                    basicErrMsg,
                                                                                    _totalRetries,
                                                                                    _pauseInterval,
-                                                                                   _shouldBeSnapshotCapable, volume.getInstanceId());
+                                                                                   _shouldBeSnapshotCapable);
         }
         
         return answer;
@@ -958,7 +952,6 @@ public class SnapshotManagerImpl implements SnapshotManager {
                                                     accountId,
                                                     volumeId,
                                                     backupOfSnapshot,
-                                                    snapshot.getName(),
                                                     backupOfNextSnapshot,
                                                     backupOfNextNextSnapshot);
                 
@@ -968,7 +961,7 @@ public class SnapshotManagerImpl implements SnapshotManager {
                                                                      details,
                                                                      _totalRetries,
                                                                      _pauseInterval,
-                                                                     _shouldBeSnapshotCapable, volume.getInstanceId());
+                                                                     _shouldBeSnapshotCapable);
                 
                 if ((answer != null) && answer.getResult()) {
                     // This is not the last snapshot.
@@ -1093,13 +1086,13 @@ public class SnapshotManagerImpl implements SnapshotManager {
         	// even if mostRecentSnapshot.removed() != null, we still have to explicitly remove it from the primary storage.
         	// Then deleting the volume VDI will GC the base copy and nothing will be left on primary storage.
         	String mostRecentSnapshotUuid = mostRecentSnapshot.getPath();
-        	DeleteSnapshotsDirCommand cmd = new DeleteSnapshotsDirCommand(primaryStoragePoolNameLabel, secondaryStoragePoolURL, dcId, accountId, volumeId, mostRecentSnapshotUuid, mostRecentSnapshot.getName());
+        	DeleteSnapshotsDirCommand cmd = new DeleteSnapshotsDirCommand(primaryStoragePoolNameLabel, secondaryStoragePoolURL, dcId, accountId, volumeId, mostRecentSnapshotUuid);
         	String basicErrMsg = "Failed to destroy snapshotsDir for: " + volume.getId() + " under account: " + accountId;
         	Answer answer = null;
         	Long poolId = volume.getPoolId();
         	if (poolId != null) {
         	    // Retry only once for this command. There's low chance of failure because of a connection problem.
-        	    answer = _storageMgr.sendToHostsOnStoragePool(poolId, cmd, basicErrMsg, 1, _pauseInterval, _shouldBeSnapshotCapable, volume.getInstanceId());
+        	    answer = _storageMgr.sendToHostsOnStoragePool(poolId, cmd, basicErrMsg, 1, _pauseInterval, _shouldBeSnapshotCapable);
         	}
         	else {
         	    s_logger.info("Pool id for volume id: " + volumeId + " belonging to account id: " + accountId + " is null. Assuming the snapshotsDir for the account has already been deleted");
@@ -1306,11 +1299,10 @@ public class SnapshotManagerImpl implements SnapshotManager {
                                 accountId,
                                 volumeId,
                                 backupOfSnapshot,
-                                snapshot.getName(),
                                 backupOfNextSnapshot,
                                 null);
                     String basicErrMsg = "Failed to destroy snapshot id: " + snapshotId + " for volume id: " + volumeId;
-                    Answer answer = _storageMgr.sendToHostsOnStoragePool(volume.getPoolId(), cmd, basicErrMsg, _totalRetries, _pauseInterval, _shouldBeSnapshotCapable, volume.getInstanceId());
+                    Answer answer = _storageMgr.sendToHostsOnStoragePool(volume.getPoolId(), cmd, basicErrMsg, _totalRetries, _pauseInterval, _shouldBeSnapshotCapable);
                     
                     if ((answer != null) && answer.getResult()) {
                         success = true;

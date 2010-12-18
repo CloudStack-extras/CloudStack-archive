@@ -34,11 +34,10 @@ public class ManageSnapshotCommand extends Command {
     private String _snapshotPath = null;
     private String _snapshotName = null;
     private long _snapshotId;
-    private String _vmName;
 
     public ManageSnapshotCommand() {}
 
-    public ManageSnapshotCommand(String commandSwitch, long snapshotId, String path, String preSnapshot, String snapshotName, String vmName) {
+    public ManageSnapshotCommand(String commandSwitch, long snapshotId, String path, String preSnapshot, String snapshotName) {
         _commandSwitch = commandSwitch;
         if (commandSwitch.equals(ManageSnapshotCommand.CREATE_SNAPSHOT)) {
             _volumePath = path;
@@ -49,7 +48,6 @@ public class ManageSnapshotCommand extends Command {
         }
         _snapshotName = snapshotName;
         _snapshotId = snapshotId;
-        _vmName = vmName;
     }
 
     @Override
@@ -75,10 +73,6 @@ public class ManageSnapshotCommand extends Command {
 
     public long getSnapshotId() {
         return _snapshotId;
-    }
-    
-    public String getVmName() {
-    	return _vmName;
     }
     
 }

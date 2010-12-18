@@ -41,12 +41,10 @@ import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
-import com.cloud.agent.api.BackupSnapshotCommand;
 import com.cloud.agent.api.Command;
 import com.cloud.agent.api.CreateVolumeFromSnapshotAnswer;
 import com.cloud.agent.api.CreateVolumeFromSnapshotCommand;
 import com.cloud.agent.api.DeleteStoragePoolCommand;
-import com.cloud.agent.api.ManageSnapshotCommand;
 import com.cloud.agent.api.ModifyStoragePoolAnswer;
 import com.cloud.agent.api.ModifyStoragePoolCommand;
 import com.cloud.agent.api.storage.CopyVolumeAnswer;
@@ -646,7 +644,6 @@ public class StorageManagerImpl implements StorageManager {
                                                 accountId,
                                                 volumeId,
                                                 backedUpSnapshotUuid,
-                                                snapshot.getName(),
                                                 templatePath);
         
         String basicErrMsg = "Failed to create volume from " + snapshot.getName() + " for volume: " + volume.getId();
@@ -655,7 +652,7 @@ public class StorageManagerImpl implements StorageManager {
                                                                                                                       basicErrMsg,
                                                                                                                       _totalRetries,
                                                                                                                       _pauseInterval,
-                                                                                                                      _shouldBeSnapshotCapable, volume.getInstanceId());
+                                                                                                                      _shouldBeSnapshotCapable);
         if (answer != null && answer.getResult()) {
             vdiUUID = answer.getVdi();
         }
@@ -858,24 +855,13 @@ public class StorageManagerImpl implements StorageManager {
         return volumes.get(0).getPoolId();
     }
 
-    public Long chooseHostForStoragePool(StoragePoolVO poolVO, List<Long> avoidHosts,  boolean sendToVmResidesOn, Long vmId) {
-    	if (sendToVmResidesOn) {
-    		if (vmId != null) {
-    			VMInstanceVO vmInstance = _vmInstanceDao.findById(vmId);
-    			if (vmInstance != null) {
-    				Long hostId = vmInstance.getHostId();
-    				if (hostId != null && !avoidHosts.contains(vmInstance.getHostId()))
-    					return hostId;
-    			}
-    		}
-    		/*Can't find the vm where host resides on(vm is destroyed? or volume is detached from vm), randomly choose a host to send the cmd */
-    	}
+    public StoragePoolHostVO chooseHostForStoragePool(StoragePoolVO poolVO, List<Long> avoidHosts) {
         List<StoragePoolHostVO> poolHosts = _poolHostDao.listByHostStatus(poolVO.getId(), Status.Up);
         Collections.shuffle(poolHosts);
         if (poolHosts != null && poolHosts.size() > 0) {
             for (StoragePoolHostVO sphvo : poolHosts) {
                 if (!avoidHosts.contains(sphvo.getHostId())) {
-                    return sphvo.getHostId();
+                    return sphvo;
                 }
             }
         }
@@ -1684,18 +1670,18 @@ public class StorageManagerImpl implements StorageManager {
 
     @Override
     public Answer sendToHostsOnStoragePool(Long poolId, Command cmd, String basicErrMsg) {
-        return sendToHostsOnStoragePool(poolId, cmd, basicErrMsg, 1, 0, false, null);
+        return sendToHostsOnStoragePool(poolId, cmd, basicErrMsg, 1, 0, false);
     }
 
     @Override
-    public Answer sendToHostsOnStoragePool(Long poolId, Command cmd, String basicErrMsg, int totalRetries, int pauseBeforeRetry, boolean shouldBeSnapshotCapable, Long vmId) {
+    public Answer sendToHostsOnStoragePool(Long poolId, Command cmd, String basicErrMsg, int totalRetries, int pauseBeforeRetry, boolean shouldBeSnapshotCapable) {
         Answer answer = null;
         Long hostId = null;
         StoragePoolVO storagePool = _storagePoolDao.findById(poolId);
         List<Long> hostsToAvoid = new ArrayList<Long>();
-        boolean sendToVmHost = sendToVmResidesOn(storagePool, cmd);
+        StoragePoolHostVO storagePoolHost;
         int tryCount = 0;
-        if (chooseHostForStoragePool(storagePool, hostsToAvoid, sendToVmHost, vmId) == null) {
+        if (chooseHostForStoragePool(storagePool, hostsToAvoid) == null) {
             // Don't just fail. The host could be reconnecting.
             // wait for some time for it to get connected
             // Wait for 3*ping.interval, since the code attempts a manual
@@ -1707,13 +1693,14 @@ public class StorageManagerImpl implements StorageManager {
                 // continue.
             }
         }
-        while ((hostId = chooseHostForStoragePool(storagePool, hostsToAvoid, sendToVmHost, vmId)) != null && tryCount++ < totalRetries) {
+        while ((storagePoolHost = chooseHostForStoragePool(storagePool, hostsToAvoid)) != null && tryCount++ < totalRetries) {
             String errMsg = basicErrMsg + " on host: " + hostId + " try: " + tryCount + ", reason: ";
             hostsToAvoid.add(hostId);
             try {
+                hostId = storagePoolHost.getHostId();
                 HostVO hostVO = _hostDao.findById(hostId);
                 if (shouldBeSnapshotCapable) {
-                    if (hostVO == null ) {
+                    if (hostVO == null || hostVO.getHypervisorType() != Hypervisor.Type.XenServer) {
                         // Only XenServer hosts are snapshot capable.
                         continue;
                     }
@@ -1872,28 +1859,5 @@ public class StorageManagerImpl implements StorageManager {
         StoragePoolVO storagePoolVO = _storagePoolDao.findById(poolId);
         assert storagePoolVO != null;
         return storagePoolVO.getUuid();
-    }
-    
-    @Override
-    public String getVmNameOnVolume(VolumeVO volume) {
-    	 Long vmId = volume.getInstanceId();
-         if (vmId != null) {
-             VMInstanceVO vm = _vmInstanceDao.findById(vmId);
-
-             if (vm == null) {
-                 return null;
-             }
-             return vm.getInstanceName();
-         }
-         return null;
-    }
-    
-    private boolean sendToVmResidesOn(StoragePoolVO storagePool, Command cmd) {
-    	if (((cmd instanceof ManageSnapshotCommand) ||
-    		 (cmd instanceof BackupSnapshotCommand))) {
-    		return true;
-    	} else {
-    		return false;
-    	}
     }
 }

@@ -602,8 +602,7 @@ function showStorageTab(domainId, targetTab) {
 	        }
 	    }); 
 	    
-		if (1) {
-                        $("#dialog_add_pool #pool_cluster_container").hide();
+		if (getHypervisorType() == "xenserver") {
 			$("#volume_action_snapshot_grid, #volume_action_take_snapshot_container, #volume_action_recurring_snapshot_container").show();
 			$("#submenu_snapshot").show().bind("click", function(event) {			        
 				event.preventDefault();
@@ -626,6 +625,9 @@ function showStorageTab(domainId, targetTab) {
 				currentPage = 1;  			
 				listSnapshots();
 			});  
+		}
+		else if (getHypervisorType() == "kvm") {
+		    $("#dialog_add_pool #pool_cluster_container").hide();
 		}
 			
 	    activateDialog($("#dialog_detach_volume").dialog({ 

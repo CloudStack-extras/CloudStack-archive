@@ -94,8 +94,6 @@ public class LibvirtDomainXMLParser extends LibvirtXMLParser {
 				} else if (qName.equalsIgnoreCase("disk")) {
 					diskMaps.put(diskDev, diskFile);
 					_disk = false;
-					diskFile = null;
-					diskDev = null;
 				} else if (qName.equalsIgnoreCase("description")) {
 					_desc = false;
 				}

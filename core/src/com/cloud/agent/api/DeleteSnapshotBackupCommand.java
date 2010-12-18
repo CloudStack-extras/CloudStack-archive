@@ -60,11 +60,10 @@ public class DeleteSnapshotBackupCommand extends SnapshotCommand {
                                        Long   accountId,
                                        Long   volumeId,
                                        String backupUUID, 
-                                       String snapshotName,
                                        String childUUID,
                                        String childChildUUID) 
     {
-        super(primaryStoragePoolNameLabel, secondaryStoragePoolURL, backupUUID, snapshotName, dcId, accountId, volumeId);
+        super(primaryStoragePoolNameLabel, secondaryStoragePoolURL, backupUUID, dcId, accountId, volumeId);
         this.childUUID = childUUID;
         this.childChildUUID = childChildUUID;
     }

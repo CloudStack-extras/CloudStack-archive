@@ -27,7 +27,6 @@ package com.cloud.agent.api;
 public class SnapshotCommand extends Command {
     private String primaryStoragePoolNameLabel;
     private String snapshotUuid;
-    private String snapshotName;
     private String secondaryStoragePoolURL;
     private Long   dcId;
     private Long   accountId;
@@ -47,14 +46,12 @@ public class SnapshotCommand extends Command {
     public SnapshotCommand(String primaryStoragePoolNameLabel,
                            String secondaryStoragePoolURL,
                            String snapshotUuid,
-                           String snapshotName,
                            Long   dcId,
                            Long   accountId,
                            Long   volumeId) 
     {
         this.primaryStoragePoolNameLabel = primaryStoragePoolNameLabel;
         this.snapshotUuid = snapshotUuid;
-        this.snapshotName = snapshotName;
         this.secondaryStoragePoolURL = secondaryStoragePoolURL;
         this.dcId = dcId;
         this.accountId = accountId;
@@ -73,9 +70,6 @@ public class SnapshotCommand extends Command {
      */
     public String getSnapshotUuid() {
         return snapshotUuid;
-    }
-    public String getSnapshotName() {
-        return snapshotName;
     }
     
     /**

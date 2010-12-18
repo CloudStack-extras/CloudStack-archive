@@ -2035,8 +2035,7 @@ public class UserVmManagerImpl implements UserVmManager {
     	SnapshotVO snapshot = _snapshotDao.findById(Long.valueOf(snapshotId));
     	if (snapshot != null) {
     		VolumeVO volume = _volsDao.findById(snapshot.getVolumeId());
-    		String vmName = _storageMgr.getVmNameOnVolume(volume); 
-    		ManageSnapshotCommand cmd = new ManageSnapshotCommand(ManageSnapshotCommand.DESTROY_SNAPSHOT, snapshotId, snapshot.getPath(), null, snapshot.getName(), vmName);
+    		ManageSnapshotCommand cmd = new ManageSnapshotCommand(ManageSnapshotCommand.DESTROY_SNAPSHOT, snapshotId, snapshot.getPath(), null, snapshot.getName());
 
     		Answer answer = null;
     		String basicErrMsg = "Failed to destroy template snapshot: " + snapshot.getName();
@@ -2072,10 +2071,9 @@ public class UserVmManagerImpl implements UserVmManager {
     	SnapshotVO snapshot = new SnapshotVO(volume.getAccountId(), volume.getId(), null, snapshotName, (short)snapshotType.ordinal(), snapshotType.name());
     	snapshot = _snapshotDao.persist(snapshot);
     	id = snapshot.getId();
-    	
-    	String vmName = _storageMgr.getVmNameOnVolume(volume);
+
     	// Send a ManageSnapshotCommand to the agent
-    	ManageSnapshotCommand cmd = new ManageSnapshotCommand(ManageSnapshotCommand.CREATE_SNAPSHOT, id, volume.getPath(), null, snapshotName, vmName);
+    	ManageSnapshotCommand cmd = new ManageSnapshotCommand(ManageSnapshotCommand.CREATE_SNAPSHOT, id, volume.getPath(), null, snapshotName);
 
     	String basicErrMsg = "Failed to create snapshot for volume: " + volume.getId();
     	// This can be sent to a KVM host too. We are only taking snapshots on primary storage, which doesn't require XenServer.
@@ -2316,7 +2314,6 @@ public class UserVmManagerImpl implements UserVmManager {
                                                                    accountId,
                                                                    volumeId,
                                                                    backupSnapshotUUID,
-                                                                   snapshot.getName(),
                                                                    origTemplateInstallPath,
                                                                    templateId,
                                                                    name);
