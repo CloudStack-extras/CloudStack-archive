@@ -376,8 +376,6 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Cluster
             throw new ConcurrentOperationException("Unable to start vm "  + vm + " due to concurrent operations");
         }
 
-        VirtualMachineProfileImpl<T> vmProfile = new VirtualMachineProfileImpl<T>(vm, template, offering, null, params, hyperType);
-        
         ExcludeList avoids = new ExcludeList();
         int retry = _retry;
         DeployDestination dest = null;
@@ -387,6 +385,8 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Cluster
         		stateTransitTo(vm, Event.OperationRetry, dest.getHost().getId());
         	}
         	
+        	VirtualMachineProfileImpl<T> vmProfile = new VirtualMachineProfileImpl<T>(vm, template, offering, null, params, hyperType);
+        	 
             for (DeploymentPlanner planner : _planners) {
                 dest = planner.plan(vmProfile, plan, avoids);
                 if (dest != null) {
@@ -417,6 +417,10 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Cluster
             } catch (InsufficientCapacityException e) {
                 s_logger.warn("Insufficient capacity ", e);
                 avoids.add(e);
+                continue;
+            } catch (Exception e) {
+            	stateTransitTo(vm, Event.OperationFailed, dest.getHost().getId());
+            	return null;
             }
             
             vmGuru.finalizeVirtualMachineProfile(vmProfile, dest, context);
