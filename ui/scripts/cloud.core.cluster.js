@@ -34,8 +34,7 @@ function afterLoadClusterJSP($leftmenuItem1) {
 
 function clusterJsonToRightPanel($leftmenuItem1) {
     clearAddButtonsOnTop();
-    if(objCluster.clustertype == "CloudManaged")
-    	initAddHostButton($("#midmenu_add_host_button"), "cluster_page", $leftmenuItem1);
+	initAddHostButton($("#midmenu_add_host_button"), "cluster_page", $leftmenuItem1);
     
     initAddPrimaryStorageButton($("#midmenu_add_primarystorage_button"), "cluster_page", $leftmenuItem1);  
     
