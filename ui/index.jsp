@@ -200,7 +200,16 @@
 									<fmt:message key="label.add.zone"/>
                                 </div>
                             </div>
-                        </div> 
+                        </div>
+						<div class="actionpanel_button_wrapper" id="midmenu_add_cluster_button" style="display: none;">
+							<div class="actionpanel_button">
+								<div class="actionpanel_button_icons">
+									<img src="images/addvm_actionicon.png" alt="Add External Cluster" /></div>
+								<div class="actionpanel_button_links" id="label">
+									<fmt:message key="label.add.cluster"/>
+								</div>
+							</div>
+						</div>
                         <div class="actionpanel_button_wrapper" id="midmenu_add_host_button" style="display: none;">
                             <div class="actionpanel_button">
                                 <div class="actionpanel_button_icons">
@@ -210,7 +219,6 @@
                                 </div>
                             </div>
                         </div>
-                        
                         <div class="actionpanel_button_wrapper" id="midmenu_add_primarystorage_button" style="display: none;">
                             <div class="actionpanel_button">
                                 <div class="actionpanel_button_icons">

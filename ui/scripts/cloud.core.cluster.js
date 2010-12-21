@@ -16,7 +16,16 @@
  * 
  */
   
+function hostGetSearchParams() {
+    var moreCriteria = [];
+    
+    // placeholder just to make it work after branch merge
+	return moreCriteria.join("");          
+}
+
 function afterLoadClusterJSP($leftmenuItem1) {
+	var objCluster = $leftmenuItem1.data("jsonObj");
+	
     showMiddleMenu();
      
     clearAddButtonsOnTop(); 
@@ -33,6 +42,7 @@ function afterLoadClusterJSP($leftmenuItem1) {
 }
 
 function clusterJsonToRightPanel($leftmenuItem1) {
+	var objCluster = $leftmenuItem1.data("jsonObj"); 
     clearAddButtonsOnTop();
 	initAddHostButton($("#midmenu_add_host_button"), "cluster_page", $leftmenuItem1);
     
