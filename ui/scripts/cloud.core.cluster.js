@@ -33,6 +33,14 @@ function afterLoadClusterJSP($leftmenuItem1) {
 }
 
 function clusterJsonToRightPanel($leftmenuItem1) {
+    clearAddButtonsOnTop();
+    if(objCluster.clustertype == "CloudManaged")
+    	initAddHostButton($("#midmenu_add_host_button"), "cluster_page", $leftmenuItem1);
+    
+    initAddPrimaryStorageButton($("#midmenu_add_primarystorage_button"), "cluster_page", $leftmenuItem1);  
+    
+    listMidMenuItems(("listHosts&type=Routing&clusterid="+objCluster.id), hostGetSearchParams, "listhostsresponse", "host", "jsp/host.jsp", afterLoadHostJSP, hostToMidmenu, hostToRightPanel, getMidmenuId, false, ("cluster_"+objCluster.id));    
+
     $("#right_panel_content").data("$leftmenuItem1", $leftmenuItem1);
     clusterJsonToDetailsTab();    
 }

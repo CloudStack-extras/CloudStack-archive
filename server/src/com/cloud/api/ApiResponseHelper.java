@@ -831,6 +831,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         clusterResponse.setName(cluster.getName());
         clusterResponse.setPodId(cluster.getPodId());
         clusterResponse.setZoneId(cluster.getDataCenterId());
+        clusterResponse.setHypervisorType(cluster.getHypervisorType().toString());
         clusterResponse.setClusterType(cluster.getClusterType().toString());
         HostPodVO pod = ApiDBUtils.findPodById(cluster.getPodId());
         clusterResponse.setPodName(pod.getName());
