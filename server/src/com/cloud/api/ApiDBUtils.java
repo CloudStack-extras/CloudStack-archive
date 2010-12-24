@@ -30,11 +30,11 @@ import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.IPAddressVO;
 import com.cloud.network.LoadBalancerVO;
 import com.cloud.network.Network;
+import com.cloud.network.Network.Capability;
+import com.cloud.network.Network.Service;
 import com.cloud.network.NetworkManager;
 import com.cloud.network.NetworkRuleConfigVO;
 import com.cloud.network.NetworkVO;
-import com.cloud.network.Network.Capability;
-import com.cloud.network.Network.Service;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.LoadBalancerDao;
 import com.cloud.network.dao.NetworkDao;
@@ -513,6 +513,15 @@ public class ApiDBUtils {
     
     public static Map<Service, Map<Capability, String>> getZoneCapabilities(long zoneId) {
         return _networkMgr.getZoneCapabilities(zoneId);
+    }
+    
+    public static Long getVlanNetworkId(long vlanId) {
+        VlanVO vlan = _vlanDao.findById(vlanId);
+        if (vlan != null) {
+            return vlan.getNetworkId();
+        } else {
+            return null;
+        }
     }
     
 }

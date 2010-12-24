@@ -615,7 +615,13 @@ public class ApiResponseHelper implements ResponseGenerator {
         ipResponse.setForVirtualNetwork(forVirtualNetworks);
         ipResponse.setStaticNat(ipAddress.isOneToOneNat());
         
-        ipResponse.setAssociatedNetworkId(ipAddress.getAssociatedNetworkId());
+        //if associated networkId is null, try to get this information from vlan
+        Long associatedNetworkId = ipAddress.getAssociatedNetworkId(); 
+        if (associatedNetworkId == null) {
+            associatedNetworkId = ApiDBUtils.getVlanNetworkId(ipAddress.getVlanId());
+        }
+        
+        ipResponse.setAssociatedNetworkId(associatedNetworkId);
 
         // show this info to admin only
         Account account = UserContext.current().getAccount();
