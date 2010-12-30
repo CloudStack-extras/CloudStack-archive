@@ -241,31 +241,7 @@ function buildZoneTree() {
                 var $clusterArrow = $thisNode.find("#cluster_arrow").hide();	
 			    var clusterObj = $thisNode.data("jsonObj");
 			    var $clusterContent = $thisNode.find("#cluster_content");				  	   
-				if($target.hasClass("expanded_close")) {										
-					$.ajax({
-                        data: createURL("command=listHosts&type=Routing&clusterid="+clusterObj.id),
-	                    dataType: "json",
-	                    async: false,
-	                    success: function(json) {	                        
-	                        var items = json.listhostsresponse.host;		                        
-                            if (items != null && items.length > 0) {					    
-                                $clusterContent.find("#cluster_"+clusterObj.id+"_host").show();    	                                 
-                            }	   
-	                    }
-                    });    
-                                        
-                    $.ajax({        
-                        data: createURL("command=listStoragePools&clusterid="+clusterObj.id),
-                        dataType: "json", 
-                        async: false,       
-                        success: function(json) {    
-                            var items = json.liststoragepoolsresponse.storagepool;                              
-                            if(items != null && items.length > 0) {              
-                                $clusterContent.find("#cluster_"+clusterObj.id+"_primarystorage").show();    	           
-                            }              	                
-                        }
-                    });	    
-                                     
+				if($target.hasClass("expanded_close")) {						  
                     $target.removeClass("expanded_close").addClass("expanded_open");							
 					$clusterContent.show();					                   
 				} 
@@ -307,67 +283,7 @@ function buildZoneTree() {
 			    break;	
 		}
 		return false;
-	});  
-	
-	/*
-	$("#leftmenu_host_node_template").unbind("click").bind("click", function(event) {		    
-		var $thisNode = $(this);
-		selectRowInZoneTree($thisNode.find("#host_header"));	
-			    
-	    if(currentRightPanelJSP != "jsp/host.jsp") {                       
-            removeDialogs();            
-            
-            $("#right_panel").load("jsp/host.jsp", function(){                    
-                currentRightPanelJSP = "jsp/host.jsp";
-                       
-                var $topButtonContainer = clearButtonsOnTop();			    	       
-		        $("#top_buttons").appendTo($topButtonContainer);        
-                                
-                $thisNode.data("onRefreshFn", function() {
-                    hostJsonToDetailsTab();
-                });  
-    	        
-                afterLoadHostJSP();
-                hostToRightPanel($thisNode);	   
-            });      
-        } 
-        else {
-            hostToRightPanel($thisNode);	             
-        }	
-		
-		return false;
-	});  
-	*/
-	
-	/*
-	$("#leftmenu_primarystorage_node_template").unbind("click").bind("click", function(event) {		    
-		var $thisNode = $(this);
-		selectRowInZoneTree($thisNode.find("#primarystorage_header"));	
-		 
-	    if(currentRightPanelJSP != "jsp/primarystorage.jsp") {                       
-            removeDialogs();            
-            
-            $("#right_panel").load("jsp/primarystorage.jsp", function(){                    
-                currentRightPanelJSP = "jsp/primarystorage.jsp";
-                  
-                var $topButtonContainer = clearButtonsOnTop();			    	       
-		        $("#top_buttons").appendTo($topButtonContainer);        
-                                
-                $thisNode.data("onRefreshFn", function() {
-                    primarystorageJsonToDetailsTab();
-                });  
-    	        
-                afterLoadPrimaryStorageJSP();
-                primarystorageToRightPanel($thisNode);	   
-            });      
-        } 
-        else {
-            primarystorageToRightPanel($thisNode);	             
-        }	
-		
-		return false;
-	});  
-	*/
+	});  	
 }    
 
 function refreshClusterUnderPod($podNode, newClusterName, existingClusterId, noClicking) {  
@@ -467,19 +383,7 @@ function clusterJSONToTreeNode(json, $clusterNode) {
     $clusterNode.find("#leftmenu_primarystorage_node_template").data("clusterObj", json).attr("id",("cluster_"+json.id+"_primarystorage"));	  
     $clusterNode.data("id", json.id).data("name", fromdb(json.name));	    
     var clusterName = $clusterNode.find("#cluster_name").text(fromdb(json.name));
-    clusterName.data("jsonObj", json);	   
-        
-    $.ajax({
-        data: createURL("command=listHosts&type=Routing&clusterid="+json.id),
-        dataType: "json",
-        async: false,
-        success: function(json) {            
-            var items = json.listhostsresponse.host;	
-            if (items != null && items.length > 0) {					    
-                $clusterNode.find("#cluster_arrow").removeClass("white_nonexpanded_close").addClass("expanded_close");                  
-            }		    
-        }
-    });      
+    clusterName.data("jsonObj", json);	 
 }			
 
 function hostJSONToTreeNode(json, $node) {
@@ -507,20 +411,44 @@ function afterLoadResourceJSP() {
 	
 	initDialog("dialog_update_cert", 450);	
 	initDialog("dialog_add_pod_in_resource_page", 370); 	
+	initDialog("dialog_add_external_cluster_in_resource_page", 320);
     initDialog("dialog_add_host_in_resource_page");  
     initDialog("dialog_add_pool_in_resource_page");
+	
+	listZonesUpdate();
 		
 	initAddPodShortcut();
+	initAddClusterShortcut();
 	initAddHostShortcut();
 	initAddPrimaryStorageShortcut();
 		
 	resourceCountTotal();	  
 }
 
+function listZonesUpdate() {
+    var $dialogs = $("#dialog_add_pod_in_resource_page,#dialog_add_external_cluster_in_resource_page,#dialog_add_host_in_resource_page,#dialog_add_pool_in_resource_page");
+       
+    $.ajax({
+	    data: createURL("command=listZones&available=true"),
+	    dataType: "json",
+	    async: false,
+	    success: function(json) {
+	        var items = json.listzonesresponse.zone;			
+			if (items != null && items.length > 0) {
+			    $("#zone_total").text(items.length.toString());			   
+			    for(var i=0; i<items.length; i++) {		   			    
+			        $dialogs.find("#zone_dropdown").append("<option value='" + items[i].id + "'>" + fromdb(items[i].name) + "</option>");
+			    }			         
+			}	
+	    }
+	}); 
+}
+
 function initAddPodShortcut() {
     var $dialogAddPod = $("#dialog_add_pod_in_resource_page");
 
     var $zoneDropdown = $dialogAddPod.find("#zone_dropdown");
+    /*
     $.ajax({
 	    data: createURL("command=listZones&available=true"),
 	    dataType: "json",
@@ -533,7 +461,7 @@ function initAddPodShortcut() {
 			}	
 	    }
 	});    
-    
+    */
     $zoneDropdown.bind("change", function(event) {
 	    var zoneId = $(this).val();	    
 	    if(zoneId == null)
@@ -679,9 +607,179 @@ function initAddPodShortcut() {
     });        
 }    
 
+function initAddClusterShortcut() {
+    var $dialogAddCluster = $("#dialog_add_external_cluster_in_resource_page");
+
+    var $zoneDropdown = $dialogAddCluster.find("#zone_dropdown");
+    var $podDropdown = $dialogAddCluster.find("#pod_dropdown");    	
+    
+    /*
+    $.ajax({
+	    data: createURL("command=listZones&available=true"),
+	    dataType: "json",
+	    async: false,
+	    success: function(json) {
+	        var items = json.listzonesresponse.zone;			
+			if (items != null && items.length > 0) {	
+			    for(var i=0; i<items.length; i++)		   			    
+			        $zoneDropdown.append("<option value='" + items[i].id + "'>" + fromdb(items[i].name) + "</option>");
+			}	
+	    }
+	});    
+    */
+        
+    $zoneDropdown.bind("change", function(event) {
+	    var zoneId = $(this).val();	    
+	    if(zoneId == null)
+	        return;
+	    $.ajax({
+	        data: createURL("command=listZones&id="+zoneId),
+	        dataType: "json",	        
+	        success: function(json) {	            
+	            var zoneObj = json.listzonesresponse.zone[0];		           
+	            if(zoneObj.networktype == "Basic") { //basic-mode network (pod-wide VLAN)
+                    $dialogAddCluster.find("#guestip_container, #guestnetmask_container, #guestgateway_container").show();
+                }
+                else if(zoneObj.networktype == "Advanced") { //advanced-mode network (zone-wide VLAN)
+                    $dialogAddCluster.find("#guestip_container, #guestnetmask_container, #guestgateway_container").hide();     
+                }  	                    
+	        }
+	    });		    	   
+	    $.ajax({
+            data: createURL("command=listPods&zoneid="+zoneId),
+            dataType: "json",
+            async: false,
+            success: function(json) {            
+                var pods = json.listpodsresponse.pod;   
+                $podDropdown.empty(); 
+                if(pods != null && pods.length > 0) {
+                    for(var i=0; i<pods.length; i++)
+                        $podDropdown.append("<option value='" + pods[i].id + "'>" + fromdb(pods[i].name) + "</option>"); 	
+                }                 
+            }        
+        });  	    
+    });        
+  
+    var $hypervisorDropdown = $dialogAddCluster.find("#cluster_hypervisor");    
+    $hypervisorDropdown.change(function() {
+        if($(this).val() == "VmWare") {
+    		$('li[input_group="vmware"]', $dialogAddCluster).show();
+    		$dialogAddCluster.find("#type_dropdown").change();
+    	} else {
+    		$('li[input_group="vmware"]', $dialogAddCluster).hide();
+    		$("#cluster_name_label", $dialogAddCluster).text("Cluster:");
+    	}
+    });
+    
+    $dialogAddCluster.find("#type_dropdown").change(function() {
+    	if($(this).val() == "ExternalManaged") {
+    		$('li[input_sub_group="external"]', $dialogAddCluster).show();
+    		$("#cluster_name_label", $dialogAddCluster).text("vCenter Cluster:");
+    	} else {
+    		$('li[input_sub_group="external"]', $dialogAddCluster).hide();
+    		$("#cluster_name_label", $dialogAddCluster).text("Cluster:");
+    	}
+    });
+            
+    $("#add_cluster_shortcut").unbind("click").bind("click", function(event) {          
+        $dialogAddCluster.find("#info_container").hide();          
+         
+        $zoneDropdown.change();          
+        $hypervisorDropdown.change();         
+                
+        $dialogAddCluster.dialog('option', 'buttons', { 				
+	        "Add": function() { 
+	            var $thisDialog = $(this);		            
+	            			   
+		        // validate values
+			    var hypervisor = $thisDialog.find("#cluster_hypervisor").val();
+			    var clusterType="CloudManaged";
+			    if(hypervisor == "VmWare")
+			    	clusterType = $thisDialog.find("#type_dropdown").val();
+	            
+		        var isValid = true;
+		        if(hypervisor == "VmWare" && clusterType != "CloudManaged") {
+			        isValid &= validateString("vCenter Server", $thisDialog.find("#cluster_hostname"), $thisDialog.find("#cluster_hostname_errormsg"));
+			        isValid &= validateString("vCenter user", $thisDialog.find("#cluster_username"), $thisDialog.find("#cluster_username_errormsg"));
+			        isValid &= validateString("Password", $thisDialog.find("#cluster_password"), $thisDialog.find("#cluster_password_errormsg"));	
+			        isValid &= validateString("Datacenter", $thisDialog.find("#cluster_datacenter"), $thisDialog.find("#cluster_datacenter_errormsg"));	
+		        }
+		        isValid &= validateString("Cluster name", $thisDialog.find("#cluster_name"), $thisDialog.find("#cluster_name_errormsg"));	
+		        if (!isValid) 
+		            return;
+		            				
+				$thisDialog.find("#spinning_wheel").show(); 				
+				
+		        var array1 = [];
+			    array1.push("&hypervisor="+hypervisor);
+			    array1.push("&clustertype=" + clusterType);
+			    
+			    var zoneId = $thisDialog.find("#zone_dropdown").val();;
+		        array1.push("&zoneId="+zoneId);
+		        
+		        //expand zone in left menu tree (to show pod, cluster under the zone) 
+				var $zoneNode = $("#leftmenu_zone_tree").find("#tree_container").find("#zone_" + zoneId);							
+				if($zoneNode.find("#zone_arrow").hasClass("expanded_close"))
+				    $zoneNode.find("#zone_arrow").click();
+										             
+		        var podId = $thisDialog.find("#pod_dropdown").val();
+		        array1.push("&podId="+podId);
+
+		        var clusterName = trim($thisDialog.find("#cluster_name").val());
+		        if(hypervisor == "VmWare" && clusterType != "CloudManaged") {
+			        var username = trim($thisDialog.find("#cluster_username").val());
+			        array1.push("&username="+todb(username));
+					
+			        var password = trim($thisDialog.find("#cluster_password").val());
+			        array1.push("&password="+todb(password));
+			        
+			        var hostname = trim($thisDialog.find("#cluster_hostname").val());
+			        var dcName = trim($thisDialog.find("#cluster_datacenter").val());
+			        var url;					
+			        if(hostname.indexOf("http://")==-1)
+			            url = "http://" + todb(hostname);
+			        else
+			            url = hostname;
+			        url += "/" + todb(dcName) + "/" + todb(clusterName);
+			        array1.push("&url=" + todb(url));
+			        
+			        clusterName = hostname + "/" + dcName + "/" + clusterName
+		        } 
+		        
+		        array1.push("&clustername=" + todb(clusterName));
+									
+		        $.ajax({
+			       data: createURL("command=addCluster" + array1.join("")),
+			        dataType: "json",
+			        success: function(json) {
+			            $thisDialog.find("#spinning_wheel").hide();
+			            $thisDialog.dialog("close");
+					
+					    var clusterTotal = parseInt($("#cluster_total").text());
+		                clusterTotal++;
+		                $("#cluster_total").text(clusterTotal.toString());  
+					
+                        //clickClusterNodeAfterAddHost("new_cluster_radio", podId, clusterName, null, $thisDialog);                        
+			        },			
+                    error: function(XMLHttpResponse) {	
+						handleError(XMLHttpResponse, function() {							
+							handleErrorInDialog(XMLHttpResponse, $thisDialog);							
+						});
+                    }				
+		        });
+	        }, 
+	        "Cancel": function() { 
+		        $(this).dialog("close"); 
+	        } 
+        }).dialog("open");            
+        return false;
+    });
+}
+
 function initAddHostShortcut() {
     var $dialogAddHost = $("#dialog_add_host_in_resource_page");    
     
+    /*
     $.ajax({
         data: createURL("command=listZones&available=true"),
 	    dataType: "json",
@@ -695,6 +793,7 @@ function initAddHostShortcut() {
 		    //$dialogAddHost.find("#zone_dropdown").change();	//comment out to avoid race condition, do it before dialog box pops up	    
 	    }
     });
+	*/
 	
     $dialogAddHost.find("#zone_dropdown").bind("change", function(event) {
 	    var zoneId = $(this).val();
@@ -861,6 +960,7 @@ function initAddZoneLinks() {
 }
 
 function resourceCountTotal() {		
+	/*
 	$.ajax({
 	    data: createURL("command=listZones&available=true"),
 	    dataType: "json",
@@ -871,6 +971,7 @@ function resourceCountTotal() {
 			}	
 	    }
 	});
+	*/
 	
 	$.ajax({
 	    data: createURL("command=listPods&available=true"),
@@ -879,6 +980,17 @@ function resourceCountTotal() {
 	        var items = json.listpodsresponse.pod;			    			
 			if (items != null) {			   			    
 			    $("#pod_total").text(items.length.toString());
+			}	
+	    }
+	});
+	
+	$.ajax({
+	    data: createURL("command=listClusters"),
+	    dataType: "json",
+	    success: function(json) {
+	        var items = json.listclustersresponse.cluster;		    			
+			if (items != null) {			   			    
+			    $("#cluster_total").text(items.length.toString());
 			}	
 	    }
 	});
@@ -1115,9 +1227,12 @@ function addZoneWizardSubmit($thisWizard) {
 		    
 		    zoneId = item.id;	
 		    
+		    listZonesUpdate();
+		    /*
 		    var zoneTotal = parseInt($("#zone_total").text());
 		    zoneTotal++;
-		    $("#zone_total").text(zoneTotal.toString());		           
+		    $("#zone_total").text(zoneTotal.toString());	
+		    */	           
 	    },
         error: function(XMLHttpResponse) {            
 			handleError(XMLHttpResponse, function() {
@@ -1313,6 +1428,7 @@ function initAddPrimaryStorageShortcut($midmenuAddLink2, currentPageInRightPanel
 	    $dialogAddPool.find("#add_pool_protocol").empty().html('<option value="nfs">NFS</option>');	
     bindEventHandlerToDialogAddPool($dialogAddPool);	
     
+    /*
     $.ajax({
         data: createURL("command=listZones&available=true"),
 	    dataType: "json",
@@ -1326,6 +1442,7 @@ function initAddPrimaryStorageShortcut($midmenuAddLink2, currentPageInRightPanel
 		    //$dialogAddPool.find("#zone_dropdown").change();	//comment out to avoid race condition, do it before dialog box pops up	    
 	    }
     });
+	*/
 	
     $dialogAddPool.find("#zone_dropdown").bind("change", function(event) {
 	    var zoneId = $(this).val();
