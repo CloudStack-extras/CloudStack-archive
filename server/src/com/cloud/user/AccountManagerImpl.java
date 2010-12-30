@@ -725,7 +725,7 @@ public class AccountManagerImpl implements AccountManager, AccountService {
     public boolean enableAccount(long accountId) {
         boolean success = false;
         AccountVO acctForUpdate = _accountDao.createForUpdate();
-        acctForUpdate.setState(State.Enabled);
+        acctForUpdate.setState(State.enabled);
         success = _accountDao.update(Long.valueOf(accountId), acctForUpdate);
         return success;
     }
@@ -734,11 +734,11 @@ public class AccountManagerImpl implements AccountManager, AccountService {
         boolean success = false;
         Account account = _accountDao.findById(accountId);
         if (account != null) {
-            if (account.getState().equals(State.Locked)) {
+            if (account.getState().equals(State.locked)) {
                 return true; // already locked, no-op
-            } else if (account.getState().equals(State.Enabled)) {
+            } else if (account.getState().equals(State.enabled)) {
                 AccountVO acctForUpdate = _accountDao.createForUpdate();
-                acctForUpdate.setState(State.Locked);
+                acctForUpdate.setState(State.locked);
                 success = _accountDao.update(Long.valueOf(accountId), acctForUpdate);
             } else {
                 if (s_logger.isInfoEnabled()) {
@@ -939,11 +939,11 @@ public class AccountManagerImpl implements AccountManager, AccountService {
         }
 
         AccountVO account = _accountDao.findById(accountId);
-        if ((account == null) || account.getState().equals(State.Disabled)) {
+        if ((account == null) || account.getState().equals(State.disabled)) {
             success = true;
         } else {
             AccountVO acctForUpdate = _accountDao.createForUpdate();
-            acctForUpdate.setState(State.Disabled);
+            acctForUpdate.setState(State.disabled);
             success = _accountDao.update(Long.valueOf(accountId), acctForUpdate);
 
             success = (success && doDisableAccount(accountId));
@@ -1027,7 +1027,7 @@ public class AccountManagerImpl implements AccountManager, AccountService {
                 newAccount.setAccountName(accountName);
                 newAccount.setDomainId(domainId);
                 newAccount.setType(userType);
-                newAccount.setState(State.Enabled);
+                newAccount.setState(State.enabled);
                 newAccount.setNetworkDomain(networkDomain);
                 newAccount = _accountDao.persist(newAccount);
                 accountId = newAccount.getId();
@@ -1040,7 +1040,7 @@ public class AccountManagerImpl implements AccountManager, AccountService {
             UserVO user = new UserVO();
             user.setUsername(username);
             user.setPassword(password);
-            user.setState(State.Enabled);
+            user.setState(State.enabled);
             user.setFirstname(firstName);
             user.setLastname(lastName);
             user.setAccountId(accountId.longValue());
@@ -1101,7 +1101,7 @@ public class AccountManagerImpl implements AccountManager, AccountService {
         UserVO user = new UserVO();
         user.setUsername(userName);
         user.setPassword(password);
-        user.setState(State.Enabled);
+        user.setState(State.enabled);
         user.setFirstname(firstName);
         user.setLastname(lastName);
         user.setAccountId(accountId.longValue());
@@ -1232,7 +1232,7 @@ public class AccountManagerImpl implements AccountManager, AccountService {
             throw new PermissionDeniedException("Failed to disable user " + userId + ", permission denied.");
         }
 
-        boolean success = doSetUserStatus(userId, State.Disabled);
+        boolean success = doSetUserStatus(userId, State.disabled);
         if (success) {
         	//user successfully disabled
         	return _userAccountDao.findById(userId);
@@ -1263,7 +1263,7 @@ public class AccountManagerImpl implements AccountManager, AccountService {
             throw new PermissionDeniedException("Failed to enable user " + userId + ", permission denied.");
         }
         
-        success = doSetUserStatus(userId, State.Enabled);
+        success = doSetUserStatus(userId, State.enabled);
 
         // make sure the account is enabled too
         success = (success && enableAccount(user.getAccountId()));
@@ -1302,16 +1302,16 @@ public class AccountManagerImpl implements AccountManager, AccountService {
 
         // make sure the account is enabled too
         // if the user is either locked already or disabled already, don't change state...only lock currently enabled users
-        if (user.getState().equals(State.Locked)) {
+        if (user.getState().equals(State.locked)) {
             // already locked...no-op
             return _userAccountDao.findById(id);
-        } else if (user.getState().equals(State.Enabled)) {
-            success = doSetUserStatus(user.getId(), State.Locked);
+        } else if (user.getState().equals(State.enabled)) {
+            success = doSetUserStatus(user.getId(), State.locked);
 
             boolean lockAccount = true;
             List<UserVO> allUsersByAccount = _userDao.listByAccount(user.getAccountId());
             for (UserVO oneUser : allUsersByAccount) {
-                if (oneUser.getState().equals(State.Enabled)) {
+                if (oneUser.getState().equals(State.enabled)) {
                     lockAccount = false;
                     break;
                 }
