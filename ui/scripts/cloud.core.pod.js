@@ -368,6 +368,7 @@ function bindAddClusterButton($leftmenuItem1) {
 			        success: function(json) {
 			            $thisDialog.find("#spinning_wheel").hide();
 			            $thisDialog.dialog("close");	
+                        var item = json.addclusterresponse.cluster[0];
                                                                    
                         var $podNode = $("#pod_" + podId);
                         if($podNode.length > 0 && $podNode.css("display") != "none") {
@@ -377,13 +378,17 @@ function bindAddClusterButton($leftmenuItem1) {
                             
                             if($podNode.find("#pod_arrow").hasClass("expanded_close")) { //if pod node is closed
                                 $podNode.find("#pod_arrow").click(); //expand pod node
+                                var $clusterNode = $podNode.find("#cluster_"+item.id);
+                                $clusterNode.find("#cluster_arrow").click(); //expand cluster node to see host node and storage node   
+                                $clusterNode.find("#cluster_name").click();  //click cluster node to show cluster info
                             }
                             else { //if pod node is expanded                                
-                                var $clusterNode = $("#leftmenu_cluster_node_template").clone(true);                                 
-                                var item = json.addclusterresponse.cluster[0];
+                                var $clusterNode = $("#leftmenu_cluster_node_template").clone(true);  
                                 clusterJSONToTreeNode(item, $clusterNode);
-                                $podNode.find("#clusters_container").append($clusterNode.show());                                                              
-                            }                         
+                                $podNode.find("#clusters_container").append($clusterNode.show());   
+                                $clusterNode.find("#cluster_arrow").click(); //expand cluster node to see host node and storage node   
+                                $clusterNode.find("#cluster_name").click();  //click cluster node to show cluster info                                                            
+                            }                                      
                         }
 			        },			
                     error: function(XMLHttpResponse) {	
@@ -424,24 +429,14 @@ function bindAddHostButton($leftmenuItem1) {
             dialogAddHost.find("#zone_name").text(fromdb(clusterObj.zonename));  
             dialogAddHost.find("#pod_name").text(fromdb(clusterObj.podname)); 
         }
-        else if(currentRightPanelJSP == "jsp/host.jsp") {
-            var hostObj = $leftmenuItem1.data("jsonObj");  
-            zoneId = hostObj.zoneid;
-            podId = hostObj.podid; 
-            clusterId = hostObj.clusterid;   
-            dialogAddHost.find("#zone_name").text(fromdb(hostObj.zonename));  
-            dialogAddHost.find("#pod_name").text(fromdb(hostObj.podname)); 
-        }
-        /*
-        else if(currentRightPanelJSP == "jsp/primarystorage.jsp") {
-            var primarystorageObj = $leftmenuItem1.data("jsonObj");   
-            zoneId = primarystorageObj.zoneid;
-            podId = primarystorageObj.podid;    
-            clusterId = primarystorageObj.clusterid;          
-            dialogAddHost.find("#zone_name").text(fromdb(primarystorageObj.zonename));  
-            dialogAddHost.find("#pod_name").text(fromdb(primarystorageObj.podname)); 
-        }
-        */
+        else if(currentRightPanelJSP == "jsp/host.jsp") {            
+            var clusterObj = $leftmenuItem1.data("clusterObj");  
+            zoneId = clusterObj.zoneid;
+            podId = clusterObj.podid;    
+            clusterId = clusterObj.id;    
+            dialogAddHost.find("#zone_name").text(fromdb(clusterObj.zonename));  
+            dialogAddHost.find("#pod_name").text(fromdb(clusterObj.podname)); 
+        }       
                   
         dialogAddHost.find("#host_hypervisor").change(function() {
         	if($(this).val() == "VmWare") {
@@ -532,7 +527,20 @@ function bindAddHostButton($leftmenuItem1) {
 			        success: function(json) {
 			            $thisDialog.find("#spinning_wheel").hide();
 			            $thisDialog.dialog("close");		         
-                        //expandClusterNodeAfterAddHost(clusterRadio, podId, newClusterName, clusterId, $thisDialog); //expand cluster node to see host node                            
+                                               
+                        var item = json.addhostresponse.host;	
+												
+						var $podArrow = $("#pod_"+podId).find("#pod_arrow");
+						if($podArrow.hasClass("expanded_close")) {	
+						    $podArrow.click();
+						}
+						
+						var $clusterArrow = $("#cluster_"+clusterId).find("#cluster_arrow");
+						if($clusterArrow.hasClass("expanded_close")) {	
+						    $clusterArrow.click();
+						}
+						
+						$("#cluster_"+clusterId+"_host").click();	                                           
 			        },			
                     error: function(XMLHttpResponse) {	
 						handleError(XMLHttpResponse, function() {							
@@ -596,24 +604,14 @@ function bindAddPrimaryStorageButton($leftmenuItem1) {
             sourceClusterId = clusterObj.id;   
             dialogAddPool.find("#zone_name").text(fromdb(clusterObj.zonename));  
             dialogAddPool.find("#pod_name").text(fromdb(clusterObj.podname)); 
-        }    
-        /*    
-        else if(currentRightPanelJSP == "jsp/host.jsp") {
-            var hostObj = $leftmenuItem1.data("jsonObj");  
-            zoneId = hostObj.zoneid;
-            podId = hostObj.podid; 
-            sourceClusterId = hostObj.clusterid;            
-            dialogAddPool.find("#zone_name").text(fromdb(hostObj.zonename));  
-            dialogAddPool.find("#pod_name").text(fromdb(hostObj.podname)); 
-        }
-        */
+        }          
         else if(currentRightPanelJSP == "jsp/primarystorage.jsp") {
-            var primarystorageObj = $leftmenuItem1.data("jsonObj");   
-            zoneId = primarystorageObj.zoneid;
-            podId = primarystorageObj.podid;  
-            sourceClusterId = primarystorageObj.clusterid;   
-            dialogAddPool.find("#zone_name").text(fromdb(primarystorageObj.zonename));  
-            dialogAddPool.find("#pod_name").text(fromdb(primarystorageObj.podname)); 
+            var clusterObj = $leftmenuItem1.data("clusterObj");   
+            zoneId = clusterObj.zoneid;
+            podId = clusterObj.podid;    
+            sourceClusterId = clusterObj.id;    
+            dialogAddPool.find("#zone_name").text(fromdb(clusterObj.zonename));  
+            dialogAddPool.find("#pod_name").text(fromdb(clusterObj.podname)); 
         }
                                              
         var clusterSelect = $("#dialog_add_pool").find("#pool_cluster").empty();			            
