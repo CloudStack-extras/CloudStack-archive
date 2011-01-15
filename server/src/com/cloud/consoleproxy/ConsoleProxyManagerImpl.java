@@ -1450,32 +1450,6 @@ public class ConsoleProxyManagerImpl implements ConsoleProxyManager, ConsoleProx
           if (_storageMgr.unshare(proxy, null) == null) {
               s_logger.warn("Unable to set share to false for " + proxy.getId());
           }
-//        Transaction txn = Transaction.currentTxn();
-//        try {
-//            txn.start();
-//            String privateIpAddress = proxy.getPrivateIpAddress();
-//            if (privateIpAddress != null) {
-//                proxy.setPrivateIpAddress(null);
-////                freePrivateIpAddress(privateIpAddress, proxy.getDataCenterId(), proxy.getId());
-//            }
-//            String guestIpAddress = proxy.getGuestIpAddress();
-//            if (guestIpAddress != null) {
-//                proxy.setGuestIpAddress(null);
-//                _dcDao.releaseLinkLocalIpAddress(guestIpAddress, proxy.getDataCenterId(), proxy.getId());
-//            }
-//
-//            if (!_itMgr.stateTransitTo(proxy, ev, null)) {
-//                s_logger.debug("Unable to update the console proxy");
-//                return;
-//            }
-//            txn.commit();
-//        } catch (Exception e) {
-//            s_logger.error("Unable to complete stop command due to ", e);
-//        }
-//
-//        if (_storageMgr.unshare(proxy, null) == null) {
-//            s_logger.warn("Unable to set share to false for " + proxy.getId());
-//        }
     }
 
     @Override
