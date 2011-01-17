@@ -107,9 +107,6 @@ import com.cloud.network.IpAddress;
 import com.cloud.network.Network;
 import com.cloud.network.NetworkManager;
 import com.cloud.network.NetworkVO;
-import com.cloud.network.Networks.BroadcastDomainType;
-import com.cloud.network.Networks.IsolationType;
-import com.cloud.network.Networks.TrafficType;
 import com.cloud.network.PublicIpAddress;
 import com.cloud.network.RemoteAccessVpn;
 import com.cloud.network.RemoteAccessVpnVO;
@@ -117,6 +114,9 @@ import com.cloud.network.SshKeysDistriMonitor;
 import com.cloud.network.VirtualNetworkApplianceService;
 import com.cloud.network.VpnUser;
 import com.cloud.network.VpnUserVO;
+import com.cloud.network.Networks.BroadcastDomainType;
+import com.cloud.network.Networks.IsolationType;
+import com.cloud.network.Networks.TrafficType;
 import com.cloud.network.addr.PublicIp;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
@@ -1453,10 +1453,14 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                 managementNic = nic;
             } else if (nic.getTrafficType() == TrafficType.Control) {
                 // DOMR control command is sent over management server in VMware
+  
+                // don't let domr setup explicit route
+/*                
                 if (dest.getHost().getHypervisorType() == HypervisorType.VmWare) {
                     buf.append(" mgmtcidr=").append(_mgmt_host);
                     buf.append(" localgw=").append(dest.getPod().getGateway());
                 }
+*/                
 
                 controlNic = nic;
             }
