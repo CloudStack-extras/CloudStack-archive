@@ -154,14 +154,14 @@ rollback_if_needed $tmpltfs $? "failed to uncompress $tmpltimg\n"
 tmpltimg2=$(untar $tmpltimg2)
 rollback_if_needed $tmpltfs $? "tar archives not supported\n"
 
-if [ ${tmpltname%.vhd} != ${tmpltname} ]
-then
-  if  which  vhd-util 2>/dev/null
-  then 
-    vhd-util check -n ${tmpltimg2} > /dev/null
-    rollback_if_needed $tmpltfs $? "vhd tool check $tmpltimg2 failed\n"
-  fi
-fi
+#if [ ${tmpltname%.vhd} != ${tmpltname} ]
+#then
+#  if  which  vhd-util 2>/dev/null
+#  then 
+#    vhd-util check -n ${tmpltimg2} > /dev/null
+#    rollback_if_needed $tmpltfs $? "vhd tool check $tmpltimg2 failed\n"
+#  fi
+#fi
 
 imgsize=$(ls -l $tmpltimg2| awk -F" " '{print $5}')
 
