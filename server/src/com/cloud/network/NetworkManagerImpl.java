@@ -942,7 +942,8 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
 
         if (profile.getIp4Address() != null) {
             vo.setIp4Address(profile.getIp4Address());
-            vo.setState(NicVO.State.Reserved);
+            vo.setReservationStrategy(ReservationStrategy.Create);
+            vo.setState(Nic.State.Allocated);
             vo.setAddressFormat(AddressFormat.Ip4);
         }
 
@@ -1051,6 +1052,15 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             _networksDao.releaseFromLockTable(networkId);
         }
     }
+    
+    @DB
+    protected void updateNic(NicVO nic, long networkId, int count) {
+        Transaction txn = Transaction.currentTxn();
+        txn.start();
+        _nicDao.update(nic.getId(), nic);
+        _networksDao.changeActiveNicsBy(networkId, count);
+        txn.commit();
+    }
 
     @Override
     public void prepare(VirtualMachineProfile<? extends VMInstanceVO> vmProfile, DeployDestination dest, ReservationContext context) throws InsufficientCapacityException, ConcurrentOperationException, ResourceUnavailableException {
@@ -1083,9 +1093,11 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 nic.setNetmask(profile.getNetmask());
                 nic.setGateway(profile.getGateway());
                 nic.setAddressFormat(profile.getFormat());
-                _nicDao.update(nic.getId(), nic);      
+                updateNic(nic, network.getId(), 1);
             } else {
                 profile = new NicProfile(nic, network, nic.getBroadcastUri(), nic.getIsolationUri());
+                nic.setState(Nic.State.Reserved);
+                updateNic(nic, network.getId(), 1);
             }
             
             for (NetworkElement element : _networkElements) {
@@ -1096,7 +1108,6 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             }
 
             vmProfile.addNic(profile);
-            _networksDao.changeActiveNicsBy(network.getId(), 1);
         }
     }
     
@@ -1118,17 +1129,25 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         List<NicVO> nics = _nicDao.listBy(vmProfile.getId());
         for (NicVO nic : nics) {
             NetworkVO network = _networksDao.findById(nic.getNetworkId());
-            if (nic.getReservationStrategy() == ReservationStrategy.Start) {
-                NetworkGuru concierge = _networkGurus.get(network.getGuruName());
-                nic.setState(Resource.State.Releasing);
-                _nicDao.update(nic.getId(), nic);
-                NicProfile profile = new NicProfile(nic, network, null, null);
-                if (concierge.release(profile, vmProfile, nic.getReservationId())) {
-                    nic.setState(Resource.State.Allocated);
+            if (nic.getState() == Nic.State.Reserved || nic.getState() == Nic.State.Reserving) {
+                if (nic.getReservationStrategy() == ReservationStrategy.Start) {
+                    NetworkGuru concierge = _networkGurus.get(network.getGuruName());
+                    nic.setState(Resource.State.Releasing);
                     _nicDao.update(nic.getId(), nic);
+                    NicProfile profile = new NicProfile(nic, network, null, null);
+                    if (concierge.release(profile, vmProfile, nic.getReservationId())) {
+                        nic.setState(Resource.State.Allocated);
+                        if (nic.getState() == Nic.State.Reserved) {
+                            updateNic(nic, network.getId(), -1);
+                        } else {
+                            _nicDao.update(nic.getId(), nic);
+                        }
+                    }
+                } else {
+                    nic.setState(Nic.State.Allocated);
+                    updateNic(nic, network.getId(), -1);
                 }
-            }
-            _networksDao.changeActiveNicsBy(network.getId(), -1);
+            }            
         }
     }
 
