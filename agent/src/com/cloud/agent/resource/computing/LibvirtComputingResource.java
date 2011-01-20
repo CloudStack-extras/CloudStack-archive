@@ -109,6 +109,7 @@ import com.cloud.agent.api.MirrorCommand;
 import com.cloud.agent.api.ModifySshKeysCommand;
 import com.cloud.agent.api.ModifyStoragePoolAnswer;
 import com.cloud.agent.api.ModifyStoragePoolCommand;
+import com.cloud.agent.api.NetworkRulesSystemVmCommand;
 import com.cloud.agent.api.NetworkUsageAnswer;
 import com.cloud.agent.api.NetworkUsageCommand;
 import com.cloud.agent.api.PingCommand;
@@ -169,6 +170,7 @@ import com.cloud.host.Host.Type;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.NetworkEnums.RouterPrivateIpStrategy;
 import com.cloud.network.Networks.BroadcastDomainType;
+import com.cloud.network.Networks.IsolationType;
 import com.cloud.network.Networks.TrafficType;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.ServerResourceBase;
@@ -868,6 +870,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             	return execute((CheckSshCommand) cmd);
             } else if (cmd instanceof NetworkUsageCommand) {
             	return execute((NetworkUsageCommand) cmd);
+            } else if (cmd instanceof NetworkRulesSystemVmCommand) {
+               return execute((NetworkRulesSystemVmCommand)cmd);
             } else {
         		s_logger.warn("Unsupported command ");
                 return Answer.createUnsupportedCommandAnswer(cmd);
@@ -1727,6 +1731,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 					_vms.put(cmd.getVmName(), State.Running);
 				}
 			}
+		
 			return new CheckVirtualMachineAnswer(cmd, state, vncPort);
 		} catch (LibvirtException e) {
 			return new CheckVirtualMachineAnswer(cmd, e.getMessage());
@@ -2227,7 +2232,12 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 			if (vmSpec.getType() != VirtualMachine.Type.User) {
 				default_network_rules_for_systemvm(vmName);
 			} else {
-				default_network_rules(vmName, vmSpec.getNics()[0].getIp(), vmSpec.getId(), vmSpec.getNics()[0].getMac());
+			    NicTO[] nics = vmSpec.getNics();
+			    for (NicTO nic : nics) { 
+			        if (nic.getIsolationUri() != null && nic.getIsolationUri().getScheme().equalsIgnoreCase(IsolationType.Ec2.toString())) {
+			            default_network_rules(vmName, vmSpec.getNics()[0].getIp(), vmSpec.getId(), vmSpec.getNics()[0].getMac());
+			        }
+			    }
 			}
 
 			// Attach each data volume to the VM, if there is a deferred attached disk
@@ -3594,5 +3604,14 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     		storage.create(0);
     	}
     	return storage;
+    }
+    
+    private Answer execute(NetworkRulesSystemVmCommand cmd) {
+        boolean success = false;
+        if (cmd.getType() != VirtualMachine.Type.User) {
+            success = default_network_rules_for_systemvm(cmd.getVmName());
+        }
+        
+        return new Answer(cmd, success, "");
     }
 }
