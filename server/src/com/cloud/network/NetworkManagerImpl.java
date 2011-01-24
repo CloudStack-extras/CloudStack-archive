@@ -450,7 +450,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     }
     
     public boolean applyIpAssociations(Network network, boolean continueOnError) throws ResourceUnavailableException {
-        List<IPAddressVO> userIps = _ipAddressDao.listByNetwork(network.getId());
+        List<IPAddressVO> userIps = _ipAddressDao.listByAssociatedNetwork(network.getId());
         List<PublicIp> publicIps = new ArrayList<PublicIp>();
         if (userIps != null && !userIps.isEmpty()) {
             for (IPAddressVO userIp : userIps) {
@@ -1684,6 +1684,21 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
 
         boolean success = true;
+        
+        //release ip addresses associated with the network if there are any
+        List<IPAddressVO> ipsToRelease = _ipAddressDao.listByAssociatedNetwork(networkId);
+        if (ipsToRelease != null && !ipsToRelease.isEmpty()) {
+            for (IPAddressVO ip : ipsToRelease) {
+                if (!releasePublicIpAddress(ip.getAddress(), ip.getAccountId(), callerUserId)) {
+                    s_logger.warn("Failed to deallocate ip address as a part of network id=" + networkId + " destroy");
+                    success = false;
+                }
+            } 
+            if (success) {
+                s_logger.debug("Ip addresses are deallocated successfully as a part of network id=" + networkId + " destroy");
+            }
+        }
+        
         for (NetworkElement element : _networkElements) {
             try {
                 if (s_logger.isDebugEnabled()) {

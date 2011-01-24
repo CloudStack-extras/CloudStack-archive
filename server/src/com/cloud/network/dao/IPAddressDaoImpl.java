@@ -203,7 +203,7 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Ip> implements
     }
     
     @Override
-    public List<IPAddressVO> listByNetwork(long networkId) {
+    public List<IPAddressVO> listByAssociatedNetwork(long networkId) {
         SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
         sc.setParameters("network", networkId);
         

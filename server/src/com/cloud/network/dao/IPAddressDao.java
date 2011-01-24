@@ -34,7 +34,7 @@ public interface IPAddressDao extends GenericDao<IPAddressVO, Ip> {
 	
 	List<IPAddressVO> listByDcIdIpAddress(long dcId, String ipAddress);
 	
-	List<IPAddressVO> listByNetwork(long networkId);
+	List<IPAddressVO> listByAssociatedNetwork(long networkId);
 	
 	int countIPs(long dcId, long vlanDbId, boolean onlyCountAllocated);
 	
