@@ -1128,7 +1128,7 @@ function showLeftNavigationBasedOnRole() {
 	    $("#leftmenu_security_group_container").hide();
 	}
 	
-	if (getUserPublicTemplateEnabled() == "true") {
+	if (g_userPublicTemplateEnabled == "true") {
 	    $("#leftmenu_submenu_community_template_container, #leftmenu_submenu_community_iso_container").show();
 	}
 	else {
