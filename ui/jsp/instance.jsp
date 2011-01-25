@@ -468,7 +468,7 @@
                                     Featured Template</div>
                                 <div class="rev_wizmid_nonselectedtempbut" id="wiz_my">
                                     My Template</div>
-                                <div class="rev_wizmid_nonselectedtempbut" id="wiz_community">
+                                <div class="rev_wizmid_nonselectedtempbut" id="wiz_community" style="display: none;">
                                     Community Template</div>
                                 <div class="rev_wizmid_nonselectedtempbut" id="wiz_blank">
                                     Blank Template</div>
