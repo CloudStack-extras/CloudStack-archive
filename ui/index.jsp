@@ -462,7 +462,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="leftmenu_expandedlist">
+                                <div class="leftmenu_expandedlist" id="leftmenu_submenu_community_template_container" style="display: none">
                                     <div class="leftmenu_content" id="leftmenu_submenu_community_template">
                                         <div class="leftmenu_thirdindent">
                                             <div class="leftmenu_arrows white_nonexpanded_close" id="arrowIcon">
@@ -504,7 +504,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="leftmenu_expandedlist">
+                                <div class="leftmenu_expandedlist" id="leftmenu_submenu_community_iso_container" style="display: none">
                                     <div class="leftmenu_content" id="leftmenu_submenu_community_iso">
                                         <div class="leftmenu_thirdindent">
                                             <div class="leftmenu_arrows white_nonexpanded_close" id="arrowIcon">
