@@ -73,6 +73,9 @@ public class ListVMsCmd extends BaseListCmd {
     
     @Parameter(name=ApiConstants.NETWORK_ID, type=CommandType.LONG, description="list by network id")
     private Long networkId;
+    
+    @Parameter(name=ApiConstants.IS_RECURSIVE, type=CommandType.BOOLEAN, description="defaults to false, but if true, lists all vms from the parent specified by the domain id till leaves.")
+    private Boolean recursive;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -124,6 +127,10 @@ public class ListVMsCmd extends BaseListCmd {
     
     public Long getNetworkId() {
         return networkId;
+    }
+    
+    public Boolean isRecursive() {
+        return recursive;
     }
 
     /////////////////////////////////////////////////////
