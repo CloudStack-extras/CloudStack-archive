@@ -853,6 +853,18 @@ function resetViewConsoleAction(jsonObj, $detailsTab) {
 				
 		//console proxy popup
 		$viewConsoleTemplate.data("proxyUrl", "console?cmd=access&vm=" + jsonObj.id).data("vmId",jsonObj.id).click(function(event) {				
+			if(navigator != null && navigator.appName == "Microsoft Internet Explorer") {			    
+			    $("#dialog_confirmation")	
+                .text("Sorry, console viewing is not currently available for Internet Explorer.  Please use Firefox for viewing your guest's console.")
+	            .dialog('option', 'buttons', { 	            
+		            "OK": function() { 
+			            $(this).dialog("close");             			
+		            } 
+	            }).dialog("open");			    
+			    			    
+			    return false;
+			}						
+			
 			var proxyUrl = $(this).data("proxyUrl");				
 			//proxyUrl = "http://localhost:8080/client/" + proxyUrl;  //***** temporary hack. This line will be removed after new UI code (/ui/new/*) moves to /ui/*
 			var viewer = window.open(proxyUrl, $(this).data("vmId"),"width=820,height=640,resizable=yes,menubar=no,status=no,scrollbars=no,toolbar=no,location=no");
