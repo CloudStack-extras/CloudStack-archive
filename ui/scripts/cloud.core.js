@@ -855,7 +855,7 @@ function resetViewConsoleAction(jsonObj, $detailsTab) {
 		$viewConsoleTemplate.data("proxyUrl", "console?cmd=access&vm=" + jsonObj.id).data("vmId",jsonObj.id).click(function(event) {				
 			if(navigator != null && navigator.appName == "Microsoft Internet Explorer") {			    
 			    $("#dialog_confirmation")	
-                .text("Sorry, console viewing is not currently available for Internet Explorer.  Please use Firefox for viewing your guest's console.")
+                .text("We've detected that you are using Internet Explorer as your web browser.  This feature is not currently supported on Internet Explorer (but we're working on it!).  Please use either Firefox or Chrome to view your virtual server's console.  Thank you.")
 	            .dialog('option', 'buttons', { 	            
 		            "OK": function() { 
 			            $(this).dialog("close");             			
