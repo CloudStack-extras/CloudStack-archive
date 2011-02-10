@@ -12,7 +12,6 @@ ALTER TABLE user_ip_address DROP primary key;
 ALTER TABLE `cloud`.`user_ip_address` ADD COLUMN `id` bigint unsigned NOT NULL auto_increment primary key;
 ALTER TABLE `cloud`.`user_ip_address` ADD COLUMN `source_network_id` bigint unsigned NOT NULL COMMENT 'network id ip belongs to';
 ALTER TABLE `cloud`.`user_ip_address` ADD COLUMN `vm_id` bigint unsigned NOT NULL COMMENT 'foreign key to virtual machine id';
-ALTER TABLE `cloud`.`user_ip_address` ADD UNIQUE (source_network_id, public_ip_address);
 UPDATE user_ip_address SET source_network_id=(select network_id from vlan where vlan.id=user_ip_address.vlan_db_id);
 
 -------------------------------firewall_rules table -------------------------------------------------------------------------------------
@@ -60,7 +59,7 @@ ALTER TABLE `cloud`.`remote_access_vpn` ADD CONSTRAINT `fk_remote_access_vpn__se
 ALTER TABLE `cloud`.`op_it_work` ADD CONSTRAINT `fk_op_it_work__mgmt_server_id` FOREIGN KEY (`mgmt_server_id`) REFERENCES `mshost`(`msid`);
 ALTER TABLE `cloud`.`op_it_work` ADD CONSTRAINT `fk_op_it_work__instance_id` FOREIGN KEY (`instance_id`) REFERENCES `vm_instance`(`id`) ON DELETE CASCADE;
 ALTER TABLE `cloud`.`op_it_work` ADD INDEX `i_op_it_work__step`(`step`);
-
+ALTER TABLE `cloud`.`user_ip_address` ADD UNIQUE (source_network_id, public_ip_address);
 
 --step 4 (independent of above)
 ----------------------usage changes (for cloud_usage database)--------------------------------------------------------------------------------------------------------------
