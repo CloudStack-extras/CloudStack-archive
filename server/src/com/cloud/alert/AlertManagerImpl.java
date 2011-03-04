@@ -59,7 +59,6 @@ import com.cloud.network.dao.IPAddressDao;
 import com.cloud.service.ServiceOffering;
 import com.cloud.service.ServiceOfferingVO;
 import com.cloud.service.dao.ServiceOfferingDao;
-import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.storage.StorageManager;
 import com.cloud.storage.StoragePoolVO;
 import com.cloud.storage.dao.StoragePoolDao;
@@ -89,7 +88,7 @@ import com.sun.mail.smtp.SMTPTransport;
 public class AlertManagerImpl implements AlertManager {
     private static final Logger s_logger = Logger.getLogger(AlertManagerImpl.class.getName());
 
-    private static final long INITIAL_DELAY = 5L * 60L * 1000L; // five minutes expressed in milliseconds
+    private static final long INITIAL_CAPACITY_CHECK_DELAY = 30L * 1000L; // Half a minute - expressed in milliseconds
 
     private static final DecimalFormat _dfPct = new DecimalFormat("###.##");
     private static final DecimalFormat _dfWhole = new DecimalFormat("########");
@@ -289,7 +288,7 @@ public class AlertManagerImpl implements AlertManager {
 
     @Override
     public boolean start() {
-        _timer.schedule(new CapacityChecker(), INITIAL_DELAY, _capacityCheckPeriod);
+        _timer.schedule(new CapacityChecker(), INITIAL_CAPACITY_CHECK_DELAY, _capacityCheckPeriod);
         return true;
     }
 
@@ -349,6 +348,7 @@ public class AlertManagerImpl implements AlertManager {
         for (ServiceOfferingVO offering : offerings) {
             offeringsMap.put(offering.getId(), offering);
         }
+        //Calculate CPU and Memory allocated stats.
         for (HostVO host : hosts) {
             if (host.getType() != Host.Type.Routing) {
                 continue;
