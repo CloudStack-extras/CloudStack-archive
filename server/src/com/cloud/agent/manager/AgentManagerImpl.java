@@ -42,6 +42,7 @@ import javax.naming.ConfigurationException;
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
+import com.cloud.agent.HostCreator;
 import com.cloud.agent.Listener;
 import com.cloud.agent.api.AgentControlAnswer;
 import com.cloud.agent.api.AgentControlCommand;
@@ -218,6 +219,8 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory,
 			17);
 	protected List<Pair<Integer, Listener>> _cmdMonitors = new ArrayList<Pair<Integer, Listener>>(
 			17);
+	protected List<Pair<Integer, HostCreator>> _creationMonitors = new ArrayList<Pair<Integer, HostCreator>>(
+	            17);
 	protected int _monitorId = 0;
 
 	protected NioServer _connection;
@@ -447,6 +450,25 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory,
 			return _monitorId;
 		}
 	}
+	
+	@Override
+	public int registerForInitialConnects(final HostCreator creator,boolean priority) {
+	    synchronized (_hostMonitors) {
+	        _monitorId++;
+
+	        if (priority) {
+	            _creationMonitors.add(0, new Pair<Integer, HostCreator>(
+	                    _monitorId, creator));
+	        } else {
+	            _creationMonitors.add(0, new Pair<Integer, HostCreator>(
+	                    _monitorId, creator));
+	        }
+	    }
+
+	    return _monitorId;
+	}
+
+
 
 	@Override
 	public void unregisterForHostEvents(final int id) {
@@ -1769,6 +1791,21 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory,
 		return attache;
 	}
 
+	protected boolean notifyCreatorsOfConnection(StartupCommand[] cmd) throws ConnectionException {
+	    for (Pair<Integer, HostCreator> monitor : _creationMonitors) {
+	        if (s_logger.isDebugEnabled()) {
+	            s_logger.debug("Sending Connect to creator: "
+	                    + monitor.second().getClass().getSimpleName());
+	        }
+	        boolean handled =  monitor.second().processInitialConnect(cmd);
+	        if (handled) {
+	            break;
+	        }
+	    }
+
+	    return false;
+	}
+	
 	@Override
 	public boolean start() {
 		startDirectlyConnectedHosts();
@@ -2626,7 +2663,15 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory,
 	public AgentAttache handleConnect(final Link link,
 			final StartupCommand[] startup) throws IllegalArgumentException,
 			ConnectionException {
-		HostVO server = createHost(startup, null, null, false, null, null);
+	    boolean created = false;
+	    HostVO server = _hostDao.findByGuid(startup[0].getGuid());
+	    if (server == null) {
+	        created = notifyCreatorsOfConnection(startup);
+	        if (!created) {
+	            server = createHost(startup, null, null, false, null, null);
+	        }
+	    }
+	     
 		if (server == null) {
 			return null;
 		}
