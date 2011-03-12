@@ -1399,8 +1399,8 @@ var vmActionMap = {
         }
     },       
     "label.action.migrate.instance": {
-        isAsyncJob: false,        
-        inProcessText: "label.action.migrate.instance",
+        isAsyncJob: true,        
+        inProcessText: "label.action.migrate.instance.processing",
         dialogBeforeActionFn : doMigrateInstance,
         afterActionSeccessFn: function(json, $midmenuItem1, id) {                 
             var jsonObj = json.queryasyncjobresultresponse.jobresult.virtualmachine;       
@@ -1724,8 +1724,13 @@ function doMigrateInstance($actionLink, $detailsTab, $midmenuItem1) {
 					hostSelect.append(option); 
 				}
 			} 
+		},
+		error: function(XMLHttpResponse) {
+			handleError(XMLHttpResponse, function() {
+				$("#dialog_migrate_instance #migrate_instance_hosts").empty();
+			});
 		}
-	});
+});
 	
 	$("#dialog_migrate_instance")
 	.dialog('option', 'buttons', { 						
