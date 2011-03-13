@@ -41,9 +41,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
@@ -173,7 +170,6 @@ import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.Pair;
 import com.cloud.utils.Ternary;
 import com.cloud.utils.component.ComponentLocator;
-import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.script.Script;
@@ -238,8 +234,8 @@ public abstract class CitrixResourceBase implements StoragePoolResource, ServerR
     protected String _guestNetworkName;
     protected int _wait;
     protected IAgentControl _agentControl;
-    private final ScheduledExecutorService _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("RouterIpSync"));
     protected Map<String, String> _domrIPMap = new ConcurrentHashMap<String, String>();
+    protected int _domrSyncCount = 0;
 
     protected final XenServerHost _host = new XenServerHost();
 
@@ -2783,6 +2779,7 @@ public abstract class CitrixResourceBase implements StoragePoolResource, ServerR
                 networkUsage(router.getPrivateIpAddress(), "create", null);
                 return new StartRouterAnswer(cmd);
             }
+            _domrIPMap.put(cmd.getVmName(), router.getPrivateIpAddress());
             return new StartRouterAnswer(cmd, result);
 
         } catch (Exception e) {
@@ -3458,6 +3455,18 @@ public abstract class CitrixResourceBase implements StoragePoolResource, ServerR
             if (newStates == null) {
                 newStates = new HashMap<String, State>();
             }
+            if (_domrSyncCount++ == 100) {
+            	//Sync domr Ip Map, after every 100 calls
+            	_domrSyncCount = 0;
+            	_domrIPMap.clear();
+    			for (final Map.Entry<String, State> entry : newStates.entrySet()) {
+    				final String vm = entry.getKey();
+    				State state = entry.getValue();
+    				if (VirtualMachineName.isValidRouterName(vm) && (state == State.Running)) {        			
+    					addDomRIpToMap(vm);
+    				}
+    			}
+    		}
             if (!_canBridgeFirewall) {
             	return new PingRoutingCommand(getType(), id, newStates);
             } else {
@@ -3786,7 +3795,6 @@ public abstract class CitrixResourceBase implements StoragePoolResource, ServerR
         cmd.setHypervisorType(Hypervisor.Type.XenServer);
         cmd.setChanges(changes);
         cmd.setCluster(_cluster);
-        _executor.scheduleAtFixedRate(new RouterIpSyncTask(), 60, 60, TimeUnit.MINUTES);
 
         StartupStorageCommand sscmd = initializeLocalSR();
         if (sscmd != null) {
@@ -6122,24 +6130,6 @@ public abstract class CitrixResourceBase implements StoragePoolResource, ServerR
 
     }
     
-    protected class RouterIpSyncTask implements Runnable {
-    	@Override
-    	public void run() {
-    		_domrIPMap.clear();
-    		HashMap<String, State> allVms= getAllVms();
-    		if (allVms != null) {
-    			for (final Map.Entry<String, State> entry : allVms.entrySet()) {
-    				final String vm = entry.getKey();
-    				State state = entry.getValue();
-    				if (VirtualMachineName.isValidRouterName(vm) && (state == State.Running)) {        			
-    					addDomRIpToMap(vm);
-    				}
-    			}
-    		}
-
-    	}
-    }
-
     protected class Nic {
         public Network n;
         public Network.Record nr;
