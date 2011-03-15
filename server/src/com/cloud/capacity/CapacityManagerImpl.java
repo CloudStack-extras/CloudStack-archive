@@ -191,7 +191,7 @@ public class CapacityManagerImpl implements CapacityManager , StateListener<Stat
             long reservedMem = capacityMem.getReservedCapacity();
             long totalCpu = capacityCpu.getTotalCapacity();
             long totalMem = capacityMem.getTotalCapacity();
-
+            
             boolean success = false;
             if (fromLastHost) {
                 /*alloc from reserved*/
@@ -205,13 +205,13 @@ public class CapacityManagerImpl implements CapacityManager , StateListener<Stat
     	        }             	
                 if (reservedCpu >= cpu && reservedMem >= ram) {
                     capacityCpu.setReservedCapacity(reservedCpu - cpu);
-                    capacityMem.setReservedCapacity(reservedMem - ram);        
-
+                    capacityMem.setReservedCapacity(reservedMem - ram);     
+                    
                     capacityCpu.setUsedCapacity(usedCpu + cpu);
                     capacityMem.setUsedCapacity(usedMem + ram);
 
                     success = true;
-                }       
+                }
             } else {
                 /*alloc from free resource*/
     			long freeCpu = totalCpu - (reservedCpu + usedCpu);
@@ -227,7 +227,7 @@ public class CapacityManagerImpl implements CapacityManager , StateListener<Stat
                     success = true;
                 }
             }
-
+            
             if (success) {
                 s_logger.debug("Success in alloc cpu from host: " + hostId + ", old used: " + usedCpu + ", old reserved: " +
                         reservedCpu + ", old total: " + totalCpu + 
@@ -250,7 +250,6 @@ public class CapacityManagerImpl implements CapacityManager , StateListener<Stat
                             ", reservedMem: " + reservedMem + ", used Mem: " + usedMem + ", requested mem: " + ram + ", total Mem:" + totalMem); 
                 }
             }
-
             txn.commit();
             return success;
         } catch (Exception e) {
@@ -360,7 +359,7 @@ public class CapacityManagerImpl implements CapacityManager , StateListener<Stat
     @Override
     public boolean postStateTransitionEvent(State oldState, Event event, State newState, VirtualMachine vm, boolean status, Long oldHostId) {
         s_logger.debug("VM state transitted from :" + oldState + " to " + newState + " with event: " + event +
-                "vm's original host id: " + vm.getLastHostId() + " new host id: " + vm.getHostId());
+                "vm's original host id: " + vm.getLastHostId() + " new host id: " + vm.getHostId() + " host id before state transition: " + oldHostId);
         if (!status) {
             return false;
         }

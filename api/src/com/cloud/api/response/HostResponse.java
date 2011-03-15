@@ -141,6 +141,9 @@ public class HostResponse extends BaseResponse {
     @SerializedName("jobstatus") @Param(description="shows the current pending asynchronous job status")
     private Integer jobStatus;
     
+    @SerializedName("hasEnoughCapacity") @Param(description="true if this host has enough CPU and RAM capacity to migrate a VM to it, false otherwise")
+    private Boolean hasEnoughCapacity;
+
     @Override
     public Long getObjectId() {
         return getId();
@@ -453,4 +456,12 @@ public class HostResponse extends BaseResponse {
     public void setEvents(String events) {
         this.events = events;
     }
+    
+    public Boolean hasEnoughCapacity() {
+        return hasEnoughCapacity;
+    }
+
+    public void setHasEnoughCapacity(Boolean hasEnoughCapacity) {
+        this.hasEnoughCapacity = hasEnoughCapacity;
+    }    
 }

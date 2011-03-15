@@ -38,6 +38,7 @@ import com.cloud.api.commands.UpgradeVMCmd;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.exception.ManagementServerException;
 import com.cloud.exception.PermissionDeniedException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
@@ -45,6 +46,7 @@ import com.cloud.exception.StorageUnavailableException;
 import com.cloud.storage.Volume;
 import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.uservm.UserVm;
+import com.cloud.host.Host;
 import com.cloud.utils.exception.ExecutionException;
 
 public interface UserVmService {
@@ -170,4 +172,17 @@ public interface UserVmService {
      * @return List of UserVMs.
      */
     List<? extends UserVm> searchForUserVMs(ListVMsCmd cmd);
+
+    UserVm getUserVm(long vmId);
+    
+    /**
+     * Migrate the given VM to the destination host provided. The API returns the migrated VM
+     * if migration succeeds. Only Root Admin can migrate a VM.
+     * @param UserVm vm The VM to migrate
+     * @return Host destinationHost to migrate the VM
+     * @throws ManagementServerException in case we get error finding the VM or host or access errors or other internal errors.
+     * @throws ConcurrentOperationException if there are multiple users working on the same VM.
+     * @throws ResourceUnavailableException if the destination host to migrate the VM is not currently available.
+     */
+    UserVm migrateVirtualMachine(UserVm vm, Host destinationHost) throws ResourceUnavailableException, ConcurrentOperationException, ManagementServerException;
 }
