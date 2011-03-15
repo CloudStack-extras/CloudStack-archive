@@ -236,7 +236,7 @@ public class FirstFitPlanner extends PlannerBase implements DeploymentPlanner {
 			return false;
     	}
 
-    	return _capacityMgr.allocateVmCapacity(host.getId(), cpu, ram, fromLastHost);
+    	return _capacityMgr.checkIfHostHasCapacity(host.getId(), cpu, ram, fromLastHost);
 	}
     
     protected List<HostVO> prioritizeHosts(VirtualMachineTemplate template, List<HostVO> hosts) {
