@@ -34,6 +34,7 @@ import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.Network.Capability;
 import com.cloud.network.Network.Service;
+import com.cloud.network.Networks.TrafficType;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.user.Account;
 
@@ -77,4 +78,6 @@ public interface NetworkService {
     Long getDedicatedNetworkDomain(long networkId);
     
     Network updateNetwork(long networkId, String name, String displayText, Account caller);
+    Network getSystemNetworkByZoneAndTrafficType(long zoneId, TrafficType trafficType);
+    
 }

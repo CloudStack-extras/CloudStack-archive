@@ -189,9 +189,11 @@ public interface NetworkManager extends NetworkService {
     List<? extends PasswordResetElement> getPasswordResetElements();
 
     boolean zoneIsConfiguredForExternalNetworking(long zoneId);
-
-    Map<Capability, String> getServiceCapability(long zoneId, Service service);
-
+    
+    void unassignPublicIpAddress(IPAddressVO addr);
+    
+    Map<Capability, String> getServiceCapabilities(long zoneId, Service service);
+    
     boolean applyIpAssociations(Network network, boolean continueOnError) throws ResourceUnavailableException;
 
     boolean isServiceSupported(long networkId, Network.Service service);
