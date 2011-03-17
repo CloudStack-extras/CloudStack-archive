@@ -190,8 +190,6 @@ public interface NetworkManager extends NetworkService {
 
     boolean zoneIsConfiguredForExternalNetworking(long zoneId);
     
-    void unassignPublicIpAddress(IPAddressVO addr);
-    
     Map<Capability, String> getServiceCapabilities(long zoneId, Service service);
     
     boolean applyIpAssociations(Network network, boolean continueOnError) throws ResourceUnavailableException;
