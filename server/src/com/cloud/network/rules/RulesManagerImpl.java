@@ -231,10 +231,10 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
         if (!_networkMgr.isServiceSupported(networkId, Service.Firewall)) {
             throw new InvalidParameterValueException("Firewall service is not supported in network id=" + networkId);
         }
-
-        // Verify that the network guru supports the protocol specified
-        Map<Network.Capability, String> firewallCapability = _networkMgr.getServiceCapability(network.getDataCenterId(), Service.Firewall);
-        String supportedProtocols = firewallCapability.get(Capability.SupportedProtocols).toLowerCase();
+    
+        //Verify that the network guru supports the protocol specified
+        Map<Network.Capability, String> firewallCapabilities = _networkMgr.getServiceCapabilities(network.getDataCenterId(), Service.Firewall);
+        String supportedProtocols = firewallCapabilities.get(Capability.SupportedProtocols).toLowerCase();
         if (!supportedProtocols.contains(rule.getProtocol().toLowerCase())) {
             throw new InvalidParameterValueException("Protocol " + rule.getProtocol() + " is not supported in zone " + network.getDataCenterId());
         }
@@ -333,9 +333,9 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
         if (!_networkMgr.isServiceSupported(networkId, Service.Firewall)) {
             throw new InvalidParameterValueException("Firewall service is not supported in network id=" + networkId);
         }
-
-        // Verify that the network guru supports the protocol specified
-        Map<Network.Capability, String> firewallCapability = _networkMgr.getServiceCapability(network.getDataCenterId(), Service.Firewall);
+    
+        //Verify that the network guru supports the protocol specified
+        Map<Network.Capability, String> firewallCapability = _networkMgr.getServiceCapabilities(network.getDataCenterId(), Service.Firewall);
         String supportedProtocols = firewallCapability.get(Capability.SupportedProtocols).toLowerCase();
         if (!supportedProtocols.contains(rule.getProtocol().toLowerCase())) {
             throw new InvalidParameterValueException("Protocol " + rule.getProtocol() + " is not supported in zone " + network.getDataCenterId());

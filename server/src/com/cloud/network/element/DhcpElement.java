@@ -28,6 +28,7 @@ import org.apache.log4j.Logger;
 import com.cloud.configuration.ConfigurationManager;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenter.NetworkType;
+import com.cloud.dc.dao.HostPodDao;
 import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
@@ -73,7 +74,8 @@ public class DhcpElement extends AdapterBase implements NetworkElement, Password
     @Inject UserVmDao _userVmDao;
     @Inject DomainRouterDao _routerDao;
     @Inject ConfigurationManager _configMgr;
-    
+    @Inject HostPodDao _podDao;
+     
     private boolean canHandle(GuestIpType ipType, DeployDestination dest, TrafficType trafficType) {
         DataCenter dc = dest.getDataCenter();
         String provider = dc.getGatewayProvider();
