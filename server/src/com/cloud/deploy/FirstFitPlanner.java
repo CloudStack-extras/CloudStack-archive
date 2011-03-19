@@ -9,7 +9,6 @@ import javax.ejb.Local;
 import org.apache.log4j.Logger;
 
 import com.cloud.capacity.CapacityManager;
-import com.cloud.capacity.CapacityVO;
 import com.cloud.capacity.dao.CapacityDao;
 import com.cloud.configuration.Config;
 import com.cloud.configuration.dao.ConfigurationDao;
@@ -31,12 +30,17 @@ import com.cloud.offering.ServiceOffering;
 import com.cloud.org.Cluster;
 import com.cloud.storage.GuestOSCategoryVO;
 import com.cloud.storage.GuestOSVO;
+import com.cloud.storage.StoragePoolVO;
+import com.cloud.storage.Volume;
+import com.cloud.storage.Volume.VolumeType;
+import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.GuestOSCategoryDao;
 import com.cloud.storage.dao.GuestOSDao;
+import com.cloud.storage.dao.StoragePoolDao;
+import com.cloud.storage.dao.VolumeDao;
 import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.db.DB;
-import com.cloud.utils.db.Transaction;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachineProfile;
 
@@ -53,6 +57,8 @@ public class FirstFitPlanner extends PlannerBase implements DeploymentPlanner {
     @Inject GuestOSCategoryDao _guestOSCategoryDao = null;
     @Inject CapacityManager _capacityMgr;
     @Inject ConfigurationDao _configDao;
+    @Inject VolumeDao _volsDao;
+    @Inject StoragePoolDao _spoolDao;
 	
 	@Override
 	public DeployDestination plan(VirtualMachineProfile vmProfile,
@@ -81,6 +87,49 @@ public class FirstFitPlanner extends PlannerBase implements DeploymentPlanner {
 			}
 		}
 		
+        List <VolumeVO> vols =  _volsDao.findByInstanceAndType(vm.getId(), VolumeType.ROOT);
+        assert (vols.size() == 1) : "How can there be more than one root volume? " + vols.size();
+        
+        VolumeVO vol = vols.get(0);
+        if (vol.getState() == Volume.State.Ready) {
+            StoragePoolVO pool = _spoolDao.findById(vol.getPoolId());
+            if (pool == null) {
+                s_logger.debug("Storage pool where the root volume, " + vol + ", is cannot be found: " + vol.getPoolId());
+                return null;
+            }
+            ClusterVO cluster = _clusterDao.findById(pool.getClusterId());
+            if (cluster == null) {
+                s_logger.debug("Cluster where the root volume, " + vol + ", is cannot be found: " + pool.getClusterId());
+                return null;
+            }
+            HostPodVO pod = _podDao.findById(pool.getPodId());
+            if (pod == null) {
+                s_logger.debug("Pod where the root volume, " + vol + ", is cannot be found: " + pool.getPodId());
+                return null;
+            }
+            List<HostVO> hosts = _hostDao.listBy(Host.Type.Routing, cluster.getId(), pod.getId(), dc.getId());
+            if (_allocationAlgorithm != null && _allocationAlgorithm.equalsIgnoreCase("random")) {
+                Collections.shuffle(hosts);
+            }
+            
+             // We will try to reorder the host lists such that we give priority to hosts that have
+            // the minimums to support a VM's requirements
+            hosts = prioritizeHosts(vmProfile.getTemplate(), hosts);
+            
+            for (HostVO hostVO : hosts) {                                                                               
+                boolean canDeployToHost = deployToHost(hostVO, cpu_requested, ram_requested, false, avoid);
+                if (canDeployToHost) {
+                    Host host = _hostDao.findById(hostVO.getId());
+                    return new DeployDestination(dc, pod, cluster, host);
+                }
+                avoid.addHost(hostVO.getId());
+            }
+            
+            avoid.addCluster(cluster.getId());
+            s_logger.debug("Cannot find any host to deploy with");
+            return null;
+        }
+        
 		/*Go through all the pods/clusters under zone*/
 		List<HostPodVO> pods = null;
 		if (plan.getPodId() != null) {
@@ -94,8 +143,9 @@ public class FirstFitPlanner extends PlannerBase implements DeploymentPlanner {
 			}
 		} 
 		
-		if (pods == null)
-			pods = _podDao.listByDataCenterId(plan.getDataCenterId());
+		if (pods == null) {
+            pods = _podDao.listByDataCenterId(plan.getDataCenterId());
+        }
 		
 		if (_allocationAlgorithm != null && _allocationAlgorithm.equalsIgnoreCase("random")) {
 		    Collections.shuffle(pods);
@@ -105,8 +155,7 @@ public class FirstFitPlanner extends PlannerBase implements DeploymentPlanner {
 			if (avoid.shouldAvoid(hostPod)) {
 				continue;
 			}
-			
-			
+
 			List<ClusterVO> clusters = null;
 			if (plan.getClusterId() != null) {
 				ClusterVO cluster = _clusterDao.findById(plan.getClusterId());
