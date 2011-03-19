@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package com.cloud.upgrade.dao;
+package com.cloud.upgrade;
 
 
 import java.sql.Connection;
@@ -29,11 +29,10 @@ import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 
-import com.cloud.upgrade.dao.VersionVO.Step;
+import com.cloud.upgrade.dao.VersionDaoImpl;
 import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.db.DbTestUtils;
 import com.cloud.utils.db.Transaction;
-import com.cloud.utils.exception.CloudRuntimeException;
 
 public class BasicZone217To224UpgradeTest extends TestCase {
     private static final Logger s_logger = Logger.getLogger(BasicZone217To224UpgradeTest.class);
@@ -41,9 +40,7 @@ public class BasicZone217To224UpgradeTest extends TestCase {
     @Override
     @Before
     public void setUp() throws Exception {
-        VersionVO version = new VersionVO("2.1.7");
-        version.setStep(Step.Cleanup);
-        DbTestUtils.executeScript("VersionDaoImplTest/clean-db.sql", false, true);
+        DbTestUtils.executeScript("PreviousDatabaseSchema/clean-db.sql", false, true);
     }
     
     @Override
@@ -51,9 +48,9 @@ public class BasicZone217To224UpgradeTest extends TestCase {
     public void tearDown() throws Exception {
     }
     
-    public void test217to22Upgrade() {
+    public void test217to22Upgrade() throws SQLException {
         s_logger.debug("Finding sample data from 2.1.7");
-        DbTestUtils.executeScript("VersionDaoImplTest/2.1.7/2.1.7_sample_basicZone_SecurityGroups.sql", false, true);
+        DbTestUtils.executeScript("PreviousDatabaseSchema/2.1.7/2.1.7_sample_basicZone_SecurityGroups.sql", false, true);
         
         Connection conn = Transaction.getStandaloneConnection();
         PreparedStatement pstmt;
@@ -202,8 +199,6 @@ public class BasicZone217To224UpgradeTest extends TestCase {
             
             s_logger.debug("Basic zone test is finished");
             
-        } catch (SQLException e) {
-            throw new CloudRuntimeException("Problem checking upgrade version", e);
         } finally {
             try {
                 conn.close();

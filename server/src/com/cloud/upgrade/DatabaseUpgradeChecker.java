@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package com.cloud.upgrade.dao;
+package com.cloud.upgrade;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -30,6 +30,14 @@ import org.apache.log4j.Logger;
 
 import com.cloud.cluster.ClusterManagerImpl;
 import com.cloud.maint.Version;
+import com.cloud.upgrade.dao.DbUpgrade;
+import com.cloud.upgrade.dao.Upgrade217to22;
+import com.cloud.upgrade.dao.Upgrade221to222;
+import com.cloud.upgrade.dao.Upgrade222to224;
+import com.cloud.upgrade.dao.UpgradeSnapshot217to223;
+import com.cloud.upgrade.dao.VersionDao;
+import com.cloud.upgrade.dao.VersionDaoImpl;
+import com.cloud.upgrade.dao.VersionVO;
 import com.cloud.upgrade.dao.VersionVO.Step;
 import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.component.SystemIntegrityChecker;

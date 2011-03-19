@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package com.cloud.upgrade.dao;
+package com.cloud.upgrade;
 
 
 import java.sql.Connection;
@@ -30,11 +30,10 @@ import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 
-import com.cloud.upgrade.dao.VersionVO.Step;
+import com.cloud.upgrade.dao.VersionDaoImpl;
 import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.db.DbTestUtils;
 import com.cloud.utils.db.Transaction;
-import com.cloud.utils.exception.CloudRuntimeException;
 
 public class InstanceGroup217To224UpgradeTest extends TestCase {
     private static final Logger s_logger = Logger.getLogger(InstanceGroup217To224UpgradeTest.class);
@@ -42,9 +41,7 @@ public class InstanceGroup217To224UpgradeTest extends TestCase {
     @Override
     @Before
     public void setUp() throws Exception {
-        VersionVO version = new VersionVO("2.1.7");
-        version.setStep(Step.Cleanup);
-        DbTestUtils.executeScript("VersionDaoImplTest/clean-db.sql", false, true);
+        DbTestUtils.executeScript("PreviousDatabaseSchema/clean-db.sql", false, true);
     }
     
     @Override
@@ -52,12 +49,12 @@ public class InstanceGroup217To224UpgradeTest extends TestCase {
     public void tearDown() throws Exception {
     }
     
-    public void test217to22Upgrade() {
+    public void test217to22Upgrade() throws SQLException {
         s_logger.debug("Finding sample data from 2.1.7");
-        DbTestUtils.executeScript("VersionDaoImplTest/2.1.7/2.1.7_sample_instanceGroups.sql", false, true);
+        DbTestUtils.executeScript("PreviousDatabaseSchema/2.1.7/2.1.7_sample_instanceGroups.sql", false, true);
         
-        Connection conn = Transaction.getStandaloneConnection();
         PreparedStatement pstmt;
+        ResultSet rs;
         
         VersionDaoImpl dao = ComponentLocator.inject(VersionDaoImpl.class);
         DatabaseUpgradeChecker checker = ComponentLocator.inject(DatabaseUpgradeChecker.class);
@@ -70,27 +67,11 @@ public class InstanceGroup217To224UpgradeTest extends TestCase {
             s_logger.debug("Basic zone test version is " + version);
         }
         
-        checker.upgrade("2.1.7", "2.2.4");
-        
-        conn = Transaction.getStandaloneConnection();
+        Long groupNumberVmInstance = 0L;
+        ArrayList<Object[]> groups = new ArrayList<Object[]>();
+        Connection conn = Transaction.getStandaloneConnection();
         try {
-            
-            s_logger.debug("Starting tesing upgrade from 2.1.7 to 2.2.4 for Instance groups...");
-            
-            //Version check
-            pstmt = conn.prepareStatement("SELECT version FROM version");
-            ResultSet rs = pstmt.executeQuery();
-            
-            if (!rs.next()) {
-                s_logger.error("ERROR: No version selected");
-            } else if (!rs.getString(1).equals("2.2.4")) {
-                s_logger.error("ERROR: VERSION stored is not 2.2.4: " + rs.getString(1));
-            }
-            rs.close();
-            pstmt.close();
-            
             //Check that correct number of instance groups were created
-            Long groupNumberVmInstance = 0L;
             pstmt = conn.prepareStatement("SELECT DISTINCT v.group, v.account_id from vm_instance v where v.group is not null");
             rs = pstmt.executeQuery();
             
@@ -100,11 +81,45 @@ public class InstanceGroup217To224UpgradeTest extends TestCase {
 
             rs.close();
             pstmt.close();
+            //For each instance group from vm_instance table check that 1) entry was created in the instance_group table 2) vm to group map exists in instance_group_vm_map table
+            //Check 1)
+            pstmt = conn.prepareStatement("SELECT DISTINCT v.group, v.account_id from vm_instance v where v.group is not null");
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Object[] group = new Object[10];
+                group[0] = rs.getString(1); // group name
+                group[1] = rs.getLong(2);  // accountId
+                groups.add(group);
+            }
+            rs.close();
+            pstmt.close();
+        } finally {
+            conn.close();
+        }
+        
+        checker.upgrade("2.1.7", "2.2.4");
+        
+        conn = Transaction.getStandaloneConnection();
+        try {
             
-            Long groupNumber = 0L;
+            s_logger.debug("Starting tesing upgrade from 2.1.7 to 2.2.4 for Instance groups...");
+            
+            //Version check
+            pstmt = conn.prepareStatement("SELECT version FROM version");
+            rs = pstmt.executeQuery();
+            
+            if (!rs.next()) {
+                s_logger.error("ERROR: No version selected");
+            } else if (!rs.getString(1).equals("2.2.4")) {
+                s_logger.error("ERROR: VERSION stored is not 2.2.4: " + rs.getString(1));
+            }
+            rs.close();
+            pstmt.close();
+            
             pstmt = conn.prepareStatement("SELECT COUNT(*) FROM instance_group");
             rs = pstmt.executeQuery();
             
+            Long groupNumber = 0L;
             if (rs.next()) {
                 groupNumber = rs.getLong(1);
             }
@@ -116,21 +131,6 @@ public class InstanceGroup217To224UpgradeTest extends TestCase {
                 s_logger.error("ERROR: instance groups were updated incorrectly. Have " + groupNumberVmInstance + " groups in vm_instance table, and " + groupNumber + " where created in instance_group table. Stopping the test");
                 System.exit(2);
             }
-            
-            
-            //For each instance group from vm_instance table check that 1) entry was created in the instance_group table 2) vm to group map exists in instance_group_vm_map table
-            //Check 1)
-            pstmt = conn.prepareStatement("SELECT DISTINCT v.group, v.account_id from vm_instance v where v.group is not null");
-            rs = pstmt.executeQuery();
-            ArrayList<Object[]> groups = new ArrayList<Object[]>();
-            while (rs.next()) {
-                Object[] group = new Object[10];
-                group[0] = rs.getString(1); // group name
-                group[1] = rs.getLong(2);  // accountId
-                groups.add(group);
-            }
-            rs.close();
-            pstmt.close();
             
             for (Object[] group : groups) {
                 String groupName = (String)group[0];
@@ -171,13 +171,8 @@ public class InstanceGroup217To224UpgradeTest extends TestCase {
             
             s_logger.debug("Instance group upgrade test is passed");
             
-        } catch (SQLException e) {
-            throw new CloudRuntimeException("Problem testing instance group update", e);
         } finally {
-            try {
-                conn.close();
-            } catch (SQLException e) {
-            }
+            conn.close();
         }
     }
     
