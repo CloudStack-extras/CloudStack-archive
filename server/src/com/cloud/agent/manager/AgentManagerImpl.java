@@ -42,7 +42,7 @@ import javax.naming.ConfigurationException;
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
-import com.cloud.agent.HostCreator;
+import com.cloud.agent.StartupCommandProcessor;
 import com.cloud.agent.Listener;
 import com.cloud.agent.api.AgentControlAnswer;
 import com.cloud.agent.api.AgentControlCommand;
@@ -219,7 +219,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory,
 			17);
 	protected List<Pair<Integer, Listener>> _cmdMonitors = new ArrayList<Pair<Integer, Listener>>(
 			17);
-	protected List<Pair<Integer, HostCreator>> _creationMonitors = new ArrayList<Pair<Integer, HostCreator>>(
+	protected List<Pair<Integer, StartupCommandProcessor>> _creationMonitors = new ArrayList<Pair<Integer, StartupCommandProcessor>>(
 	            17);
 	protected int _monitorId = 0;
 
@@ -452,15 +452,15 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory,
 	}
 	
 	@Override
-	public int registerForInitialConnects(final HostCreator creator,boolean priority) {
+	public int registerForInitialConnects(final StartupCommandProcessor creator,boolean priority) {
 	    synchronized (_hostMonitors) {
 	        _monitorId++;
 
 	        if (priority) {
-	            _creationMonitors.add(0, new Pair<Integer, HostCreator>(
+	            _creationMonitors.add(0, new Pair<Integer, StartupCommandProcessor>(
 	                    _monitorId, creator));
 	        } else {
-	            _creationMonitors.add(0, new Pair<Integer, HostCreator>(
+	            _creationMonitors.add(0, new Pair<Integer, StartupCommandProcessor>(
 	                    _monitorId, creator));
 	        }
 	    }
@@ -1793,7 +1793,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory,
 
 	protected boolean notifyCreatorsOfConnection(StartupCommand[] cmd) throws ConnectionException {
 	    boolean handled = false;
-	    for (Pair<Integer, HostCreator> monitor : _creationMonitors) {
+	    for (Pair<Integer, StartupCommandProcessor> monitor : _creationMonitors) {
 	        if (s_logger.isDebugEnabled()) {
 	            s_logger.debug("Sending Connect to creator: "
 	                    + monitor.second().getClass().getSimpleName());

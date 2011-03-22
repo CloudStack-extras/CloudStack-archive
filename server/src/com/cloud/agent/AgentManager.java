@@ -131,7 +131,7 @@ public interface AgentManager extends Manager {
      * @param priority in listening for events.
      * @return id to unregister if needed.
      */
-    int registerForInitialConnects(HostCreator creator,  boolean priority);
+    int registerForInitialConnects(StartupCommandProcessor creator,  boolean priority);
     
     /**
      * Unregister for listening to host events.

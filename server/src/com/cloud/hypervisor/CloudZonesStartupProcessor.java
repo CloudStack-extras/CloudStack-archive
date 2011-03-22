@@ -26,7 +26,7 @@ import javax.naming.ConfigurationException;
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
-import com.cloud.agent.HostCreator;
+import com.cloud.agent.StartupCommandProcessor;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
 import com.cloud.agent.manager.authn.AgentAuthnException;
@@ -50,9 +50,9 @@ import com.cloud.utils.net.MacAddress;
  * Creates a host record and supporting records such as pod and ip address
  *
  */
-@Local(value=HostCreator.class)
-public class SelfConfiguringHostCreator implements HostCreator {
-    private static final Logger s_logger = Logger.getLogger(SelfConfiguringHostCreator.class);
+@Local(value=StartupCommandProcessor.class)
+public class CloudZonesStartupProcessor implements StartupCommandProcessor {
+    private static final Logger s_logger = Logger.getLogger(CloudZonesStartupProcessor.class);
     @Inject ClusterDao _clusterDao = null;
     @Inject ConfigurationDao _configDao = null;
     @Inject DataCenterDao _zoneDao = null;
