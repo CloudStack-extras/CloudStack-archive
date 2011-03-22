@@ -86,6 +86,10 @@
         <adapters key="com.cloud.acl.SecurityChecker">
             <adapter name="DomainChecker" class="com.cloud.acl.DomainChecker"/>
         </adapters>
+        <adapters key="com.cloud.agent.HostCreator">
+            <adapter name="BasicAgentAuthorizer" class="com.cloud.agent.manager.authn.impl.BasicAgentAuthManager"/>
+            <adapter name="SelfConfiguringHostCreator" class="com.cloud.hypervisor.SelfConfiguringHostCreator"/>
+        </adapters>
     </management-server>
 
     <configuration-server class="com.cloud.server.ConfigurationServerImpl">
