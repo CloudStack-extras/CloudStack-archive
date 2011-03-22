@@ -18,7 +18,6 @@ version.
  */
 package com.cloud.hypervisor;
 
-import java.text.ParseException;
 import java.util.Map;
 
 import javax.ejb.Local;
@@ -32,7 +31,6 @@ import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
 import com.cloud.agent.manager.authn.AgentAuthnException;
 import com.cloud.configuration.dao.ConfigurationDao;
-import com.cloud.dc.ClusterVO;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.HostPodVO;
 import com.cloud.dc.dao.ClusterDao;
@@ -45,6 +43,8 @@ import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.utils.component.Inject;
+import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.net.MacAddress;
 
 /**
  * Creates a host record and supporting records such as pod and ip address
@@ -60,12 +60,19 @@ public class SelfConfiguringHostCreator implements HostCreator {
     @Inject HostPodDao _podDao = null;
 
     @Inject AgentManager _agentManager = null;
+    
+    long _nodeId = -1;
    
 
     @Override
     public boolean configure(String name, Map<String, Object> params)
             throws ConfigurationException {
         _agentManager.registerForInitialConnects(this, false);
+        if (_nodeId == -1) {
+            // FIXME: We really should not do this like this. It should be done
+            // at config time and is stored as a config variable.
+            _nodeId = MacAddress.getMacAddress().toLong();
+        }
         return true;
     }
 
@@ -93,6 +100,7 @@ public class SelfConfiguringHostCreator implements HostCreator {
         StartupCommand startup = cmd[0];
         if (startup instanceof StartupRoutingCommand) {
             StartupRoutingCommand ssCmd = ((StartupRoutingCommand) startup);
+            boolean found = false;
             Type type = Host.Type.Routing;
             final Map<String, String> hostDetails = ssCmd.getHostDetails();
             HostVO server = _hostDao.findByGuid(startup.getGuid());
@@ -104,6 +112,7 @@ public class SelfConfiguringHostCreator implements HostCreator {
                     s_logger.debug("Found the host " + server.getId() + " by guid: "
                             + startup.getGuid());
                 }
+                found = true;
                 
             } else {
                 server = new HostVO(startup.getGuid());
@@ -115,7 +124,17 @@ public class SelfConfiguringHostCreator implements HostCreator {
             } catch (AgentAuthnException e) {
                 throw new ConnectionException(true, "Failed to authorize host, invalid configuration", e);
             }
-            server = _hostDao.persist(server);
+            if (!found) {
+                server = _hostDao.persist(server);
+            } else {
+                if (!_hostDao.connect(server, _nodeId)) {
+                    throw new CloudRuntimeException(
+                            "Agent cannot connect because the current state is "
+                                    + server.getStatus().toString());
+                }
+                s_logger.info("Old " + server.getType().toString()
+                        + " host reconnected w/ id =" + server.getId());
+            }
             return true;
         }
         return false;
