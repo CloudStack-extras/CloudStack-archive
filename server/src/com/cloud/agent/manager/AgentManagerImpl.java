@@ -1792,18 +1792,19 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory,
 	}
 
 	protected boolean notifyCreatorsOfConnection(StartupCommand[] cmd) throws ConnectionException {
+	    boolean handled = false;
 	    for (Pair<Integer, HostCreator> monitor : _creationMonitors) {
 	        if (s_logger.isDebugEnabled()) {
 	            s_logger.debug("Sending Connect to creator: "
 	                    + monitor.second().getClass().getSimpleName());
 	        }
-	        boolean handled =  monitor.second().processInitialConnect(cmd);
+	        handled =  monitor.second().processInitialConnect(cmd);
 	        if (handled) {
 	            break;
 	        }
 	    }
 
-	    return false;
+	    return handled;
 	}
 	
 	@Override
@@ -2663,13 +2664,12 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory,
 	public AgentAttache handleConnect(final Link link,
 			final StartupCommand[] startup) throws IllegalArgumentException,
 			ConnectionException {
-	    boolean created = false;
-	    HostVO server = _hostDao.findByGuid(startup[0].getGuid());
-	    if (server == null) {
-	        created = notifyCreatorsOfConnection(startup);
-	        if (!created) {
-	            server = createHost(startup, null, null, false, null, null);
-	        }
+	    HostVO server = null;
+	    boolean handled = notifyCreatorsOfConnection(startup);
+	    if (!handled) {
+	        server = createHost(startup, null, null, false, null, null);
+	    } else {
+	        server = _hostDao.findByGuid(startup[0].getGuid()); 
 	    }
 	     
 		if (server == null) {
