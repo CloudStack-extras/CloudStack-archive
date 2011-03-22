@@ -8,7 +8,7 @@ import javax.naming.ConfigurationException;
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
-import com.cloud.agent.HostCreator;
+import com.cloud.agent.StartupCommandProcessor;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.manager.authn.AgentAuthnException;
 import com.cloud.agent.manager.authn.AgentAuthorizer;
@@ -17,8 +17,8 @@ import com.cloud.exception.ConnectionException;
 import com.cloud.host.dao.HostDao;
 import com.cloud.utils.component.Inject;
 
-@Local(value={AgentAuthorizer.class, HostCreator.class})
-public class BasicAgentAuthManager implements AgentAuthorizer, HostCreator {
+@Local(value={AgentAuthorizer.class, StartupCommandProcessor.class})
+public class BasicAgentAuthManager implements AgentAuthorizer, StartupCommandProcessor {
     private static final Logger s_logger = Logger.getLogger(BasicAgentAuthManager.class);
     @Inject HostDao _hostDao = null;
     @Inject ConfigurationDao _configDao = null;
