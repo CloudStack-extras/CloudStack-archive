@@ -61,12 +61,12 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.VirtualMachine.State;
 
 /**
- * Forwards some requests to a different resource
+ * Pretends to be a computing resource
  * 
  */
 @Local(value={ServerResource.class})
-public class ForwardingComputingResource extends ServerResourceBase implements ServerResource {
-    private static final Logger s_logger = Logger.getLogger(ForwardingComputingResource.class);
+public class FakeComputingResource extends ServerResourceBase implements ServerResource {
+    private static final Logger s_logger = Logger.getLogger(FakeComputingResource.class);
     private Map<String, Object> _params;
     
 
