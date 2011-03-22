@@ -25,7 +25,7 @@ import com.cloud.utils.component.Adapter;
  * HostCreator hooks into the AgentManager to be notified of agent connections before the
  * AgentManager knows about the agent that's connecting.
  */
-public interface HostCreator extends Adapter {
+public interface StartupCommandProcessor extends Adapter {
 
     /**
      * This method is called by AgentManager when an agent made a
