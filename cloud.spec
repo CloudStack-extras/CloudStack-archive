@@ -9,11 +9,12 @@
 
 Name:      cloud
 Summary:   Cloud.com CloudStack
-Version:   %{_ver}
 #http://fedoraproject.org/wiki/PackageNamingGuidelines#Pre-Release_packages
 %if "%{?_prerelease}" != ""
+Version:   %{_ver}.%{_build_number}
 Release:   0.%{_build_number}%{_prerelease}
 %else
+Version:   %{_ver}
 Release:   %{_rel}
 %endif
 License:   GPLv3+ with exceptions or CSL 1.1
