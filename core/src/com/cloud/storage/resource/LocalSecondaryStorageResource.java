@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package com.cloud.storage.secondary;
+package com.cloud.storage.resource;
 
 import java.util.HashMap;
 import java.util.Map;
