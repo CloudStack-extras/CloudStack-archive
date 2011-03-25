@@ -56,6 +56,7 @@ import com.cloud.certificate.CertificateVO;
 import com.cloud.certificate.dao.CertificateDao;
 import com.cloud.cluster.ClusterManager;
 import com.cloud.configuration.Config;
+import com.cloud.configuration.ZoneConfig;
 import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenter.NetworkType;
@@ -894,7 +895,7 @@ public class ConsoleProxyManagerImpl implements ConsoleProxyManager, ConsoleProx
                     }
                     return;
                 }
-
+              
                 // config var for consoleproxy.restart check
                 String restart = _configDao.getValue("consoleproxy.restart");
                 if (restart != null && restart.equalsIgnoreCase("false")) {
@@ -965,7 +966,7 @@ public class ConsoleProxyManagerImpl implements ConsoleProxyManager, ConsoleProx
                                 ConsoleProxyLoadInfo vmInfo = mapVmCounts.get(info.getId());
 
                                 if (!checkCapacity(info, vmInfo != null ? vmInfo : new ConsoleProxyLoadInfo())) {
-                                    if (isZoneReady(zoneHostInfoMap, info.getId())) {
+                                    if (isConsoleProxyVmRequired(info.getId()) && isZoneReady(zoneHostInfoMap, info.getId())) {
                                         allocCapacity(info.getId());
                                     } else {
                                         if (s_logger.isTraceEnabled()) {
@@ -1052,6 +1053,12 @@ public class ConsoleProxyManagerImpl implements ConsoleProxyManager, ConsoleProx
 
     public boolean isServiceReady(Map<Long, ZoneHostInfo> zoneHostInfoMap) {
         for (ZoneHostInfo zoneHostInfo : zoneHostInfoMap.values()) {
+            if (!isConsoleProxyVmRequired(zoneHostInfo.getDcId())) {
+                if (s_logger.isInfoEnabled()) {
+                    s_logger.info("Zone " + zoneHostInfo.getDcId() + " does not need a CP VM");
+                }
+                continue;
+            }
             if (isZoneHostReady(zoneHostInfo)) {
                 if (s_logger.isInfoEnabled()) {
                     s_logger.info("Zone " + zoneHostInfo.getDcId() + " is ready to launch");
@@ -1102,6 +1109,16 @@ public class ConsoleProxyManagerImpl implements ConsoleProxyManager, ConsoleProx
         }
 
         return (zoneHostInfo.getFlags() & expectedFlags) == expectedFlags;
+    }
+    
+    public boolean isConsoleProxyVmRequired(long dcId) {
+        DataCenterVO dc = _dcDao.findById(dcId);
+        _dcDao.loadDetails(dc);
+        String cpvmReq = dc.getDetail(ZoneConfig.EnableConsoleProxyVm.key());
+        if (cpvmReq != null) {
+            return Boolean.parseBoolean(cpvmReq);
+        }
+        return true;
     }
 
     private synchronized Map<Long, ZoneHostInfo> getZoneHostInfo() {
