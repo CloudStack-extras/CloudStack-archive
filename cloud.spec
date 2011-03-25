@@ -221,6 +221,7 @@ Requires: jpackage-utils
 Requires: %{name}-daemonize
 Requires: /sbin/service
 Requires: /sbin/chkconfig
+Requires: jnetpcap
 
 %if 0%{?rhel} >= 6
 Requires: cloud-kvm
