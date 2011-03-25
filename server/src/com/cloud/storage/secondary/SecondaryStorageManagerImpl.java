@@ -44,6 +44,7 @@ import com.cloud.agent.api.check.CheckSshCommand;
 import com.cloud.agent.manager.Commands;
 import com.cloud.cluster.ClusterManager;
 import com.cloud.configuration.Config;
+import com.cloud.configuration.ZoneConfig;
 import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenter.NetworkType;
@@ -482,7 +483,7 @@ public class SecondaryStorageManagerImpl implements SecondaryStorageVmManager, V
                         List<DataCenterVO> datacenters = _dcDao.listAllIncludingRemoved();
 
                         for (DataCenterVO dc : datacenters) {
-                            if (isZoneReady(zoneHostInfoMap, dc.getId())) {
+                            if (isSecondaryStorageVmRequired(dc) && isZoneReady(zoneHostInfoMap, dc.getId())) {
                                 List<SecondaryStorageVmVO> alreadyRunning = _secStorageVmDao.getSecStorageVmListInStates(dc.getId(), State.Running,
                                         State.Migrating, State.Starting);
                                 List<SecondaryStorageVmVO> stopped = _secStorageVmDao.getSecStorageVmListInStates(dc.getId(), State.Stopped,
@@ -680,6 +681,15 @@ public class SecondaryStorageManagerImpl implements SecondaryStorageVmManager, V
             }
         }
         return false;
+    }
+    
+    public boolean isSecondaryStorageVmRequired(DataCenterVO dc) {
+        _dcDao.loadDetails(dc);
+        String ssvmReq = dc.getDetail(ZoneConfig.EnableSecStorageVm.key());
+        if (ssvmReq != null) {
+            return Boolean.parseBoolean(ssvmReq);
+        }
+        return true;
     }
 
     private synchronized Map<Long, ZoneHostInfo> getZoneHostInfo() {
