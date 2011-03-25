@@ -20,13 +20,14 @@ class ZoneCreator:
                       'internaldns1':self._internaldns})
         if  jsonresult is  None:
            print "Failed to create zone"
-           return 1
+           return 0
 
         jsonobj = json.loads(jsonresult)
         self._zoneid = jsonobj['createzoneresponse']['zone']['id']
         print "Zone %s is created"%self._zonename
         print "zone=%s"%self._zoneid
-        return self.createPod()
+        self.createPod()
+        return self._zoneid
 
 
     def createPod(self):

@@ -3,18 +3,19 @@ from physicalresource import ZoneCreator
 from globalconfig import GlobalConfig
 from db import Database
 import random
+import uuid
 
 def fix_default_db():
     database = Database()
     statement="""
      UPDATE vm_template SET url='%s'
      WHERE unique_name='%s' """
-    database.update(statement % ('http://nfs1.lab.vmops.com/templates/dummy/systemvm.vhd.bz2', 'routing-1'))
-    database.update(statement % ('http://nfs1.lab.vmops.com/templates/dummy/systemvm.qcow2.bz2', 'routing-3'))
+    database.update(statement % ('http://nfs1.lab.vmops.com/templates/dummy/systemvm.vhd', 'routing-1'))
+    database.update(statement % ('http://nfs1.lab.vmops.com/templates/dummy/systemvm.qcow2', 'routing-3'))
     database.update(statement % ('http://nfs1.lab.vmops.com/templates/dummy/systemvm.ova', 'routing-8'))
 
-    database.update(statement % ('http://nfs1.lab.vmops.com/templates/dummy/builtin.vhd.bz2', 'centos53-x86_64'))
-    database.update(statement % ('http://nfs1.lab.vmops.com/templates/dummy/builtin.qcow2.bz2', 'centos55-x86_64'))
+    database.update(statement % ('http://nfs1.lab.vmops.com/templates/dummy/builtin.vhd', 'centos53-x86_64'))
+    database.update(statement % ('http://nfs1.lab.vmops.com/templates/dummy/builtin.qcow2', 'centos55-x86_64'))
     database.update(statement % ('http://nfs1.lab.vmops.com/templates/dummy/builtin.ova', 'centos53-x64'))
     statement="""UPDATE vm_template SET checksum=NULL"""
     database.update(statement)
@@ -26,7 +27,12 @@ def config():
 
 def create_zone():
     zonecreator = ZoneCreator(api, random.randint(2,1000))
-    zonecreator.create()
+    zoneid = zonecreator.create()
+    database = Database()
+    statement="""INSERT INTO data_center_details (dc_id, name, value) 
+                 VALUES (%s, '%s', '0')"""
+    database.update(statement % (zoneid, 'enable.secstorage.vm'))
+    database.update(statement % (zoneid, 'enable.consoleproxy.vm'))
 
 if __name__ == "__main__":
     fix_default_db()
@@ -37,5 +43,7 @@ if __name__ == "__main__":
     config()
 
     create_zone()
+
+    print "guid=%s" % str(uuid.uuid4())
 
 
