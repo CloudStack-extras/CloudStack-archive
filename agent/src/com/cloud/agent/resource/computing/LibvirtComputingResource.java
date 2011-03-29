@@ -1886,13 +1886,20 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
         try {
         	Connect conn = LibvirtConnection.getConnection();
+        	
+        	String macAddress = null;
+        	if (vmName.startsWith("i-")) {
+        	    List<InterfaceDef> nics = getInterfaces(conn, vmName);
+        	    macAddress = nics.get(0).getMacAddress();
+        	}
+        	
         	destroy_network_rules_for_vm(vmName);
             String result = stopVM(conn, vmName, defineOps.UNDEFINE_VM);
             
             final String result2 = cleanupVnet(conn, cmd.getVnet());
-            if (_isCloudKitEnabled) {
-                _dhcpManager.cleanup(cmd.getPrivateMacAddress());
-            }
+           
+            _dhcpManager.cleanup(macAddress);
+            
             if (result != null && result2 != null) {
                 result = result2 + result;
             }
@@ -2228,7 +2235,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 		} else if (nic.getType() == TrafficType.Control) {
 			/*Make sure the network is still there*/
 			createControlNetwork(conn);
-			intf.defPrivateNet(_privNwName, null, nic.getMac(), model);
+			intf.defBridgeNet(_linkLocalBridgeName, null, nic.getMac(), model);
 		} else if (nic.getType() == TrafficType.Public) {
 			if (nic.getBroadcastType() == BroadcastDomainType.Vlan && !vlanId.equalsIgnoreCase("untagged")) {
 				String brName = createVlanBr(vlanId, _pifs.second());
@@ -3087,29 +3094,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 		return command.execute(parser);
     }
     
-    private void deletExitingLinkLocalRoutTable(String linkLocalBr) {
-    	Script command = new Script("/bin/bash", _timeout);
-    	command.add("-c");
-    	command.add("ip route | grep " + NetUtils.getLinkLocalCIDR());
-    	OutputInterpreter.AllLinesParser parser = new OutputInterpreter.AllLinesParser();
-    	String result = command.execute(parser);
-    	boolean foundLinkLocalBr = false;
-    	if (result == null && parser.getLines() != null) {
-    		String[] lines = parser.getLines().split("\\n");
-    		for (String line : lines) {
-    			String[] tokens = line.split(" ");
-    			if (!tokens[2].equalsIgnoreCase(linkLocalBr)) {
-                    Script.runSimpleBashScript("ip route del " + NetUtils.getLinkLocalCIDR());
-                } else {
-                    foundLinkLocalBr = true;
-                }
-    		}
-    	}
-    	if (!foundLinkLocalBr) {
-    		Script.runSimpleBashScript("ip route add " + NetUtils.getLinkLocalCIDR() + " dev " + linkLocalBr + " src " + NetUtils.getLinkLocalGateway());
-    	}
-    }
-    
     private class vmStats {
     	long _usedTime;
     	long _tx;
@@ -3369,28 +3353,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     }
     
     private void createControlNetwork(Connect conn) throws LibvirtException {
-    	Network vmopsNw = null;
-
-    	try {
-    		vmopsNw = conn.networkLookupByName(_privNwName);
-    	} catch (LibvirtException e) {
-    		
-    	}
-    	
-    	if (vmopsNw == null) {
-    		deletExitingLinkLocalRoutTable(_linkLocalBridgeName);
-    		_virtRouterResource.cleanupPrivateNetwork(_privNwName, _linkLocalBridgeName);
-    		LibvirtNetworkDef networkDef = new LibvirtNetworkDef(_privNwName, null, null);
-    		networkDef.defLocalNetwork(_linkLocalBridgeName, false, 0, NetUtils.getLinkLocalGateway(), NetUtils.getLinkLocalNetMask());
-
-    		String nwXML = networkDef.toString();
-    		s_logger.debug(nwXML);
-    		vmopsNw = conn.networkCreateXML(nwXML);
-    	}
+        _virtRouterResource.createControlNetwork(_linkLocalBridgeName);
     }
-    
-    
-    
+
     private Answer execute(NetworkRulesSystemVmCommand cmd) {
         boolean success = false;
         Connect conn;
