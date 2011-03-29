@@ -29,9 +29,19 @@ import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 
+import com.cloud.agent.AgentManager;
+import com.cloud.agent.Listener;
+import com.cloud.agent.api.AgentControlAnswer;
+import com.cloud.agent.api.AgentControlCommand;
+import com.cloud.agent.api.Answer;
+import com.cloud.agent.api.Command;
+import com.cloud.agent.api.StartupCommand;
+import com.cloud.agent.api.StartupRoutingCommand;
+import com.cloud.agent.api.StartupStorageCommand;
 import com.cloud.capacity.dao.CapacityDao;
 import com.cloud.configuration.Config;
 import com.cloud.configuration.dao.ConfigurationDao;
+import com.cloud.exception.ConnectionException;
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.host.Status;
@@ -39,6 +49,7 @@ import com.cloud.host.dao.HostDao;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.service.ServiceOfferingVO;
 import com.cloud.service.dao.ServiceOfferingDao;
+import com.cloud.storage.Storage;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.component.Inject;
@@ -54,7 +65,7 @@ import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.dao.VMInstanceDao;
 
 @Local(value=CapacityManager.class)
-public class CapacityManagerImpl implements CapacityManager , StateListener<State, VirtualMachine.Event, VirtualMachine>{
+public class CapacityManagerImpl implements CapacityManager , StateListener<State, VirtualMachine.Event, VirtualMachine>, Listener{
     private static final Logger s_logger = Logger.getLogger(CapacityManagerImpl.class);
     String _name;
     @Inject CapacityDao _capacityDao;
@@ -62,12 +73,15 @@ public class CapacityManagerImpl implements CapacityManager , StateListener<Stat
     @Inject ServiceOfferingDao _offeringsDao;
     @Inject HostDao _hostDao;
     @Inject VMInstanceDao _vmDao;
+    @Inject AgentManager _agentMgr;
 
     private int _hostCapacityCheckerDelay;
     private int _hostCapacityCheckerInterval;
     private int _vmCapacityReleaseInterval;
     private ScheduledExecutorService _executor;
     private boolean _stopped;
+    protected int _overProvisioningFactor = 1;
+    protected float _cpuOverProvisioningFactor = 1;
     
 
     @Override
@@ -77,7 +91,18 @@ public class CapacityManagerImpl implements CapacityManager , StateListener<Stat
         _hostCapacityCheckerInterval = NumbersUtil.parseInt(_configDao.getValue(Config.HostCapacityCheckerInterval.key()), 3600);
         _vmCapacityReleaseInterval = NumbersUtil.parseInt(_configDao.getValue(Config.CapacitySkipcountingHours.key()), 3600);
         _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("HostCapacity-Checker"));
+        String overProvisioningFactorStr = _configDao.getValue(Config.StorageOverprovisioningFactor.key());
+        _overProvisioningFactor = NumbersUtil.parseInt(
+                overProvisioningFactorStr, 1);
+
+        String cpuOverProvisioningFactorStr = _configDao.getValue(Config.CPUOverprovisioningFactor.key());
+        _cpuOverProvisioningFactor = NumbersUtil.parseFloat(
+                cpuOverProvisioningFactorStr, 1);
+        if (_cpuOverProvisioningFactor < 1) {
+            _cpuOverProvisioningFactor = 1;
+        }
         VirtualMachine.State.getStateMachine().registerListener(this);
+        _agentMgr.registerForHostEvents(this, true, false, false);
         return true;
     }
 
@@ -493,6 +518,155 @@ public class CapacityManagerImpl implements CapacityManager , StateListener<Stat
         }
         
         return true;
+    }
+ // create capacity entries if none exist for this server
+    private void createCapacityEntry(final StartupCommand startup, HostVO server) {
+        SearchCriteria<CapacityVO> capacitySC = _capacityDao
+                .createSearchCriteria();
+        capacitySC.addAnd("hostOrPoolId", SearchCriteria.Op.EQ, server.getId());
+        capacitySC.addAnd("dataCenterId", SearchCriteria.Op.EQ,
+                server.getDataCenterId());
+        capacitySC.addAnd("podId", SearchCriteria.Op.EQ, server.getPodId());
+
+ 
+        if (startup instanceof StartupRoutingCommand) {
+            SearchCriteria<CapacityVO> capacityCPU = _capacityDao
+                    .createSearchCriteria();
+            capacityCPU.addAnd("hostOrPoolId", SearchCriteria.Op.EQ,
+                    server.getId());
+            capacityCPU.addAnd("dataCenterId", SearchCriteria.Op.EQ,
+                    server.getDataCenterId());
+            capacityCPU
+                    .addAnd("podId", SearchCriteria.Op.EQ, server.getPodId());
+            capacityCPU.addAnd("capacityType", SearchCriteria.Op.EQ,
+                    CapacityVO.CAPACITY_TYPE_CPU);
+            List<CapacityVO> capacityVOCpus = _capacityDao.search(capacitySC,
+                    null);
+
+            if (capacityVOCpus != null && !capacityVOCpus.isEmpty()) {
+                CapacityVO CapacityVOCpu = capacityVOCpus.get(0);
+                long newTotalCpu = (long) (server.getCpus().longValue()
+                        * server.getSpeed().longValue() * _cpuOverProvisioningFactor);
+                if ((CapacityVOCpu.getTotalCapacity() <= newTotalCpu)
+                        || ((CapacityVOCpu.getUsedCapacity() + CapacityVOCpu
+                                .getReservedCapacity()) <= newTotalCpu)) {
+                    CapacityVOCpu.setTotalCapacity(newTotalCpu);
+                } else if ((CapacityVOCpu.getUsedCapacity()
+                        + CapacityVOCpu.getReservedCapacity() > newTotalCpu)
+                        && (CapacityVOCpu.getUsedCapacity() < newTotalCpu)) {
+                    CapacityVOCpu.setReservedCapacity(0);
+                    CapacityVOCpu.setTotalCapacity(newTotalCpu);
+                } else {
+                    s_logger.debug("What? new cpu is :" + newTotalCpu
+                            + ", old one is " + CapacityVOCpu.getUsedCapacity()
+                            + "," + CapacityVOCpu.getReservedCapacity() + ","
+                            + CapacityVOCpu.getTotalCapacity());
+                }
+                _capacityDao.update(CapacityVOCpu.getId(), CapacityVOCpu);
+            } else {
+                CapacityVO capacity = new CapacityVO(
+                        server.getId(),
+                        server.getDataCenterId(),
+                        server.getPodId(), 
+                        server.getClusterId(),
+                        0L,
+                        (long) (server.getCpus().longValue()
+                                * server.getSpeed().longValue() * _cpuOverProvisioningFactor),
+                        CapacityVO.CAPACITY_TYPE_CPU);
+                _capacityDao.persist(capacity);
+            }
+
+            SearchCriteria<CapacityVO> capacityMem = _capacityDao
+                    .createSearchCriteria();
+            capacityMem.addAnd("hostOrPoolId", SearchCriteria.Op.EQ,
+                    server.getId());
+            capacityMem.addAnd("dataCenterId", SearchCriteria.Op.EQ,
+                    server.getDataCenterId());
+            capacityMem
+                    .addAnd("podId", SearchCriteria.Op.EQ, server.getPodId());
+            capacityMem.addAnd("capacityType", SearchCriteria.Op.EQ,
+                    CapacityVO.CAPACITY_TYPE_MEMORY);
+            List<CapacityVO> capacityVOMems = _capacityDao.search(capacityMem,
+                    null);
+
+            if (capacityVOMems != null && !capacityVOMems.isEmpty()) {
+                CapacityVO CapacityVOMem = capacityVOMems.get(0);
+                long newTotalMem = server.getTotalMemory();
+                if (CapacityVOMem.getTotalCapacity() <= newTotalMem
+                        || (CapacityVOMem.getUsedCapacity()
+                                + CapacityVOMem.getReservedCapacity() <= newTotalMem)) {
+                    CapacityVOMem.setTotalCapacity(newTotalMem);
+                } else if (CapacityVOMem.getUsedCapacity()
+                        + CapacityVOMem.getReservedCapacity() > newTotalMem
+                        && CapacityVOMem.getUsedCapacity() < newTotalMem) {
+                    CapacityVOMem.setReservedCapacity(0);
+                    CapacityVOMem.setTotalCapacity(newTotalMem);
+                } else {
+                    s_logger.debug("What? new cpu is :" + newTotalMem
+                            + ", old one is " + CapacityVOMem.getUsedCapacity()
+                            + "," + CapacityVOMem.getReservedCapacity() + ","
+                            + CapacityVOMem.getTotalCapacity());
+                }
+                _capacityDao.update(CapacityVOMem.getId(), CapacityVOMem);
+            } else {
+                CapacityVO capacity = new CapacityVO(server.getId(),
+                        server.getDataCenterId(), server.getPodId(), server.getClusterId(), 0L,
+                        server.getTotalMemory(),
+                        CapacityVO.CAPACITY_TYPE_MEMORY);
+                _capacityDao.persist(capacity);
+            }
+        }
+
+    }
+
+    @Override
+    public boolean processAnswers(long agentId, long seq, Answer[] answers) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean processCommands(long agentId, long seq, Command[] commands) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public AgentControlAnswer processControlCommand(long agentId, AgentControlCommand cmd) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void processConnect(HostVO host, StartupCommand cmd) throws ConnectionException {
+        if (cmd instanceof StartupRoutingCommand) {
+            createCapacityEntry(cmd, host);
+        }
+        
+    }
+
+    @Override
+    public boolean processDisconnect(long agentId, Status state) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isRecurring() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public int getTimeout() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public boolean processTimeout(long agentId, long seq) {
+        // TODO Auto-generated method stub
+        return false;
     }
     
 }

@@ -88,8 +88,15 @@ public class DhcpManager {
     }
     
     public void cleanup(String macAddr) {
-        _macIpMap.remove(macAddr);
-        _ipMacMap.values().remove(macAddr);
+        try {
+            if (macAddr == null) {
+                return;
+            }
+            _macIpMap.remove(macAddr);
+            _ipMacMap.values().remove(macAddr);
+        } catch (Exception e) {
+            s_logger.debug("Failed to cleanup: " + e.toString());
+        }
     }
     
     public HashMap<String, InetAddress> syncIpAddr() {
@@ -228,6 +235,7 @@ public class DhcpManager {
                             }
                         }
                     };
+                    s_logger.debug("Starting DHCP snooping on " + _bridge);
                     int retValue = _pcapedDev.loop(-1, jpacketHandler, "pcapPacketHandler");
                     if ( retValue == -1) {
                         s_logger.debug("Pcap: failed to set loop handler");

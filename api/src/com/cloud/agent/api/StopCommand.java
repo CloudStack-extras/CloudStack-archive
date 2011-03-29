@@ -25,7 +25,6 @@ public class StopCommand extends RebootCommand {
     private String urlPort=null;
     private String publicConsoleProxyIpAddress=null;
     private String privateRouterIpAddress=null;
-    private String privateMacAddress;
     
     protected StopCommand() {
     }
@@ -35,7 +34,6 @@ public class StopCommand extends RebootCommand {
     	this.isProxy = isProxy;
     	this.urlPort = urlPort;
     	this.publicConsoleProxyIpAddress = publicConsoleProxyIpAddress;
-    	this.privateMacAddress = vm.getPrivateMacAddress();
     }
     
     public StopCommand(VirtualMachine vm, String vnet) {
@@ -81,9 +79,5 @@ public class StopCommand extends RebootCommand {
 
     public String getPrivateRouterIpAddress() {
         return privateRouterIpAddress;
-    }
-    
-    public String getPrivateMacAddress() {
-        return privateMacAddress;
     }
 }
