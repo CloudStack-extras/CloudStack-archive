@@ -144,6 +144,7 @@ import com.cloud.agent.api.to.NicTO;
 import com.cloud.agent.api.to.StorageFilerTO;
 import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.agent.api.to.VolumeTO;
+import com.cloud.agent.dhcp.DhcpManager;
 import com.cloud.agent.resource.computing.KVMHABase.NfsStoragePool;
 import com.cloud.agent.resource.computing.LibvirtStorageVolumeDef.volFormat;
 import com.cloud.agent.resource.computing.LibvirtVMDef.ConsoleDef;
@@ -225,6 +226,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private String _dcId;
     private String _pod;
     private String _clusterId;
+    private boolean _isCloudKitEnabled;
     private long _hvVersion;
     private KVMHAMonitor _monitor;
     private final String _SSHKEYSPATH = "/root/.ssh";
@@ -232,6 +234,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private final String _SSHPUBKEYPATH = _SSHKEYSPATH + File.separator + "id_rsa.pub.cloud";
     private final String _mountPoint = "/mnt";
     StorageLayer _storage;
+    DhcpManager _dhcpManager;
     
 	private static final class KeyValueInterpreter extends OutputInterpreter {
 		private final Map<String, String> map = new HashMap<String, String>();
@@ -548,6 +551,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         	}
         }
         
+        String cloudKit = (String)params.get("cloudkit.enabled");
+        _isCloudKitEnabled = Boolean.parseBoolean(cloudKit);
+        
         _localStoragePath = (String)params.get("local.storage.path");
         if (_localStoragePath == null) {
             _localStoragePath = "/var/lib/libvirt/images/";
@@ -639,7 +645,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 		
         _storageResource = new LibvirtStorageResource(this, _storage, _createvmPath, _timeout, _mountPoint, _monitor);
 
-		
+        setupDhcpManager(conn, _guestBridgeName);
 		return true;
 	}
 	
@@ -1884,6 +1890,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             String result = stopVM(conn, vmName, defineOps.UNDEFINE_VM);
             
             final String result2 = cleanupVnet(conn, cmd.getVnet());
+            if (_isCloudKitEnabled) {
+                _dhcpManager.cleanup(cmd.getPrivateMacAddress());
+            }
             if (result != null && result2 != null) {
                 result = result2 + result;
             }
@@ -2089,6 +2098,13 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 				}
 			}
 			state = State.Running;
+			if (_isCloudKitEnabled && vmSpec.getType() == VirtualMachine.Type.User) {
+			    for (NicTO nic: nics) {
+			        if (nic.getType() == TrafficType.Guest) {
+			            s_logger.debug(_dhcpManager.getIPAddr(nic.getMac(), vmName));
+			        }
+			    }
+			}
 			return new StartAnswer(cmd);
 		} catch (Exception e) {
 			s_logger.warn("Exception ", e);
@@ -2352,6 +2368,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 	@Override
 	public PingCommand getCurrentStatus(long id) {
 		final HashMap<String, State> newStates = sync();
+		if (_isCloudKitEnabled) {
+		    s_logger.debug(_dhcpManager.syncIpAddr());
+		}
+		
 		if (!_can_bridge_firewall) {
 			return new PingRoutingCommand(com.cloud.host.Host.Type.Routing, id, newStates);
 		} else {
@@ -2617,7 +2637,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         Domain dm = null;
         for (int i =0; i < ids.length; i++) {
             try {
-                s_logger.debug("domid" + ids[i]);
                 dm = conn.domainLookupByID(ids[i]);
 
                 DomainInfo.DomainState ps = dm.getInfo().state;
@@ -3384,5 +3403,29 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         }
       
         return new Answer(cmd, success, "");
+    }
+    
+    private void setupDhcpManager(Connect conn, String bridgeName) {
+        if (!_isCloudKitEnabled) {
+           return;
+        }
+        
+        _dhcpManager = new DhcpManager(bridgeName);
+        List<Pair<String, String>> macs = new ArrayList<Pair<String, String>>();
+        try {
+            int[] domainIds = conn.listDomains();
+            for (int i = 0; i < domainIds.length; i++) {
+                Domain vm = conn.domainLookupByID(domainIds[i]);
+                if (vm.getName().startsWith("i-")) {
+                    List<InterfaceDef> nics = getInterfaces(conn, vm.getName());
+                    InterfaceDef nic = nics.get(0);
+                    macs.add(new Pair<String, String>(nic.getMacAddress(), vm.getName()));
+                }
+            }
+        } catch (LibvirtException e) {
+            s_logger.debug("Failed to get MACs: " + e.toString());
+        }
+        
+        _dhcpManager.initializeMacTable(macs);
     }
 }

@@ -52,7 +52,8 @@ public class DhcpManager {
     protected ExecutorService _executor;
     protected Map<String, IPAddr> _macIpMap;
     protected Map<InetAddress, String> _ipMacMap;
-    DhcpServer _server;
+    private DhcpServer _server;
+    protected long _timeout = 1200000;
     
     public DhcpManager(String bridge) {
         _executor = new ThreadPoolExecutor(10, 10 * 10, 1, TimeUnit.DAYS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("DhcpListener"));
@@ -74,7 +75,7 @@ public class DhcpManager {
         
         synchronized(addr) {
             try {
-                addr.wait(1200000);
+                addr.wait(_timeout);
             } catch (InterruptedException e) {
             }
             if (addr._state == DHCPState.DHCPACKED) {
@@ -84,6 +85,11 @@ public class DhcpManager {
         }
         
         return null;
+    }
+    
+    public void cleanup(String macAddr) {
+        _macIpMap.remove(macAddr);
+        _ipMacMap.values().remove(macAddr);
     }
     
     public HashMap<String, InetAddress> syncIpAddr() {
@@ -111,9 +117,8 @@ public class DhcpManager {
             if (ipAddr == null) {
                 return;
             }
-            if (_ipMacMap.get(ip) == null) {
-                _ipMacMap.put(ip, macAddr);
-            }
+           
+            _ipMacMap.put(ip, macAddr);
         } else if (state == DHCPState.DHCPACKED) {
             String destMac = macAddrLowerCase;
             if (macAddrLowerCase.equalsIgnoreCase("ff:ff:ff:ff:ff:ff")) {
