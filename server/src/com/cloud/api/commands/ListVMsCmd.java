@@ -29,6 +29,7 @@ import org.apache.log4j.Logger;
 import com.cloud.api.BaseCmd;
 import com.cloud.api.ServerApiException;
 import com.cloud.async.AsyncJobVO;
+import com.cloud.dc.DataCenterVO;
 import com.cloud.domain.DomainVO;
 import com.cloud.host.HostVO;
 import com.cloud.server.Criteria;
@@ -107,7 +108,6 @@ public class ListVMsCmd extends BaseCmd {
                 domainId = ((account == null) ? DomainVO.ROOT_DOMAIN : account.getDomainId());
             }
         } else {
-            accountName = account.getAccountName();
             accountId = account.getId();
             domainId = account.getDomainId();
         }
@@ -148,10 +148,6 @@ public class ListVMsCmd extends BaseCmd {
 
         List<? extends UserVm> virtualMachines = getManagementServer().searchForUserVMs(c);
 
-        if (virtualMachines == null) {
-            throw new ServerApiException(BaseCmd.VM_LIST_ERROR, "unable to find virtual machines for account id " + accountName.toString());
-        }
-
         List vmTag = new ArrayList();
 
         HashMap<Long, HostVO> hostMap = new HashMap<Long, HostVO>();
@@ -160,6 +156,12 @@ public class ListVMsCmd extends BaseCmd {
         	hostMap.put(hostVO.getId(), hostVO);
         }
 
+        
+        Map<Long, DataCenterVO> zones = new HashMap<Long, DataCenterVO>();
+        Map<Long, Account> accounts = new HashMap<Long, Account>();
+        Map<Long, VMTemplateVO> templates = new HashMap<Long, VMTemplateVO>();
+        Map<Long, ServiceOfferingVO> offerings = new HashMap<Long, ServiceOfferingVO>();
+        
         for (UserVm vmInstance : virtualMachines) {
     
         	//if the account is deleted, do not return the user vm 
@@ -183,8 +185,13 @@ public class ListVMsCmd extends BaseCmd {
             if (vmInstance.getState() != null) {
                 vmData.add(new Pair<String, Object>(BaseCmd.Properties.STATE.getName(), vmInstance.getState().toString()));
             }
-
-            Account acct = getManagementServer().findAccountById(Long.valueOf(vmInstance.getAccountId()));
+            
+            Account acct = accounts.get(vmInstance.getAccountId());
+            if (acct == null) {
+                acct = getManagementServer().findAccountById(Long.valueOf(vmInstance.getAccountId()));
+                accounts.put(vmInstance.getAccountId(), acct);
+            }
+            
             if (acct != null) {
                 vmData.add(new Pair<String, Object>(BaseCmd.Properties.ACCOUNT.getName(), acct.getAccountName()));
                 vmData.add(new Pair<String, Object>(BaseCmd.Properties.DOMAIN_ID.getName(), acct.getDomainId().toString()));
@@ -204,8 +211,15 @@ public class ListVMsCmd extends BaseCmd {
     		}
 
             // Data Center Info
-            vmData.add(new Pair<String, Object>(BaseCmd.Properties.ZONE_ID.getName(), Long.valueOf(vmInstance.getDataCenterId()).toString()));
-            vmData.add(new Pair<String, Object>(BaseCmd.Properties.ZONE_NAME.getName(), getManagementServer().findDataCenterById(vmInstance.getDataCenterId()).getName()));
+    		DataCenterVO zone = zones.get(vmInstance.getDataCenterId());
+    		if (zone == null) {
+    		    zone = getManagementServer().findDataCenterById(vmInstance.getDataCenterId());
+    		    zones.put(zone.getId(), zone);
+    		}
+    		
+    		
+            vmData.add(new Pair<String, Object>(BaseCmd.Properties.ZONE_ID.getName(), zone.getId().toString()));
+            vmData.add(new Pair<String, Object>(BaseCmd.Properties.ZONE_NAME.getName(), zone.getName()));
             //if user is an admin, display host id
             if ( (isAdmin == true) && (vmInstance.getHostId() != null)) {
             	vmData.add(new Pair<String, Object>(BaseCmd.Properties.HOST_ID.getName(), vmInstance.getHostId().toString()));
@@ -213,9 +227,16 @@ public class ListVMsCmd extends BaseCmd {
             }
 
             // Template Info
-            VMTemplateVO template = getManagementServer().findTemplateById(vmInstance.getTemplateId());
+            VMTemplateVO template = templates.get(vmInstance.getTemplateId());
+            if (template == null) {
+                template = getManagementServer().findTemplateById(vmInstance.getTemplateId());
+                if (template != null) {
+                    templates.put(template.getId(), template);
+                }
+            }
+            
             if (template != null) {
-            	vmData.add(new Pair<String, Object>(BaseCmd.Properties.TEMPLATE_ID.getName(), Long.valueOf(vmInstance.getTemplateId()).toString()));
+            	vmData.add(new Pair<String, Object>(BaseCmd.Properties.TEMPLATE_ID.getName(), template.getId().toString()));
             	vmData.add(new Pair<String, Object>(BaseCmd.Properties.TEMPLATE_NAME.getName(), template.getName()));
             	vmData.add(new Pair<String, Object>(BaseCmd.Properties.TEMPLATE_DISPLAY_TEXT.getName(), template.getDisplayText()));
             	vmData.add(new Pair<String, Object>(BaseCmd.Properties.PASSWORD_ENABLED.getName(), template.getEnablePassword()));
@@ -226,24 +247,33 @@ public class ListVMsCmd extends BaseCmd {
             	vmData.add(new Pair<String, Object>(BaseCmd.Properties.PASSWORD_ENABLED.getName(), false));
             }
 
-            // ISO Info
+            // ISO Info 
             if (vmInstance.getIsoId() != null) {
-                VMTemplateVO iso = getManagementServer().findTemplateById(vmInstance.getIsoId().longValue());
+                VMTemplateVO iso = templates.get(vmInstance.getIsoId());
+                if (iso == null) {
+                    iso = getManagementServer().findTemplateById(vmInstance.getIsoId().longValue());
+                    templates.put(vmInstance.getIsoId(), iso);
+                }
+                
                 if (iso != null) {
-                    vmData.add(new Pair<String, Object>(BaseCmd.Properties.ISO_ID.getName(), Long.valueOf(vmInstance.getIsoId()).toString()));
+                    vmData.add(new Pair<String, Object>(BaseCmd.Properties.ISO_ID.getName(), iso.getId().toString()));
                     vmData.add(new Pair<String, Object>(BaseCmd.Properties.ISO_NAME.getName(), iso.getName()));
                 }
             }
 
             // Service Offering Info
-            ServiceOfferingVO offering = getManagementServer().findServiceOfferingById(vmInstance.getServiceOfferingId());
+            ServiceOfferingVO offering = offerings.get(vmInstance.getServiceOfferingId());
+            if (offering == null) {
+                offering = getManagementServer().findServiceOfferingById(vmInstance.getServiceOfferingId());
+                offerings.put(vmInstance.getServiceOfferingId(), offering);
+            }
             
             // Probably not the best place to check but it will have to do for now to make this
             // the least intrusive fix.
             if (forVirtualNetwork != null && forVirtualNetwork && offering.getGuestIpType() != ServiceOffering.GuestIpType.Virtualized) {
             	continue;
             }
-            vmData.add(new Pair<String, Object>(BaseCmd.Properties.SERVICE_OFFERING_ID.getName(), Long.valueOf(vmInstance.getServiceOfferingId()).toString()));
+            vmData.add(new Pair<String, Object>(BaseCmd.Properties.SERVICE_OFFERING_ID.getName(), offering.getId().toString()));
 	        vmData.add(new Pair<String, Object>(BaseCmd.Properties.SERVICE_OFFERING_NAME.getName(), offering.getName()));
             vmData.add(new Pair<String, Object>(BaseCmd.Properties.CPU_NUMBER.getName(), Integer.valueOf(offering.getCpu()).toString()));
             vmData.add(new Pair<String, Object>(BaseCmd.Properties.CPU_SPEED.getName(), Integer.valueOf(offering.getSpeed()).toString()));
