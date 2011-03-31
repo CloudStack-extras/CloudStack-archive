@@ -926,4 +926,9 @@ public class NetworkGroupManagerImpl implements NetworkGroupManager {
 		}
 
 	}
+	
+	@Override
+	public boolean isNetworkGroupsEnabled() {
+	    return _enabled;
+	}
 }

@@ -105,6 +105,10 @@ public class CreateNetworkGroupCmd extends BaseCmd {
             throw new ServerApiException(BaseCmd.PARAM_ERROR, "Unable to create network group, a group with name " + name + " already exisits.");
         }
 
+        if (!getManagementServer().isSecurityGroupEnabled()) {
+            throw new ServerApiException(BaseCmd.UNSUPPORTED_ACTION_ERROR, "Network groups feature is not enabled");
+        }
+        
         NetworkGroupVO networkGroup = getManagementServer().createNetworkGroup(name, description, domainId, accountId, accountName);
 
         List<Pair<String, Object>> embeddedObject = new ArrayList<Pair<String, Object>>();

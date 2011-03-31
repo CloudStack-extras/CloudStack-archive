@@ -68,4 +68,6 @@ public interface NetworkGroupManager extends Manager {
 	public void fullSync(long agentId, HashMap<String, Pair<Long, Long>> newGroupStates);
 	
 	public String getNetworkGroupsNamesForVm(long vmId);
+	
+	boolean isNetworkGroupsEnabled();
 }

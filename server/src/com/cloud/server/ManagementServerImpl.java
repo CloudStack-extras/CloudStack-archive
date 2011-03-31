@@ -8479,5 +8479,10 @@ public class ManagementServerImpl implements ManagementServer {
     public Integer getDefaultPageSize() {
         return _defaultPageSize;
     }
+	
+	@Override
+	public boolean isSecurityGroupEnabled() {
+	    return _networkGroupMgr.isNetworkGroupsEnabled();
+	}
 }
 

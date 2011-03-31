@@ -2190,4 +2190,5 @@ public interface ManagementServer {
     
     Integer getDefaultPageSize();
 	
+    boolean isSecurityGroupEnabled();
 }
