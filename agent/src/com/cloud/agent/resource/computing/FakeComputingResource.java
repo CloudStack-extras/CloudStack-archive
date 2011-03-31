@@ -117,6 +117,7 @@ public class FakeComputingResource extends ServerResourceBase implements ServerR
         cmd.setStorageIpAddress((String)_params.get("private.ip.address"));
         cmd.setStorageMacAddress((String)_params.get("private.mac.address"));
         cmd.setStorageNetmask((String)_params.get("private.ip.netmask"));
+        cmd.setGatewayIpAddress((String)_params.get("gateway.ip.address"));
 
     }
     

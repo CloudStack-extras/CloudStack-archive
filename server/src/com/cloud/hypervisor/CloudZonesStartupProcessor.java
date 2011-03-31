@@ -18,6 +18,7 @@ version.
  */
 package com.cloud.hypervisor;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Local;
@@ -30,11 +31,16 @@ import com.cloud.agent.StartupCommandProcessor;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
 import com.cloud.agent.manager.authn.AgentAuthnException;
+import com.cloud.configuration.ConfigurationManager;
+import com.cloud.configuration.ZoneConfig;
 import com.cloud.configuration.dao.ConfigurationDao;
+import com.cloud.dc.ClusterVO;
 import com.cloud.dc.DataCenterVO;
+import com.cloud.dc.DcDetailVO;
 import com.cloud.dc.HostPodVO;
 import com.cloud.dc.dao.ClusterDao;
 import com.cloud.dc.dao.DataCenterDao;
+import com.cloud.dc.dao.DcDetailsDao;
 import com.cloud.dc.dao.HostPodDao;
 import com.cloud.exception.ConnectionException;
 import com.cloud.host.Host;
@@ -45,6 +51,7 @@ import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.MacAddress;
+import com.cloud.utils.net.NetUtils;
 
 /**
  * Creates a host record and supporting records such as pod and ip address
@@ -58,8 +65,10 @@ public class CloudZonesStartupProcessor implements StartupCommandProcessor {
     @Inject DataCenterDao _zoneDao = null;
     @Inject HostDao _hostDao = null;
     @Inject HostPodDao _podDao = null;
-
+    @Inject DcDetailsDao _zoneDetailsDao = null;
+    
     @Inject AgentManager _agentManager = null;
+    @Inject ConfigurationManager _configurationManager = null;
     
     long _nodeId = -1;
    
@@ -142,54 +151,157 @@ public class CloudZonesStartupProcessor implements StartupCommandProcessor {
     
     protected void updateHost(final HostVO host, final StartupCommand startup,
             final Host.Type type) throws AgentAuthnException {
-        s_logger.debug("updateHost() called");
 
-        String dataCenter = startup.getDataCenter();
-        String pod = startup.getPod(); //FIXME: always deduce this and ignore if passed in
-        String cluster = startup.getCluster(); //FIXME: always figure this out, or ignore
-
+        String zoneToken = startup.getDataCenter();
+        if(zoneToken == null){
+        	s_logger.warn("No Zone Token passed in, cannot not find zone for the agent");
+        	throw new AgentAuthnException("No Zone Token passed in, cannot not find zone for agent");
+        }
         
-        DataCenterVO zone = _zoneDao.findByName(dataCenter); //TODO: use secure zone token
+        DataCenterVO zone = _zoneDao.findByToken(zoneToken);
         if (zone == null) {
-            try {
-                long zoneId = Long.parseLong(dataCenter);
-                zone = _zoneDao.findById(zoneId);
-                zone.getDetails();
-            } catch (NumberFormatException nfe) {
-                throw new AgentAuthnException("Could not find zone for agent in datacenter with token " + dataCenter);
-            }
+        	zone = _zoneDao.findByName(zoneToken);
+        	if(zone == null){
+	            try {
+	                long zoneId = Long.parseLong(zoneToken);
+	                zone = _zoneDao.findById(zoneId);
+	        		if (zone == null) {
+	        			throw new AgentAuthnException("Could not find zone for agent with token " + zoneToken);
+	        		}
+	            } catch (NumberFormatException nfe) {
+	                throw new AgentAuthnException("Could not find zone for agent with token " + zoneToken);
+	            }
+        	}
+        }
+    	if(s_logger.isDebugEnabled()){
+    		s_logger.debug("Successfully loaded the DataCenter from the zone token passed in ");
+    	}
+        
+        long zoneId = zone.getId();
+        DcDetailVO maxHostsInZone = _zoneDetailsDao.findDetail(zoneId, ZoneConfig.MaxHosts.key());
+        if(maxHostsInZone != null){
+        	long maxHosts = new Long(maxHostsInZone.getValue()).longValue();
+        	long currentCountOfHosts = _hostDao.countRoutingHostsByDataCenter(zoneId);
+        	if(s_logger.isDebugEnabled()){
+        		s_logger.debug("Number of hosts in Zone:"+ currentCountOfHosts + ", max hosts limit: "+ maxHosts);
+        	}
+        	if(currentCountOfHosts >= maxHosts){
+        		throw new AgentAuthnException("Number of running Routing hosts in the Zone:"+ zone.getName() +" is already at the max limit:"+maxHosts+", cannot start one more host");
+        	}
         }
         
-        HostPodVO p = _podDao.findByName(pod, zone.getId()); //TODO: DAO needs lookup by private cidr and zone
-
-        if (p == null) {//TODO: autocreate pod and cluster
-            try {
-                long podId = Long.parseLong(pod);
-                p = _podDao.findById(podId);
-                if (pod == null) {
-                    throw new AgentAuthnException("Could not find pod for agent in datacenter with token " + dataCenter);
-                }
-            } catch (NumberFormatException nfe) {
-                throw new AgentAuthnException("Could not find pod for agent in datacenter with token " + dataCenter);
-            }
-        } 
+        HostPodVO pod = null;
         
-        Long clusterId = null;
-        if (cluster != null) {
-            try {
-                clusterId = Long.parseLong(cluster);
-                if (_clusterDao.findById(clusterId) == null) {
-                    throw new AgentAuthnException("Could not find cluster for agent in datacenter with token " + dataCenter);
-                }
-            } catch (NumberFormatException nfe) {
-                throw new AgentAuthnException("Could not find cluster for agent in datacenter with token " + dataCenter);
-            }
+    	if(startup.getPrivateIpAddress() == null){
+       		s_logger.warn("No private IP address passed in for the agent, cannot not find pod for agent");
+    		throw new AgentAuthnException("No private IP address passed in for the agent, cannot not find pod for agent");
+    	}
+    	
+    	if(startup.getPrivateNetmask() == null){
+       		s_logger.warn("No netmask passed in for the agent, cannot not find pod for agent");
+    		throw new AgentAuthnException("No netmask passed in for the agent, cannot not find pod for agent");
+    	}
+    	        
+        if(host.getPodId() != null){
+        	if(s_logger.isDebugEnabled()){
+        		s_logger.debug("Pod is already created for this agent, looks like agent is reconnecting...");
+        	}
+        	pod = _podDao.findById(host.getPodId());
+        	if(!checkCIDR(type, pod, startup.getPrivateIpAddress(),
+					startup.getPrivateNetmask())){
+        		pod = null;
+            	if(s_logger.isDebugEnabled()){
+            		s_logger.debug("Subnet of Pod does not match the subnet of the agent, not using this Pod: "+host.getPodId());
+            	}        		
+        	}else{
+        		updatePodNetmaskIfNeeded(pod, startup.getPrivateNetmask());
+        	}
         }
         
+        if(pod == null){
+	    	if(s_logger.isDebugEnabled()){
+	    		s_logger.debug("Trying to detect the Pod to use from the agent's ip address and netmask passed in ");
+	    	}
+	    	
+	        //deduce pod
+	    	boolean podFound = false;
+	        List<HostPodVO> podsInZone = _podDao.listByDataCenterId(zoneId);
+			for (HostPodVO hostPod : podsInZone) {
+				if (checkCIDR(type, hostPod, startup.getPrivateIpAddress(),
+						startup.getPrivateNetmask())) {
+					pod = hostPod;
+					
+					//found the default POD having the same subnet.
+					updatePodNetmaskIfNeeded(pod, startup.getPrivateNetmask());
+					podFound = true;
+					break;
+				}
+			}
 
-        host.setDataCenterId(zone.getId());
-        host.setPodId(p.getId());
-        host.setClusterId(clusterId);
+        
+	        if (!podFound) {
+	        	if(s_logger.isDebugEnabled()){
+	        		s_logger.debug("Creating a new Pod since no default Pod found that matches the agent's ip address and netmask passed in ");
+	        	}
+	        	
+	        	if(startup.getGatewayIpAddress() == null){
+	           		s_logger.warn("No Gateway IP address passed in for the agent, cannot create a new pod for the agent");
+	        		throw new AgentAuthnException("No Gateway IP address passed in for the agent, cannot create a new pod for the agent");
+	        	}
+	        	//auto-create a new pod, since pod matching the agent's ip is not found
+	        	String podName = "POD-"+ (podsInZone.size()+1);
+	        	try{
+		        	String gateway = startup.getGatewayIpAddress();
+		        	String cidr = NetUtils.getCidrFromGatewayAndNetmask(gateway, startup.getPrivateNetmask());
+		            String[] cidrPair = cidr.split("\\/");
+		            String cidrAddress = cidrPair[0];
+		            long cidrSize = Long.parseLong(cidrPair[1]);
+		        	String startIp = NetUtils.getIpRangeStartIpFromCidr(cidrAddress, cidrSize);
+		        	String endIp = NetUtils.getIpRangeEndIpFromCidr(cidrAddress, cidrSize);
+	        		pod = _configurationManager.createPod(-1, podName, zoneId, gateway, cidr, startIp, endIp, true);
+	        	}catch (Exception e) {
+					// no longer tolerate exception during the cluster creation phase
+					throw new CloudRuntimeException("Unable to create new Pod "
+							+ podName + " in Zone: "
+							+ zoneId, e);
+				}
+	        	
+	        }
+        }
+        final StartupRoutingCommand scc = (StartupRoutingCommand) startup;
+
+        ClusterVO cluster = null;
+        if(host.getClusterId() != null){
+        	if(s_logger.isDebugEnabled()){
+        		s_logger.debug("Cluster is already created for this agent, looks like agent is reconnecting...");
+        	}        	
+        	cluster = _clusterDao.findById(host.getClusterId());
+        }
+        if(cluster == null){
+	    	//auto-create cluster - assume one host per cluster
+	        String clusterName = "Cluster-" + startup.getPrivateIpAddress();
+        	if(s_logger.isDebugEnabled()){
+        		s_logger.debug("Creating a new Cluster for this agent with name: "+clusterName + " in Pod: " +pod.getId() +", in Zone:"+zoneId);
+        	}        	
+
+	        cluster = new ClusterVO(zoneId, pod.getId(), clusterName);
+			cluster.setHypervisorType(scc.getHypervisorType().toString());
+			try {
+				cluster = _clusterDao.persist(cluster);
+			} catch (Exception e) {
+				// no longer tolerate exception during the cluster creation phase
+				throw new CloudRuntimeException("Unable to create cluster "
+						+ clusterName + " in pod " + pod.getId() + " and data center "
+						+ zoneId, e);
+			}
+        }
+
+    	if(s_logger.isDebugEnabled()){
+    		s_logger.debug("Detected Zone: "+zoneId+", Pod: " +pod.getId() +", Cluster:" +cluster.getId());
+    	}        
+		host.setDataCenterId(zone.getId());
+        host.setPodId(pod.getId());
+        host.setClusterId(cluster.getId());
         host.setPrivateIpAddress(startup.getPrivateIpAddress());
         host.setPrivateNetmask(startup.getPrivateNetmask());
         host.setPrivateMacAddress(startup.getPrivateMacAddress());
@@ -204,7 +316,6 @@ public class CloudZonesStartupProcessor implements StartupCommandProcessor {
         host.setType(type);
         host.setStorageUrl(startup.getIqn());
         host.setLastPinged(System.currentTimeMillis() >> 10);
-        final StartupRoutingCommand scc = (StartupRoutingCommand) startup;
         host.setCaps(scc.getCapabilities());
         host.setCpus(scc.getCpus());
         host.setTotalMemory(scc.getMemory());
@@ -213,5 +324,42 @@ public class CloudZonesStartupProcessor implements StartupCommandProcessor {
         host.setHypervisorType(hyType);
 
     }
+    
+	private boolean checkCIDR(Host.Type type, HostPodVO pod,
+			String serverPrivateIP, String serverPrivateNetmask) {
+		if (serverPrivateIP == null) {
+			return true;
+		}
+		// Get the CIDR address and CIDR size
+		String cidrAddress = pod.getCidrAddress();
+		long cidrSize = pod.getCidrSize();
+
+		// If the server's private IP address is not in the same subnet as the
+		// pod's CIDR, return false
+		String cidrSubnet = NetUtils.getCidrSubNet(cidrAddress, cidrSize);
+		String serverSubnet = NetUtils.getSubNet(serverPrivateIP,
+				serverPrivateNetmask);
+		if (!cidrSubnet.equals(serverSubnet)) {
+			return false;
+		}
+		return true;
+	}
+	
+	private void updatePodNetmaskIfNeeded(HostPodVO pod, String agentNetmask){
+		// If the server's private netmask is less inclusive than the pod's CIDR
+		// netmask, update cidrSize of the default POD 
+		//(reason: we are maintaining pods only for internal accounting.)
+		long cidrSize = pod.getCidrSize();
+		String cidrNetmask = NetUtils
+				.getCidrSubNet("255.255.255.255", cidrSize);
+		long cidrNetmaskNumeric = NetUtils.ip2Long(cidrNetmask);
+		long serverNetmaskNumeric = NetUtils.ip2Long(agentNetmask);//
+		if (serverNetmaskNumeric > cidrNetmaskNumeric) {
+			//update pod's cidrsize
+			int newCidrSize = new Long(NetUtils.getCidrSize(agentNetmask)).intValue();
+			pod.setCidrSize(newCidrSize);
+			_podDao.update(pod.getId(), pod);
+		}		
+	}
 
 }

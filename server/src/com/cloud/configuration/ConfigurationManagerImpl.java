@@ -21,11 +21,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
@@ -259,7 +262,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
     		s_logger.error("Failed to update configuration option, name: " + name + ", value:" + value);
     		throw new CloudRuntimeException("Failed to update configuration value. Please contact Cloud Support.");
     	}
-    	
+   	
     }
     
     @Override
@@ -459,7 +462,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
     	}
     }
     
-    private void checkPodAttributes(long podId, String podName, long zoneId, String gateway, String cidr, String startIp, String endIp, String allocationStateStr, boolean checkForDuplicates) throws InvalidParameterValueException {
+
+    private void checkPodAttributes(long podId, String podName, long zoneId, String gateway, String cidr, String startIp, String endIp, String allocationStateStr, boolean checkForDuplicates, boolean skipGatewayOverlapCheck) throws InvalidParameterValueException {
 		if (checkForDuplicates) {
 			// Check if the pod already exists
 			if (validPod(podName, zoneId)) {
@@ -493,10 +497,12 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
     	}
 		
 		//Don't allow gateway to overlap with start/endIp
-		if (NetUtils.ipRangesOverlap(startIp, endIp, gateway, gateway)) {
-		    throw new InvalidParameterValueException("The gateway shouldn't overlap start/end ip addresses");
+		if(!skipGatewayOverlapCheck){
+			if (NetUtils.ipRangesOverlap(startIp, endIp, gateway, gateway)) {
+			    throw new InvalidParameterValueException("The gateway shouldn't overlap start/end ip addresses");
+			}
 		}
-
+		
 		String checkPodCIDRs = _configDao.getValue("check.pod.cidrs");
 		if (checkPodCIDRs == null || checkPodCIDRs.trim().isEmpty() || Boolean.parseBoolean(checkPodCIDRs)) {
 			// Check if the CIDR conflicts with the Guest Network or other pods
@@ -668,7 +674,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
     	//Verify pod's attributes
     	String cidr = NetUtils.ipAndNetMaskToCidr(gateway, netmask);
     	boolean checkForDuplicates = !oldPodName.equals(name);
-    	checkPodAttributes(id, name, pod.getDataCenterId(), gateway, cidr, startIp, endIp, allocationStateStr, checkForDuplicates);
+
+    	checkPodAttributes(id, name, pod.getDataCenterId(), gateway, cidr, startIp, endIp, allocationStateStr, checkForDuplicates, false);
 		
 		Transaction txn = Transaction.currentTxn();
 		try {
@@ -741,11 +748,11 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         if(allocationState == null){
         	allocationState = Grouping.AllocationState.Enabled.toString();
         }
-        return createPod(userId.longValue(), name, zoneId, gateway, cidr, startIp, endIp, allocationState);
+        return createPod(userId.longValue(), name, zoneId, gateway, cidr, startIp, endIp, allocationState, false);
     }
 
     @Override @DB
-    public HostPodVO createPod(long userId, String podName, long zoneId, String gateway, String cidr, String startIp, String endIp, String allocationStateStr)  {
+    public HostPodVO createPod(long userId, String podName, long zoneId, String gateway, String cidr, String startIp, String endIp, String allocationStateStr, boolean skipGatewayOverlapCheck)  {
         
         // Check if the zone is valid
         if (!validZone(zoneId)) {
@@ -770,7 +777,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         }
             
         //Validate new pod settings
-        checkPodAttributes(-1, podName, zoneId, gateway, cidr, startIp, endIp, allocationStateStr, true);
+        checkPodAttributes(-1, podName, zoneId, gateway, cidr, startIp, endIp, allocationStateStr, true, skipGatewayOverlapCheck);
 		
 		// Create the new pod in the database
 		String ipRange;
@@ -1029,6 +1036,26 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
     	int stopVnetRange = 0;
     	Boolean isPublic = cmd.isPublic();
     	String allocationStateStr = cmd.getAllocationState();
+    	Map detailsMap = cmd.getDetails();
+    	
+    	Map<String, String> newDetails = new HashMap<String, String>();
+        if (detailsMap != null) {
+            Collection zoneDetailsCollection = detailsMap.values();
+            Iterator iter = zoneDetailsCollection.iterator();
+            while (iter.hasNext()) {
+                HashMap detail = (HashMap)iter.next();
+        		String key = (String)detail.get("key");
+        		String value = (String)detail.get("value");
+        		if ((key == null) || (value == null)) {
+        			 throw new InvalidParameterValueException("Invalid Zone Detail specified, fields 'key' and 'value' cannot be null, please specify details in the form:  details[0].key=XXX&details[0].value=YYY");
+        		} 
+       			//validate the zone detail keys are known keys
+				if(!ZoneConfig.doesKeyExist(key)){
+					throw new InvalidParameterValueException("Invalid Zone Detail parameter: "+ key);
+				}
+				newDetails.put(key, value);
+            }
+        }
     	
     	if (userId == null) {
             userId = Long.valueOf(User.UID_SYSTEM);
@@ -1122,7 +1149,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
 
     	if(guestCidr == null) {
             guestCidr = zone.getGuestNetworkCidr();
-        }    	
+        }
     	
     	boolean checkForDuplicates = !zoneName.equals(oldZoneName);
     	checkZoneParameters(zoneName, dns1, dns2, internalDns1, internalDns2, checkForDuplicates, null, allocationStateStr);//not allowing updating domain associated with a zone, once created
@@ -1143,6 +1170,14 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
     	    zone.setDomainId(null);
     	    zone.setDomain(null);
     	}
+
+    	Map<String, String> updatedDetails = new HashMap<String, String>();
+    	_zoneDao.loadDetails(zone);
+    	if(zone.getDetails() != null){
+    		updatedDetails.putAll(zone.getDetails());
+    	}
+    	updatedDetails.putAll(newDetails);
+    	zone.setDetails(updatedDetails);
     	
 		if (allocationStateStr != null && !allocationStateStr.isEmpty()) {
     		Grouping.AllocationState allocationState = Grouping.AllocationState.valueOf(allocationStateStr);
@@ -1164,6 +1199,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
     	
     	return zone;
     }
+    
 
     @Override @DB
     public DataCenterVO createZone(long userId, String zoneName, String dns1, String dns2, String internalDns1, String internalDns2, String vnetRange, String guestCidr, String domain, Long domainId, NetworkType zoneType, boolean isSecurityGroupEnabled, String allocationStateStr)  {
@@ -1196,16 +1232,19 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
 
         checkZoneParameters(zoneName, dns1, dns2, internalDns1, internalDns2, true, domainId, allocationStateStr);
 
+        byte[] bytes = (zoneName + System.currentTimeMillis()).getBytes();
+        String zoneToken = UUID.nameUUIDFromBytes(bytes).toString();
         Transaction txn = Transaction.currentTxn();
         try {
             txn.start();
             // Create the new zone in the database
-            DataCenterVO zone = new DataCenterVO(zoneName, null, dns1, dns2, internalDns1, internalDns2, vnetRange, guestCidr, domain, domainId, zoneType, isSecurityGroupEnabled);
-    		if (allocationStateStr != null && !allocationStateStr.isEmpty()) {
-        		Grouping.AllocationState allocationState = Grouping.AllocationState.valueOf(allocationStateStr);
-        		zone.setAllocationState(allocationState);
-    		}	
-            zone = _zoneDao.persist(zone);
+            DataCenterVO zone = new DataCenterVO(zoneName, null, dns1, dns2, internalDns1, internalDns2, vnetRange, guestCidr, domain, domainId, zoneType, isSecurityGroupEnabled, zoneToken);
+			if (allocationStateStr != null && !allocationStateStr.isEmpty()) {
+				Grouping.AllocationState allocationState = Grouping.AllocationState.valueOf(allocationStateStr);
+				zone.setAllocationState(allocationState);
+			}	
+	
+			zone = _zoneDao.persist(zone);
 
             // Add vnet entries for the new zone if zone type is Advanced
             if (vnetRange != null) {
@@ -1323,9 +1362,9 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         if (zoneType == NetworkType.Basic) {
             securityGroupEnabled = true;
         }
-        
+                
        return createZone(userId, zoneName, dns1, dns2, internalDns1, internalDns2, vnetRange, guestCidr, domainVO != null ? domainVO.getName() : null, domainId, zoneType, securityGroupEnabled, allocationState);
-    }
+   }
 
     @Override
     public ServiceOffering createServiceOffering(CreateServiceOfferingCmd cmd){

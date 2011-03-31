@@ -19,6 +19,7 @@ package com.cloud.host.dao;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import com.cloud.host.Host;
 import com.cloud.host.Host.Type;
@@ -158,5 +159,7 @@ public interface HostDao extends GenericDao<HostVO, Long> {
     void loadHostTags(HostVO host);
     
     List<HostVO> listByHostTag(Host.Type type, Long clusterId, Long podId, long dcId, String hostTag);
+
+    long countRoutingHostsByDataCenter(long dcId);
     
 }
