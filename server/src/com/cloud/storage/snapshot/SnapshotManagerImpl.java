@@ -1159,43 +1159,25 @@ public class SnapshotManagerImpl implements SnapshotManager {
             event.setDescription("Failed to update schedule for Snapshot policy with id: "+policyId);
             event.setLevel(EventVO.LEVEL_ERROR);
             
-            // Check if there are any recurring snapshots being currently executed. Race condition.
-            SnapshotScheduleVO snapshotSchedule = _snapshotScheduleDao.getCurrentSchedule(volumeId, policyId, true);
-            if (snapshotSchedule != null) {
-                Date scheduledTimestamp = snapshotSchedule.getScheduledTimestamp();
-                String dateDisplay = DateUtil.displayDateInTimezone(DateUtil.GMT_TIMEZONE, scheduledTimestamp);
-                s_logger.debug("Cannot update the policy now. Wait until the current snapshot scheduled at " + dateDisplay + " finishes");
-                
-                policyId = null;
-                policy = null;
-            }
-            else {
-                _snapSchedMgr.removeSchedule(volumeId, policyId);
-                policy.setSchedule(schedule);
-                policy.setTimezone(timezone);
-                policy.setMaxSnaps(maxSnaps);
-                policy.setActive(true);
-                
-                if(_snapshotPolicyDao.update(policy.getId(), policy)){
-                    event.setLevel(EventVO.LEVEL_INFO);
-                    event.setDescription("Successfully updated snapshot policy with Id: "+policyId);
-                }
+            policy.setSchedule(schedule);
+            policy.setTimezone(timezone);
+            policy.setMaxSnaps(maxSnaps);
+            policy.setActive(true);
+
+            if (_snapshotPolicyDao.update(policy.getId(), policy)) {
+                event.setLevel(EventVO.LEVEL_INFO);
+                event.setDescription("Successfully updated snapshot policy with Id: " + policyId);
             }
         } else {
             policy = new SnapshotPolicyVO(volumeId, schedule, timezone, interval, maxSnaps);
             policy = _snapshotPolicyDao.persist(policy);
+            _snapSchedMgr.scheduleNextSnapshotJob(policy);
             policyId = policy.getId();
             event.setType(EventTypes.EVENT_SNAPSHOT_POLICY_CREATE);
             event.setDescription("Successfully created snapshot policy with Id: "+policyId);
         }
                 
         _eventDao.persist(event);
-        if (policyId != null) {
-            _snapSchedMgr.scheduleNextSnapshotJob(policy);
-        }
-        else {
-            s_logger.debug("Failed to update schedule for Snapshot policy with id: " + policyId);
-        }
         txn.commit();
         
         return policy;
