@@ -18,7 +18,7 @@
 
 package com.cloud.agent.api;
 
-import com.cloud.storage.StoragePool;
+import com.cloud.storage.StoragePoolVO;
 
 public class CreateStoragePoolCommand extends ModifyStoragePoolCommand {
 
@@ -26,7 +26,7 @@ public class CreateStoragePoolCommand extends ModifyStoragePoolCommand {
 	public CreateStoragePoolCommand() {
 	}
     
-    public CreateStoragePoolCommand(boolean add, StoragePool pool) {
+    public CreateStoragePoolCommand(boolean add, StoragePoolVO pool) {
         super(add, pool);
 	}
 }

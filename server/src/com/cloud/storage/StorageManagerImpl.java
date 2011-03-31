@@ -43,6 +43,7 @@ import org.apache.log4j.Logger;
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.Command;
+import com.cloud.agent.api.CreateStoragePoolCommand;
 import com.cloud.agent.api.CreateVolumeFromSnapshotAnswer;
 import com.cloud.agent.api.CreateVolumeFromSnapshotCommand;
 import com.cloud.agent.api.DeleteStoragePoolCommand;
@@ -1254,8 +1255,21 @@ public class StorageManagerImpl implements StorageManager {
         }
         s_logger.debug("In createPool Adding the pool to each of the hosts");
         List<HostVO> poolHosts = new ArrayList<HostVO>();
+        boolean success = false;
         for (HostVO h : allHosts) {
-            boolean success = addPoolToHost(h.getId(), pool);
+            success = createStoragePool(h.getId(), pool);
+            if (success) {
+                break;
+            }
+        }
+        if ( !success ) {
+            s_logger.warn("Can not create storage pool " + pool + " on cluster " + clusterId);
+            _storagePoolDao.delete(pool.getId());
+            return null;
+        }
+        
+        for (HostVO h : allHosts) {
+            success = addPoolToHost(h.getId(), pool);
             if (success) {
                 poolHosts.add(h);
             }
@@ -1366,10 +1380,34 @@ public class StorageManagerImpl implements StorageManager {
     }
     
     @Override
+    public boolean createStoragePool(long hostId, StoragePoolVO pool) {
+        s_logger.debug("creating pool " + pool.getName() + " on  host " + hostId);
+        if (pool.getPoolType() != StoragePoolType.NetworkFilesystem && pool.getPoolType() != StoragePoolType.Filesystem 
+             && pool.getPoolType() != StoragePoolType.IscsiLUN && pool.getPoolType() != StoragePoolType.Iscsi ) {
+             s_logger.warn(" Doesn't support storage pool type " + pool.getPoolType());
+            return false;
+        }
+        CreateStoragePoolCommand cmd = new CreateStoragePoolCommand(true, pool);
+        final Answer answer = _agentMgr.easySend(hostId, cmd);
+        if (answer != null && answer.getResult()) {
+            return true;
+        } else {
+            if( answer != null) {
+                s_logger.warn(" can not create strorage pool through host " + hostId + " due to " + answer.getDetails());
+            } else {
+                s_logger.warn(" can not create strorage pool through host " + hostId + " due to CreateStoragePoolCommand returns null");
+            }
+            return false;
+        }
+    }
+
+    
+    
+    @Override
     public boolean addPoolToHost(long hostId, StoragePoolVO pool) {
         s_logger.debug("Adding pool " + pool.getName() + " to  host " + hostId);
         if (pool.getPoolType() != StoragePoolType.NetworkFilesystem && pool.getPoolType() != StoragePoolType.Filesystem && pool.getPoolType() != StoragePoolType.IscsiLUN && pool.getPoolType() != StoragePoolType.Iscsi) {
-            return true;
+            return false;
         }
         ModifyStoragePoolCommand cmd = new ModifyStoragePoolCommand(true, pool);
         final Answer answer = _agentMgr.easySend(hostId, cmd);
