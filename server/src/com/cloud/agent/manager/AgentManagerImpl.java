@@ -101,6 +101,7 @@ import com.cloud.host.Status;
 import com.cloud.host.Status.Event;
 import com.cloud.host.dao.DetailsDao;
 import com.cloud.host.dao.HostDao;
+import com.cloud.host.dao.HostTagsDao;
 import com.cloud.hypervisor.Hypervisor;
 import com.cloud.maid.StackMaid;
 import com.cloud.maint.UpgradeManager;
@@ -127,6 +128,7 @@ import com.cloud.user.dao.UserStatisticsDao;
 import com.cloud.utils.ActionDelegate;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.Pair;
+import com.cloud.utils.StringUtils;
 import com.cloud.utils.component.Adapters;
 import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.component.Inject;
@@ -141,13 +143,11 @@ import com.cloud.utils.nio.HandlerFactory;
 import com.cloud.utils.nio.Link;
 import com.cloud.utils.nio.NioServer;
 import com.cloud.utils.nio.Task;
-import com.cloud.utils.StringUtils;
 import com.cloud.vm.State;
 import com.cloud.vm.UserVm;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VmCharacteristics;
 import com.cloud.vm.dao.VMInstanceDao;
-import com.cloud.host.dao.HostTagsDao;
 
 /**
  * Implementation of the Agent Manager. This class controls the connection to
@@ -634,6 +634,18 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory {
             AgentAttache attache = _agents.get(hostId);
             handleDisconnect(attache, Status.Event.Remove, false);
     		_hostDao.remove(secStorageHost.getId());
+    		
+    		// delete the templates associated with this host
+            SearchCriteria templateHostSC = _vmTemplateHostDao.createSearchCriteria();
+            templateHostSC.addAnd("hostId", SearchCriteria.Op.EQ,secStorageHost.getId());
+            _vmTemplateHostDao.remove(templateHostSC);
+            
+           //delete the op_host_capacity entry
+            SearchCriteria secStorageCapacitySC = _capacityDao.createSearchCriteria();          
+            secStorageCapacitySC.addAnd("hostOrPoolId", SearchCriteria.Op.EQ, secStorageHost.getId());
+            secStorageCapacitySC.addAnd("capacityType", SearchCriteria.Op.EQ, CapacityVO.CAPACITY_TYPE_SECONDARY_STORAGE);  
+            _capacityDao.remove(secStorageCapacitySC);
+    		
             /*Disconnected agent needs special handling here*/
     		secStorageHost.setGuid(null);
     		txn.commit();
