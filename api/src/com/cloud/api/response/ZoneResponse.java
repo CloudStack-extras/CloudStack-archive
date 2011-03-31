@@ -71,6 +71,9 @@ public class ZoneResponse extends BaseResponse {
     @SerializedName("allocationstate") @Param(description="the allocation state of the cluster")
     private String allocationState;    
 
+    @SerializedName(ApiConstants.ZONE_TOKEN) @Param(description="Zone Token")
+    private String zoneToken;
+
     public Long getId() {
         return id;
     }
@@ -198,4 +201,13 @@ public class ZoneResponse extends BaseResponse {
     public void setAllocationState(String allocationState) {
     	this.allocationState = allocationState;
     }     
+
+    public String getZoneToken() {
+	    return zoneToken;
+	}
+	
+	public void setZoneToken(String zoneToken) {
+		this.zoneToken = zoneToken;
+	}
+    
 }

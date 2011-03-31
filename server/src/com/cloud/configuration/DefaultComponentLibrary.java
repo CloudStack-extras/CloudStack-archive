@@ -51,6 +51,7 @@ import com.cloud.dc.dao.AccountVlanMapDaoImpl;
 import com.cloud.dc.dao.ClusterDaoImpl;
 import com.cloud.dc.dao.DataCenterDaoImpl;
 import com.cloud.dc.dao.DataCenterIpAddressDaoImpl;
+import com.cloud.dc.dao.DcDetailsDaoImpl;
 import com.cloud.dc.dao.HostPodDaoImpl;
 import com.cloud.dc.dao.PodVlanMapDaoImpl;
 import com.cloud.dc.dao.VlanDaoImpl;
@@ -260,6 +261,7 @@ public class DefaultComponentLibrary extends ComponentLibraryBase implements Com
         addDao("StoragePoolWorkDao", StoragePoolWorkDaoImpl.class);
         addDao("HostTagsDao", HostTagsDaoImpl.class);
         addDao("NetworkDomainDao", NetworkDomainDaoImpl.class);
+        addDao("DcDetailsDao", DcDetailsDaoImpl.class);
     }
     
     @Override

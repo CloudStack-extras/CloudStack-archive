@@ -18,10 +18,16 @@ version.
  */
 package com.cloud.configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public enum ZoneConfig {
     EnableSecStorageVm( Boolean.class, "enable.secstorage.vm", "true", "Enables secondary storage vm service", null),
-    EnableConsoleProxyVm( Boolean.class, "enable.consoleproxy.vm", "true", "Enables console proxy vm service", null);
-
+    EnableConsoleProxyVm( Boolean.class, "enable.consoleproxy.vm", "true", "Enables console proxy vm service", null),
+    MaxHosts( Long.class, "max.hosts", null, "Maximum number of hosts the Zone can have", null),
+    MaxVirtualMachines( Long.class, "max.vms", null, "Maximum number of VMs the Zone can have", null),
+    ZoneMode( String.class, "zone.mode", null, "Mode of the Zone", "Free,Basic,Advanced"),
+    HasNoPublicIp(Boolean.class, "has.no.public.ip", "false", "True if Zone has no public IP", null);
    
 
     private final Class<?> _type;
@@ -29,6 +35,16 @@ public enum ZoneConfig {
     private final String _defaultValue;
     private final String _description;
     private final String _range;
+    
+    private static final List<String> _zoneConfigKeys = new ArrayList<String>();
+    
+    static {
+    	// Add keys into List
+        for (ZoneConfig c : ZoneConfig.values()) {
+        	String key = c.key();
+        	_zoneConfigKeys.add(key);
+        }
+    }    
     
     private ZoneConfig( Class<?> type, String name, String defaultValue, String description, String range) {
 
@@ -42,7 +58,7 @@ public enum ZoneConfig {
     public Class<?> getType() {
         return _type;
     }
-
+    
     public String getName() {
         return _name;
     }
@@ -62,4 +78,9 @@ public enum ZoneConfig {
     public String key() {
         return _name;
     }
+    
+    public static boolean doesKeyExist(String key){
+    	return _zoneConfigKeys.contains(key);
+    }    	
+
 }

@@ -573,7 +573,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         }
 	}
 
-    private DataCenterVO createZone(long userId, String zoneName, String dns1, String dns2, String internalDns1, String internalDns2, String vnetRange, String guestCidr, String domain, Long domainId, NetworkType zoneType) throws InvalidParameterValueException, InternalErrorException {
+    private DataCenterVO createZone(long userId, String zoneName, String dns1, String dns2, String internalDns1, String internalDns2, String vnetRange, String guestCidr, String domain, Long domainId, NetworkType zoneType, String zoneToken) throws InvalidParameterValueException, InternalErrorException {
         int vnetStart = 0;
         int vnetEnd = 0;
         if (vnetRange != null) {
@@ -604,7 +604,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
             }
         }
         // Create the new zone in the database
-        DataCenterVO zone = new DataCenterVO(zoneName, null, dns1, dns2, internalDns1, internalDns2, vnetRange, guestCidr, domain, domainId, zoneType, false);
+        DataCenterVO zone = new DataCenterVO(zoneName, null, dns1, dns2, internalDns1, internalDns2, vnetRange, guestCidr, domain, domainId, zoneType, false, zoneToken);
         zone = _zoneDao.persist(zone);
 
         // Add vnet entries for the new zone

@@ -18,6 +18,8 @@
 
 package com.cloud.api.commands;
 
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiConstants;
@@ -69,6 +71,9 @@ public class UpdateZoneCmd extends BaseCmd {
     
     @Parameter(name=ApiConstants.ALLOCATION_STATE, type=CommandType.STRING, description="Allocation state of this cluster for allocation of new resources")
     private String allocationState;    
+
+    @Parameter(name=ApiConstants.DETAILS, type=CommandType.MAP, description="the details for the Zone")
+    private Map details;
     
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -113,6 +118,10 @@ public class UpdateZoneCmd extends BaseCmd {
     public String getAllocationState() {
     	return allocationState;
     }    
+
+    public Map getDetails() {
+        return details;
+    }
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
