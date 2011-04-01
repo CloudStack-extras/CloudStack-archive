@@ -258,7 +258,7 @@ public class CloudZonesStartupProcessor implements StartupCommandProcessor {
 		            long cidrSize = Long.parseLong(cidrPair[1]);
 		        	String startIp = NetUtils.getIpRangeStartIpFromCidr(cidrAddress, cidrSize);
 		        	String endIp = NetUtils.getIpRangeEndIpFromCidr(cidrAddress, cidrSize);
-	        		pod = _configurationManager.createPod(-1, podName, zoneId, gateway, cidr, startIp, endIp, true);
+	        		pod = _configurationManager.createPod(-1, podName, zoneId, gateway, cidr, startIp, endIp, null, true);
 	        	}catch (Exception e) {
 					// no longer tolerate exception during the cluster creation phase
 					throw new CloudRuntimeException("Unable to create new Pod "
