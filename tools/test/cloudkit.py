@@ -20,6 +20,9 @@ def fix_default_db():
     statement="""UPDATE vm_template SET checksum=NULL"""
     database.update(statement)
     
+    statement="""UPDATE disk_offering set use_local_storage=1"""
+    database.update(statement)
+    
 def config():
     config = GlobalConfig(api)
     config.update('use.local.storage', 'true')
