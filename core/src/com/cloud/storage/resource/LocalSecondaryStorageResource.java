@@ -161,7 +161,7 @@ public class LocalSecondaryStorageResource extends ServerResourceBase implements
         
         final StartupStorageCommand cmd = new StartupStorageCommand(_parent, StoragePoolType.Filesystem, 1024l*1024l*1024l*1024l, _dlMgr.gatherTemplateInfo());
         cmd.setResourceType(Storage.StorageResourceType.SECONDARY_STORAGE);
-        cmd.setIqn(null);
+        cmd.setIqn("local://");
         fillNetworkInformation(cmd);
         cmd.setDataCenter(_dc);
         cmd.setPod(_pod);
