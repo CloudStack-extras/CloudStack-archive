@@ -30,18 +30,11 @@ import javax.naming.ConfigurationException;
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
-import com.cloud.agent.Listener;
-import com.cloud.agent.api.AgentControlAnswer;
-import com.cloud.agent.api.AgentControlCommand;
-import com.cloud.agent.api.Answer;
-import com.cloud.agent.api.Command;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
-import com.cloud.agent.api.StartupStorageCommand;
 import com.cloud.capacity.dao.CapacityDao;
 import com.cloud.configuration.Config;
 import com.cloud.configuration.dao.ConfigurationDao;
-import com.cloud.exception.ConnectionException;
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.host.Status;
@@ -49,7 +42,6 @@ import com.cloud.host.dao.HostDao;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.service.ServiceOfferingVO;
 import com.cloud.service.dao.ServiceOfferingDao;
-import com.cloud.storage.Storage;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.component.Inject;
@@ -65,7 +57,7 @@ import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.dao.VMInstanceDao;
 
 @Local(value=CapacityManager.class)
-public class CapacityManagerImpl implements CapacityManager , StateListener<State, VirtualMachine.Event, VirtualMachine>, Listener{
+public class CapacityManagerImpl implements CapacityManager , StateListener<State, VirtualMachine.Event, VirtualMachine>{
     private static final Logger s_logger = Logger.getLogger(CapacityManagerImpl.class);
     String _name;
     @Inject CapacityDao _capacityDao;
@@ -80,7 +72,7 @@ public class CapacityManagerImpl implements CapacityManager , StateListener<Stat
     private int _vmCapacityReleaseInterval;
     private ScheduledExecutorService _executor;
     private boolean _stopped;
-    private int _storageOverProvisioningFactor = 1;
+    private float _storageOverProvisioningFactor = 1.0f;
     private float _cpuOverProvisioningFactor = 1.0f;
 
 
@@ -90,7 +82,7 @@ public class CapacityManagerImpl implements CapacityManager , StateListener<Stat
         _hostCapacityCheckerDelay = NumbersUtil.parseInt(_configDao.getValue(Config.HostCapacityCheckerWait.key()), 3600);
         _hostCapacityCheckerInterval = NumbersUtil.parseInt(_configDao.getValue(Config.HostCapacityCheckerInterval.key()), 3600);
         _vmCapacityReleaseInterval = NumbersUtil.parseInt(_configDao.getValue(Config.CapacitySkipcountingHours.key()), 3600);
-        _storageOverProvisioningFactor = NumbersUtil.parseInt(_configDao.getValue(Config.StorageOverprovisioningFactor.key()), 1);
+        _storageOverProvisioningFactor = NumbersUtil.parseFloat(_configDao.getValue(Config.StorageOverprovisioningFactor.key()), 1.0f);
         _cpuOverProvisioningFactor = NumbersUtil.parseFloat(_configDao.getValue(Config.CPUOverprovisioningFactor.key()), 1.0f);
 
         if (_cpuOverProvisioningFactor < 1.0f) {
@@ -617,54 +609,5 @@ public class CapacityManagerImpl implements CapacityManager , StateListener<Stat
 
     }
 
-    @Override
-    public boolean processAnswers(long agentId, long seq, Answer[] answers) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean processCommands(long agentId, long seq, Command[] commands) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public AgentControlAnswer processControlCommand(long agentId, AgentControlCommand cmd) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void processConnect(HostVO host, StartupCommand cmd) throws ConnectionException {
-        if (cmd instanceof StartupRoutingCommand) {
-            createCapacityEntry(cmd, host);
-        }
-        
-    }
-
-    @Override
-    public boolean processDisconnect(long agentId, Status state) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isRecurring() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public int getTimeout() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public boolean processTimeout(long agentId, long seq) {
-        // TODO Auto-generated method stub
-        return false;
-    }
     
 }
