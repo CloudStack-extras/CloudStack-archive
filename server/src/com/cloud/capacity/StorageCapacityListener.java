@@ -38,11 +38,11 @@ import com.cloud.utils.db.SearchCriteria;
 public class StorageCapacityListener implements Listener {
     
     CapacityDao _capacityDao;
-    int _overProvisioningFactor = 1;
+    float _overProvisioningFactor = 1.0f;
 
 
     public StorageCapacityListener(CapacityDao _capacityDao,
-            int _overProvisioningFactor) {
+            float _overProvisioningFactor) {
         super();
         this._capacityDao = _capacityDao;
         this._overProvisioningFactor = _overProvisioningFactor;
@@ -93,7 +93,7 @@ public class StorageCapacityListener implements Listener {
         if (ssCmd.getResourceType() == Storage.StorageResourceType.STORAGE_HOST) {
             CapacityVO capacity = new CapacityVO(server.getId(),
                     server.getDataCenterId(), server.getPodId(), server.getClusterId(), 0L,
-                    server.getTotalSize() * _overProvisioningFactor,
+                    (long) (server.getTotalSize() * _overProvisioningFactor),
                     CapacityVO.CAPACITY_TYPE_STORAGE_ALLOCATED);
             _capacityDao.persist(capacity);
         }
