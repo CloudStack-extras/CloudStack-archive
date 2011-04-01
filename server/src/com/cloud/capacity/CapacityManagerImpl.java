@@ -73,16 +73,16 @@ public class CapacityManagerImpl implements CapacityManager , StateListener<Stat
     @Inject ServiceOfferingDao _offeringsDao;
     @Inject HostDao _hostDao;
     @Inject VMInstanceDao _vmDao;
-    @Inject AgentManager _agentMgr;
+    @Inject AgentManager _agentManager;
 
     private int _hostCapacityCheckerDelay;
     private int _hostCapacityCheckerInterval;
     private int _vmCapacityReleaseInterval;
     private ScheduledExecutorService _executor;
     private boolean _stopped;
-    protected int _overProvisioningFactor = 1;
-    protected float _cpuOverProvisioningFactor = 1;
-    
+    private int _storageOverProvisioningFactor = 1;
+    private float _cpuOverProvisioningFactor = 1.0f;
+
 
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -90,19 +90,17 @@ public class CapacityManagerImpl implements CapacityManager , StateListener<Stat
         _hostCapacityCheckerDelay = NumbersUtil.parseInt(_configDao.getValue(Config.HostCapacityCheckerWait.key()), 3600);
         _hostCapacityCheckerInterval = NumbersUtil.parseInt(_configDao.getValue(Config.HostCapacityCheckerInterval.key()), 3600);
         _vmCapacityReleaseInterval = NumbersUtil.parseInt(_configDao.getValue(Config.CapacitySkipcountingHours.key()), 3600);
-        _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("HostCapacity-Checker"));
-        String overProvisioningFactorStr = _configDao.getValue(Config.StorageOverprovisioningFactor.key());
-        _overProvisioningFactor = NumbersUtil.parseInt(
-                overProvisioningFactorStr, 1);
+        _storageOverProvisioningFactor = NumbersUtil.parseInt(_configDao.getValue(Config.StorageOverprovisioningFactor.key()), 1);
+        _cpuOverProvisioningFactor = NumbersUtil.parseFloat(_configDao.getValue(Config.CPUOverprovisioningFactor.key()), 1.0f);
 
-        String cpuOverProvisioningFactorStr = _configDao.getValue(Config.CPUOverprovisioningFactor.key());
-        _cpuOverProvisioningFactor = NumbersUtil.parseFloat(
-                cpuOverProvisioningFactorStr, 1);
-        if (_cpuOverProvisioningFactor < 1) {
-            _cpuOverProvisioningFactor = 1;
+        if (_cpuOverProvisioningFactor < 1.0f) {
+            _cpuOverProvisioningFactor = 1.0f;
         }
+        _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("HostCapacity-Checker"));
         VirtualMachine.State.getStateMachine().registerListener(this);
-        _agentMgr.registerForHostEvents(this, true, false, false);
+        _agentManager.registerForHostEvents(new StorageCapacityListener(_capacityDao, _storageOverProvisioningFactor), true, false, false);
+        _agentManager.registerForHostEvents(new ComputeCapacityListener(_capacityDao, _cpuOverProvisioningFactor), true, false, false);
+
         return true;
     }
 
