@@ -134,6 +134,7 @@ public class CloudZonesStartupProcessor implements StartupCommandProcessor {
                 throw new ConnectionException(true, "Failed to authorize host, invalid configuration", e);
             }
             if (!found) {
+                server.setHostAllocationState(Host.HostAllocationState.Enabled);
                 server = _hostDao.persist(server);
             } else {
                 if (!_hostDao.connect(server, _nodeId)) {
