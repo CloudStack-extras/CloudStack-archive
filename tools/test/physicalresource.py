@@ -26,7 +26,7 @@ class ZoneCreator:
         self._zonetoken = jsonobj['createzoneresponse']['zone']['zonetoken']
         print "Zone %s is created"%self._zonename
         print "zone=%s"%self._zonetoken
-        self.createPod()
+        #self.createPod()
         return self._zoneid
 
 
