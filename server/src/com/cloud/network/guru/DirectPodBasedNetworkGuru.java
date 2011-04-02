@@ -25,8 +25,10 @@ import javax.ejb.Local;
 
 import org.apache.log4j.Logger;
 
+import com.cloud.configuration.ZoneConfig;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenter.NetworkType;
+import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.Pod;
 import com.cloud.dc.Vlan;
 import com.cloud.dc.Vlan.VlanType;
@@ -54,7 +56,7 @@ import com.cloud.vm.VirtualMachineProfile;
 
 @Local(value=NetworkGuru.class)
 public class DirectPodBasedNetworkGuru extends DirectNetworkGuru{
-private static final Logger s_logger = Logger.getLogger(DirectPodBasedNetworkGuru.class);
+    private static final Logger s_logger = Logger.getLogger(DirectPodBasedNetworkGuru.class);
     
     @Inject DataCenterDao _dcDao;
     @Inject VlanDao _vlanDao;
@@ -78,7 +80,13 @@ private static final Logger s_logger = Logger.getLogger(DirectPodBasedNetworkGur
     public NicProfile allocate(Network network, NicProfile nic, VirtualMachineProfile<? extends VirtualMachine> vm) throws InsufficientVirtualNetworkCapcityException,
             InsufficientAddressCapacityException, ConcurrentOperationException {
         
-        DataCenter dc = _dcDao.findById(network.getDataCenterId());
+        DataCenterVO dc = _dcDao.findById(network.getDataCenterId());
+        ReservationStrategy rsStrategy = ReservationStrategy.Start;
+        _dcDao.loadDetails(dc);
+        String dhcpStrategy = dc.getDetail(ZoneConfig.DhcpStrategy.key());
+        if ("external".equalsIgnoreCase(dhcpStrategy)) {
+            rsStrategy = ReservationStrategy.Create;
+        }
         NetworkOffering offering = _networkOfferingDao.findByIdIncludingRemoved(network.getNetworkOfferingId());
         
         if (!canHandle(offering, dc)) {
@@ -86,9 +94,9 @@ private static final Logger s_logger = Logger.getLogger(DirectPodBasedNetworkGur
         }
        
         if (nic == null) {
-            nic = new NicProfile(ReservationStrategy.Start, null, null, null, null);
+            nic = new NicProfile(rsStrategy, null, null, null, null);
         } else {
-            nic.setStrategy(ReservationStrategy.Start);
+            nic.setStrategy(rsStrategy);
         }
 
         return nic;
@@ -103,6 +111,7 @@ private static final Logger s_logger = Logger.getLogger(DirectPodBasedNetworkGur
     
     protected void getIp(NicProfile nic, Pod pod, VirtualMachineProfile<? extends VirtualMachine> vm, Network network) throws InsufficientVirtualNetworkCapcityException, InsufficientAddressCapacityException, ConcurrentOperationException {
         DataCenter dc = _dcDao.findById(pod.getDataCenterId());
+        
         if (nic.getIp4Address() == null) {     
             PublicIp ip = _networkMgr.assignPublicIpAddress(dc.getId(), pod.getId(), vm.getOwner(), VlanType.DirectAttached, network.getId());
             nic.setIp4Address(ip.getAddress().toString());
@@ -120,5 +129,7 @@ private static final Logger s_logger = Logger.getLogger(DirectPodBasedNetworkGur
         nic.setDns1(dc.getDns1());
         nic.setDns2(dc.getDns2());
     }
+
+   
 
 }
