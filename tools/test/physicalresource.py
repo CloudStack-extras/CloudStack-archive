@@ -21,11 +21,11 @@ class ZoneCreator:
         if  jsonresult is  None:
            print "Failed to create zone"
            return 0
-
         jsonobj = json.loads(jsonresult)
         self._zoneid = jsonobj['createzoneresponse']['zone']['id']
+        self._zonetoken = jsonobj['createzoneresponse']['zone']['zonetoken']
         print "Zone %s is created"%self._zonename
-        print "zone=%s"%self._zoneid
+        print "zone=%s"%self._zonetoken
         self.createPod()
         return self._zoneid
 

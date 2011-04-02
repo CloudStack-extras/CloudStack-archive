@@ -36,6 +36,12 @@ def create_zone():
                  VALUES (%s, '%s', '0')"""
     database.update(statement % (zoneid, 'enable.secstorage.vm'))
     database.update(statement % (zoneid, 'enable.consoleproxy.vm'))
+    statement="""INSERT INTO data_center_details (dc_id, name, value) 
+                 VALUES (%s, '%s', '%s')"""
+    database.update(statement % (zoneid, 'zone.dhcp.strategy', 'external'))
+
+    statement="""UPDATE data_center set dhcp_provider='ExternalDhcpServer' where id=%s""" 
+    database.update(statement % (zoneid))
 
 if __name__ == "__main__":
     fix_default_db()
