@@ -30,6 +30,7 @@ import com.cloud.agent.AgentManager;
 import com.cloud.agent.StartupCommandProcessor;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
+import com.cloud.agent.api.StartupStorageCommand;
 import com.cloud.agent.manager.authn.AgentAuthnException;
 import com.cloud.configuration.ConfigurationManager;
 import com.cloud.configuration.ZoneConfig;
@@ -48,6 +49,9 @@ import com.cloud.host.Host.Type;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.storage.Storage;
+import com.cloud.storage.StorageStats;
+import com.cloud.storage.resource.DummySecondaryStorageResource;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.MacAddress;
@@ -108,49 +112,57 @@ public class CloudZonesStartupProcessor implements StartupCommandProcessor {
             throws ConnectionException {
         StartupCommand startup = cmd[0];
         if (startup instanceof StartupRoutingCommand) {
-            StartupRoutingCommand ssCmd = ((StartupRoutingCommand) startup);
-            boolean found = false;
-            Type type = Host.Type.Routing;
-            final Map<String, String> hostDetails = ssCmd.getHostDetails();
-            HostVO server = _hostDao.findByGuid(startup.getGuid());
-            if (server == null) {
-                server = _hostDao.findByGuid(startup.getGuidWithoutResource());
-            }
-            if (server != null && server.getRemoved() == null) {
-                if (s_logger.isDebugEnabled()) {
-                    s_logger.debug("Found the host " + server.getId() + " by guid: "
-                            + startup.getGuid());
-                }
-                found = true;
-                
-            } else {
-                server = new HostVO(startup.getGuid());
-            }
-            server.setDetails(hostDetails);
-            
-            try {
-                updateHost(server, startup, type);
-            } catch (AgentAuthnException e) {
-                throw new ConnectionException(true, "Failed to authorize host, invalid configuration", e);
-            }
-            if (!found) {
-                server.setHostAllocationState(Host.HostAllocationState.Enabled);
-                server = _hostDao.persist(server);
-            } else {
-                if (!_hostDao.connect(server, _nodeId)) {
-                    throw new CloudRuntimeException(
-                            "Agent cannot connect because the current state is "
-                                    + server.getStatus().toString());
-                }
-                s_logger.info("Old " + server.getType().toString()
-                        + " host reconnected w/ id =" + server.getId());
-            }
-            return true;
+            return processHostStartup((StartupRoutingCommand)startup);
+        } else if (startup instanceof StartupStorageCommand ){
+            return processStorageStartup((StartupStorageCommand)startup);
         }
+
         return false;
     }
     
-    protected void updateHost(final HostVO host, final StartupCommand startup,
+    protected boolean processHostStartup(StartupRoutingCommand startup) throws ConnectionException{
+        boolean found = false;
+        Type type = Host.Type.Routing;
+        final Map<String, String> hostDetails = startup.getHostDetails();
+        HostVO server = _hostDao.findByGuid(startup.getGuid());
+        if (server == null) {
+            server = _hostDao.findByGuid(startup.getGuidWithoutResource());
+        }
+        if (server != null && server.getRemoved() == null) {
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug("Found the host " + server.getId() + " by guid: "
+                        + startup.getGuid());
+            }
+            found = true;
+
+        } else {
+            server = new HostVO(startup.getGuid());
+        }
+        server.setDetails(hostDetails);
+
+        try {
+            updateComputeHost(server, startup, type);
+        } catch (AgentAuthnException e) {
+            throw new ConnectionException(true, "Failed to authorize host, invalid configuration", e);
+        }
+        if (!found) {
+            server.setHostAllocationState(Host.HostAllocationState.Enabled);
+            server = _hostDao.persist(server);
+        } else {
+            if (!_hostDao.connect(server, _nodeId)) {
+                throw new CloudRuntimeException(
+                        "Agent cannot connect because the current state is "
+                        + server.getStatus().toString());
+            }
+            s_logger.info("Old " + server.getType().toString()
+                    + " host reconnected w/ id =" + server.getId());
+        }
+        return true;
+   
+        
+    }
+    
+    protected void updateComputeHost(final HostVO host, final StartupCommand startup,
             final Host.Type type) throws AgentAuthnException {
 
         String zoneToken = startup.getDataCenter();
@@ -362,5 +374,109 @@ public class CloudZonesStartupProcessor implements StartupCommandProcessor {
 			_podDao.update(pod.getId(), pod);
 		}		
 	}
+	
+	
+	protected boolean processStorageStartup(StartupStorageCommand startup) throws ConnectionException{
+	    if (startup.getResourceType() != Storage.StorageResourceType.SECONDARY_STORAGE) {
+            return false;
+        }
+	    boolean found = false;
+        Type type = Host.Type.SecondaryStorage;
+        final Map<String, String> hostDetails = startup.getHostDetails();
+        HostVO server = _hostDao.findByGuid(startup.getGuid());
+        if (server == null) {
+            server = _hostDao.findByGuid(startup.getGuidWithoutResource());
+        }
+        if (server != null && server.getRemoved() == null) {
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug("Found the host " + server.getId() + " by guid: "
+                        + startup.getGuid());
+            }
+            found = true;
+
+        } else {
+            server = new HostVO(startup.getGuid());
+        }
+        server.setDetails(hostDetails);
+
+        try {
+            updateSecondaryHost(server, startup, type);
+        } catch (AgentAuthnException e) {
+            throw new ConnectionException(true, "Failed to authorize host, invalid configuration", e);
+        }
+        if (!found) {
+            server.setHostAllocationState(Host.HostAllocationState.Enabled);
+            server = _hostDao.persist(server);
+        } else {
+            if (!_hostDao.connect(server, _nodeId)) {
+                throw new CloudRuntimeException(
+                        "Agent cannot connect because the current state is "
+                        + server.getStatus().toString());
+            }
+            s_logger.info("Old " + server.getType().toString()
+                    + " host reconnected w/ id =" + server.getId());
+        }
+        return true;
+   
+        
+    }
+	protected void updateSecondaryHost(final HostVO host, final StartupStorageCommand startup,
+            final Host.Type type) throws AgentAuthnException {
+	  
+        String zoneToken = startup.getDataCenter();
+        if(zoneToken == null){
+            s_logger.warn("No Zone Token passed in, cannot not find zone for the agent");
+            throw new AgentAuthnException("No Zone Token passed in, cannot not find zone for agent");
+        }
+        
+        DataCenterVO zone = _zoneDao.findByToken(zoneToken);
+        if (zone == null) {
+            zone = _zoneDao.findByName(zoneToken);
+            if(zone == null){
+                try {
+                    long zoneId = Long.parseLong(zoneToken);
+                    zone = _zoneDao.findById(zoneId);
+                    if (zone == null) {
+                        throw new AgentAuthnException("Could not find zone for agent with token " + zoneToken);
+                    }
+                } catch (NumberFormatException nfe) {
+                    throw new AgentAuthnException("Could not find zone for agent with token " + zoneToken);
+                }
+            }
+        }
+        if(s_logger.isDebugEnabled()){
+            s_logger.debug("Successfully loaded the DataCenter from the zone token passed in ");
+        }
+        
+
+        host.setDataCenterId(zone.getId());
+        host.setPodId(null);
+        host.setClusterId(null);
+        host.setPrivateIpAddress(startup.getPrivateIpAddress());
+        host.setPrivateNetmask(startup.getPrivateNetmask());
+        host.setPrivateMacAddress(startup.getPrivateMacAddress());
+        host.setPublicIpAddress(startup.getPublicIpAddress());
+        host.setPublicMacAddress(startup.getPublicMacAddress());
+        host.setPublicNetmask(startup.getPublicNetmask());
+        host.setStorageIpAddress(startup.getStorageIpAddress());
+        host.setStorageMacAddress(startup.getStorageMacAddress());
+        host.setStorageNetmask(startup.getStorageNetmask());
+        host.setVersion(startup.getVersion());
+        host.setName(startup.getName());
+        host.setType(type);
+        host.setStorageUrl(startup.getIqn());
+        host.setLastPinged(System.currentTimeMillis() >> 10);
+        host.setCaps(null);
+        host.setCpus(null);
+        host.setTotalMemory(0);
+        host.setSpeed(null);
+        host.setParent(startup.getParent());
+        host.setTotalSize(startup.getTotalSize());
+        host.setHypervisorType(HypervisorType.None);
+        if (startup.getNfsShare() != null) {
+            host.setStorageUrl(startup.getNfsShare());
+        }
+
+    }
 
 }

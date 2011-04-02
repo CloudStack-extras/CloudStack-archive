@@ -2836,14 +2836,8 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory,
 			}
 		}
 		long dcId = -1;
-		DataCenterVO dc = _dcDao.findByName(dataCenter);
-		if (dc == null) {
-			try {
-				dcId = Long.parseLong(dataCenter);
-				dc = _dcDao.findById(dcId);
-			} catch (final NumberFormatException e) {
-			}
-		}
+		DataCenterVO dc = _dcDao.findByTokenOrIdOrName(dataCenter);
+		
 		if (dc == null) {
 			throw new IllegalArgumentException("Host "
 					+ startup.getPrivateIpAddress()
