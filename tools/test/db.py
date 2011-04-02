@@ -7,9 +7,9 @@ class Database:
 
     def update(self, statement):
         cursor = self._conn.cursor ()
-        print statement
+        #print statement
         cursor.execute (statement)
-        print "Number of rows updated: %d" % cursor.rowcount
+        #print "Number of rows updated: %d" % cursor.rowcount
         cursor.close ()
         self._conn.commit ()
 
