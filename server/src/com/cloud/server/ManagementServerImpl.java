@@ -6403,6 +6403,10 @@ public class ManagementServerImpl implements ManagementServer {
         if (hostId != null) {
             sc.addAnd("hostOrPoolId", SearchCriteria.Op.EQ, hostId);
         }
+
+        // use memory statistics instead of the one in DB
+        sc.addAnd("capacityType", SearchCriteria.Op.NEQ, CapacityVO.CAPACITY_TYPE_SECONDARY_STORAGE);
+        sc.addAnd("capacityType", SearchCriteria.Op.NEQ, CapacityVO.CAPACITY_TYPE_STORAGE);
         capacities = _capacityDao.search(sc, searchFilter);
         
         // op_host_Capacity contains only allocated stats and the real time stats are stored "in memory".
