@@ -134,7 +134,7 @@ public class ListCapacityCmd extends BaseCmd{
         
         Set<Long> poolIdsToIgnore = new HashSet<Long>();
         Criteria c = new Criteria();
-        List<? extends StoragePoolVO> allStoragePools = getManagementServer().searchForStoragePools(c);
+        List<? extends StoragePoolVO> allStoragePools = getManagementServer().searchForStoragePools(c);       
         for (StoragePoolVO pool : allStoragePools) {
         	StoragePoolType poolType = pool.getPoolType();
         	if (!(poolType.equals(StoragePoolType.NetworkFilesystem) || poolType.equals(StoragePoolType.IscsiLUN))) {
@@ -144,7 +144,9 @@ public class ListCapacityCmd extends BaseCmd{
         
         // collect all the capacity types, sum allocated/used and sum total...get one capacity number for each
         for (CapacityVO capacity : hostCapacities) {
-        	if (poolIdsToIgnore.contains(capacity.getHostOrPoolId())) {
+        	if (poolIdsToIgnore.contains(capacity.getHostOrPoolId()) 
+        	        && (capacity.getCapacityType() == CapacityVO.CAPACITY_TYPE_STORAGE 
+        	        || capacity.getCapacityType() == CapacityVO.CAPACITY_TYPE_STORAGE_ALLOCATED )) {
         		continue;
         	}
         	
