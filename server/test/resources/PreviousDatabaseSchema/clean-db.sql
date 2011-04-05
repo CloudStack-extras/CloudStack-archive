@@ -125,3 +125,4 @@ DROP TABLE IF EXISTS `cloud`.`netapp_lun`;
 DROP TABLE IF EXISTS `cloud`.`netapp_pool`;
 DROP TABLE IF EXISTS `cloud`.`netapp_volume`;
 DROP TABLE IF EXISTS `cloud`.`domain_network_ref`;
+DROP TABLE IF EXISTS `cloud`.`data_center_details`;
