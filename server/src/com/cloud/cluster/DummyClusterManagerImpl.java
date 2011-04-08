@@ -79,7 +79,7 @@ public class DummyClusterManagerImpl implements ClusterManager {
     	return ClusterManager.DEFAULT_HEARTBEAT_INTERVAL;
 	}
 	
-	public long getId() {
+	public long getManagementNodeId() {
         return _id;
 	}
 	
@@ -95,6 +95,14 @@ public class DummyClusterManagerImpl implements ClusterManager {
 	public String getSelfNodeIP() {
 		return _clusterNodeIP;
 	}
+	
+    public boolean isManagementNodeAlive(long msid) {
+    	return true;
+    }
+    
+    public boolean pingManagementNode(long msid) {
+    	return false;
+    }
 	
     public String getPeerName(long agentHostId) {
     	throw new CloudRuntimeException("Unsupported feature");
@@ -133,4 +141,5 @@ public class DummyClusterManagerImpl implements ClusterManager {
 	public boolean stop() {
 		return true;
 	}
+
 }

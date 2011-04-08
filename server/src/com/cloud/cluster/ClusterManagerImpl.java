@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -39,6 +40,7 @@ import com.cloud.host.dao.HostDao;
 import com.cloud.serializer.GsonHelper;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.NumbersUtil;
+import com.cloud.utils.Profiler;
 import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.component.Adapters;
 import com.cloud.utils.component.ComponentLocator;
@@ -84,6 +86,7 @@ public class ClusterManagerImpl implements ClusterManager {
     protected long _id = MacAddress.getMacAddress().toLong();
     
     private Long _mshostId = null;
+    private boolean _peerScanInited = false;
     
     private String _name;
     private String _clusterNodeIP = "127.0.0.1";
@@ -536,12 +539,26 @@ public class ClusterManagerImpl implements ClusterManager {
                         s_logger.trace("Cluster manager peer-scan, id:" + _mshostId);
                     }
     	    		
+    	    		if(!_peerScanInited) {
+    	    			_peerScanInited = true;
+    	    			initPeerScan();
+    	    		}
+    	    		
         			peerScan();
 			    } catch (Throwable e) {
 			        s_logger.error("Problem with the cluster peer-scan!", e);
 			    }
 			}
 		};
+	}
+	
+	private void initPeerScan() {
+		// upon startup, for all inactive management server nodes that we see at startup time, we will send notification also to help upper layer perform
+		// missed cleanup 
+		Date cutTime = DateUtil.currentGMTTime();
+		List<ManagementServerHostVO> inactiveList = _mshostDao.getInactiveList(new Date(cutTime.getTime() - heartbeatThreshold));
+		if(inactiveList.size() > 0)
+			notifyNodeLeft(inactiveList);
 	}
 	
 	private void peerScan() {
@@ -563,14 +580,22 @@ public class ClusterManagerImpl implements ClusterManager {
 				}
 			}
 		}
-		
-		for(ManagementServerHostVO mshost : removedNodeList) {
-			activePeers.remove(mshost.getId());
-			
-			try {
-				JmxUtil.unregisterMBean("ClusterManager", "Node " + mshost.getId());
-			} catch(Exception e) {
-				s_logger.warn("Unable to deregiester cluster node from JMX monitoring due to exception " + e.toString());
+
+		Iterator<ManagementServerHostVO> it = removedNodeList.iterator();
+		while(it.hasNext()) {
+			ManagementServerHostVO mshost = it.next();
+			if(!pingManagementNode(mshost.getId())) {
+				s_logger.warn("Management node " + mshost.getId() + " is detected inactive by timestamp and also not pingable");
+				activePeers.remove(mshost.getId());
+				
+				try {
+					JmxUtil.unregisterMBean("ClusterManager", "Node " + mshost.getId());
+				} catch(Exception e) {
+					s_logger.warn("Unable to deregiester cluster node from JMX monitoring due to exception " + e.toString());
+				}
+			} else {
+				s_logger.info("Management node " + mshost.getId() + " is detected inactive by timestamp but is pingable");
+				it.remove();
 			}
 		}
 		
@@ -593,11 +618,33 @@ public class ClusterManagerImpl implements ClusterManager {
 		}
 		
 		if(newNodeList.size() > 0) {
+			Profiler profiler = new Profiler();
+			profiler.start();
+			
             notifyNodeJoined(newNodeList);
-        }
+            
+			profiler.stop();
+			if(profiler.getDuration() > 1000) {
+				if(s_logger.isDebugEnabled())
+					s_logger.debug("Notifying management server join event took " + profiler.getDuration() + " ms");
+			} else {
+				s_logger.warn("Notifying management server join event took " + profiler.getDuration() + " ms");
+			}
+		}
 		
 		if(removedNodeList.size() > 0) {
-            notifyNodeLeft(removedNodeList);
+			Profiler profiler = new Profiler();
+			profiler.start();
+
+			notifyNodeLeft(removedNodeList);
+			
+			profiler.stop();
+			if(profiler.getDuration() > 1000) {
+				if(s_logger.isDebugEnabled())
+					s_logger.debug("Notifying management server leave event took " + profiler.getDuration() + " ms");
+			} else {
+				s_logger.warn("Notifying management server leave event took " + profiler.getDuration() + " ms");
+			}
         }
 	}
 	
@@ -677,6 +724,7 @@ public class ClusterManagerImpl implements ClusterManager {
     	if(s_logger.isInfoEnabled()) {
             s_logger.info("Cluster manager is started");
         }
+    	
         return true;
     }
 
@@ -707,6 +755,7 @@ public class ClusterManagerImpl implements ClusterManager {
     	if(s_logger.isInfoEnabled()) {
             s_logger.info("Start configuring cluster manager : " + name);
         }
+        _name = name;
     	
         ComponentLocator locator = ComponentLocator.getCurrentLocator();
         _agentMgr = locator.getManager(AgentManager.class);
@@ -740,8 +789,6 @@ public class ClusterManagerImpl implements ClusterManager {
         if(value != null) {
             heartbeatThreshold = NumbersUtil.parseInt(value, ClusterManager.DEFAULT_HEARTBEAT_THRESHOLD);
         }
-    	
-        _name = name;
 
         File dbPropsFile = PropertiesUtil.findConfigFile("db.properties");
         Properties dbProps = new Properties();
@@ -756,6 +803,8 @@ public class ClusterManagerImpl implements ClusterManager {
         if(_clusterNodeIP == null) {
             _clusterNodeIP = "127.0.0.1";
         }
+        _clusterNodeIP = _clusterNodeIP.trim();
+        
         if(s_logger.isInfoEnabled()) {
             s_logger.info("Cluster node IP : " + _clusterNodeIP);
         }
@@ -777,6 +826,8 @@ public class ClusterManagerImpl implements ClusterManager {
             throw new ConfigurationException("Unable to set current cluster service adapter");
         }
 		
+		checkConflicts();
+		
         if(s_logger.isInfoEnabled()) {
             s_logger.info("Cluster manager is configured.");
         }
@@ -784,12 +835,89 @@ public class ClusterManagerImpl implements ClusterManager {
     }
     
     @Override
-    public long getId() {
+    public long getManagementNodeId() {
         return _id;
+    }
+    
+    
+    @Override
+    public boolean isManagementNodeAlive(long msid) {
+    	ManagementServerHostVO mshost = _mshostDao.findById(msid);
+    	if(mshost != null) {
+    		if(mshost.getLastUpdateTime().getTime() >=  DateUtil.currentGMTTime().getTime() - heartbeatThreshold)
+    			return true;
+    	}
+    	
+    	return false;
+    }
+    
+    @Override
+    public boolean pingManagementNode(long msid) {
+    	ManagementServerHostVO mshost = _mshostDao.findById(msid);
+    	if(mshost == null)
+    		return false;
+    	
+    	String targetIp = mshost.getServiceIP();
+    	if("127.0.0.1".equals(targetIp) || "0.0.0.0".equals(targetIp)) {
+    		s_logger.info("ping management node cluster service can not be performed on self");
+    		return false;
+    	}
+    	
+    	String targetPeer = String.valueOf(msid);
+    	ClusterService peerService = null;
+    	for(int i = 0; i < 2; i++) {
+	    	try {
+				peerService = getPeerService(targetPeer);
+			} catch (RemoteException e) {
+				s_logger.error("cluster service for peer " + targetPeer + " no longer exists");
+			}
+			
+	    	if(peerService != null) {
+	    		try {
+	    			return peerService.ping(getSelfPeerName());
+				} catch (RemoteException e) {
+					s_logger.warn("Exception in performing remote call, ", e);
+					invalidatePeerService(targetPeer);
+				}
+	    	} else {
+	    		s_logger.warn("Remote peer " + msid + " no longer exists");
+	    	}
+    	}
+    	
+    	return false;
     }
     
     @Override
 	public int getHeartbeatThreshold() {
     	return this.heartbeatThreshold;
+    }
+    
+    public int getHeartbeatInterval() {
+    	return this.heartbeatInterval;
+    }
+    
+    public void setHeartbeatThreshold(int threshold) {
+		heartbeatThreshold = threshold;
+    }
+    
+    private void checkConflicts() throws ConfigurationException {
+    	Date cutTime = DateUtil.currentGMTTime();
+    	List<ManagementServerHostVO> peers = _mshostDao.getActiveList(new Date(cutTime.getTime() - heartbeatThreshold));
+    	for(ManagementServerHostVO peer : peers) {
+    		if(_mshostId == peer.getMsid()) {
+    			// skip check on itself
+    			continue;
+    		}
+    		
+    		if(_clusterNodeIP.equals(peer.getServiceIP().trim())) {
+    			if("127.0.0.1".equals(_clusterNodeIP)) {
+					throw new ConfigurationException("Detected another management node with localhost IP is already running, please check your cluster configuration");
+    			} else {
+    				if(!pingManagementNode(peer.getId())) {
+    					throw new ConfigurationException("Detected that another management node with the same IP " + peer.getServiceIP() + " is already running");
+    				}
+    			}
+    		}
+    	}
     }
 }

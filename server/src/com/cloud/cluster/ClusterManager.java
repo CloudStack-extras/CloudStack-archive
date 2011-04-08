@@ -42,7 +42,12 @@ public interface ClusterManager extends Manager {
     public Boolean propagateAgentEvent(long agentId, Event event) throws AgentUnavailableException;
 	
 	public int getHeartbeatThreshold();
-	public long getId();
+	
+	public long getManagementNodeId();
+	
+    public boolean isManagementNodeAlive(long msid);
+    public boolean pingManagementNode(long msid);
+    
 	public String getSelfPeerName();
 	public String getSelfNodeIP();
     public String getPeerName(long agentHostId);
