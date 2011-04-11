@@ -215,5 +215,6 @@ public class ApiConstants {
     public static final String ALLOCATION_STATE = "allocationstate";
     public static final String STORAGE_ID="storageid";
     public static final String ZONE_TOKEN = "zonetoken";
+    public static final String CHECKSUM="checksum";
 }
  
