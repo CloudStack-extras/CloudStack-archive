@@ -809,6 +809,8 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory,
 		String hostTag = cmd.getHostTag();
 		Map<String, String>bareMetalParams = new HashMap<String, String>();
 		
+		dcId = _accountMgr.checkAccessAndSpecifyAuthority(UserContext.current().getCaller(), dcId);
+		
 		// this is for standalone option
 		if (clusterName == null && clusterId == null) {
 			clusterName = "Standalone-" + url;
@@ -1316,7 +1318,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory,
 			throw new InvalidParameterValueException("Host with id "
 					+ id.toString() + " doesn't exist");
 		}
-
+		_accountMgr.checkAccessAndSpecifyAuthority(UserContext.current().getCaller(), host.getDataCenterId());
 		return deleteHost(id);
 	}
 

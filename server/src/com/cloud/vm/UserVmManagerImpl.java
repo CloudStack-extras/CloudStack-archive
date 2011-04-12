@@ -467,6 +467,8 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         }
     	
     	// If the account is not an admin, check that the volume and the virtual machine are owned by the account that was passed in
+        _accountMgr.checkAccess(account, volume);
+        /*if (account != null) {
     	if (account != null) {
     	    if (!isAdmin(account.getType())) {
                 if (account.getId() != volume.getAccountId()) {
@@ -482,7 +484,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
                     throw new PermissionDeniedException("Unable to attach volume " + volumeId + " to virtual machine instance " + vmId + ". Permission denied.");
     	        }
     	    }
-    	}
+    	}*/
 
         VolumeVO rootVolumeOfVm = null;
         List<VolumeVO> rootVolumesOfVm = _volsDao.findByInstanceAndType(vmId, Volume.Type.ROOT);
@@ -672,7 +674,8 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         }
 
     	// If the account is not an admin, check that the volume is owned by the account that was passed in
-    	if (!isAdmin) {
+    	_accountMgr.checkAccess(account, volume);
+    	/*if (!isAdmin) {
     		if (account.getId() != volume.getAccountId()) {
                 throw new InvalidParameterValueException("Unable to find volume with ID: " + volumeId + " for account: " + account.getAccountName());
             }
@@ -680,7 +683,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
     	    if (!_domainDao.isChildDomain(account.getDomainId(), volume.getDomainId())) {
                 throw new PermissionDeniedException("Unable to detach volume with ID: " + volumeId + ", permission denied.");
     	    }
-    	}
+    	}*/
 
         // Check that the volume is a data volume
         if (volume.getVolumeType() != Volume.Type.DATADISK) {
@@ -1590,6 +1593,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
 
 	private static boolean isAdmin(short accountType) {
 	    return ((accountType == Account.ACCOUNT_TYPE_ADMIN) ||
+	    		(accountType == Account.ACCOUNT_TYPE_RESOURCE_DOMAIN_ADMIN) ||
 	            (accountType == Account.ACCOUNT_TYPE_DOMAIN_ADMIN) ||
 	            (accountType == Account.ACCOUNT_TYPE_READ_ONLY_ADMIN));
 	}
@@ -2645,7 +2649,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
                     accountId = account.getId();
                 }
             } 
-            if (account.getType() == Account.ACCOUNT_TYPE_DOMAIN_ADMIN) {
+            if (account.getType() == Account.ACCOUNT_TYPE_DOMAIN_ADMIN || account.getType() == Account.ACCOUNT_TYPE_RESOURCE_DOMAIN_ADMIN) {
                 DomainVO domain = _domainDao.findById(account.getDomainId());
                 if (domain != null) {
                     path = domain.getPath();
