@@ -1697,7 +1697,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             //set status 
             Account account = UserContext.current().getCaller();
             boolean isAdmin = false;
-            if ((account == null) || (account.getType() == Account.ACCOUNT_TYPE_ADMIN) || (account.getType() == Account.ACCOUNT_TYPE_DOMAIN_ADMIN)) {
+            if ((account == null) || BaseCmd.isAdmin(account.getType())) {
                 isAdmin = true;
             }
             
@@ -1769,7 +1769,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             //set status 
             Account account = UserContext.current().getCaller();
             boolean isAdmin = false;
-            if ((account == null) || (account.getType() == Account.ACCOUNT_TYPE_ADMIN) || (account.getType() == Account.ACCOUNT_TYPE_DOMAIN_ADMIN)) {
+            if ((account == null) || BaseCmd.isAdmin(account.getType())) {
                 isAdmin = true;
             }
             
