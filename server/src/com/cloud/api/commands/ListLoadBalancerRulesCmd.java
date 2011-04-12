@@ -26,6 +26,7 @@ import org.apache.log4j.Logger;
 
 import com.cloud.api.BaseCmd;
 import com.cloud.api.ServerApiException;
+import com.cloud.dc.DataCenterVO;
 import com.cloud.domain.DomainVO;
 import com.cloud.network.IPAddressVO;
 import com.cloud.network.LoadBalancerVO;
@@ -50,6 +51,7 @@ public class ListLoadBalancerRulesCmd extends BaseCmd {
         s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.VIRTUAL_MACHINE_ID, Boolean.FALSE));
         s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.PAGE, Boolean.FALSE));
         s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.PAGESIZE, Boolean.FALSE));
+        s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.ZONE_ID, Boolean.FALSE));
     }
 
     public String getName() {
@@ -71,6 +73,7 @@ public class ListLoadBalancerRulesCmd extends BaseCmd {
         Long vmId = (Long)params.get(BaseCmd.Properties.VIRTUAL_MACHINE_ID.getName());
         Integer page = (Integer)params.get(BaseCmd.Properties.PAGE.getName());
         Integer pageSize = (Integer)params.get(BaseCmd.Properties.PAGESIZE.getName());
+        Long zoneId = (Long)params.get(BaseCmd.Properties.ZONE_ID.getName());
         Long accountId = null;
         boolean isAdmin = false;
         Account ipAddressOwner = null;
@@ -129,6 +132,7 @@ public class ListLoadBalancerRulesCmd extends BaseCmd {
         c.addCriteria(Criteria.INSTANCEID, vmId);
         c.addCriteria(Criteria.IPADDRESS, publicIp);
         c.addCriteria(Criteria.KEYWORD, keyword);
+        c.addCriteria(Criteria.DATACENTERID, zoneId);
         if (isAdmin) {
             c.addCriteria(Criteria.DOMAINID, domainId);
         }
@@ -160,6 +164,11 @@ public class ListLoadBalancerRulesCmd extends BaseCmd {
             	lbData.add(new Pair<String, Object>(BaseCmd.Properties.DOMAIN_ID.getName(), accountTemp.getDomainId()));
             	lbData.add(new Pair<String, Object>(BaseCmd.Properties.DOMAIN.getName(), getManagementServer().findDomainIdById(accountTemp.getDomainId()).getName()));
             }
+            
+            IPAddressVO ip = getManagementServer().findIPAddressById(loadBalancer.getIpAddress());
+            DataCenterVO dc = getManagementServer().findDataCenterById(ip.getDataCenterId());
+            lbData.add(new Pair<String, Object>(BaseCmd.Properties.ZONE_ID.getName(), dc.getId()));
+            lbData.add(new Pair<String, Object>(BaseCmd.Properties.ZONE_NAME.getName(), dc.getName()));
 
             lbTag[i++] = lbData;
         }

@@ -177,7 +177,6 @@ import com.cloud.pricing.PricingVO;
 import com.cloud.pricing.dao.PricingDao;
 import com.cloud.serializer.GsonHelper;
 import com.cloud.server.auth.UserAuthenticator;
-import com.cloud.service.ServiceOffering;
 import com.cloud.service.ServiceOffering.GuestIpType;
 import com.cloud.service.ServiceOfferingVO;
 import com.cloud.service.dao.ServiceOfferingDao;
@@ -214,9 +213,9 @@ import com.cloud.storage.dao.SnapshotDao;
 import com.cloud.storage.dao.SnapshotPolicyDao;
 import com.cloud.storage.dao.StoragePoolDao;
 import com.cloud.storage.dao.VMTemplateDao;
-import com.cloud.storage.dao.VMTemplateZoneDao;
 import com.cloud.storage.dao.VMTemplateDao.TemplateFilter;
 import com.cloud.storage.dao.VMTemplateHostDao;
+import com.cloud.storage.dao.VMTemplateZoneDao;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.storage.preallocatedlun.PreallocatedLunVO;
 import com.cloud.storage.preallocatedlun.dao.PreallocatedLunDao;
@@ -7693,6 +7692,7 @@ public class ManagementServerImpl implements ManagementServer {
         Object keyword = c.getCriteria(Criteria.KEYWORD);
         Object ipAddress = c.getCriteria(Criteria.IPADDRESS);
         Object instanceId = c.getCriteria(Criteria.INSTANCEID);
+        Object zoneId = c.getCriteria(Criteria.DATACENTERID);
 
         SearchBuilder<LoadBalancerVO> sb = _loadBalancerDao.createSearchBuilder();
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
@@ -7711,6 +7711,12 @@ public class ManagementServerImpl implements ManagementServer {
             SearchBuilder<LoadBalancerVMMapVO> lbVMSearch = _loadBalancerVMMapDao.createSearchBuilder();
             lbVMSearch.and("instanceId", lbVMSearch.entity().getInstanceId(), SearchCriteria.Op.EQ);
             sb.join("lbVMSearch", lbVMSearch, sb.entity().getId(), lbVMSearch.entity().getLoadBalancerId());
+        }
+        
+        if (zoneId != null) {
+            SearchBuilder<IPAddressVO> ipSearch = _publicIpAddressDao.createSearchBuilder();
+            ipSearch.and("dataCenterId", ipSearch.entity().getDataCenterId(), SearchCriteria.Op.EQ);
+            sb.join("ipSearch", ipSearch, sb.entity().getIpAddress(), ipSearch.entity().getAddress());
         }
 
         SearchCriteria sc = sb.create();
@@ -7743,6 +7749,10 @@ public class ManagementServerImpl implements ManagementServer {
 
         if (instanceId != null) {
             sc.setJoinParameters("lbVMSearch", "instanceId", instanceId);
+        }
+        
+        if (zoneId != null) {
+            sc.setJoinParameters("ipSearch", "dataCenterId", zoneId);
         }
 
         return _loadBalancerDao.search(sc, searchFilter);

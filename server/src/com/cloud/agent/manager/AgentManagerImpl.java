@@ -798,7 +798,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory {
             }
         }
         if( conflict ) {
-            s_logger.debug("Ageent for host " + hostId + " is created when it is being disconnected");
+            s_logger.debug("Agent for host " + hostId + " is created when it is being disconnected");
         }
         if( removed != null ) {
             removed.disconnect(nextState);
