@@ -145,6 +145,7 @@ import com.cloud.agent.api.to.StorageFilerTO;
 import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.agent.api.to.VolumeTO;
 import com.cloud.agent.dhcp.DhcpSnooper;
+import com.cloud.agent.dhcp.DhcpSnooperImpl;
 import com.cloud.agent.resource.computing.KVMHABase.NfsStoragePool;
 import com.cloud.agent.resource.computing.LibvirtStorageVolumeDef.volFormat;
 import com.cloud.agent.resource.computing.LibvirtVMDef.ConsoleDef;
@@ -234,7 +235,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private final String _SSHPUBKEYPATH = _SSHKEYSPATH + File.separator + "id_rsa.pub.cloud";
     private final String _mountPoint = "/mnt";
     StorageLayer _storage;
-    DhcpSnooper _dhcpManager;
+    DhcpSnooper _dhcpSnooper;
     
 	private static final class KeyValueInterpreter extends OutputInterpreter {
 		private final Map<String, String> map = new HashMap<String, String>();
@@ -1898,7 +1899,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             
             final String result2 = cleanupVnet(conn, cmd.getVnet());
            
-            _dhcpManager.cleanup(macAddress);
+            _dhcpSnooper.cleanup(macAddress);
             
             if (result != null && result2 != null) {
                 result = result2 + result;
@@ -2108,7 +2109,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 			if (_isCloudKitEnabled && vmSpec.getType() == VirtualMachine.Type.User) {
 			    for (NicTO nic: nics) {
 			        if (nic.getType() == TrafficType.Guest) {
-			            s_logger.debug(_dhcpManager.getIPAddr(nic.getMac(), vmName));
+			            s_logger.debug(_dhcpSnooper.getIPAddr(nic.getMac(), vmName));
 			        }
 			    }
 			}
@@ -2376,7 +2377,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 	public PingCommand getCurrentStatus(long id) {
 		final HashMap<String, State> newStates = sync();
 		if (_isCloudKitEnabled) {
-		    s_logger.debug(_dhcpManager.syncIpAddr());
+		    s_logger.debug(_dhcpSnooper.syncIpAddr());
 		}
 		
 		if (!_can_bridge_firewall) {
@@ -3375,7 +3376,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
            return;
         }
         
-        _dhcpManager = new DhcpSnooper(bridgeName);
+        _dhcpSnooper = new DhcpSnooperImpl(bridgeName);
         List<Pair<String, String>> macs = new ArrayList<Pair<String, String>>();
         try {
             int[] domainIds = conn.listDomains();
@@ -3391,6 +3392,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             s_logger.debug("Failed to get MACs: " + e.toString());
         }
         
-        _dhcpManager.initializeMacTable(macs);
+        _dhcpSnooper.initializeMacTable(macs);
     }
 }
