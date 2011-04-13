@@ -18,6 +18,8 @@
 
 package com.cloud.servlet;
 
+import java.util.List;
+
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
@@ -30,8 +32,11 @@ import org.apache.log4j.Logger;
 import com.cloud.configuration.Configuration;
 import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.server.ManagementServer;
+import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.User;
+import com.cloud.user.UserVO;
+import com.cloud.user.dao.UserDao;
 import com.cloud.utils.SerialVersionUID;
 import com.cloud.utils.component.ComponentLocator;
 
@@ -42,12 +47,14 @@ public class RegisterCompleteServlet extends HttpServlet implements ServletConte
    
     protected static AccountService _accountSvc = null;
     protected static ConfigurationDao _configDao = null;
+    protected static UserDao _userDao = null;
     
 	@Override
     public void init() throws ServletException {
 		ComponentLocator locator = ComponentLocator.getLocator(ManagementServer.Name);
 		_accountSvc = locator.getManager(AccountService.class);
 		_configDao = locator.getDao(ConfigurationDao.class);
+		_userDao = locator.getDao(UserDao.class);
 	}
 	
 	@Override
@@ -71,23 +78,34 @@ public class RegisterCompleteServlet extends HttpServlet implements ServletConte
 	
 	@Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
+		// The token system will change.  Currently, it is simply using the user id.
 		String token = req.getParameter("token");
 		if (token == null || token.trim().length() == 0) {
 			// Return an error code
 		} 
 		
-		User user = _accountSvc.getActiveUser(new Long(token));
-		if (user == null) {
+		User resourceAdminUser = _accountSvc.getActiveUser(new Long(token));
+		if (resourceAdminUser == null) {
 			// Return an error code
 		}
+		
+		Account resourceAdminAccount = _accountSvc.getActiveAccount(resourceAdminUser.getAccountId());
+		Account rsUserAccount = _accountSvc.getActiveAccount("rightscale", resourceAdminAccount.getDomainId());
+		
+		List<UserVO> users =  _userDao.listByAccount(resourceAdminAccount.getId());
+		User rsUser = users.get(0);
 		
 		Configuration config = _configDao.findByName("endpointe.url");
 		
 		StringBuffer sb = new StringBuffer();
         sb.append("{ \"registration_info\" : { \"endpoint_url\" : \""+config.getValue()+"\", ");
-        sb.append("\"account\" : \""+user.getUsername()+"\", ");
-        sb.append("\"account_api_key\" : \""+user.getApiKey()+"\", ");
-        sb.append("\"account_secret_key\" : \""+user.getSecretKey()+"\" ");
+        sb.append("\"domain_id\" : \""+resourceAdminAccount.getDomainId()+"\", ");
+        sb.append("\"admin_account\" : \""+resourceAdminUser.getUsername()+"\", ");
+        sb.append("\"admin_account_api_key\" : \""+resourceAdminUser.getApiKey()+"\", ");
+        sb.append("\"admin_account_secret_key\" : \""+resourceAdminUser.getSecretKey()+"\", ");
+        sb.append("\"user_account\" : \"rightscale\", ");
+        sb.append("\"user_account_secret_key\" : \""+rsUser.getApiKey()+"\", ");
+        sb.append("\"user_account_secret_key\" : \""+rsUser.getSecretKey()+"\" ");
         sb.append("} }");
         
         try {
