@@ -14,8 +14,8 @@ import org.jnetpcap.protocol.lan.Ethernet;
 import org.jnetpcap.protocol.lan.IEEE802dot1q;
 import org.jnetpcap.protocol.tcpip.Udp;
 
-import com.cloud.agent.dhcp.DhcpManager.DHCPState;
-import com.cloud.agent.dhcp.DhcpManager.IPAddr;
+import com.cloud.agent.dhcp.DhcpSnooper.DHCPState;
+import com.cloud.agent.dhcp.DhcpSnooper.IPAddr;
 import com.sun.mail.iap.ByteArray;
 
 import edu.emory.mathcs.backport.java.util.Arrays;
@@ -101,10 +101,10 @@ public class DhcpPacketParser implements Runnable{
     private PcapPacket _buffer;
     private int _offset;
     private int _len;
-    private DhcpManager _manager;
+    private DhcpSnooper _manager;
     
     
-    public DhcpPacketParser(PcapPacket buffer, int offset, int len, DhcpManager manager) {
+    public DhcpPacketParser(PcapPacket buffer, int offset, int len, DhcpSnooper manager) {
         _buffer = buffer;
         _offset = offset;
         _len = len;

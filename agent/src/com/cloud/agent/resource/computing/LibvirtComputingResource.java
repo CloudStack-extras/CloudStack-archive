@@ -144,7 +144,7 @@ import com.cloud.agent.api.to.NicTO;
 import com.cloud.agent.api.to.StorageFilerTO;
 import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.agent.api.to.VolumeTO;
-import com.cloud.agent.dhcp.DhcpManager;
+import com.cloud.agent.dhcp.DhcpSnooper;
 import com.cloud.agent.resource.computing.KVMHABase.NfsStoragePool;
 import com.cloud.agent.resource.computing.LibvirtStorageVolumeDef.volFormat;
 import com.cloud.agent.resource.computing.LibvirtVMDef.ConsoleDef;
@@ -234,7 +234,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private final String _SSHPUBKEYPATH = _SSHKEYSPATH + File.separator + "id_rsa.pub.cloud";
     private final String _mountPoint = "/mnt";
     StorageLayer _storage;
-    DhcpManager _dhcpManager;
+    DhcpSnooper _dhcpManager;
     
 	private static final class KeyValueInterpreter extends OutputInterpreter {
 		private final Map<String, String> map = new HashMap<String, String>();
@@ -3375,7 +3375,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
            return;
         }
         
-        _dhcpManager = new DhcpManager(bridgeName);
+        _dhcpManager = new DhcpSnooper(bridgeName);
         List<Pair<String, String>> macs = new ArrayList<Pair<String, String>>();
         try {
             int[] domainIds = conn.listDomains();
