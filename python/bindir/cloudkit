@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import time
 from subprocess import PIPE, Popen
 from signal import alarm, signal, SIGALRM, SIGKILL
 import tempfile
@@ -11,6 +10,7 @@ import re
 import traceback
 import socket
 import uuid
+
 class CloudRuntimeException(Exception):
     def __init__(self, errMsg):
         self.errMsg = errMsg
@@ -72,29 +72,6 @@ class bash:
         return self.stderr.strip("\n")
 
 
-class DistributionDetector():
-    def __init__(self):
-        self.distro = Unknown 
-
-        if os.path.exists("/etc/fedora-release"):
-            self.distro = Fedora
-        elif os.path.exists("/etc/centos-release"):
-            self.distro = CentOS
-        elif os.path.exists("/etc/redhat-release"):
-            version = file("/etc/redhat-release").readline()
-            if version.find("Red Hat Enterprise Linux Server release 6") != -1:
-                self.distro = RHEL6
-            elif version.find("CentOS release") != -1:
-                self.distro = CentOS
-            else:
-                self.distro = RHEL5
-        elif os.path.exists("/etc/legal") and "Ubuntu" in file("/etc/legal").read(-1):
-            self.distro = Ubuntu
-        else: 
-            self.distro = Unknown 
-
-    def getVersion(self):
-        return self.distro 
 
 def initLoging(logFile=None):
     try:
@@ -223,15 +200,11 @@ class networkConfig():
 
         cmds = ""
         if not networkConfig.isBridge(brName):
-           cmds = "brctl addbr %s ;"%brName
+            cmds = "brctl addbr %s ;"%brName
     
         cmds += "ifconfig %s up;"%brName
         cmds += "brctl addif %s %s"%(brName, dev)
         return bash(cmds).isSuccess()
-
-    @staticmethod
-    def isBridge(brName):
-        return os.path.exists("/sys/class/net/%s"%brName)
 
     @staticmethod
     def isBridgeEnslavedWithDevices(brName):
@@ -316,7 +289,8 @@ class networkConfig():
         return networkConfig.devInfo(macAddr, ipAddr, netmask, None, type, dev)
 
 class networkConfigUbuntu(networkConfig):
-    def __init__(self):
+    def __init__(self, syscfg):
+        self.syscfg = syscfg
         self.netCfgFile = "/etc/network/interfaces"
         self.brName = None
         self.dev = None
@@ -375,7 +349,7 @@ class networkConfigUbuntu(networkConfig):
             #both need to be reconfigured
             self.addbridgeAndDev(br, dev)     
                  
-    def config(self, dev=None, brName=None):
+    def cfgNetwork(self, dev=None, brName=None):
         if dev is None:
             device = networkConfig.getDefaultNetwork()
         else:
@@ -404,15 +378,33 @@ class networkConfigUbuntu(networkConfig):
 
         self.brName = brDevice.name
         self.dev = device.name
-
-    def start(self):
-        bash("ifup %s "%self.brName)
-        bash("/etc/init.d/networking stop")
-        bash("/etc/init.d/networking start")
-             
-class sysConfig(object):
-    def setupCgConfig(self): 
-        writeProgressBar("Configure cgconfig...", None)
+        
+    def config(self):
+        writeProgressBar("Configure Network...", None)
+        try:
+            self.cfgNetwork(self.syscfg.env.defaultNic)
+        
+            bash("ifup %s "%self.brName)
+            bash("/etc/init.d/networking stop")
+            bash("/etc/init.d/networking start")
+            writeProgressBar(None, True)
+        except:
+            logging.debug(formatExceptionInfo())
+            writeProgressBar(None, False)
+            
+        self.syscfg.env.nics.append(self.brName)
+        self.syscfg.env.nics.append(self.brName)
+        self.syscfg.env.nics.append(self.brName)
+        
+    def restore(self):
+        pass
+        
+class cgroupConfigUbuntu():
+    def __init__(self, syscfg):
+        self.syscfg = syscfg
+        
+    def config(self):
+        writeProgressBar("Configure cgroup...", None)
 
         try:
             cfo = configFileOps("/etc/cgconfig.conf")
@@ -423,51 +415,215 @@ class sysConfig(object):
                         }\n"
             cfo.replace(addConfig)
 
-            self.stopService("cgconfig")
-            self.enableService("cgconfig",forcestart=True)
+            self.syscfg.stopService("cgconfig")
+            self.syscfg.enableService("cgconfig",forcestart=True)
 
-            writeProgressBar(None, True)
-        except:
-            logging.debug(formatExceptionInfo())
-            writeProgressBar(None, False)
-
-    def setupCgRules(self):
-        writeProgressBar("Configure cgred...", None)
-
-        try:
             cfo = configFileOps("/etc/cgrules.conf")
             cfgline = "root:/usr/sbin/libvirtd  cpu virt/\n"
             cfo.replace(cfgline)
         
-            self.stopService("cgred")
-            self.enableService("cgred")
+            self.syscfg.stopService("cgred")
+            self.syscfg.enableService("cgred")
 
             writeProgressBar(None, True)
         except:
             logging.debug(formatExceptionInfo())
             writeProgressBar(None, False)
+            
+    def restore(self):
+        pass
+            
+class securityPolicyConfigUbuntu():
+    def __init__(self, syscfg):
+        self.syscfg = syscfg
 
-    def setupLibvirt(self):
-        cfgline = "cgroup_controllers = [ \"cpu\" ]\n" \
-                  "security_driver = \"none\"\n"
-        filename = "/etc/libvirt/qemu.conf"
+    def config(self):
+        writeProgressBar("Configure Security Policy...", None)
+        result = False
+        try:
+            apparmor = bash("service apparmor status")
+            if not apparmor.isSuccess():
+                result = True
+                return True
+
+            if apparmor.getStdout() == "":
+                result = True
+                return True
+
+            if bash("service apparmor stop").isSuccess():
+                bash("update-rc.d -f apparmor remove")
+                result = True
+                return True
+
+            return False
+        except:
+            logging.debug(formatExceptionInfo())
+        finally:
+            writeProgressBar(None, result)
+            
+    def restore(self):
+        pass
     
-        cfo = configFileOps(filename)
-        cfo.replace(cfgline)
+class libvirtConfigUbuntu():
+    def __init__(self, syscfg):
+        self.syscfg = syscfg
+    
+    def setupLiveMigration(self):
+        stanzas = (
+            "listen_tcp=1",
+            'tcp_port="16509"',
+            'auth_tcp="none"',
+            "listen_tls=0",
+        )
+    
+        for stanza in stanzas:
+            startswith = stanza.split("=")[0] + '='
+            cfo = configFileOps("/etc/libvirt/libvirtd.conf")
+            cfo.replace_or_add_line(startswith,stanza)
+   
+        if os.path.exists("/etc/init/libvirt-bin.conf"):
+            cfo = configFileOps("/etc/init/libvirt-bin.conf")
+            cfo.replace_line("exec /usr/sbin/libvirtd","exec /usr/sbin/libvirtd -d -l")
+        else:
+            cfo = configFileOps("/etc/default/libvirt-bin")
+            cfo.replace_or_add_line("libvirtd_opts=","libvirtd_opts='-l -d'")
+            
+    def config(self):
+        writeProgressBar("Configure Libvirt...", None)
 
-    def stopService(self, servicename,force=False):
-        print "call parent method"
-        pass
+        try:
+            cfgline = "export CGROUP_DAEMON='cpu:/virt'"
+            libvirtfile = "/etc/default/libvirt-bin"
+            cfo = configFileOps(libvirtfile)
+            cfo.replace(cfgline)
 
-    def startService(self, servicename,force=False):
-        print "call parent method"
-        pass
-       
-    def isServiceRunning(self, servicename):
-        print "call parent method"
-        pass
+            self.setupLiveMigration()
+            
+            cfgline = "cgroup_controllers = [ \"cpu\" ]\n" \
+                  "security_driver = \"none\"\n"
+            filename = "/etc/libvirt/qemu.conf"
+    
+            cfo = configFileOps(filename)
+            cfo.replace(cfgline)
 
+            self.syscfg.stopService("libvirt-bin")
+            self.syscfg.enableService("libvirt-bin")
+
+            writeProgressBar(None, True)
+        except:
+            logging.debug(formatExceptionInfo())
+            writeProgressBar(None, False)
+            
+    def restore(self):
+        pass
+    
+class firewawllConfigUbuntu():
+    def __init__(self, syscfg):
+        self.syscfg = syscfg
+        
+    def config(self):
+        writeProgressBar("Configure Firewall...", None)
+
+        try:
+            ports = "22 1798 16509".split()
+            for p in ports:
+                bash("ufw allow %s"%p)
+            bash("ufw allow proto tcp from any to any port 5900:6100")
+            bash("ufw allow proto tcp from any to any port 49152:49216")
+            self.syscfg.stopService("ufw")
+            self.syscfg.startService("ufw")
+
+            writeProgressBar(None, True)
+        except:
+            logging.debug(formatExceptionInfo())
+            writeProgressBar(None, False)
+    def restore(self):
+        pass
+    
+class cloudKitConfig():
+    def __init__(self, syscfg):
+        self.syscfg = syscfg
+        
+    def config(self):
+        writeProgressBar("Configure CloudKit...", None)
+
+        try:
+            cfo = configFileOps("/etc/cloud/agent/agent.properties")  
+            cfo.addEntry("host", self.syscfg.env.mgtSvr)
+            cfo.addEntry("zone", self.syscfg.env.zoneToken)
+            cfo.addEntry("private.network.device", self.syscfg.env.nics[0])
+            cfo.addEntry("public.network.device", self.syscfg.env.nics[1])
+            cfo.addEntry("guest.network.device", self.syscfg.env.nics[2])
+            cfo.addEntry("guid", str(self.syscfg.env.uuid))
+            cfo.save()
+            
+            self.syscfg.stopService("cloud-agent")
+            self.syscfg.startService("cloud-agent")
+            writeProgressBar(None, True)
+        except:
+            logging.debug(formatExceptionInfo())
+            writeProgressBar(None, False)
+    
+    def restore(self):
+        pass
+    
+Unknown = 0
+Fedora = 1
+CentOS = 2
+RHEL6 = 3
+RHEL5 = 4
+Ubuntu = 5
+
+class DistributionDetector():
+    def __init__(self):
+        self.distro = Unknown 
+
+        if os.path.exists("/etc/fedora-release"):
+            self.distro = Fedora
+        elif os.path.exists("/etc/centos-release"):
+            self.distro = CentOS
+        elif os.path.exists("/etc/redhat-release"):
+            version = file("/etc/redhat-release").readline()
+            if version.find("Red Hat Enterprise Linux Server release 6") != -1:
+                self.distro = RHEL6
+            elif version.find("CentOS release") != -1:
+                self.distro = CentOS
+            else:
+                self.distro = RHEL5
+        elif os.path.exists("/etc/legal") and "Ubuntu" in file("/etc/legal").read(-1):
+            self.distro = Ubuntu
+        else: 
+            self.distro = Unknown 
+
+    def getVersion(self):
+        return self.distro 
+        
+class sysConfig(object):
+    @staticmethod
+    def getSysConfigFactory(glbEnv):
+        distribution = DistributionDetector().getVersion()
+        if distribution == Ubuntu:
+            return sysConfigUbuntu(glbEnv)
+    
 class sysConfigUbuntu(sysConfig):
+    def __init__(self, glbEnv):
+        self.env = glbEnv
+        self.services = [cgroupConfigUbuntu(self),
+                         securityPolicyConfigUbuntu(self),
+                         networkConfigUbuntu(self),
+                         libvirtConfigUbuntu(self),
+                         firewawllConfigUbuntu(self),
+                         cloudKitConfig(self)]
+        
+    def config(self):
+        for service in self.services:
+            service.config()
+
+    def restore(self):
+        for service in self.services:
+            service.restore()
+            
+
     def isServiceRunning(self, servicename):
         try:
             o = bash("service " + servicename + " status")
@@ -498,128 +654,6 @@ class sysConfigUbuntu(sysConfig):
     def isKVMEnabled(self):
         return bash("kvmok").isSuccess()
     
-    def disableSecurityPolicy(self):
-        writeProgressBar("Configure Security Policy...", None)
-        result = False
-        try:
-            apparmor = bash("service apparmor status")
-            if not apparmor.isSuccess():
-                result = True
-                return True
-
-            if apparmor.getStdout() == "":
-                result = True
-                return True
-
-            if bash("service apparmor stop").isSuccess():
-                bash("update-rc.d -f apparmor remove")
-                result = True
-                return True
-
-            return False
-        except:
-            logging.debug(formatExceptionInfo())
-        finally:
-            writeProgressBar(None, result)
-    
-    def setupNetwork(self, nics, defaultNic=None):
-        writeProgressBar("Configure Network...", None)
-
-        try:
-            network = networkConfigUbuntu()
-            network.config()
-            network.start()
-            nics.append(network.brName)
-            nics.append(network.brName)
-            nics.append(network.brName)
-
-            writeProgressBar(None, True)
-        except:
-            logging.debug(formatExceptionInfo())
-            writeProgressBar(None, False)
-
-    def setupLiveMigration(self):
-        stanzas = (
-            "listen_tcp=1",
-            'tcp_port="16509"',
-            'auth_tcp="none"',
-            "listen_tls=0",
-        )
-    
-        for stanza in stanzas:
-            startswith = stanza.split("=")[0] + '='
-            cfo = configFileOps("/etc/libvirt/libvirtd.conf")
-            cfo.replace_or_add_line(startswith,stanza)
-   
-        if os.path.exists("/etc/init/libvirt-bin.conf"):
-            cfo = configFileOps("/etc/init/libvirt-bin.conf")
-            cfo.replace_line("exec /usr/sbin/libvirtd","exec /usr/sbin/libvirtd -d -l")
-        else:
-            cfo = configFileOps("/etc/default/libvirt-bin")
-            cfo.replace_or_add_line("libvirtd_opts=","libvirtd_opts='-l -d'")
-
-    def setupLibvirt(self):
-        writeProgressBar("Configure Libvirt...", None)
-
-        cfgline = "export CGROUP_DAEMON='cpu:/virt'"
-        libvirtfile = "/etc/default/libvirt-bin"
-        
-        try:
-            cfo = configFileOps(libvirtfile)
-            cfo.replace(cfgline)
-
-            self.setupLiveMigration()
-            super(sysConfigUbuntu, self).setupLibvirt()
-
-            self.stopService("libvirt-bin")
-            self.enableService("libvirt-bin")
-
-            writeProgressBar(None, True)
-        except:
-            logging.debug(formatExceptionInfo())
-            writeProgressBar(None, False)
-
-    def setupRequiredServices(self):
-        pass
-        
-    def setupFirewall(self):
-        writeProgressBar("Configure Firewall...", None)
-
-        try:
-            ports = "22 1798 16509".split()
-            for p in ports:
-                bash("ufw allow %s"%p)
-            bash("ufw allow proto tcp from any to any port 5900:6100")
-            bash("ufw allow proto tcp from any to any port 49152:49216")
-            self.stopService("ufw")
-            self.startService("ufw")
-
-            writeProgressBar(None, True)
-        except:
-            logging.debug(formatExceptionInfo())
-            writeProgressBar(None, False)
-
-    def setupCloudKit(self, mgtSvr, zoneToken, nics, uuid):
-        writeProgressBar("Configure CloudKit...", None)
-
-        try:
-            cfo = configFileOps("/etc/cloud/agent/agent.properties")  
-            cfo.addEntry("host", mgtSvr)
-            cfo.addEntry("zone", zoneToken)
-            cfo.addEntry("private.network.device", nics[0])
-            cfo.addEntry("public.network.device", nics[1])
-            cfo.addEntry("guest.network.device", nics[2])
-            cfo.addEntry("guid", str(uuid))
-            cfo.save()
-
-            
-            self.stopService("cloud-agent")
-            self.startService("cloud-agent")
-            writeProgressBar(None, True)
-        except:
-            logging.debug(formatExceptionInfo())
-            writeProgressBar(None, False)
-
 def getUserInputs():
     print "Welcome to CloudKit Setup:"
 
@@ -666,25 +700,25 @@ def writeProgressBar(msg, result):
     sys.stdout.write(output)
     sys.stdout.flush()
 
+class globalEnv():
+    pass
+
 if __name__ == '__main__':
     #todo: check executing permission 
     initLoging("/var/log/cloud/setupAgent.log")
 
     userInputs = getUserInputs()
-    print "Starting to configure your system:"
-    sysConfig = sysConfigUbuntu()
-
-    nics = []
-    result = sysConfig.setupNetwork(nics, userInputs[2])
-    sysConfig.disableSecurityPolicy()
-    sysConfig.setupCgConfig()
-    sysConfig.setupCgRules()
-    sysConfig.setupLibvirt()
-    sysConfig.setupRequiredServices()
-    sysConfig.setupFirewall()
+    glbEnv = globalEnv()
+    
+    glbEnv.mgtSvr = userInputs[0]
+    glbEnv.zoneToken = userInputs[1]
+    glbEnv.defaultNic = userInputs[2]
+    glbEnv.nics = []
     #generate UUID
-    guid = configFileOps("/etc/cloud/agent/agent.properties").getEntry("guid")
-    if guid == "":
-        guid = uuid.uuid1()
-
-    sysConfig.setupCloudKit(userInputs[0], userInputs[1], nics, guid)
+    glbEnv.uuid = configFileOps("/etc/cloud/agent/agent.properties").getEntry("guid")
+    if glbEnv.uuid == "":
+        glbEnv.uuid = uuid.uuid1()
+   
+    print "Starting to configure your system:"
+    sysConfig = sysConfig.getSysConfigFactory(glbEnv)
+    sysConfig.config()
