@@ -92,7 +92,7 @@ public class RegisterCompleteServlet extends HttpServlet implements ServletConte
 		Account resourceAdminAccount = _accountSvc.getActiveAccount(resourceAdminUser.getAccountId());
 		Account rsUserAccount = _accountSvc.getActiveAccount("rightscale", resourceAdminAccount.getDomainId());
 		
-		List<UserVO> users =  _userDao.listByAccount(resourceAdminAccount.getId());
+		List<UserVO> users =  _userDao.listByAccount(rsUserAccount.getId());
 		User rsUser = users.get(0);
 		
 		Configuration config = _configDao.findByName("endpointe.url");
