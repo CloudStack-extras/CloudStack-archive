@@ -73,7 +73,7 @@ public class NioClient extends NioConnection {
         	doHandshake(sch, sslEngine, true);
         	s_logger.info("SSL: Handshake done");
         } catch (Exception e) {
-        	s_logger.warn("SSL: Fail to init SSL" + e);
+        	throw new IOException("SSL: Fail to init SSL! " + e);
         }
         
         sch.configureBlocking(false);
