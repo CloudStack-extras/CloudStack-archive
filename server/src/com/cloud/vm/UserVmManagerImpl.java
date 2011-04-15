@@ -42,10 +42,13 @@ import com.cloud.agent.api.CreatePrivateTemplateFromVolumeCommand;
 import com.cloud.agent.api.GetVmStatsAnswer;
 import com.cloud.agent.api.GetVmStatsCommand;
 import com.cloud.agent.api.SnapshotCommand;
+import com.cloud.agent.api.StartAnswer;
 import com.cloud.agent.api.StopAnswer;
 import com.cloud.agent.api.UpgradeSnapshotCommand;
 import com.cloud.agent.api.VmStatsEntry;
 import com.cloud.agent.api.storage.CreatePrivateTemplateAnswer;
+import com.cloud.agent.api.to.NicTO;
+import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.agent.api.to.VolumeTO;
 import com.cloud.agent.manager.Commands;
 import com.cloud.alert.AlertManager;
@@ -109,6 +112,7 @@ import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.IPAddressVO;
 import com.cloud.network.Network;
 import com.cloud.network.Network.GuestIpType;
+import com.cloud.network.Network.Provider;
 import com.cloud.network.NetworkManager;
 import com.cloud.network.NetworkVO;
 import com.cloud.network.Networks.TrafficType;
@@ -2476,14 +2480,51 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
     	UserVmVO vm = profile.getVirtualMachine();
         UsageEventVO usageEvent = new UsageEventVO(EventTypes.EVENT_VM_START, vm.getAccountId(), vm.getDataCenterId(), vm.getId(), vm.getName(), vm.getServiceOfferingId(), vm.getTemplateId(), vm.getHypervisorType().toString());
         _usageEventDao.persist(usageEvent);
-        
+        Answer startAnswer = cmds.getAnswer(StartAnswer.class);
+        String returnedIp = null;
+        String originalIp = null;
+        if (startAnswer != null) {
+            StartAnswer startAns = (StartAnswer) startAnswer;
+            VirtualMachineTO vmTO = startAns.getVirtualMachine();
+            for (NicTO nicTO: vmTO.getNics()) {
+                if (nicTO.getType() == TrafficType.Guest) {
+                    returnedIp = nicTO.getIp();
+                }
+            }
+        }
         List<NicVO> nics = _nicDao.listByVmId(vm.getId());
+        NicVO guestNic = null;
         for (NicVO nic : nics) {
             NetworkVO network = _networkDao.findById(nic.getNetworkId());
             long isDefault = (nic.isDefaultNic()) ? 1 : 0;
             usageEvent = new UsageEventVO(EventTypes.EVENT_NETWORK_OFFERING_ASSIGN, vm.getAccountId(), vm.getDataCenterId(), vm.getId(), vm.getName(), network.getNetworkOfferingId(), null, isDefault);
             _usageEventDao.persist(usageEvent);   
+            if (network.getTrafficType() == TrafficType.Guest) {
+                originalIp = nic.getIp4Address();
+                guestNic = nic;
+            }
         }
+        boolean ipChanged = false;
+        if (originalIp != null && !originalIp.equalsIgnoreCase(returnedIp)) {
+            if (returnedIp != null && guestNic != null) {
+                guestNic.setIp4Address(returnedIp);
+                ipChanged = true;
+            }
+        }
+        if (returnedIp != null && !returnedIp.equalsIgnoreCase(originalIp)) {
+            if (guestNic != null) {
+                guestNic.setIp4Address(returnedIp);
+                ipChanged = true;
+            }
+        }
+        if (ipChanged) {
+            DataCenterVO dc = _dcDao.findById(vm.getDataCenterId());
+            if (dc.getDhcpProvider().equalsIgnoreCase(Provider.ExternalDhcpServer.getName())){            
+                _nicDao.update(guestNic.getId(), guestNic);
+                s_logger.info("Detected that ip changed in the answer, updated nic in the db with new ip " + returnedIp);
+            }
+        }
+        
         
     	return true;
     }

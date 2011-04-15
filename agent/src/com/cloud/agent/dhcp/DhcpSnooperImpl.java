@@ -22,7 +22,6 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
-
 
 import org.apache.log4j.Logger;
 import org.jnetpcap.Pcap;
@@ -106,7 +104,7 @@ public class DhcpSnooperImpl implements DhcpSnooper {
     
 
     @Override
-    public void cleanup(String macAddr) {
+    public void cleanup(String macAddr, String vmName) {
         try {
             if (macAddr == null) {
                 return;
@@ -120,7 +118,7 @@ public class DhcpSnooperImpl implements DhcpSnooper {
     
 
     @Override
-    public HashMap<String, InetAddress> syncIpAddr() {
+    public Map<String, InetAddress> syncIpAddr() {
         Collection<IPAddr> ips = _macIpMap.values();
         HashMap<String, InetAddress> vmIpMap = new HashMap<String, InetAddress>();
         for(IPAddr ip : ips) {
@@ -289,19 +287,18 @@ public class DhcpSnooperImpl implements DhcpSnooper {
     @Override
     public boolean configure(String name, Map<String, Object> params)
             throws ConfigurationException {
-        // TODO Auto-generated method stub
-        return false;
+        // TODO configure timeout here
+        return true;
     }
 
     @Override
     public boolean start() {
-        // TODO Auto-generated method stub
-        return false;
+        return true;
     }
 
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
-        return null;
+        return "DhcpSnooperImpl";
     }
+
 }

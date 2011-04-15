@@ -18,19 +18,19 @@
 package com.cloud.agent.dhcp;
 
 import java.net.InetAddress;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.cloud.utils.Pair;
-import com.cloud.utils.component.Manager;
+import com.cloud.utils.component.Adapter;
 
-public interface DhcpSnooper extends Manager{
+public interface DhcpSnooper   extends Adapter{
 
     public  InetAddress getIPAddr(String macAddr, String vmName);
 
-    public  void cleanup(String macAddr);
+    public  void cleanup(String macAddr, String vmName);
 
-    public  HashMap<String, InetAddress> syncIpAddr();
+    public  Map<String, InetAddress> syncIpAddr();
 
     public  boolean stop();
 
