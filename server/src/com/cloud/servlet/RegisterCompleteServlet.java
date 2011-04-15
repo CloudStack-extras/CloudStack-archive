@@ -90,7 +90,7 @@ public class RegisterCompleteServlet extends HttpServlet implements ServletConte
 		}
 		
 		Account resourceAdminAccount = _accountSvc.getActiveAccount(resourceAdminUser.getAccountId());
-		Account rsUserAccount = _accountSvc.getActiveAccount("rightscale", resourceAdminAccount.getDomainId());
+		Account rsUserAccount = _accountSvc.getActiveAccount(resourceAdminAccount.getAccountName()+"-user", resourceAdminAccount.getDomainId());
 		
 		List<UserVO> users =  _userDao.listByAccount(rsUserAccount.getId());
 		User rsUser = users.get(0);
@@ -103,8 +103,8 @@ public class RegisterCompleteServlet extends HttpServlet implements ServletConte
         sb.append("\"admin_account\" : \""+resourceAdminUser.getUsername()+"\", ");
         sb.append("\"admin_account_api_key\" : \""+resourceAdminUser.getApiKey()+"\", ");
         sb.append("\"admin_account_secret_key\" : \""+resourceAdminUser.getSecretKey()+"\", ");
-        sb.append("\"user_account\" : \"rightscale\", ");
-        sb.append("\"user_account_secret_key\" : \""+rsUser.getApiKey()+"\", ");
+        sb.append("\"user_account\" : \""+rsUser.getUsername()+"\", ");
+        sb.append("\"user_account_api_key\" : \""+rsUser.getApiKey()+"\", ");
         sb.append("\"user_account_secret_key\" : \""+rsUser.getSecretKey()+"\" ");
         sb.append("} }");
         
