@@ -173,6 +173,10 @@ public class Link {
             if (s_logger.isTraceEnabled()) {
                 s_logger.trace("Packet length is " + readSize);
             }
+            
+            if (readSize > 65535) {
+            	throw new IOException("Packet is too big! Discard it. Size: " + readSize);
+            }
             _readBuffer.clear();
             _readSize = false;
             
@@ -303,6 +307,10 @@ public class Link {
             pkgBuf.flip();
             headBuf.putInt(dataRemaining);
             headBuf.flip();
+
+            if (headRemaining + dataRemaining > 65535) {
+                throw new IOException("Fail to send a too big packet! Size: " + (headRemaining + dataRemaining));
+            }
 
             while (headRemaining > 0) {
                 if (s_logger.isTraceEnabled()) {
