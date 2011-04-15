@@ -269,10 +269,6 @@ public class Link {
         return false;
     }
     
-    public synchronized void connect(SocketChannel ch) {
-        _connection.register(SelectionKey.OP_CONNECT, ch, this);
-    }
-    
     public InetSocketAddress getSocketAddress() {
         return _addr;
     }
