@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -78,14 +79,18 @@ import com.cloud.agent.api.storage.CreateCommand;
 import com.cloud.agent.api.storage.DestroyCommand;
 import com.cloud.agent.api.storage.PrimaryStorageDownloadAnswer;
 import com.cloud.agent.api.storage.PrimaryStorageDownloadCommand;
+import com.cloud.agent.api.to.NicTO;
 import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.agent.api.to.VolumeTO;
+import com.cloud.agent.dhcp.DhcpSnooper;
+import com.cloud.agent.dhcp.FakeDhcpSnooper;
 import com.cloud.agent.mockvm.MockVm;
 import com.cloud.agent.mockvm.MockVmMgr;
 import com.cloud.agent.mockvm.VmMgr;
 import com.cloud.host.Host.Type;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.Networks.RouterPrivateIpStrategy;
+import com.cloud.network.Networks.TrafficType;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.ServerResourceBase;
 import com.cloud.storage.Storage;
@@ -108,6 +113,7 @@ public class FakeComputingResource extends ServerResourceBase implements ServerR
     private Map<String, Object> _params;
     private VmMgr _vmManager = new MockVmMgr();
     protected HashMap<String, State> _vms = new HashMap<String, State>(20);
+    protected DhcpSnooper _dhcpSnooper = new FakeDhcpSnooper();
 
 
     @Override
@@ -179,6 +185,7 @@ public class FakeComputingResource extends ServerResourceBase implements ServerR
     @Override
     public PingCommand getCurrentStatus(long id) {
         final HashMap<String, State> newStates = new HashMap<String, State>();
+        _dhcpSnooper.syncIpAddr();
         return new PingRoutingCommand(com.cloud.host.Host.Type.Routing, id, newStates);
     }
 
@@ -358,6 +365,7 @@ public class FakeComputingResource extends ServerResourceBase implements ServerR
         params.putAll(simProps);
         setParams(params);
         _vmManager.configure(params);
+        _dhcpSnooper.configure(name, params);
         return true;
     }
 
@@ -388,6 +396,12 @@ public class FakeComputingResource extends ServerResourceBase implements ServerR
                 vmMgr.createVif(vmSpec, vmName, vm);
            
                 state = State.Running;
+                for (NicTO nic: cmd.getVirtualMachine().getNics()) {
+                    if (nic.getType() == TrafficType.Guest) {
+                        InetAddress addr = _dhcpSnooper.getIPAddr(nic.getMac(), vmName);
+                        nic.setIp(addr.getHostAddress());
+                    }
+                }
                 return new StartAnswer(cmd);
             } else {
                 String msg = "There is already a VM having the same name "
@@ -446,6 +460,8 @@ public class FakeComputingResource extends ServerResourceBase implements ServerR
                 answer = new StopAnswer(cmd, result, port, bytesSent,
                         bytesReceived);
             }
+          
+            _dhcpSnooper.cleanup(vmName, null);
 
             return answer;
         } finally {

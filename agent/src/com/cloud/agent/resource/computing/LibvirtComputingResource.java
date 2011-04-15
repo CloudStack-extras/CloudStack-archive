@@ -1899,7 +1899,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             
             final String result2 = cleanupVnet(conn, cmd.getVnet());
            
-            _dhcpSnooper.cleanup(macAddress);
+            _dhcpSnooper.cleanup(vmName, macAddress);
             
             if (result != null && result2 != null) {
                 result = result2 + result;
