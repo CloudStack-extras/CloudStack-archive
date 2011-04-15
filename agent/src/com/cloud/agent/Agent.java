@@ -377,16 +377,15 @@ public class Agent implements HandlerFactory, IAgentControl {
             	continue;
             }
 
-            try {
-                final SocketChannel sch = SocketChannel.open();
-                sch.configureBlocking(false);
-                sch.connect(link.getSocketAddress());
-
-                link.connect(sch);
-                return;
-            } catch(final IOException e) {
-                s_logger.error("Unable to establish connection with the server", e);
-            }
+            _connection.stop();
+            _connection = new NioClient(
+            		"Agent",
+            		_shell.getHost(),
+            		_shell.getPort(),
+            		_shell.getWorkers(),
+            		this);
+            _connection.start();
+            return;
         }
     }
     
