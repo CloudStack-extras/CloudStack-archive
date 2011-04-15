@@ -75,6 +75,9 @@ public class UpdateZoneCmd extends BaseCmd {
     @Parameter(name=ApiConstants.DETAILS, type=CommandType.MAP, description="the details for the Zone")
     private Map details;
     
+    @Parameter(name=ApiConstants.DHCP_PROVIDER, type=CommandType.STRING, description="the dhcp Provider for the Zone")
+    private String dhcpProvider;    
+    
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -122,6 +125,10 @@ public class UpdateZoneCmd extends BaseCmd {
     public Map getDetails() {
         return details;
     }
+    
+    public String getDhcpProvider() {
+        return dhcpProvider;
+    }    
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
