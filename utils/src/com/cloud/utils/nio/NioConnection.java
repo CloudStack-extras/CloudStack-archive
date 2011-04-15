@@ -281,7 +281,7 @@ public abstract class NioConnection implements Runnable {
         	doHandshake(socketChannel, sslEngine, false);
         	s_logger.info("SSL: Handshake done");
         } catch (Exception e) {
-        	s_logger.warn("SSL: Fail to get SSL handshake done " + e);
+        	throw new IOException("SSL: Fail to init SSL! " + e);
         }
         
         socketChannel.configureBlocking(false);
