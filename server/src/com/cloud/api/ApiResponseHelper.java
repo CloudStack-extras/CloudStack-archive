@@ -753,6 +753,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         zoneResponse.setType(dataCenter.getNetworkType().toString());
         zoneResponse.setAllocationState(dataCenter.getAllocationState().toString());
         zoneResponse.setZoneToken(dataCenter.getZoneToken());
+        zoneResponse.setDhcpProvider(dataCenter.getDhcpProvider());
         zoneResponse.setObjectName("zone");
         return zoneResponse;
     }

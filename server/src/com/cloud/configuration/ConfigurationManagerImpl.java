@@ -1036,6 +1036,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
     	int stopVnetRange = 0;
     	Boolean isPublic = cmd.isPublic();
     	String allocationStateStr = cmd.getAllocationState();
+    	String dhcpProvider = cmd.getDhcpProvider();
     	Map detailsMap = cmd.getDetails();
     	
     	Map<String, String> newDetails = new HashMap<String, String>();
@@ -1182,7 +1183,11 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
 		if (allocationStateStr != null && !allocationStateStr.isEmpty()) {
     		Grouping.AllocationState allocationState = Grouping.AllocationState.valueOf(allocationStateStr);
     		zone.setAllocationState(allocationState);
-		}	
+		}
+		
+		if(dhcpProvider != null){
+			zone.setDhcpProvider(dhcpProvider);
+		}
 		
     	if (!_zoneDao.update(zoneId, zone)) {
     		throw new CloudRuntimeException("Failed to edit zone. Please contact Cloud Support.");
