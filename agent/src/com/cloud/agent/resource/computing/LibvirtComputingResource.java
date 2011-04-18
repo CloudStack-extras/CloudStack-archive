@@ -2420,6 +2420,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         cmd.getHostDetails().putAll(getVersionStrings());
         cmd.setPool(_pool);
         cmd.setCluster(_clusterId);
+        cmd.setGatewayIpAddress(_localGateway);
         
         StartupStorageCommand sscmd = null;
         try {
