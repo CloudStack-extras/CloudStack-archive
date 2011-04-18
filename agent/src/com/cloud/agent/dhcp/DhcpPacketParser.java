@@ -209,7 +209,6 @@ public class DhcpPacketParser implements Runnable{
 
             }
         }  else if (msg.msgType == DHCPMSGTYPE.DHCPREQUEST) {
-            System.out.println("new found dhcprequest");
             InetAddress ip = null;
             if (msg.requestedIP != null) {
                 try {

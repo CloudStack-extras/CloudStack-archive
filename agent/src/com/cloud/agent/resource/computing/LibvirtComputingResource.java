@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -2090,14 +2091,14 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
 			NicTO[] nics = vmSpec.getNics();
 			for (NicTO nic : nics) {
-			    if (nic.isSecurityGroupEnabled()) {
-			        if (vmSpec.getType() != VirtualMachine.Type.User) {
-			            default_network_rules_for_systemvm(conn, vmName);
-			        } else {
-			            default_network_rules(conn, vmName, nic, vmSpec.getId());
-			        }
-			    }
-			}
+                if (nic.isSecurityGroupEnabled()) {
+                    if (vmSpec.getType() != VirtualMachine.Type.User) {
+                        default_network_rules_for_systemvm(conn, vmName);
+                    } else {
+                        default_network_rules(conn, vmName, nic, vmSpec.getId());
+                    }
+                }
+            }
 
 			// Attach each data volume to the VM, if there is a deferred attached disk
 			for (DiskDef disk : vm.getDevices().getDisks()) {
@@ -2105,14 +2106,25 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 					attachOrDetachDisk(conn, true, vmName, disk.getDiskPath(), disk.getDiskSeq());
 				}
 			}
-			state = State.Running;
+			
 			if (_isCloudKitEnabled && vmSpec.getType() == VirtualMachine.Type.User) {
 			    for (NicTO nic: nics) {
 			        if (nic.getType() == TrafficType.Guest) {
-			            s_logger.debug(_dhcpSnooper.getIPAddr(nic.getMac(), vmName));
+			            InetAddress ipAddr = _dhcpSnooper.getIPAddr(nic.getMac(), vmName);
+			            if (ipAddr == null) {
+			                s_logger.debug("Failed to get guest DHCP ip, stop it");
+			                StopCommand stpCmd = new StopCommand(vmName);
+			                execute(stpCmd);
+			                return new StartAnswer(cmd, "Failed to get guest DHCP ip, stop it");
+			            }
+			            s_logger.debug(ipAddr);
+			            nic.setIp(ipAddr.getHostAddress());
+			            post_default_network_rules(conn, vmName, nic, vmSpec.getId());
 			        }
 			    }
 			}
+			
+			state = State.Running;
 			return new StartAnswer(cmd);
 		} catch (Exception e) {
 			s_logger.warn("Exception ", e);
@@ -3206,7 +3218,9 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	cmd.add("default_network_rules");
     	cmd.add("--vmname", vmName);
     	cmd.add("--vmid", vmId.toString());
-    	cmd.add("--vmip", nic.getIp());
+    	if (nic.getIp() != null) {
+    	    cmd.add("--vmip", nic.getIp());
+    	}
     	cmd.add("--vmmac", nic.getMac());
     	cmd.add("--vif", vif);
     	cmd.add("--brname", brname);
@@ -3215,6 +3229,35 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     		return false;
     	}
     	return true;
+    }
+    
+    private boolean post_default_network_rules(Connect conn, String vmName, NicTO nic, Long vmId) {
+        if (!_can_bridge_firewall) {
+            return false;
+        }
+        
+        List<InterfaceDef> intfs = getInterfaces(conn, vmName);
+        if (intfs.size() < nic.getDeviceId()) {
+            return false;
+        }
+        
+        InterfaceDef intf = intfs.get(nic.getDeviceId());
+        String brname = intf.getBrName();
+        String vif = intf.getDevName();
+        
+        Script cmd = new Script(_securityGroupPath, _timeout, s_logger);
+        cmd.add("post_default_network_rules");
+        cmd.add("--vmname", vmName);
+        cmd.add("--vmid", vmId.toString());
+        cmd.add("--vmip", nic.getIp());
+        cmd.add("--vmmac", nic.getMac());
+        cmd.add("--vif", vif);
+        cmd.add("--brname", brname);
+        String result = cmd.execute();
+        if (result != null) {
+            return false;
+        }
+        return true;
     }
     
     private boolean default_network_rules_for_systemvm(Connect conn, String vmName) {

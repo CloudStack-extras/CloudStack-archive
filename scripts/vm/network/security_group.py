@@ -141,7 +141,8 @@ def default_ebtables_rules(vm_name, vm_ip, vm_mac, vif):
         execute("ebtables -t nat -A " +  vmchain_in + " -s ! " +  vm_mac + " -j DROP")
         execute("ebtables -t nat -A " +  vmchain_in  + " -p ARP -s ! " + vm_mac + " -j DROP")
         execute("ebtables -t nat -A " +  vmchain_in  + " -p ARP --arp-mac-src ! " + vm_mac + " -j DROP")
-        execute("ebtables -t nat -A " + vmchain_in  +  " -p ARP --arp-ip-src ! " + vm_ip + " -j DROP") 
+        if vm_ip is not None:
+            execute("ebtables -t nat -A " + vmchain_in  +  " -p ARP --arp-ip-src ! " + vm_ip + " -j DROP") 
         execute("ebtables -t nat -A " + vmchain_in  + " -p ARP --arp-op Request -j ACCEPT")   
         execute("ebtables -t nat -A " + vmchain_in  + " -p ARP --arp-op Reply -j ACCEPT")    
         execute("ebtables -t nat -A " + vmchain_in  + " -p ARP  -j DROP")    
@@ -151,7 +152,8 @@ def default_ebtables_rules(vm_name, vm_ip, vm_mac, vif):
    
     try:
         execute("ebtables -t nat -A " + vmchain_out + " -p ARP --arp-op Reply --arp-mac-dst ! " +  vm_mac + " -j DROP")
-        execute("ebtables -t nat -A " + vmchain_out + " -p ARP --arp-ip-dst ! " + vm_ip + " -j DROP") 
+        if vm_ip is not None:
+            execute("ebtables -t nat -A " + vmchain_out + " -p ARP --arp-ip-dst ! " + vm_ip + " -j DROP") 
         execute("ebtables -t nat -A " + vmchain_out + " -p ARP --arp-op Request -j ACCEPT")   
         execute("ebtables -t nat -A " + vmchain_out + " -p ARP --arp-op Reply -j ACCEPT")    
         execute("ebtables -t nat -A " + vmchain_out + " -p ARP -j DROP")    
@@ -223,7 +225,8 @@ def default_network_rules(vm_name, vm_id, vm_ip, vm_mac, vif, brname):
         execute("iptables -A " + vmchain_default + " -m physdev --physdev-is-bridged --physdev-out " + vif + " -p udp --dport 68 --sport 67  -j ACCEPT")
 
         #don't let vm spoof its ip address
-        execute("iptables -A " + vmchain_default + " -m physdev --physdev-is-bridged --physdev-in " + vif  + " --source " +  vm_ip +  " -j ACCEPT")
+        if vm_ip is not None:
+            execute("iptables -A " + vmchain_default + " -m physdev --physdev-is-bridged --physdev-in " + vif  + " --source " +  vm_ip +  " -j ACCEPT")
         execute("iptables -A " + vmchain_default + " -j " +  vmchain)
         execute("iptables -A " + vmchain + " -j DROP")
     except:
@@ -232,12 +235,23 @@ def default_network_rules(vm_name, vm_id, vm_ip, vm_mac, vif, brname):
     
     default_ebtables_rules(vmchain, vm_ip, vm_mac, vif)
     
-    if write_rule_log_for_vm(vmName, vm_id, vm_ip, domID, '_initial_', '-1') == False:
-        logging.debug("Failed to log default network rules, ignoring")
+    if vm_ip is not None:
+        if write_rule_log_for_vm(vmName, vm_id, vm_ip, domID, '_initial_', '-1') == False:
+            logging.debug("Failed to log default network rules, ignoring")
         
     logging.debug("Programmed default rules for vm " + vm_name)
     return 'true'
     
+def post_default_network_rules(vm_name, vm_id, vm_ip, vm_mac, vif, brname):
+    vmchain_default = '-'.join(vm_name.split('-')[:-1]) + "-def"
+    vmchain_in = vm_name + "-in"
+    vmchain_out = vm_name + "-out"
+    domID = getvmId(vm_name)
+    execute("iptables -I " + vmchain_default + " 4 -m physdev --physdev-is-bridged --physdev-in " + vif  + " --source " +  vm_ip +  " -j ACCEPT")
+    execute("ebtables -t nat -I " + vmchain_in  +  " 4 -p ARP --arp-ip-src ! " + vm_ip + " -j DROP") 
+    execute("ebtables -t nat -I " + vmchain_out + " 2 -p ARP --arp-ip-dst ! " + vm_ip + " -j DROP") 
+    if write_rule_log_for_vm(vm_name, vm_id, vm_ip, domID, '_initial_', '-1') == False:
+            logging.debug("Failed to log default network rules, ignoring")
 def delete_rules_for_vm_in_bridge_firewall_chain(vmName):
     vm_name = vmName
     if vm_name.startswith('i-') or vm_name.startswith('r-'):
@@ -577,3 +591,5 @@ if __name__ == '__main__':
         add_network_rules(option.vmName, option.vmID, option.vmIP, option.sig, option.seq, option.vmMAC, option.rules, option.vif, option.brname)
     elif cmd == "cleanup_rules":
         cleanup_rules()
+    elif cmd == "post_default_network_rules":
+        post_default_network_rules(option.vmName, option.vmID, option.vmIP, option.vmMAC, option.vif, option.brname)
