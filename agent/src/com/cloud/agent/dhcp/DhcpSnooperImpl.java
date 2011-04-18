@@ -67,7 +67,7 @@ public class DhcpSnooperImpl implements DhcpSnooper {
     protected Map<InetAddress, String> _ipMacMap;
     private DhcpServer _server;
     protected long _timeout = 1200000;
-    
+   
     public DhcpSnooperImpl(String bridge) {
         _executor = new ThreadPoolExecutor(10, 10 * 10, 1, TimeUnit.DAYS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("DhcpListener"));
         _macIpMap = new ConcurrentHashMap<String, IPAddr>();
