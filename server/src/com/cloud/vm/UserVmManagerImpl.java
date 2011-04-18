@@ -2519,8 +2519,12 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         }
         if (ipChanged) {
             DataCenterVO dc = _dcDao.findById(vm.getDataCenterId());
+            UserVmVO userVm = profile.getVirtualMachine();
             if (dc.getDhcpProvider().equalsIgnoreCase(Provider.ExternalDhcpServer.getName())){            
                 _nicDao.update(guestNic.getId(), guestNic);
+                userVm.setPrivateIpAddress(guestNic.getIp4Address());
+                _vmDao.update(userVm.getId(), userVm);
+
                 s_logger.info("Detected that ip changed in the answer, updated nic in the db with new ip " + returnedIp);
             }
         }
