@@ -73,7 +73,7 @@ public class MockVmMgr implements VmMgr {
 		synchronized(this) {
 			MockVm vm = vms.get(vmName);
 			if(vm == null) {
-				if(ramSize*1024*1024L > getHostFreeMemory())
+				if(ramSize > getHostFreeMemory())
 					return "Out of memory";
 					
 				int vncPort = allocVncPort();
@@ -209,7 +209,7 @@ public class MockVmMgr implements VmMgr {
 		synchronized(this) {
 			for(MockVm vm : vms.values()) {
 				if(vm.getState() != State.Stopped)
-					memSize -= vm.getRamSize()*1024*1024L;
+					memSize -= vm.getRamSize();
 			}
 		}
 		
@@ -255,14 +255,14 @@ public class MockVmMgr implements VmMgr {
 	@Override
 	public MockVm createVmFromSpec(VirtualMachineTO vmSpec) {
 		String vmName = vmSpec.getName();
-		long ramSize = vmSpec.getMinRam()/1024;		
+		long ramSize = vmSpec.getMinRam();		
 		int utilizationPercent = randSeed.nextInt() % 100;
 		MockVm vm = null;
 		
 		synchronized(this) {
 			vm = vms.get(vmName);
 			if(vm == null) {
-				if (ramSize * 1024 * 1024L > getHostFreeMemory()) {
+				if (ramSize  > getHostFreeMemory()) {
 					s_logger.debug("host is out of memory");
 					throw new CloudRuntimeException("Host is out of Memory");
 				}
