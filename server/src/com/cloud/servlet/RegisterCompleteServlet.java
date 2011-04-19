@@ -78,15 +78,18 @@ public class RegisterCompleteServlet extends HttpServlet implements ServletConte
 	
 	@Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-		// The token system will change.  Currently, it is simply using the user id.
-		String token = req.getParameter("token");
-		if (token == null || token.trim().length() == 0) {
+		String registrationToken = req.getParameter("token");
+		if (registrationToken == null || registrationToken.trim().length() == 0) {
 			// Return an error code
 		} 
 		
-		User resourceAdminUser = _accountSvc.getActiveUser(new Long(token));
+		User resourceAdminUser = _accountSvc.getActiveUserByRegistrationToken(registrationToken);
 		if (resourceAdminUser == null) {
 			// Return an error code
+		}
+		
+		if(!resourceAdminUser.isRegistered()){
+			_accountSvc.markUserRegistered(resourceAdminUser.getId());
 		}
 		
 		Account resourceAdminAccount = _accountSvc.getActiveAccount(resourceAdminUser.getAccountId());

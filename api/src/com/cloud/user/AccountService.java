@@ -158,5 +158,9 @@ public interface AccountService {
 	Domain getDomain(long id);
 	
 	boolean isRootAdmin(short accountType);
+	
+	User getActiveUserByRegistrationToken(String registrationToken);
+	
+	void markUserRegistered(long userId);
 
 }
