@@ -228,7 +228,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private String _dcId;
     private String _pod;
     private String _clusterId;
-    private boolean _isCloudKitEnabled;
+
     private long _hvVersion;
     private KVMHAMonitor _monitor;
     private final String _SSHKEYSPATH = "/root/.ssh";
@@ -236,7 +236,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private final String _SSHPUBKEYPATH = _SSHKEYSPATH + File.separator + "id_rsa.pub.cloud";
     private final String _mountPoint = "/mnt";
     StorageLayer _storage;
-    DhcpSnooper _dhcpSnooper;
     
 	private static final class KeyValueInterpreter extends OutputInterpreter {
 		private final Map<String, String> map = new HashMap<String, String>();
@@ -321,7 +320,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
 	private int _dom0MinMem;
 
-	private enum defineOps {
+	protected enum defineOps {
 		UNDEFINE_VM,
 		DEFINE_VM
 	}
@@ -553,8 +552,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         	}
         }
         
-        String cloudKit = (String)params.get("cloudkit.enabled");
-        _isCloudKitEnabled = Boolean.parseBoolean(cloudKit);
+    
         
         _localStoragePath = (String)params.get("local.storage.path");
         if (_localStoragePath == null) {
@@ -647,7 +645,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 		
         _storageResource = new LibvirtStorageResource(this, _storage, _createvmPath, _timeout, _mountPoint, _monitor);
 
-        setupDhcpManager(conn, _guestBridgeName);
+        
 		return true;
 	}
 	
@@ -1900,8 +1898,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             
             final String result2 = cleanupVnet(conn, cmd.getVnet());
            
-            _dhcpSnooper.cleanup(vmName, macAddress);
-            
             if (result != null && result2 != null) {
                 result = result2 + result;
             }
@@ -1994,13 +1990,13 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 	
 	
 
-	private void handleVmStartFailure(Connect conn, String vmName, LibvirtVMDef vm) {
+	protected void handleVmStartFailure(Connect conn, String vmName, LibvirtVMDef vm) {
 		if (vm != null && vm.getDevices() != null) {
             cleanupVMNetworks(conn, vm.getDevices().getInterfaces());
         }
 	}
 
-	private LibvirtVMDef createVMFromSpec(VirtualMachineTO vmTO) {
+	protected LibvirtVMDef createVMFromSpec(VirtualMachineTO vmTO) {
 		LibvirtVMDef vm = new LibvirtVMDef();
 		vm.setHvsType(_hypervisorType);
 		vm.setDomainName(vmTO.getName());
@@ -2054,7 +2050,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 		return vm;
 	}
 	
-	private void createVifs(Connect conn, VirtualMachineTO vmSpec, LibvirtVMDef vm) throws InternalErrorException, LibvirtException {
+	protected void createVifs(Connect conn, VirtualMachineTO vmSpec, LibvirtVMDef vm) throws InternalErrorException, LibvirtException {
 		NicTO[] nics = vmSpec.getNics();
 		for (int i = 0; i < nics.length; i++) {
 			for (NicTO nic : vmSpec.getNics()) {
@@ -2107,23 +2103,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 				}
 			}
 			
-			if (_isCloudKitEnabled && vmSpec.getType() == VirtualMachine.Type.User) {
-			    for (NicTO nic: nics) {
-			        if (nic.getType() == TrafficType.Guest) {
-			            InetAddress ipAddr = _dhcpSnooper.getIPAddr(nic.getMac(), vmName);
-			            if (ipAddr == null) {
-			                s_logger.debug("Failed to get guest DHCP ip, stop it");
-			                StopCommand stpCmd = new StopCommand(vmName);
-			                execute(stpCmd);
-			                return new StartAnswer(cmd, "Failed to get guest DHCP ip, stop it");
-			            }
-			            s_logger.debug(ipAddr);
-			            nic.setIp(ipAddr.getHostAddress());
-			            post_default_network_rules(conn, vmName, nic, vmSpec.getId());
-			        }
-			    }
-			}
-			
 			state = State.Running;
 			return new StartAnswer(cmd);
 		} catch (Exception e) {
@@ -2152,7 +2131,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 		}
 	}
 
-	private void createVbd(Connect conn, VirtualMachineTO vmSpec, String vmName, LibvirtVMDef vm) throws InternalErrorException, LibvirtException, URISyntaxException{
+	protected void createVbd(Connect conn, VirtualMachineTO vmSpec, String vmName, LibvirtVMDef vm) throws InternalErrorException, LibvirtException, URISyntaxException{
 		for (VolumeTO volume : vmSpec.getDisks()) {
 			String volPath = getVolumePath(conn, volume);
 
@@ -2388,9 +2367,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 	@Override
 	public PingCommand getCurrentStatus(long id) {
 		final HashMap<String, State> newStates = sync();
-		if (_isCloudKitEnabled) {
-		    s_logger.debug(_dhcpSnooper.syncIpAddr());
-		}
 		
 		if (!_can_bridge_firewall) {
 			return new PingRoutingCommand(com.cloud.host.Host.Type.Routing, id, newStates);
@@ -3069,7 +3045,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	 return conn.domainLookupByUUID(UUID.nameUUIDFromBytes(vmName.getBytes()));
     }
     
-    private  List<InterfaceDef> getInterfaces(Connect conn, String vmName) {
+    protected  List<InterfaceDef> getInterfaces(Connect conn, String vmName) {
     	LibvirtDomainXMLParser parser = new LibvirtDomainXMLParser();
     	Domain dm = null;
     	try {
@@ -3184,7 +3160,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	return true;
     }
     
-    private boolean destroy_network_rules_for_vm(String vmName) {
+    protected boolean destroy_network_rules_for_vm(String vmName) {
     	if (!_can_bridge_firewall) {
             return false;
         }
@@ -3200,7 +3176,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	return true;
     }
     
-    private boolean default_network_rules(Connect conn, String vmName, NicTO nic, Long vmId) {
+    protected boolean default_network_rules(Connect conn, String vmName, NicTO nic, Long vmId) {
     	if (!_can_bridge_firewall) {
             return false;
         }
@@ -3231,7 +3207,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	return true;
     }
     
-    private boolean post_default_network_rules(Connect conn, String vmName, NicTO nic, Long vmId) {
+    protected boolean post_default_network_rules(Connect conn, String vmName, NicTO nic, Long vmId) {
         if (!_can_bridge_firewall) {
             return false;
         }
@@ -3260,7 +3236,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return true;
     }
     
-    private boolean default_network_rules_for_systemvm(Connect conn, String vmName) {
+    protected boolean default_network_rules_for_systemvm(Connect conn, String vmName) {
     	if (!_can_bridge_firewall) {
             return false;
         }
@@ -3415,27 +3391,5 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         return new Answer(cmd, success, "");
     }
     
-    private void setupDhcpManager(Connect conn, String bridgeName) {
-        if (!_isCloudKitEnabled) {
-           return;
-        }
-        
-        _dhcpSnooper = new DhcpSnooperImpl(bridgeName);
-        List<Pair<String, String>> macs = new ArrayList<Pair<String, String>>();
-        try {
-            int[] domainIds = conn.listDomains();
-            for (int i = 0; i < domainIds.length; i++) {
-                Domain vm = conn.domainLookupByID(domainIds[i]);
-                if (vm.getName().startsWith("i-")) {
-                    List<InterfaceDef> nics = getInterfaces(conn, vm.getName());
-                    InterfaceDef nic = nics.get(0);
-                    macs.add(new Pair<String, String>(nic.getMacAddress(), vm.getName()));
-                }
-            }
-        } catch (LibvirtException e) {
-            s_logger.debug("Failed to get MACs: " + e.toString());
-        }
-        
-        _dhcpSnooper.initializeMacTable(macs);
-    }
+   
 }
