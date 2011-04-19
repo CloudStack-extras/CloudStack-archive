@@ -35,7 +35,7 @@ $(document).ready(function() {
 			async: false,
 			success: function(json) {
 				g_loginResponse = json.loginresponse;
-				$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/cloudkit/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.userid));
+				$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/cloudkit/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
 			},
 			error: function() {
 				logout();
