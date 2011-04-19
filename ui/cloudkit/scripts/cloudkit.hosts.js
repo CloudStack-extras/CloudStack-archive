@@ -20,7 +20,6 @@ $(document).ready(function() {
 		logout();
 		return;
 	}
-	$("#main").show();
 	
 	if (g_loginResponse.registered == "false") {
 		$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/cloudkit/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
@@ -28,6 +27,32 @@ $(document).ready(function() {
 	} else {
 		$("#registration_complete_container").hide();
 	}
+	
+	var hostTemplate = $("#host_template");
+	var hostContainer = $("#host_container").empty();
+	$.ajax({
+		data: createURL("command=listHosts"),				
+		success: function(json) {	
+			var hosts = json.listhostsresponse.host;
+			if (hosts != null && hosts.length >0) {
+				for (var i = 0; i < hosts.length; i++) {
+					var host = hosts[i];
+					var template = hostTemplate.clone(true);
+					template.find("#hostname").text(host.name);
+					template.find("#ip").text(host.ipaddress);
+					template.find("#version").text(host.version);
+					template.find("#disconnected").text(host.disconnected);
+					template.find("#state").text(host.state);
+					if (host.state != 'Up') {
+						template.find("#state").removeClass("green").addClass("red");
+					}
+					hostContainer.append(template.show());
+				}
+			}
+		}
+	});	
+	
+	$("#main").show();
 });
 
 
