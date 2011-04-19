@@ -928,23 +928,31 @@ public class ClusterManagerImpl implements ClusterManager {
     }
     
     private void checkConflicts() throws ConfigurationException {
-    	Date cutTime = DateUtil.currentGMTTime();
-    	List<ManagementServerHostVO> peers = _mshostDao.getActiveList(new Date(cutTime.getTime() - heartbeatThreshold));
-    	for(ManagementServerHostVO peer : peers) {
-    		String peerIP = peer.getServiceIP().trim();
-    		if(_clusterNodeIP.equals(peerIP)) {
-    			if("127.0.0.1".equals(_clusterNodeIP)) {
-    				String msg = "Detected another management node with localhost IP is already running, please check your cluster configuration";
-    				s_logger.error(msg);
-					throw new ConfigurationException(msg);
-    			} else {
-    				if(!pingManagementNode(peer.getMsid())) {
-    					String msg = "Detected that another management node with the same IP " + peer.getServiceIP() + " is already running";
-        				s_logger.error(msg);
-    					throw new ConfigurationException(msg);
-    				}
-    			}
-    		}
-    	}
+        Date cutTime = DateUtil.currentGMTTime();
+        List<ManagementServerHostVO> peers = _mshostDao.getActiveList(new Date(cutTime.getTime() - heartbeatThreshold));
+        for(ManagementServerHostVO peer : peers) {
+            String peerIP = peer.getServiceIP().trim();
+            if(_clusterNodeIP.equals(peerIP)) {
+                if("127.0.0.1".equals(_clusterNodeIP)) {
+                    if(pingManagementNode(peer.getMsid())) {
+                        String msg = "Detected another management node with localhost IP is already running, please check your cluster configuration";
+                        s_logger.error(msg);
+                        throw new ConfigurationException(msg);
+                    } else {
+                        String msg = "Detected another management node with localhost IP is considered as running in DB, however it is not pingable, we will continue cluster initialization with this management server node";
+                        s_logger.info(msg);
+                    }
+                } else {
+                    if(pingManagementNode(peer.getMsid())) {
+	                    String msg = "Detected that another management node with the same IP " + peer.getServiceIP() + " is already running, please check your cluster configuration";
+	                    s_logger.error(msg);
+	                    throw new ConfigurationException(msg);
+                    } else {
+                        String msg = "Detected that another management node with the same IP " + peer.getServiceIP() + " is considered as running in DB, however it is not pingable, we will continue cluster initialization with this management server node";
+                        s_logger.info(msg);
+                    }
+                }
+            }
+        }
     }
 }
