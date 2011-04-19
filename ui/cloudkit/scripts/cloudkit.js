@@ -27,13 +27,14 @@ function logout() {
 
 function login(json) {
 	g_loginResponse = json.loginresponse;
-	$.cookie('loginResponse', g_loginResponse, { expires: 1});
+	$.cookie('loginResponse', JSON.stringify(g_loginResponse), { expires: 1});
 	window.location='/client/cloudkit/cloudkit.jsp';
 }
 
 $(document).ready(function() {
-	g_loginResponse = $.cookie('loginResponse');
-	
+	if (g_loginResponse == null) {
+		g_loginResponse = JSON.parse($.cookie('loginResponse'));
+	}
 	if (g_loginResponse != null) {
 		$("#header_username").text(g_loginResponse.username);
 	}

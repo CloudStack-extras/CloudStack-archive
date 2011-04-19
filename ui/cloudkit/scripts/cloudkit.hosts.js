@@ -21,7 +21,13 @@ $(document).ready(function() {
 		return;
 	}
 	$("#main").show();
-	$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/cloudkit/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
+	
+	if (g_loginResponse.registered == "false") {
+		$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/cloudkit/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
+		$("#registration_complete_container").show();
+	} else {
+		$("#registration_complete_container").hide();
+	}
 });
 
 

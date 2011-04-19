@@ -10,6 +10,7 @@
 	<link rel="stylesheet" href="css/main.css" type="text/css" />
 
 	<!-- Common libraries -->
+	<script type="text/javascript" src="scripts/json2.js"></script>
     <script type="text/javascript" src="../scripts/jquery.min.js"></script>
     <script type="text/javascript" src="../scripts/jquery-ui.custom.min.js"></script>
     <script type="text/javascript" src="../scripts/date.js"></script>
