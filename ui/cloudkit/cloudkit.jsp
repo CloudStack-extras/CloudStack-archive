@@ -19,6 +19,7 @@
 
     <!-- cloud.com scripts -->
 	<script type="text/javascript" src="scripts/cloudkit.js?t=<%=now%>"></script>
+	<script type="text/javascript" src="scripts/cloudkit.hosts.js?t=<%=now%>"></script>
 	
 	<!-- Favicon -->
 	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
@@ -26,7 +27,7 @@
     <title>CloudKit</title>
 </head>
 <body>
-	<div id="main">
+	<div id="main" style="display:none">
     	<div id="dialogoverlay" style="display:none;">
             <div class="overlay_black"></div>
             
@@ -164,10 +165,10 @@
                     </div>
                     <div class="db_gridcontainer_topbox_right">
                     	<div class="db_grid_tabbox">
-                       	  <div class="db_grid_tabs on">Host</div>
+							<div class="db_grid_tabs on" id="tab_hosts">Hosts</div>
                         </div>
                         <div class="db_grid_tabbox">
-                        	<a class="db_grid_tabs off" href="#">Instructions</a>
+                        	<div class="db_grid_tabs off" id="tab_docs">Documentation</div>
                         </div>
                     </div>
                 </div>
