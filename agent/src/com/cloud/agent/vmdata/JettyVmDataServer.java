@@ -229,13 +229,13 @@ public class JettyVmDataServer implements VmDataServer {
  
         SelectChannelConnector connector0 = new SelectChannelConnector();
         connector0.setHost("127.0.0.1");
-        connector0.setPort(8088);
+        connector0.setPort(fileservingPort);
         connector0.setMaxIdleTime(30000);
         connector0.setRequestBufferSize(8192);
  
         SelectChannelConnector connector1 = new SelectChannelConnector();
         connector1.setHost("127.0.0.1");
-        connector1.setPort(8000);
+        connector1.setPort(vmDataPort);
         connector1.setThreadPool(new QueuedThreadPool(5));
         connector1.setMaxIdleTime(30000);
         connector1.setRequestBufferSize(8192);
