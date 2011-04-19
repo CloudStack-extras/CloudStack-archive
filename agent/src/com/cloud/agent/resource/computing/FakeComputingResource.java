@@ -73,6 +73,7 @@ import com.cloud.agent.api.StartupStorageCommand;
 import com.cloud.agent.api.StopAnswer;
 import com.cloud.agent.api.StopCommand;
 import com.cloud.agent.api.StoragePoolInfo;
+import com.cloud.agent.api.routing.SavePasswordCommand;
 import com.cloud.agent.api.routing.VmDataCommand;
 import com.cloud.agent.api.storage.CreateAnswer;
 import com.cloud.agent.api.storage.CreateCommand;
@@ -87,6 +88,8 @@ import com.cloud.agent.dhcp.FakeDhcpSnooper;
 import com.cloud.agent.mockvm.MockVm;
 import com.cloud.agent.mockvm.MockVmMgr;
 import com.cloud.agent.mockvm.VmMgr;
+import com.cloud.agent.vmdata.JettyVmDataServer;
+import com.cloud.agent.vmdata.VmDataServer;
 import com.cloud.host.Host.Type;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.Networks.RouterPrivateIpStrategy;
@@ -114,6 +117,7 @@ public class FakeComputingResource extends ServerResourceBase implements ServerR
     private VmMgr _vmManager = new MockVmMgr();
     protected HashMap<String, State> _vms = new HashMap<String, State>(20);
     protected DhcpSnooper _dhcpSnooper = new FakeDhcpSnooper();
+    protected VmDataServer _vmDataServer = new JettyVmDataServer();
 
 
     @Override
@@ -235,6 +239,10 @@ public class FakeComputingResource extends ServerResourceBase implements ServerR
                 return execute((StartCommand) cmd);
             } else if (cmd instanceof CleanupNetworkRulesCmd) {
                return execute((CleanupNetworkRulesCmd)cmd);
+            } else if (cmd instanceof SavePasswordCommand) {
+               return execute((SavePasswordCommand)cmd);
+            } else if (cmd instanceof VmDataCommand) {
+               return execute((VmDataCommand)cmd);
             } else {
                 s_logger.warn("Unsupported command ");
                 return Answer.createUnsupportedCommandAnswer(cmd);
@@ -366,6 +374,7 @@ public class FakeComputingResource extends ServerResourceBase implements ServerR
         setParams(params);
         _vmManager.configure(params);
         _dhcpSnooper.configure(name, params);
+        _vmDataServer.configure(name, params);
         return true;
     }
 
@@ -402,6 +411,7 @@ public class FakeComputingResource extends ServerResourceBase implements ServerR
                         nic.setIp(addr.getHostAddress());
                     }
                 }
+                _vmDataServer.handleVmStarted(cmd.getVirtualMachine());
                 return new StartAnswer(cmd);
             } else {
                 String msg = "There is already a VM having the same name "
@@ -474,6 +484,10 @@ public class FakeComputingResource extends ServerResourceBase implements ServerR
     }
 
     protected Answer execute(final VmDataCommand cmd) {
+        return _vmDataServer.handleVmDataCommand(cmd);
+    }
+    
+    protected Answer execute(final SavePasswordCommand cmd) {
         return new Answer(cmd);
     }
     
