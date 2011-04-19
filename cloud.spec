@@ -286,6 +286,13 @@ The Cloud.com command line tools contain a few Python modules that can call clou
 
 %if %{_premium}
 
+%package premium-agent
+Summary: Cloud.com premium agent
+Requires: cloud-agent
+Group:     System Environment/Libraries
+%description premium-agent
+The Cloud.com premium agent
+
 %package test
 Summary:   Cloud.com test suite
 Requires: java >= 1.6.0
@@ -571,6 +578,10 @@ fi
 %{_libdir}/%{name}/agent/images
 %attr(0755,root,root) %{_bindir}/%{name}-setup-agent
 %dir %attr(0770,root,root) %{_localstatedir}/log/%{name}/agent
+
+%files premium-agent
+%{_javadir}/cloud-agent-premium.jar
+%attr(0755,root,root) %{_bindir}/cloudkit
 
 
 %files console-proxy
