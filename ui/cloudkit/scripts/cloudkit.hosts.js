@@ -21,15 +21,9 @@ $(document).ready(function() {
 		return;
 	}
 	
-	if (g_loginResponse.registered == "false") {
-		$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/cloudkit/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
-		$("#registration_complete_container").show();
-	} else {
-		$("#registration_complete_container").hide();
-	}
-	
 	var hostTemplate = $("#host_template");
 	var hostContainer = $("#host_container").empty();
+	var oneHostUp = false;
 	$.ajax({
 		data: createURL("command=listHosts"),				
 		success: function(json) {	
@@ -37,20 +31,33 @@ $(document).ready(function() {
 			if (hosts != null && hosts.length >0) {
 				for (var i = 0; i < hosts.length; i++) {
 					var host = hosts[i];
-					var template = hostTemplate.clone(true);
+					var template = hostTemplate.clone(true).attr("id", "host_"+host.id);
 					template.find("#hostname").text(host.name);
 					template.find("#ip").text(host.ipaddress);
 					template.find("#version").text(host.version);
-					template.find("#disconnected").text(host.disconnected);
-					template.find("#state").text(host.state);
-					if (host.state != 'Up') {
+					
+					var disconnected = new Date();
+					disconnected.setISO8601(host.disconnected);	
+					template.find("#disconnected").text(disconnected.format("m/d/Y H:i:s"));
+					var state = host.state;
+					template.find("#state").text(state);
+					if (state != 'Up') {
 						template.find("#state").removeClass("green").addClass("red");
+					} else {
+						onHostUp = true;
 					}
 					hostContainer.append(template.show());
 				}
 			}
 		}
 	});	
+	
+	if (g_loginResponse.registered == "false" && oneHostUp) {
+		$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/cloudkit/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
+		$("#registration_complete_container").show();
+	} else {
+		$("#registration_complete_container").hide();
+	}
 	
 	$("#main").show();
 });
