@@ -21,32 +21,18 @@ $.urlParam = function(name){ var results = new RegExp('[\\?&]' + name + '=([^&#]
 function logout() {
 	window.location='/client/cloudkit/login.jsp';
 	g_loginResponse = null;
+	$.cookie('loginResponse', null);
 	return true;
 }
 
+function login(json) {
+	g_loginResponse = json.loginresponse;
+	$.cookie('loginResponse', g_loginResponse, { expires: 1});
+	window.location='/client/cloudkit/cloudkit.jsp';
+}
+
 $(document).ready(function() {
-	
-	var url = $.urlParam("loginUrl");
-	if (url != undefined && url != null && url.length > 0) {
-		url = unescape("/client/api?"+url);
-		$.ajax({
-			url: url,
-			dataType: "json",
-			async: false,
-			success: function(json) {
-				g_loginResponse = json.loginresponse;
-				$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/cloudkit/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
-			},
-			error: function() {
-				logout();
-			},
-			beforeSend: function(XMLHttpRequest) {
-				return true;
-			}
-		});
-	} else {
-		logout();
-	}
+	g_loginResponse = $.cookie('loginResponse');
 });
 
 
