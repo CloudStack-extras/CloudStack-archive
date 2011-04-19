@@ -198,87 +198,160 @@
                         </div>
                     </div>
                 </div>
-                <div class="db_tabcontent" id="host" style="display:block;">
+                <div class="db_tabcontent" id="tab_hosts_content" style="display:block;">
                     <div class="db_gridbox">
                         <div class="db_gridrows header">
                             <div class="db_gridcolumns header" style="width:20%;">
                                 <div class="db_gridcelltitles header">Name</div>
                             </div>
                             <div class="db_gridcolumns header" style="width:15%;">
-                              <div class="db_gridcelltitles header">State</div>
+                                <div class="db_gridcelltitles header">State</div>
                             </div>
                             <div class="db_gridcolumns header" style="width:15%;">
-                              <div class="db_gridcelltitles header">IP Address</div>
-                          </div>
+                                <div class="db_gridcelltitles header">IP Address</div>
+                            </div>
                             <div class="db_gridcolumns header" style="width:20%;">
-                              <div class="db_gridcelltitles header">Version</div>
-                          </div>
+                                <div class="db_gridcelltitles header">Version</div>
+                            </div>
                             <div class="db_gridcolumns header" style="width:20%;">
-                              <div class="db_gridcelltitles header">Last Disconnected</div>
-                          </div>
-                          <div class="db_gridcolumns header" style="width:10%;">
-                               <div class="db_gridcelltitles header">Actions</div>
-                          </div>
-                      </div>
-                
-                      <div class="db_maingrid">
-                      	<!--Reminder for completing registrtaion starts here-->
-                      	<div class="db_gridmsgbox" style="display:block;" id="registration_complete_container">
-                        	<div class="db_gridmsgbox_content">
-                            	<p>
-									You have successfully added your first compute node.  Please <a id="registration_complete_link" href='#'>click here</a> to complete your registration process.
-								</p>
+                                <div class="db_gridcelltitles header">Last Disconnected</div>
+                            </div>
+                            <div class="db_gridcolumns header" style="width:10%;">
+                                <div class="db_gridcelltitles header">Actions</div>
                             </div>
                         </div>
-                        <!--Reminder for completing registrtaion ends here-->
-						<div id="host_container">
-                        </div>
-                        <div class="db_grid_navigationpanel">
-                            <div class="db_gridb_navbox" style="display:none"><a href="#">Prev</a> <a href="#">Next</a> </div>
-                        </div>
-                  </div>
-              </div>
+                
+                        <div class="db_maingrid">
+							<!--Reminder for completing registrtaion starts here-->
+							<div class="db_gridmsgbox" style="display:block;" id="registration_complete_container">
+								<div class="db_gridmsgbox_content">
+									<p>
+										You have successfully added your first compute node.  Please <a id="registration_complete_link" href='#'>click here</a> to complete your registration process.
+									</p>
+								</div>
+							</div>
+							<!--Reminder for completing registrtaion ends here-->
+							<div id="host_container">
+							</div>
+							<div class="db_grid_navigationpanel">
+								<div class="db_gridb_navbox" style="display:none"><a href="#">Prev</a> <a href="#">Next</a> </div>
+							</div>
+						</div>
+					</div>
+				</div>
               
-              <div class="db_tabcontent" id="instructions" style="display:none;">
+				<div class="db_tabcontent" id="tab_docs_content" style="display:none;">
                     <div class="db_gridbox">
                         <div class="db_gridrows header">
                             <div class="db_gridcolumns header" style="width:70%;">
                                 <div class="db_gridcelltitles header">Welcome to Cloud.com!</div>
                             </div>
-                           
-                      </div>
-                      <div class="db_maingrid">
+						</div>
+						<div class="db_maingrid">
+							<div class="dbinstruction_contentarea">
+								<div class="dbinstruction_submenubox">
+									<div class="dbinstruction_submenubox_content">
+										<ul>
+											<li><a href="#gettingstarted">Getting Started</a></li>
+											<li><a href="#managehost">Managing Your Hosts</a></li>
+										</ul>
+									</div>
+								</div>
                             
-                      	<div class="dbinstruction_contentarea">
-                        	<p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
-                            <h3>Where should I start?</h3>
-                            <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
-                            </p>      
+								<div id="getting_started"><a name="gettingstarted"></a>
+									<h3>Getting Started</h3>
+									<div class="db_downlaodbox">
+										<p>Your zone token is: <strong>&lt;zone token here&gt;</strong></p>
+										<a class="db_instructiondownlaodbutton" href="#">Download Installer</a>
+									</div>
+									
+									<h4>Contents</h4>
+									<p>Cloud.com's <a href="http://cloud.com/products/cloud-computing-software">CloudStack</a> agent + RightScale's <a href="http://support.rightscale.com/06-FAQs/FAQ_0178_-_What_is_inside_of_a_RightImage%3F">RightImage</a> + README</p>
+									
+									<h4>System requirements</h4>
+									<div class="dbinstruction_bulletbox">
+										<ul>
+											<li>One or more computer hosts capable of running the software. See <a href="http://linuxhcl.com/">Linux Hardware Compatibility List</a>.</li>
+											<li>Ubuntu 10.04 LTS installed on each machine. Available at <a href="http://releases.ubuntu.com/">Ubuntu Releases</a>.</li>
+											<li>KVM hypervisor installed on each machine. Available at <a href="http://www.linux-kvm.org/page/Main_Page">linux-kvm.org</a>. </li>
+										</ul>
+									</div>
+									
+									<h4>Adding a New Host</h4>
+									<p>To add a new host, install the CloudStack agent software on it.</p>
+									<div class="dbinstruction_bulletbox">
+										<ol>
+											<li>Click the Download button to get the CloudKit installation bundle.</li>
+											<li>Log in as root to the host machine where you want to install the software.
+												The machine must have <a href="http://releases.ubuntu.com/">Ubuntu 10.04 LTS</a> and the <a href="http://www.linux-kvm.org/page/Main_Page">KVM hypervisor</a> installed.                                    
+											</li>
+											<li>Place the CloudKit installation bundle on the host and untar.
+												<div class="dbinstruction_bulletbox_codebox"># tar xzf CloudStack-agent.tar.gz</div>
+												</li>
+											<li>Run the installer.
+												<div class="dbinstruction_bulletbox_codebox"># cd CloudStack</div>
+												<div class="dbinstruction_bulletbox_codebox"># ./cloudkit</div>
+											</li>
+											<li>Follow the onscreen prompts.
+												When prompted, paste in the zone token for your cloud. You can find it at the top of this page.
+												The zone token is a unique code that identifies your cloud. You will need it throughout the lifetime of your cloud.
+											</li>                                    
+											<li>Confirm that the new host appears in the CloudKit administration UI under <a href="http://99.57.184.139:8000/client/cloudkit/cloudkit.jsp">Hosts</a>.
+												You can also run this command on the host to be sure the cloud-agent software is running:
+												<div class="dbinstruction_bulletbox_codebox"># service cloud-agent status</div>
+											 </li>                                 	
+											 <li>In the <a href="http://99.57.184.139:8000/client/cloudkit/cloudkit.jsp">CloudKit administration UI</a>, click Register.
+												The new host is automatically registered with RightScale as part of your CloudKit cloud.</p>
+											</li>
+										</ol>
+									</div>
+									<p><strong>You're ready to start using your new host!</strong></p>
+									
+									<h4>More Information</h4>
+									 <p style="margin-top:5px;"><a href="#">RightScale's CoudKit docs (title and URL: TBD)</a></p>
+								</div>
+                            
+								<div id="managing_host">
+									
+									<h3>Managing Your Hosts</h3>
+									<a name="managehost"></a>
+									<p>Use the Hosts tab of the CloudKit administration UI to view host status or delete hosts.</p>
+									<p>(Want to do more than view or delete? To add a host, click the Installer tab. For other cloud management tasks, <a href="#">RightScale UI</a>.)</p>
 
-							<h3>New to Cloud.com?</h3>
-                            <p>It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
-                            
-                            <p>More information:<a href="#"> Dashboard Overview</a>    |  <a href="#">  Getting Started Guide </a></p> 
-                            
-                            <h3>Overview</h3>
-                            <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
-                            </p>
-							<div class="dbinstruction_bulletbox">
-                            	<ul>
-                                <li> It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</li>
-                                
-                                <li>The industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.</li>
-                                </ul>
-     						</div>
-						</div>   
-                             
-                        
+
+									<div class="dbinstruction_bulletbox">
+									   <ul>
+											<li><strong>Host Name</strong>: Name given to the host when it was added to the cloud</li>
+											<li><strong>State:</strong></li>
+											<li style="margin-left:15px; display:inline;">Connecting: Request to connect to the cloud has been received and the host is attempting to comply</li>
+											<li style="margin-left:15px; display:inline;">Up: Host is connected and operational in the cloud</li>
+											<li style="margin-left:15px; display:inline;">Down: Host is connected but not operational</li>
+											<li style="margin-left:15px; display:inline;">Disconnected: Host is not connected to the cloud</li>
+											<li style="margin-left:15px; display:inline;">Updating: State of the host is in transition</li>
+											<li style="margin-left:15px; display:inline;">PrepareForMaintenance: Request to put the host into maintenance mode has been received</li>
+											<li style="margin-left:15px; display:inline;">ErrorInMaintenance: Action taken during maintenance mode has failed</li>
+											<li style="margin-left:15px; display:inline;">CancelMaintenance: Request to abandon maintenance activity and restore host to previous condition has been received</li>
+											<li style="margin-left:15px; display:inline;">Maintenance: Host is in maintenance mode and is not available for new VM instances</li>
+											<li style="margin-left:15px; display:inline;">Alert: Error condition exists on the host and requires attention</li>
+											<li style="margin-left:15px; display:inline;">Removed: Request to delete the host has been received</li>
+											<li><strong>Version</strong>: Version of CloudKit software installed on the host</li>
+											<li><strong>Last Disconnected</strong>: Timestamp recording any prior disconnection of the host from the cloud</li>
+											<li><strong>Action</strong></li>
+											<li style="margin-left:15px; display:inline;"><a class="db_statistics_icon" style="margin:-5px 5px 0 0;"></a> Statistic Icon: Click to display resource usage statistics for troubleshooting and tuning</li>
+											<li style="margin-left:15px; display:inline;"><a class="db_delete_icon" style="margin:-5px 5px 0 0;"></a>Delete Icon: Click to delete host; a confirmation dialog will be displayed</li>
+										</ul>
+									</div>
+									
+									<h4>Adding a New Host</h4>
+									<p style="margin-top:5px;">To add a new host, install the CloudStack agent software on it. Click the Installer tab.</p> 
+									
+									<h4>More Information</h4>
+									<p style="margin-top:5px;"><a href="#">RightScale's CoudKit docs (title and URL: TBD)</a></p>
+								</div>
+							</div>   
                         </div>
-                        <div class="db_grid_navigationpanel">
-                            <div class="db_gridb_navbox"><a href="#">Prev</a> <a href="#">Next</a> </div>
-                        </div>
-                    </div>
-                </div>
+					</div>   
+				</div>
             </div>
         </div>
         <div id="footer">
