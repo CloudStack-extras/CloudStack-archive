@@ -69,24 +69,10 @@ public class JettyVmDataServer implements VmDataServer {
     
     public static final String USER_DATA = "user-data";
     public static final String META_DATA = "meta-data";
-    protected static final List<String> _validItems = new ArrayList<String>();
     protected String _vmDataDir;
     protected Server _jetty;
     protected Map<String, String> _ipVmMap = new HashMap<String, String>();
     protected StorageLayer _fs = new JavaStorageLayer();
-    
-    static {
-        _validItems.add("user-data");
-        _validItems.add("service-offering");
-        _validItems.add("availability-zone");
-        _validItems.add("local-ipv4" );
-        _validItems.add("local-hostname");
-        _validItems.add("public-ipv4");
-        _validItems.add("public-hostname");
-        _validItems.add("instance-id");
-        _validItems.add("vm-id");
-        _validItems.add("public-keys");
-    }
     
     public class VmDataServlet extends HttpServlet {
 
@@ -152,15 +138,25 @@ public class JettyVmDataServer implements VmDataServer {
             throws ConfigurationException {
         boolean success = true;
         try {
-
+            int vmDataPort = 80;
+            int fileservingPort = 8000;
             _vmDataDir = (String)params.get("vm.data.dir");
+            String port = (String) params.get("vm.data.port");
+            if (port != null) {
+                vmDataPort = Integer.parseInt(port);
+            }
+            port = (String) params.get("file.server.port");
+            if (port != null) {
+                fileservingPort = Integer.parseInt(port);
+            }
+            
             if (_vmDataDir == null) {
                 _vmDataDir = "/var/www/html";
             }
             success = _fs.mkdirs(_vmDataDir);
             success = success && buildIpVmMap();
             if (success) {
-                setupJetty();
+                setupJetty(vmDataPort, fileservingPort);
             }
         } catch (Exception e) {
             s_logger.warn("Failed to configure jetty", e);
@@ -175,7 +171,7 @@ public class JettyVmDataServer implements VmDataServer {
             String [] path = dir.split("/");
             String vm = path[path.length -1];
             if (vm.startsWith("i-")) {
-                String [] dataFiles = _fs.listFiles(_vmDataDir + File.pathSeparator + dir);
+                String [] dataFiles = _fs.listFiles(dir);
                 for (String dfile: dataFiles) {
                     String path2[] = dfile.split("/");
                     String ipv4file = path2[path2.length -1];
@@ -228,7 +224,7 @@ public class JettyVmDataServer implements VmDataServer {
         } 
     }
 
-    private void setupJetty() throws Exception {
+    private void setupJetty(int vmDataPort, int fileservingPort) throws Exception {
         _jetty  = new Server();
  
         SelectChannelConnector connector0 = new SelectChannelConnector();
