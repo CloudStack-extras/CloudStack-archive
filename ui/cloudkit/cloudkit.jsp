@@ -194,7 +194,7 @@
 							<div class="db_grid_tabs on" id="tab_hosts">Hosts</div>
                         </div>
                         <div class="db_grid_tabbox">
-                        	<div class="db_grid_tabs off" id="tab_docs">Documentation</div>
+                        	<div class="db_grid_tabs off" id="tab_docs">Getting Started</div>
                         </div>
                     </div>
                 </div>
