@@ -34,5 +34,5 @@ public interface VmDataServer extends Manager {
     
     public void handleVmStarted(VirtualMachineTO vm);
     
-    public void handleVmStopped(VirtualMachineTO vm);
+    public void handleVmStopped(String vmName);
 }
