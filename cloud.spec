@@ -580,7 +580,7 @@ fi
 %dir %attr(0770,root,root) %{_localstatedir}/log/%{name}/agent
 
 %files premium-agent
-%{_javadir}/cloud-agent-premium.jar
+%{_javadir}/cloud-agent-extras.jar
 %attr(0755,root,root) %{_bindir}/cloudkit
 
 

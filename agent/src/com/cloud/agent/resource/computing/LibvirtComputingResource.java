@@ -312,7 +312,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     protected List<String> _vmsKilled = new ArrayList<String>();
     
 	private VirtualRoutingResource _virtRouterResource;
-	private LibvirtStorageResource _storageResource;
+	protected LibvirtStorageResource _storageResource;
 
 	private String _pingTestPath;
 
