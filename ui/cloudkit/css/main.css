@@ -854,7 +854,7 @@ a:hover {
 
 .db_maingrid {
 	width:918px;
-	height:480px;
+	height:580px;
 	float:left;
 	margin:0;
 	padding:0;
@@ -1061,13 +1061,61 @@ a:hover {
 }
 
 
+.dbinstruction_submenubox {
+	width:880px;
+	height:auto;
+	float:left;
+	background:#FFF url(../images/db_gridrowbg.gif) repeat-x left bottom;
+	margin:0;
+	padding:0;
+}
+
+.dbinstruction_submenubox_content { 
+	width:800px; 
+	height:auto; 
+	float:left; 
+	margin:10px 0 0 10px; 
+	display:inline; 
+	padding:0 0 15px 0; 
+	list-style:none;
+}
+
+.dbinstruction_submenubox_content li {
+	width:600px; 
+	height:auto; 
+	float:left; 
+	margin:15px 0 0 10px;  
+	list-style:none; 
+	font-size:15px; 
+	background:url(../images/menu_icon.png) no-repeat top left; 
+	padding:1px 0 0 35px; 
+}
+
+.dbinstruction_submenubox_content a { 
+	color:#2c8bbc; 
+	text-align:left; 
+	font-size:15px; 
+	font-weight:normal; 
+	text-decoration:none;
+}
+
+.dbinstruction_submenubox_content a:link,.dbinstruction_submenubox_content a:visited { 
+	text-decoration:none; 
+}
+
+.dbinstruction_submenubox_content a:hover { 
+	text-decoration:underline; 
+}
+
+
 .dbinstruction_contentarea p {
 	width:880px;
 	height:auto;
 	float:left;
 	color:#333;
-	font-size:11px;
+	font-size:12px;
 	font-weight:normal;
+	line-height:16px;
 	margin:15px 0 0 0;
 	padding:0;
 }
@@ -1077,13 +1125,64 @@ a:hover {
 	width:880px;
 	height:auto;
 	float:left;
-	color:#333;
-	font-size:15px;
+	color:#f19d00;
+	font-size:18px;
 	font-weight:normal;
+	margin:30px 0 0 0;
+	padding:0;
+}
+
+.dbinstruction_contentarea h4 {
+	width:880px;
+	height:auto;
+	float:left;
+	color:#666;
+	font-size:13px;
+	font-weight:bold;
 	margin:20px 0 0 0;
 	padding:0;
 }
 
+.db_downlaodbox {
+	width:880px;
+	height:78px;
+	float:left;
+	background:url(../images/instructiondownload_bg.gif) no-repeat top left;
+	margin:10px 0 0 0;
+	padding:0;
+}
+
+.db_downlaodbox p{
+	width:400px;
+	height:auto;
+	float:left;
+	color:#666;
+	font-size:14px;
+	font-weight:normal;
+	text-align:left;
+	margin:20px 0 0 30px;
+	display:inline;
+	padding:0;
+}
+
+.db_instructiondownlaodbutton {
+	width:133px;
+	height:21px;
+	float:right;
+	background:url(../images/download_button.png) no-repeat top left;
+	margin:15px 50px 0 0;
+	color:#FFF;
+	font-size:13px;
+	text-align:center;
+	text-decoration:none;
+	padding:6px 0 0 15px;
+}
+
+.db_instructiondownlaodbutton:hover {
+	background:url(../images/download_button_hover.png) no-repeat top left;
+	text-decoration:none;
+
+}
 
 .dbinstruction_bulletbox {
 	width:880px;
@@ -1097,6 +1196,19 @@ a:hover {
 	padding:0;
 }
 
+.dbinstruction_bulletbox_codebox {
+	width:820px;
+	height:auto;
+	float:left;
+	background:#f1f1f1;
+	color:#333;
+	font-size:11px;
+	font-weight:normal;
+	list-style:none;
+	margin:7px 0 0 0;
+	padding:5px 0 5px 10px;
+}
+
 .dbinstruction_bulletbox li{
 	width:800px;
 	height:auto;
@@ -1106,7 +1218,7 @@ a:hover {
 	list-style:none;
 	background:url(../images/orange_bullet.gif) no-repeat 0 4px;
 	color:#333;
-	font-size:13px;
+	font-size:12px;
 	font-weight:normal;
 	margin:10px 0 0 0;
 	padding:0 0 5px 15px;
