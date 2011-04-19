@@ -332,8 +332,8 @@ public class JettyVmDataServer implements VmDataServer {
 
 
     @Override
-    public void handleVmStopped(VirtualMachineTO vm) {
-        String vmDataDir = _vmDataDir + File.separator + vm.getName();
+    public void handleVmStopped(String vmName) {
+        String vmDataDir = _vmDataDir + File.separator + vmName;
         try {
             _fs.cleanup(vmDataDir, _vmDataDir);
             _fs.mkdirs(vmDataDir);
