@@ -10,6 +10,7 @@
 	<link rel="stylesheet" href="css/main.css" type="text/css" />
 
 	<!-- Common libraries -->
+	<script type="text/javascript" src="scripts/json2.js"></script>
     <script type="text/javascript" src="../scripts/jquery.min.js"></script>
     <script type="text/javascript" src="../scripts/jquery-ui.custom.min.js"></script>
     <script type="text/javascript" src="../scripts/date.js"></script>
@@ -152,7 +153,7 @@
         </div>
     	<div id="header">
         	<div class="logo"></div>
-			<div class="user_links"><p>Welcome <span id="header_username">User</span></p><p><a href="#" id="header_logout">Logout</a></p></div>
+			<div class="user_links"><p>Welcome <span id="header_username"></span></p><p><a href="#" id="header_logout">Logout</a></p></div>
         </div>
         <div class="main_contentbg">
             <div class="db_gridcontainer">
@@ -198,13 +199,12 @@
                 
                       <div class="db_maingrid">
                       	<!--Reminder for completing registrtaion starts here-->
-                      	<div class="db_gridmsgbox" style="display:block;">
+                      	<div class="db_gridmsgbox" style="display:block;" id="registration_complete_container">
                         	<div class="db_gridmsgbox_content">
                             	<p>
 									You have successfully added your first compute node.  Please <a id="registration_complete_link" href='#'>click here</a> to complete your registration process.
 								</p>
                             </div>
-                            <!-- <a id="registration_complete_link" class="db_gridmsg_button" href="#">Ok</a> -->
                         </div>
                         <!--Reminder for completing registrtaion ends here-->
                        	<div class="db_gridrows">
