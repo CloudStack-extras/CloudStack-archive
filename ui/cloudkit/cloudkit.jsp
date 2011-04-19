@@ -152,6 +152,7 @@
         </div>
     	<div id="header">
         	<div class="logo"></div>
+			<div class="user_links"><p>Welcome <span id="header_username">User</span></p><p><a href="#" id="header_logout">Logout</a></p></div>
         </div>
         <div class="main_contentbg">
             <div class="db_gridcontainer">

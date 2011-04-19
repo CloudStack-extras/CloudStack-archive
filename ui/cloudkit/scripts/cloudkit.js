@@ -33,6 +33,15 @@ function login(json) {
 
 $(document).ready(function() {
 	g_loginResponse = $.cookie('loginResponse');
+	
+	if (g_loginResponse != null) {
+		$("#header_username").text(g_loginResponse.username);
+	}
+	
+	$("#header_logout").bind("click", function(event) {
+		logout();
+		return false;
+	});
 });
 
 
