@@ -145,6 +145,7 @@ import com.cloud.user.dao.UserStatisticsDao;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.Pair;
+import com.cloud.utils.PasswordGenerator;
 import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.concurrency.NamedThreadFactory;
@@ -370,23 +371,6 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
 
     }
 
-    private String rot13(final String password) {
-        final StringBuffer newPassword = new StringBuffer("");
-
-        for (int i = 0; i < password.length(); i++) {
-            char c = password.charAt(i);
-
-            if ((c >= 'a' && c <= 'm') || ((c >= 'A' && c <= 'M'))) {
-                c += 13;
-            } else if ((c >= 'n' && c <= 'z') || (c >= 'N' && c <= 'Z')) {
-                c -= 13;
-            }
-
-            newPassword.append(c);
-        }
-
-        return newPassword.toString();
-    }
 
     @Override
     public boolean savePasswordToRouter(Network network, NicProfile nic, VirtualMachineProfile<UserVm> profile) throws ResourceUnavailableException{
@@ -398,7 +382,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         
         UserVm userVm = profile.getVirtualMachine();
         String password = (String)profile.getParameter(Param.VmPassword);
-        String encodedPassword = rot13(password);
+        String encodedPassword = PasswordGenerator.rot13(password);
         
         Commands cmds = new Commands(OnError.Continue);
         SavePasswordCommand cmd = new SavePasswordCommand(encodedPassword, nic.getIp4Address(), userVm.getName());
@@ -606,7 +590,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
 
     private VmDataCommand generateVmDataCommand(DomainRouterVO router, String vmPrivateIpAddress,
             String userData, String serviceOffering, String zoneName, String guestIpAddress, String vmName, String vmInstanceName, long vmId, String publicKey) {
-        VmDataCommand cmd = new VmDataCommand(vmPrivateIpAddress);
+        VmDataCommand cmd = new VmDataCommand(vmPrivateIpAddress, vmName);
         
         cmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, router.getPrivateIpAddress());
         cmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
@@ -1232,7 +1216,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
 
         //password should be set only on default network element
         if (password != null && network.isDefault()) {
-            final String encodedPassword = rot13(password);
+            final String encodedPassword = PasswordGenerator.rot13(password);
             SavePasswordCommand cmd = new SavePasswordCommand(encodedPassword, nic.getIp4Address(), profile.getVirtualMachine().getName());
             cmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, router.getPrivateIpAddress());
             cmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
