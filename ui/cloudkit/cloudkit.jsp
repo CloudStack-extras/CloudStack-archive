@@ -28,6 +28,30 @@
     <title>CloudKit</title>
 </head>
 <body>
+	<!-- Host template -->
+	<div class="db_gridrows" id="host_template" style="display:none">
+		<div class="db_gridcolumns" style="width:20%;">
+			<div class="db_gridcelltitles" id="hostname"></div>
+		</div>
+		<div class="db_gridcolumns" style="width:15%;">
+		  <div class="db_gridcelltitles green" id="state"></div>
+	    </div>
+		<div class="db_gridcolumns" style="width:15%;">
+		  <div class="db_gridcelltitles" id="ip"></div>
+	    </div>
+		<div class="db_gridcolumns" style="width:20%;">
+		  <div class="db_gridcelltitles" id="version"></div>
+	    </div>
+		<div class="db_gridcolumns" style="width:20%;">
+		  <div class="db_gridcelltitles" id="disconnected"></div>
+	    </div>
+		<div class="db_gridcolumns" style="width:10%;">
+			<a class="db_statistics_icon" href="#" id="statistics"></a>
+			<a class="db_delete_icon" style="margin-left:25px" href="#" id="delete_host"></a>
+		</div>
+	</div>
+	<!-- End Host template -->
+
 	<div id="main" style="display:none">
     	<div id="dialogoverlay" style="display:none;">
             <div class="overlay_black"></div>
@@ -207,54 +231,10 @@
                             </div>
                         </div>
                         <!--Reminder for completing registrtaion ends here-->
-                       	<div class="db_gridrows">
-                                <div class="db_gridcolumns" style="width:20%;">
-                                    <div class="db_gridcelltitles">test8.lab.vmops.com</div>
-                                </div>
-                                <div class="db_gridcolumns" style="width:15%;">
-                                  <div class="db_gridcelltitles green">Up</div>
-                              </div>
-                                <div class="db_gridcolumns" style="width:15%;">
-                                  <div class="db_gridcelltitles">192.168.10.210</div>
-                              </div>
-                                <div class="db_gridcolumns" style="width:20%;">
-                                  <div class="db_gridcelltitles">9.1.2011-01-13T21:54:37Z</div>
-                              </div>
-                                <div class="db_gridcolumns" style="width:20%;">
-                                  <div class="db_gridcelltitles">2011-03-26T17:25:35-0700</div>
-                              </div>
-                                <div class="db_gridcolumns" style="width:10%;">
-                                    <a class="db_statistics_icon" href="#"></a>
-                                 	
-                                    <a class="db_delete_icon" style="margin-left:25px" href="#"></a>
-                                </div>
-                           	
-                         </div>
-                            
-                        <div class="db_gridrows">
-                            <div class="db_gridcolumns" style="width:20%;">
-                                <div class="db_gridcelltitles">test8.lab.vmops.com</div>
-                            </div>
-                            <div class="db_gridcolumns" style="width:15%;">
-                                <div class="db_gridcelltitles red">Disconnected</div>
-                            </div>
-                            <div class="db_gridcolumns" style="width:15%;">
-                                <div class="db_gridcelltitles">192.168.10.210</div>
-                            </div>
-                                <div class="db_gridcolumns" style="width:20%;">
-                                    <div class="db_gridcelltitles">9.1.2011-01-13T21:54:37Z</div>
-                                </div>
-                                <div class="db_gridcolumns" style="width:20%;">
-                                    <div class="db_gridcelltitles">2011-03-26T17:25:35-0700</div>
-                                </div>
-                                <div class="db_gridcolumns" style="width:10%;">
-                                    <a class="db_statistics_icon" href="#"></a>
-                                    <a class="db_delete_icon" style="margin-left:25px" href="#"></a>
-                                </div>
-                            </div>  
+						<div id="host_container">
                         </div>
                         <div class="db_grid_navigationpanel">
-                            <div class="db_gridb_navbox"><a href="#">Prev</a> <a href="#">Next</a> </div>
+                            <div class="db_gridb_navbox" style="display:none"><a href="#">Prev</a> <a href="#">Next</a> </div>
                         </div>
                   </div>
               </div>
