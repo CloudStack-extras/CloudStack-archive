@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
+$.urlParam = function(name){ var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href); if (!results) { return 0; } return results[1] || 0;}
+
 $(document).ready(function() {
 	var url = $.urlParam("loginUrl");
 	if (url != undefined && url != null && url.length > 0) {

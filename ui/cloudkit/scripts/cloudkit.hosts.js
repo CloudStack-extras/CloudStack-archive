@@ -15,20 +15,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
+ 
 $(document).ready(function() {
 	if (g_loginResponse == null) {
 		logout();
 		return;
 	}
 	
+	// Setup zone key
+	$.ajax({
+		data: createURL("command=listZones&domainid="+g_loginResponse.domainid),				
+		success: function(json) {	
+			var zones = json.listzonesresponse.zone;
+			if (zones != null && zones.length >0) {
+				$("#zone_token").text(zones[0].zonetoken);
+			}
+		}
+	});	
+	
 	var hostTemplate = $("#host_template");
 	var hostContainer = $("#host_container").empty();
 	var oneHostUp = false;
+	var atLeastOneHost = false;
 	$.ajax({
 		data: createURL("command=listHosts"),				
 		success: function(json) {	
 			var hosts = json.listhostsresponse.host;
 			if (hosts != null && hosts.length >0) {
+				atLeastOneHost = true;
 				for (var i = 0; i < hosts.length; i++) {
 					var host = hosts[i];
 					var template = hostTemplate.clone(true).attr("id", "host_"+host.id);
@@ -44,7 +58,7 @@ $(document).ready(function() {
 					if (state != 'Up') {
 						template.find("#state").removeClass("green").addClass("red");
 					} else {
-						onHostUp = true;
+						oneHostUp = true;
 					}
 					hostContainer.append(template.show());
 				}
@@ -52,9 +66,13 @@ $(document).ready(function() {
 		}
 	});	
 	
-	if (g_loginResponse.registered == "false" && oneHostUp) {
-		$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/cloudkit/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
-		$("#registration_complete_container").show();
+	if (g_loginResponse.registered == "false") {
+		if (!atLeastOneHost) {
+			$("#tab_docs").click();
+		} else if (oneHostUp) {
+			$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/cloudkit/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
+			$("#registration_complete_container").show();
+		}
 	} else {
 		$("#registration_complete_container").hide();
 	}

@@ -223,7 +223,7 @@
                 
                         <div class="db_maingrid">
 							<!--Reminder for completing registrtaion starts here-->
-							<div class="db_gridmsgbox" style="display:block;" id="registration_complete_container">
+							<div class="db_gridmsgbox" style="display:none;" id="registration_complete_container">
 								<div class="db_gridmsgbox_content">
 									<p>
 										You have successfully added your first compute node.  Please <a id="registration_complete_link" href='#'>click here</a> to complete your registration process.
@@ -261,7 +261,7 @@
 								<div id="getting_started"><a name="gettingstarted"></a>
 									<h3>Getting Started</h3>
 									<div class="db_downlaodbox">
-										<p>Your zone token is: <strong>&lt;zone token here&gt;</strong></p>
+										<p>Your zone token is: <strong id="zone_token"></strong></p>
 										<a class="db_instructiondownlaodbutton" href="#">Download Installer</a>
 									</div>
 									
