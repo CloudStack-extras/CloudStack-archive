@@ -226,7 +226,7 @@
 							<div class="db_gridmsgbox" style="display:none;" id="registration_complete_container">
 								<div class="db_gridmsgbox_content">
 									<p>
-										You have successfully added your first compute node.  Please <a id="registration_complete_link" href='#'>click here</a> to complete your registration process.
+										You have successfully added your first compute node.  Please complete your registration process, please click here: <a id="registration_complete_link" href='#'>Complete Registration</a>
 									</p>
 								</div>
 							</div>
@@ -286,21 +286,21 @@
 												The machine must have <a href="http://releases.ubuntu.com/">Ubuntu 10.04 LTS</a> and the <a href="http://www.linux-kvm.org/page/Main_Page">KVM hypervisor</a> installed.                                    
 											</li>
 											<li>Place the CloudKit installation bundle on the host and untar.
-												<div class="dbinstruction_bulletbox_codebox"># tar xzf CloudStack-agent.tar.gz</div>
+												<div class="dbinstruction_bulletbox_codebox"># tar xzf &lt;Installer file name&gt;.tar.gz</div>
 												</li>
 											<li>Run the installer.
-												<div class="dbinstruction_bulletbox_codebox"># cd CloudStack</div>
+												<div class="dbinstruction_bulletbox_codebox"># cd &lt;Directory of extracted installer&gt;</div>
 												<div class="dbinstruction_bulletbox_codebox"># ./cloudkit</div>
 											</li>
 											<li>Follow the onscreen prompts.
 												When prompted, paste in the zone token for your cloud. You can find it at the top of this page.
 												The zone token is a unique code that identifies your cloud. You will need it throughout the lifetime of your cloud.
 											</li>                                    
-											<li>Confirm that the new host appears in the CloudKit administration UI under <a href="http://99.57.184.139:8000/client/cloudkit/cloudkit.jsp">Hosts</a>.
+											<li>Confirm that the new host appears in the Hosts tab of the <a href="http://99.57.184.139:8000/client/cloudkit/cloudkit.jsp">CloudKit administration UI</a>.
 												You can also run this command on the host to be sure the cloud-agent software is running:
 												<div class="dbinstruction_bulletbox_codebox"># service cloud-agent status</div>
 											 </li>                                 	
-											 <li>In the <a href="http://99.57.184.139:8000/client/cloudkit/cloudkit.jsp">CloudKit administration UI</a>, click Register.
+											 <li>Click <a id="registration_complete_link" href='#'>Complete Registration</a>.
 												The new host is automatically registered with RightScale as part of your CloudKit cloud.</p>
 											</li>
 										</ol>
@@ -321,7 +321,7 @@
 
 									<div class="dbinstruction_bulletbox">
 									   <ul>
-											<li><strong>Host Name</strong>: Name given to the host when it was added to the cloud</li>
+											<li><strong>Host Name</strong>: IP address or fully-qualified DNS name of the host</li>
 											<li><strong>State:</strong></li>
 											<li style="margin-left:15px; display:inline;">Connecting: Request to connect to the cloud has been received and the host is attempting to comply</li>
 											<li style="margin-left:15px; display:inline;">Up: Host is connected and operational in the cloud</li>
@@ -343,7 +343,7 @@
 									</div>
 									
 									<h4>Adding a New Host</h4>
-									<p style="margin-top:5px;">To add a new host, install the CloudStack agent software on it. Click the Installer tab.</p> 
+									<p style="margin-top:5px;">To add a new host, install the CloudStack agent software on it. Click the Getting Started tab and follow the <a href="#gettingstarted">installation steps</a>.</p> 
 									
 									<h4>More Information</h4>
 									<p style="margin-top:5px;"><a href="#">RightScale's CoudKit docs (title and URL: TBD)</a></p>
