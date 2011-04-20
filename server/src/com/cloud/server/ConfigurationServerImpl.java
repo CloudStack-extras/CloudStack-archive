@@ -394,19 +394,17 @@ public class ConfigurationServerImpl implements ConfigurationServer {
 		}
 	}
 
-    private String getBase64Keystore(String keystorePath) {
+    private String getBase64Keystore(String keystorePath) throws IOException {
         byte[] storeBytes = new byte[4094];
         int len = 0;
         try {
             len = new FileInputStream(keystorePath).read(storeBytes);
         } catch (EOFException e) {
         } catch (Exception e) {
-            s_logger.error("Cannot read the generated keystore file",e);
-            throw new CloudRuntimeException("Cannot read the generated keystore file");
+            throw new IOException("Cannot read the generated keystore file");
         }
         if (len > 3000) { // Base64 codec would enlarge data by 1/3, and we have 4094 bytes in database entry at most
-            s_logger.error("KeyStore is too big for database! Length" + len);
-            throw new CloudRuntimeException("KeyStore is too big for database! Length " + len);
+            throw new IOException("KeyStore is too big for database! Length " + len);
         }
 
         byte[] encodeBytes = new byte[len];
@@ -416,7 +414,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
     }
 
     @DB
-    private void createSSLKeystoreDBEntry(String encodedKeystore) {
+    private void createSSLKeystoreDBEntry(String encodedKeystore) throws IOException {
         String insertSQL = "INSERT INTO `cloud`.`configuration` (category, instance, component, name, value, description) " +
             "VALUES ('Hidden','DEFAULT', 'management-server','ssl.keystore', '" + encodedKeystore +"','SSL Keystore for the management servers')";
         Transaction txn = Transaction.currentTxn();
@@ -428,11 +426,11 @@ public class ConfigurationServerImpl implements ConfigurationServer {
             }
         } catch (SQLException ex) {
             s_logger.error("SQL of the SSL Keystore failed", ex);
-            throw new CloudRuntimeException("SQL of the SSL Keystore failed");
+            throw new IOException("SQL of the SSL Keystore failed");
         }
     }
 
-    private void generateDefaultKeystore(String keystorePath) {
+    private void generateDefaultKeystore(String keystorePath) throws IOException {
         String cn = "Cloudstack User";
         String ou;
 
@@ -457,7 +455,10 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         String o = ou;
         String c = "Unknown";
         String dname = "\"cn=" + cn + ", ou=" + ou +", o=" + o + ", c=" + c + "\"";
-        Script.runSimpleBashScript("keytool -genkey -keystore " + keystorePath + " -storepass vmops.com -keypass vmops.com -dname " + dname);
+        String result = Script.runSimpleBashScript("keytool -genkey -keystore " + keystorePath + " -storepass vmops.com -keypass vmops.com -dname " + dname);
+        if (result != null) {
+        	throw new IOException("Fail to generate certificate!");
+        }
     }
 
     protected void updateSSLKeystore() {
@@ -471,30 +472,32 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         File keystoreFile = new File(keystorePath);
         boolean dbExisted = (dbString != null && !dbString.isEmpty());
 
-        if (!dbExisted) {
-            if  (!keystoreFile.exists()) {
-                generateDefaultKeystore(keystorePath);
+        try {
+            if (!dbExisted) {
+                if  (!keystoreFile.exists()) {
+                    generateDefaultKeystore(keystorePath);
+                }
+                String base64Keystore = getBase64Keystore(keystorePath);
+                createSSLKeystoreDBEntry(base64Keystore);
+            } else if (keystoreFile.exists()) { // and dbExisted
+                // Check if they are the same one, otherwise override with local keystore
+                String base64Keystore = getBase64Keystore(keystorePath);
+                if (base64Keystore != dbString) {
+                    _configDao.update("ssl.keystore", base64Keystore);
+                }
+            } else { // !keystoreFile.exists() and dbExisted
+                // Export keystore to local file
+                byte[] storeBytes = Base64.decodeBase64(dbString);
+                try {
+                    FileOutputStream fo = new FileOutputStream(keystorePath);
+                    fo.write(storeBytes);
+                    fo.close();
+                } catch (Exception e) {
+                    throw new IOException("Fail to create keystore file!", e);
+                }
             }
-            String base64Keystore = getBase64Keystore(keystorePath);
-            createSSLKeystoreDBEntry(base64Keystore);
-        } else if (keystoreFile.exists()) { // and dbExisted
-            // Check if they are the same one, otherwise override with local keystore
-            String base64Keystore = getBase64Keystore(keystorePath);
-            if (base64Keystore != dbString) {
-                _configDao.update("ssl.keystore", base64Keystore);
-            }
-        } else { // !keystoreFile.exists() and dbExisted
-            // Export keystore to local file
-            byte[] storeBytes = Base64.decodeBase64(dbString);
-            try {
-                FileOutputStream fo = new FileOutputStream(keystorePath);
-                fo.write(storeBytes);
-                fo.close();
-            } catch (EOFException e) {
-            } catch (Exception e) {
-                s_logger.error("Cannot write to keystore file",e);
-                throw new CloudRuntimeException("Cannot write to keystore file");
-            }
+        } catch (Exception ex) {
+            s_logger.warn("Would use fail-safe keystore to continue.", ex);
         }
     }
 
