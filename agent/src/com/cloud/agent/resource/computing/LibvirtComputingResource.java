@@ -1676,7 +1676,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 				_vms.put(vmName, state);
 			}
 		} else {
-		    destroy_network_rules_for_vm(vmName);
+		    destroy_network_rules_for_vm(conn, vmName);
 			cleanupVM(conn, vmName, getVnetId(VirtualMachineName.getVnet(vmName)));
 		}
 
@@ -1896,7 +1896,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         	    macAddress = nics.get(0).getMacAddress();
         	}
         	
-        	destroy_network_rules_for_vm(vmName);
+        	destroy_network_rules_for_vm(conn, vmName);
             String result = stopVM(conn, vmName, defineOps.UNDEFINE_VM);
             
             final String result2 = cleanupVnet(conn, cmd.getVnet());
@@ -3163,14 +3163,22 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	return true;
     }
     
-    protected boolean destroy_network_rules_for_vm(String vmName) {
+    protected boolean destroy_network_rules_for_vm(Connect conn, String vmName) {
     	if (!_can_bridge_firewall) {
             return false;
         }
-    	
+    	String vif = null;
+    	List<InterfaceDef> intfs = getInterfaces(conn, vmName);
+    	if (intfs.size() > 0) {
+    	    InterfaceDef intf = intfs.get(0);
+    	    vif = intf.getDevName();
+    	}
     	Script cmd = new Script(_securityGroupPath, _timeout, s_logger);
     	cmd.add("destroy_network_rules_for_vm");
     	cmd.add("--vmname");
+    	if (vif != null) {
+    	    cmd.add("--vif", vif);
+    	}
     	cmd.add(vmName);
     	String result = cmd.execute();
     	if (result != null) {
@@ -3210,7 +3218,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	return true;
     }
     
-    protected boolean post_default_network_rules(Connect conn, String vmName, NicTO nic, Long vmId) {
+    protected boolean post_default_network_rules(Connect conn, String vmName, NicTO nic, Long vmId, InetAddress dhcpServerIp, String hostIp) {
         if (!_can_bridge_firewall) {
             return false;
         }
@@ -3232,6 +3240,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         cmd.add("--vmmac", nic.getMac());
         cmd.add("--vif", vif);
         cmd.add("--brname", brname);
+        if (dhcpServerIp != null)
+            cmd.add("--dhcpSvr", dhcpServerIp.getHostAddress());
+        
+        cmd.add("--hostIp", hostIp);
         String result = cmd.execute();
         if (result != null) {
             return false;

@@ -27,6 +27,8 @@ import com.cloud.utils.component.Adapter;
 public interface DhcpSnooper   extends Adapter{
 
     public  InetAddress getIPAddr(String macAddr, String vmName);
+    
+    public InetAddress getDhcpServerIP();
 
     public  void cleanup(String macAddr, String vmName);
 
