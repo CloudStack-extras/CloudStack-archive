@@ -22,7 +22,6 @@ var ERROR_VMOPS_ACCOUNT_ERROR = 531;
 
 var g_loginResponse = null;
 var g_mySession = null;
-$.urlParam = function(name){ var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href); if (!results) { return 0; } return results[1] || 0;}
  
 function logout() {
 	window.location='/client/cloudkit/login.jsp';
