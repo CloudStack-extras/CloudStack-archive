@@ -33,11 +33,13 @@ import com.cloud.agent.api.WatchNetworkAnswer;
 import com.cloud.agent.api.WatchNetworkCommand;
 import com.cloud.host.HostVO;
 import com.cloud.host.Status;
+import com.cloud.host.dao.HostDao;
 import com.cloud.user.UserStatisticsVO;
 import com.cloud.user.dao.UserStatisticsDao;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.Transaction;
+import com.cloud.utils.net.MacAddress;
 import com.cloud.vm.DomainRouterVO;
 import com.cloud.vm.State;
 import com.cloud.vm.VirtualMachineName;
@@ -52,8 +54,12 @@ public class RouterStatsListener implements Listener {
     private UserStatisticsDao _statsDao;
     @Inject
     private AgentManager _agentMgr;
+    @Inject
+    private HostDao _hostDao;
     
     private int _interval;
+    
+    private long mgmtSrvrId = MacAddress.getMacAddress().toLong();
     
     public RouterStatsListener(int interval) {
         _interval = interval;
@@ -70,6 +76,20 @@ public class RouterStatsListener implements Listener {
             if (!(answer instanceof WatchNetworkAnswer)) {
                 continue;
             }
+            /*
+             * Ignore WatchNetworkAnswer from agents not owned by this mgmt server 
+             */
+    		HostVO host = _hostDao.findById(agentId);
+    		if(host != null) {
+    			if((host.getManagementServerId() == null) || (mgmtSrvrId != host.getManagementServerId())){
+    				s_logger.warn("Not the owner. Discarding WatchNetworkAnswer for Agent: "+agentId);
+    				return false;
+    			}
+    		} else {
+    			s_logger.warn("Agent not found. Discarding WatchNetworkAnswer for Agent: "+agentId);
+				return false;
+    		}
+            
             WatchNetworkAnswer watch = (WatchNetworkAnswer)answer;
             Collection<String> map = watch.getAllVms();
             for (String vmName : map) {
