@@ -232,7 +232,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     private final String _SSHKEYSPATH = "/root/.ssh";
     private final String _SSHPRVKEYPATH = _SSHKEYSPATH + File.separator + "id_rsa.cloud";
     private final String _SSHPUBKEYPATH = _SSHKEYSPATH + File.separator + "id_rsa.pub.cloud";
-    private final String _mountPoint = "/mnt";
+    private String _mountPoint = "/mnt";
     StorageLayer _storage;
     
 	private static final class KeyValueInterpreter extends OutputInterpreter {
@@ -639,6 +639,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 		_localGateway = Script.runSimpleBashScript("ip route |grep default|awk '{print $3}'");
 		if (_localGateway == null) {
 			s_logger.debug("Failed to found the local gateway");
+		}
+		
+		_mountPoint = (String)params.get("mount.path");
+		if (_mountPoint == null) {
+		    _mountPoint = "/mnt";
 		}
 		
         _storageResource = new LibvirtStorageResource(this, _storage, _createvmPath, _timeout, _mountPoint, _monitor);
