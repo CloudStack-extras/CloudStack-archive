@@ -31,6 +31,7 @@ import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.dc.ClusterVO;
 import com.cloud.dc.dao.ClusterDao;
 import com.cloud.deploy.DataCenterDeployment;
+import com.cloud.deploy.DeploymentPlan;
 import com.cloud.deploy.DeploymentPlanner.ExcludeList;
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
@@ -132,7 +133,7 @@ public abstract class AbstractStoragePoolAllocator extends AdapterBase implement
 	}
 	
 	protected boolean checkPool(ExcludeList avoid, StoragePoolVO pool, DiskProfile dskCh, VMTemplateVO template, List<VMTemplateStoragePoolVO> templatesInPool, 
-			StatsCollector sc) {
+			StatsCollector sc, DeploymentPlan plan) {
 		
 		if (s_logger.isDebugEnabled()) {
             s_logger.debug("Checking if storage pool is suitable, name: " + pool.getName()+ " ,poolId: "+ pool.getId());
@@ -225,22 +226,20 @@ public abstract class AbstractStoragePoolAllocator extends AdapterBase implement
 		}
 
 		if ((template != null) && !tmpinstalled) {
-			// If the template that was passed into this allocator is not installed in the storage pool,
-			// add 3 * (template size on secondary storage) to the running total
-			HostVO secondaryStorageHost = _storageMgr.getSecondaryStorageHost(pool.getDataCenterId());
-			if (secondaryStorageHost == null) {
-				return false;
-			} else {
-				VMTemplateHostVO templateHostVO = _templateHostDao.findByHostTemplate(secondaryStorageHost.getId(), template.getId());
-				if (templateHostVO == null) {
-					return false;
-				} else {
-					s_logger.debug("For template: " + template.getName() + ", using template size multiplier: " + 2);
-					long templateSize = templateHostVO.getSize();
-	                long templatePhysicalSize = templateHostVO.getPhysicalSize();
-					totalAllocatedSize +=  (templateSize + _extraBytesPerVolume) + (templatePhysicalSize + _extraBytesPerVolume);
-				}
-			}
+		    // If the template that was passed into this allocator is not installed in the storage pool,
+		    // add 3 * (template size on secondary storage) to the running total
+		    VMTemplateHostVO templateHostVO = _storageMgr.findVmTemplateHost(template.getId(), plan.getDataCenterId(), plan.getPodId());
+
+		    if (templateHostVO == null) {
+		        s_logger.info("Did not find template downloaded on secondary hosts in zone " + plan.getDataCenterId());
+		        return false;
+		    } else {
+		        s_logger.debug("For template: " + template.getName() + ", using template size multiplier: " + 2);
+		        long templateSize = templateHostVO.getSize();
+		        long templatePhysicalSize = templateHostVO.getPhysicalSize();
+		        totalAllocatedSize +=  (templateSize + _extraBytesPerVolume) + (templatePhysicalSize + _extraBytesPerVolume);
+		    }
+
 		}
 
 		long askingSize = dskCh.getSize();

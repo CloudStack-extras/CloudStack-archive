@@ -448,9 +448,14 @@ public class CloudZonesStartupProcessor implements StartupCommandProcessor {
             s_logger.debug("Successfully loaded the DataCenter from the zone token passed in ");
         }
         
-
+        HostPodVO pod = findPod(startup, zone.getId(), Host.Type.Routing); //yes, routing
+        Long podId = null;
+        if (pod != null) {
+            s_logger.debug("Found pod " + pod.getName() + " for the secondary storage host " + startup.getName());
+            podId = pod.getId();
+        }
         host.setDataCenterId(zone.getId());
-        host.setPodId(null);
+        host.setPodId(podId);
         host.setClusterId(null);
         host.setPrivateIpAddress(startup.getPrivateIpAddress());
         host.setPrivateNetmask(startup.getPrivateNetmask());
@@ -478,5 +483,23 @@ public class CloudZonesStartupProcessor implements StartupCommandProcessor {
         }
 
     }
+	
+	private HostPodVO findPod(StartupCommand startup, long zoneId, Host.Type type) {
+	    HostPodVO pod = null;
+	    List<HostPodVO> podsInZone = _podDao.listByDataCenterId(zoneId);
+        for (HostPodVO hostPod : podsInZone) {
+            if (checkCIDR(type, hostPod, startup.getPrivateIpAddress(),
+                    startup.getPrivateNetmask())) {
+                pod = hostPod;
+                
+                //found the default POD having the same subnet.
+                updatePodNetmaskIfNeeded(pod, startup.getPrivateNetmask());
+                
+                break;
+            }
+        }
+        return pod;
+
+	}
 
 }
