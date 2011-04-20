@@ -1756,7 +1756,7 @@ public class StorageManagerImpl implements StorageManager {
             try {
                 s_logger.info("Storage Garbage Collection Thread is running.");
 
-                GlobalLock scanLock = GlobalLock.getInternLock("clustermgr.scan");
+                GlobalLock scanLock = GlobalLock.getInternLock("storagemgr.cleanup");
                 try {
                     if (scanLock.lock(3)) {
                         try {
