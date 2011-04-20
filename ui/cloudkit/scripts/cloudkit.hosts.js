@@ -70,7 +70,7 @@ $(document).ready(function() {
 		if (!atLeastOneHost) {
 			$("#tab_docs").click();
 		} else if (oneHostUp) {
-			$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/cloudkit/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
+			$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/mycloud/cdc/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
 			$("#registration_complete_container").show();
 		}
 	} else {
