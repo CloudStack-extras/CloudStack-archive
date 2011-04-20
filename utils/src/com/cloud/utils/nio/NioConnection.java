@@ -166,7 +166,7 @@ public abstract class NioConnection implements Runnable {
         
         if (!isClient) {
         	char[] passphrase = "vmops.com".toCharArray();
-        	ks.load(NioConnection.class.getResourceAsStream("/nioserver.keystore"), passphrase);
+        	ks.load(new FileInputStream("/etc/cloud/management/keystore"), passphrase);
         	kmf.init(ks, passphrase);
         	tmf.init(ks);
         	tms = tmf.getTrustManagers();
