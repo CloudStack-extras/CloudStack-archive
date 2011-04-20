@@ -466,7 +466,8 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         }
 
         String dbString = _configDao.getValue("ssl.keystore");
-        String keystorePath = "/etc/cloud/management/keystore";
+        String CATALINA_HOME = System.getenv("CATALINA_HOME");
+        String keystorePath = CATALINA_HOME + "/conf/cloud.keystore";
         File keystoreFile = new File(keystorePath);
         boolean dbExisted = (dbString != null && !dbString.isEmpty());
 
