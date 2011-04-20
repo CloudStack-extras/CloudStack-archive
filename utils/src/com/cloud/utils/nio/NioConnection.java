@@ -166,7 +166,9 @@ public abstract class NioConnection implements Runnable {
         
         if (!isClient) {
         	char[] passphrase = "vmops.com".toCharArray();
-        	ks.load(new FileInputStream("/etc/cloud/management/keystore"), passphrase);
+        	String CATALINA_HOME = System.getenv("CATALINA_HOME");
+        	String keystorePath = CATALINA_HOME + "/conf/cloud.keystore";
+        	ks.load(new FileInputStream(keystorePath), passphrase);
         	kmf.init(ks, passphrase);
         	tmf.init(ks);
         	tms = tmf.getTrustManagers();
