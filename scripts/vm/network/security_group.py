@@ -63,7 +63,7 @@ def ipset(ipsetname, proto, start, end, ips):
     return result
 '''
 
-def destroy_network_rules_for_vm(vm_name):
+def destroy_network_rules_for_vm(vm_name, vif=None):
     vmchain = vm_name
     vmchain_default = None
     
@@ -95,6 +95,16 @@ def destroy_network_rules_for_vm(vm_name):
     except:
         logging.debug("Ignoring failure to delete  chain " + vmchain)
     
+    if vif is not None:
+        try:
+            dnats = execute("iptables -t nat -S | grep " + vif + " | sed 's/-A/-D'").split("\n")
+            for dnat in dnats:
+                try:
+                    execute("iptables -t nat " + dnat)
+                except:
+                    logging.debug("Igoring failure to delete dnat: " + dnat) 
+        except:
+            pass
     remove_rule_log_for_vm(vm_name)
     
     if 1 in [ vm_name.startswith(c) for c in ['r-', 's-', 'v-'] ]:
@@ -242,14 +252,27 @@ def default_network_rules(vm_name, vm_id, vm_ip, vm_mac, vif, brname):
     logging.debug("Programmed default rules for vm " + vm_name)
     return 'true'
     
-def post_default_network_rules(vm_name, vm_id, vm_ip, vm_mac, vif, brname):
+def post_default_network_rules(vm_name, vm_id, vm_ip, vm_mac, vif, brname, dhcpSvr, hostIp):
     vmchain_default = '-'.join(vm_name.split('-')[:-1]) + "-def"
     vmchain_in = vm_name + "-in"
     vmchain_out = vm_name + "-out"
     domID = getvmId(vm_name)
-    execute("iptables -I " + vmchain_default + " 4 -m physdev --physdev-is-bridged --physdev-in " + vif  + " --source " +  vm_ip +  " -j ACCEPT")
-    execute("ebtables -t nat -I " + vmchain_in  +  " 4 -p ARP --arp-ip-src ! " + vm_ip + " -j DROP") 
-    execute("ebtables -t nat -I " + vmchain_out + " 2 -p ARP --arp-ip-dst ! " + vm_ip + " -j DROP") 
+    try:
+        execute("iptables -I " + vmchain_default + " 4 -m physdev --physdev-is-bridged --physdev-in " + vif  + " --source " +  vm_ip +  " -j ACCEPT")
+    except:
+        pass
+    try:
+        execute("iptables -t nat -A PREROUTING -p tcp -m physdev --physdev-in " + vif + " -m tcp --dport 80 -d " + dhcpSvr + " -j DNAT --to-destination " + hostIp + ":80")
+    except:
+        pass
+    try:
+        execute("ebtables -t nat -I " + vmchain_in  +  " 4 -p ARP --arp-ip-src ! " + vm_ip + " -j DROP") 
+    except:
+        pass
+    try:
+        execute("ebtables -t nat -I " + vmchain_out + " 2 -p ARP --arp-ip-dst ! " + vm_ip + " -j DROP") 
+    except:
+        pass
     if write_rule_log_for_vm(vm_name, vm_id, vm_ip, domID, '_initial_', '-1') == False:
             logging.debug("Failed to log default network rules, ignoring")
 def delete_rules_for_vm_in_bridge_firewall_chain(vmName):
@@ -575,6 +598,8 @@ if __name__ == '__main__':
     parser.add_option("--seq", dest="seq")
     parser.add_option("--rules", dest="rules")
     parser.add_option("--brname", dest="brname")
+    parser.add_option("--dhcpSvr", dest="dhcpSvr")
+    parser.add_option("--hostIp", dest="hostIp")
     (option, args) = parser.parse_args()
     cmd = args[0]
     if cmd == "can_bridge_firewall":
@@ -582,7 +607,7 @@ if __name__ == '__main__':
     elif cmd == "default_network_rules":
         default_network_rules(option.vmName, option.vmID, option.vmIP, option.vmMAC, option.vif, option.brname)
     elif cmd == "destroy_network_rules_for_vm":
-        destroy_network_rules_for_vm(option.vmName) 
+        destroy_network_rules_for_vm(option.vmName, option.vif) 
     elif cmd == "default_network_rules_systemvm":
         default_network_rules_systemvm(option.vmName, option.brname)
     elif cmd == "get_rule_logs_for_vms":
@@ -592,4 +617,4 @@ if __name__ == '__main__':
     elif cmd == "cleanup_rules":
         cleanup_rules()
     elif cmd == "post_default_network_rules":
-        post_default_network_rules(option.vmName, option.vmID, option.vmIP, option.vmMAC, option.vif, option.brname)
+        post_default_network_rules(option.vmName, option.vmID, option.vmIP, option.vmMAC, option.vif, option.brname, option.dhcpSvr, option.hostIp)

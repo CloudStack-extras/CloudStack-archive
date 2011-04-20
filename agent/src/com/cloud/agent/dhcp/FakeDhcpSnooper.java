@@ -115,4 +115,10 @@ public class FakeDhcpSnooper implements DhcpSnooper {
 
     }
 
+    @Override
+    public InetAddress getDhcpServerIP() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

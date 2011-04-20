@@ -71,6 +71,7 @@ public class JettyVmDataServer implements VmDataServer {
     public static final String META_DATA = "meta-data";
     protected String _vmDataDir;
     protected Server _jetty;
+    protected String _hostIp;
     protected Map<String, String> _ipVmMap = new HashMap<String, String>();
     protected StorageLayer _fs = new JavaStorageLayer();
     
@@ -149,6 +150,7 @@ public class JettyVmDataServer implements VmDataServer {
             if (port != null) {
                 fileservingPort = Integer.parseInt(port);
             }
+            _hostIp = (String) params.get("host.ip");
             
             if (_vmDataDir == null) {
                 _vmDataDir = "/var/www/html";
@@ -228,13 +230,13 @@ public class JettyVmDataServer implements VmDataServer {
         _jetty  = new Server();
  
         SelectChannelConnector connector0 = new SelectChannelConnector();
-        connector0.setHost("127.0.0.1");
+        connector0.setHost(_hostIp);
         connector0.setPort(fileservingPort);
         connector0.setMaxIdleTime(30000);
         connector0.setRequestBufferSize(8192);
  
         SelectChannelConnector connector1 = new SelectChannelConnector();
-        connector1.setHost("127.0.0.1");
+        connector1.setHost(_hostIp);
         connector1.setPort(vmDataPort);
         connector1.setThreadPool(new QueuedThreadPool(5));
         connector1.setMaxIdleTime(30000);
@@ -320,7 +322,7 @@ public class JettyVmDataServer implements VmDataServer {
                         _ipVmMap.put(nic.getIp(), vm.getName());
                         writer.close();
                     } catch (IOException e) {
-                        s_logger.warn("Failed to create or write to local-ipv4 file " + ipv4File);
+                        s_logger.warn("Failed to create or write to local-ipv4 file " + ipv4File,e);
                     }
 
                     
