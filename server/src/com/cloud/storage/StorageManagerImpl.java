@@ -89,6 +89,7 @@ import com.cloud.dc.dao.ClusterDao;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.HostPodDao;
 import com.cloud.deploy.DeployDestination;
+import com.cloud.deploy.DeploymentPlan;
 import com.cloud.domain.Domain;
 import com.cloud.domain.dao.DomainDao;
 import com.cloud.event.ActionEvent;
@@ -2780,6 +2781,26 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
         	 capacities.add(capacity);
          }
          return capacities;
+    }
+
+    @Override
+    public VMTemplateHostVO findVmTemplateHost(long templateId, long dcId, Long podId) {
+        List<HostVO> secHosts = _hostDao.listSecondaryStorageHosts(dcId);
+        if (secHosts.size() == 1) {
+            VMTemplateHostVO templateHostVO = _templateHostDao.findByHostTemplate(secHosts.get(0).getId(), templateId);
+            return templateHostVO;
+        }
+        if (podId != null) {
+            List<VMTemplateHostVO> templHosts = _templateHostDao.listByTemplateStatus(templateId, dcId, podId, VMTemplateStorageResourceAssoc.Status.DOWNLOADED);
+            for (VMTemplateHostVO templHost: templHosts) {
+                return templHost;
+            }
+        }
+        List<VMTemplateHostVO> templHosts = _templateHostDao.listByTemplateStatus(templateId, dcId,  VMTemplateStorageResourceAssoc.Status.DOWNLOADED);
+        for (VMTemplateHostVO templHost: templHosts) {
+            return templHost;
+        }
+        return null;
     }
 
 }
