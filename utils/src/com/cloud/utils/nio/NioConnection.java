@@ -17,6 +17,7 @@
  */
 package com.cloud.utils.nio;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -168,7 +169,12 @@ public abstract class NioConnection implements Runnable {
         	char[] passphrase = "vmops.com".toCharArray();
         	String CATALINA_HOME = System.getenv("CATALINA_HOME");
         	String keystorePath = CATALINA_HOME + "/conf/cloud.keystore";
-        	ks.load(new FileInputStream(keystorePath), passphrase);
+        	if (new File(keystorePath).exists()) {
+        		ks.load(new FileInputStream(keystorePath), passphrase);
+        	} else {
+        		s_logger.warn("SSL: Fail to find the generated keystore. Loading fail-safe one to continue.");
+        		ks.load(NioConnection.class.getResourceAsStream("/cloud.keystore"), passphrase);
+        	}
         	kmf.init(ks, passphrase);
         	tmf.init(ks);
         	tms = tmf.getTrustManagers();
