@@ -670,6 +670,7 @@ class cloudKitConfig():
             cfo.addEntry("guest.network.device", self.syscfg.env.nics[2])
             cfo.addEntry("guid", str(self.syscfg.env.uuid))
             cfo.addEntry("cloudkit.enabled", "true")
+            cfo.addEntry("mount.path", "/mnt")
             cfo.addEntry("resource", "com.cloud.storage.resource.LocalSecondaryStorageResource|com.cloud.agent.resource.computing.CloudZonesComputingResource")
             cfo.save()
             
