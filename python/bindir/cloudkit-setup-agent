@@ -141,7 +141,7 @@ class configFileOps():
         newlines = []
         replaced = False
         for line in lines:
-            if line.startswith(startswith):
+            if re.search(startswith, line):
                 if stanza is not None:
                     newlines.append(stanza)
                     self.backups.append([line, stanza])
@@ -336,6 +336,7 @@ class networkConfigUbuntu(networkConfig):
             return False
     
     def addBridge(self, br, dev):
+        bash("ifdown %s"%dev.name)
         for line in file(self.netCfgFile).readlines():
             match = re.match("^ *iface %s.*"%dev.name, line)
             if match is not None:
@@ -343,7 +344,7 @@ class networkConfigUbuntu(networkConfig):
                 bridgeCfg = "\niface %s inet manual\n \
                              auto %s\n \
                              iface %s inet %s\n \
-                             bridge_ports %s\n"%(dev.name, br.name, br.name, dev.method, dev.name)
+                             bridge_ports %s\n"%(dev.name, br, br, dev.method, dev.name)
                 cfo = configFileOps(self.netCfgFile)
                 cfo.replace_line("^ *iface %s.*"%dev.name, bridgeCfg)
                 self.cfoHandlers.append(cfo)
@@ -357,9 +358,9 @@ class networkConfigUbuntu(networkConfig):
     def writeToCfgFile(self, br, dev):
         cfg = file(self.netCfgFile).read()
         ifaceDev = re.search("^ *iface %s.*"%dev.name, cfg, re.MULTILINE)
-        ifaceBr = re.search("^ *iface %s.*"%br.name, cfg, re.MULTILINE)
+        ifaceBr = re.search("^ *iface %s.*"%br, cfg, re.MULTILINE)
         if ifaceDev is not None and ifaceBr is not None:
-            logging.debug("%s:%s already configured"%(br.name, dev.name))
+            logging.debug("%s:%s already configured"%(br, dev.name))
             return True
         elif ifaceDev is not None and ifaceBr is None:
             #reconfig bridge
@@ -381,12 +382,13 @@ class networkConfigUbuntu(networkConfig):
             #Need to create a bridge on it
             if brName is None:
                 brName = "cloudbr0"
+            '''
             if not networkConfig.createBridge(device.name, brName):
                 logging.debug("Failed to create bridge:%s on dev %s"%(brName, device.name))
                 return False
+            '''
 
-            brDevice = networkConfig.getDevInfo(brName)
-            self.writeToCfgFile(brDevice, device)
+            self.writeToCfgFile(brName, device)
         elif device.type == "brport":
             brName = networkConfig.getBridge(dev)
             brDevice = networkConfig.getDevInfo(brName)
@@ -396,23 +398,22 @@ class networkConfigUbuntu(networkConfig):
             enslavedDev = networkConfig.getEnslavedDev(device.name, 1)
             brDevice = device
             device = networkConfig.getDevInfo(enslavedDev)
-            self.writeToCfgFile(brDevice, device)
+            brName = brDevice.name
+            self.writeToCfgFile(brName, device)
 
-        self.brName = brDevice.name
+        self.brName = brName
         self.dev = device.name
         
     def config(self):
         writeProgressBar("Configure Network...", None)
         try:
-            bash("ifdown %s"self.syscfg.env.defaultNic)
             self.cfgNetwork(self.syscfg.env.defaultNic)
             self.netMgrRunning = self.syscfg.isServiceRunning("network-manager")
             if self.netMgrRunning:
                 self.syscfg.stopService("network-manager")
                 self.syscfg.disableService("network-manager")
                 
-            bash("ifup %s"self.syscfg.env.defaultNic)
-            bash("ifup %s "%self.brName)
+            bash("ifup %s"%self.brName)
             
             self.syscfg.env.nics.append(self.brName)
             self.syscfg.env.nics.append(self.brName)
@@ -433,11 +434,6 @@ class networkConfigUbuntu(networkConfig):
         
         for cfo in self.cfoHandlers:
             cfo.backup()
-            
-        try:
-            bash("ifdown %s ;brctl delif %s %s;ifdown %s ; brctl delbr %s ; ifup %s"%(self.dev, self.brName, self.dev, self.brName, self.brName, self.dev))
-        except:
-            pass
         
         try:
             if self.netMgrRunning:
@@ -515,12 +511,11 @@ class securityPolicyConfigUbuntu():
         writeProgressBar("Configure Security Policy...", None)
         
         try:
-            apparmorRunning = self.syscfg.isServiceRunning("apparmor")
-            if not apparmorRunning:
+            if bash("service apparmor status").getStdout() == "":
+                self.spRunning = False
                 return
-            
-            self.syscfg.stopService("apparmor")
-            self.syscfg.disableService("apparmor")
+            bash("service apparmor stop")
+            bash("update-rc.d -f apparmor remove")
 
             self.status = True
             writeProgressBar(None, True)
@@ -787,7 +782,7 @@ class sysConfigUbuntu(sysConfig):
         self.startService(servicename,force=forcestart)
 
     def isKVMEnabled(self):
-        return bash("kvmok").isSuccess()
+        return bash("kvm-ok").isSuccess() 
     
 def getUserInputs():
     print "Welcome to CloudKit Setup:"
