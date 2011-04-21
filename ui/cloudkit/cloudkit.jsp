@@ -25,7 +25,7 @@
 	<!-- Favicon -->
 	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 
-    <title>CloudKit</title>
+    <title>myCloud</title>
 </head>
 <body>
 	<!-- Host template -->
@@ -46,48 +46,64 @@
 		  <div class="db_gridcelltitles" id="disconnected"></div>
 	    </div>
 		<div class="db_gridcolumns" style="width:10%;">
-			<a class="db_statistics_icon" href="#" id="statistics"></a>
-			<a class="db_delete_icon" style="margin-left:25px" href="#" id="delete_host"></a>
+			<a class="db_statistics_icon" href="#" id="host_details"></a>
+			<a class="db_delete_icon" style="margin-left:25px" href="#" id="host_delete"></a>
 		</div>
 	</div>
 	<!-- End Host template -->
 
 	<div id="main" style="display:none">
-    	<div id="dialogoverlay" style="display:none;">
+    	<div id="dialog_overlay" style="display:none;">
             <div class="overlay_black"></div>
             
 			<!-- Statitics overlay starts here-->
-            <div class="overlay_dialogbox" style="display:block;">
+            <div class="overlay_dialogbox" id="dialog_host_details" style="display:none;">
             	<div class="overlay_dialogbox_top"></div>
                 <div class="overlay_dialogbox_mid">
                     <div class="overlay_dialogbox_contentarea">
-                        <h2>Statistics</h2>
+                        <h2>Host Details</h2>
                         <div class="overlay_dialogbox_content">
                             <div class="db_stats_gridbox">
-                                <div class="db_stats_gridrow ">
+								<div class="db_stats_gridrow ">
                                     <div class="db_stats_gridcolumns" style="width:48%;">
-                                        <div class="db_stats_gridcelltitles">Total CPU: </div>
+                                        <div class="db_stats_gridcelltitles">Host GUID: </div>
                                     </div>
                                     <div class="db_stats_gridcolumns" style="width:50%;">
-                                        <div class="db_stats_gridcelltitles"><strong>4 x 2.40 GHZ</strong></div>
+                                        <div class="db_stats_gridcelltitles"><strong id="host_id"></strong></div>
+                                    </div>
+                                </div>
+								<div class="db_stats_gridrow ">
+                                    <div class="db_stats_gridcolumns" style="width:48%;">
+                                        <div class="db_stats_gridcelltitles">Added Date: </div>
+                                    </div>
+                                    <div class="db_stats_gridcolumns" style="width:50%;">
+                                        <div class="db_stats_gridcelltitles"><strong id="host_added"></strong></div>
+                                    </div>
+                                </div>
+                                <div class="db_stats_gridrow ">
+                                    <div class="db_stats_gridcolumns" style="width:48%;">
+                                        <div class="db_stats_gridcelltitles">CPU Total: </div>
+                                    </div>
+                                    <div class="db_stats_gridcolumns" style="width:50%;">
+                                        <div class="db_stats_gridcelltitles"><strong id="host_cpu_total">4 x 2.40 GHZ</strong></div>
+                                    </div>
+                                </div>
+								
+								<div class="db_stats_gridrow ">
+                                    <div class="db_stats_gridcolumns" style="width:48%;">
+                                        <div class="db_stats_gridcelltitles">CPU Allocated:</div>
+                                    </div>
+                                    <div class="db_stats_gridcolumns" style="width:50%;">
+                                        <div class="db_stats_gridcelltitles"><strong id="host_cpu_allocated">20.83%</strong></div>
                                     </div>
                                 </div>
                                 
                                 <div class="db_stats_gridrow ">
                                     <div class="db_stats_gridcolumns" style="width:48%;">
-                                        <div class="db_stats_gridcelltitles">CPU Utilized: </div>
+                                        <div class="db_stats_gridcelltitles">CPU Used: </div>
                                     </div>
                                     <div class="db_stats_gridcolumns" style="width:50%;">
-                                        <div class="db_stats_gridcelltitles"><strong>0.04%</strong></div>
-                                    </div>
-                                </div>
-                                
-                                <div class="db_stats_gridrow ">
-                                    <div class="db_stats_gridcolumns" style="width:48%;">
-                                        <div class="db_stats_gridcelltitles">CPU Allocated for VMs:</div>
-                                    </div>
-                                    <div class="db_stats_gridcolumns" style="width:50%;">
-                                        <div class="db_stats_gridcelltitles"><strong>20.83%</strong></div>
+                                        <div class="db_stats_gridcelltitles"><strong id="host_cpu_used">0.04%</strong></div>
                                     </div>
                                 </div>
                                 
@@ -96,7 +112,7 @@
                                         <div class="db_stats_gridcelltitles">Memory Total:</div>
                                     </div>
                                     <div class="db_stats_gridcolumns" style="width:50%;">
-                                        <div class="db_stats_gridcelltitles"><strong>3.09 GB</strong></div>
+                                        <div class="db_stats_gridcelltitles"><strong id="host_mem_total">3.09 GB</strong></div>
                                     </div>
                                 </div>
                                 
@@ -105,7 +121,7 @@
                                         <div class="db_stats_gridcelltitles">Memory Allocated:</div>
                                     </div>
                                     <div class="db_stats_gridcolumns" style="width:50%;">
-                                        <div class="db_stats_gridcelltitles"><strong>2.63 GB</strong></div>
+                                        <div class="db_stats_gridcelltitles"><strong id="host_mem_allocated">2.63 GB</strong></div>
                                     </div>
                                 </div>
                                 
@@ -114,7 +130,7 @@
                                         <div class="db_stats_gridcelltitles">Memory Used:</div>
                                     </div>
                                     <div class="db_stats_gridcolumns" style="width:50%;">
-                                        <div class="db_stats_gridcelltitles"><strong>2.63 GB</strong></div>
+                                        <div class="db_stats_gridcelltitles"><strong id="host_mem_used">2.63 GB</strong></div>
                                     </div>
                                 </div>
                                 
@@ -123,7 +139,7 @@
                                         <div class="db_stats_gridcelltitles">Network Read:</div>
                                     </div>
                                     <div class="db_stats_gridcolumns" style="width:50%;">
-                                        <div class="db_stats_gridcelltitles"><strong>4338950879.03 TB</strong></div>
+                                        <div class="db_stats_gridcelltitles"><strong id="host_net_read">4338950879.03 TB</strong></div>
                                     </div>
                                 </div>
                                 
@@ -132,7 +148,7 @@
                                         <div class="db_stats_gridcelltitles">Network Write:</div>
                                     </div>
                                     <div class="db_stats_gridcolumns" style="width:50%;">
-                                        <div class="db_stats_gridcelltitles"><strong>4352955092.25 TB</strong></div>
+                                        <div class="db_stats_gridcelltitles"><strong id="host_net_sent">4352955092.25 TB</strong></div>
                                     </div>
                                 </div>
                                 
@@ -143,8 +159,7 @@
                         
                         <div class="overlay_dialogbox_confirmationbox">
                             <div class="overlay_dialogbox_confirmationbuttonbox">
-                                <a href="#">Cancel</a>
-                                <div class="overlay_dialog_button">OK</div>
+                                <div class="overlay_dialog_button" id="dialog_ok">OK</div>
                             </div>
                         </div>
                     </div>
@@ -154,19 +169,19 @@
             <!-- Statitics overlay ends here-->
            
             <!-- Delete overlay starts here-->
-            <div class="overlay_dialogbox" style="display:none;">
+            <div class="overlay_dialogbox" style="display:none;" id="dialog_delete_host">
             	<div class="overlay_dialogbox_top"></div>
                 <div class="overlay_dialogbox_mid">
                     <div class="overlay_dialogbox_contentarea">
                         <h2>Confirmation</h2>
                         <div class="overlay_dialogbox_content">
-                            <p>Please confirm that you want to delete this Host.</p>
+                            <p>Please confirm that you want to remove the host, <strong id="hostname"></strong>, from your cloud.</p>
                         </div>
                         
                         <div class="overlay_dialogbox_confirmationbox">
                             <div class="overlay_dialogbox_confirmationbuttonbox">
-                                <a href="#">Cancel</a>
-                                <div class="overlay_dialog_button">Confirm</div>
+                                <a href="#" id="dialog_cancel">Cancel</a>
+                                <div class="overlay_dialog_button" id="dialog_confirm">Confirm</div>
                             </div>
                         </div>
                     </div>
@@ -183,7 +198,7 @@
             <div class="db_gridcontainer">
             	<div class="db_gridcontainer_topbox">
                 	<div class="db_gridcontainer_topbox_left">
-                    	<h2>My Cloud</h2>
+                    	<h2>myCloud</h2>
                         <div class="db_grid_searchbox">
                         	<div class="db_grid_searchicon"></div>
                             <input class="text" type="text" />
@@ -244,7 +259,7 @@
                     <div class="db_gridbox">
                         <div class="db_gridrows header">
                             <div class="db_gridcolumns header" style="width:70%;">
-                                <div class="db_gridcelltitles header">Welcome to Cloud.com!</div>
+                                <div class="db_gridcelltitles header"></div>
                             </div>
 						</div>
 						<div class="db_maingrid">
