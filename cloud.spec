@@ -579,6 +579,7 @@ fi
 %{_libdir}/%{name}/agent/js
 %{_libdir}/%{name}/agent/images
 %attr(0755,root,root) %{_bindir}/%{name}-setup-agent
+%attr(0755,root,root) %{_bindir}/cloudkit-setup-agent
 %dir %attr(0770,root,root) %{_localstatedir}/log/%{name}/agent
 
 %files premium-agent
