@@ -20,6 +20,7 @@ package com.cloud.utils.nio;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
@@ -106,14 +107,23 @@ public abstract class NioConnection implements Runnable {
     }
     
     public void run() {
-        try {
-            init();
-        } catch (IOException e) {
-            s_logger.error("Unable to initialize the threads.", e);
-            return;
-        }
-
-        _isStartup = true;
+    	synchronized(this) {
+    		if (_isStartup) {
+    			return;
+    		}
+    		
+    		try {
+    			init();
+    		} catch (ConnectException e) {
+    			s_logger.error("Unable to connect to remote");
+    			return;
+    		} catch (IOException e) {
+    			s_logger.error("Unable to initialize the threads.", e);
+    			return;
+    		}
+    		_isStartup = true;
+    	}
+    	
         while (_isRunning) {
             try {
                 _selector.select();
