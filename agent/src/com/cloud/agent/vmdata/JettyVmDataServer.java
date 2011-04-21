@@ -92,7 +92,7 @@ public class JettyVmDataServer implements VmDataServer {
         protected void doGet(HttpServletRequest req, HttpServletResponse resp)
                 throws ServletException, IOException {
             int port = req.getServerPort();
-            if (port != 8000) {
+            if (port != 80 && port != 8000) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Request not understood");
                 return;
             }

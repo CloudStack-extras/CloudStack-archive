@@ -97,7 +97,7 @@ def destroy_network_rules_for_vm(vm_name, vif=None):
     
     if vif is not None:
         try:
-            dnats = execute("iptables -t nat -S | grep " + vif + " | sed 's/-A/-D'").split("\n")
+            dnats = execute("iptables -t nat -S | grep " + vif + " | sed 's/-A/-D/'").split("\n")
             for dnat in dnats:
                 try:
                     execute("iptables -t nat " + dnat)
@@ -252,7 +252,7 @@ def default_network_rules(vm_name, vm_id, vm_ip, vm_mac, vif, brname):
     logging.debug("Programmed default rules for vm " + vm_name)
     return 'true'
     
-def post_default_network_rules(vm_name, vm_id, vm_ip, vm_mac, vif, brname, dhcpSvr, hostIp):
+def post_default_network_rules(vm_name, vm_id, vm_ip, vm_mac, vif, brname, dhcpSvr, hostIp, hostMacAddr):
     vmchain_default = '-'.join(vm_name.split('-')[:-1]) + "-def"
     vmchain_in = vm_name + "-in"
     vmchain_out = vm_name + "-out"
@@ -265,6 +265,12 @@ def post_default_network_rules(vm_name, vm_id, vm_ip, vm_mac, vif, brname, dhcpS
         execute("iptables -t nat -A PREROUTING -p tcp -m physdev --physdev-in " + vif + " -m tcp --dport 80 -d " + dhcpSvr + " -j DNAT --to-destination " + hostIp + ":80")
     except:
         pass
+    
+    try:
+        execute("ebtables -t nat -A PREROUTING -i " + vif + " -p IPv4 --ip-protocol tcp --ip-destination-port 80 -j dnat --to-destination " + hostMacAddr)
+    except:
+        pass
+    
     try:
         execute("ebtables -t nat -I " + vmchain_in  +  " 4 -p ARP --arp-ip-src ! " + vm_ip + " -j DROP") 
     except:
@@ -600,6 +606,7 @@ if __name__ == '__main__':
     parser.add_option("--brname", dest="brname")
     parser.add_option("--dhcpSvr", dest="dhcpSvr")
     parser.add_option("--hostIp", dest="hostIp")
+    parser.add_option("--hostMacAddr", dest="hostMacAddr")
     (option, args) = parser.parse_args()
     cmd = args[0]
     if cmd == "can_bridge_firewall":
@@ -617,4 +624,4 @@ if __name__ == '__main__':
     elif cmd == "cleanup_rules":
         cleanup_rules()
     elif cmd == "post_default_network_rules":
-        post_default_network_rules(option.vmName, option.vmID, option.vmIP, option.vmMAC, option.vif, option.brname, option.dhcpSvr, option.hostIp)
+        post_default_network_rules(option.vmName, option.vmID, option.vmIP, option.vmMAC, option.vif, option.brname, option.dhcpSvr, option.hostIp, option.hostMacAddr)
