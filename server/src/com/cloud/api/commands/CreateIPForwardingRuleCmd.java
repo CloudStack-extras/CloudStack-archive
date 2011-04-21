@@ -50,22 +50,25 @@ public class CreateIPForwardingRuleCmd extends BaseCmd {
         s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.VIRTUAL_MACHINE_ID, Boolean.TRUE));
     }
 
+    @Override
     public String getName() {
         return s_name;
     }
+
+    @Override
     public List<Pair<Enum, Boolean>> getProperties() {
         return s_properties;
     }
 
     @Override
     public List<Pair<String, Object>> execute(Map<String, Object> params) {
-        Long userId = (Long)params.get(BaseCmd.Properties.USER_ID.getName());
-        Account account = (Account)params.get(BaseCmd.Properties.ACCOUNT_OBJ.getName());
-        String ipAddress = (String)params.get(BaseCmd.Properties.IP_ADDRESS.getName());
-        String publicPort = (String)params.get(BaseCmd.Properties.PUBLIC_PORT.getName());
-        String privatePort = (String)params.get(BaseCmd.Properties.PRIVATE_PORT.getName());
-        String protocol = (String)params.get(BaseCmd.Properties.PROTOCOL.getName());
-        Long vmId = (Long)params.get(BaseCmd.Properties.VIRTUAL_MACHINE_ID.getName());
+        Long userId = (Long) params.get(BaseCmd.Properties.USER_ID.getName());
+        Account account = (Account) params.get(BaseCmd.Properties.ACCOUNT_OBJ.getName());
+        String ipAddress = (String) params.get(BaseCmd.Properties.IP_ADDRESS.getName());
+        String publicPort = ((String) params.get(BaseCmd.Properties.PUBLIC_PORT.getName())).trim();
+        String privatePort = ((String) params.get(BaseCmd.Properties.PRIVATE_PORT.getName())).trim();
+        String protocol = (String) params.get(BaseCmd.Properties.PROTOCOL.getName());
+        Long vmId = (Long) params.get(BaseCmd.Properties.VIRTUAL_MACHINE_ID.getName());
 
         if (userId == null) {
             userId = Long.valueOf(User.UID_SYSTEM);
@@ -82,14 +85,17 @@ public class CreateIPForwardingRuleCmd extends BaseCmd {
         }
 
         if ((ipAddressVO.getAccountId() == null) || (ipAddressVO.getAccountId().longValue() != userVM.getAccountId())) {
-            throw new ServerApiException(BaseCmd.ACCOUNT_ERROR, "Unable to create port forwarding rule, IP address " + ipAddress + " owner is not the same as owner of virtual machine " + userVM.toString()); 
+            throw new ServerApiException(BaseCmd.ACCOUNT_ERROR, "Unable to create port forwarding rule, IP address " + ipAddress + " owner is not the same as owner of virtual machine "
+                    + userVM.toString());
         }
 
         if (ipAddressVO.getDataCenterId() != userVM.getDataCenterId()) {
-            throw new ServerApiException(BaseCmd.ACCOUNT_ERROR, "Unable to create port forwarding rule, IP address " + ipAddress + " owner is not in the same availability zone as virtual machine " + userVM.toString());
+            throw new ServerApiException(BaseCmd.ACCOUNT_ERROR, "Unable to create port forwarding rule, IP address " + ipAddress + " owner is not in the same availability zone as virtual machine "
+                    + userVM.toString());
         }
 
-        // if an admin account was passed in, or no account was passed in, make sure we honor the accountName/domainId parameters
+        // if an admin account was passed in, or no account was passed in, make sure we honor the accountName/domainId
+        // parameters
         if (account != null) {
             if (isAdmin(account.getType())) {
                 Account vmOwner = getManagementServer().findAccountById(userVM.getAccountId());
@@ -102,17 +108,19 @@ public class CreateIPForwardingRuleCmd extends BaseCmd {
         }
 
         FirewallRuleVO firewallRule = null;
-        
+
         try {
             firewallRule = getManagementServer().createPortForwardingRule(userId.longValue(), ipAddressVO, userVM, publicPort, privatePort, protocol);
         } catch (NetworkRuleConflictException ex) {
-            throw new ServerApiException(BaseCmd.NET_CONFLICT_IPFW_RULE_ERROR, "Network rule conflict creating a forwarding rule on address:port " + ipAddress + ":" + publicPort + " to virtual machine " + userVM.toString());
+            throw new ServerApiException(BaseCmd.NET_CONFLICT_IPFW_RULE_ERROR, "Network rule conflict creating a forwarding rule on address:port " + ipAddress + ":" + publicPort
+                    + " to virtual machine " + userVM.toString());
         } catch (IllegalArgumentException argEx) {
             throw new ServerApiException(BaseCmd.PARAM_ERROR, argEx.getMessage());
         }
 
         if (firewallRule == null) {
-            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "The port forwarding rule from public port " + publicPort + " to private port " + privatePort + " for address " + ipAddress + " and virtual machine " + userVM.toString() + " already exists.");
+            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "The port forwarding rule from public port " + publicPort + " to private port " + privatePort + " for address " + ipAddress
+                    + " and virtual machine " + userVM.toString() + " already exists.");
         }
 
         List<Pair<String, Object>> groupsTags = new ArrayList<Pair<String, Object>>();

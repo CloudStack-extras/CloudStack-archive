@@ -33,7 +33,7 @@ import com.cloud.user.Account;
 import com.cloud.utils.Pair;
 
 public class CreatePortForwardingServiceRuleCmd extends BaseCmd {
-	public static final Logger s_logger = Logger.getLogger(CreatePortForwardingServiceRuleCmd.class.getName());
+    public static final Logger s_logger = Logger.getLogger(CreatePortForwardingServiceRuleCmd.class.getName());
 
     private static final String s_name = "createportforwardingserviceruleresponse";
     private static final List<Pair<Enum, Boolean>> s_properties = new ArrayList<Pair<Enum, Boolean>>();
@@ -47,26 +47,28 @@ public class CreatePortForwardingServiceRuleCmd extends BaseCmd {
         s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.PORT_FORWARDING_SERVICE_ID, Boolean.TRUE));
     }
 
+    @Override
     public String getName() {
         return s_name;
     }
-    
+
     public static String getResultObjectName() {
-    	return "portforwardingservicerule";
+        return "portforwardingservicerule";
     }
-    
+
+    @Override
     public List<Pair<Enum, Boolean>> getProperties() {
         return s_properties;
     }
 
     @Override
     public List<Pair<String, Object>> execute(Map<String, Object> params) {
-        Account account = (Account)params.get(BaseCmd.Properties.ACCOUNT_OBJ.getName());
-        Long userId = (Long)params.get(BaseCmd.Properties.USER_ID.getName());
-        String publicPort = (String)params.get(BaseCmd.Properties.PUBLIC_PORT.getName());
-        String privatePort = (String)params.get(BaseCmd.Properties.PRIVATE_PORT.getName());
-        String protocol = (String)params.get(BaseCmd.Properties.PROTOCOL.getName());
-        Long securityGroupId = (Long)params.get(BaseCmd.Properties.PORT_FORWARDING_SERVICE_ID.getName());
+        Account account = (Account) params.get(BaseCmd.Properties.ACCOUNT_OBJ.getName());
+        Long userId = (Long) params.get(BaseCmd.Properties.USER_ID.getName());
+        String publicPort = ((String) params.get(BaseCmd.Properties.PUBLIC_PORT.getName())).trim();
+        String privatePort = ((String) params.get(BaseCmd.Properties.PRIVATE_PORT.getName())).trim();
+        String protocol = (String) params.get(BaseCmd.Properties.PROTOCOL.getName());
+        Long securityGroupId = (Long) params.get(BaseCmd.Properties.PORT_FORWARDING_SERVICE_ID.getName());
 
         SecurityGroupVO sg = getManagementServer().findSecurityGroupById(securityGroupId);
         if (sg == null) {
@@ -96,22 +98,23 @@ public class CreatePortForwardingServiceRuleCmd extends BaseCmd {
         } else {
             if (s_logger.isDebugEnabled())
                 s_logger.debug("CreatePortForwardingServiceRuleCmd command has been accepted, job id: " + jobId);
-            
+
             ruleId = waitInstanceCreation(jobId);
         }
 
         List<Pair<String, Object>> returnValues = new ArrayList<Pair<String, Object>>();
         returnValues.add(new Pair<String, Object>(BaseCmd.Properties.JOB_ID.getName(), Long.valueOf(jobId)));
-        returnValues.add(new Pair<String, Object>(BaseCmd.Properties.RULE_ID.getName(), Long.valueOf(ruleId))); 
+        returnValues.add(new Pair<String, Object>(BaseCmd.Properties.RULE_ID.getName(), Long.valueOf(ruleId)));
         return returnValues;
     }
-    
-	protected long getInstanceIdFromJobSuccessResult(String result) {
-		CreateOrUpdateRuleResultObject resultObject = (CreateOrUpdateRuleResultObject)SerializerHelper.fromSerializedString(result);
-		if(resultObject != null) {
-			return resultObject.getRuleId();
-		}
 
-		return 0;
-	}
+    @Override
+    protected long getInstanceIdFromJobSuccessResult(String result) {
+        CreateOrUpdateRuleResultObject resultObject = (CreateOrUpdateRuleResultObject) SerializerHelper.fromSerializedString(result);
+        if (resultObject != null) {
+            return resultObject.getRuleId();
+        }
+
+        return 0;
+    }
 }

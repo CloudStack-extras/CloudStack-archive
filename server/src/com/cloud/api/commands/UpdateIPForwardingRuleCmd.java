@@ -33,23 +33,26 @@ public class UpdateIPForwardingRuleCmd extends BaseCmd {
         s_properties.add(new Pair<Enum, Boolean>(BaseCmd.Properties.VIRTUAL_MACHINE_ID, Boolean.FALSE));
     }
 
+    @Override
     public String getName() {
         return s_name;
     }
+
+    @Override
     public List<Pair<Enum, Boolean>> getProperties() {
         return s_properties;
     }
 
     @Override
     public List<Pair<String, Object>> execute(Map<String, Object> params) {
-        Long userId = (Long)params.get(BaseCmd.Properties.USER_ID.getName());
-        Account account = (Account)params.get(BaseCmd.Properties.ACCOUNT_OBJ.getName());
-        String publicIp = (String)params.get(BaseCmd.Properties.PUBLIC_IP.getName());
-        String publicPort = (String)params.get(BaseCmd.Properties.PUBLIC_PORT.getName());
-        String privateIp = (String)params.get(BaseCmd.Properties.PRIVATE_IP.getName());
-        String privatePort = (String)params.get(BaseCmd.Properties.PRIVATE_PORT.getName());
-        String protocol = (String)params.get(BaseCmd.Properties.PROTOCOL.getName());
-        Long vmId = (Long)params.get(BaseCmd.Properties.VIRTUAL_MACHINE_ID.getName());
+        Long userId = (Long) params.get(BaseCmd.Properties.USER_ID.getName());
+        Account account = (Account) params.get(BaseCmd.Properties.ACCOUNT_OBJ.getName());
+        String publicIp = (String) params.get(BaseCmd.Properties.PUBLIC_IP.getName());
+        String publicPort = ((String) params.get(BaseCmd.Properties.PUBLIC_PORT.getName())).trim();
+        String privatePort = ((String) params.get(BaseCmd.Properties.PRIVATE_PORT.getName())).trim();
+        String privateIp = (String) params.get(BaseCmd.Properties.PRIVATE_IP.getName());
+        String protocol = (String) params.get(BaseCmd.Properties.PROTOCOL.getName());
+        Long vmId = (Long) params.get(BaseCmd.Properties.VIRTUAL_MACHINE_ID.getName());
         UserVmVO userVM = null;
 
         if (userId == null) {
@@ -70,7 +73,7 @@ public class UpdateIPForwardingRuleCmd extends BaseCmd {
                 throw new ServerApiException(BaseCmd.PARAM_ERROR, "Invalid private IP address specified: " + privateIp);
             }
             Criteria c = new Criteria();
-            c.addCriteria(Criteria.ACCOUNTID, new Object[] {ipAddressVO.getAccountId()});
+            c.addCriteria(Criteria.ACCOUNTID, new Object[] { ipAddressVO.getAccountId() });
             c.addCriteria(Criteria.DATACENTERID, ipAddressVO.getDataCenterId());
             c.addCriteria(Criteria.IPADDRESS, privateIp);
             List<UserVmVO> userVMs = getManagementServer().searchForUserVMs(c);
@@ -85,11 +88,12 @@ public class UpdateIPForwardingRuleCmd extends BaseCmd {
             }
 
             if ((ipAddressVO.getAccountId() == null) || (ipAddressVO.getAccountId().longValue() != userVM.getAccountId())) {
-                throw new ServerApiException(BaseCmd.ACCOUNT_ERROR, "Unable to update port forwarding rule on IP address " + publicIp + ", permission denied."); 
+                throw new ServerApiException(BaseCmd.ACCOUNT_ERROR, "Unable to update port forwarding rule on IP address " + publicIp + ", permission denied.");
             }
 
             if (ipAddressVO.getDataCenterId() != userVM.getDataCenterId()) {
-                throw new ServerApiException(BaseCmd.PARAM_ERROR, "Unable to update port forwarding rule, IP address " + publicIp + " is not in the same availability zone as virtual machine " + userVM.toString());
+                throw new ServerApiException(BaseCmd.PARAM_ERROR, "Unable to update port forwarding rule, IP address " + publicIp + " is not in the same availability zone as virtual machine "
+                        + userVM.toString());
             }
 
             privateIp = userVM.getGuestIpAddress();
@@ -97,7 +101,8 @@ public class UpdateIPForwardingRuleCmd extends BaseCmd {
             throw new ServerApiException(BaseCmd.PARAM_ERROR, "No private IP address (privateip) or virtual machine instance id (virtualmachineid) specified, unable to update port forwarding rule");
         }
 
-        // if an admin account was passed in, or no account was passed in, make sure we honor the accountName/domainId parameters
+        // if an admin account was passed in, or no account was passed in, make sure we honor the accountName/domainId
+        // parameters
         if (account != null) {
             if (isAdmin(account.getType())) {
                 if (!getManagementServer().isChildDomain(account.getDomainId(), ipAddressVO.getDomainId())) {
