@@ -3175,11 +3175,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	}
     	Script cmd = new Script(_securityGroupPath, _timeout, s_logger);
     	cmd.add("destroy_network_rules_for_vm");
-    	cmd.add("--vmname");
+    	cmd.add("--vmname", vmName);
     	if (vif != null) {
-    	    cmd.add("--vif", vif);
-    	}
-    	cmd.add(vmName);
+            cmd.add("--vif", vif);
+        }
     	String result = cmd.execute();
     	if (result != null) {
     		return false;
@@ -3218,7 +3217,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	return true;
     }
     
-    protected boolean post_default_network_rules(Connect conn, String vmName, NicTO nic, Long vmId, InetAddress dhcpServerIp, String hostIp) {
+    protected boolean post_default_network_rules(Connect conn, String vmName, NicTO nic, Long vmId, InetAddress dhcpServerIp, String hostIp, String hostMacAddr) {
         if (!_can_bridge_firewall) {
             return false;
         }
@@ -3244,6 +3243,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             cmd.add("--dhcpSvr", dhcpServerIp.getHostAddress());
         
         cmd.add("--hostIp", hostIp);
+        cmd.add("--hostMacAddr", hostMacAddr);
         String result = cmd.execute();
         if (result != null) {
             return false;

@@ -125,6 +125,8 @@ public abstract class ServerResourceBase implements ServerResource {
         }
         String infos[] = NetUtils.getNetworkParams(_privateNic);
         params.put("host.ip", infos[0]);
+        params.put("host.mac.address", infos[1]);
+       
     	return true;
     }
     
