@@ -64,6 +64,7 @@ public abstract class NioConnection implements Runnable {
     protected Selector _selector;
     protected Thread _thread;
     protected boolean _isRunning;
+    protected boolean _isStartup;
     protected int _port;
     protected List<ChangeRequest> _todos;
     protected HandlerFactory _factory;
@@ -100,6 +101,10 @@ public abstract class NioConnection implements Runnable {
         return _thread.isAlive();
     }
     
+    public boolean isStartup() {
+    	return _isStartup;
+    }
+    
     public void run() {
         try {
             init();
@@ -108,6 +113,7 @@ public abstract class NioConnection implements Runnable {
             return;
         }
 
+        _isStartup = true;
         while (_isRunning) {
             try {
                 _selector.select();
