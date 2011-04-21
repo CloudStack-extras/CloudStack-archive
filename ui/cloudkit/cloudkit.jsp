@@ -58,10 +58,8 @@
             
 			<!-- Statitics overlay starts here-->
             <div class="overlay_dialogbox" id="dialog_host_details" style="display:none;">
-            	<div class="overlay_dialogbox_top"></div>
-                <div class="overlay_dialogbox_mid">
                     <div class="overlay_dialogbox_contentarea">
-                        <h2>Host Details</h2>
+                        <div class="overlay_dialogbox_titlearea"><h2>Host Details</h2></div>
                         <div class="overlay_dialogbox_content">
                             <div class="db_stats_gridbox">
 								<div class="db_stats_gridrow ">
@@ -163,30 +161,24 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="overlay_dialogbox_bot"></div>
             </div>
             <!-- Statitics overlay ends here-->
            
             <!-- Delete overlay starts here-->
             <div class="overlay_dialogbox" style="display:none;" id="dialog_delete_host">
-            	<div class="overlay_dialogbox_top"></div>
-                <div class="overlay_dialogbox_mid">
-                    <div class="overlay_dialogbox_contentarea">
-                        <h2>Confirmation</h2>
-                        <div class="overlay_dialogbox_content">
-                            <p>Please confirm that you want to remove the host, <strong id="hostname"></strong>, from your cloud.</p>
-                        </div>
-                        
-                        <div class="overlay_dialogbox_confirmationbox">
-                            <div class="overlay_dialogbox_confirmationbuttonbox">
-                                <a href="#" id="dialog_cancel">Cancel</a>
-                                <div class="overlay_dialog_button" id="dialog_confirm">Confirm</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="overlay_dialogbox_bot"></div>
+				<div class="overlay_dialogbox_contentarea">
+					<div class="overlay_dialogbox_titlearea"><h2>Confirmation</h2></div>
+					<div class="overlay_dialogbox_content">
+						<p>Please confirm that you want to remove the host, <strong id="hostname"></strong>, from your cloud.</p>
+					</div>
+					
+					<div class="overlay_dialogbox_confirmationbox">
+						<div class="overlay_dialogbox_confirmationbuttonbox">
+							<a href="#" id="dialog_cancel">Cancel</a>
+							<div class="overlay_dialog_button" id="dialog_confirm">Confirm</div>
+						</div>
+					</div>
+				</div>
             </div>
             <!-- Delete overlay ends here-->
         </div>

@@ -1235,21 +1235,23 @@ a:hover {
 	height: 100%;
 	background-color: black;
 	z-index:5;
-	-moz-opacity: 0.8;
-	opacity:.60;
-	filter: alpha(opacity=60);
+	-moz-opacity: 0.4;
+	opacity:.40;
+	filter: alpha(opacity=40);
 	overflow:hidden;
 }
 
 .overlay_dialogbox {
-	width:525px;
+	width:485px;
 	height:auto;
 	float:left;
 	position:absolute;
+	background:#FFF;
+	border:1px solid #666;
 	margin:0;
 	padding:0;
 	z-index:10;
-	top:20%;
+	top:25%;
 	left:36%;
 }
 
@@ -1288,37 +1290,47 @@ a:hover {
 }
 
 .overlay_dialogbox_contentarea {
-	width:460px;
+	width:450px;
 	height:auto;
 	float:left;
-	margin:0 0 0 27px;
+	margin:15px 0 0 16px;
 	display:inline;
+	padding:0 0 15px 0;
+}
+
+.overlay_dialogbox_titlearea {
+	width:450px;
+	height:25px;
+	float:left;
+	background:url(../images/db_gridheaderbg.gif) repeat-x top left;
+	border:1px solid #CCC;
+	margin:0;
 	padding:0;
 }
 
-.overlay_dialogbox_contentarea  h2{
-	width:460px;
+.overlay_dialogbox_titlearea  h2{
+	width:400px;
 	height:auto;
 	float:left;
-	color:#648BB3;
-	font-size:18px;
+	color:#FFF;
+	font-size:14px;
 	font-weight:normal;
 	text-align:left;
-	margin:0 0 0 0;
+	margin:5px 0 0 10px;
 	display:inline;
 	padding:0;
 }
 
 .overlay_dialogbox_content {
-	width:460px;
+	width:450px;
 	height:auto;
 	float:left;
-	margin:10px 0 0 0;
+	margin:15px 0 0 0;
 	padding:0;
 }
 
 .overlay_dialogbox_content p {
-	width:460px;
+	width:450px;
 	height:auto;
 	float:left;
 	margin:10px 0 0 0;
@@ -1330,7 +1342,7 @@ a:hover {
 
 
 .db_stats_gridbox {
-	width:460px;
+	width:450px;
 	height:auto;
 	float:left;
 	margin:0;
@@ -1339,7 +1351,7 @@ a:hover {
 }
 
 .db_stats_gridrow {
-	width:460px;	
+	width:450px;	
 	height:auto;
 	float:left;
 	background:url(../images/stats_row.gif) repeat-x bottom left;
@@ -1368,7 +1380,7 @@ a:hover {
 }
 
 .overlay_dialogbox_confirmationbox {
-	width:460px;
+	width:450px;
 	height:auto;
 	float:left;
 	border-top:1px solid #CCC;
