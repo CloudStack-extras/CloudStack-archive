@@ -340,13 +340,13 @@ class networkConfigUbuntu(networkConfig):
             match = re.match("^ *iface %s.*"%dev.name, line)
             if match is not None:
                 dev.method = self.getNetworkMethod(match.group(0))
-                bridgeCfg = "\niface %s manual\n \
+                bridgeCfg = "\niface %s inet manual\n \
                              auto %s\n \
                              iface %s inet %s\n \
                              bridge_ports %s\n"%(dev.name, br.name, br.name, dev.method, dev.name)
                 cfo = configFileOps(self.netCfgFile)
                 cfo.replace_line("^ *iface %s.*"%dev.name, bridgeCfg)
-                cfo.cfoHandlers.append(cfo)
+                self.cfoHandlers.append(cfo)
 
     def addDev(self, br, dev):
         logging.debug("Haven't implement yet")
@@ -404,15 +404,15 @@ class networkConfigUbuntu(networkConfig):
     def config(self):
         writeProgressBar("Configure Network...", None)
         try:
+            bash("ifdown %s"self.syscfg.env.defaultNic)
             self.cfgNetwork(self.syscfg.env.defaultNic)
             self.netMgrRunning = self.syscfg.isServiceRunning("network-manager")
             if self.netMgrRunning:
                 self.syscfg.stopService("network-manager")
                 self.syscfg.disableService("network-manager")
                 
+            bash("ifup %s"self.syscfg.env.defaultNic)
             bash("ifup %s "%self.brName)
-            bash("/etc/init.d/networking stop")
-            bash("/etc/init.d/networking start")
             
             self.syscfg.env.nics.append(self.brName)
             self.syscfg.env.nics.append(self.brName)
@@ -669,7 +669,6 @@ class cloudKitConfig():
             cfo.addEntry("public.network.device", self.syscfg.env.nics[1])
             cfo.addEntry("guest.network.device", self.syscfg.env.nics[2])
             cfo.addEntry("guid", str(self.syscfg.env.uuid))
-            cfo.addEntry("cloudkit.enabled", "true")
             cfo.addEntry("mount.path", "/mnt")
             cfo.addEntry("resource", "com.cloud.storage.resource.LocalSecondaryStorageResource|com.cloud.agent.resource.computing.CloudZonesComputingResource")
             cfo.save()
