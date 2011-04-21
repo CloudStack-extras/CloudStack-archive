@@ -147,6 +147,15 @@ Description: Cloud.com agent
  a Cloud.com Cloud Stack-powered cloud.  Install this package if this computer
  will participate in your cloud.
 
+Package: cloud-agent-premium
+Architecture: any
+Depends: cloud-agent
+Description: Cloud.com agent premium
+ The Cloud.com agent is in charge of managing shared computing resources in
+ a Cloud.com Cloud Stack-powered cloud.  Install this package if this computer
+ will participate in your cloud.
+
+
 Package: cloud-console-proxy
 Architecture: any
 Depends: openjdk-6-jre, cloud-utils (= ${source:Version}), cloud-core (= ${source:Version}), cloud-deps (= ${source:Version}), cloud-agent-libs (= ${source:Version}), python, cloud-python (= ${source:Version}), libcommons-httpclient-java, libcommons-collections-java, libcommons-dbcp-java, libcommons-pool-java, libcommons-logging-java, cloud-daemonize, sysvinit-utils, chkconfig, augeas-tools, uuid-runtime, grep, iproute
