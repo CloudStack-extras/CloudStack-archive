@@ -387,11 +387,12 @@ public class Agent implements HandlerFactory, IAgentControl {
         		_shell.getWorkers(),
         		this);
         do {
+        	s_logger.info("Reconnecting...");
+        	_connection.start();
         	try {
         		Thread.sleep(5000);
         	} catch (InterruptedException ex) {
         	}
-        	_connection.start();
         } while (!_connection.isStartup());
     }
     
