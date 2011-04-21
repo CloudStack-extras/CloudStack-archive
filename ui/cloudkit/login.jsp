@@ -25,7 +25,7 @@
 	<!-- Favicon -->
 	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 
-    <title>CloudKit - Login</title>
+    <title>myCloud - Login</title>
 </head>
 
 <body>
@@ -35,7 +35,7 @@
 				<div class="login_logo"></div>
 			</div>
 			<div class="login_box_mid">
-				<h2>Login to Cloud.com Account</h2>
+				<h2>Login to your myCloud Account</h2>
 				<div class="login_formbox">
 					<form>
 						<ul>
