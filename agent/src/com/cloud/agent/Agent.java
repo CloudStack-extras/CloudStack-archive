@@ -376,17 +376,23 @@ public class Agent implements HandlerFactory, IAgentControl {
             	s_logger.info("Cannot connect because we still have " + inProgress + " commands in progress.");
             	continue;
             }
-
-            _connection.stop();
-            _connection = new NioClient(
-            		"Agent",
-            		_shell.getHost(),
-            		_shell.getPort(),
-            		_shell.getWorkers(),
-            		this);
-            _connection.start();
-            return;
+            break;
         }
+
+        _connection.stop();
+        _connection = new NioClient(
+        		"Agent",
+        		_shell.getHost(),
+        		_shell.getPort(),
+        		_shell.getWorkers(),
+        		this);
+        do {
+        	try {
+        		Thread.sleep(5000);
+        	} catch (InterruptedException ex) {
+        	}
+        	_connection.start();
+        } while (!_connection.isStartup());
     }
     
     public void processStartupAnswer(Answer answer, Response response, Link link) {
