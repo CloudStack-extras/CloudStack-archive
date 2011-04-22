@@ -454,8 +454,14 @@ public class ConfigurationServerImpl implements ConfigurationServer {
 
         String o = ou;
         String c = "Unknown";
-        String dname = "\"cn=" + cn + ", ou=" + ou +", o=" + o + ", c=" + c + "\"";
-        String result = Script.runSimpleBashScript("keytool -genkey -keystore " + keystorePath + " -storepass vmops.com -keypass vmops.com -dname " + dname);
+        String dname = "cn=" + cn + ", ou=" + ou +", o=" + o + ", c=" + c;
+        Script script = new Script(true, "keytool", 5000, null);
+        script.add("-genkey");
+        script.add("-keystore", keystorePath);
+        script.add("-storepass", "vmops.com");
+        script.add("-keypass", "vmops.com");
+        script.add("-dname", dname);
+        String result = script.execute();
         if (result != null) {
         	throw new IOException("Fail to generate certificate!");
         }
@@ -467,8 +473,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         }
 
         String dbString = _configDao.getValue("ssl.keystore");
-        String CATALINA_HOME = System.getenv("CATALINA_HOME");
-        String keystorePath = CATALINA_HOME + "/conf/cloud.keystore";
+        String keystorePath = "/etc/cloud/management/cloud.keystore";
         File keystoreFile = new File(keystorePath);
         boolean dbExisted = (dbString != null && !dbString.isEmpty());
 
@@ -476,25 +481,37 @@ public class ConfigurationServerImpl implements ConfigurationServer {
             if (!dbExisted) {
                 if  (!keystoreFile.exists()) {
                     generateDefaultKeystore(keystorePath);
+                    s_logger.info("Generated SSL keystore.");
                 }
                 String base64Keystore = getBase64Keystore(keystorePath);
                 createSSLKeystoreDBEntry(base64Keystore);
+                s_logger.info("Stored SSL keystore to database.");
             } else if (keystoreFile.exists()) { // and dbExisted
                 // Check if they are the same one, otherwise override with local keystore
                 String base64Keystore = getBase64Keystore(keystorePath);
-                if (base64Keystore != dbString) {
+                if (base64Keystore.compareTo(dbString) != 0) {
                     _configDao.update("ssl.keystore", base64Keystore);
+                    s_logger.info("Updated database keystore with local one.");
                 }
             } else { // !keystoreFile.exists() and dbExisted
                 // Export keystore to local file
                 byte[] storeBytes = Base64.decodeBase64(dbString);
                 try {
-                    FileOutputStream fo = new FileOutputStream(keystorePath);
+                    String tmpKeystorePath = "/tmp/tmpkey";
+                    FileOutputStream fo = new FileOutputStream(tmpKeystorePath);
                     fo.write(storeBytes);
                     fo.close();
+                    Script script = new Script(true, "cp", 5000, null);
+                    script.add(tmpKeystorePath);
+                    script.add(keystorePath);
+                    String result = script.execute();
+                    if (result != null) {
+                    	throw new IOException();
+                    }
                 } catch (Exception e) {
                     throw new IOException("Fail to create keystore file!", e);
                 }
+                s_logger.info("Stored database keystore to local.");
             }
         } catch (Exception ex) {
             s_logger.warn("Would use fail-safe keystore to continue.", ex);
