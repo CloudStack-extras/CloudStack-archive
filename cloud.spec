@@ -582,7 +582,7 @@ fi
 %files premium-agent
 %{_javadir}/cloud-agent-extras.jar
 %attr(0755,root,root) %{_bindir}/cloudkit
-
+%attr(0755,root,root) %{_bindir}/cloudkit-setup-agent
 
 %files console-proxy
 %defattr(0644,root,root,0755)
