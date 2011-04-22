@@ -660,6 +660,7 @@ class cloudKitConfig():
             cfo = configFileOps("/etc/cloud/agent/agent.properties")  
             cfo.addEntry("host", self.syscfg.env.mgtSvr)
             cfo.addEntry("zone", self.syscfg.env.zoneToken)
+            cfo.addEntry("port", "443")
             cfo.addEntry("private.network.device", self.syscfg.env.nics[0])
             cfo.addEntry("public.network.device", self.syscfg.env.nics[1])
             cfo.addEntry("guest.network.device", self.syscfg.env.nics[2])
