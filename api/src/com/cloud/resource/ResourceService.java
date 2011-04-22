@@ -24,7 +24,6 @@ import com.cloud.api.commands.AddHostCmd;
 import com.cloud.api.commands.AddSecondaryStorageCmd;
 import com.cloud.api.commands.CancelMaintenanceCmd;
 import com.cloud.api.commands.DeleteClusterCmd;
-import com.cloud.api.commands.DeleteHostCmd;
 import com.cloud.api.commands.PrepareForMaintenanceCmd;
 import com.cloud.api.commands.ReconnectHostCmd;
 import com.cloud.api.commands.UpdateHostCmd;
@@ -37,7 +36,9 @@ import com.cloud.org.Cluster;
 public interface ResourceService {
     /**
      * Updates a host
-     * @param cmd - the command specifying hostId
+     * 
+     * @param cmd
+     *            - the command specifying hostId
      * @return hostObject
      * @throws InvalidParameterValueException
      */
@@ -46,9 +47,9 @@ public interface ResourceService {
     Host cancelMaintenance(CancelMaintenanceCmd cmd) throws InvalidParameterValueException;
 
     Host reconnectHost(ReconnectHostCmd cmd) throws AgentUnavailableException;
-    
+
     /**
-     * We will automatically create a cloud.com cluster to attach to the external cluster and return a hyper host to perform 
+     * We will automatically create a cloud.com cluster to attach to the external cluster and return a hyper host to perform
      * host related operation within the cluster
      * 
      * @param cmd
@@ -58,17 +59,25 @@ public interface ResourceService {
      * @throws InvalidParameterValueException
      */
     List<? extends Cluster> discoverCluster(AddClusterCmd cmd) throws IllegalArgumentException, DiscoveryException, InvalidParameterValueException;
-    boolean deleteCluster(DeleteClusterCmd cmd) throws InvalidParameterValueException; 
-    
+
+    boolean deleteCluster(DeleteClusterCmd cmd) throws InvalidParameterValueException;
+
     List<? extends Host> discoverHosts(AddHostCmd cmd) throws IllegalArgumentException, DiscoveryException, InvalidParameterValueException;
+
     List<? extends Host> discoverHosts(AddSecondaryStorageCmd cmd) throws IllegalArgumentException, DiscoveryException, InvalidParameterValueException;
+
     Host maintain(PrepareForMaintenanceCmd cmd) throws InvalidParameterValueException;
+
     /**
      * Deletes a host
      * 
-     * @param cmd - the command specifying hostId
+     * @param hostId
+     *            TODO
+     * @param isForced
+     *            TODO
+     * 
      * @param true if deleted, false otherwise
-     * @throws InvalidParameterValueException
      */
-    boolean deleteHost(DeleteHostCmd cmd) throws InvalidParameterValueException; 
+    boolean deleteHost(long hostId, boolean isForced);
+
 }

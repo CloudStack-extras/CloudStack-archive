@@ -137,51 +137,81 @@ import com.cloud.vm.dao.SecondaryStorageVmDao;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.VMInstanceDao;
 
-@Local(value=VirtualMachineManager.class)
+@Local(value = VirtualMachineManager.class)
 public class VirtualMachineManagerImpl implements VirtualMachineManager, Listener {
     private static final Logger s_logger = Logger.getLogger(VirtualMachineManagerImpl.class);
-    
+
     String _name;
-    @Inject protected StorageManager _storageMgr;
-    @Inject protected NetworkManager _networkMgr;
-    @Inject protected AgentManager _agentMgr;
-    @Inject protected VMInstanceDao _vmDao;
-    @Inject protected ServiceOfferingDao _offeringDao;
-    @Inject protected VMTemplateDao _templateDao;
-    @Inject protected UserDao _userDao;
-    @Inject protected AccountDao _accountDao;
-    @Inject protected DomainDao _domainDao;
-    @Inject protected ClusterManager _clusterMgr;
-    @Inject protected ItWorkDao _workDao;
-    @Inject protected UserVmDao _userVmDao;
-    @Inject protected DomainRouterDao _routerDao;
-    @Inject protected ConsoleProxyDao _consoleDao;
-    @Inject protected SecondaryStorageVmDao _secondaryDao;
-    @Inject protected UsageEventDao _usageEventDao;
-    @Inject protected NicDao _nicsDao;
-    @Inject protected AccountManager _accountMgr;
-    @Inject protected HostDao _hostDao;
-    @Inject protected AlertManager _alertMgr;
-    @Inject protected GuestOSCategoryDao _guestOsCategoryDao;
-    @Inject protected GuestOSDao _guestOsDao;
-    @Inject protected VolumeDao _volsDao;
-    @Inject protected ConsoleProxyManager _consoleProxyMgr;
-    @Inject protected ConfigurationManager _configMgr;
-    @Inject protected CapacityManager _capacityMgr;
-    @Inject protected HighAvailabilityManager _haMgr;
-    @Inject protected HostPodDao _podDao;
-    @Inject protected DataCenterDao _dcDao;
-    @Inject protected HypervisorGuruManager _hvGuruMgr;
-    
-    @Inject(adapter=DeploymentPlanner.class)
+    @Inject
+    protected StorageManager _storageMgr;
+    @Inject
+    protected NetworkManager _networkMgr;
+    @Inject
+    protected AgentManager _agentMgr;
+    @Inject
+    protected VMInstanceDao _vmDao;
+    @Inject
+    protected ServiceOfferingDao _offeringDao;
+    @Inject
+    protected VMTemplateDao _templateDao;
+    @Inject
+    protected UserDao _userDao;
+    @Inject
+    protected AccountDao _accountDao;
+    @Inject
+    protected DomainDao _domainDao;
+    @Inject
+    protected ClusterManager _clusterMgr;
+    @Inject
+    protected ItWorkDao _workDao;
+    @Inject
+    protected UserVmDao _userVmDao;
+    @Inject
+    protected DomainRouterDao _routerDao;
+    @Inject
+    protected ConsoleProxyDao _consoleDao;
+    @Inject
+    protected SecondaryStorageVmDao _secondaryDao;
+    @Inject
+    protected UsageEventDao _usageEventDao;
+    @Inject
+    protected NicDao _nicsDao;
+    @Inject
+    protected AccountManager _accountMgr;
+    @Inject
+    protected HostDao _hostDao;
+    @Inject
+    protected AlertManager _alertMgr;
+    @Inject
+    protected GuestOSCategoryDao _guestOsCategoryDao;
+    @Inject
+    protected GuestOSDao _guestOsDao;
+    @Inject
+    protected VolumeDao _volsDao;
+    @Inject
+    protected ConsoleProxyManager _consoleProxyMgr;
+    @Inject
+    protected ConfigurationManager _configMgr;
+    @Inject
+    protected CapacityManager _capacityMgr;
+    @Inject
+    protected HighAvailabilityManager _haMgr;
+    @Inject
+    protected HostPodDao _podDao;
+    @Inject
+    protected DataCenterDao _dcDao;
+    @Inject
+    protected HypervisorGuruManager _hvGuruMgr;
+
+    @Inject(adapter = DeploymentPlanner.class)
     protected Adapters<DeploymentPlanner> _planners;
-    
+
     Map<VirtualMachine.Type, VirtualMachineGuru<? extends VMInstanceVO>> _vmGurus = new HashMap<VirtualMachine.Type, VirtualMachineGuru<? extends VMInstanceVO>>();
     protected StateMachine2<State, VirtualMachine.Event, VirtualMachine> _stateMachine;
-    
+
     ScheduledExecutorService _executor = null;
     protected int _operationTimeout;
-    
+
     protected int _retry;
     protected long _nodeId;
     protected long _cleanupWait;
@@ -192,37 +222,31 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
 
     @Override
     public <T extends VMInstanceVO> void registerGuru(VirtualMachine.Type type, VirtualMachineGuru<T> guru) {
-        synchronized(_vmGurus) { 
+        synchronized (_vmGurus) {
             _vmGurus.put(type, guru);
         }
     }
-    
-    @Override @DB
-    public <T extends VMInstanceVO> T allocate(T vm,
-            VMTemplateVO template,
-            ServiceOfferingVO serviceOffering,
-            Pair<? extends DiskOfferingVO, Long> rootDiskOffering,
-            List<Pair<DiskOfferingVO, Long>> dataDiskOfferings,
-            List<Pair<NetworkVO, NicProfile>> networks,
-            Map<VirtualMachineProfile.Param, Object> params,
-            DeploymentPlan plan,
-            HypervisorType hyperType,
-            Account owner) throws InsufficientCapacityException {
+
+    @Override
+    @DB
+    public <T extends VMInstanceVO> T allocate(T vm, VMTemplateVO template, ServiceOfferingVO serviceOffering, Pair<? extends DiskOfferingVO, Long> rootDiskOffering,
+            List<Pair<DiskOfferingVO, Long>> dataDiskOfferings, List<Pair<NetworkVO, NicProfile>> networks, Map<VirtualMachineProfile.Param, Object> params, DeploymentPlan plan,
+            HypervisorType hyperType, Account owner) throws InsufficientCapacityException {
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Allocating entries for VM: " + vm);
         }
-        
+
         VirtualMachineProfileImpl<T> vmProfile = new VirtualMachineProfileImpl<T>(vm, template, serviceOffering, owner, params);
-        
+
         vm.setDataCenterId(plan.getDataCenterId());
         if (plan.getPodId() != null) {
             vm.setPodId(plan.getPodId());
         }
+
         assert (plan.getClusterId() == null && plan.getPoolId() == null) : "We currently don't support cluster and pool preset yet";
-        
         @SuppressWarnings("unchecked")
-        VirtualMachineGuru<T> guru = (VirtualMachineGuru<T>)_vmGurus.get(vm.getType());
-        
+        VirtualMachineGuru<T> guru = (VirtualMachineGuru<T>) _vmGurus.get(vm.getType());
+
         Transaction txn = Transaction.currentTxn();
         txn.start();
         vm = guru.persist(vm);
@@ -239,11 +263,11 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         if (dataDiskOfferings == null) {
             dataDiskOfferings = new ArrayList<Pair<DiskOfferingVO, Long>>(0);
         }
-        
+
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Allocaing disks for " + vm);
         }
-        
+
         if (template.getFormat() == ImageFormat.ISO) {
             _storageMgr.allocateRawVolume(VolumeType.ROOT, "ROOT-" + vm.getId(), rootDiskOffering.first(), rootDiskOffering.second(), vm, owner);
         } else {
@@ -257,48 +281,36 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Allocation completed for VM: " + vm);
         }
-        
+
         return vm;
     }
-    
+
     @Override
-    public <T extends VMInstanceVO> T allocate(T vm,
-            VMTemplateVO template,
-            ServiceOfferingVO serviceOffering,
-            Long rootSize,
-            Pair<DiskOfferingVO, Long> dataDiskOffering,
-            List<Pair<NetworkVO, NicProfile>> networks,
-            DeploymentPlan plan,
-            HypervisorType hyperType,
-            Account owner) throws InsufficientCapacityException {
+    public <T extends VMInstanceVO> T allocate(T vm, VMTemplateVO template, ServiceOfferingVO serviceOffering, Long rootSize, Pair<DiskOfferingVO, Long> dataDiskOffering,
+            List<Pair<NetworkVO, NicProfile>> networks, DeploymentPlan plan, HypervisorType hyperType, Account owner) throws InsufficientCapacityException {
         List<Pair<DiskOfferingVO, Long>> diskOfferings = new ArrayList<Pair<DiskOfferingVO, Long>>(1);
         if (dataDiskOffering != null) {
             diskOfferings.add(dataDiskOffering);
         }
         return allocate(vm, template, serviceOffering, new Pair<DiskOfferingVO, Long>(serviceOffering, rootSize), diskOfferings, networks, null, plan, hyperType, owner);
     }
-    
+
     @Override
-    public <T extends VMInstanceVO> T allocate(T vm,
-            VMTemplateVO template,
-            ServiceOfferingVO serviceOffering,
-            List<Pair<NetworkVO, NicProfile>> networks,
-            DeploymentPlan plan, 
-            HypervisorType hyperType,
-            Account owner) throws InsufficientCapacityException {
+    public <T extends VMInstanceVO> T allocate(T vm, VMTemplateVO template, ServiceOfferingVO serviceOffering, List<Pair<NetworkVO, NicProfile>> networks, DeploymentPlan plan,
+            HypervisorType hyperType, Account owner) throws InsufficientCapacityException {
         return allocate(vm, template, serviceOffering, new Pair<DiskOfferingVO, Long>(serviceOffering, null), null, networks, null, plan, hyperType, owner);
     }
-    
+
     @SuppressWarnings("unchecked")
     private <T extends VMInstanceVO> VirtualMachineGuru<T> getVmGuru(T vm) {
-        return (VirtualMachineGuru<T>)_vmGurus.get(vm.getType());
+        return (VirtualMachineGuru<T>) _vmGurus.get(vm.getType());
     }
-    
+
     @Override
     public <T extends VMInstanceVO> boolean expunge(T vm, User caller, Account account) throws ResourceUnavailableException {
         try {
             if (advanceExpunge(vm, caller, account)) {
-                //Mark vms as removed
+                // Mark vms as removed
                 remove(vm, caller, account);
                 return true;
             } else {
@@ -311,7 +323,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             throw new CloudRuntimeException("Concurrent operation ", e);
         }
     }
-    
+
     @Override
     public <T extends VMInstanceVO> boolean advanceExpunge(T vm, User caller, Account account) throws ResourceUnavailableException, OperationTimedoutException, ConcurrentOperationException {
         if (vm == null || vm.getRemoved() != null) {
@@ -320,7 +332,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             }
             return true;
         }
-        
+
         if (!this.advanceStop(vm, false, caller, account)) {
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("Unable to stop the VM so we can't expunge it.");
@@ -331,20 +343,20 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             s_logger.debug("Unable to destroy the vm because it is not in the correct state: " + vm.toString());
             return false;
         }
-        
+
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Destroying vm " + vm);
         }
-        
+
         VirtualMachineProfile<T> profile = new VirtualMachineProfileImpl<T>(vm);
 
         _networkMgr.cleanupNics(profile);
-    	//Clean up volumes based on the vm's instance id
-    	_storageMgr.cleanupVolumes(vm.getId());
-    	
+        // Clean up volumes based on the vm's instance id
+        _storageMgr.cleanupVolumes(vm.getId());
+
         VirtualMachineGuru<T> guru = getVmGuru(vm);
         guru.finalizeExpunge(vm);
-    	
+
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Expunged " + vm);
         }
@@ -363,17 +375,17 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
     public boolean stop() {
         return true;
     }
-    
+
     @Override
     public boolean configure(String name, Map<String, Object> xmlParams) throws ConfigurationException {
         _name = name;
-        
+
         ComponentLocator locator = ComponentLocator.getCurrentLocator();
         ConfigurationDao configDao = locator.getDao(ConfigurationDao.class);
         Map<String, String> params = configDao.getConfiguration(xmlParams);
-        
+
         _retry = NumbersUtil.parseInt(params.get(Config.StartRetry.key()), 10);
-        
+
         ReservationContextImpl.setComponents(_userDao, _domainDao, _accountDao);
         VirtualMachineProfileImpl.setComponents(_offeringDao, _templateDao, _accountDao);
 
@@ -383,24 +395,24 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         _opWaitInterval = NumbersUtil.parseLong(params.get(Config.VmOpWaitInterval.key()), 120) * 1000;
         _lockStateRetry = NumbersUtil.parseInt(params.get(Config.VmOpLockStateRetry.key()), 5);
         _operationTimeout = NumbersUtil.parseInt(params.get(Config.Wait.key()), 1800) * 2;
-        
+
         _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("Vm-Operations-Cleanup"));
         _nodeId = _clusterMgr.getManagementNodeId();
-      
+
         _agentMgr.registerForHostEvents(this, true, true, true);
-        
+
         return true;
     }
-    
+
     @Override
     public String getName() {
         return _name;
     }
-    
+
     protected VirtualMachineManagerImpl() {
         setStateMachine();
     }
-    
+
     @Override
     public <T extends VMInstanceVO> T start(T vm, Map<VirtualMachineProfile.Param, Object> params, User caller, Account account) throws InsufficientCapacityException, ResourceUnavailableException {
         try {
@@ -419,19 +431,19 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 }
                 return true;
             }
-            
+
             if (vo.getStep() == Step.Done) {
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Work for " + vm + " is " + vo.getStep());
                 }
                 return true;
             }
-            
+
             if (vo.getSecondsTaskIsInactive() > _cancelWait) {
                 s_logger.warn("The task item for vm " + vm + " has been inactive for " + vo.getSecondsTaskIsInactive());
                 return false;
             }
-            
+
             try {
                 Thread.sleep(_opWaitInterval);
             } catch (InterruptedException e) {
@@ -440,14 +452,14 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             }
             s_logger.debug("Waiting some more to make sure there's no activity on " + vm);
         }
-        
-        
+
     }
-    
+
     @DB
-    protected <T extends VMInstanceVO> Ternary<T, ReservationContext, ItWorkVO> changeToStartState(VirtualMachineGuru<T> vmGuru, T vm, User caller, Account account) throws ConcurrentOperationException {
+    protected <T extends VMInstanceVO> Ternary<T, ReservationContext, ItWorkVO> changeToStartState(VirtualMachineGuru<T> vmGuru, T vm, User caller, Account account)
+            throws ConcurrentOperationException {
         long vmId = vm.getId();
-        
+
         ItWorkVO work = new ItWorkVO(UUID.randomUUID().toString(), _nodeId, State.Starting, vm.getType(), vm.getId());
         int retry = _lockStateRetry;
         while (retry-- != 0) {
@@ -455,26 +467,26 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             txn.start();
             try {
                 if (stateTransitTo(vm, Event.StartRequested, null, work.getId())) {
-                    
+
                     Journal journal = new Journal.LogJournal("Creating " + vm, s_logger);
                     work = _workDao.persist(work);
                     ReservationContextImpl context = new ReservationContextImpl(work.getId(), journal, caller, account);
-                    
+
                     if (s_logger.isDebugEnabled()) {
                         s_logger.debug("Successfully transitioned to start state for " + vm + " reservation id = " + work.getId());
                     }
                     return new Ternary<T, ReservationContext, ItWorkVO>(vmGuru.findById(vmId), context, work);
                 }
-                
+
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Determining why we're unable to update the state to Starting for " + vm);
-                } 
-                
+                }
+
                 VMInstanceVO instance = _vmDao.lockRow(vmId, true);
                 if (instance == null) {
                     throw new ConcurrentOperationException("Unable to acquire lock on " + vm);
                 }
-                
+
                 State state = instance.getState();
                 if (state == State.Running) {
                     if (s_logger.isDebugEnabled()) {
@@ -482,7 +494,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                     }
                     return null;
                 }
-                
+
                 if (state.isTransitional()) {
                     if (!checkWorkItems(vm, state)) {
                         throw new ConcurrentOperationException("There are concurrent operations on the VM " + vm);
@@ -490,7 +502,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                         continue;
                     }
                 }
-                
+
                 if (state != State.Stopped) {
                     s_logger.debug("VM " + vm + " is not in a state to be started: " + state);
                     return null;
@@ -499,10 +511,10 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 txn.commit();
             }
         }
-        
+
         throw new ConcurrentOperationException("Unable to change the state of " + vm);
     }
-    
+
     @DB
     protected <T extends VMInstanceVO> boolean changeState(T vm, Event event, Long hostId, ItWorkVO work, Step step) {
         Transaction txn = Transaction.currentTxn();
@@ -514,35 +526,35 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         txn.commit();
         return true;
     }
-    
+
     @Override
-    public <T extends VMInstanceVO> T advanceStart(T vm, Map<VirtualMachineProfile.Param, Object> params, User caller, Account account) throws InsufficientCapacityException, ConcurrentOperationException, ResourceUnavailableException {
+    public <T extends VMInstanceVO> T advanceStart(T vm, Map<VirtualMachineProfile.Param, Object> params, User caller, Account account) throws InsufficientCapacityException,
+            ConcurrentOperationException, ResourceUnavailableException {
         long vmId = vm.getId();
-        
+
         VirtualMachineGuru<T> vmGuru = getVmGuru(vm);
-        vm = vmGuru.findById(vm.getId());        
+        vm = vmGuru.findById(vm.getId());
         Ternary<T, ReservationContext, ItWorkVO> start = changeToStartState(vmGuru, vm, caller, account);
         if (start == null) {
             return vmGuru.findById(vmId);
         }
-        
+
         vm = start.first();
         ReservationContext ctx = start.second();
         ItWorkVO work = start.third();
-        
+
         T startedVm = null;
         ServiceOfferingVO offering = _offeringDao.findById(vm.getServiceOfferingId());
         VMTemplateVO template = _templateDao.findById(vm.getTemplateId());
         DataCenterDeployment plan = new DataCenterDeployment(vm.getDataCenterId(), vm.getPodId(), null, null);
         HypervisorGuru hvGuru = _hvGuruMgr.getGuru(vm.getHypervisorType());
-        
+
         try {
             Journal journal = start.second().getJournal();
-            
             ExcludeList avoids = new ExcludeList();
             int retry = _retry;
             while (retry-- != 0) { // It's != so that it can match -1.
-                
+
                 VirtualMachineProfileImpl<T> vmProfile = new VirtualMachineProfileImpl<T>(vm, template, offering, null, params);
                 DeployDestination dest = null;
                 for (DeploymentPlanner planner : _planners) {
@@ -553,38 +565,38 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                         break;
                     }
                 }
-                
+
                 if (dest == null) {
-                	_accountMgr.decrementResourceCount(vm.getAccountId(), ResourceType.user_vm);
-                    throw new InsufficientServerCapacityException("Unable to create a deployment for " + vmProfile, DataCenter.class, plan.getDataCenterId());                    
+                    _accountMgr.decrementResourceCount(vm.getAccountId(), ResourceType.user_vm);
+                    throw new InsufficientServerCapacityException("Unable to create a deployment for " + vmProfile, DataCenter.class, plan.getDataCenterId());
                 }
-                
+
                 long destHostId = dest.getHost().getId();
-                
+
                 if (!changeState(vm, Event.OperationRetry, destHostId, work, Step.Prepare)) {
                     throw new ConcurrentOperationException("Unable to update the state of the Virtual Machine");
                 }
-                
+
                 try {
-                    
                     _storageMgr.prepare(vmProfile, dest);
                     _networkMgr.prepare(vmProfile, dest, ctx);
-                    
+
                     vmGuru.finalizeVirtualMachineProfile(vmProfile, dest, ctx);
-                    
+
                     VirtualMachineTO vmTO = hvGuru.implement(vmProfile);
-                    
+
                     Commands cmds = new Commands(OnError.Revert);
                     cmds.addCommand(new StartCommand(vmTO));
-                    
+
                     vmGuru.finalizeDeployment(cmds, vmProfile, dest, ctx);
                     vm.setPodId(dest.getPod().getId());
+
                     work = _workDao.findById(work.getId());
                     if (work == null || work.getStep() != Step.Prepare) {
                         throw new ConcurrentOperationException("Work steps have been changed: " + work);
                     }
                     _workDao.updateStep(work, Step.Starting);
-                
+
                     _agentMgr.send(destHostId, cmds);
                     _workDao.updateStep(work, Step.Started);
                     Answer startAnswer = cmds.getAnswer(StartAnswer.class);
@@ -604,7 +616,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 } catch (OperationTimedoutException e) {
                     s_logger.debug("Unable to send the start command to host " + dest.getHost());
                     if (e.isActive()) {
-                        //TODO: This one is different as we're not sure if the VM is actually started. 
+                        // TODO: This one is different as we're not sure if the VM is actually started.
                     }
                     avoids.addHost(destHostId);
                     continue;
@@ -638,16 +650,16 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                         cleanup(vmGuru, vmProfile, work, Event.OperationFailed, false, caller, account);
                     }
                 }
-            } 
+            }
         } finally {
             if (startedVm == null) {
                 changeState(vm, Event.OperationFailed, null, work, Step.Done);
             }
         }
-        
+
         return startedVm;
     }
-    
+
     @Override
     public <T extends VMInstanceVO> boolean stop(T vm, User user, Account account) throws ResourceUnavailableException {
         try {
@@ -658,17 +670,17 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             throw new CloudRuntimeException("Unable to stop vm because of a concurrent operation", e);
         }
     }
-    
+
     protected <T extends VMInstanceVO> boolean sendStop(VirtualMachineGuru<T> guru, VirtualMachineProfile<T> profile, boolean force) {
         VMInstanceVO vm = profile.getVirtualMachine();
         StopCommand stop = new StopCommand(vm, vm.getInstanceName(), null);
         try {
-            StopAnswer answer = (StopAnswer)_agentMgr.send(vm.getHostId(), stop);
+            StopAnswer answer = (StopAnswer) _agentMgr.send(vm.getHostId(), stop);
             if (!answer.getResult()) {
                 s_logger.debug("Unable to stop VM due to " + answer.getDetails());
                 return false;
             }
-            
+
             guru.finalizeStop(profile, answer);
         } catch (AgentUnavailableException e) {
             if (!force) {
@@ -679,10 +691,10 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     protected <T extends VMInstanceVO> boolean cleanup(VirtualMachineGuru<T> guru, VirtualMachineProfile<T> profile, ItWorkVO work, Event event, boolean force, User user, Account account) {
         T vm = profile.getVirtualMachine();
         State state = vm.getState();
@@ -693,7 +705,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 s_logger.warn("Unable to cleanup vm " + vm + "; work state is incorrect: " + step);
                 return false;
             }
-            
+
             if (step == Step.Started || step == Step.Starting) {
                 if (vm.getHostId() != null) {
                     if (!sendStop(guru, profile, force)) {
@@ -702,7 +714,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                     }
                 }
             }
-            
+
             if (step != Step.Release && step != Step.Prepare && step != Step.Started && step != Step.Starting) {
                 s_logger.debug("Cleanup is not needed for vm " + vm + "; work state is incorrect: " + step);
                 return true;
@@ -720,7 +732,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                     s_logger.warn("Failed to stop vm " + vm + " in " + State.Migrating + " state as a part of cleanup process");
                     return false;
                 }
-            } 
+            }
             if (vm.getLastHostId() != null) {
                 if (!sendStop(guru, profile, force)) {
                     s_logger.warn("Failed to stop vm " + vm + " in " + State.Migrating + " state as a part of cleanup process");
@@ -733,7 +745,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 return false;
             }
         }
-        
+
         _networkMgr.release(profile, force);
         _storageMgr.release(profile);
         s_logger.debug("Successfully cleanued up resources for the vm " + vm + " in " + state + " state");
@@ -750,21 +762,21 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             }
             return true;
         }
-        
+
         if (state == State.Destroyed || state == State.Expunging || state == State.Error) {
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("Stopped called on " + vm + " but the state is " + state);
             }
             return true;
         }
-        
+
         VirtualMachineGuru<T> vmGuru = getVmGuru(vm);
-        
+
         if (!stateTransitTo(vm, Event.StopRequested, vm.getHostId())) {
             if (!forced) {
                 throw new ConcurrentOperationException("VM is being operated on by someone else.");
             }
-            
+
             vm = vmGuru.findById(vmId);
             if (vm == null) {
                 if (s_logger.isDebugEnabled()) {
@@ -773,7 +785,8 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 return true;
             }
         }
-        
+
+        VirtualMachineProfile<T> profile = new VirtualMachineProfileImpl<T>(vm);
         if ((vm.getState() == State.Starting || vm.getState() == State.Stopping || vm.getState() == State.Migrating) && forced) {
             ItWorkVO work = _workDao.findByOutstandingWork(vm.getId(), vm.getState());
             if (work != null) {
@@ -782,24 +795,23 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 }
             }
         }
-        
-        VirtualMachineProfile<T> profile = new VirtualMachineProfileImpl<T>(vm);
+
         if (vm.getHostId() != null) {
             String routerPrivateIp = null;
-            if(vm.getType() == VirtualMachine.Type.DomainRouter){
+            if (vm.getType() == VirtualMachine.Type.DomainRouter) {
                 routerPrivateIp = vm.getPrivateIpAddress();
             }
             StopCommand stop = new StopCommand(vm, vm.getInstanceName(), null, routerPrivateIp);
             boolean stopped = false;
             StopAnswer answer = null;
             try {
-                answer = (StopAnswer)_agentMgr.send(vm.getHostId(), stop);
+                answer = (StopAnswer) _agentMgr.send(vm.getHostId(), stop);
                 stopped = answer.getResult();
                 if (!stopped) {
                     throw new CloudRuntimeException("Unable to stop the virtual machine due to " + answer.getDetails());
                 }
                 vmGuru.finalizeStop(profile, answer);
-                    
+
             } catch (AgentUnavailableException e) {
             } catch (OperationTimedoutException e) {
             } finally {
@@ -810,63 +822,65 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                         return false;
                     } else {
                         s_logger.warn("Unable to actually stop " + vm + " but continue with release because it's a force stop");
+                        vmGuru.finalizeStop(profile, answer);
                     }
                 }
             }
         }
-        
+
         if (s_logger.isDebugEnabled()) {
             s_logger.debug(vm + " is stopped on the host.  Proceeding to release resource held.");
         }
-        
+
         try {
             _networkMgr.release(profile, forced);
             s_logger.debug("Successfully released network resources for the vm " + vm);
         } catch (Exception e) {
             s_logger.warn("Unable to release some network resources.", e);
         }
-        
+
         try {
             _storageMgr.release(profile);
             s_logger.debug("Successfully released storage resources for the vm " + vm);
         } catch (Exception e) {
             s_logger.warn("Unable to release storage resources.", e);
         }
-         
+
         vm.setReservationId(null);
-        
+
         return stateTransitTo(vm, Event.OperationSucceeded, null);
     }
-    
+
     private void setStateMachine() {
-    	_stateMachine = VirtualMachine.State.getStateMachine();
+        _stateMachine = VirtualMachine.State.getStateMachine();
     }
-    
+
     protected boolean stateTransitTo(VMInstanceVO vm, VirtualMachine.Event e, Long hostId, String reservationId) {
         vm.setReservationId(reservationId);
         return _stateMachine.transitTo(vm, e, hostId, _vmDao);
     }
-    
+
     @Override
     public boolean stateTransitTo(VMInstanceVO vm, VirtualMachine.Event e, Long hostId) {
         State oldState = vm.getState();
-        if (oldState == State.Starting ) {
+        if (oldState == State.Starting) {
             if (e == Event.OperationSucceeded) {
                 vm.setLastHostId(hostId);
             }
+
         }
         return _stateMachine.transitTo(vm, e, hostId, _vmDao);
     }
-    
+
     @Override
     public <T extends VMInstanceVO> boolean remove(T vm, User user, Account caller) {
-        //expunge the corresponding nics
+        // expunge the corresponding nics
         VirtualMachineProfile<T> profile = new VirtualMachineProfileImpl<T>(vm);
         _networkMgr.expungeNics(profile);
         s_logger.trace("Nics of the vm " + vm + " are expunged successfully");
         return _vmDao.remove(vm.getId());
     }
-    
+
     @Override
     public <T extends VMInstanceVO> boolean destroy(T vm, User user, Account caller) throws AgentUnavailableException, OperationTimedoutException, ConcurrentOperationException {
         if (s_logger.isDebugEnabled()) {
@@ -878,12 +892,12 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             }
             return true;
         }
-        
+
         if (!advanceStop(vm, false, user, caller)) {
             s_logger.debug("Unable to stop " + vm);
             return false;
         }
-        
+
         if (!stateTransitTo(vm, VirtualMachine.Event.DestroyRequested, vm.getHostId())) {
             s_logger.debug("Unable to destroy the vm because it is not in the correct state: " + vm.toString());
             return false;
@@ -891,28 +905,28 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
 
         return true;
     }
-    
+
     protected boolean checkVmOnHost(VirtualMachine vm, long hostId) throws AgentUnavailableException, OperationTimedoutException {
-         CheckVirtualMachineAnswer answer = (CheckVirtualMachineAnswer)_agentMgr.send(hostId, new CheckVirtualMachineCommand(vm.getInstanceName()));
+        CheckVirtualMachineAnswer answer = (CheckVirtualMachineAnswer) _agentMgr.send(hostId, new CheckVirtualMachineCommand(vm.getInstanceName()));
         if (!answer.getResult() || answer.getState() == State.Stopped) {
             return false;
         }
-        
+
         return true;
     }
-    
+
     @Override
     public <T extends VMInstanceVO> T migrate(T vm, long srcHostId, DeployDestination dest) throws ResourceUnavailableException {
         s_logger.info("Migrating " + vm + " to " + dest);
-        
+
         long dstHostId = dest.getHost().getId();
         Host fromHost = _hostDao.findById(srcHostId);
         if (fromHost == null) {
             s_logger.info("Unable to find the host to migrate from: " + srcHostId);
             return null;
-        } 
+        }
         VirtualMachineGuru<T> vmGuru = getVmGuru(vm);
-        
+
         vm = vmGuru.findById(vm.getId());
         if (vm == null) {
             if (s_logger.isDebugEnabled()) {
@@ -920,31 +934,31 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             }
             return null;
         }
-        
+
         short alertType = AlertManager.ALERT_TYPE_USERVM_MIGRATE;
         if (VirtualMachine.Type.DomainRouter.equals(vm.getType())) {
             alertType = AlertManager.ALERT_TYPE_DOMAIN_ROUTER_MIGRATE;
         } else if (VirtualMachine.Type.ConsoleProxy.equals(vm.getType())) {
             alertType = AlertManager.ALERT_TYPE_CONSOLE_PROXY_MIGRATE;
         }
-        
+
         VirtualMachineProfile<VMInstanceVO> profile = new VirtualMachineProfileImpl<VMInstanceVO>(vm);
         _networkMgr.prepareNicForMigration(profile, dest);
         _storageMgr.prepareForMigration(profile, dest);
         HypervisorGuru hvGuru = _hvGuruMgr.getGuru(vm.getHypervisorType());
-        
+
         VirtualMachineTO to = hvGuru.implement(profile);
         PrepareForMigrationCommand pfmc = new PrepareForMigrationCommand(to);
-        
+
         ItWorkVO work = new ItWorkVO(UUID.randomUUID().toString(), _nodeId, State.Migrating, vm.getType(), vm.getId());
         work.setStep(Step.Prepare);
         work.setResourceType(ItWorkVO.ResourceType.Host);
         work.setResourceId(dstHostId);
         work = _workDao.persist(work);
-        
+
         PrepareForMigrationAnswer pfma = null;
         try {
-            pfma = (PrepareForMigrationAnswer)_agentMgr.send(dstHostId, pfmc);
+            pfma = (PrepareForMigrationAnswer) _agentMgr.send(dstHostId, pfmc);
             if (!pfma.getResult()) {
                 String msg = "Unable to prepare for migration due to " + pfma.getDetails();
                 pfma = null;
@@ -958,19 +972,18 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 _workDao.update(work.getId(), work);
             }
         }
-        
+
         vm.setLastHostId(srcHostId);
         if (vm == null || vm.getHostId() == null || vm.getHostId() != srcHostId || !changeState(vm, Event.MigrationRequested, dstHostId, work, Step.Migrating)) {
             s_logger.info("Migration cancelled because state has changed: " + vm);
             return null;
-        } 
-        
+        }
         boolean migrated = false;
         try {
             boolean isWindows = _guestOsCategoryDao.findById(_guestOsDao.findById(vm.getGuestOSId()).getCategoryId()).getName().equalsIgnoreCase("Windows");
             MigrateCommand mc = new MigrateCommand(vm.getInstanceName(), dest.getHost().getPrivateIpAddress(), isWindows);
             try {
-                MigrateAnswer ma = (MigrateAnswer)_agentMgr.send(vm.getLastHostId(), mc);
+                MigrateAnswer ma = (MigrateAnswer) _agentMgr.send(vm.getLastHostId(), mc);
                 if (!ma.getResult()) {
                     s_logger.error("Unable to migrate due to " + ma.getDetails());
                     return null;
@@ -982,9 +995,9 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 }
                 throw new AgentUnavailableException("Operation timed out on migrating " + vm, dstHostId);
             }
-            
+
             changeState(vm, VirtualMachine.Event.OperationSucceeded, dstHostId, work, Step.Started);
-            
+
             try {
                 if (!checkVmOnHost(vm, dstHostId)) {
                     s_logger.error("Unable to complete migration for " + vm);
@@ -994,25 +1007,26 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 }
             } catch (OperationTimedoutException e) {
             }
-            
+
             migrated = true;
             return vm;
         } finally {
             if (!migrated) {
                 s_logger.info("Migration was unsuccessful.  Cleaning up: " + vm);
 
-                _alertMgr.sendAlert(alertType, fromHost.getDataCenterId(), fromHost.getPodId(), "Unable to migrate vm " + vm.getName() + " from host " + fromHost.getName() + " in zone " + dest.getDataCenter().getName() + " and pod " + dest.getPod().getName(), "Migrate Command failed.  Please check logs.");
+                _alertMgr.sendAlert(alertType, fromHost.getDataCenterId(), fromHost.getPodId(), "Unable to migrate vm " + vm.getName() + " from host " + fromHost.getName() + " in zone "
+                        + dest.getDataCenter().getName() + " and pod " + dest.getPod().getName(), "Migrate Command failed.  Please check logs.");
 
                 _agentMgr.send(dstHostId, new Commands(cleanup(vm.getInstanceName())), null);
-                
+
                 stateTransitTo(vm, Event.OperationFailed, srcHostId);
             }
-            
+
             work.setStep(Step.Done);
             _workDao.update(work.getId(), work);
         }
     }
-    
+
     protected void cancelWorkItems(long nodeId) {
         GlobalLock scanLock = GlobalLock.getInternLock("vmmgr.cancel.workitem");
 
@@ -1032,7 +1046,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                                 } else if (work.getType() == State.Migrating) {
                                     _haMgr.scheduleMigration(vm);
                                 }
-                            } 
+                            }
                             work.setStep(Step.Done);
                             _workDao.update(work.getId(), work);
                         } catch (Exception e) {
@@ -1047,7 +1061,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             scanLock.releaseRef();
         }
     }
-    
+
     @Override
     public boolean migrateAway(VirtualMachine.Type vmType, long vmId, long srcHostId) throws InsufficientServerCapacityException {
         VirtualMachineGuru<? extends VMInstanceVO> vmGuru = _vmGurus.get(vmType);
@@ -1056,21 +1070,21 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             s_logger.debug("Unable to find a VM for " + vmId);
             return true;
         }
-        
-        VirtualMachineProfile<VMInstanceVO> profile = new VirtualMachineProfileImpl<VMInstanceVO>(vm); 
-        
+
+        VirtualMachineProfile<VMInstanceVO> profile = new VirtualMachineProfileImpl<VMInstanceVO>(vm);
+
         Long hostId = vm.getHostId();
         if (hostId == null) {
             s_logger.debug("Unable to migrate because the VM doesn't have a host id: " + vm);
             return true;
         }
-        
+
         Host host = _hostDao.findById(hostId);
-        
+
         DataCenterDeployment plan = new DataCenterDeployment(host.getDataCenterId(), host.getPodId(), host.getClusterId(), null);
         ExcludeList excludes = new ExcludeList();
         excludes.addHost(hostId);
-        
+
         DeployDestination dest = null;
         while (true) {
             for (DeploymentPlanner planner : _planners) {
@@ -1085,13 +1099,13 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                     s_logger.debug("Planner " + planner + " was unable to find anything.");
                 }
             }
-            
+
             if (dest == null) {
                 throw new InsufficientServerCapacityException("Unable to find a server to migrate to.", host.getClusterId());
             }
-            
+
             excludes.addHost(dest.getHost().getId());
-            
+
             try {
                 vm = migrate(vm, srcHostId, dest);
             } catch (ResourceUnavailableException e) {
@@ -1100,9 +1114,9 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             if (vm != null) {
                 return true;
             }
-        } 
+        }
     }
-    
+
     protected class CleanupTask implements Runnable {
         @Override
         public void run() {
@@ -1114,7 +1128,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             }
         }
     }
-    
+
     @Override
     public <T extends VMInstanceVO> T reboot(T vm, Map<VirtualMachineProfile.Param, Object> params, User caller, Account account) throws InsufficientCapacityException, ResourceUnavailableException {
         try {
@@ -1123,11 +1137,12 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             throw new CloudRuntimeException("Unable to reboot a VM due to concurrent operation", e);
         }
     }
-    
+
     @Override
-    public <T extends VMInstanceVO> T advanceReboot(T vm, Map<VirtualMachineProfile.Param, Object> params, User caller, Account account) throws InsufficientCapacityException, ConcurrentOperationException, ResourceUnavailableException {  
+    public <T extends VMInstanceVO> T advanceReboot(T vm, Map<VirtualMachineProfile.Param, Object> params, User caller, Account account) throws InsufficientCapacityException,
+            ConcurrentOperationException, ResourceUnavailableException {
         T rebootedVm = null;
-        
+
         DataCenter dc = _configMgr.getZone(vm.getDataCenterId());
         HostPodVO pod = _configMgr.getPod(vm.getPodId());
         Host host = _hostDao.findById(vm.getHostId());
@@ -1136,13 +1151,13 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             cluster = _configMgr.getCluster(host.getClusterId());
         }
         DeployDestination dest = new DeployDestination(dc, pod, cluster, host);
-            
+
         try {
-            
+
             Commands cmds = new Commands(OnError.Revert);
             cmds.addCommand(new RebootCommand(vm.getName()));
             _agentMgr.send(host.getId(), cmds);
-           
+
             Answer rebootAnswer = cmds.getAnswer(RebootAnswer.class);
             if (rebootAnswer != null && rebootAnswer.getResult()) {
                 rebootedVm = vm;
@@ -1153,26 +1168,26 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             s_logger.warn("Unable to send the reboot command to host " + dest.getHost() + " for the vm " + vm + " due to operation timeout", e);
             throw new CloudRuntimeException("Failed to reboot the vm on host " + dest.getHost());
         }
-        
+
         return rebootedVm;
     }
-    
+
     @Override
     public VMInstanceVO findById(VirtualMachine.Type type, long vmId) {
         VirtualMachineGuru<? extends VMInstanceVO> guru = _vmGurus.get(type);
         return guru.findById(vmId);
     }
-    
+
     public Command cleanup(String vmName) {
         return new StopCommand(vmName);
     }
-    
+
     public Commands deltaSync(long hostId, Map<String, State> newStates) {
         Map<Long, AgentVmInfo> states = convertToInfos(newStates);
         Commands commands = new Commands(OnError.Continue);
-        
+
         boolean nativeHA = _agentMgr.isHostNativeHAEnabled(hostId);
-        
+
         for (Map.Entry<Long, AgentVmInfo> entry : states.entrySet()) {
             AgentVmInfo info = entry.getValue();
 
@@ -1181,7 +1196,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             Command command = null;
             if (vm != null) {
                 command = compareState(vm, info, false, nativeHA);
-            }  else {
+            } else {
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Cleaning up a VM that is no longer found: " + info.name);
                 }
@@ -1195,7 +1210,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
 
         return commands;
     }
-    
+
     protected Map<Long, AgentVmInfo> convertToInfos(final Map<String, State> states) {
         final HashMap<Long, AgentVmInfo> map = new HashMap<Long, AgentVmInfo>();
 
@@ -1215,7 +1230,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                     map.put(vm.getId(), new AgentVmInfo(entry.getKey(), vmGuru, vm, entry.getValue()));
                     break;
                 }
-                
+
                 Long id = vmGuru.convertToId(name);
                 if (id != null) {
                     map.put(id, new AgentVmInfo(entry.getKey(), vmGuru, null, entry.getValue()));
@@ -1227,28 +1242,27 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
     }
 
     /**
-     * compareState does as its name suggests and compares the states between
-     * management server and agent.  It returns whether something should be
-     * cleaned up
-     *
+     * compareState does as its name suggests and compares the states between management server and agent. It returns whether
+     * something should be cleaned up
+     * 
      */
     protected Command compareState(VMInstanceVO vm, final AgentVmInfo info, final boolean fullSync, boolean nativeHA) {
         State agentState = info.state;
         final String agentName = info.name;
         final State serverState = vm.getState();
         final String serverName = vm.getName();
-        
+
         VirtualMachineGuru<VMInstanceVO> vmGuru = getVmGuru(vm);
-        
+
         Command command = null;
 
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("VM " + serverName + ": server state = " + serverState.toString() + " and agent state = " + agentState.toString());
         }
-        
+
         if (agentState == State.Error) {
             agentState = State.Stopped;
-            
+
             short alertType = AlertManager.ALERT_TYPE_USERVM;
             if (VirtualMachine.Type.DomainRouter.equals(vm.getType())) {
                 alertType = AlertManager.ALERT_TYPE_DOMAIN_ROUTER;
@@ -1259,15 +1273,16 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             HostPodVO podVO = _podDao.findById(vm.getPodId());
             DataCenterVO dcVO = _dcDao.findById(vm.getDataCenterId());
             HostVO hostVO = _hostDao.findById(vm.getHostId());
-            
+
             String hostDesc = "name: " + hostVO.getName() + " (id:" + hostVO.getId() + "), availability zone: " + dcVO.getName() + ", pod: " + podVO.getName();
-            _alertMgr.sendAlert(alertType, vm.getDataCenterId(), vm.getPodId(), "VM (name: " + vm.getName() + ", id: " + vm.getId() + ") stopped on host " + hostDesc + " due to storage failure", "Virtual Machine " + vm.getName() + " (id: " + vm.getId() + ") running on host [" + vm.getHostId() + "] stopped due to storage failure.");
+            _alertMgr.sendAlert(alertType, vm.getDataCenterId(), vm.getPodId(), "VM (name: " + vm.getName() + ", id: " + vm.getId() + ") stopped on host " + hostDesc + " due to storage failure",
+                    "Virtual Machine " + vm.getName() + " (id: " + vm.getId() + ") running on host [" + vm.getHostId() + "] stopped due to storage failure.");
         }
-        
-//        if (serverState == State.Migrating) {
-//            s_logger.debug("Skipping vm in migrating state: " + vm.toString());
-//            return null;
-//        }
+
+        // if (serverState == State.Migrating) {
+        // s_logger.debug("Skipping vm in migrating state: " + vm.toString());
+        // return null;
+        // }
 
         if (agentState == serverState) {
             if (s_logger.isDebugEnabled()) {
@@ -1276,34 +1291,34 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             assert (agentState == State.Stopped || agentState == State.Running) : "If the states we send up is changed, this must be changed.";
             if (agentState == State.Running) {
                 stateTransitTo(vm, VirtualMachine.Event.AgentReportRunning, vm.getHostId());
-                // FIXME: What if someone comes in and sets it to stopping?  Then what?
+                // FIXME: What if someone comes in and sets it to stopping? Then what?
                 return null;
             }
             s_logger.debug("State matches but the agent said stopped so let's send a cleanup command anyways.");
             return cleanup(agentName);
-        } 
-        
+        }
+
         if (agentState == State.Shutdowned) {
             if (serverState == State.Running || serverState == State.Starting || serverState == State.Stopping) {
                 try {
                     advanceStop(vm, true, _accountMgr.getSystemUser(), _accountMgr.getSystemAccount());
                 } catch (AgentUnavailableException e) {
-                    assert(false) : "How do we hit this with forced on?";
+                    assert (false) : "How do we hit this with forced on?";
                     return null;
                 } catch (OperationTimedoutException e) {
-                    assert(false) : "How do we hit this with forced on?";
+                    assert (false) : "How do we hit this with forced on?";
                     return null;
                 } catch (ConcurrentOperationException e) {
-                    assert(false) : "How do we hit this with forced on?";
+                    assert (false) : "How do we hit this with forced on?";
                     return null;
                 }
             } else {
-                s_logger.debug("Sending cleanup to a shutdowned vm: " + agentName);            
+                s_logger.debug("Sending cleanup to a shutdowned vm: " + agentName);
                 command = cleanup(agentName);
             }
         } else if (agentState == State.Stopped) {
             // This state means the VM on the agent was detected previously
-            // and now is gone.  This is slightly different than if the VM
+            // and now is gone. This is slightly different than if the VM
             // was never completed but we still send down a Stop Command
             // to ensure there's cleanup.
             if (serverState == State.Running) {
@@ -1315,7 +1330,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             } else if (serverState == State.Starting) {
                 s_logger.debug("Ignoring VM in starting mode: " + vm.getName());
                 _haMgr.scheduleRestart(vm, false);
-            } 
+            }
             command = cleanup(agentName);
         } else if (agentState == State.Running) {
             if (serverState == State.Starting) {
@@ -1325,31 +1340,32 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                     stateTransitTo(vm, Event.AgentReportRunning, vm.getHostId());
                     s_logger.debug("VM's " + vm + " state is starting on full sync so updating it to Running");
                     vm = vmGuru.findById(vm.getId());
-                    
+
                     VirtualMachineProfile<VMInstanceVO> profile = new VirtualMachineProfileImpl<VMInstanceVO>(vm);
-                    
+
                     Commands cmds = new Commands(OnError.Revert);
                     s_logger.debug("Finalizing commands that need to be send to complete Start process for the vm " + vm);
                     vmGuru.finalizeCommandsOnStart(cmds, profile);
-                    
+
                     if (cmds.size() != 0) {
                         try {
                             _agentMgr.send(vm.getHostId(), cmds);
-                        } catch (OperationTimedoutException e){
-                            s_logger.error("Exception during update for running vm: " + vm, e);                        
+                        } catch (OperationTimedoutException e) {
+                            s_logger.error("Exception during update for running vm: " + vm, e);
                             return null;
                         } catch (ResourceUnavailableException e) {
-                            s_logger.error("Exception during update for running vm: " + vm, e); 
+                            s_logger.error("Exception during update for running vm: " + vm, e);
                             return null;
                         }
                     }
-                    
+
                     if (vmGuru.finalizeStart(profile, vm.getHostId(), cmds, null)) {
                         stateTransitTo(vm, Event.AgentReportRunning, vm.getHostId());
                     } else {
-                        s_logger.error("Exception during update for running vm: " + vm); 
+                        s_logger.error("Exception during update for running vm: " + vm);
                         return null;
                     }
+
                 }
             } else if (serverState == State.Stopping) {
                 s_logger.debug("Scheduling a stop command for " + vm);
@@ -1357,7 +1373,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             } else {
                 s_logger.debug("VM state is in stopped so stopping it on the agent");
                 command = cleanup(agentName);
-            } 
+            }
         }
         return command;
     }
@@ -1378,10 +1394,10 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             if (info == null) {
                 info = new AgentVmInfo(vm.getInstanceName(), getVmGuru(vm), vm, State.Stopped);
                 castedVm = info.guru.findById(vm.getId());
-            } else { 
+            } else {
                 castedVm = info.vm;
             }
-            
+
             Command command = compareState(castedVm, info, true, nativeHA);
             if (command != null) {
                 commands.addCommand(command);
@@ -1411,7 +1427,6 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         return commands;
     }
 
-    
     @Override
     public boolean isRecurring() {
         return false;
@@ -1430,12 +1445,12 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         }
         return true;
     }
-    
+
     @Override
     public boolean processTimeout(long agentId, long seq) {
         return true;
     }
-    
+
     @Override
     public int getTimeout() {
         return -1;
@@ -1446,7 +1461,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         boolean processed = false;
         for (Command cmd : cmds) {
             if (cmd instanceof PingRoutingCommand) {
-                PingRoutingCommand ping = (PingRoutingCommand)cmd;
+                PingRoutingCommand ping = (PingRoutingCommand) cmd;
                 if (ping.getNewStates().size() > 0) {
                     Commands commands = deltaSync(agentId, ping.getNewStates());
                     if (commands.size() > 0) {
@@ -1467,24 +1482,24 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
     public AgentControlAnswer processControlCommand(long agentId, AgentControlCommand cmd) {
         return null;
     }
-    
+
     @Override
     public boolean processDisconnect(long agentId, Status state) {
         return true;
     }
-    
+
     @Override
     public void processConnect(HostVO agent, StartupCommand cmd) throws ConnectionException {
         if (!(cmd instanceof StartupRoutingCommand)) {
             return;
         }
-        
+
         long agentId = agent.getId();
-        
-        StartupRoutingCommand startup = (StartupRoutingCommand)cmd;
-        
+
+        StartupRoutingCommand startup = (StartupRoutingCommand) cmd;
+
         Commands commands = fullSync(agentId, startup.getVmStates());
-        
+
         if (commands.size() > 0) {
             s_logger.debug("Sending clean commands to the agent");
 
@@ -1509,7 +1524,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             }
         }
     }
-    
+
     protected class TransitionTask implements Runnable {
         @Override
         public void run() {
@@ -1518,7 +1533,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 s_logger.debug("Couldn't get the global lock");
                 return;
             }
-            
+
             if (!lock.lock(30)) {
                 s_logger.debug("Couldn't lock the db");
                 return;
@@ -1542,7 +1557,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             }
         }
     }
-    
+
     protected class AgentVmInfo {
         public String name;
         public State state;
@@ -1554,7 +1569,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             this.name = name;
             this.state = state;
             this.vm = vm;
-            this.guru = (VirtualMachineGuru<VMInstanceVO>)guru;
+            this.guru = (VirtualMachineGuru<VMInstanceVO>) guru;
         }
     }
 }
