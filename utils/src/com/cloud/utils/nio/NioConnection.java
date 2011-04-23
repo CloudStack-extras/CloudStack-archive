@@ -250,6 +250,7 @@ public abstract class NioConnection implements Runnable {
                 }
             } else if (hsStatus == SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
                 in_appBuf.clear();
+                // One packet may contained multiply operation
                 if (in_pkgBuf.position() == 0 || !in_pkgBuf.hasRemaining()) {
                     in_pkgBuf.clear();
                     count = ch.read(in_pkgBuf);
@@ -259,6 +260,26 @@ public abstract class NioConnection implements Runnable {
                     in_pkgBuf.flip();
                 }
                 engResult = sslEngine.unwrap(in_pkgBuf, in_appBuf);
+                ByteBuffer tmp_pkgBuf =
+                    ByteBuffer.allocate(sslSession.getPacketBufferSize() + 40);
+                while (engResult.getStatus() == SSLEngineResult.Status.BUFFER_UNDERFLOW) {
+                    // We need more packets to complete this operation
+                    if (s_logger.isTraceEnabled()) {
+                        s_logger.info("SSL: Buffer overflowed, getting more packets");
+                    }
+                    tmp_pkgBuf.clear();
+                    count = ch.read(tmp_pkgBuf);
+                    tmp_pkgBuf.flip();
+                    
+                    in_pkgBuf.mark();
+                    in_pkgBuf.position(in_pkgBuf.limit());
+                    in_pkgBuf.limit(in_pkgBuf.limit() + tmp_pkgBuf.limit());
+                    in_pkgBuf.put(tmp_pkgBuf);
+                    in_pkgBuf.reset();
+                    
+                    in_appBuf.clear();
+                    engResult = sslEngine.unwrap(in_pkgBuf, in_appBuf);
+                }
             } else if (hsStatus == SSLEngineResult.HandshakeStatus.NEED_TASK) {
                 Runnable run;
                 while ((run = sslEngine.getDelegatedTask()) != null) {
