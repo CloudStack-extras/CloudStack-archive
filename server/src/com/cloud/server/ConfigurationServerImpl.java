@@ -460,6 +460,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         script.add("-keystore", keystorePath);
         script.add("-storepass", "vmops.com");
         script.add("-keypass", "vmops.com");
+        script.add("-validity", "3650");
         script.add("-dname", dname);
         String result = script.execute();
         if (result != null) {
