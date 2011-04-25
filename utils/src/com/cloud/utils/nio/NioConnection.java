@@ -88,6 +88,16 @@ public abstract class NioConnection implements Runnable {
         _thread = new Thread(this, _name + "-Selector");
         _isRunning = true;
         _thread.start();
+        // Wait until we got init() done
+        synchronized(_thread) {
+            try {
+                _thread.wait();
+            } catch (InterruptedException e) {
+                if (s_logger.isTraceEnabled()) {
+                    s_logger.info("Interrupted start thread ", e);
+                }
+            }
+        }
     }
 
     public void stop() {
@@ -107,11 +117,7 @@ public abstract class NioConnection implements Runnable {
     }
     
     public void run() {
-    	synchronized(this) {
-    		if (_isStartup) {
-    			return;
-    		}
-    		
+    	synchronized(_thread) {
     		try {
     			init();
     		} catch (ConnectException e) {
@@ -122,6 +128,7 @@ public abstract class NioConnection implements Runnable {
     			return;
     		}
     		_isStartup = true;
+    		_thread.notifyAll();
     	}
     	
         while (_isRunning) {
