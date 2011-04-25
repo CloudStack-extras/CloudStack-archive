@@ -59,7 +59,12 @@ public class NioClient extends NioConnection {
         }
 
         InetSocketAddress addr = new InetSocketAddress(_host, _port);
-        sch.connect(addr);
+        try {
+        	sch.connect(addr);
+        } catch (IOException e) {
+        	_selector.close();
+        	throw e;
+        }
 
         SSLEngine sslEngine = null;
         try {

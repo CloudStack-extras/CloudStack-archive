@@ -366,18 +366,17 @@ public class Agent implements HandlerFactory, IAgentControl {
         
         _resource.disconnected();
 
-        while (true) {
+        int inProgress = 0;
+        do {
             _shell.getBackoffAlgorithm().waitBeforeRetry();
             
             s_logger.info("Lost connection to the server.  Reconnecting....");
 
-            int inProgress = 0;
-            if ((inProgress = _inProgress.get()) > 0) {
+            inProgress = _inProgress.get();
+            if (inProgress > 0) {
             	s_logger.info("Cannot connect because we still have " + inProgress + " commands in progress.");
-            	continue;
             }
-            break;
-        }
+        } while (inProgress > 0);
 
         _connection.stop();
         _connection = new NioClient(
@@ -389,10 +388,7 @@ public class Agent implements HandlerFactory, IAgentControl {
         do {
         	s_logger.info("Reconnecting...");
         	_connection.start();
-        	try {
-        		Thread.sleep(5000);
-        	} catch (InterruptedException ex) {
-        	}
+            _shell.getBackoffAlgorithm().waitBeforeRetry();
         } while (!_connection.isStartup());
     }
     
