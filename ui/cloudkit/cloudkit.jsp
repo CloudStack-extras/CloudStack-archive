@@ -307,7 +307,7 @@
 												You can also run this command on the host to be sure the cloud-agent software is running:
 												<div class="dbinstruction_bulletbox_codebox"># service cloud-agent status</div>
 											 </li>                                 	
-											 <li>Click <a id="registration_complete_link" href='#'>Complete Registration</a>.
+											 <li>Click <a id="registration_complete_doc_link" href='#'>Complete Registration</a>.
 												The new host is automatically registered with RightScale as part of your CloudKit cloud.</p>
 											</li>
 										</ol>
