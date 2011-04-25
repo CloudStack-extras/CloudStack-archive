@@ -39,5 +39,10 @@ public class ModifySshKeysCommand extends Command {
 		// TODO Auto-generated method stub
 		return false;
 	}
+	
+	@Override
+	public boolean doNotLogCommandParams(){
+    	return true;
+    }
 
 }

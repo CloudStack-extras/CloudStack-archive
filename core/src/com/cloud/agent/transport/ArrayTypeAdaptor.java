@@ -42,8 +42,6 @@ public class ArrayTypeAdaptor<T> implements JsonDeserializer<T[]>, JsonSerialize
 	static final GsonBuilder s_gBuilder;
     static {
         s_gBuilder = Request.initBuilder();
-//        final Type listType = new TypeToken<List<VolumeVO>>() {}.getType();
-//        s_gBuilder.registerTypeAdapter(listType, new VolListTypeAdaptor());
     }
 	
 	

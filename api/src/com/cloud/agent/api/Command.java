@@ -56,4 +56,8 @@ public abstract class Command {
     public String getContextParam(String name) {
         return contextMap.get(name);
     }
+    
+    public boolean doNotLogCommandParams(){
+    	return false;
+    }
 }
