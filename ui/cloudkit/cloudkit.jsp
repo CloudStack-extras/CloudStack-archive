@@ -233,7 +233,7 @@
 							<div class="db_gridmsgbox" style="display:none;" id="registration_complete_container">
 								<div class="db_gridmsgbox_content">
 									<p>
-										You have successfully added your first compute node.  Please complete your registration process, please click here: <a id="registration_complete_link" href='#'>Complete Registration</a>
+										You have successfully added your first compute node.  Please complete your registration process by clicking here: <a id="registration_complete_link" href='#'>Complete Registration</a>
 									</p>
 								</div>
 							</div>
@@ -279,8 +279,7 @@
 									<div class="dbinstruction_bulletbox">
 										<ul>
 											<li>One or more computer hosts capable of running the software. See <a href="http://linuxhcl.com/">Linux Hardware Compatibility List</a>.</li>
-											<li>Ubuntu 10.04 LTS installed on each machine. Available at <a href="http://releases.ubuntu.com/">Ubuntu Releases</a>.</li>
-											<li>KVM hypervisor installed on each machine. Available at <a href="http://www.linux-kvm.org/page/Main_Page">linux-kvm.org</a>. </li>
+											<li>Ubuntu 10.04 LTS installed on each machine. Available at <a href="http://releases.ubuntu.com/">Ubuntu Releases</a>.</li>											
 										</ul>
 									</div>
 									
@@ -290,16 +289,19 @@
 										<ol>
 											<li>Click the Download button to get the CloudKit installation bundle.</li>
 											<li>Log in as root to the host machine where you want to install the software.
-												The machine must have <a href="http://releases.ubuntu.com/">Ubuntu 10.04 LTS</a> and the <a href="http://www.linux-kvm.org/page/Main_Page">KVM hypervisor</a> installed.                                    
+												The machine must have <a href="http://releases.ubuntu.com/">Ubuntu 10.04 LTS</a> installed.                                    
 											</li>
 											<li>Place the CloudKit installation bundle on the host and untar.
 												<div class="dbinstruction_bulletbox_codebox"># tar xzf &lt;Installer file name&gt;.tar.gz</div>
 												</li>
 											<li>Run the installer.
 												<div class="dbinstruction_bulletbox_codebox"># cd &lt;Directory of extracted installer&gt;</div>
-												<div class="dbinstruction_bulletbox_codebox"># ./cloudkit</div>
+												<div class="dbinstruction_bulletbox_codebox"># ./install.sh</div>
 											</li>
-											<li>Follow the onscreen prompts.
+											<li>At the prompt, choose A to install the agent.</li>
+											<li>After the agent installation finishes, run the setup script.</li>
+												<div class="dbinstruction_bulletbox_codebox"># ./mycloud-setup-agent</div>											
+											<li>Follow the onscreen prompts. Accept the default for Management Server address.
 												When prompted, paste in the zone token for your cloud. You can find it at the top of this page.
 												The zone token is a unique code that identifies your cloud. You will need it throughout the lifetime of your cloud.
 											</li>                                    
