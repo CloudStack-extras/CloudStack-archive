@@ -61,5 +61,12 @@ $(document).ready(function() {
 			});
 			return false;
 		});
+					
+		var keycode_Enter = 13;		
+		$("#login_form").keypress(function(event) {			
+			if(event.keyCode == keycode_Enter) {
+				$("#login_submit").click();
+			}
+		});		
 	}
 });
