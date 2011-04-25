@@ -117,11 +117,11 @@ $(document).ready(function() {
 		}
 	});
 	
-	
 	var oneHostUp = false;
 	var atLeastOneHost = false;
+	
 	$.ajax({
-		data: createURL("command=listHosts"),				
+		data: createURL("command=listHosts&type=Routing"),				
 		success: function(json) {	
 			var hosts = json.listhostsresponse.host;
 			if (hosts != null && hosts.length >0) {
@@ -163,6 +163,7 @@ $(document).ready(function() {
 	} else {
 		$("#registration_complete_container").hide();
 	}
+	$("#registration_complete_doc_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
 	
 	$("#main").show();
 });
