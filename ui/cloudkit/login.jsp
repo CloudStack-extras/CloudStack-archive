@@ -36,7 +36,7 @@
 			</div>
 			<div class="login_box_mid">
 				<h2>Login to your myCloud Account</h2>
-				<div class="login_formbox">
+				<div id="login_form" class="login_formbox">
 					<form>
 						<ul>
 							<li>
