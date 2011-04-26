@@ -193,7 +193,7 @@
                     	<h2>myCloud</h2>
                         <div id="search_panel" class="db_grid_searchbox">
                         	<div class="db_grid_searchicon"></div>
-                            <input class="text" type="text" />
+                            <input id="search_input" class="text" type="text" />
                         </div>
                     </div>
                     <div class="db_gridcontainer_topbox_right">
