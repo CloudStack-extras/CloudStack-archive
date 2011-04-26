@@ -296,26 +296,29 @@
 												</li>
 											<li>Run the installer.
 												<div class="dbinstruction_bulletbox_codebox"># cd &lt;Directory of extracted installer&gt;</div>
-												<div class="dbinstruction_bulletbox_codebox"># ./install.sh</div>
+												<div class="dbinstruction_bulletbox_codebox"># sudo ./install.sh</div>
 											</li>
-											<li>At the prompt, choose A to install the agent.</li>
+											<li>At the prompt, type A to install the agent. Installation can take a few minutes.
+											    When installation is finished, a message like "Agent installation is completed" appears.</li>
 											<li>After the agent installation finishes, run the setup script.</li>
-												<div class="dbinstruction_bulletbox_codebox"># ./mycloud-setup-agent</div>											
-											<li>Follow the onscreen prompts. Accept the default for Management Server address.
-												When prompted, paste in the zone token for your cloud. You can find it at the top of this page.
+												<div class="dbinstruction_bulletbox_codebox"># sudo mycloud-setup-agent</div>											
+											<li>For Management Server address, use the default if it is not localhost, or input the IP address provided to you by
+											    Cloud.com. Currently the only Management Server IP being provided is 192.168.130.223.</li>
+											<li>When prompted, paste in the zone token for your cloud. You can find it at the top of this page.
 												The zone token is a unique code that identifies your cloud. You will need it throughout the lifetime of your cloud.
+											</li>
+											<li>Provide the name of the network interface you want to use, or (typically) accept the default.
 											</li>                                    
-											<li>Confirm that the new host appears in the Hosts tab of the <a href="http://99.57.184.139:8000/client/cloudkit/cloudkit.jsp">CloudKit administration UI</a>.
+											<li>When the "Installation complete!" message appears, confirm that the new host appears in the Hosts tab of the <a href="http://216.38.159.3:8080/client/cloudkit/login.jsp ">CloudKit administration UI</a>.
 												You can also run this command on the host to be sure the cloud-agent software is running:
-												<div class="dbinstruction_bulletbox_codebox"># service cloud-agent status</div>
+												<div class="dbinstruction_bulletbox_codebox"># sudo service cloud-agent status</div>
 											 </li>                                 	
 											 <li>Click <a id="registration_complete_doc_link" href='#'>Complete Registration</a>.
 												The new host is automatically registered with RightScale as part of your CloudKit cloud.</p>
 											</li>
 										</ol>
 									</div>
-									<p><strong>You're ready to start using your new host!</strong></p>
-									
+									<p><strong>You're ready to start using your new host!</strong></p>	
 									<h4>More Information</h4>
 									 <p style="margin-top:5px;"><a href="#">RightScale's CoudKit docs (title and URL: TBD)</a></p>
 								</div>
