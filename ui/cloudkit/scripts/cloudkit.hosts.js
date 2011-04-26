@@ -128,23 +128,27 @@ $(document).ready(function() {
 		return false;
 	});
 
-	
-	$("#tab_hosts").bind("click", function(event) {
-		$(this).removeClass("off").addClass("on");
-		$("#tab_docs").removeClass("on").addClass("off");
-		$("#tab_docs_content").hide();
-		$("#tab_hosts_content").show();
-		$("#search_panel").show();					
+	var midmenuItemCount = 12;
+	var page = 1;
+	function listHosts() {
+		if(page > 1)
+            $("#prev_page_button").show();
+		else
+			$("#prev_page_button").hide();
 		
 		var oneHostUp = false;
 		var atLeastOneHost = false;
 		
 		$.ajax({
-			data: createURL("command=listHosts&type=Routing"),				
+			data: createURL("command=listHosts&type=Routing"+"&pagesize="+midmenuItemCount+"&page="+page),				
 			success: function(json) {	
 				hostContainer.empty();
 				var hosts = json.listhostsresponse.host;
 				if (hosts != null && hosts.length >0) {
+					if(hosts.length >= midmenuItemCount)
+                        $("#next_page_button").show();
+					else
+						$("#next_page_button").hide();
 					atLeastOneHost = true;
 					for (var i = 0; i < hosts.length; i++) {
 						var host = hosts[i];
@@ -183,12 +187,32 @@ $(document).ready(function() {
 		} else {
 			$("#registration_complete_container").hide();
 		}
-		$("#registration_complete_doc_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
-		
+		$("#registration_complete_doc_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));			
+	}
+	
+	$("#tab_hosts").bind("click", function(event) {
+		$(this).removeClass("off").addClass("on");
+		$("#tab_docs").removeClass("on").addClass("off");
+		$("#tab_docs_content").hide();
+		$("#tab_hosts_content").show();
+		$("#search_panel").show();					
+		listHosts();
+		return false;
+	});	
+	$("#tab_hosts").click();	
+	
+	$("#tab_hosts_content").find("#prev_page_button").bind("click", function(event){
+		page--
+		listHosts();
 		return false;
 	});
 	
-	$("#tab_hosts").click();	
+	$("#tab_hosts_content").find("#next_page_button").bind("click", function(event){
+		page++
+		listHosts();
+		return false;
+	});
+	
 	
 	$("#main").show();
 });
