@@ -22,7 +22,9 @@ var ERROR_VMOPS_ACCOUNT_ERROR = 531;
 
 var g_loginResponse = null;
 var g_mySession = null;
- 
+
+var keycode_Enter = 13;	
+
 function logout() {
 	window.location='/client/cloudkit/login.jsp';
 	g_loginResponse = null;

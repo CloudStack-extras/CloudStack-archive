@@ -114,9 +114,14 @@ $(document).ready(function() {
             $("#prev_page_button").show();
 		else
 			$("#prev_page_button").hide();
+				
+		var cmdString = "command=listHosts&type=Routing"+"&pagesize="+midmenuItemCount+"&page="+page;				
+		var searchInput = $("#search_panel").find("#search_input").val();	 
+	    if (searchInput != null && searchInput.length > 0) 
+	    	cmdString += ("&keyword="+searchInput);		      	
 		
 		$.ajax({
-			data: createURL("command=listHosts&type=Routing"+"&pagesize="+midmenuItemCount+"&page="+page),				
+			data: createURL(cmdString),				
 			success: function(json) {	
 				hostContainer.empty();
 				var hosts = json.listhostsresponse.host;
@@ -162,6 +167,7 @@ $(document).ready(function() {
 		$("#tab_docs").removeClass("on").addClass("off");
 		$("#tab_docs_content").hide();
 		$("#tab_hosts_content").show();
+		$("#search_input").val("");
 		$("#search_panel").show();					
 		page = 1; //reset pagination to the first page
 		listHosts(); 
@@ -189,7 +195,7 @@ $(document).ready(function() {
 	});	
 	// *** Setup tab clicks (end) ***
 	
-	// *** prev/next button event binding (begin) ***
+	// *** Pagination (begin) ***
 	$("#tab_hosts_content").find("#prev_page_button").bind("click", function(event){
 		page--
 		listHosts();
@@ -201,9 +207,18 @@ $(document).ready(function() {
 		listHosts();
 		return false;
 	});
-	// *** prev/next button event binding (end) ***
+	// *** Pagination (begin) ***
 	
+	// *** Search (begin) ***
+	$("#search_input").bind("keypress", function(event) {
+		if(event.keyCode == keycode_Enter) {
+			page = 1; //reset pagination to the first page
+			listHosts();
+		}
+		return true;
+	});
 	
+	// *** Search (end) ***
 	
 	var oneHostUp = false;
 	var atLeastOneHost = false;	
