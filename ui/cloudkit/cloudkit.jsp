@@ -239,14 +239,16 @@
 							</div>
 							<!--Reminder for completing registrtaion ends here-->
 							<div id="host_container">
-							</div>
-							<div class="db_grid_navigationpanel">
-								<div class="db_gridb_navbox">
-								    <a id="prev_page_button" href="#">Prev</a> 
-								    <a id="next_page_button" href="#">Next</a> 
-								</div>
+							</div>							
+						</div>
+						
+						<div class="db_grid_navigationpanel">
+							<div class="db_gridb_navbox">
+							    <a id="prev_page_button" href="#">Prev</a> 
+							    <a id="next_page_button" href="#">Next</a> 
 							</div>
 						</div>
+						
 					</div>
 				</div>
               
