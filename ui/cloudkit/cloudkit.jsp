@@ -191,7 +191,7 @@
             	<div class="db_gridcontainer_topbox">
                 	<div class="db_gridcontainer_topbox_left">
                     	<h2>myCloud</h2>
-                        <div class="db_grid_searchbox">
+                        <div id="search_panel" class="db_grid_searchbox">
                         	<div class="db_grid_searchicon"></div>
                             <input class="text" type="text" />
                         </div>
