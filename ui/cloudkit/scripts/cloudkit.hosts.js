@@ -108,7 +108,7 @@ $(document).ready(function() {
 	
 
 	var page = 1;
-	var midmenuItemCount = 12;
+	var midmenuItemCount = 13;
 	function listHosts() {
 		if(page > 1)
             $("#prev_page_button").show();
@@ -263,7 +263,7 @@ $(document).ready(function() {
 			$("#tab_docs").click();
 		} 
 		else if (oneHostUp) {
-			$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
+			$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://216.38.159.3:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
 			$("#registration_complete_container").show();
 			$("#tab_hosts").click();	
 		}
@@ -276,7 +276,7 @@ $(document).ready(function() {
 		$("#tab_hosts").click();	
 	}
 		
-	$("#registration_complete_doc_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));			
+	$("#registration_complete_doc_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://216.38.159.3:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));			
 	$("#main").show();
 });
 
