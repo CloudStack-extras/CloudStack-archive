@@ -241,7 +241,10 @@
 							<div id="host_container">
 							</div>
 							<div class="db_grid_navigationpanel">
-								<div class="db_gridb_navbox" style="display:none"><a href="#">Prev</a> <a href="#">Next</a> </div>
+								<div class="db_gridb_navbox">
+								    <a id="prev_page_button" href="#">Prev</a> 
+								    <a id="next_page_button" href="#">Next</a> 
+								</div>
 							</div>
 						</div>
 					</div>
