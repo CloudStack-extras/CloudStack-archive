@@ -193,8 +193,10 @@
                     	<h2>myCloud</h2>
                         <div id="search_panel" class="db_grid_searchbox">
                         	<div class="db_grid_searchicon"></div>
-                            <input id="search_input" class="text" type="text" />
+                            <input id="search_input" class="text" type="text" />                            
+                            <a id="clear_search_button" class="db_grid_search_closeicon" href="#" style="display:none;"></a>                            
                         </div>
+                        <div id="refresh_button" class="db_gridcontainer_refreshbox"><a class="db_refreshbutton" href="#"></a></div>
                     </div>
                     <div class="db_gridcontainer_topbox_right">
                     	<div class="db_grid_tabbox">
