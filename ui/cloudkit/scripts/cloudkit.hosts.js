@@ -215,10 +215,26 @@ $(document).ready(function() {
 			page = 1; //reset pagination to the first page
 			listHosts();
 		}
+		else {
+		    $("#clear_search_button").show();	
+		}
 		return true;
+	});	
+	$("#clear_search_button").bind("click", function(event){
+		$("#search_input").val("");					
+		page = 1; //reset pagination to the first page
+		listHosts(); 
+		$(this).hide();
+		return false;
 	});
-	
 	// *** Search (end) ***
+	
+	// *** Refresh button (begin) ***
+	$("#refresh_button").bind("click", function(event){
+		listHosts();
+		return false;
+	});
+	// *** Refresh button (end) ***
 	
 	var oneHostUp = false;
 	var atLeastOneHost = false;	

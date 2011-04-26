@@ -768,7 +768,7 @@ a:hover {
 }
 
 .db_grid_searchbox .text {
-	width:150px;
+	width:133px;
 	height:16px;
 	float:left;
 	background:#FFF;
@@ -787,6 +787,50 @@ a:hover {
 	margin:2px 0 0 3px;
 	display:inline;
 	padding:0;
+}
+
+.db_grid_search_closeicon {
+	width:13px;
+	height:14px;
+	float:left;
+	background:url(../images/search_closeicon.gif) no-repeat top left;
+	margin:2px 0 0 3px;
+	display:inline;
+	padding:0;
+	text-decoration:none;
+}
+
+.db_grid_search_closeicon:hover {
+	background:url(../images/search_closeicon_hover.gif) no-repeat top left;
+	text-decoration:none;
+}
+
+.db_gridcontainer_refreshbox{
+	width:auto;
+	height:20px;
+	float:left;
+	color:#648bb3;
+	font-size:20px;
+	font-weight:normal;
+	background:url(../images/title_sidebar.gif) no-repeat top left;
+	text-align:left;
+	margin:2px 0 0 20px;
+	padding:0 0 0 15px;
+}
+
+.db_refreshbutton {
+	width:20px;
+	height:18px;
+	float:left;
+	background:url(../images/refresh_button.gif) no-repeat top left;
+	text-decoration:none;
+	margin:2px 0 0 0;
+	padding:0;
+}
+
+.db_refreshbutton:hover {
+	background:url(../images/refresh_button_hover.gif) no-repeat top left;
+	
 }
 
 .db_gridcontainer_topbox_right {
@@ -854,7 +898,7 @@ a:hover {
 
 .db_maingrid {
 	width:918px;
-	height:580px;
+	height:530px;
 	float:left;
 	margin:0;
 	padding:0;
@@ -1153,7 +1197,7 @@ a:hover {
 }
 
 .db_downlaodbox p{
-	width:500px;
+	width:400px;
 	height:auto;
 	float:left;
 	color:#666;
