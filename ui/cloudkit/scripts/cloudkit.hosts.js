@@ -106,38 +106,14 @@ $(document).ready(function() {
 		}
 	});
 	
-	
-	$("#tab_docs").bind("click", function(event) {
-		$(this).removeClass("off").addClass("on");
-		$("#tab_hosts").removeClass("on").addClass("off");
-		$("#tab_hosts_content").hide();
-		$("#tab_docs_content").show();
-		$("#search_panel").hide();
-		
-		// Setup zone key
-		$.ajax({
-			data: createURL("command=listZones&domainid="+g_loginResponse.domainid),				
-			success: function(json) {	
-				var zones = json.listzonesresponse.zone;
-				if (zones != null && zones.length >0) {
-					$("#zone_token").text(zones[0].zonetoken);
-				}
-			}
-		});	
-		
-		return false;
-	});
 
-	var midmenuItemCount = 12;
 	var page = 1;
+	var midmenuItemCount = 12;
 	function listHosts() {
 		if(page > 1)
             $("#prev_page_button").show();
 		else
 			$("#prev_page_button").hide();
-		
-		var oneHostUp = false;
-		var atLeastOneHost = false;
 		
 		$.ajax({
 			data: createURL("command=listHosts&type=Routing"+"&pagesize="+midmenuItemCount+"&page="+page),				
@@ -149,7 +125,7 @@ $(document).ready(function() {
                         $("#next_page_button").show();
 					else
 						$("#next_page_button").hide();
-					atLeastOneHost = true;
+					
 					for (var i = 0; i < hosts.length; i++) {
 						var host = hosts[i];
 						var template = hostTemplate.clone(true).attr("id", "host_"+host.id);
@@ -166,41 +142,54 @@ $(document).ready(function() {
 						}
 						var state = host.state;
 						template.find("#state").text(state);
-						if (state != 'Up') {
+						if (state == 'Up') {
+							template.find("#state").removeClass("red").addClass("green");
+						} 
+						else {
 							template.find("#state").removeClass("green").addClass("red");
-						} else {
-							oneHostUp = true;
 						}
 						hostContainer.append(template.show());
 					}
 				}
 			}
 		});	
-		
-		if (g_loginResponse.registered == "false") {
-			if (!atLeastOneHost) {
-				$("#tab_docs").click();
-			} else if (oneHostUp) {
-				$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
-				$("#registration_complete_container").show();
-			}
-		} else {
-			$("#registration_complete_container").hide();
-		}
-		$("#registration_complete_doc_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));			
 	}
 	
+	
+	// *** Setup tab clicks (begin) ***
 	$("#tab_hosts").bind("click", function(event) {
 		$(this).removeClass("off").addClass("on");
 		$("#tab_docs").removeClass("on").addClass("off");
 		$("#tab_docs_content").hide();
 		$("#tab_hosts_content").show();
 		$("#search_panel").show();					
-		listHosts();
+		page = 1; //reset pagination to the first page
+		listHosts(); 
 		return false;
 	});	
-	$("#tab_hosts").click();	
 	
+	$("#tab_docs").bind("click", function(event) {
+		$(this).removeClass("off").addClass("on");
+		$("#tab_hosts").removeClass("on").addClass("off");
+		$("#tab_hosts_content").hide();
+		$("#tab_docs_content").show();
+		$("#search_panel").hide();
+				
+		$.ajax({
+			data: createURL("command=listZones&domainid="+g_loginResponse.domainid),	// Setup zone key			
+			success: function(json) {	
+				var zones = json.listzonesresponse.zone;
+				if (zones != null && zones.length >0) {
+					$("#zone_token").text(zones[0].zonetoken);
+				}
+			}
+		});	
+		
+		return false;
+	});	
+	// *** Setup tab clicks (end) ***
+	
+	// *** prev/next button event binding (begin) ***
 	$("#tab_hosts_content").find("#prev_page_button").bind("click", function(event){
 		page--
 		listHosts();
@@ -212,8 +201,48 @@ $(document).ready(function() {
 		listHosts();
 		return false;
 	});
+	// *** prev/next button event binding (end) ***
 	
 	
+	
+	var oneHostUp = false;
+	var atLeastOneHost = false;	
+	$.ajax({
+		data: createURL("command=listHosts&type=Routing"),				
+		success: function(json) {	
+			hostContainer.empty();
+			var hosts = json.listhostsresponse.host;
+			if (hosts != null && hosts.length >0) {				
+				atLeastOneHost = true;
+				for (var i = 0; i < hosts.length; i++) {
+					var host = hosts[i];					
+					if (host.state == 'Up') {
+						oneHostUp = true;
+					} 			
+				}
+			}
+		}
+	});	
+	
+	if (g_loginResponse.registered == "false") {
+		if (!atLeastOneHost) {
+			$("#tab_docs").click();
+		} 
+		else if (oneHostUp) {
+			$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
+			$("#registration_complete_container").show();
+			$("#tab_hosts").click();	
+		}
+		else {
+			$("#tab_hosts").click();
+		}
+	} 
+	else {
+		$("#registration_complete_container").hide();
+		$("#tab_hosts").click();	
+	}
+		
+	$("#registration_complete_doc_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));			
 	$("#main").show();
 });
 
