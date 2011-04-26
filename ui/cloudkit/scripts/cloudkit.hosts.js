@@ -156,6 +156,9 @@ $(document).ready(function() {
 						hostContainer.append(template.show());
 					}
 				}
+				else {
+					$("#next_page_button").hide();	
+				}
 			}
 		});	
 	}
