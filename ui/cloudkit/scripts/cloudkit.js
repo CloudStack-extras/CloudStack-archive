@@ -89,25 +89,7 @@ $(document).ready(function() {
 			}
 		}		
 	});
-	
-	// Setup tab clicks
-	$("#tab_hosts").bind("click", function(event) {
-		$(this).removeClass("off").addClass("on");
-		$("#tab_docs").removeClass("on").addClass("off");
-		$("#tab_docs_content").hide();
-		$("#tab_hosts_content").show();
-		$("#search_panel").show();
-		return false;
-	});
-	$("#tab_docs").bind("click", function(event) {
-		$(this).removeClass("off").addClass("on");
-		$("#tab_hosts").removeClass("on").addClass("off");
-		$("#tab_hosts_content").hide();
-		$("#tab_docs_content").show();
-		$("#search_panel").hide();
-		return false;
-	});
-
+		
 	if (g_loginResponse == null) {
 		g_loginResponse = JSON.parse($.cookie('loginResponse'));
 	}

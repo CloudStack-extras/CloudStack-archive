@@ -45,17 +45,6 @@ $(document).ready(function() {
 		return;
 	}
 	
-	// Setup zone key
-	$.ajax({
-		data: createURL("command=listZones&domainid="+g_loginResponse.domainid),				
-		success: function(json) {	
-			var zones = json.listzonesresponse.zone;
-			if (zones != null && zones.length >0) {
-				$("#zone_token").text(zones[0].zonetoken);
-			}
-		}
-	});	
-	
 	// setup dialog
 	var dialog = $("#dialog_overlay");
 	dialog.find("#dialog_cancel, #dialog_ok").bind("click", function(event) {
@@ -76,7 +65,7 @@ $(document).ready(function() {
 	
 	// setup host template and container
 	var hostTemplate = $("#host_template");
-	var hostContainer = $("#host_container").empty();
+	var hostContainer = $("#host_container");
 	
 	hostContainer.bind("click", function(event) {
 		var $container = $(this);
@@ -117,53 +106,89 @@ $(document).ready(function() {
 		}
 	});
 	
-	var oneHostUp = false;
-	var atLeastOneHost = false;
 	
-	$.ajax({
-		data: createURL("command=listHosts&type=Routing"),				
-		success: function(json) {	
-			var hosts = json.listhostsresponse.host;
-			if (hosts != null && hosts.length >0) {
-				atLeastOneHost = true;
-				for (var i = 0; i < hosts.length; i++) {
-					var host = hosts[i];
-					var template = hostTemplate.clone(true).attr("id", "host_"+host.id);
-					template.find("#host_details").data("jsonObj", host);
-					template.find("#host_delete").data("jsonObj", host);
-					template.find("#hostname").text(host.name);
-					template.find("#ip").text(host.ipaddress);
-					template.find("#version").text(host.version);
-
-					if (host.disconnected != null) {
-						var disconnected = new Date();
-						disconnected.setISO8601(host.disconnected);
-						template.find("#disconnected").text(disconnected.format("m/d/Y H:i:s"));
-					}
-					var state = host.state;
-					template.find("#state").text(state);
-					if (state != 'Up') {
-						template.find("#state").removeClass("green").addClass("red");
-					} else {
-						oneHostUp = true;
-					}
-					hostContainer.append(template.show());
+	$("#tab_docs").bind("click", function(event) {
+		$(this).removeClass("off").addClass("on");
+		$("#tab_hosts").removeClass("on").addClass("off");
+		$("#tab_hosts_content").hide();
+		$("#tab_docs_content").show();
+		$("#search_panel").hide();
+		
+		// Setup zone key
+		$.ajax({
+			data: createURL("command=listZones&domainid="+g_loginResponse.domainid),				
+			success: function(json) {	
+				var zones = json.listzonesresponse.zone;
+				if (zones != null && zones.length >0) {
+					$("#zone_token").text(zones[0].zonetoken);
 				}
 			}
-		}
-	});	
+		});	
+		
+		return false;
+	});
+
 	
-	if (g_loginResponse.registered == "false") {
-		if (!atLeastOneHost) {
-			$("#tab_docs").click();
-		} else if (oneHostUp) {
-			$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
-			$("#registration_complete_container").show();
+	$("#tab_hosts").bind("click", function(event) {
+		$(this).removeClass("off").addClass("on");
+		$("#tab_docs").removeClass("on").addClass("off");
+		$("#tab_docs_content").hide();
+		$("#tab_hosts_content").show();
+		$("#search_panel").show();					
+		
+		var oneHostUp = false;
+		var atLeastOneHost = false;
+		
+		$.ajax({
+			data: createURL("command=listHosts&type=Routing"),				
+			success: function(json) {	
+				hostContainer.empty();
+				var hosts = json.listhostsresponse.host;
+				if (hosts != null && hosts.length >0) {
+					atLeastOneHost = true;
+					for (var i = 0; i < hosts.length; i++) {
+						var host = hosts[i];
+						var template = hostTemplate.clone(true).attr("id", "host_"+host.id);
+						template.find("#host_details").data("jsonObj", host);
+						template.find("#host_delete").data("jsonObj", host);
+						template.find("#hostname").text(host.name);
+						template.find("#ip").text(host.ipaddress);
+						template.find("#version").text(host.version);
+
+						if (host.disconnected != null) {
+							var disconnected = new Date();
+							disconnected.setISO8601(host.disconnected);
+							template.find("#disconnected").text(disconnected.format("m/d/Y H:i:s"));
+						}
+						var state = host.state;
+						template.find("#state").text(state);
+						if (state != 'Up') {
+							template.find("#state").removeClass("green").addClass("red");
+						} else {
+							oneHostUp = true;
+						}
+						hostContainer.append(template.show());
+					}
+				}
+			}
+		});	
+		
+		if (g_loginResponse.registered == "false") {
+			if (!atLeastOneHost) {
+				$("#tab_docs").click();
+			} else if (oneHostUp) {
+				$("#registration_complete_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
+				$("#registration_complete_container").show();
+			}
+		} else {
+			$("#registration_complete_container").hide();
 		}
-	} else {
-		$("#registration_complete_container").hide();
-	}
-	$("#registration_complete_doc_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
+		$("#registration_complete_doc_link").attr("href","https://my.rightscale.com/cloud_registrations/my_cloud/cloud_stack/new?callback_url="+encodeURIComponent("http://localhost:8080/client/cloudkit/complete?token="+g_loginResponse.registrationtoken));
+		
+		return false;
+	});
+	
+	$("#tab_hosts").click();	
 	
 	$("#main").show();
 });
