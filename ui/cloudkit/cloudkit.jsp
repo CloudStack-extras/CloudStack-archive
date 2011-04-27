@@ -195,8 +195,8 @@
                         	<div class="db_grid_searchicon"></div>
                             <input id="search_input" class="text" type="text" />                            
                             <a id="clear_search_button" class="db_grid_search_closeicon" href="#" style="display:none;"></a>                            
-                        </div>
-                        <div id="refresh_button" class="db_gridcontainer_refreshbox"><a class="db_refreshbutton" href="#"></a></div>
+                        </div>                       
+                        <div id="refresh_button" class="db_gridcontainer_refreshbox"><a href="#"> Refresh </a></div>                        
                     </div>
                     <div class="db_gridcontainer_topbox_right">
                     	<div class="db_grid_tabbox">
@@ -245,6 +245,7 @@
 						</div>
 						
 						<div class="db_grid_navigationpanel">
+						    <div class="db_gridb_paginationbox"><p>Page <span id="page_number">N</span></p></div>
 							<div class="db_gridb_navbox">
 							    <a id="prev_page_button" href="#">Prev</a> 
 							    <a id="next_page_button" href="#">Next</a> 

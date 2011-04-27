@@ -123,7 +123,8 @@ $(document).ready(function() {
 		$.ajax({
 			data: createURL(cmdString),				
 			success: function(json) {	
-				hostContainer.empty();
+				hostContainer.empty();				
+				$("#page_number").text(page);				
 				var hosts = json.listhostsresponse.host;
 				if (hosts != null && hosts.length >0) {
 					if(hosts.length >= midmenuItemCount)
