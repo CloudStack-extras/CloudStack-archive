@@ -77,7 +77,7 @@ public interface StorageManager extends Manager {
 	 * @param hostId
 	 * @param pool
 	 */
-	boolean addPoolToHost(long hostId, StoragePoolVO pool);
+	void addPoolToHost(long hostId, StoragePoolVO pool) throws StorageUnavailableException;
 	
 	/**
 	 * Moves a volume from its current storage pool to a storage pool with enough capacity in the specified zone, pod, or cluster
@@ -185,3 +185,4 @@ public interface StorageManager extends Manager {
 
 	Answer sendToPool(StoragePool pool, long[] hostIdsToTryFirst, Command cmd) throws StorageUnavailableException;
 }
+
