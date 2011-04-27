@@ -79,19 +79,22 @@ $(document).ready(function() {
 				var jsonObj = target.data("jsonObj");
 				
 				details.find("#host_id").text(jsonObj.id);
-				details.find("#host_cpu_total").text(jsonObj.cpunumber + "x" + convertHz(jsonObj.cpuspeed));
-				details.find("#host_cpu_allocated").text(jsonObj.cpuallocated);
-				details.find("#host_cpu_used").text(jsonObj.cpuused);
-				details.find("#host_mem_total").text(convertBytes(jsonObj.memorytotal));
-				details.find("#host_mem_allocated").text(convertBytes(jsonObj.memoryallocated));
-				details.find("#host_mem_used").text(convertBytes(jsonObj.memeoryused));
-				details.find("#host_net_read").text(convertBytes(jsonObj.networkkbsread * 1024));
-				details.find("#host_net_sent").text(convertBytes(jsonObj.networkkbswrite *1024));
+				details.find("#host_cpu_total").text((jsonObj.cpuspeed == null)? "": (jsonObj.cpunumber + "x" + convertHz(jsonObj.cpuspeed)));
+				details.find("#host_cpu_allocated").text((jsonObj.cpuallocated == null)? "": jsonObj.cpuallocated);
+				details.find("#host_cpu_used").text((jsonObj.cpuused == null)? "": jsonObj.cpuused);
+				details.find("#host_mem_total").text((jsonObj.memorytotal == null)? "": convertBytes(jsonObj.memorytotal));
+				details.find("#host_mem_allocated").text((jsonObj.memoryallocated == null)? "": convertBytes(jsonObj.memoryallocated));
+				details.find("#host_mem_used").text((jsonObj.memeoryused == null)? "": convertBytes(jsonObj.memeoryused));
+				details.find("#host_net_read").text((jsonObj.networkkbsread == null)? "": convertBytes(jsonObj.networkkbsread * 1024));
+				details.find("#host_net_sent").text((jsonObj.networkkbswrite == null)? "": convertBytes(jsonObj.networkkbswrite *1024));
 				
 				if (jsonObj.created != null) {
 					var created = new Date();
 					created.setISO8601(jsonObj.created);
 					details.find("#host_added").text(created.format("m/d/Y H:i:s"));
+				}
+				else {
+					details.find("#host_added").text("");
 				}
 				dialog.show();
 				break;
