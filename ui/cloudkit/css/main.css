@@ -812,11 +812,32 @@ a:hover {
 	color:#648bb3;
 	font-size:20px;
 	font-weight:normal;
-	background:url(../images/title_sidebar.gif) no-repeat top left;
 	text-align:left;
-	margin:2px 0 0 20px;
-	padding:0 0 0 15px;
+	margin:0 0 0 10px;
+	padding:0 0 0 5px;
 }
+
+.db_gridcontainer_refreshbox a{
+	width:auto;
+	height:aut;
+	float:left;
+	color:#2c8bbc;
+	font-size:12px;
+	font-weight:normal;
+	text-align:left;
+	margin:6px 0 0 0;
+	padding:0;
+	text-decoration:underline;
+}
+
+.db_gridcontainer_refreshbox a:link, .db_gridcontainer_refreshbox a:visited{
+	text-decoration:underline;
+}
+
+.db_gridcontainer_refreshbox a:hover{
+	text-decoration:none;
+}
+
 
 .db_refreshbutton {
 	width:20px;
@@ -898,7 +919,7 @@ a:hover {
 
 .db_maingrid {
 	width:918px;
-	height:530px;
+	height:575px;
 	float:left;
 	margin:0;
 	padding:0;
@@ -1006,6 +1027,36 @@ a:hover {
 	float:left;
 	background:url(../images/grid_navbg.gif) repeat-x top left;
 	margin:0;
+	padding:0;
+}
+
+.db_gridb_paginationbox {
+	width:auto;
+	height:auto;
+	float:left;
+	margin:7px 0 0 20px;
+	display:inline;
+	padding:0;
+}
+
+.db_gridb_paginationbox p{
+	width:auto;
+	height:auto;
+	float:left;
+	color:#999;
+	font-size:11px;
+	font-weight:normal;
+	margin: 0 0;
+	padding:0;
+}
+
+.db_gridb_paginationbox span{
+	width:auto;
+	height:auto;
+	color:#999;
+	font-size:11px;
+	font-weight:bold;
+	margin: 0 0;
 	padding:0;
 }
 
