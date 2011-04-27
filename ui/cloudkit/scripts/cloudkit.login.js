@@ -50,10 +50,13 @@ $(document).ready(function() {
 				async: false,
 				type: "POST",
 				success: function(json) {
+				    $("#login_error").hide();
 					login(json);
 				},
-				error: function() {
-					
+				error: function(XMLHttpRequest) {				
+					$("#login_password").val("");
+					$("#login_error").show();
+					$("#login_username").focus();
 				},
 				beforeSend: function(XMLHttpRequest) {
 					return true;

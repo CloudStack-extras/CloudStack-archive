@@ -54,8 +54,8 @@
 						  
 						</div>
 					</form>
-					<div class="login_errormsgbox" style="display:none;">
-						<p>Error msg will appear here</p>
+					<div id="login_error" class="login_errormsgbox" style="display:none;">
+						<p>Your username/password does not match our records.</p>
 					</div>
 				</div>
 			</div>
