@@ -145,7 +145,17 @@ public interface VirtualMachine extends RunningOn, ControlledEntity, StateObject
         User,
         DomainRouter,
         ConsoleProxy,
-        SecondaryStorageVm
+        SecondaryStorageVm;
+        
+        public static boolean isSystemVM(VirtualMachine.Type vmtype) {
+        	if(DomainRouter.equals(vmtype)
+        			|| ConsoleProxy.equals(vmtype)
+        			|| SecondaryStorageVm.equals(vmtype)){
+        		return true;
+        	}
+            return false;
+        }
+        
     }
     
     public String getInstanceName();
