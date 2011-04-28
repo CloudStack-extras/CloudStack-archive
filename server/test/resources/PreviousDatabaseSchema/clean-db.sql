@@ -121,8 +121,5 @@ DROP TABLE IF EXISTS `cloud`.`op_vm_ruleset_log`;
 DROP TABLE IF EXISTS `cloud`.`disk_template_ref`;
 DROP TABLE IF EXISTS `cloud`.`ext_lun_alloc`;
 DROP TABLE IF EXISTS `cloud`.`ext_lun_details`;
-DROP TABLE IF EXISTS `cloud`.`netapp_lun`;
-DROP TABLE IF EXISTS `cloud`.`netapp_pool`;
-DROP TABLE IF EXISTS `cloud`.`netapp_volume`;
 DROP TABLE IF EXISTS `cloud`.`domain_network_ref`;
 DROP TABLE IF EXISTS `cloud`.`data_center_details`;
