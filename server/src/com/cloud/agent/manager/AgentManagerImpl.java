@@ -398,7 +398,11 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory {
     }
 
     public AgentAttache findAttache(long hostId) {
-        return _agents.get(hostId);
+        AgentAttache attache = null;
+        synchronized (_agents) {
+            attache = _agents.get(hostId);
+        }
+        return attache;
     }
 
     
@@ -928,16 +932,14 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory {
             s_logger.debug("Deregistering link for " + hostId + " with state " + nextState);
         }
         
+        
+        removeAgent(attache, nextState);
         _hostDao.disconnect(host, event, _nodeId);
         
-        synchronized (_agents) {
-            AgentAttache removed = _agents.remove(hostId);
-        }       
         host = _hostDao.findById(host.getId());
         if (host.getStatus() == Status.Alert || host.getStatus() == Status.Down) {
             _haMgr.scheduleRestartForVmsOnHost(host);
         }
-        attache.disconnect(nextState);
 
         for (Pair<Integer, Listener> monitor : _hostMonitors) {
             if (s_logger.isDebugEnabled()) {
@@ -1644,8 +1646,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory {
         link.attach(attache);
         AgentAttache old = null;
         synchronized (_agents) {
-            old = _agents.get(id);
-            _agents.put(id, attache);
+            old = _agents.put(id, attache);
         }
         if( old != null ) {
             old.disconnect(Status.Removed);
@@ -1662,8 +1663,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory {
                 || server.getStatus() == Status.ErrorInMaintenance || server.getStatus() == Status.PrepareForMaintenance, this);
         AgentAttache old = null;
         synchronized (_agents) {
-            old = _agents.get(id);
-            _agents.put(id, attache);
+            old = _agents.put(id, attache);
         }
         if( old != null ) {
             old.disconnect(Status.Removed);
