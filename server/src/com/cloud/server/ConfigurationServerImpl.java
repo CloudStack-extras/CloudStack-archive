@@ -420,7 +420,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
             }
 
             String homeDir = Script.runSimpleBashScript("echo ~");
-            if (homeDir == "~") {
+            if (homeDir == null || homeDir.equals("~")) {
                 s_logger.warn("No home directory was detected.  Trouble with SSH keys ahead.");
                 return;
             }
