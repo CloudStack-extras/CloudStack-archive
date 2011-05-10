@@ -830,7 +830,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, ResourceS
                         }
                         return null;
                     }
-                    AgentAttache attache = simulateStart(null, resource, entry.getValue(), true, hostTags, allocationState);
+                    AgentAttache attache = simulateStart(null, resource, entry.getValue(), true, null, null);
                     if (attache != null) {
                         hosts.add(_hostDao.findById(attache.getId()));
                     }
@@ -1552,8 +1552,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, ResourceS
             s_logger.warn("Unable to start the resource");
             return;
         }
-
-        _executor.execute(new SimulateStartTask(host.getId(), resource, host.getDetails(), actionDelegate));
+        _executor.execute(new SimulateStartTask(host.getId(), resource, host.getDetails(), null));
     }
 
     protected AgentAttache simulateStart(Long id, ServerResource resource, Map<String, String> details, boolean old, List<String> hostTags, String allocationState) throws IllegalArgumentException {
