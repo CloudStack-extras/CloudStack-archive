@@ -141,7 +141,8 @@ public class HostVO implements Host {
 		this.storageIpAddressDeux = deuxStorageIpAddress;
 	}
 
-	public String getStorageNetmaskDeux() {
+	@Override
+    public String getStorageNetmaskDeux() {
 		return storageNetmaskDeux;
 	}
 
@@ -158,7 +159,8 @@ public class HostVO implements Host {
 		this.storageNetmaskDeux = deuxStorageNetmask;
 	}
 
-	public String getStorageMacAddressDeux() {
+	@Override
+    public String getStorageMacAddressDeux() {
 		return storageMacAddressDeux;
 	}
 
@@ -166,7 +168,8 @@ public class HostVO implements Host {
 		this.storageMacAddressDeux = duexStorageMacAddress;
 	}
 
-	public String getPrivateMacAddress() {
+	@Override
+    public String getPrivateMacAddress() {
         return privateMacAddress;
     }
 
@@ -182,6 +185,7 @@ public class HostVO implements Host {
         this.available = available;
     }
 
+    @Override
     public String getPrivateNetmask() {
         return privateNetmask;
     }
@@ -190,6 +194,7 @@ public class HostVO implements Host {
         this.privateNetmask = privateNetmask;
     }
 
+    @Override
     public String getPublicNetmask() {
         return publicNetmask;
     }
@@ -198,6 +203,7 @@ public class HostVO implements Host {
         this.publicNetmask = publicNetmask;
     }
 
+    @Override
     public String getPublicIpAddress() {
         return publicIpAddress;
     }
@@ -206,6 +212,7 @@ public class HostVO implements Host {
         this.publicIpAddress = publicIpAddress;
     }
 
+    @Override
     public String getPublicMacAddress() {
         return publicMacAddress;
     }
@@ -223,6 +230,7 @@ public class HostVO implements Host {
         this.storageIpAddress = storageIpAddress;
     }
 
+    @Override
     public String getStorageNetmask() {
         return storageNetmask;
     }
@@ -231,6 +239,7 @@ public class HostVO implements Host {
         this.storageNetmask = storageNetmask;
     }
 
+    @Override
     public String getStorageMacAddress() {
         return storageMacAddress;
     }
@@ -625,7 +634,7 @@ public class HostVO implements Host {
 
     @Override
     public String toString() {
-    	return new StringBuilder(type.toString()).append("-").append(id).append("-").append(name).toString();
+    	return new StringBuilder("Host[").append("-").append(id).append("-").append(type).append("]").toString();
     }
 
 	public void setHypervisorType(HypervisorType hypervisorType) {

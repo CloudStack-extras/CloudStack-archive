@@ -1,8 +1,8 @@
 /**
  *  Copyright (C) 2010 Cloud.com, Inc.  All rights reserved.
- * 
+ *
  * This software is licensed under the GNU General Public License v3 or later.
- * 
+ *
  * It is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or any later version.
@@ -10,10 +10,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 package com.cloud.agent.manager;
 
@@ -183,7 +183,7 @@ import com.cloud.vm.dao.VMInstanceDao;
 
 /**
  * Implementation of the Agent Manager. This class controls the connection to the agents.
- * 
+ *
  * @config {@table || Param Name | Description | Values | Default || || port | port to listen on for agent connection. | Integer
  *         | 8250 || || workers | # of worker threads | Integer | 5 || || router.template.id | default id for template | Integer
  *         | 1 || || router.ram.size | default ram for router vm in mb | Integer | 128 || || router.ip.address | ip address for
@@ -445,7 +445,11 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, ResourceS
     }
 
     public AgentAttache findAttache(long hostId) {
-        return _agents.get(hostId);
+        AgentAttache attache = null;
+        synchronized (_agents) {
+            attache = _agents.get(hostId);
+        }
+        return attache;
     }
 
     @Override
@@ -660,7 +664,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, ResourceS
             if (resources != null) {
                 for (Map.Entry<? extends ServerResource, Map<String, String>> entry : resources.entrySet()) {
                     ServerResource resource = entry.getKey();
-                    AgentAttache attache = simulateStart(resource, entry.getValue(), true);
+                    AgentAttache attache = simulateStart(null, resource, entry.getValue(), true, null, null);
                     if (attache != null) {
                         hosts.add(_hostDao.findById(attache.getId()));
                     }
@@ -826,7 +830,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, ResourceS
                         }
                         return null;
                     }
-                    AgentAttache attache = simulateStart(resource, entry.getValue(), true);
+                    AgentAttache attache = simulateStart(null, resource, entry.getValue(), true, hostTags, allocationState);
                     if (attache != null) {
                         hosts.add(_hostDao.findById(attache.getId()));
                     }
@@ -1393,10 +1397,8 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, ResourceS
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Deregistering link for " + hostId + " with state " + nextState);
         }
-
-        _hostDao.disconnect(host, event, _nodeId);
-
         removeAgent(attache, nextState);
+        _hostDao.disconnect(host, event, _nodeId);
 
         host = _hostDao.findById(host.getId());
         if (host.getStatus() == Status.Alert || host.getStatus() == Status.Down) {
@@ -1554,10 +1556,18 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, ResourceS
         _executor.execute(new SimulateStartTask(host.getId(), resource, host.getDetails(), actionDelegate));
     }
 
-    protected AgentAttache simulateStart(ServerResource resource, Map<String, String> details, boolean old) throws IllegalArgumentException {
+    protected AgentAttache simulateStart(Long id, ServerResource resource, Map<String, String> details, boolean old, List<String> hostTags, String allocationState) throws IllegalArgumentException {
         StartupCommand[] cmds = resource.initialize();
         if (cmds == null) {
             return null;
+        }
+
+        if (id != null) {
+            HostVO host = _hostDao.findById(id);
+            if (!_hostDao.directConnect(host, _nodeId)) {
+                s_logger.info("Someone else is loading " + host);
+                return null;
+            }
         }
 
         AgentAttache attache = null;
@@ -2058,7 +2068,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, ResourceS
             }
         }
 
-        AgentAttache attache = simulateStart(resource, hostDetails, true);
+        AgentAttache attache = simulateStart(null, resource, hostDetails, true, null, null);
         return _hostDao.findById(attache.getId());
     }
 
@@ -2137,7 +2147,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, ResourceS
              * !"0.0.0.0".equals(startup.getStorageIpAddress())) { if (_hostDao.findByPrivateIpAddressInDataCenter
              * (server.getDataCenterId(), startup.getPrivateIpAddress()) != null) { throw newIllegalArgumentException(
              * "The private ip address is already in used: " + startup.getPrivateIpAddress()); }
-             * 
+             *
              * if (_hostDao.findByPrivateIpAddressInDataCenter(server.getDataCenterId (), startup.getStorageIpAddress()) !=
              * null) { throw new IllegalArgumentException ("The private ip address is already in used: " +
              * startup.getStorageIpAddress()); } }
@@ -2198,8 +2208,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, ResourceS
         link.attach(attache);
         AgentAttache old = null;
         synchronized (_agents) {
-            old = _agents.get(id);
-            _agents.put(id, attache);
+            old = _agents.put(id, attache);
         }
         if (old != null) {
             old.disconnect(Status.Removed);
@@ -2216,8 +2225,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, ResourceS
                 || server.getStatus() == Status.PrepareForMaintenance, this);
         AgentAttache old = null;
         synchronized (_agents) {
-            old = _agents.get(id);
-            _agents.put(id, attache);
+            old = _agents.put(id, attache);
         }
         if (old != null) {
             old.disconnect(Status.Removed);
@@ -2574,14 +2582,13 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, ResourceS
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Simulating start for resource " + resource.getName() + " id " + id);
                 }
-                simulateStart(resource, details, false);
+                simulateStart(id, resource, details, false, null, null);
             } catch (Exception e) {
                 s_logger.warn("Unable to simulate start on resource " + id + " name " + resource.getName(), e);
             } finally {
                 if (actionDelegate != null) {
                     actionDelegate.action(new Long(id));
                 }
-
                 StackMaid.current().exitCleanup();
             }
         }
