@@ -155,10 +155,6 @@ public interface HostDao extends GenericDao<HostVO, Long> {
 
     List<HostVO> listBy(Long clusterId, Long podId, long dcId);
 
-    void loadHostTags(HostVO host);
-
-    List<HostVO> listByHostTag(Host.Type type, Long clusterId, Long podId, long dcId, String hostTag);
-
     long countRoutingHostsByDataCenter(long dcId);
 
     List<HostVO> listSecondaryStorageHosts(long dataCenterId);
