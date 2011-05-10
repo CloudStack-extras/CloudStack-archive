@@ -1,8 +1,8 @@
 /**
  *  Copyright (C) 2010 Cloud.com, Inc.  All rights reserved.
- * 
+ *
  * This software is licensed under the GNU General Public License v3 or later.
- * 
+ *
  * It is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or any later version.
@@ -10,10 +10,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 package com.cloud.event.dao;
@@ -42,11 +42,10 @@ public class UsageEventDaoImpl extends GenericDaoBase<UsageEventVO, Long> implem
     public static final Logger s_logger = Logger.getLogger(UsageEventDaoImpl.class.getName());
 
     private final SearchBuilder<UsageEventVO> latestEventsSearch;
-    private static final String COPY_EVENTS = "INSERT INTO cloud_usage.usage_event (id, type, account_id, created, zone_id, resource_id, resource_name, offering_id, template_id, size) " +
-    		"SELECT id, type, account_id, created, zone_id, resource_id, resource_name, offering_id, template_id, size FROM cloud.usage_event vmevt WHERE vmevt.id > ? and vmevt.created <= ? ";
-    private static final String COPY_ALL_EVENTS = "INSERT INTO cloud_usage.usage_event (id, type, account_id, created, zone_id, resource_id, resource_name, offering_id, template_id, size) " +
-    		"SELECT id, type, account_id, created, zone_id, resource_id, resource_name, offering_id, template_id, size FROM cloud.usage_event where id <= ? ";
-
+    private static final String COPY_EVENTS = "INSERT INTO cloud_usage.usage_event (id, type, account_id, created, zone_id, resource_id, resource_name, offering_id, template_id, size, resource_type) " +
+    		"SELECT id, type, account_id, created, zone_id, resource_id, resource_name, offering_id, template_id, size, resource_type FROM cloud.usage_event vmevt WHERE vmevt.id > ? and vmevt.created <= ? ";
+    private static final String COPY_ALL_EVENTS = "INSERT INTO cloud_usage.usage_event (id, type, account_id, created, zone_id, resource_id, resource_name, offering_id, template_id, size, resource_type) " +
+    		"SELECT id, type, account_id, created, zone_id, resource_id, resource_name, offering_id, template_id, size, resource_type FROM cloud.usage_event where id <= ? ";
 
     public UsageEventDaoImpl () {
         latestEventsSearch = createSearchBuilder();
@@ -70,6 +69,7 @@ public class UsageEventDaoImpl extends GenericDaoBase<UsageEventVO, Long> implem
         return listAll(filter);
     }
 
+    @Override
     @DB
     public synchronized List<UsageEventVO> getRecentEvents(Date endDate) throws UsageServerException {
         Transaction txn = Transaction.open(Transaction.USAGE_DB);

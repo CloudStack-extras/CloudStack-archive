@@ -1557,20 +1557,25 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, ResourceS
         HostVO host = null;
         if (id != null) {
             host = _hostDao.findById(id);
-            if (host.getManagementServerId() != null) {
+            if (!_hostDao.directConnect(host, _nodeId, false)) {
                 s_logger.info("MS " + host.getManagementServerId() + " is loading " + host);
                 return null;
             }
         }
-        
+
         StartupCommand[] cmds = resource.initialize();
         if (cmds == null) {
+            s_logger.info("Unable to fully initialize the agent because no StartupCommands are returned");
+            if (id != null) {
+                _hostDao.updateStatus(host, Event.AgentDisconnected, _nodeId);
+            }
             return null;
         }
-        
+
         if (host != null) {
-            if (!_hostDao.directConnect(host, _nodeId)) {
-                s_logger.info("Someone else is loading " + host);
+            if (!_hostDao.directConnect(host, _nodeId, true)) {
+                host = _hostDao.findById(id);
+                s_logger.info("MS " + host.getManagementServerId() + " is loading " + host + " after it has been initialized.");
                 resource.disconnected();
                 return null;
             }
