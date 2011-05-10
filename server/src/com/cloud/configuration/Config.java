@@ -215,7 +215,18 @@ public enum Config {
 	VmOpLockStateRetry("Advanced", ManagementServer.class, Integer.class, "vm.op.lock.state.retry", "5", "Times to retry locking the state of a VM for operations", "-1 means try forever"),
 	VmOpCleanupInterval("Advanced", ManagementServer.class, Long.class, "vm.op.cleanup.interval", "86400", "Interval to run the thread that cleans up the vm operations (in seconds)", "Seconds"),
 	VmOpCleanupWait("Advanced", ManagementServer.class, Long.class, "vm.op.cleanup.wait", "3600", "Time (in seconds) to wait before cleanuping up any vm work items", "Seconds"),
-	VmOpCancelInterval("Advanced", ManagementServer.class, Long.class, "vm.op.cancel.interval", "3600", "Time (in seconds) to wait before cancelling a operation", "Seconds");
+	VmOpCancelInterval("Advanced", ManagementServer.class, Long.class, "vm.op.cancel.interval", "3600", "Time (in seconds) to wait before cancelling a operation", "Seconds"),
+	
+	DefaultPageSize("Advanced", ManagementServer.class, Long.class, "default.page.size", "500", "Default page size for API list* commands", null),
+	
+	
+	// Account Default Limits
+	DefaultMaxAccountUserVms("Account Defaults", ManagementServer.class, Long.class, "max.account.user.vms", "20", "The default maximum number of user VMs that can be deployed for an account", null),
+	DefaultMaxAccountPublicIPs("Account Defaults", ManagementServer.class, Long.class, "max.account.public.ips", "20", "The default maximum number of public IPs that can be consumed by an account", null),
+	DefaultMaxAccountTemplates("Account Defaults", ManagementServer.class, Long.class, "max.account.templates", "20", "The default maximum number of templates that can be deployed for an account", null),
+	DefaultMaxAccountSnapshots("Account Defaults", ManagementServer.class, Long.class, "max.account.snapshots", "20", "The default maximum number of snapshots that can be created for an account", null),
+	DefaultMaxAccountVolumes("Account Defaults", ManagementServer.class, Long.class, "max.account.volumes", "20", "The default maximum number of volumes that can be created for an account", null),
+	DirectAgentLoadSize("Advanced", ManagementServer.class, Integer.class, "direct.agent.load.size", "16", "The number of direct agents to load each time", null);
 	
 	private final String _category;
 	private final Class<?> _componentClass;
