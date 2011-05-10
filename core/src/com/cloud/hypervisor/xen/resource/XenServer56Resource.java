@@ -1,8 +1,8 @@
 /**
  *  Copyright (C) 2010 Cloud.com, Inc.  All rights reserved.
- * 
+ *
  * This software is licensed under the GNU General Public License v3 or later.
- * 
+ *
  * It is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or any later version.
@@ -10,10 +10,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 package com.cloud.hypervisor.xen.resource;
@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
@@ -46,12 +47,9 @@ import com.cloud.agent.api.SetupCommand;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.storage.CopyVolumeAnswer;
 import com.cloud.agent.api.storage.CopyVolumeCommand;
-import com.cloud.agent.api.storage.PrimaryStorageDownloadAnswer;
-import com.cloud.agent.api.storage.PrimaryStorageDownloadCommand;
 import com.cloud.agent.api.to.StorageFilerTO;
 import com.cloud.exception.InternalErrorException;
 import com.cloud.resource.ServerResource;
-import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.Pair;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -88,12 +86,12 @@ public class XenServer56Resource extends CitrixResourceBase {
             return super.executeRequest(cmd);
         }
     }
-    
+
     @Override
     protected void setMemory(Connection conn, VM vm, long memsize) throws XmlRpcException, XenAPIException {
         vm.setMemoryLimits(conn, memsize, memsize, memsize, memsize);
-    }   
-    
+    }
+
 
     @Override
     protected String getGuestOsType(String stdType, boolean bootFromCD) {
@@ -113,7 +111,7 @@ public class XenServer56Resource extends CitrixResourceBase {
         files.add(file);
 
         // no premimum overriding anymore after FOSS/premium merge
-/*        
+/*
         patch = "premium-scripts/vm/hypervisor/xenserver/xenserver56/patch";
         patchfilePath = Script.findScript("", patch);
         if (patchfilePath == null) {
@@ -121,7 +119,7 @@ public class XenServer56Resource extends CitrixResourceBase {
         }
         file = new File(patchfilePath);
         files.add(file);
-*/        
+*/
         return files;
     }
 
@@ -153,7 +151,7 @@ public class XenServer56Resource extends CitrixResourceBase {
                             host.forgetDataSourceArchives(conn, "pif_" + device + "." + vlannum + "_tx");
                             host.forgetDataSourceArchives(conn, "pif_" + device + "." + vlannum + "_rx");
                         } catch (XenAPIException e) {
-                            s_logger.debug("Catch Exception: " + e.getClass().getName() + ": failed to destory VLAN " + device + " on host " + _host.uuid
+                            s_logger.debug("Catch " + e.getClass().getName() + ": failed to destory VLAN " + device + " on host " + _host.uuid
                                     + " due to "  + e.toString());
                         }
                     }
@@ -375,7 +373,7 @@ public class XenServer56Resource extends CitrixResourceBase {
         src.reconfigureIp(conn, IpConfigurationMode.NONE, null, null, null, null);
         return true;
     }
-    
+
     @Override
     public CopyVolumeAnswer execute(final CopyVolumeCommand cmd) {
         Connection conn = getConnection();
@@ -389,7 +387,7 @@ public class XenServer56Resource extends CitrixResourceBase {
             String volumeFolder = String.valueOf(cmd.getVolumeId()) + "/";
             String mountpoint = remoteVolumesMountPath + volumeFolder;
             SR primaryStoragePool = getStorageRepository(conn, poolTO);
-            String srUuid = primaryStoragePool.getUuid(conn);         
+            String srUuid = primaryStoragePool.getUuid(conn);
             if (toSecondaryStorage) {
                 VDI vdi = VDI.getByUuid(conn, volumeUUID);
                 String vdiParent = vdi.getSmConfig(conn).get("vhd-parent");
@@ -400,7 +398,7 @@ public class XenServer56Resource extends CitrixResourceBase {
                 if (!createSecondaryStorageFolder(conn, remoteVolumesMountPath, volumeFolder)) {
                     throw new InternalErrorException("Failed to create the volume folder.");
                 }
-                String uuid = copy_vhd_to_secondarystorage(conn, mountpoint, volumeUUID, srUuid);              
+                String uuid = copy_vhd_to_secondarystorage(conn, mountpoint, volumeUUID, srUuid);
                 return new CopyVolumeAnswer(cmd, true, null, null, uuid);
             } else {
                 String uuid = copy_vhd_from_secondarystorage(conn, mountpoint, srUuid);
@@ -411,7 +409,7 @@ public class XenServer56Resource extends CitrixResourceBase {
             String msg = "Catch Exception " + e.getClass().getName() + " due to " + e.toString();
             s_logger.warn(msg, e);
             return new CopyVolumeAnswer(cmd, false, msg, null, null);
-        } 
+        }
     }
 
     @Override
@@ -583,7 +581,7 @@ public class XenServer56Resource extends CitrixResourceBase {
         } catch (Exception e) {
             throw new CloudRuntimeException("Unable to remove heartbeat tag", e);
         }
-        
+
         if (!setIptables(conn)) {
             s_logger.warn("set xenserver Iptable failed");
             return null;

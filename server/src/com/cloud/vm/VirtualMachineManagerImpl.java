@@ -1,8 +1,8 @@
 /**
  *  Copyright (C) 2010 Cloud.com, Inc.  All rights reserved.
- * 
- * This software is licensed under the GNU General Public License v3 or later.  
- * 
+ *
+ * This software is licensed under the GNU General Public License v3 or later.
+ *
  * It is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or any later version.
@@ -10,10 +10,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 package com.cloud.vm;
 
@@ -102,11 +102,14 @@ import com.cloud.service.dao.ServiceOfferingDao;
 import com.cloud.storage.DiskOfferingVO;
 import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.StorageManager;
+import com.cloud.storage.StoragePoolVO;
 import com.cloud.storage.VMTemplateVO;
 import com.cloud.storage.Volume;
 import com.cloud.storage.Volume.VolumeType;
+import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.GuestOSCategoryDao;
 import com.cloud.storage.dao.GuestOSDao;
+import com.cloud.storage.dao.StoragePoolDao;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.user.Account;
@@ -126,6 +129,7 @@ import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.exception.ExecutionException;
 import com.cloud.utils.fsm.StateMachine2;
 import com.cloud.vm.ItWorkVO.Step;
 import com.cloud.vm.VirtualMachine.Event;
@@ -202,6 +206,8 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
     protected DataCenterDao _dcDao;
     @Inject
     protected HypervisorGuruManager _hvGuruMgr;
+    @Inject
+    protected StoragePoolDao _storagePoolDao;
 
     @Inject(adapter = DeploymentPlanner.class)
     protected Adapters<DeploymentPlanner> _planners;
@@ -549,8 +555,36 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         DataCenterDeployment plan = new DataCenterDeployment(vm.getDataCenterId(), vm.getPodId(), null, null);
         HypervisorGuru hvGuru = _hvGuruMgr.getGuru(vm.getHypervisorType());
 
+        boolean canRetry = true;
         try {
             Journal journal = start.second().getJournal();
+
+            // edit plan if this vm's ROOT volume is in READY state already
+            List<VolumeVO> vols = _volsDao.findReadyRootVolumesByInstance(vm.getId());
+
+            for (VolumeVO vol : vols) {
+                // make sure if the templateId is unchanged. If it is changed, let planner
+                // reassign pool for the volume even if it ready.
+                Long volTemplateId = vol.getTemplateId();
+                if (volTemplateId != null && volTemplateId.longValue() != template.getId()) {
+                    if (s_logger.isDebugEnabled()) {
+                        s_logger.debug(vol + " of " + vm + " is READY, but template ids don't match, let the planner reassign a new pool");
+                    }
+                    continue;
+                }
+
+                StoragePoolVO pool = _storagePoolDao.findById(vol.getPoolId());
+                if (!pool.isInMaintenance()) {
+                    long rootVolDcId = pool.getDataCenterId();
+                    Long rootVolPodId = pool.getPodId();
+                    Long rootVolClusterId = pool.getClusterId();
+                    plan = new DataCenterDeployment(rootVolDcId, rootVolPodId, rootVolClusterId, null);
+                    if (s_logger.isDebugEnabled()) {
+                        s_logger.debug(vol + " is ready, changing deployment plan to use this pool's dcId: " + rootVolDcId + " , podId: " + rootVolPodId + " , and clusterId: " + rootVolClusterId);
+                    }
+                }
+            }
+
             ExcludeList avoids = new ExcludeList();
             int retry = _retry;
             while (retry-- != 0) { // It's != so that it can match -1.
@@ -589,7 +623,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                     cmds.addCommand(new StartCommand(vmTO));
 
                     vmGuru.finalizeDeployment(cmds, vmProfile, dest, ctx);
-                    vm.setPodId(dest.getPod().getId());
+//                    vm.setPodId(dest.getPod().getId());
 
                     work = _workDao.findById(work.getId());
                     if (work == null || work.getStep() != Step.Prepare) {
@@ -607,19 +641,31 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                             }
                             startedVm = vm;
                             if (s_logger.isDebugEnabled()) {
-                                s_logger.debug("Creation complete for VM " + vm);
+                                s_logger.debug("Start completed for VM " + vm);
                             }
                             return startedVm;
+                        } else {
+                            if (s_logger.isDebugEnabled()) {
+                                s_logger.info("The guru did not like the answers so stopping " + vm);
+                            }
+                            StopCommand cmd = new StopCommand(vm.getInstanceName());
+                            StopAnswer answer = (StopAnswer)_agentMgr.easySend(destHostId, cmd);
+                            if (answer == null || !answer.getResult()) {
+                                s_logger.warn("Unable to stop " + vm + " due to " + (answer != null ? answer.getDetails() : "no answers"));
+                                canRetry = false;
+                                _haMgr.scheduleStop(vm, destHostId, WorkType.ForceStop);
+                                throw new ExecutionException("Unable to stop " + vm + " so we are unable to retry the start operation");
+                            }
                         }
                     }
                     s_logger.info("Unable to start VM on " + dest.getHost() + " due to " + (startAnswer == null ? " no start answer" : startAnswer.getDetails()));
                 } catch (OperationTimedoutException e) {
                     s_logger.debug("Unable to send the start command to host " + dest.getHost());
                     if (e.isActive()) {
-                        // TODO: This one is different as we're not sure if the VM is actually started.
+                        _haMgr.scheduleStop(vm, destHostId, WorkType.ForceStop);
                     }
-                    avoids.addHost(destHostId);
-                    continue;
+                    canRetry = false;
+                    throw new AgentUnavailableException("Unable to start " + vm.getName(), destHostId, e);
                 } catch (ResourceUnavailableException e) {
                     s_logger.info("Unable to contact resource.", e);
                     if (!avoids.add(e)) {
@@ -630,7 +676,6 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                             throw e;
                         }
                     }
-                    continue;
                 } catch (InsufficientCapacityException e) {
                     s_logger.info("Insufficient capacity ", e);
                     if (!avoids.add(e)) {
@@ -640,19 +685,22 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                             s_logger.warn("unexpected InsufficientCapacityException : " + e.getScope().getName(), e);
                         }
                     }
-                    continue;
-                } catch (RuntimeException e) {
-                    s_logger.warn("Failed to start instance " + vm, e);
-                    throw e;
+                } catch (Exception e) {
+                    s_logger.error("Failed to start instance " + vm, e);
+                    throw new AgentUnavailableException("Unable to start instance", destHostId, e);
                 } finally {
-                    if (startedVm == null) {
+                    if (startedVm == null && canRetry) {
                         _workDao.updateStep(work, Step.Release);
                         cleanup(vmGuru, vmProfile, work, Event.OperationFailed, false, caller, account);
                     }
                 }
             }
         } finally {
-            if (startedVm == null) {
+            if (startedVm == null && canRetry) {
+            	// decrement only for user VM's and newly created VM
+            	if (vm.getType().equals(VirtualMachine.Type.User) && (vm.getLastHostId() == null)) {
+                    _accountMgr.decrementResourceCount(vm.getAccountId(), ResourceType.user_vm);
+                }
                 changeState(vm, Event.OperationFailed, null, work, Step.Done);
             }
         }
@@ -1244,7 +1292,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
     /**
      * compareState does as its name suggests and compares the states between management server and agent. It returns whether
      * something should be cleaned up
-     * 
+     *
      */
     protected Command compareState(VMInstanceVO vm, final AgentVmInfo info, final boolean fullSync, boolean nativeHA) {
         State agentState = info.state;
