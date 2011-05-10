@@ -4192,6 +4192,8 @@ public class ManagementServerImpl implements ManagementServer {
     		if (template == null) {
     			throw new InvalidParameterValueException("Please specify a valid template ID.");
     		}
+    		//Check permissions here
+    		
         }
     	
     	Account account = null;
@@ -4380,7 +4382,6 @@ public class ManagementServerImpl implements ManagementServer {
         sb.and("needsCleanup", sb.entity().getNeedsCleanup(), SearchCriteria.Op.EQ);
 
         if (domainId != null) {
-            // do a domain match for the admin case
             SearchBuilder<DomainVO> domainSearch = _domainDao.createSearchBuilder();
             domainSearch.and("path", domainSearch.entity().getPath(), SearchCriteria.Op.LIKE);
             sb.join("domainSearch", domainSearch, sb.entity().getDomainId(), domainSearch.entity().getId());
@@ -4417,7 +4418,6 @@ public class ManagementServerImpl implements ManagementServer {
 
         if (domainId != null) {
             DomainVO domain = _domainDao.findById((Long) domainId);
-
             // I want to join on user_vm.domain_id = domain.id where domain.path like 'foo%'
             sc.setJoinParameters("domainSearch", "path", domain.getPath() + "%");
             sc.setParameters("nid", 1L);
