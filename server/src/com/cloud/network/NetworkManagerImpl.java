@@ -1077,7 +1077,7 @@ public class NetworkManagerImpl implements NetworkManager, VirtualMachineManager
 				return false;
 			}
 		}
-		return resendDhcpEntries(router);
+		return resendDhcpEntries(router) && resendUserData(router);
       
     }
     
@@ -1117,18 +1117,22 @@ public class NetworkManagerImpl implements NetworkManager, VirtualMachineManager
         return true;
     }
 
-    /*
+    
     private boolean resendUserData(final DomainRouterVO router){
-    	final List<UserVmVO> vms = _vmDao.listByRouterId(router.getId());
-    	final List<Command> cmdList = new ArrayList<Command>();
-    	for (UserVmVO vm: vms) {
-    		if (vm.getGuestIpAddress() == null || vm.getGuestMacAddress() == null || vm.getName() == null)
-    			continue;
-    		if (vm.getUserData() == null)
-    			continue;
-    		UserDataCommand userDataCmd = new UserDataCommand(vm.getUserData(), vm.getGuestIpAddress(), router.getPrivateIpAddress(), vm.getName());
-    		cmdList.add(userDataCmd);
-    	}
+        final List<UserVmVO> vms = _vmDao.listByRouterId(router.getId());
+        final List<Command> cmdList = new ArrayList<Command>();
+        for (UserVmVO vm: vms) {
+            if (vm.getGuestIpAddress() == null || vm.getGuestMacAddress() == null || vm.getName() == null)
+                continue;
+            String zoneName = _dcDao.findById(router.getDataCenterId()).getName();
+            String offerName = _serviceOfferingDao.findById(vm.getServiceOfferingId()).getName();
+            cmdList.add(generateVmDataCommand(router.getPrivateIpAddress(), router.getPublicIpAddress(), 
+                    vm.getPrivateIpAddress(), vm.getUserData(), offerName, zoneName,
+                    vm.getGuestIpAddress(), vm.getName(), vm.getInstanceName(), vm.getId()));
+        }
+        if (cmdList.size() == 0) {
+            return true;
+        }
         final Command [] cmds = new Command[cmdList.size()];
         Answer [] answers = null;
         try {
@@ -1143,17 +1147,17 @@ public class NetworkManagerImpl implements NetworkManager, VirtualMachineManager
         }
         int i=0;
         while (i < cmdList.size()) {
-        	Answer ans = answers[i];
-        	i++;
-        	if ((ans != null) && (ans.getResult())) {
-        		continue;
-        	} else {
-        		return false;
-        	}
+            Answer ans = answers[i];
+            i++;
+            if ((ans != null) && (ans.getResult())) {
+                continue;
+            } else {
+                return false;
+            }
         }
         return true;
     }
-    */
+    
 
     @Override
     public boolean stopRouter(final long routerId, long eventId) {
@@ -1165,7 +1169,7 @@ public class NetworkManagerImpl implements NetworkManager, VirtualMachineManager
                 s_logger.info("Stop router " + routerId + ", update async job-" + job.getId());
             _asyncMgr.updateAsyncJobAttachment(job.getId(), "domain_router", routerId);
         }
-    	
+        
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Stopping router " + routerId);
         }
@@ -1174,8 +1178,8 @@ public class NetworkManagerImpl implements NetworkManager, VirtualMachineManager
     }
 
     @DB
-	public void processStopOrRebootAnswer(final DomainRouterVO router, Answer answer) {
-		final Transaction txn = Transaction.currentTxn();
+    public void processStopOrRebootAnswer(final DomainRouterVO router, Answer answer) {
+        final Transaction txn = Transaction.currentTxn();
         try {
             txn.start();
             final UserStatisticsVO userStats = _userStatsDao.lock(router.getAccountId(), router.getDataCenterId());
@@ -1184,11 +1188,11 @@ public class NetworkManagerImpl implements NetworkManager, VirtualMachineManager
                 final Long received = sa.getBytesReceived();
                 long netBytes = 0;
                 if (received != null) {
-                	if (received.longValue() >= userStats.getCurrentBytesReceived()) {
-                    	 netBytes = received.longValue();
-                	} else {
-                		netBytes = userStats.getCurrentBytesReceived() + received;
-                	}
+                    if (received.longValue() >= userStats.getCurrentBytesReceived()) {
+                         netBytes = received.longValue();
+                    } else {
+                        netBytes = userStats.getCurrentBytesReceived() + received;
+                    }
                 } else {
                 	netBytes = userStats.getCurrentBytesReceived();
                 }
