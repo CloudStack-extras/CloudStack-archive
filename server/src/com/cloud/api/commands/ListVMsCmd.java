@@ -116,7 +116,7 @@ public class ListVMsCmd extends BaseCmd {
         }
 
         Long startIndex = Long.valueOf(0);
-        int pageSizeNum = 50;
+        int pageSizeNum = 5000;
     	if (pageSize != null) {
     		pageSizeNum = pageSize.intValue();
     	}
