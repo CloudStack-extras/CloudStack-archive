@@ -88,6 +88,7 @@ import com.cloud.vm.NicProfile;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.State;
+import com.cloud.vm.VirtualMachine.Type;
 import com.cloud.vm.VirtualMachineGuru;
 import com.cloud.vm.VirtualMachineManager;
 import com.cloud.vm.VirtualMachineName;
@@ -225,7 +226,7 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
         }
 
         long id = _elasticIpVmDao.getNextInSequence(Long.class, "id");
-        String name = VirtualMachineName.getSystemVmName(id, _instance, "s").intern();
+        String name = VirtualMachineName.getSystemVmName(id, _instance, "r").intern();
         Account systemAcct = _accountMgr.getSystemAccount();
 
         DataCenterDeployment plan = new DataCenterDeployment(dataCenterId);
@@ -258,7 +259,7 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
             throw new CloudRuntimeException("Insufficient capacity exception");
         }
 
-        DomainRouterVO elasticIpVm = new DomainRouterVO(id, _serviceOffering.getId(), name, template.getId(), template.getHypervisorType(), template.getGuestOSId(), dataCenterId,
+        DomainRouterVO elasticIpVm = new DomainRouterVO(id, _serviceOffering.getId(), name, template.getId(), template.getHypervisorType(), Type.ElasticIpVm, template.getGuestOSId(), dataCenterId,
                 systemAcct.getDomainId(), systemAcct.getId(), _serviceOffering.getOfferHA());
         try {
             elasticIpVm = _itMgr.allocate(elasticIpVm, template, _serviceOffering, networks, plan, null, systemAcct);
@@ -588,7 +589,7 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
         _elasticIpVmRamSize = NumbersUtil.parseInt(configs.get("elasticip.vm.ram.size"), DEFAULT_EIP_VM_RAMSIZE);
         _elasticIpVmCpuMHz = NumbersUtil.parseInt(configs.get("elasticip.vm.cpu.mhz"), DEFAULT_EIP_VM_CPUMHZ);
         String useServiceVM = configDao.getValue("elasticip.vm");
-        boolean _useServiceVM = false;
+        boolean _useServiceVM = true; //FIXME
         if ("true".equalsIgnoreCase(useServiceVM)) {
             _useServiceVM = true;
         }   
