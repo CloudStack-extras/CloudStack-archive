@@ -1,5 +1,5 @@
 /**
- *  Copyright (C) 2010 Cloud.com, Inc.  All rights reserved.
+ *  Copyright (C) 2011 Cloud.com, Inc.  All rights reserved.
  * 
  * This software is licensed under the GNU General Public License v3 or later.
  * 
@@ -15,20 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package com.cloud.network.router;
+package com.cloud.network.eip;
 
-import com.cloud.vm.VirtualMachine;
+import java.util.List;
+import java.util.Map;
 
-/**
- *  VirtualMachineRouter is a small VM instance that is started to 
- *  bridge internal and external traffic.
- */
-public interface VirtualRouter extends VirtualMachine {
-	public enum Role {
-		DHCP_FIREWALL_LB_PASSWD_USERDATA,
-		DHCP_USERDATA,
-		FIREWALL,
-		LB
-	}
-    Role getRole();
+import com.cloud.utils.component.Adapter;
+import com.cloud.vm.DomainRouterVO;
+
+public interface ElasticIpVmAllocator extends Adapter {
+	public DomainRouterVO allocElasticIpVm(List<DomainRouterVO> candidates, Map<Long, Integer> loadInfo, long dataCenterId);
 }
