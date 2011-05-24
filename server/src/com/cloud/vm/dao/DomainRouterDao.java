@@ -22,6 +22,7 @@ import java.util.List;
 import com.cloud.network.router.VirtualRouter.Role;
 import com.cloud.utils.db.GenericDao;
 import com.cloud.vm.DomainRouterVO;
+import com.cloud.vm.VirtualMachine.State;
 
 /**
  *
@@ -81,4 +82,6 @@ public interface DomainRouterDao extends GenericDao<DomainRouterVO, Long> {
 	DomainRouterVO findByNetwork(long networkId);
 
 	DomainRouterVO findByNetworkAndPod(long networkId, long podId);
-}
+	
+    public List<DomainRouterVO> listInStates(long dataCenterId, Role role, State... states);
+    public List<DomainRouterVO> listInStates(Role role, State... states);}

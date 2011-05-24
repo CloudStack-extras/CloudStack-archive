@@ -29,9 +29,9 @@ import com.cloud.network.dao.NetworkDaoImpl;
 import com.cloud.network.router.VirtualRouter.Role;
 import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.db.GenericDaoBase;
+import com.cloud.utils.db.JoinBuilder.JoinType;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
-import com.cloud.utils.db.JoinBuilder.JoinType;
 import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.UpdateBuilder;
@@ -45,6 +45,10 @@ public class DomainRouterDaoImpl extends GenericDaoBase<DomainRouterVO, Long> im
     protected final SearchBuilder<DomainRouterVO> AllFieldsSearch;
     protected final SearchBuilder<DomainRouterVO> IdStatesSearch;
     protected final SearchBuilder<DomainRouterVO> HostUpSearch;
+    protected SearchBuilder<DomainRouterVO> RoleStatesSearch;
+    protected SearchBuilder<DomainRouterVO> DcRoleStatesSearch;
+
+
     NetworkDaoImpl _networksDao = ComponentLocator.inject(NetworkDaoImpl.class);
 
     protected DomainRouterDaoImpl() {
@@ -72,6 +76,17 @@ public class DomainRouterDaoImpl extends GenericDaoBase<DomainRouterVO, Long> im
         joinNetwork.and("guestType", joinNetwork.entity().getGuestType(), Op.EQ);
         HostUpSearch.join("network", joinNetwork, joinNetwork.entity().getId(), HostUpSearch.entity().getNetworkId(), JoinType.INNER);
         HostUpSearch.done();
+        
+        RoleStatesSearch = createSearchBuilder();
+        RoleStatesSearch.and("role", RoleStatesSearch.entity().getRole(), SearchCriteria.Op.EQ);
+        RoleStatesSearch.and("states", RoleStatesSearch.entity().getState(), SearchCriteria.Op.IN);
+        RoleStatesSearch.done();
+        
+        DcRoleStatesSearch = createSearchBuilder();
+        DcRoleStatesSearch.and("dcId", DcRoleStatesSearch.entity().getDataCenterId(), SearchCriteria.Op.EQ);
+        DcRoleStatesSearch.and("role", DcRoleStatesSearch.entity().getRole(), SearchCriteria.Op.EQ);
+        DcRoleStatesSearch.and("states", DcRoleStatesSearch.entity().getState(), SearchCriteria.Op.IN);
+        DcRoleStatesSearch.done();
         
     }
 
@@ -169,4 +184,21 @@ public class DomainRouterDaoImpl extends GenericDaoBase<DomainRouterVO, Long> im
         sc.setParameters("podId", podId);
         return findOneBy(sc);
 	}
+
+    @Override
+    public List<DomainRouterVO> listInStates(long dataCenterId, Role role, State... states) {
+        SearchCriteria<DomainRouterVO> sc = DcRoleStatesSearch.create();
+        sc.setParameters("dcId", dataCenterId);
+        sc.setParameters("role", role);
+        sc.setParameters("states", (Object[])states);
+        return listBy(sc);
+    }
+
+    @Override
+    public List<DomainRouterVO> listInStates(Role role, State... states) {
+        SearchCriteria<DomainRouterVO> sc = RoleStatesSearch.create();
+        sc.setParameters("role", role);
+        sc.setParameters("states", (Object[])states);
+        return listBy(sc);
+    }
 }
