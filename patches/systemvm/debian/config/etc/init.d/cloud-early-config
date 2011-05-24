@@ -281,6 +281,25 @@ setup_router() {
   cp /etc/iptables/iptables-router /etc/iptables/rules
 }
 
+setup_elasticip() {
+  log_it "Setting up elastic ip system vm"
+
+  setup_common eth0 eth1 eth2
+  ip route delete default
+  ip route add default via $GUEST_GW 
+  
+  setup_sshd $ETH1_IP
+
+  enable_svc dnsmasq 0
+  enable_svc haproxy 0
+  enable_svc cloud-passwd-srvr 0
+  enable_svc cloud 0
+  disable_rpfilter
+  enable_fwding 1
+  chkconfig nfs-common off
+  cp /etc/iptables/iptables-router /etc/iptables/rules
+}
+
 setup_dhcpsrvr() {
   log_it "Setting up dhcp server system vm"
   setup_common eth0 eth1
@@ -401,6 +420,10 @@ start() {
          [ "$NAME" == "" ] && NAME=consoleproxy
          setup_console_proxy $hyp;
 	  ;;
+	 elasticip)
+         [ "$NAME" == "" ] && NAME=elasticip
+         setup_elasticip $hyp;
+	  ;;
      unknown)
          [ "$NAME" == "" ] && NAME=systemvm
          setup_default;
@@ -461,24 +484,27 @@ for i in $CMDLINE
       localgw)
           LOCAL_GW=$VALUE
           ;;
+      guestgw)
+          GUEST_GW=$VALUE
+          ;;          
       template)
-        TEMPLATE=$VALUE
-      	;;
+          TEMPLATE=$VALUE
+      	  ;;
       name)
-	NAME=$VALUE
-	;;
+	      NAME=$VALUE
+	      ;;
       dhcprange)
-        DHCP_RANGE=$(echo $VALUE | tr ':' ',')
-      	;;
+          DHCP_RANGE=$(echo $VALUE | tr ':' ',')
+      	  ;;
       bootproto)
-        BOOTPROTO=$VALUE 
-      	;;
+          BOOTPROTO=$VALUE 
+      	  ;;
       type)
-        TYPE=$VALUE	
-	;;
+          TYPE=$VALUE	
+	      ;;
       defaultroute)
-        DEFAULTROUTE=$VALUE	
-	;;
+          DEFAULTROUTE=$VALUE	
+	      ;;
     esac
 done
 }

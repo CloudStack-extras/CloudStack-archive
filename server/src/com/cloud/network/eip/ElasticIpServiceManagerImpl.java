@@ -54,13 +54,11 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.exception.StorageUnavailableException;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
-import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.info.RunningHostCountInfo;
 import com.cloud.info.RunningHostInfoAgregator;
 import com.cloud.info.RunningHostInfoAgregator.ZoneHostInfo;
 import com.cloud.network.NetworkManager;
 import com.cloud.network.NetworkVO;
-import com.cloud.network.Network.GuestIpType;
 import com.cloud.network.Networks.TrafficType;
 import com.cloud.network.router.VirtualRouter.Role;
 import com.cloud.offerings.NetworkOfferingVO;
@@ -85,8 +83,6 @@ import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.net.NetUtils;
-import com.cloud.utils.net.NfsUtils;
 import com.cloud.vm.DomainRouterVO;
 import com.cloud.vm.NicProfile;
 import com.cloud.vm.ReservationContext;
@@ -114,12 +110,9 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
 
     private static final int STARTUP_DELAY = 60000; // 60 seconds
 
-    private String _mgmt_host;
-    private int _mgmt_port = 8250;
-
     private String _name;
     @Inject(adapter = ElasticIpVmAllocator.class)
-    private Adapters<ElasticIpVmAllocator> _ssVmAllocators;
+    private Adapters<ElasticIpVmAllocator> _eipVmAllocators;
 
     @Inject
     private DomainRouterDao _elasticIpVmDao;
@@ -154,7 +147,7 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
     @Inject
     private VirtualMachineManager _itMgr;
 
-    private final ScheduledExecutorService _capacityScanScheduler = Executors.newScheduledThreadPool(1, new NamedThreadFactory("SS-Scan"));
+    private final ScheduledExecutorService _capacityScanScheduler = Executors.newScheduledThreadPool(1, new NamedThreadFactory("EIP-Scan"));
 
     private long _capacityScanInterval = DEFAULT_CAPACITY_SCAN_INTERVAL;
 
@@ -282,7 +275,7 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
     private ElasticIpVmAllocator getCurrentAllocator() {
 
         // for now, only one adapter is supported
-        Enumeration<ElasticIpVmAllocator> it = _ssVmAllocators.enumeration();
+        Enumeration<ElasticIpVmAllocator> it = _eipVmAllocators.enumeration();
         if (it.hasMoreElements()) {
             return it.nextElement();
         }
@@ -317,12 +310,12 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
                 Map<Long, ZoneHostInfo> zoneHostInfoMap = getZoneHostInfo();
                 if (isServiceReady(zoneHostInfoMap)) {
                     if (s_logger.isTraceEnabled()) {
-                        s_logger.trace("Sec Storage VM Service is ready, check to see if we need to allocate standby capacity");
+                        s_logger.trace("Elastic Ip VM Service is ready, check to see if we need to allocate standby capacity");
                     }
 
                     if (!_capacityScanLock.lock(ACQUIRE_GLOBAL_LOCK_TIMEOUT_FOR_COOPERATION)) {
                         if (s_logger.isTraceEnabled()) {
-                            s_logger.trace("Sec Storage VM Capacity scan lock is used by others, skip and wait for my turn");
+                            s_logger.trace("Elastic Ip VM Capacity scan lock is used by others, skip and wait for my turn");
                         }
                         return;
                     }
@@ -365,7 +358,7 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
 
                 } else {
                     if (s_logger.isTraceEnabled()) {
-                        s_logger.trace("Secondary storage vm service is not ready for capacity preallocation, wait for next time");
+                        s_logger.trace("Elastic Ip vm service is not ready for capacity preallocation, wait for next time");
                     }
                 }
 
@@ -600,7 +593,7 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
             _useServiceVM = true;
         }   
 
-        String value = configs.get("secstorage.capacityscan.interval");
+        String value = configs.get("secstorage.capacityscan.interval"); //TODO
         _capacityScanInterval = NumbersUtil.parseLong(value, DEFAULT_CAPACITY_SCAN_INTERVAL);
 
         _instance = configs.get("instance.name");
@@ -620,7 +613,7 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
             _capacityScanScheduler.scheduleAtFixedRate(getCapacityScanTask(), STARTUP_DELAY, _capacityScanInterval, TimeUnit.MILLISECONDS);
         }
         if (s_logger.isInfoEnabled()) {
-            s_logger.info("Secondary storage vm Manager is configured.");
+            s_logger.info("Elastic ip vm Manager is configured.");
         }
         return true;
     }
@@ -702,7 +695,7 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
 */
                 return true;
             } else {
-                String msg = "Rebooting Secondary Storage VM failed - " + elasticIpVm.getHostName();
+                String msg = "Rebooting Elastic Ip VM failed - " + elasticIpVm.getHostName();
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug(msg);
                 }
@@ -759,10 +752,8 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
     @Override
     public boolean finalizeVirtualMachineProfile(VirtualMachineProfile<DomainRouterVO> profile, DeployDestination dest, ReservationContext context) {
 
-        DomainRouterVO router = profile.getVirtualMachine();
-
         StringBuilder buf = profile.getBootArgsBuilder();
-        buf.append(" template=domP type=router");
+        buf.append(" template=domP type=elasticip");
         buf.append(" name=").append(profile.getHostName());
         NicProfile controlNic = null;
         String defaultDns1 = null;
@@ -772,7 +763,7 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
             int deviceId = nic.getDeviceId();
             buf.append(" eth").append(deviceId).append("ip=").append(nic.getIp4Address());
             buf.append(" eth").append(deviceId).append("mask=").append(nic.getNetmask());
-            if (nic.isDefaultNic()) {
+            if (nic.getTrafficType() == TrafficType.Public) {
                 buf.append(" gateway=").append(nic.getGateway());
                 defaultDns1 = nic.getDns1();
                 defaultDns2 = nic.getDns2();
@@ -782,6 +773,9 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
             } else if (nic.getTrafficType() == TrafficType.Control) {
                 //TODO: VMWare: need to account for route back to management server
                 controlNic = nic;
+            }
+            if (nic.getTrafficType() == TrafficType.Guest) {
+                buf.append(" guestgw=").append(nic.getGateway());
             }
         }
 
