@@ -4687,7 +4687,7 @@ public abstract class CitrixResourceBase implements StoragePoolResource, ServerR
                     continue;
 
                 if (server.equals(dc.get("server")) && serverpath.equals(dc.get("serverpath"))) {
-                    throw new CloudRuntimeException("There is a SR using the same configuration server:" + dc.get("server") + "， serverpath:" 
+                    throw new CloudRuntimeException("There is a SR using the same configuration server:" + dc.get("server") + ", serverpath:" 
                                 + dc.get("serverpath") + " for pool " + pool.getUuid() + "on host:" + _host.uuid);
                 }
 
