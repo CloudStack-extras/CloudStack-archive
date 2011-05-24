@@ -77,6 +77,7 @@ import com.cloud.network.dao.NetworkDomainDaoImpl;
 import com.cloud.network.dao.NetworkRuleConfigDaoImpl;
 import com.cloud.network.dao.RemoteAccessVpnDaoImpl;
 import com.cloud.network.dao.VpnUserDaoImpl;
+import com.cloud.network.eip.ElasticIpServiceManagerImpl;
 import com.cloud.network.lb.LoadBalancingRulesManagerImpl;
 import com.cloud.network.ovs.OvsNetworkManagerImpl;
 import com.cloud.network.ovs.OvsTunnelManagerImpl;
@@ -280,6 +281,7 @@ public class DefaultComponentLibrary extends ComponentLibraryBase implements Com
         addManager("upload manager", UploadMonitorImpl.class);
         addManager("console proxy manager", AgentBasedStandaloneConsoleProxyManager.class);
         addManager("secondary storage vm manager", SecondaryStorageManagerImpl.class);
+        addManager("elastic ip vm manager", ElasticIpServiceManagerImpl.class);
         addManager("vm manager", UserVmManagerImpl.class);
         addManager("upgrade manager", UpgradeManagerImpl.class);
         addManager("StorageManager", StorageManagerImpl.class);
