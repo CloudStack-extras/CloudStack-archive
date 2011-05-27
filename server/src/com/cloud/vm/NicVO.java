@@ -110,6 +110,12 @@ public class NicVO implements Nic {
 
     @Column(name = GenericDao.CREATED_COLUMN)
     Date created;
+    
+    @Column(name = "elastic_ip_address_id")
+    Long elasticIpAddressId;
+    
+    @Column(name = "elastic_ip_vm_id")
+    Long elasticIpVmId;
 
     public NicVO(String reserver, Long instanceId, long configurationId, VirtualMachine.Type vmType) {
         this.reserver = reserver;
@@ -309,5 +315,21 @@ public class NicVO implements Nic {
     @Override
     public VirtualMachine.Type getVmType() {
         return vmType;
+    }
+
+    public Long getElasticIpAddressId() {
+        return elasticIpVmId;
+    }
+
+    public void setElasticIpAddressId(Long elasticIpAddressId) {
+        this.elasticIpAddressId = elasticIpAddressId;
+    }
+
+    public Long getElasticIpVmId() {
+        return elasticIpVmId;
+    }
+
+    public void setElasticIpVmId(Long elasticIpVmId) {
+        this.elasticIpVmId = elasticIpVmId;
     }
 }

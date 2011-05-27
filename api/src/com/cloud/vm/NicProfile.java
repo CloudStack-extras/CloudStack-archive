@@ -35,6 +35,8 @@ public class NicProfile {
     String dns2;
     Integer networkRate;
     boolean isSecurityGroupEnabled;
+    Long elasticIpAddressId;
+    Long elasticIpVmId;
 
     public String getDns1() {
         return dns1;
@@ -275,5 +277,21 @@ public class NicProfile {
     @Override
     public String toString() {
         return new StringBuilder("NicProfile[").append(id).append("-").append(vmId).append("-").append(reservationId).toString();
+    }
+
+    public Long getElasticIpAddressId() {
+        return elasticIpAddressId;
+    }
+
+    public void setElasticIpAddressId(Long elasticIpAddressId) {
+        this.elasticIpAddressId = elasticIpAddressId;
+    }
+
+    public Long getElasticIpVmId() {
+        return elasticIpVmId;
+    }
+
+    public void setElasticIpVmId(Long elasticIpVmId) {
+        this.elasticIpVmId = elasticIpVmId;
     }
 }

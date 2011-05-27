@@ -19,11 +19,15 @@
 package com.cloud.network.guru;
 
 import java.net.URI;
+import java.util.Map;
 
 import javax.ejb.Local;
+import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 
+import com.cloud.configuration.Config;
+import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenter.NetworkType;
 import com.cloud.dc.Pod;
@@ -44,7 +48,10 @@ import com.cloud.network.addr.PublicIp;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offerings.dao.NetworkOfferingDao;
+import com.cloud.user.UserContext;
 import com.cloud.utils.component.Inject;
+import com.cloud.utils.db.DB;
+import com.cloud.utils.db.Transaction;
 import com.cloud.vm.Nic.ReservationStrategy;
 import com.cloud.vm.NicProfile;
 import com.cloud.vm.ReservationContext;
@@ -65,6 +72,11 @@ public class DirectPodBasedNetworkGuru extends DirectNetworkGuru {
     IPAddressDao _ipAddressDao;
     @Inject
     NetworkOfferingDao _networkOfferingDao;
+    @Inject
+    ConfigurationDao _configDao;
+    
+    boolean _elasticIpEnabled;
+    String _elasticIpGuestCidrs;
 
     @Override
     protected boolean canHandle(NetworkOffering offering, DataCenter dc) {
@@ -107,10 +119,13 @@ public class DirectPodBasedNetworkGuru extends DirectNetworkGuru {
             nic.setStrategy(ReservationStrategy.Create);
         }
     }
-
-    protected void getIp(NicProfile nic, Pod pod, VirtualMachineProfile<? extends VirtualMachine> vm, Network network) throws InsufficientVirtualNetworkCapcityException,
+    
+    @DB
+    public void getIp(NicProfile nic, Pod pod, VirtualMachineProfile<? extends VirtualMachine> vm, Network network) throws InsufficientVirtualNetworkCapcityException,
             InsufficientAddressCapacityException, ConcurrentOperationException {
         DataCenter dc = _dcDao.findById(pod.getDataCenterId());
+        Transaction txn = Transaction.currentTxn();
+        txn.start();
         if (nic.getIp4Address() == null) {
             PublicIp ip = _networkMgr.assignPublicIpAddress(dc.getId(), pod.getId(), vm.getOwner(), VlanType.DirectAttached, network.getId());
             nic.setIp4Address(ip.getAddress().toString());
@@ -127,6 +142,38 @@ public class DirectPodBasedNetworkGuru extends DirectNetworkGuru {
         }
         nic.setDns1(dc.getDns1());
         nic.setDns2(dc.getDns2());
+        if (_elasticIpEnabled) {
+            if (nic.getElasticIpAddressId() == null) {
+                PublicIp ip = _networkMgr.assignPublicIpAddress(dc.getId(), null, vm.getOwner(), VlanType.VirtualNetwork, null);
+                nic.setElasticIpAddressId(ip.getId());
+            }
+        }
+        txn.commit();
+        
+    }
+
+    @Override
+    public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
+        super.configure(name, params);
+        final Map<String, String> configs = _configDao.getConfiguration(params);
+        _elasticIpEnabled = Boolean.parseBoolean(configs.get(Config.ElasticIpVmEnabled.key()));
+        if (_elasticIpEnabled) {
+            _elasticIpGuestCidrs = configs.get(Config.ElasticIpGuestCidrs.key());
+            s_logger.info("Elastic ip feature is enabled, guest cidrs are " + _elasticIpGuestCidrs);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean release(NicProfile nic, VirtualMachineProfile<? extends VirtualMachine> vm, String reservationId) {
+        boolean result = true;
+        if (_elasticIpEnabled) {
+            if (nic.getElasticIpAddressId() != null) {
+                result = _networkMgr.releasePublicIpAddress(nic.getElasticIpAddressId(), 
+                        UserContext.current().getCallerUserId(), vm.getOwner());
+            }
+        }
+        return result && super.release(nic, vm, reservationId);
     }
 
 }

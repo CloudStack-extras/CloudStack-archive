@@ -24,7 +24,10 @@ public class DhcpEntryCommand extends NetworkElementCommand {
     String vmMac;
     String vmIpAddress;
     String vmName;
+    String defaultRouter;
+    String staticRoutes;
     
+  
     protected DhcpEntryCommand() {
     	
     }
@@ -51,5 +54,22 @@ public class DhcpEntryCommand extends NetworkElementCommand {
 	public String getVmName() {
 		return vmName;
 	}
+	
+	public String getDefaultRouter() {
+	    return defaultRouter;
+	}
+
+	public void setDefaultRouter(String defaultRouter) {
+	    this.defaultRouter = defaultRouter;
+	}
+
+	public String getStaticRoutes() {
+	    return staticRoutes;
+	}
+
+	public void setStaticRoutes(String staticRoutes) {
+	    this.staticRoutes = staticRoutes;
+	}
+
 	
 }

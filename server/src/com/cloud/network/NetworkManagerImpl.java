@@ -1037,8 +1037,10 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         if (profile.getIsolationUri() != null) {
             vo.setIsolationUri(profile.getIsolationUri());
         }
-
+        vo.setElasticIpAddressId(profile.getElasticIpAddressId());
+        vo.setElasticIpVmId(profile.getElasticIpVmId());
         vo.setState(Nic.State.Allocated);
+
         return deviceId;
     }
 
@@ -1054,6 +1056,8 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         vo.setBroadcastUri(profile.getBroadCastUri());
         vo.setIsolationUri(profile.getIsolationUri());
         vo.setNetmask(profile.getNetmask());
+        vo.setElasticIpAddressId(profile.getElasticIpAddressId());
+        vo.setElasticIpVmId(profile.getElasticIpVmId());
     }
 
     protected void applyProfileToNetwork(NetworkVO network, NetworkProfile profile) {
@@ -1235,6 +1239,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 nic.setState(Nic.State.Reserved);
                 nic.setNetmask(profile.getNetmask());
                 nic.setGateway(profile.getGateway());
+                nic.setElasticIpAddressId(profile.getElasticIpAddressId());
 
                 if (profile.getStrategy() != null) {
                     nic.setReservationStrategy(profile.getStrategy());
@@ -1254,7 +1259,10 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 element.prepare(network, profile, vmProfile, dest, context);
             }
             profile.setSecurityGroupEnabled(network.isSecurityGroupEnabled());
-            guru.updateNicProfile(profile, network);
+            if (profile.getElasticIpVmId() != null) {
+                nic.setElasticIpVmId(profile.getElasticIpVmId());
+                updateNic(nic, network.getId(), 1);
+            }
             vmProfile.addNic(profile);
         }
     }

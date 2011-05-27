@@ -589,7 +589,7 @@ public class ElasticIpServiceManagerImpl implements ElasticIpServiceManager, Vir
         _elasticIpVmRamSize = NumbersUtil.parseInt(configs.get("elasticip.vm.ram.size"), DEFAULT_EIP_VM_RAMSIZE);
         _elasticIpVmCpuMHz = NumbersUtil.parseInt(configs.get("elasticip.vm.cpu.mhz"), DEFAULT_EIP_VM_CPUMHZ);
         String useServiceVM = configDao.getValue("elasticip.vm");
-        boolean _useServiceVM = true; //FIXME
+        boolean _useServiceVM = false; //FIXME
         if ("true".equalsIgnoreCase(useServiceVM)) {
             _useServiceVM = true;
         }   

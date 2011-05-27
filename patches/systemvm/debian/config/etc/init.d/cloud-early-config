@@ -285,8 +285,6 @@ setup_elasticip() {
   log_it "Setting up elastic ip system vm"
 
   setup_common eth0 eth1 eth2
-  ip route delete default
-  ip route add default via $GUEST_GW 
   
   setup_sshd $ETH1_IP
 
