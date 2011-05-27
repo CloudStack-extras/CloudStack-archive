@@ -278,6 +278,8 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
     String _instance;
     String _mgmt_host;
     String _mgmt_cidr;
+    boolean _elasticIpEnabled;
+    String _elasticIpGuestCidrs;
 
     int _routerStatsInterval = 300;
     private ServiceOfferingVO _offering;
@@ -565,6 +567,12 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         _offering = _serviceOfferingDao.persistSystemServiceOffering(_offering);
 
         _systemAcct = _accountService.getSystemAccount();
+        
+        _elasticIpEnabled = Boolean.parseBoolean(configs.get(Config.ElasticIpVmEnabled.key()));
+        if (_elasticIpEnabled) {
+            _elasticIpGuestCidrs = configs.get(Config.ElasticIpGuestCidrs.key());
+            s_logger.info("Elastic ip feature is enabled, guest cidrs are " + _elasticIpGuestCidrs);
+        }
 
         s_logger.info("DomainRouterManager is configured.");
 
@@ -811,7 +819,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
 
             // In Basic zone and Guest network we have to start domR per pod, not per network
             if ((dc.getNetworkType() == NetworkType.Basic || guestNetwork.isSecurityGroupEnabled()) && guestNetwork.getTrafficType() == TrafficType.Guest) {
-                router = _routerDao.findByNetworkAndPod(guestNetwork.getId(), podId);
+                router = _routerDao.findByNetworkAndPodAndRole(guestNetwork.getId(), podId, Role.DHCP_USERDATA);
                 plan = new DataCenterDeployment(dcId, podId, null, null, null);
             } else {
                 router = _routerDao.findByNetwork(guestNetwork.getId());
@@ -867,6 +875,9 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
     public boolean finalizeVirtualMachineProfile(VirtualMachineProfile<DomainRouterVO> profile, DeployDestination dest, ReservationContext context) {
 
         DomainRouterVO router = profile.getVirtualMachine();
+        if (router.getRole() == Role.FIREWALL) {
+            return finalizeElasticIpVmProfile(profile, dest, context);
+        }
         NetworkVO network = _networkDao.findById(router.getNetworkId());
 
         String type = null;
@@ -1238,6 +1249,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             throws ConcurrentOperationException, InsufficientCapacityException, ResourceUnavailableException {
 
         DomainRouterVO router = startDhcp ? deployDhcp(network, dest, profile.getOwner(), profile.getParameters()) : deployVirtualRouter(network, dest, profile.getOwner(), profile.getParameters());
+        DomainRouterVO elasticIpVm = deployElasticIpVm(network, dest, profile.getOwner(), profile.getParameters());
 
         _userVmDao.loadDetails((UserVmVO) profile.getVirtualMachine());
 
@@ -1256,6 +1268,15 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         }
 
         DhcpEntryCommand dhcpCommand = new DhcpEntryCommand(nic.getMacAddress(), nic.getIp4Address(), profile.getVirtualMachine().getHostName());
+        if (_elasticIpEnabled) {
+            dhcpCommand.setDefaultRouter(elasticIpVm.getGuestIpAddress());
+            String [] cidrs = _elasticIpGuestCidrs.split(",");
+            StringBuilder routes = new StringBuilder();
+            for (String cidr: cidrs) {
+                routes.append(cidr).append(",").append(nic.getGateway()).append(",");
+            }
+            dhcpCommand.setStaticRoutes(routes.toString());
+        }
         dhcpCommand.setAccessDetail(NetworkElementCommand.ROUTER_IP, routerControlIpAddress);
         dhcpCommand.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
         cmds.addCommand("dhcp", dhcpCommand);
@@ -1577,6 +1598,18 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                     DhcpEntryCommand dhcpCommand = new DhcpEntryCommand(nic.getMacAddress(), nic.getIp4Address(), vm.getHostName());
                     dhcpCommand.setAccessDetail(NetworkElementCommand.ROUTER_IP, router.getPrivateIpAddress());
                     dhcpCommand.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
+                    if (_elasticIpEnabled) {
+                        DomainRouterVO elasticIpVm = _routerDao.findById(nic.getElasticIpVmId());
+                        if (elasticIpVm != null) {
+                            dhcpCommand.setDefaultRouter(elasticIpVm.getGuestIpAddress()); 
+                            String [] cidrs = _elasticIpGuestCidrs.split(",");
+                            StringBuilder routes = new StringBuilder();
+                            for (String cidr: cidrs) {
+                                routes.append(cidr).append(",").append(nic.getGateway()).append(",");
+                            }
+                            dhcpCommand.setStaticRoutes(routes.toString());
+                        }
+                    }
                     cmds.addCommand("dhcp", dhcpCommand);
                 }
             }
@@ -1697,5 +1730,144 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
     public VirtualRouter getRouterForNetwork(long networkId) {
         return _routerDao.findByNetwork(networkId);
 
+    }
+
+    @Override
+    @DB
+    public DomainRouterVO deployElasticIpVm(Network guestNetwork, DeployDestination dest, Account owner, Map<Param, Object> params) throws InsufficientCapacityException, StorageUnavailableException,
+                ConcurrentOperationException, ResourceUnavailableException {
+        long dcId = dest.getDataCenter().getId();
+
+        // lock guest network
+        Long guestNetworkId = guestNetwork.getId();
+        guestNetwork = _networkDao.acquireInLockTable(guestNetworkId);
+
+        if (guestNetwork == null) {
+            throw new ConcurrentOperationException("Unable to acquire network configuration: " + guestNetworkId);
+        }
+
+        try {
+
+            NetworkOffering offering = _networkOfferingDao.findByIdIncludingRemoved(guestNetwork.getNetworkOfferingId());
+            if (offering.isSystemOnly() || guestNetwork.getIsShared()) {
+                owner = _accountMgr.getAccount(Account.ACCOUNT_ID_SYSTEM);
+            }
+
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug("Starting a elastic ip vm for network configurations: " + guestNetwork + " in " + dest);
+            }
+            assert guestNetwork.getState() == Network.State.Implemented || guestNetwork.getState() == Network.State.Setup || guestNetwork.getState() == Network.State.Implementing : "Network is not yet fully implemented: "
+                + guestNetwork;
+
+            DataCenterDeployment plan = null;
+            DataCenter dc = _dcDao.findById(dcId);
+            DomainRouterVO router = null;
+            Long podId = dest.getPod().getId();
+
+            // In Basic zone and Guest network we have to start at least one per pod, not per network
+            if ((dc.getNetworkType() == NetworkType.Basic || guestNetwork.isSecurityGroupEnabled()) 
+                    && guestNetwork.getTrafficType() == TrafficType.Guest &&
+                    _elasticIpEnabled) {
+                router = _routerDao.findByNetworkAndPodAndRole(guestNetwork.getId(), podId, Role.FIREWALL);
+                plan = new DataCenterDeployment(dcId, podId, null, null, null);
+            } else {
+                s_logger.debug("Not deploying elastic ip vm");
+                return null;
+            }
+
+            if (router == null) {
+                long id = _routerDao.getNextInSequence(Long.class, "id");
+                if (s_logger.isDebugEnabled()) {
+                    s_logger.debug("Creating the elastic ip vm " + id);
+                }
+
+
+                PublicIp sourceNatIp = _networkMgr.assignSourceNatIpAddress(owner, guestNetwork, _accountService.getSystemUser().getId());
+
+                List<NetworkOfferingVO> offerings = _networkMgr.getSystemAccountNetworkOfferings(NetworkOfferingVO.SystemControlNetwork);
+                NetworkOfferingVO controlOffering = offerings.get(0);
+                NetworkVO controlConfig = _networkMgr.setupNetwork(_systemAcct, controlOffering, plan, null, null, false, false).get(0);
+
+                List<Pair<NetworkVO, NicProfile>> networks = new ArrayList<Pair<NetworkVO, NicProfile>>(3);
+                NetworkOfferingVO publicOffering = _networkMgr.getSystemAccountNetworkOfferings(NetworkOfferingVO.SystemPublicNetwork).get(0);
+                List<NetworkVO> publicNetworks = _networkMgr.setupNetwork(_systemAcct, publicOffering, plan, null, null, false, false);
+                NicProfile defaultNic = new NicProfile();
+                defaultNic.setDefaultNic(true);
+                defaultNic.setIp4Address(sourceNatIp.getAddress().addr());
+                defaultNic.setGateway(sourceNatIp.getGateway());
+                defaultNic.setNetmask(sourceNatIp.getNetmask());
+                defaultNic.setMacAddress(sourceNatIp.getMacAddress());
+                defaultNic.setBroadcastType(BroadcastDomainType.Vlan);
+                defaultNic.setBroadcastUri(BroadcastDomainType.Vlan.toUri(sourceNatIp.getVlanTag()));
+                defaultNic.setIsolationUri(IsolationType.Vlan.toUri(sourceNatIp.getVlanTag()));
+                defaultNic.setDeviceId(2);
+                networks.add(new Pair<NetworkVO, NicProfile>(publicNetworks.get(0), defaultNic));
+                NicProfile gatewayNic = new NicProfile();
+                networks.add(new Pair<NetworkVO, NicProfile>((NetworkVO) guestNetwork, gatewayNic));
+                networks.add(new Pair<NetworkVO, NicProfile>(controlConfig, null));
+
+                VMTemplateVO template = _templateDao.findRoutingTemplate(dest.getCluster().getHypervisorType());
+
+                router = new DomainRouterVO(id, _offering.getId(), VirtualMachineName.getRouterName(id, _instance), template.getId(), template.getHypervisorType(), template.getGuestOSId(),
+                        owner.getDomainId(), owner.getId(), guestNetwork.getId(), _offering.getOfferHA());
+                router.setRole(Role.FIREWALL);
+                router = _itMgr.allocate(router, template, _offering, networks, plan, null, owner);
+            }
+
+            State state = router.getState();
+            if (state != State.Running) {
+                router = this.start(router, _accountService.getSystemUser(), _accountService.getSystemAccount(), params);
+            }
+
+
+            return router;
+        } finally {
+            _networkDao.releaseFromLockTable(guestNetworkId);
+        }
+    }
+    
+    public boolean finalizeElasticIpVmProfile(VirtualMachineProfile<DomainRouterVO> profile, DeployDestination dest, ReservationContext context) {
+
+        StringBuilder buf = profile.getBootArgsBuilder();
+        buf.append(" template=domP type=elasticip");
+        buf.append(" name=").append(profile.getHostName());
+        NicProfile controlNic = null;
+        String defaultDns1 = null;
+        String defaultDns2 = null;
+
+        for (NicProfile nic : profile.getNics()) {
+            int deviceId = nic.getDeviceId();
+            buf.append(" eth").append(deviceId).append("ip=").append(nic.getIp4Address());
+            buf.append(" eth").append(deviceId).append("mask=").append(nic.getNetmask());
+            if (nic.getTrafficType() == TrafficType.Public) {
+                buf.append(" gateway=").append(nic.getGateway());
+                defaultDns1 = nic.getDns1();
+                defaultDns2 = nic.getDns2();
+            }
+            if (nic.getTrafficType() == TrafficType.Management) {
+                buf.append(" localgw=").append(dest.getPod().getGateway());
+            } else if (nic.getTrafficType() == TrafficType.Control) {
+                //TODO: VMWare: need to account for route back to management server
+                controlNic = nic;
+            }
+            if (nic.getTrafficType() == TrafficType.Guest) {
+                buf.append(" guestgw=").append(nic.getGateway());
+            }
+        }
+
+        buf.append(" dns1=").append(defaultDns1);
+        if (defaultDns2 != null) {
+            buf.append(" dns2=").append(defaultDns2);
+        }
+
+        if (s_logger.isDebugEnabled()) {
+            s_logger.debug("Boot Args for " + profile + ": " + buf.toString());
+        }
+
+        if (controlNic == null) {
+            throw new CloudRuntimeException("Didn't start a control port");
+        }
+
+        return true;
     }
 }

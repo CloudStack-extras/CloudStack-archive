@@ -65,6 +65,9 @@ public enum Config {
 	DirectNetworkNoDefaultRoute("Network", ManagementServer.class, Boolean.class, "direct.network.no.default.route", "false", "Direct Network Dhcp Server should not send a default route", "true/false"),
 	OvsNetwork("Network", ManagementServer.class, Boolean.class, "open.vswitch.vlan.network", "false", "enable/disable vlan remapping of  open vswitch network", null),
 	OvsTunnelNetwork("Network", ManagementServer.class, Boolean.class, "open.vswitch.tunnel.network", "false", "enable/disable open vswitch tunnel network(no vlan)", null),
+	ElasticIpVmEnabled("Network", AgentManager.class, Boolean.class, "elasticip.vm.enabled", "false", "whether elastic ip vms are used in basic zone", "true/false"),
+	ElasticIpGuestCidrs("Network", AgentManager.class, Boolean.class, "elasticip.guest.cidrs", "10.0.0.0/8", "comma separated list of cidrs for guest vms in all security group enabled zones", "cidr list"),
+
 	
 	//VPN
 	RemoteAccessVpnPskLength("Network", AgentManager.class, Integer.class, "remote.access.vpn.psk.length", "24", "The length of the ipsec preshared key (minimum 8, maximum 256)", null),

@@ -24,6 +24,7 @@ import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.exception.StorageUnavailableException;
 import com.cloud.network.Network;
 import com.cloud.network.PublicIpAddress;
 import com.cloud.network.RemoteAccessVpn;
@@ -37,6 +38,7 @@ import com.cloud.utils.component.Manager;
 import com.cloud.vm.NicProfile;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.VirtualMachineProfile;
+import com.cloud.vm.VirtualMachineProfile.Param;
 
 /**
  * NetworkManager manages the network for the different end users.
@@ -86,4 +88,6 @@ public interface VirtualNetworkApplianceManager extends Manager, VirtualNetworkA
     VirtualRouter getRouterForNetwork(long networkId);
     
     VirtualRouter stop(VirtualRouter router, boolean forced, User callingUser, Account callingAccount) throws ConcurrentOperationException, ResourceUnavailableException;
+
+    VirtualRouter deployElasticIpVm(Network network, DeployDestination dest, Account account, Map<Param, Object> params) throws InsufficientCapacityException, StorageUnavailableException, ConcurrentOperationException, ResourceUnavailableException;
 }
