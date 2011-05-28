@@ -62,7 +62,7 @@ import com.cloud.vm.dao.UserVmDao;
 
 
 @Local(value=NetworkElement.class)
-public class ElasticIpElement extends AdapterBase implements NetworkElement, PasswordResetElement{
+public class ElasticIpElement extends AdapterBase implements NetworkElement{
     private static final Logger s_logger = Logger.getLogger(ElasticIpElement.class);
     
     private static final Map<Service, Map<Capability, String>> capabilities = setCapabilities();
@@ -116,11 +116,11 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement, Pas
             VirtualRouter eipVm = _routerMgr.deployElasticIpVm(network, dest, context.getAccount(), params);
             s_logger.debug("Elastic ip vm = " + eipVm);
             if (eipVm != null) {
-                nic.setElasticIpAddressId(eipVm.getId());
+                nic.setElasticIpVmId(eipVm.getId());
             }
             return true;
         } else {
-            s_logger.debug("ElasticIpElement.implement: cannot handle guest " + network.getGuestType() + ", traffic " + network.getTrafficType());
+            s_logger.debug("ElasticIpElement.prepare: cannot handle guest " + network.getGuestType() + ", traffic " + network.getTrafficType());
             return false;
         }
     }
@@ -208,13 +208,5 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement, Pas
             return true;
         }
     }
-    
-    @Override
-    public boolean savePassword(Network network, NicProfile nic, VirtualMachineProfile<? extends VirtualMachine> vm) throws ResourceUnavailableException{
-        
-        @SuppressWarnings("unchecked")
-        VirtualMachineProfile<UserVm> uservm = (VirtualMachineProfile<UserVm>)vm;
- 
-        return _routerMgr.savePasswordToRouter(network, nic, uservm);
-    }
+
 }

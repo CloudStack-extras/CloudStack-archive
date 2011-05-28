@@ -42,6 +42,7 @@ import com.cloud.agent.api.RebootAnswer;
 import com.cloud.agent.api.StopAnswer;
 import com.cloud.agent.api.check.CheckSshAnswer;
 import com.cloud.agent.api.check.CheckSshCommand;
+import com.cloud.agent.api.routing.AssociateElasticIpCommand;
 import com.cloud.agent.api.routing.DhcpEntryCommand;
 import com.cloud.agent.api.routing.IPAssocCommand;
 import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
@@ -52,6 +53,7 @@ import com.cloud.agent.api.routing.SetPortForwardingRulesCommand;
 import com.cloud.agent.api.routing.SetStaticNatRulesCommand;
 import com.cloud.agent.api.routing.VmDataCommand;
 import com.cloud.agent.api.routing.VpnUsersCfgCommand;
+import com.cloud.agent.api.to.ElasticIpTO;
 import com.cloud.agent.api.to.IpAddressTO;
 import com.cloud.agent.api.to.LoadBalancerTO;
 import com.cloud.agent.api.to.PortForwardingRuleTO;
@@ -967,8 +969,8 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         if (domain != null) {
             buf.append(" domain=" + domain);
         }
-
-        if (!network.isDefault() && network.getGuestType() == GuestIpType.Direct) {
+       
+        if (!network.isDefault()  && network.getGuestType() == GuestIpType.Direct) {
             buf.append(" defaultroute=false");
 
             String virtualNetworkElementNicIP = _networkMgr.getIpOfNetworkElementInVirtualNetwork(network.getAccountId(), network.getDataCenterId());
@@ -1321,8 +1323,46 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             s_logger.error("Unable to set VM data for " + profile + " due to " + answer.getDetails());
             throw new ResourceUnavailableException("Unable to set VM data due to " + answer.getDetails(), DataCenter.class, router.getDataCenterId());
         }
+        if (_elasticIpEnabled && nic.getElasticIpAddressId() != null) {
+            associateElasticIp(elasticIpVm, nic.getElasticIpAddressId(), nic.getIp4Address());            
+        }
         return router;
     }
+    
+    protected boolean associateElasticIp(DomainRouterVO elasticIpVm, Long publicIpId, String privateIp)
+    throws ConcurrentOperationException,  AgentUnavailableException, ResourceUnavailableException {
+        Commands cmds = new Commands(OnError.Stop);
+        String routerControlIpAddress = null;
+        List<NicVO> nics = _nicDao.listByVmId(elasticIpVm.getId());
+        for (NicVO n : nics) {
+            NetworkVO nc = _networkDao.findById(n.getNetworkId());
+            if (nc.getTrafficType() == TrafficType.Control) {
+                routerControlIpAddress = n.getIp4Address();
+            }
+        }
+        IPAddressVO publicIp = _ipAddressDao.findById(publicIpId);
+        
+        ElasticIpTO eipTO = new ElasticIpTO(publicIp.getAddress().addr(), privateIp, true);
+        AssociateElasticIpCommand eipCmd = new AssociateElasticIpCommand(new ElasticIpTO[] { eipTO});
+        eipCmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, routerControlIpAddress);
+        eipCmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, elasticIpVm.getInstanceName());
+        cmds.addCommand("eip", eipCmd);
+
+        try {
+            _agentMgr.send(elasticIpVm.getHostId(), cmds);
+        } catch (OperationTimedoutException e) {
+            throw new AgentUnavailableException("Unable to reach the elastic ip vm ", elasticIpVm.getHostId(), e);
+        }
+        
+        Answer answer = cmds.getAnswer("eip");
+        if (!answer.getResult()) {
+            s_logger.error("Unable to set elastic ip for " + publicIp + " on domR: " + elasticIpVm.getHostName() + " due to " + answer.getDetails());
+            throw new ResourceUnavailableException("Unable to set dhcp entry for " + publicIp + " due to " + answer.getDetails(), DataCenter.class, elasticIpVm.getDataCenterId());
+        }
+        return true;
+    }
+
+    
 
     @Override
     public DomainRouterVO persist(DomainRouterVO router) {
@@ -1871,3 +1911,4 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         return true;
     }
 }
+

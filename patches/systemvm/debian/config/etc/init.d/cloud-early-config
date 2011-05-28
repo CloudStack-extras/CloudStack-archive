@@ -285,6 +285,8 @@ setup_elasticip() {
   log_it "Setting up elastic ip system vm"
 
   setup_common eth0 eth1 eth2
+  sed -i  /$NAME/d /etc/hosts
+  echo "$ETH0_IP $NAME" >> /etc/hosts
   
   setup_sshd $ETH1_IP
 
