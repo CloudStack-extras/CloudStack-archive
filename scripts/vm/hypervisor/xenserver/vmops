@@ -243,6 +243,21 @@ def l2tp_vpn(session, args):
     return txt    
 
 @echo
+def elastic_ip(session, args):
+    sargs = args['args']
+    cmd = sargs.split(' ')
+    cmd.insert(0, "/opt/xensource/bin/elastic_ip.sh")
+    cmd.insert(0, "/bin/bash")
+    try:
+        txt = util.pread2(cmd)
+        txt = 'success'
+    except:
+        util.SMlog("elastic ip failed "  )
+        txt = '' 
+
+    return txt    
+    
+@echo
 def setLinkLocalIP(session, args):
     brName = args['brName']
     try:
@@ -574,11 +589,13 @@ def default_network_rules_systemvm(session, args):
     for vif in vifs:
         try:
             util.pread2(['iptables', '-A', 'BRIDGE-FIREWALL', '-m', 'physdev', '--physdev-is-bridged', '--physdev-out', vif, '-j', vmchain])
-            util.pread2(['iptables', '-A', 'BRIDGE-FIREWALL', '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', vif, '-j', vmchain])
+            util.pread2(['iptables', '-I', 'BRIDGE-FIREWALL', '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', vif, '-j', vmchain])
+            util.pread2(['iptables', '-I', vmchain, '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', vif, '-j', 'RETURN'])
         except:
             util.SMlog("Failed to program default rules")
             return 'false'
-
+	
+	
     util.pread2(['iptables', '-A', vmchain, '-j', 'ACCEPT'])
     
     if write_rule_log_for_vm(vm_name, '-1', '_ignore_', domid, '_initial_', '-1') == False:
@@ -638,7 +655,7 @@ def default_network_rules(session, args):
     try:
         for v in vifs:
             util.pread2(['iptables', '-A', 'BRIDGE-FIREWALL', '-m', 'physdev', '--physdev-is-bridged', '--physdev-out', v, '-j', vmchain_default])
-            util.pread2(['iptables', '-A', 'BRIDGE-FIREWALL', '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', v, '-j', vmchain_default])
+            util.pread2(['iptables', '-I', 'BRIDGE-FIREWALL', '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', v, '-j', vmchain_default])
         util.pread2(['iptables', '-A', vmchain_default, '-m', 'state', '--state', 'RELATED,ESTABLISHED', '-j', 'ACCEPT'])
         #allow dhcp
         for v in vifs:
@@ -738,7 +755,7 @@ def network_rules_for_rebooted_vm(session, vmName):
 
     for v in vifs:
         util.pread2(['iptables', '-A', 'BRIDGE-FIREWALL', '-m', 'physdev', '--physdev-is-bridged', '--physdev-out', v, '-j', vmchain_default])
-        util.pread2(['iptables', '-A', 'BRIDGE-FIREWALL', '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', v, '-j', vmchain_default])
+        util.pread2(['iptables', '-I', 'BRIDGE-FIREWALL', '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', v, '-j', vmchain_default])
 
     #change antispoof rule in vmchain
     try:
@@ -1043,5 +1060,18 @@ def network_rules(session, args):
 
 
 if __name__ == "__main__":
-    XenAPIPlugin.dispatch({"pingtest": pingtest, "setup_iscsi":setup_iscsi, "gethostvmstats": gethostvmstats, "getvncport": getvncport, "getgateway": getgateway, "preparemigration": preparemigration, "setIptables": setIptables, "pingdomr": pingdomr, "pingxenserver": pingxenserver,  "ipassoc": ipassoc, "vm_data": vm_data, "savePassword": savePassword, "saveDhcpEntry": saveDhcpEntry, "setFirewallRule": setFirewallRule, "setLoadBalancerRule": setLoadBalancerRule, "createFile": createFile, "deleteFile": deleteFile, "networkUsage": networkUsage, "network_rules":network_rules, "can_bridge_firewall":can_bridge_firewall, "default_network_rules":default_network_rules, "destroy_network_rules_for_vm":destroy_network_rules_for_vm, "default_network_rules_systemvm":default_network_rules_systemvm, "get_rule_logs_for_vms":get_rule_logs_for_vms, "setLinkLocalIP":setLinkLocalIP, "l2tp_vpn":l2tp_vpn, "cleanup_rules":cleanup_rules})
+    XenAPIPlugin.dispatch({"pingtest": pingtest, "setup_iscsi":setup_iscsi, "gethostvmstats": gethostvmstats, 
+                           "getvncport": getvncport, "getgateway": getgateway, "preparemigration": preparemigration, 
+                           "setIptables": setIptables, "pingdomr": pingdomr, "pingxenserver": pingxenserver,  
+                           "ipassoc": ipassoc, "vm_data": vm_data, "savePassword": savePassword, 
+                           "saveDhcpEntry": saveDhcpEntry, "setFirewallRule": setFirewallRule, 
+                           "setLoadBalancerRule": setLoadBalancerRule, "createFile": createFile, "deleteFile": deleteFile, 
+                           "networkUsage": networkUsage, "network_rules":network_rules, 
+                           "can_bridge_firewall":can_bridge_firewall, "default_network_rules":default_network_rules,
+                           "destroy_network_rules_for_vm":destroy_network_rules_for_vm, 
+                           "default_network_rules_systemvm":default_network_rules_systemvm, 
+                           "get_rule_logs_for_vms":get_rule_logs_for_vms, 
+                           "setLinkLocalIP":setLinkLocalIP, 
+                           "l2tp_vpn":l2tp_vpn, "elastic_ip":elastic_ip,
+                           "cleanup_rules":cleanup_rules})
 

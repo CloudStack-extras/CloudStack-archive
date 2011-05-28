@@ -53,6 +53,7 @@ import com.cloud.utils.component.Inject;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.Transaction;
 import com.cloud.vm.Nic.ReservationStrategy;
+import com.cloud.vm.VirtualMachine.Type;
 import com.cloud.vm.NicProfile;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.VirtualMachine;
@@ -142,7 +143,7 @@ public class DirectPodBasedNetworkGuru extends DirectNetworkGuru {
         }
         nic.setDns1(dc.getDns1());
         nic.setDns2(dc.getDns2());
-        if (_elasticIpEnabled) {
+        if (_elasticIpEnabled && vm.getType()==Type.User) {
             if (nic.getElasticIpAddressId() == null) {
                 PublicIp ip = _networkMgr.assignPublicIpAddress(dc.getId(), null, vm.getOwner(), VlanType.VirtualNetwork, null);
                 nic.setElasticIpAddressId(ip.getId());

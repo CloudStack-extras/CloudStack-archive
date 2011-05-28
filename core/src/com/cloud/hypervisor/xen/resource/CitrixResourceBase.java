@@ -125,6 +125,7 @@ import com.cloud.agent.api.check.CheckSshCommand;
 import com.cloud.agent.api.proxy.CheckConsoleProxyLoadCommand;
 import com.cloud.agent.api.proxy.ConsoleProxyLoadAnswer;
 import com.cloud.agent.api.proxy.WatchConsoleProxyLoadCommand;
+import com.cloud.agent.api.routing.AssociateElasticIpCommand;
 import com.cloud.agent.api.routing.DhcpEntryCommand;
 import com.cloud.agent.api.routing.IPAssocCommand;
 import com.cloud.agent.api.routing.IpAssocAnswer;
@@ -146,6 +147,7 @@ import com.cloud.agent.api.storage.CreatePrivateTemplateAnswer;
 import com.cloud.agent.api.storage.DestroyCommand;
 import com.cloud.agent.api.storage.PrimaryStorageDownloadAnswer;
 import com.cloud.agent.api.storage.PrimaryStorageDownloadCommand;
+import com.cloud.agent.api.to.ElasticIpTO;
 import com.cloud.agent.api.to.IpAddressTO;
 import com.cloud.agent.api.to.NicTO;
 import com.cloud.agent.api.to.PortForwardingRuleTO;
@@ -488,7 +490,9 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         } else if (cmd instanceof OvsCreateTunnelCommand) {
             return execute((OvsCreateTunnelCommand)cmd);
         } else if (cmd instanceof OvsDestroyTunnelCommand) {
-            return execute((OvsDestroyTunnelCommand)cmd);
+            return execute((OvsDestroyTunnelCommand)cmd);  
+        } else if (cmd instanceof AssociateElasticIpCommand) {
+            return execute((AssociateElasticIpCommand)cmd);         
         } else {
             return Answer.createUnsupportedCommandAnswer(cmd);
         }
@@ -1344,6 +1348,27 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
     	}
     	return new Answer(cmd);
     }
+    
+    protected synchronized Answer execute(final AssociateElasticIpCommand cmd) {
+        Connection conn = getConnection();
+        String args = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
+        for (ElasticIpTO eipTO: cmd.getElasticIpAssocs()) {
+            args += " -p " + eipTO.getPublicIp();
+            args += " -g " + eipTO.getGuestIp();
+            if (eipTO.isAssociate()) {
+                args += " -a ";
+            } else {
+                args += " -d ";
+            }
+            String result = callHostPlugin(conn, "vmops", "elastic_ip", "args", args);
+            if (result == null || result.isEmpty()) {
+                return new Answer(cmd, false, "Associate Elastic Ip failed");
+            }
+        }
+        return new Answer(cmd);
+    }
+    
+    
     
     protected synchronized Answer execute(final VpnUsersCfgCommand cmd) {
         Connection conn = getConnection();

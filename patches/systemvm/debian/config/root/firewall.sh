@@ -9,8 +9,6 @@ usage() {
   printf "Usage: %s: (-A|-D)   -r <target-instance-ip> -P protocol (-p port_range | -t icmp_type_code)  -l <public ip address> -d <target port> [-G]   \n" $(basename $0) >&2
 }
 
-set -x
-
 get_dev_list() {
   ip link show | grep -e eth[2-9] | awk -F ":" '{print $2}'
   ip link show | grep -e eth1[0-9] | awk -F ":" '{print $2}'
