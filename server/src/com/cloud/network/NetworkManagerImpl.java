@@ -226,11 +226,18 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
 
     @Override
     public PublicIp assignPublicIpAddress(long dcId, Long podId, Account owner, VlanType type, Long networkId) throws InsufficientAddressCapacityException {
-        return fetchNewPublicIp(dcId, podId, null, owner, type, networkId, false, true);
+        return fetchNewPublicIp(dcId, podId, null, owner, type, networkId, false, true, false, null);
+    }
+    
+    @Override
+    public PublicIp assignElasticPublicIpAddress(long dcId, long  vmId, Account owner) throws InsufficientAddressCapacityException {
+        return fetchNewPublicIp(dcId, null, null, owner, VlanType.VirtualNetwork, null, false, true, true, vmId);
     }
 
+
     @DB
-    public PublicIp fetchNewPublicIp(long dcId, Long podId, Long vlanDbId, Account owner, VlanType vlanUse, Long networkId, boolean sourceNat, boolean assign)
+    public PublicIp fetchNewPublicIp(long dcId, Long podId, Long vlanDbId, Account owner, VlanType vlanUse, 
+            Long networkId, boolean sourceNat, boolean assign, boolean oneToOneNat, Long userVmId)
             throws InsufficientAddressCapacityException {
         Transaction txn = Transaction.currentTxn();
         txn.start();
@@ -272,6 +279,8 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         addr.setAllocatedTime(new Date());
         addr.setAllocatedInDomainId(owner.getDomainId());
         addr.setAllocatedToAccountId(owner.getId());
+        addr.setOneToOneNat(oneToOneNat);
+        addr.setAssociatedWithVmId(userVmId);
 
         if (assign) {
             markPublicIpAsAllocated(addr);
@@ -360,7 +369,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                     vlanId = maps.get(0).getVlanDbId();
                 }
 
-                ip = fetchNewPublicIp(dcId, null, vlanId, owner, VlanType.VirtualNetwork, network.getId(), true, false);
+                ip = fetchNewPublicIp(dcId, null, vlanId, owner, VlanType.VirtualNetwork, network.getId(), true, false, false, null);
                 sourceNat = ip.ip();
 
                 markPublicIpAsAllocated(sourceNat);
@@ -566,7 +575,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 isSourceNat = true;
             }
 
-            ip = fetchNewPublicIp(zoneId, null, null, ipOwner, VlanType.VirtualNetwork, network.getId(), isSourceNat, false);
+            ip = fetchNewPublicIp(zoneId, null, null, ipOwner, VlanType.VirtualNetwork, network.getId(), isSourceNat, false, false, null);
 
             if (ip == null) {
                 throw new InsufficientAddressCapacityException("Unable to find available public IP addresses", DataCenter.class, zoneId);
