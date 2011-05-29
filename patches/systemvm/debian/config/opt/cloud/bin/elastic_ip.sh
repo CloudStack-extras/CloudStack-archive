@@ -26,12 +26,17 @@ elastic_ip_entry() {
 
   # shortcircuit the process if error and it is an append operation
   # continue if it is delete
+  # the last 2 rules for packets entering eth0 are to ensure hairpin NAT
   (sudo iptables -t nat $op  PREROUTING -i $dev -d $publicIp  -j DNAT \
            --to-destination $instIp &>>  $OUTFILE || [ "$op" == "-D" ]) &&
   (sudo iptables $op FORWARD -i $dev -o eth0 -d $instIp  \
            -m state --state NEW -j ACCEPT &>>  $OUTFILE )
   (sudo iptables -t nat $op  POSTROUTING -o $dev -s $instIp  -j SNAT \
            --to-source $publicIp &>>  $OUTFILE || [ "$op" == "-D" ]) &&
+  (sudo iptables -t nat $op  PREROUTING -i eth0 -d $publicIp  -j DNAT \
+           --to-destination $instIp &>>  $OUTFILE || [ "$op" == "-D" ]) &&
+  (sudo iptables -t nat $op  POSTROUTING -o eth0 -s $instIp  -j SNAT \
+           --to-source $publicIp &>>  $OUTFILE || [ "$op" == "-D" ]) 
 
   result=$?
   logger -t cloud "$(basename $0): done elastic ip entry public ip=$publicIp op=$op result=$result"
