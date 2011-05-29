@@ -413,6 +413,28 @@ def can_bridge_firewall(session, args):
     
     return result
 
+@echo
+def allow_egress_traffic(session):
+    devs = []
+    for pif in session.xenapi.PIF.get_all():
+        pif_rec = session.xenapi.PIF.get_record(pif)
+        vlan = pif_rec.get('VLAN')
+        dev = pif_rec.get('device')
+        if vlan == '-1':
+            devs.append(dev)
+        else:
+            devs.append(dev + "." + vlan)
+    for d in devs:
+        try:
+            util.pread2(['/bin/bash', '-c', "iptables -n -L FORWARD | grep '%s '" % d])
+        except:
+            try:
+                util.pread2(['iptables', '-I', 'FORWARD', '2', '-m', 'physdev', '--physdev-is-bridged', '--physdev-out', d, '-j', 'ACCEPT'])
+            except:
+                util.SMlog("Failed to add FORWARD rule through to %s" % d)
+                return 'false'
+    return 'true'
+
 
 def ipset(ipsetname, proto, start, end, ips):
     try:
@@ -584,12 +606,13 @@ def default_network_rules_systemvm(session, args):
         util.pread2(['iptables', '-N', vmchain])
     except:
         util.pread2(['iptables', '-F', vmchain])
-
+    
+    allow_egress_traffic(session)
   
     for vif in vifs:
         try:
             util.pread2(['iptables', '-A', 'BRIDGE-FIREWALL', '-m', 'physdev', '--physdev-is-bridged', '--physdev-out', vif, '-j', vmchain])
-            util.pread2(['iptables', '-I', 'BRIDGE-FIREWALL', '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', vif, '-j', vmchain])
+            util.pread2(['iptables', '-I', 'BRIDGE-FIREWALL', '2', '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', vif, '-j', vmchain])
             util.pread2(['iptables', '-I', vmchain, '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', vif, '-j', 'RETURN'])
         except:
             util.SMlog("Failed to program default rules")
@@ -655,7 +678,7 @@ def default_network_rules(session, args):
     try:
         for v in vifs:
             util.pread2(['iptables', '-A', 'BRIDGE-FIREWALL', '-m', 'physdev', '--physdev-is-bridged', '--physdev-out', v, '-j', vmchain_default])
-            util.pread2(['iptables', '-I', 'BRIDGE-FIREWALL', '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', v, '-j', vmchain_default])
+            util.pread2(['iptables', '-I', 'BRIDGE-FIREWALL', '2', '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', v, '-j', vmchain_default])
         util.pread2(['iptables', '-A', vmchain_default, '-m', 'state', '--state', 'RELATED,ESTABLISHED', '-j', 'ACCEPT'])
         #allow dhcp
         for v in vifs:
