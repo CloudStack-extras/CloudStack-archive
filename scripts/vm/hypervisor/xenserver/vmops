@@ -404,7 +404,7 @@ def can_bridge_firewall(session, args):
             util.pread2(['iptables', '-A', 'FORWARD', '-j', 'DROP'])
         except:
             result = 'false'
-
+    allow_egress_traffic(session)
     if not os.path.exists('/var/run/cloud'):
         os.makedirs('/var/run/cloud')
  
