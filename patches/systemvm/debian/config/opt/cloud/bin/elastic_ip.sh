@@ -102,8 +102,12 @@ done
 [ "$gflag$pflag" != "11" ] && usage && exit 2
 OUTFILE=$(mktemp)
 
+
+
 if [ "$associate" == "1" ]; then
     add_an_ip $publicIp
+    sudo iptables -D FORWARD -i eth0 -o eth0 -j ACCEPT
+    sudo iptables -I FORWARD -i eth0 -o eth0 -j ACCEPT
     elastic_ip_entry $publicIp $instIp "-A"
     [ "$result" -ne 0 ] && cat $OUTFILE >&2
     rm -f $OUTFILE
