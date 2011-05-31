@@ -197,6 +197,7 @@ public class DataCenterVO implements DataCenter {
             dhcpProvider = Provider.DhcpServer.getName();
             dnsProvider = Provider.DhcpServer.getName();
             userDataProvider = Provider.DhcpServer.getName();
+            firewallProvider = Provider.ElasticIpVm.getName(); //FIXME: we need a NAT provider instead of Firewall provider
         }
         
     }
