@@ -196,7 +196,7 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
     
     @Override
     public Provider getProvider() {
-        return Provider.VirtualRouter;
+        return Provider.ElasticIpVm;
     }
     
     @Override
