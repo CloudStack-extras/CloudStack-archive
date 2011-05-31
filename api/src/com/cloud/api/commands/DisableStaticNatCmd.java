@@ -47,7 +47,7 @@ public class DisableStaticNatCmd extends BaseAsyncCmd {
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
 
-    public Long getIpAddress() {
+    public Long getIpAddressId() {
         return ipAddressId;
     }
     
@@ -76,9 +76,9 @@ public class DisableStaticNatCmd extends BaseAsyncCmd {
     
     @Override
     public void execute() throws ResourceUnavailableException {
-        boolean result = _rulesService.disableOneToOneNat(ipAddressId);
+        IpAddress result = _networkService.disassociateElasticIP(this);
         
-        if (result) {
+        if (result != null) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
         } else {
