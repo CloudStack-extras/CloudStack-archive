@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.cloud.deploy.DeployDestination;
+import com.cloud.exception.AgentUnavailableException;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ResourceUnavailableException;
@@ -35,6 +36,7 @@ import com.cloud.user.Account;
 import com.cloud.user.User;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.component.Manager;
+import com.cloud.vm.DomainRouterVO;
 import com.cloud.vm.NicProfile;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.VirtualMachineProfile;
@@ -90,4 +92,6 @@ public interface VirtualNetworkApplianceManager extends Manager, VirtualNetworkA
     VirtualRouter stop(VirtualRouter router, boolean forced, User callingUser, Account callingAccount) throws ConcurrentOperationException, ResourceUnavailableException;
 
     VirtualRouter deployElasticIpVm(Network network, DeployDestination dest, Account account, Map<Param, Object> params) throws InsufficientCapacityException, StorageUnavailableException, ConcurrentOperationException, ResourceUnavailableException;
+    
+    boolean associateElasticIp(DomainRouterVO elasticIpVm, Long publicIpId, String privateIp) throws  ResourceUnavailableException;
 }

@@ -145,7 +145,7 @@ public class DirectPodBasedNetworkGuru extends DirectNetworkGuru {
         nic.setDns2(dc.getDns2());
         if (_elasticIpEnabled && vm.getType()==Type.User) {
             if (nic.getElasticIpAddressId() == null) {
-                PublicIp ip = _networkMgr.assignElasticPublicIpAddress(dc.getId(), vm.getId(),  vm.getOwner());
+                PublicIp ip = _networkMgr.assignElasticPublicIpAddress(dc.getId(), vm.getId(),  vm.getOwner(), nic.getNetworkId());
                 nic.setElasticIpAddressId(ip.getId());
             }
         }

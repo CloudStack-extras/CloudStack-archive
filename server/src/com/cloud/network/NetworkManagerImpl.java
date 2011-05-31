@@ -40,6 +40,7 @@ import com.cloud.alert.AlertManager;
 import com.cloud.api.commands.AssociateIPAddrCmd;
 import com.cloud.api.commands.CreateNetworkCmd;
 import com.cloud.api.commands.DisassociateIPAddrCmd;
+import com.cloud.api.commands.EnableStaticNatCmd;
 import com.cloud.api.commands.ListNetworksCmd;
 import com.cloud.api.commands.RestartNetworkCmd;
 import com.cloud.capacity.dao.CapacityDao;
@@ -58,6 +59,7 @@ import com.cloud.dc.Vlan.VlanType;
 import com.cloud.dc.VlanVO;
 import com.cloud.dc.dao.AccountVlanMapDao;
 import com.cloud.dc.dao.DataCenterDao;
+import com.cloud.dc.dao.DcDetailsDao;
 import com.cloud.dc.dao.HostPodDao;
 import com.cloud.dc.dao.PodVlanMapDao;
 import com.cloud.dc.dao.VlanDao;
@@ -230,8 +232,8 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     }
     
     @Override
-    public PublicIp assignElasticPublicIpAddress(long dcId, long  vmId, Account owner) throws InsufficientAddressCapacityException {
-        return fetchNewPublicIp(dcId, null, null, owner, VlanType.VirtualNetwork, null, false, true, true, vmId);
+    public PublicIp assignElasticPublicIpAddress(long dcId, long  vmId, Account owner, long networkId) throws InsufficientAddressCapacityException {
+        return fetchNewPublicIp(dcId, null, null, owner, VlanType.VirtualNetwork, networkId, false, true, true, vmId);
     }
 
 
@@ -513,13 +515,13 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
 
         _accountMgr.checkAccess(caller, ipOwner);
-
+        boolean isBasicZone = false;
         if (zoneId != null) {
             DataCenterVO zone = _dcDao.findById(zoneId);
             if (zone == null) {
                 throw new InvalidParameterValueException("Can't find zone by id " + zoneId);
             }
-
+            isBasicZone = zone.getNetworkType() == NetworkType.Basic;
             if (Grouping.AllocationState.Disabled == zone.getAllocationState() && !_accountMgr.isRootAdmin(caller.getType())) {
                 throw new PermissionDeniedException("Cannot perform this operation, Zone is currently disabled: " + zoneId);
             }
@@ -535,7 +537,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
 
         // Check that network belongs to IP owner
-        if (network.getAccountId() != ipOwner.getId()) {
+        if (network.getAccountId() != ipOwner.getId() && !isBasicZone ) {
             throw new InvalidParameterValueException("The owner of the network is not the same as owner of the IP");
         }
 
@@ -571,7 +573,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             // First IP address should be source nat
             List<IPAddressVO> addrs = listPublicIpAddressesInVirtualNetwork(ownerId, zoneId, true, networkId);
 
-            if (addrs.isEmpty()) {
+            if (addrs.isEmpty() && !isBasicZone) {
                 isSourceNat = true;
             }
 
@@ -2863,4 +2865,97 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         return network;
 
     }
+
+    @Override
+    public IpAddress associateElasticIP(EnableStaticNatCmd cmd) {
+        Account caller = UserContext.current().getCaller();
+        Account owner = null;
+
+        IpAddress ipToAssoc = getIp(cmd.getIpAddressId());
+        if (ipToAssoc != null) {
+            _accountMgr.checkAccess(caller, ipToAssoc);
+            owner = _accountMgr.getAccount(ipToAssoc.getAccountId());
+        } else {
+            s_logger.debug("Unable to find ip address by id: " + cmd.getEntityId());
+            return null;
+        }
+
+        Network network = _networksDao.findById(ipToAssoc.getAssociatedWithNetworkId());
+
+        IPAddressVO ip = _ipAddressDao.findById(cmd.getIpAddressId());
+        boolean success = false;
+        try {
+            success = applyElasticIpAssociations(network, ip, false);
+            if (success) {
+                s_logger.debug("Successfully associated ip address " + ip.getAddress().addr() + " for account " + owner.getId() + " in zone " + network.getDataCenterId());
+            } else {
+                s_logger.warn("Failed to associate ip address " + ip.getAddress().addr() + " for account " + owner.getId() + " in zone " + network.getDataCenterId());
+            }
+            return ip;
+        } catch (ResourceUnavailableException e) {
+            s_logger.error("Unable to associate ip address due to resource unavailable exception", e);
+            return null;
+        } finally {
+            if (!success) {
+                if (ip != null) {
+                    try {
+                        s_logger.warn("Failed to associate ip address " + ip);
+                        _ipAddressDao.markAsUnavailable(ip.getId());
+                        if (!applyElasticIpAssociations(network, ip, true)) {
+                            // if fail to apply ip assciations again, unassign ip address without updating resource count and
+                            // generating usage event as there is no need to keep it in the db
+                            _ipAddressDao.unassignIpAddress(ip.getId());
+                        }
+                    } catch (Exception e) {
+                        s_logger.warn("Unable to disassociate ip address for recovery", e);
+                    }
+                }
+            }
+        }
+    }
+    
+    @DB
+    public boolean applyElasticIpAssociations(Network network, IPAddressVO userIp, boolean continueOnError) throws ResourceUnavailableException {
+        List<PublicIp> publicIps = new ArrayList<PublicIp>();
+
+        PublicIp publicIp = new PublicIp(userIp, _vlanDao.findById(userIp.getVlanId()), NetUtils.createSequenceBasedMacAddress(userIp.getMacAddress()));
+        publicIps.add(publicIp);
+       
+
+        boolean success = true;
+        for (NetworkElement element : _networkElements) {
+            try {
+                s_logger.trace("Asking " + element + " to apply ip associations");
+                element.applyIps(network, publicIps);
+            } catch (ResourceUnavailableException e) {
+                success = false;
+                if (!continueOnError) {
+                    throw e;
+                } else {
+                    s_logger.debug("Resource is not available: " + element.getName(), e);
+                }
+            }
+        }
+        Transaction txn = Transaction.currentTxn();
+        txn.start();
+        List<IPAddressVO> assocIps = _ipAddressDao.findAllByAssociatedVmId(userIp.getAssociatedWithVmId());
+        if (success) {
+            for (IPAddressVO ip: assocIps) {
+                if (ip.getId() != userIp.getId()) {
+                    ip.setAssociatedWithVmId(null);
+                    _ipAddressDao.update(ip.getId(), ip);
+                }
+            }
+        } else {
+            s_logger.info("Association of elastic ip " + userIp.getAddress().toString() + " failed, reverting association");
+            userIp.setAssociatedWithVmId(null);
+            _ipAddressDao.update(userIp.getId(), userIp);
+            
+        }
+        txn.commit();
+        
+
+        return success;
+    }
+    
 }

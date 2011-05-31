@@ -50,6 +50,9 @@ public interface IPAddressDao extends GenericDao<IPAddressVO, Long> {
 	
 	IPAddressVO findByAssociatedVmId(long vmId);
 	
+	List<IPAddressVO> findAllByAssociatedVmId(long vmId);
+
+	
 	IPAddressVO findByAccountAndIp(long accountId, String ipAddress);
 	
 }

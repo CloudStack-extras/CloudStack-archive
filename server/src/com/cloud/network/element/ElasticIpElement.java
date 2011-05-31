@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Local;
+import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 
@@ -41,23 +42,27 @@ import com.cloud.network.Network.Service;
 import com.cloud.network.NetworkManager;
 import com.cloud.network.Networks.TrafficType;
 import com.cloud.network.PublicIpAddress;
+import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.router.VirtualNetworkApplianceManager;
 import com.cloud.network.router.VirtualRouter;
+import com.cloud.network.router.VirtualRouter.Role;
 import com.cloud.network.rules.FirewallRule;
-import com.cloud.network.vpn.PasswordResetElement;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.component.AdapterBase;
 import com.cloud.utils.component.Inject;
 import com.cloud.vm.DomainRouterVO;
 import com.cloud.vm.NicProfile;
+import com.cloud.vm.NicVO;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.UserVmManager;
+import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.VirtualMachineProfile;
 import com.cloud.vm.dao.DomainRouterDao;
+import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.UserVmDao;
 
 
@@ -75,6 +80,8 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
     @Inject DomainRouterDao _routerDao;
     @Inject ConfigurationManager _configMgr;
     @Inject HostPodDao _podDao;
+    @Inject NicDao _nicDao;
+    @Inject IPAddressDao _ipAddressDao;
      
     private boolean canHandle(GuestIpType ipType, DeployDestination dest, TrafficType trafficType) {
         DataCenter dc = dest.getDataCenter();
@@ -152,16 +159,35 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
     public boolean applyRules(Network network, List<? extends FirewallRule> rules) throws ResourceUnavailableException {
         return false;
     }
+    
+    private DomainRouterVO findElasticIpVmForUserVm(long networkId, UserVmVO userVm) {
+       //FIXME: do something more sophisticated here.
+       return _routerDao.findByNetworkAndPodAndRole(networkId, userVm.getPodId(), Role.FIREWALL);
+    }
 
     @Override
-    public boolean applyIps(Network network, List<? extends PublicIpAddress> ipAddress) throws ResourceUnavailableException {
-        return false;
+    public boolean applyIps(Network network, List<? extends PublicIpAddress> ipAddressList) throws ResourceUnavailableException {
+        if (network.getGuestType() != GuestIpType.Direct)
+            return false;
+        boolean result = true;
+        for (PublicIpAddress publicIp: ipAddressList){
+            Long vmId = publicIp.getAssociatedWithVmId();
+            if (vmId == null) {
+                continue;
+            }
+             UserVmVO vm = _userVmDao.findById(vmId);
+             NicVO nic = _nicDao.findByInstanceIdAndNetworkId(network.getId(), vmId);
+             DomainRouterVO elasticIpVm = findElasticIpVmForUserVm(network.getId(), vm);
+             result = result && _routerMgr.associateElasticIp(elasticIpVm, publicIp.getId(), nic.getIp4Address());
+             s_logger.debug("Associate elastic ip : " + publicIp.getAddress().toString() + " to " + nic.getIp4Address() + "result=" + result);
+        }
+        return result;
     }
     
     
     @Override
     public Provider getProvider() {
-        return Provider.DhcpServer;
+        return Provider.VirtualRouter;
     }
     
     @Override
@@ -172,10 +198,7 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
     private static Map<Service, Map<Capability, String>> setCapabilities() {
         Map<Service, Map<Capability, String>> capabilities = new HashMap<Service, Map<Capability, String>>();
         
-        capabilities.put(Service.Dns, null);
-        capabilities.put(Service.UserData, null);
-        capabilities.put(Service.Dhcp, null);
-        
+        capabilities.put(Service.Firewall, null);       
         return capabilities;
     }
     
