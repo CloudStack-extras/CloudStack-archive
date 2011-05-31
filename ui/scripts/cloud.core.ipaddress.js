@@ -1294,7 +1294,8 @@ var ipActionMap = {
         }
     },
     "label.action.enable.static.NAT": {                      
-        isAsyncJob: false,        
+        isAsyncJob: true,       
+        asyncJobResponse: "enablestaticnatresponse",
         dialogBeforeActionFn: doEnableStaticNAT,
         inProcessText: "label.action.enable.static.NAT.processing",
         afterActionSeccessFn: function(json, $midmenuItem1, id) {    
