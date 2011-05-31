@@ -29,6 +29,9 @@ import javax.naming.ConfigurationException;
 import org.apache.log4j.Logger;
 
 import com.cloud.api.commands.ListPortForwardingRulesCmd;
+import com.cloud.dc.DataCenterVO;
+import com.cloud.dc.DataCenter.NetworkType;
+import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.domain.Domain;
 import com.cloud.domain.DomainVO;
 import com.cloud.domain.dao.DomainDao;
@@ -47,8 +50,10 @@ import com.cloud.network.Network;
 import com.cloud.network.Network.Capability;
 import com.cloud.network.Network.Service;
 import com.cloud.network.NetworkManager;
+import com.cloud.network.NetworkVO;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
+import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.rules.FirewallRule.Purpose;
 import com.cloud.network.rules.FirewallRule.State;
 import com.cloud.network.rules.dao.PortForwardingRulesDao;
@@ -86,6 +91,10 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
     IPAddressDao _ipAddressDao;
     @Inject
     UserVmDao _vmDao;
+    @Inject
+    NetworkDao _networkDao;
+    @Inject
+    DataCenterDao _dcDao;
     @Inject
     AccountManager _accountMgr;
     @Inject
@@ -395,6 +404,9 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
         if (networkId == null) {
             throw new InvalidParameterValueException("Unable to enable static nat for the ipAddress id=" + ipId + " as ip is not associated with any network");
         }
+        
+        NetworkVO network = _networkDao.findById(networkId);
+        DataCenterVO dcVO = _dcDao.findById(network.getDataCenterId());
 
         if (!_networkMgr.isServiceSupported(networkId, Service.Firewall)) {
             throw new InvalidParameterValueException("Unable to create static nat rule; Firewall service is not supported in network id=" + networkId);
@@ -410,7 +422,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
             if (rules != null && !rules.isEmpty()) {
                 throw new NetworkRuleConflictException("Failed to enable static nat for the ip address id=" + ipId + " as it already has firewall rules assigned");
             }
-        } else {
+        } else if (dcVO.getNetworkType() == NetworkType.Advanced) {
             if (ipAddress.getAssociatedWithVmId() != null && ipAddress.getAssociatedWithVmId().longValue() != vmId) {
                 throw new NetworkRuleConflictException("Failed to enable static for the ip address id=" + ipId + " and vm id=" + vmId + " as it's already assigned to antoher vm");
             }
@@ -419,7 +431,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
         // If there is public ip address already associated with the vm, throw an exception
         IPAddressVO ip = _ipAddressDao.findByAssociatedVmId(vmId);
 
-        if (ip != null) {
+        if (ip != null && dcVO.getNetworkType() == NetworkType.Advanced) {
             throw new InvalidParameterValueException("Failed to enable static nat for the ip address id=" + ipId + " as vm id=" + " is already associated with ip id=" + ip.getId());
         }
 

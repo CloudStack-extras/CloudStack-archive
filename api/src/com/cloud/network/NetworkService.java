@@ -23,6 +23,7 @@ import java.util.Map;
 import com.cloud.api.commands.AssociateIPAddrCmd;
 import com.cloud.api.commands.CreateNetworkCmd;
 import com.cloud.api.commands.DisassociateIPAddrCmd;
+import com.cloud.api.commands.EnableStaticNatCmd;
 import com.cloud.api.commands.ListNetworksCmd;
 import com.cloud.api.commands.RestartNetworkCmd;
 import com.cloud.exception.ConcurrentOperationException;
@@ -79,5 +80,7 @@ public interface NetworkService {
     
     Network updateNetwork(long networkId, String name, String displayText, Account caller);
     Network getSystemNetworkByZoneAndTrafficType(long zoneId, TrafficType trafficType);
+
+    IpAddress associateElasticIP(EnableStaticNatCmd enableStaticNatCmd);
     
 }

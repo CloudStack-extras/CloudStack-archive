@@ -1329,8 +1329,8 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         return router;
     }
     
-    protected boolean associateElasticIp(DomainRouterVO elasticIpVm, Long publicIpId, String privateIp)
-    throws ConcurrentOperationException,  AgentUnavailableException, ResourceUnavailableException {
+    public boolean associateElasticIp(DomainRouterVO elasticIpVm, Long publicIpId, String privateIp)
+    throws ResourceUnavailableException {
         Commands cmds = new Commands(OnError.Stop);
         String routerControlIpAddress = null;
         List<NicVO> nics = _nicDao.listByVmId(elasticIpVm.getId());

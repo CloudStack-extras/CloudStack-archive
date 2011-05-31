@@ -21,18 +21,25 @@ package com.cloud.api.commands;
 import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiConstants;
+import com.cloud.api.BaseAsyncCmd;
+import com.cloud.api.BaseAsyncCreateCmd;
 import com.cloud.api.BaseCmd;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
+import com.cloud.api.response.IPAddressResponse;
 import com.cloud.api.response.SuccessResponse;
+import com.cloud.event.EventTypes;
 import com.cloud.exception.NetworkRuleConflictException;
+import com.cloud.exception.ResourceAllocationException;
+import com.cloud.network.IpAddress;
 import com.cloud.user.Account;
+import com.cloud.user.UserContext;
 import com.cloud.uservm.UserVm;
 
 @Implementation(description="Enables static nat for given ip address", responseObject=SuccessResponse.class)
-public class EnableStaticNatCmd extends BaseCmd{
-    public static final Logger s_logger = Logger.getLogger(CreateIpForwardingRuleCmd.class.getName());
+public class EnableStaticNatCmd extends BaseAsyncCreateCmd{
+    public static final Logger s_logger = Logger.getLogger(EnableStaticNatCmd.class.getName());
 
     private static final String s_name = "enablestaticnatresponse";
 
@@ -79,19 +86,41 @@ public class EnableStaticNatCmd extends BaseCmd{
 
     @Override
     public void execute(){ 
+        UserContext.current().setEventDetails("Ip Id: "+getEntityId());
+        IpAddress result = _networkService.associateElasticIP(this);
+        if (result != null) {
+            IPAddressResponse ipResponse = _responseGenerator.createIPAddressResponse(result);
+            ipResponse.setResponseName(getCommandName());
+            this.setResponseObject(ipResponse);
+        } else {
+            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to associate ip address");
+        }
+    }
+
+    @Override
+    public String getEventType() {
+        return EventTypes.EVENT_ENABLE_STATIC_NAT;
+    }
+
+    @Override
+    public String getEventDescription() {
+        return "Enable static nat or elastic ip service";
+    }
+
+    @Override
+    public void create() throws ResourceAllocationException {
+        setEntityId(getIpAddressId());
         try {
             boolean result = _rulesService.enableOneToOneNat(ipAddressId, virtualMachineId);
-            if (result) {
-                SuccessResponse response = new SuccessResponse(getCommandName());
-                this.setResponseObject(response);
-            } else {
-                throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to enable static nat");
+            if (!result) {
+                throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to configure static nat / elasticip");
             }
         } catch (NetworkRuleConflictException ex) {
             s_logger.info("Network rule conflict: " + ex.getMessage());
             s_logger.trace("Network Rule Conflict: ", ex);
             throw new ServerApiException(BaseCmd.NETWORK_RULE_CONFLICT_ERROR, ex.getMessage());
         }
+        
     }
 
 }

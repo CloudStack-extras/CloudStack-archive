@@ -72,11 +72,12 @@ public interface NetworkManager extends NetworkService {
      * 
      * @param dcId
      * @param owner
+     * @param vmId
      * @param networkId
      * @return
      * @throws InsufficientAddressCapacityException
      */
-    PublicIp assignElasticPublicIpAddress(long dcId, long vmId, Account owner) throws InsufficientAddressCapacityException;
+    PublicIp assignElasticPublicIpAddress(long dcId, long vmId, Account owner, long networkId) throws InsufficientAddressCapacityException;
 
     /**
      * assigns a source nat ip address to an account within a network.
