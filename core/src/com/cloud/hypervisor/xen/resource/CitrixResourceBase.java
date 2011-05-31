@@ -1351,8 +1351,8 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
     
     protected synchronized Answer execute(final AssociateElasticIpCommand cmd) {
         Connection conn = getConnection();
-        String args = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
         for (ElasticIpTO eipTO: cmd.getElasticIpAssocs()) {
+            String args = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
             args += " -p " + eipTO.getPublicIp();
             args += " -g " + eipTO.getGuestIp();
             if (eipTO.isAssociate()) {
