@@ -2715,7 +2715,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         }
 
         NetworkOfferingVO offering = new NetworkOfferingVO(name, displayText, trafficType, false, specifyVlan, networkRate, multicastRate, maxConnections, false, availability, true, true, true,
-                gatewayService, firewallService, lbService, vpnService, guestIpType);
+                gatewayService, firewallService, lbService, vpnService, guestIpType, false);
 
         if ((offering = _networkOfferingDao.persist(offering)) != null) {
             return offering;
