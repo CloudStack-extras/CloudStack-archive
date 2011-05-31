@@ -1324,12 +1324,12 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             throw new ResourceUnavailableException("Unable to set VM data due to " + answer.getDetails(), DataCenter.class, router.getDataCenterId());
         }
         if (_elasticIpEnabled && nic.getElasticIpAddressId() != null) {
-            associateElasticIp(elasticIpVm, nic.getElasticIpAddressId(), nic.getIp4Address());            
+            associateElasticIp(elasticIpVm, nic.getElasticIpAddressId(), nic.getIp4Address(), true, null);            
         }
         return router;
     }
     
-    public boolean associateElasticIp(DomainRouterVO elasticIpVm, Long publicIpId, String privateIp)
+    public boolean associateElasticIp(DomainRouterVO elasticIpVm, Long publicIpId, String privateIp, boolean associate, Long previousPublicIpId)
     throws ResourceUnavailableException {
         Commands cmds = new Commands(OnError.Stop);
         String routerControlIpAddress = null;
@@ -1341,9 +1341,14 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             }
         }
         IPAddressVO publicIp = _ipAddressDao.findById(publicIpId);
+        List<ElasticIpTO> eipList = new ArrayList<ElasticIpTO>();
+        if (previousPublicIpId != null) {
+            IPAddressVO prevPublicIp = _ipAddressDao.findById(previousPublicIpId);
+            eipList.add(new ElasticIpTO(prevPublicIp.getAddress().addr(), privateIp, false));
+        }
+        eipList.add(new ElasticIpTO(publicIp.getAddress().addr(), privateIp, associate));
         
-        ElasticIpTO eipTO = new ElasticIpTO(publicIp.getAddress().addr(), privateIp, true);
-        AssociateElasticIpCommand eipCmd = new AssociateElasticIpCommand(new ElasticIpTO[] { eipTO});
+        AssociateElasticIpCommand eipCmd = new AssociateElasticIpCommand(eipList.toArray(new ElasticIpTO[eipList.size()]));
         eipCmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, routerControlIpAddress);
         eipCmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, elasticIpVm.getInstanceName());
         cmds.addCommand("eip", eipCmd);

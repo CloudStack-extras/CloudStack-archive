@@ -34,6 +34,7 @@ import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.network.IPAddressVO;
 import com.cloud.network.Network;
 import com.cloud.network.Network.Capability;
 import com.cloud.network.Network.GuestIpType;
@@ -178,7 +179,15 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
              UserVmVO vm = _userVmDao.findById(vmId);
              NicVO nic = _nicDao.findByInstanceIdAndNetworkId(network.getId(), vmId);
              DomainRouterVO elasticIpVm = findElasticIpVmForUserVm(network.getId(), vm);
-             result = result && _routerMgr.associateElasticIp(elasticIpVm, publicIp.getId(), nic.getIp4Address());
+             List<IPAddressVO> assocIps = _ipAddressDao.findAllByAssociatedVmId(publicIp.getAssociatedWithVmId());
+             Long oldId = null;
+             for (IPAddressVO ip: assocIps) {
+                 if (ip.getId()  != publicIp.getId()) {
+                     oldId = ip.getId();
+                     break;
+                 }
+             }
+             result = result && _routerMgr.associateElasticIp(elasticIpVm, publicIp.getId(), nic.getIp4Address(), true, oldId);
              s_logger.debug("Associate elastic ip : " + publicIp.getAddress().toString() + " to " + nic.getIp4Address() + "result=" + result);
         }
         return result;

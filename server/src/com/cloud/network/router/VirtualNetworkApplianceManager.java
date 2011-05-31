@@ -93,5 +93,5 @@ public interface VirtualNetworkApplianceManager extends Manager, VirtualNetworkA
 
     VirtualRouter deployElasticIpVm(Network network, DeployDestination dest, Account account, Map<Param, Object> params) throws InsufficientCapacityException, StorageUnavailableException, ConcurrentOperationException, ResourceUnavailableException;
     
-    boolean associateElasticIp(DomainRouterVO elasticIpVm, Long publicIpId, String privateIp) throws  ResourceUnavailableException;
+    boolean associateElasticIp(DomainRouterVO elasticIpVm, Long publicIpId, String privateIp, boolean associate, Long previousPublicIpId) throws  ResourceUnavailableException;
 }
