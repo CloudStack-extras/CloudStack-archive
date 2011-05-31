@@ -2895,22 +2895,6 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         } catch (ResourceUnavailableException e) {
             s_logger.error("Unable to associate ip address due to resource unavailable exception", e);
             return null;
-        } finally {
-            if (!success) {
-                if (ip != null) {
-                    try {
-                        s_logger.warn("Failed to associate ip address " + ip);
-                        _ipAddressDao.markAsUnavailable(ip.getId());
-                        if (!applyElasticIpAssociations(network, ip, true)) {
-                            // if fail to apply ip assciations again, unassign ip address without updating resource count and
-                            // generating usage event as there is no need to keep it in the db
-                            _ipAddressDao.unassignIpAddress(ip.getId());
-                        }
-                    } catch (Exception e) {
-                        s_logger.warn("Unable to disassociate ip address for recovery", e);
-                    }
-                }
-            }
         }
     }
     
