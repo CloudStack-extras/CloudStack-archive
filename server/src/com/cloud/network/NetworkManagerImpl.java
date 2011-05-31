@@ -39,6 +39,7 @@ import com.cloud.agent.api.to.NicTO;
 import com.cloud.alert.AlertManager;
 import com.cloud.api.commands.AssociateIPAddrCmd;
 import com.cloud.api.commands.CreateNetworkCmd;
+import com.cloud.api.commands.DisableStaticNatCmd;
 import com.cloud.api.commands.DisassociateIPAddrCmd;
 import com.cloud.api.commands.EnableStaticNatCmd;
 import com.cloud.api.commands.ListNetworksCmd;
@@ -233,7 +234,9 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     
     @Override
     public PublicIp assignElasticPublicIpAddress(long dcId, long  vmId, Account owner, long networkId) throws InsufficientAddressCapacityException {
-        return fetchNewPublicIp(dcId, null, null, owner, VlanType.VirtualNetwork, networkId, false, true, true, vmId);
+        Account systemAccount = _accountDao.findById(Account.ACCOUNT_ID_SYSTEM);
+        //FIXME: the owner is system account, but allocated in domain should be the domain of the vm owner.
+        return fetchNewPublicIp(dcId, null, null, systemAccount, VlanType.VirtualNetwork, networkId, false, true, true, vmId);
     }
 
 
@@ -615,6 +618,9 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
 
         Network network = _networksDao.findById(ipToAssoc.getAssociatedWithNetworkId());
+        if (network.getGuestType() == GuestIpType.Direct) {
+            return ipToAssoc; // no actual associations done with public ips. 
+        }
 
         IPAddressVO ip = _ipAddressDao.findById(cmd.getEntityId());
         boolean success = false;
@@ -2898,8 +2904,52 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
     }
     
+    @Override
+    public IpAddress disassociateElasticIP(DisableStaticNatCmd cmd) {
+        Account caller = UserContext.current().getCaller();
+        Account owner = null;
+
+        IPAddressVO ipToDisAssoc = _ipAddressDao.findById(cmd.getIpAddressId());
+        if (ipToDisAssoc != null) {
+            _accountMgr.checkAccess(caller, ipToDisAssoc);
+            owner = _accountMgr.getAccount(ipToDisAssoc.getAccountId());
+        } else {
+            s_logger.debug("Unable to find ip address by id: " + cmd.getIpAddressId());
+            return null;
+        }
+
+        Network network = _networksDao.findById(ipToDisAssoc.getAssociatedWithNetworkId());
+        Account systemAccount = _accountDao.findById(Account.ACCOUNT_ID_SYSTEM);
+        PublicIp newPublicIpForVm = null;
+        try {
+            newPublicIpForVm = assignElasticPublicIpAddress(ipToDisAssoc.getDataCenterId(), ipToDisAssoc.getAssociatedWithVmId(),  systemAccount, network.getId());
+        } catch (InsufficientAddressCapacityException e1) {
+            s_logger.warn("Not disassociating public ip " + ipToDisAssoc.getAddress().toString() + " because we failed to get another public ip to replace it");
+            return null;
+        }
+        boolean success = false;
+        try {
+            success = applyElasticIpAssociations(network, newPublicIpForVm.ip(), false);
+            if (success) {
+                s_logger.debug("Successfully disassociated ip address " + ipToDisAssoc.getAddress().addr() + " for account " + owner.getId() + " in zone " + network.getDataCenterId());
+            } else {
+                s_logger.warn("Failed to disassociate ip address " + ipToDisAssoc.getAddress().addr() + " for account " + owner.getId() + " in zone " + network.getDataCenterId());
+            }
+            return ipToDisAssoc;
+        } catch (ResourceUnavailableException e) {
+            s_logger.error("Unable to disassociate ip address due to resource unavailable exception", e);
+            return null;
+        } finally {
+            if (success)
+                return ipToDisAssoc;
+            else {
+                releasePublicIpAddress(newPublicIpForVm.getId(), Account.ACCOUNT_ID_SYSTEM, systemAccount);
+            }
+        }
+    }
+    
     @DB
-    public boolean applyElasticIpAssociations(Network network, IPAddressVO userIp, boolean continueOnError) throws ResourceUnavailableException {
+    public boolean applyElasticIpAssociations(Network network, IPAddressVO userIp, boolean associate) throws ResourceUnavailableException {
         List<PublicIp> publicIps = new ArrayList<PublicIp>();
 
         PublicIp publicIp = new PublicIp(userIp, _vlanDao.findById(userIp.getVlanId()), NetUtils.createSequenceBasedMacAddress(userIp.getMacAddress()));
@@ -2913,11 +2963,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 element.applyIps(network, publicIps);
             } catch (ResourceUnavailableException e) {
                 success = false;
-                if (!continueOnError) {
-                    throw e;
-                } else {
-                    s_logger.debug("Resource is not available: " + element.getName(), e);
-                }
+                s_logger.debug("Resource is not available: " + element.getName(), e);
             }
         }
         Transaction txn = Transaction.currentTxn();
@@ -2928,6 +2974,9 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 if (ip.getId() != userIp.getId()) {
                     ip.setAssociatedWithVmId(null);
                     _ipAddressDao.update(ip.getId(), ip);
+                    if (ip.getAccountId() == Account.ACCOUNT_ID_SYSTEM) {
+                        _ipAddressDao.unassignIpAddress(ip.getId());
+                    }
                 }
             }
         } else {
