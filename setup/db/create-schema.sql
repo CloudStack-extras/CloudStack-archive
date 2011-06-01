@@ -231,7 +231,6 @@ CREATE TABLE `cloud`.`nics` (
   `ip6_address` char(40) COMMENT 'ip6 address',
   `default_nic` tinyint NOT NULL COMMENT "None", 
   `vm_type` varchar(32) COMMENT 'type of vm: System or User vm',
-  `elastic_ip_address_id` bigint unsigned COMMENT 'static nat public ip address',
   `elastic_ip_vm_id` bigint unsigned COMMENT 'router providing elastic ip service',
   `created` datetime NOT NULL COMMENT 'date created',
   `removed` datetime COMMENT 'date removed if not null',
