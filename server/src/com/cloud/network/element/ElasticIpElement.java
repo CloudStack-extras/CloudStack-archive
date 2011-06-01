@@ -207,7 +207,12 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
     private static Map<Service, Map<Capability, String>> setCapabilities() {
         Map<Service, Map<Capability, String>> capabilities = new HashMap<Service, Map<Capability, String>>();
         
-        capabilities.put(Service.Firewall, null);       
+        Map<Capability, String> firewallCapabilities = new HashMap<Capability, String>();
+        firewallCapabilities.put(Capability.PortForwarding, "false");
+        firewallCapabilities.put(Capability.TrafficStatistics, "per public ip");
+        firewallCapabilities.put(Capability.StaticNat, "true");
+        
+        capabilities.put(Service.Firewall, firewallCapabilities);   
         return capabilities;
     }
     
