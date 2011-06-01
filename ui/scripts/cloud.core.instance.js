@@ -1872,9 +1872,7 @@ function vmJsonToDetailsTab(){
             );
 	    }
 	}
-		
-		
-	$thisTab.find("#ipAddress").text(fromdb(jsonObj.ipaddress));	
+	
 	$thisTab.find("#id").text(fromdb(jsonObj.id));
 	$thisTab.find("#zoneName").text(fromdb(jsonObj.zonename));
 		   
@@ -1897,7 +1895,8 @@ function vmJsonToDetailsTab(){
 	$thisTab.find("#hostName").text(fromdb(jsonObj.hostname));
 	
 	$thisTab.find("#group").text(fromdb(jsonObj.group));	
-	$thisTab.find("#group_edit").val(fromdb(jsonObj.group));	
+	$thisTab.find("#group_edit").val(fromdb(jsonObj.group));
+	$thisTab.find("#ipaddress").text(fromdb(jsonObj.ipaddress));	
 	
 	setDateField(jsonObj.created, $thisTab.find("#created"));	 		
 	
