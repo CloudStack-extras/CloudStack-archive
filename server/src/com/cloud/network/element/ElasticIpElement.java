@@ -65,6 +65,7 @@ import com.cloud.vm.VirtualMachineProfile;
 import com.cloud.vm.dao.DomainRouterDao;
 import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.UserVmDao;
+import com.sun.jdi.connect.spi.TransportService.Capabilities;
 
 
 @Local(value=NetworkElement.class)
@@ -211,6 +212,7 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
         firewallCapabilities.put(Capability.PortForwarding, "false");
         firewallCapabilities.put(Capability.TrafficStatistics, "per public ip");
         firewallCapabilities.put(Capability.StaticNat, "true");
+        firewallCapabilities.put(Capability.PortFiltering, "none");
         
         capabilities.put(Service.Firewall, firewallCapabilities);   
         return capabilities;
