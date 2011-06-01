@@ -558,5 +558,13 @@ public class ApiDBUtils {
     public static SecurityGroup getSecurityGroup(String groupName, long ownerId) {
         return _securityGroupMgr.getSecurityGroup(groupName, ownerId);
     }
+    
+    public static String getPublicIpAddressForVm(long vmId) {
+        IPAddressVO ipVO = _ipAddressDao.findByAssociatedVmId(vmId);
+        if (ipVO != null) {
+            return ipVO.getAddress().addr();
+        }
+        return null;
+    }
 
 }
