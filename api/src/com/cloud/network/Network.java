@@ -31,8 +31,14 @@ public interface Network extends ControlledEntity {
         public static final Service Dhcp = new Service("Dhcp");
         public static final Service Dns = new Service("Dns");
         public static final Service Gateway = new Service("Gateway");
-        public static final Service Firewall = new Service("Firewall", Capability.PortForwarding, Capability.StaticNat, Capability.SupportedProtocols, Capability.MultipleIps, Capability.SupportedSourceNatTypes, Capability.TrafficStatistics);
-        public static final Service Lb = new Service("Lb", Capability.SupportedLBAlgorithms, Capability.SupportedProtocols, Capability.TrafficStatistics, Capability.LoadBalancingSupportedIps);
+        public static final Service Firewall = new Service("Firewall", 
+                                                           Capability.PortForwarding, Capability.StaticNat, 
+                                                           Capability.SupportedProtocols, Capability.MultipleIps, 
+                                                           Capability.SupportedSourceNatTypes, Capability.TrafficStatistics,
+                                                           Capability.PortFiltering);
+        public static final Service Lb = new Service("Lb", 
+                                                     Capability.SupportedLBAlgorithms, Capability.SupportedProtocols, 
+                                                     Capability.TrafficStatistics, Capability.LoadBalancingSupportedIps);
         public static final Service UserData = new Service("UserData");
         
         private String name;
@@ -92,6 +98,7 @@ public interface Network extends ControlledEntity {
         
         public static final Capability PortForwarding = new Capability("PortForwarding");
         public static final Capability StaticNat = new Capability("StaticNat");
+        public static final Capability PortFiltering = new Capability("PortFiltering"); //can be none, source, destination or source,destination
         public static final Capability SupportedProtocols = new Capability("SupportedProtocols");
         public static final Capability SupportedLBAlgorithms = new Capability("SupportedLbAlgorithms");
         public static final Capability MultipleIps = new Capability("MultipleIps");
