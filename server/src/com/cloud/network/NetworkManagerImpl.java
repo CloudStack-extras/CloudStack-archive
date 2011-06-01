@@ -1054,7 +1054,6 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         if (profile.getIsolationUri() != null) {
             vo.setIsolationUri(profile.getIsolationUri());
         }
-        vo.setElasticIpAddressId(profile.getElasticIpAddressId());
         vo.setElasticIpVmId(profile.getElasticIpVmId());
         vo.setState(Nic.State.Allocated);
 
@@ -1073,7 +1072,6 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         vo.setBroadcastUri(profile.getBroadCastUri());
         vo.setIsolationUri(profile.getIsolationUri());
         vo.setNetmask(profile.getNetmask());
-        vo.setElasticIpAddressId(profile.getElasticIpAddressId());
         vo.setElasticIpVmId(profile.getElasticIpVmId());
     }
 
@@ -1256,7 +1254,6 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 nic.setState(Nic.State.Reserved);
                 nic.setNetmask(profile.getNetmask());
                 nic.setGateway(profile.getGateway());
-                nic.setElasticIpAddressId(profile.getElasticIpAddressId());
 
                 if (profile.getStrategy() != null) {
                     nic.setReservationStrategy(profile.getStrategy());

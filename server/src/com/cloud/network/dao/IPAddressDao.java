@@ -21,6 +21,7 @@ package com.cloud.network.dao;
 import java.util.List;
 
 import com.cloud.network.IPAddressVO;
+import com.cloud.utils.Pair;
 import com.cloud.utils.db.GenericDao;
 import com.cloud.utils.net.Ip;
 
@@ -54,5 +55,7 @@ public interface IPAddressDao extends GenericDao<IPAddressVO, Long> {
 
 	
 	IPAddressVO findByAccountAndIp(long accountId, String ipAddress);
+
+    List<Pair<String, String>> findAllElasticIpsForElasticIpVm(long elasticIpVmId);
 	
 }
