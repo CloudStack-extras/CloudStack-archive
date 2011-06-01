@@ -20,6 +20,8 @@ package com.cloud.network.dao;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -29,6 +31,8 @@ import org.apache.log4j.Logger;
 
 import com.cloud.network.IPAddressVO;
 import com.cloud.network.IpAddress.State;
+import com.cloud.utils.Pair;
+import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.GenericDaoBase;
@@ -40,6 +44,8 @@ import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.Ip;
+import com.cloud.vm.dao.NicDao;
+import com.cloud.vm.dao.UserVmDao;
 
 @Local(value = { IPAddressDao.class })
 @DB
@@ -52,7 +58,6 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
     protected final GenericSearchBuilder<IPAddressVO, Integer> AllocatedIpCount;
     protected final GenericSearchBuilder<IPAddressVO, Integer> AllIpCountForDashboard;
     protected final GenericSearchBuilder<IPAddressVO, Integer> AllocatedIpCountForDashboard;
-    
     
     // make it public for JUnit test
     public IPAddressDaoImpl() {
@@ -282,5 +287,38 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
         sc.setParameters("associatedWithVmId", vmId);
         
         return listBy(sc);
+    }
+    
+    @Override
+    public List<Pair<String, String>> findAllElasticIpsForElasticIpVm(long elasticIpVmId) {
+        Transaction txn = Transaction.currentTxn();
+        PreparedStatement pstmt = null;
+        List< Pair<String, String>> result = new ArrayList<Pair<String, String>>();
+        ResultSet rs = null;
+        try {
+            String sql = "select u.public_ip_address, n.ip4_address  from nics n, "
+                        + "user_ip_address u, user_vm v where v.id = u.vm_id and " 
+                        + "u.vm_id = n.instance_id and n.elastic_ip_vm_id=?;";
+            pstmt = txn.prepareStatement(sql);
+            
+            pstmt.setLong(1, elasticIpVmId);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                result.add(new Pair<String,String>(rs.getString(1), rs.getString(2)));
+            }
+        } catch (Exception e) {
+            s_logger.warn("Exception: ", e);
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+            } catch (SQLException e) {
+            }
+        }
+        return result;
     }
 }

@@ -1025,7 +1025,9 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
     @Override
     public boolean finalizeCommandsOnStart(Commands cmds, VirtualMachineProfile<DomainRouterVO> profile) {
         DomainRouterVO router = profile.getVirtualMachine();
-
+        if (router.getRole() == Role.FIREWALL) {
+            return finalizeCommandsOnStartOfElasticIpVm(cmds, profile);
+        }
         NicProfile controlNic = null;
         for (NicProfile nic : profile.getNics()) {
             if (nic.getTrafficType() == TrafficType.Control && nic.getIp4Address() != null) {
@@ -1132,6 +1134,35 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         // Network usage command to create iptables rules
         cmds.addCommand("networkUsage", new NetworkUsageCommand(controlNic.getIp4Address(), router.getHostName(), "create"));
 
+        return true;
+    }
+
+    private boolean finalizeCommandsOnStartOfElasticIpVm(Commands cmds, VirtualMachineProfile<DomainRouterVO> profile) {
+        DomainRouterVO router = profile.getVirtualMachine();
+        NicProfile controlNic = null;
+        for (NicProfile nic : profile.getNics()) {
+            if (nic.getTrafficType() == TrafficType.Control && nic.getIp4Address() != null) {
+                controlNic = nic;
+            }
+        }
+
+        if (controlNic == null) {
+            s_logger.error("Control network doesn't exist for the router " + router);
+            return false;
+        }
+
+        cmds.addCommand("checkSsh", new CheckSshCommand(profile.getInstanceName(), controlNic.getIp4Address(), 3922, 5, 20));
+        List<Pair<String, String>> publicToGuestIps = _ipAddressDao.findAllElasticIpsForElasticIpVm(router.getId());
+        List<ElasticIpTO> eipList = new ArrayList<ElasticIpTO>();
+        for (Pair<String,String> p: publicToGuestIps) {
+            String publicIp = p.first();
+            String guestIp = p.second();
+            eipList.add(new ElasticIpTO(publicIp, guestIp, true));
+        }
+        AssociateElasticIpCommand eipCmd = new AssociateElasticIpCommand(eipList.toArray(new ElasticIpTO[eipList.size()]));
+        eipCmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, controlNic.getIp4Address());
+        eipCmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, profile.getInstanceName());
+        cmds.addCommand("elasticIp", eipCmd);
         return true;
     }
 
@@ -1323,8 +1354,10 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             s_logger.error("Unable to set VM data for " + profile + " due to " + answer.getDetails());
             throw new ResourceUnavailableException("Unable to set VM data due to " + answer.getDetails(), DataCenter.class, router.getDataCenterId());
         }
-        if (_elasticIpEnabled && nic.getElasticIpAddressId() != null) {
-            associateElasticIp(elasticIpVm, nic.getElasticIpAddressId(), nic.getIp4Address(), true, null);            
+        if (_elasticIpEnabled) {
+            IPAddressVO publicIp = _ipAddressDao.findByAssociatedVmId(profile.getId());
+            if (publicIp != null)
+                associateElasticIp(elasticIpVm, publicIp.getId(), nic.getIp4Address(), true, null);            
         }
         return router;
     }
