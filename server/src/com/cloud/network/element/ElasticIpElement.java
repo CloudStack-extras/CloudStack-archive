@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Local;
-import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 
@@ -65,7 +64,6 @@ import com.cloud.vm.VirtualMachineProfile;
 import com.cloud.vm.dao.DomainRouterDao;
 import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.UserVmDao;
-import com.sun.jdi.connect.spi.TransportService.Capabilities;
 
 
 @Local(value=NetworkElement.class)
