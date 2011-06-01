@@ -1834,18 +1834,20 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("Starting a elastic ip vm for network configurations: " + guestNetwork + " in " + dest);
             }
-            assert guestNetwork.getState() == Network.State.Implemented || guestNetwork.getState() == Network.State.Setup || guestNetwork.getState() == Network.State.Implementing : "Network is not yet fully implemented: "
-                + guestNetwork;
+            assert guestNetwork.getState() == Network.State.Implemented 
+                || guestNetwork.getState() == Network.State.Setup 
+                || guestNetwork.getState() == Network.State.Implementing 
+                : "Network is not yet fully implemented: "+ guestNetwork;
 
             DataCenterDeployment plan = null;
             DataCenter dc = _dcDao.findById(dcId);
             DomainRouterVO router = null;
             Long podId = dest.getPod().getId();
 
-            // In Basic zone and Guest network we have to start at least one per pod, not per network
+            // In Basic zone and Guest network we have to start at least one per pod
             if ((dc.getNetworkType() == NetworkType.Basic || guestNetwork.isSecurityGroupEnabled()) 
-                    && guestNetwork.getTrafficType() == TrafficType.Guest &&
-                    _elasticIpEnabled) {
+                    && guestNetwork.getTrafficType() == TrafficType.Guest 
+                    && _elasticIpEnabled) {
                 router = _routerDao.findByNetworkAndPodAndRole(guestNetwork.getId(), podId, Role.FIREWALL);
                 plan = new DataCenterDeployment(dcId, podId, null, null, null);
             } else {
