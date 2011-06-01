@@ -805,7 +805,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
 
             NetworkOffering offering = _networkOfferingDao.findByIdIncludingRemoved(guestNetwork.getNetworkOfferingId());
             if (offering.isSystemOnly() || guestNetwork.getIsShared()) {
-                owner = _accountMgr.getAccount(Account.ACCOUNT_ID_SYSTEM);
+                owner = _accountService.getSystemAccount();
             }
 
             if (s_logger.isDebugEnabled()) {
@@ -1828,7 +1828,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
 
             NetworkOffering offering = _networkOfferingDao.findByIdIncludingRemoved(guestNetwork.getNetworkOfferingId());
             if (offering.isSystemOnly() || guestNetwork.getIsShared()) {
-                owner = _accountMgr.getAccount(Account.ACCOUNT_ID_SYSTEM);
+                owner = _accountService.getSystemAccount();
             }
 
             if (s_logger.isDebugEnabled()) {
@@ -1862,7 +1862,6 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                 }
 
 
-                PublicIp sourceNatIp = _networkMgr.assignSourceNatIpAddress(owner, guestNetwork, _accountService.getSystemUser().getId());
 
                 List<NetworkOfferingVO> offerings = _networkMgr.getSystemAccountNetworkOfferings(NetworkOfferingVO.SystemControlNetwork);
                 NetworkOfferingVO controlOffering = offerings.get(0);
@@ -1873,13 +1872,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                 List<NetworkVO> publicNetworks = _networkMgr.setupNetwork(_systemAcct, publicOffering, plan, null, null, false, false);
                 NicProfile defaultNic = new NicProfile();
                 defaultNic.setDefaultNic(true);
-                defaultNic.setIp4Address(sourceNatIp.getAddress().addr());
-                defaultNic.setGateway(sourceNatIp.getGateway());
-                defaultNic.setNetmask(sourceNatIp.getNetmask());
-                defaultNic.setMacAddress(sourceNatIp.getMacAddress());
                 defaultNic.setBroadcastType(BroadcastDomainType.Vlan);
-                defaultNic.setBroadcastUri(BroadcastDomainType.Vlan.toUri(sourceNatIp.getVlanTag()));
-                defaultNic.setIsolationUri(IsolationType.Vlan.toUri(sourceNatIp.getVlanTag()));
                 defaultNic.setDeviceId(2);
                 networks.add(new Pair<NetworkVO, NicProfile>(publicNetworks.get(0), defaultNic));
                 NicProfile gatewayNic = new NicProfile();
