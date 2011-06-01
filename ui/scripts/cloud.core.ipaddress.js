@@ -468,7 +468,26 @@ function ipToRightPanel($midmenuItem1) {
     $("#tab_details").click();        
    
     if(ipObj.isstaticnat == true) {
-        $("#tab_port_range").show();	
+        //$("#tab_port_range").show();
+    	if(networkObj != null) {
+            var firewallServiceObj = ipFindNetworkServiceByName("Firewall", networkObj);
+            if(firewallServiceObj != null) {
+	            var portFilteringCapabilityObj = ipFindCapabilityByName("PortFiltering", firewallServiceObj);
+	            if(portFilteringCapabilityObj != null) {
+	                if(portFilteringCapabilityObj.value == "none") 
+	                	$("#tab_port_range").hide();			                
+	                else
+	                	$("#tab_port_range").show();  
+	            }
+	            else {
+	            	$("#tab_port_range").show();  
+	            }	
+            }
+            else {
+            	$("#tab_port_range").show();  
+            }
+        }
+    	      
         $("#tab_port_forwarding, #tab_load_balancer, #tab_vpn").hide();	
     }
     else { //ipObj.isstaticnat == false  
