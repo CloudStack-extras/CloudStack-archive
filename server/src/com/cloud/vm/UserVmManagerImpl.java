@@ -1190,11 +1190,16 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         IPAddressVO ip = _ipAddressDao.findByAssociatedVmId(vmId);
         try {
             if (ip != null) {
-                if (_rulesMgr.disableOneToOneNat(ip.getId())) {
-                    s_logger.debug("Disabled 1-1 nat for ip address " + ip + " as a part of vm id=" + vmId + " expunge");
-                } else {
-                    s_logger.warn("Failed to disable static nat for ip address " + ip + " as a part of vm id=" + vmId + " expunge");
-                    success = false;
+                if (ip.getAccountId() != Account.ACCOUNT_ID_SYSTEM) {
+                    if (_rulesMgr.disableOneToOneNat(ip.getId())) {
+                        s_logger.debug("Disabled 1-1 nat for ip address " + ip + " as a part of vm id=" + vmId + " expunge");
+                    } else {
+                        s_logger.warn("Failed to disable static nat for ip address " + ip + " as a part of vm id=" + vmId + " expunge");
+                        success = false;
+                    }
+                } else if (ip.isOneToOneNat()) { //system owned public ip used for static nat
+                    s_logger.info("Expunge user vm: " + vmId + " :releasing system owned public ip used for static nat: " + ip.getAddress().addr());
+                    _ipAddressDao.unassignIpAddress(ip.getId());
                 }
             }
         } catch (ResourceUnavailableException e) {
