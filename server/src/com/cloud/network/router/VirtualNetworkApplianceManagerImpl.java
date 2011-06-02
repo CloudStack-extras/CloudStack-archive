@@ -276,6 +276,10 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
 
     int _routerRamSize;
     int _routerCpuMHz;
+    
+    int _elasticIpVmRamSize;
+    int _elasticIpvmCpuMHz;
+    
     int _retry = 2;
     String _instance;
     String _mgmt_host;
@@ -285,6 +289,8 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
 
     int _routerStatsInterval = 300;
     private ServiceOfferingVO _offering;
+    private ServiceOfferingVO _elasticIpVmOffering;
+
 
     ScheduledExecutorService _executor;
 
@@ -542,6 +548,10 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         _mgmt_host = configs.get("host");
         _routerRamSize = NumbersUtil.parseInt(configs.get("router.ram.size"), DEFAULT_ROUTER_VM_RAMSIZE);
         _routerCpuMHz = NumbersUtil.parseInt(configs.get("router.cpu.mhz"), DEFAULT_ROUTER_CPU_MHZ);
+        
+        _elasticIpVmRamSize = NumbersUtil.parseInt(configs.get("elastic.ip.vm.ram.size"), 256);
+        _elasticIpvmCpuMHz = NumbersUtil.parseInt(configs.get("elastic.ip.vm.cpu.mhz"), DEFAULT_ROUTER_CPU_MHZ);
+        
         String value = configs.get("start.retry");
         _retry = NumbersUtil.parseInt(value, 2);
 
@@ -567,6 +577,9 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         _offering = new ServiceOfferingVO("System Offering For Software Router", 1, _routerRamSize, _routerCpuMHz, 0, 0, true, null, useLocalStorage, true, null, true);
         _offering.setUniqueName("Cloud.Com-SoftwareRouter");
         _offering = _serviceOfferingDao.persistSystemServiceOffering(_offering);
+        _elasticIpVmOffering = new ServiceOfferingVO("System Offering For Elastic Ip VM", 1, _elasticIpVmRamSize, _elasticIpvmCpuMHz, 0, 0, true, null, useLocalStorage, true, null, true);
+        _elasticIpVmOffering.setUniqueName("Cloud.Com-ElasticIpVm");
+        _elasticIpVmOffering = _serviceOfferingDao.persistSystemServiceOffering(_elasticIpVmOffering);
 
         _systemAcct = _accountService.getSystemAccount();
         
@@ -1881,8 +1894,8 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
 
                 VMTemplateVO template = _templateDao.findRoutingTemplate(dest.getCluster().getHypervisorType());
 
-                router = new DomainRouterVO(id, _offering.getId(), VirtualMachineName.getRouterName(id, _instance), template.getId(), template.getHypervisorType(), template.getGuestOSId(),
-                        owner.getDomainId(), owner.getId(), guestNetwork.getId(), _offering.getOfferHA());
+                router = new DomainRouterVO(id, _elasticIpVmOffering.getId(), VirtualMachineName.getRouterName(id, _instance), template.getId(), template.getHypervisorType(), template.getGuestOSId(),
+                        owner.getDomainId(), owner.getId(), guestNetwork.getId(), _elasticIpVmOffering.getOfferHA());
                 router.setRole(Role.FIREWALL);
                 router = _itMgr.allocate(router, template, _offering, networks, plan, null, owner);
             }
