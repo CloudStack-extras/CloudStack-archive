@@ -1193,7 +1193,13 @@ public class ApiResponseHelper implements ResponseGenerator {
             }
             userVmResponse.setNics(nicResponses);
             userVmResponse.setObjectName(objectName);
-            userVmResponse.setIpAddress(ApiDBUtils.getPublicIpAddressForVm(userVm.getId()));
+            
+            IpAddress publicIp = ApiDBUtils.getPublicIpAddressForVm(userVm.getId());
+            
+            if (publicIp != null) {
+                userVmResponse.setIpAddress(publicIp.getAddress().addr());
+            }
+            
             vmResponses.add(userVmResponse);
         } 
        
