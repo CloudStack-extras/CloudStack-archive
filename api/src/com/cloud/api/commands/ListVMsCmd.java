@@ -149,14 +149,6 @@ public class ListVMsCmd extends BaseListCmd {
         return storageId;
     }
 
-    public static Logger getsLogger() {
-        return s_logger;
-    }
-
-    public static String getsName() {
-        return s_name;
-    }
-
     public String getIpAddress() {
         return ipAddress;
     }
