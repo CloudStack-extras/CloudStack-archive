@@ -34,7 +34,7 @@ public class UserVmResponse extends BaseResponse {
     @SerializedName("displayname") @Param(description="user generated name. The name of the virtual machine is returned if no displayname exists.")
     private String displayName;
 
-    @SerializedName(ApiConstants.IP_ADDRESS) @Param(description="the ip address of the virtual machine")
+    @SerializedName(ApiConstants.IP_ADDRESS) @Param(description="the public ip address of the virtual machine")
     private String ipAddress;
 
     @SerializedName(ApiConstants.ACCOUNT) @Param(description="the account associated with the virtual machine")
@@ -479,4 +479,5 @@ public class UserVmResponse extends BaseResponse {
     public void setSecurityGroupList(List<SecurityGroupResponse> securityGroups) {
         this.securityGroupList = securityGroups;
     }
+    
 }

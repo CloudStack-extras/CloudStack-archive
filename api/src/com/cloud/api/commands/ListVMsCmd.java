@@ -81,6 +81,9 @@ public class ListVMsCmd extends BaseListCmd {
     
     @Parameter(name=ApiConstants.STORAGE_ID, type=CommandType.LONG, description="the storage ID where vm's volumes belong to")
     private Long storageId;
+    
+    @Parameter(name=ApiConstants.IP_ADDRESS, type=CommandType.STRING, description="the public ip address of the vm")
+    private String ipAddress;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -144,6 +147,18 @@ public class ListVMsCmd extends BaseListCmd {
     
     public Long getStorageId() {
         return storageId;
+    }
+
+    public static Logger getsLogger() {
+        return s_logger;
+    }
+
+    public static String getsName() {
+        return s_name;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
     }
 
     /////////////////////////////////////////////////////

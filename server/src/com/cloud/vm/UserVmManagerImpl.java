@@ -192,6 +192,7 @@ import com.cloud.utils.db.JoinBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
+import com.cloud.utils.db.JoinBuilder.JoinType;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.exception.ExecutionException;
 import com.cloud.utils.net.NetUtils;
@@ -2795,6 +2796,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         c.addCriteria(Criteria.GROUPID, cmd.getGroupId());
         c.addCriteria(Criteria.FOR_VIRTUAL_NETWORK, cmd.getForVirtualNetwork());
         c.addCriteria(Criteria.NETWORKID, cmd.getNetworkId());
+        c.addCriteria(Criteria.IPADDRESS, cmd.getIpAddress());
         
         if (domainId != null) {
             c.addCriteria(Criteria.DOMAINID, domainId);
@@ -2843,12 +2845,12 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         Object hostName = c.getCriteria(Criteria.HOSTNAME);
         Object keyword = c.getCriteria(Criteria.KEYWORD);
         Object isAdmin = c.getCriteria(Criteria.ISADMIN);
-        assert c.getCriteria(Criteria.IPADDRESS) == null : "We don't support search by ip address on VM any more.  If you see this assert, it means we have to find a different way to search by the nic table.";
         Object groupId = c.getCriteria(Criteria.GROUPID);
         Object path = c.getCriteria(Criteria.PATH);
         Object networkId = c.getCriteria(Criteria.NETWORKID);
         Object hypervisor = c.getCriteria(Criteria.HYPERVISOR);
         Object storageId = c.getCriteria(Criteria.STORAGE_ID);
+        Object publicIp = c.getCriteria(Criteria.IPADDRESS);
         
         sb.and("displayName", sb.entity().getDisplayName(), SearchCriteria.Op.LIKE);
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
@@ -2879,6 +2881,13 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             SearchBuilder<InstanceGroupVMMapVO> groupSearch = _groupVMMapDao.createSearchBuilder();
             groupSearch.and("groupId", groupSearch.entity().getGroupId(), SearchCriteria.Op.EQ);
             sb.join("groupSearch", groupSearch, sb.entity().getId(), groupSearch.entity().getInstanceId(), JoinBuilder.JoinType.INNER);
+        }
+        
+        
+        if (publicIp != null) {
+            SearchBuilder<IPAddressVO> publicIpSearch = _ipAddressDao.createSearchBuilder();
+            publicIpSearch.and("publicIp", publicIpSearch.entity().getAddress(), SearchCriteria.Op.EQ);
+            sb.join("publicIpSearch", publicIpSearch, sb.entity().getId(), publicIpSearch.entity().getAssociatedWithVmId(), JoinType.INNER);
         }
         
         if (networkId != null) {
@@ -2998,6 +3007,10 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         
         if (storageId != null) {
             sc.setJoinParameters("volumeSearch", "poolId", storageId);
+        }
+        
+        if (publicIp != null) {
+            sc.setJoinParameters("publicIpSearch", "publicIp", publicIp);
         }
 
         return _vmDao.search(sc, searchFilter);

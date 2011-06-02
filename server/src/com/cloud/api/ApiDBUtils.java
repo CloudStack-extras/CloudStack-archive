@@ -31,6 +31,7 @@ import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.IPAddressVO;
+import com.cloud.network.IpAddress;
 import com.cloud.network.LoadBalancerVO;
 import com.cloud.network.Network.Capability;
 import com.cloud.network.Network.Service;
@@ -559,12 +560,11 @@ public class ApiDBUtils {
         return _securityGroupMgr.getSecurityGroup(groupName, ownerId);
     }
     
-    public static String getPublicIpAddressForVm(long vmId) {
+    public static IpAddress getPublicIpAddressForVm(long vmId) {
         IPAddressVO ipVO = _ipAddressDao.findByAssociatedVmId(vmId);
-        if (ipVO != null) {
-            return ipVO.getAddress().addr();
-        }
-        return null;
+        
+        return ipVO;
+        
     }
 
 }
