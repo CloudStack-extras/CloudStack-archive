@@ -234,7 +234,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     
     @Override
     public PublicIp assignElasticPublicIpAddress(long dcId, long  vmId, Account owner, long networkId) throws InsufficientAddressCapacityException {
-        Account systemAccount = _accountDao.findById(Account.ACCOUNT_ID_SYSTEM);
+        Account systemAccount = _accountMgr.getSystemAccount();
         //FIXME: the owner is system account, but allocated in domain should be the domain of the vm owner.
         return fetchNewPublicIp(dcId, null, null, systemAccount, VlanType.VirtualNetwork, networkId, false, true, true, vmId);
     }
@@ -2917,7 +2917,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
 
         Network network = _networksDao.findById(ipToDisAssoc.getAssociatedWithNetworkId());
-        Account systemAccount = _accountDao.findById(Account.ACCOUNT_ID_SYSTEM);
+        Account systemAccount = _accountMgr.getSystemAccount();
         PublicIp newPublicIpForVm = null;
         try {
             newPublicIpForVm = assignElasticPublicIpAddress(ipToDisAssoc.getDataCenterId(), ipToDisAssoc.getAssociatedWithVmId(),  systemAccount, network.getId());
@@ -2968,21 +2968,27 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         txn.start();
         List<IPAddressVO> assocIps = _ipAddressDao.findAllByAssociatedVmId(userIp.getAssociatedWithVmId());
         if (success) {
+            userIp.setState(State.Allocated);
             for (IPAddressVO ip: assocIps) {
                 if (ip.getId() != userIp.getId()) {
                     ip.setAssociatedWithVmId(null);
                     _ipAddressDao.update(ip.getId(), ip);
                     if (ip.getAccountId() == Account.ACCOUNT_ID_SYSTEM) {
                         _ipAddressDao.unassignIpAddress(ip.getId());
+                    } else {
+                        ip.setState(State.Allocating);
+                        ip.setOneToOneNat(false);
+                        _ipAddressDao.update(ip.getId(), ip);
                     }
                 }
             }
         } else {
             s_logger.info("Association of elastic ip " + userIp.getAddress().toString() + " failed, reverting association");
-            userIp.setAssociatedWithVmId(null);
-            _ipAddressDao.update(userIp.getId(), userIp);
-            
+            userIp.setAssociatedWithVmId(null);   
+            userIp.setOneToOneNat(false);
         }
+        _ipAddressDao.update(userIp.getId(), userIp);
+
         txn.commit();
         
 
