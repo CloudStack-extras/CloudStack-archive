@@ -215,6 +215,9 @@ public enum Config {
 	//NetworkType("Hidden", ManagementServer.class, String.class, "network.type", "vlan", "The type of network that this deployment will use.", "vlan,direct"),
 	HashKey("Hidden", ManagementServer.class, String.class, "security.hash.key", null, "for generic key-ed hash", null),
 	RouterRamSize("Hidden", NetworkManager.class, Integer.class, "router.ram.size", "128", "Default RAM for router VM (in MB).", null),
+	ElasticIpVmRamSize("Hidden", NetworkManager.class, Integer.class, "elastic.ip.vm.ram.size", "128", "Default RAM for elastic ip VM (in MB).", null),
+	ElasticIpVmCpuMhz("Hidden", NetworkManager.class, Integer.class, "elastic.ip.vm.cpu.mhz", "500", "Default CPU for elastic ip VM (in Mhz).", null),
+
 
 	VmOpWaitInterval("Advanced", ManagementServer.class, Integer.class, "vm.op.wait.interval", "120", "Time (in seconds) to wait before checking if a previous operation has succeeded", null),
 	VmOpLockStateRetry("Advanced", ManagementServer.class, Integer.class, "vm.op.lock.state.retry", "5", "Times to retry locking the state of a VM for operations", "-1 means try forever"),
