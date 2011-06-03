@@ -217,4 +217,6 @@ public interface NetworkManager extends NetworkService {
     List<NetworkVO> listNetworksForAccount(long accountId, long zoneId, GuestIpType guestType, Boolean isDefault);
 
     IPAddressVO markIpAsUnavailable(long addrId);
+
+    boolean applyElasticIpAssociations(Network network, IPAddressVO userIp, boolean associate) throws ResourceUnavailableException;
 }
