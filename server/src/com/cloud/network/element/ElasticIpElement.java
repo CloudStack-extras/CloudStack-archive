@@ -42,6 +42,7 @@ import com.cloud.network.Network.Service;
 import com.cloud.network.NetworkManager;
 import com.cloud.network.Networks.TrafficType;
 import com.cloud.network.PublicIpAddress;
+import com.cloud.network.IpAddress;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.router.VirtualNetworkApplianceManager;
@@ -186,8 +187,9 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
                      break;
                  }
              }
-             result = result && _routerMgr.associateElasticIp(elasticIpVm, publicIp.getId(), nic.getIp4Address(), true, oldId);
-             s_logger.debug("Associate elastic ip : " + publicIp.getAddress().toString() + " to " + nic.getIp4Address() + "result=" + result);
+             boolean release = (publicIp.getState() == IpAddress.State.Releasing || publicIp.getState() == IpAddress.State.Free);
+             result = result && _routerMgr.associateElasticIp(elasticIpVm, publicIp.getId(), nic.getIp4Address(), !release, oldId);
+             s_logger.debug(release?"Disa":"A" + "ssociate elastic ip : " + publicIp.getAddress() + " to " + nic.getIp4Address() + "result=" + result);
         }
         return result;
     }
