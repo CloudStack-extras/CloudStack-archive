@@ -68,6 +68,7 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
         AllFieldsSearch.and("vlan", AllFieldsSearch.entity().getVlanId(), Op.EQ);
         AllFieldsSearch.and("accountId", AllFieldsSearch.entity().getAllocatedToAccountId(), Op.EQ);
         AllFieldsSearch.and("sourceNat", AllFieldsSearch.entity().isSourceNat(), Op.EQ);
+        AllFieldsSearch.and("sourceNetwork", AllFieldsSearch.entity().getSourceNetworkId(), Op.EQ);
         AllFieldsSearch.and("network", AllFieldsSearch.entity().getAssociatedWithNetworkId(), Op.EQ);
         AllFieldsSearch.and("associatedWithVmId", AllFieldsSearch.entity().getAssociatedWithVmId(), Op.EQ);
         AllFieldsSearch.and("oneToOneNat", AllFieldsSearch.entity().isOneToOneNat(), Op.EQ);
@@ -320,5 +321,13 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
             }
         }
         return result;
+    }
+
+    @Override
+    public IPAddressVO findBySourceNetworkAndIp(long networkId, String ipAddress) {
+        SearchCriteria<IPAddressVO> sc = AllFieldsSearch.create();
+        sc.setParameters("sourceNetwork", networkId);
+        sc.setParameters("ipAddress", ipAddress);
+        return findOneBy(sc);
     }
 }
