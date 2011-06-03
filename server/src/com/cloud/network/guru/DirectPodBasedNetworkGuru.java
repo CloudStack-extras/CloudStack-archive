@@ -19,6 +19,7 @@
 package com.cloud.network.guru;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Local;
@@ -39,8 +40,10 @@ import com.cloud.deploy.DeployDestination;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientAddressCapacityException;
 import com.cloud.exception.InsufficientVirtualNetworkCapcityException;
+import com.cloud.network.IPAddressVO;
 import com.cloud.network.Network;
 import com.cloud.network.NetworkManager;
+import com.cloud.network.IpAddress.State;
 import com.cloud.network.Networks.AddressFormat;
 import com.cloud.network.Networks.BroadcastDomainType;
 import com.cloud.network.Networks.TrafficType;
@@ -48,6 +51,7 @@ import com.cloud.network.addr.PublicIp;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offerings.dao.NetworkOfferingDao;
+import com.cloud.user.Account;
 import com.cloud.user.UserContext;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.db.DB;
@@ -117,7 +121,10 @@ public class DirectPodBasedNetworkGuru extends DirectNetworkGuru {
             throws InsufficientVirtualNetworkCapcityException, InsufficientAddressCapacityException, ConcurrentOperationException {
         if (nic.getIp4Address() == null) {
             getIp(nic, dest.getPod(), vm, network);
-            nic.setStrategy(ReservationStrategy.Create);
+            if (!_elasticIpEnabled)
+                nic.setStrategy(ReservationStrategy.Create); //ip can only be released by destroying the vm
+            else 
+                nic.setStrategy(ReservationStrategy.Start); //ip is released whenever the vm is stopped.
         }
         
         DataCenter dc = _dcDao.findById(network.getDataCenterId());
@@ -148,9 +155,7 @@ public class DirectPodBasedNetworkGuru extends DirectNetworkGuru {
         nic.setDns1(dc.getDns1());
         nic.setDns2(dc.getDns2());
         if (_elasticIpEnabled && vm.getType()==Type.User) {
-            if (nic.getElasticIpAddressId() == null) {
-                PublicIp ip = _networkMgr.assignElasticPublicIpAddress(dc.getId(), vm.getId(),  vm.getOwner(), nic.getNetworkId());
-            }
+            PublicIp ip = _networkMgr.assignElasticPublicIpAddress(dc.getId(), vm.getId(),  vm.getOwner(), nic.getNetworkId());
         }
         txn.commit();
         
@@ -172,9 +177,28 @@ public class DirectPodBasedNetworkGuru extends DirectNetworkGuru {
     public boolean release(NicProfile nic, VirtualMachineProfile<? extends VirtualMachine> vm, String reservationId) {
         boolean result = true;
         if (_elasticIpEnabled) {
-            if (nic.getElasticIpAddressId() != null) {
-                result = _networkMgr.releasePublicIpAddress(nic.getElasticIpAddressId(), 
-                        UserContext.current().getCallerUserId(), vm.getOwner());
+            List<IPAddressVO> assocIps = _ipAddressDao.findAllByAssociatedVmId(vm.getId());
+            for (IPAddressVO ip: assocIps){
+                if (ip.getAccountId() == Account.ACCOUNT_ID_SYSTEM) {
+                    //FIXME: should we call _networkMgr.releasePublicIpAddress() instead?
+                    _ipAddressDao.unassignIpAddress(ip.getId());
+                } else {
+                    ip.setOneToOneNat(false);
+                    ip.setAssociatedWithVmId(null);
+                    _ipAddressDao.update(ip.getId(), ip);
+                    
+                }
+            }
+            //also release the nic guest ip
+            IPAddressVO guestIp = _ipAddressDao.findBySourceNetworkAndIp(nic.getNetworkId(), nic.getIp4Address());
+            //Long userId = UserContext.current().getCallerUserId();
+            //Account caller = UserContext.current().getCaller();
+            //result = _networkMgr.releasePublicIpAddress(guestIp.getId(), userId, caller);
+            //FIXME: the above shouldn't be needed since there was no usage event for the assignmentan
+            _ipAddressDao.unassignIpAddress(guestIp.getId());
+            if (result) {
+                nic.setElasticIpVmId(null);
+                nic.setIp4Address(null);
             }
         }
         return result && super.release(nic, vm, reservationId);
