@@ -60,7 +60,6 @@ import com.cloud.dc.Vlan.VlanType;
 import com.cloud.dc.VlanVO;
 import com.cloud.dc.dao.AccountVlanMapDao;
 import com.cloud.dc.dao.DataCenterDao;
-import com.cloud.dc.dao.DcDetailsDao;
 import com.cloud.dc.dao.HostPodDao;
 import com.cloud.dc.dao.PodVlanMapDao;
 import com.cloud.dc.dao.VlanDao;
@@ -1303,11 +1302,25 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             NetworkVO network = _networksDao.findById(nic.getNetworkId());
             if (nic.getState() == Nic.State.Reserved || nic.getState() == Nic.State.Reserving) {
                 Nic.State originalState = nic.getState();
+                NicProfile profile = new NicProfile(nic, network, null, null, null);
+                //FIXME: don't eat the exceptions.
+                try {
+                    for (NetworkElement element : _networkElements) {
+                        if (s_logger.isDebugEnabled()) {
+                            s_logger.debug("Asking " + element.getName() + " to release " + nic);
+                        }
+                        //FIXME: element probably doesn't need reservation context: fix the api
+                        element.release(network, profile, vmProfile, null); 
+                    } 
+                } catch (Exception e) {
+                    s_logger.warn("Caught an exception while releasing nic, pushing on (probably wrong thing to do eh?)", e);
+                    continue; // on to the next nic
+                }
                 if (nic.getReservationStrategy() == Nic.ReservationStrategy.Start) {
                     NetworkGuru guru = _networkGurus.get(network.getGuruName());
                     nic.setState(Nic.State.Releasing);
                     _nicDao.update(nic.getId(), nic);
-                    NicProfile profile = new NicProfile(nic, network, null, null, null);
+                    profile = new NicProfile(nic, network, null, null, null);
                     if (guru.release(profile, vmProfile, nic.getReservationId())) {
                         applyProfileToNicForRelease(nic, profile);
                         nic.setState(Nic.State.Allocated);

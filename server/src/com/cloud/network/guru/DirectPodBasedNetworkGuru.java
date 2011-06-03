@@ -121,7 +121,10 @@ public class DirectPodBasedNetworkGuru extends DirectNetworkGuru {
             throws InsufficientVirtualNetworkCapcityException, InsufficientAddressCapacityException, ConcurrentOperationException {
         if (nic.getIp4Address() == null) {
             getIp(nic, dest.getPod(), vm, network);
-            nic.setStrategy(ReservationStrategy.Create); //ip can only be released by destroying the vm
+            if (!_elasticIpEnabled)
+                nic.setStrategy(ReservationStrategy.Create); //ip can only be released by destroying the vm
+            else
+                nic.setStrategy(ReservationStrategy.Start); //ip is released whenever the vm is stopped.
             
         }
         

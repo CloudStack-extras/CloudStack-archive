@@ -134,7 +134,22 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
     }
 
     @Override
-    public boolean release(Network network, NicProfile nic, VirtualMachineProfile<? extends VirtualMachine> vm, ReservationContext context) {
+    public boolean release(Network network, NicProfile nic, VirtualMachineProfile<? extends VirtualMachine> vm, ReservationContext context)
+                throws ConcurrentOperationException, ResourceUnavailableException {
+        if (vm.getType() != VirtualMachine.Type.User) {
+            return true;
+        }
+        if (nic.getElasticIpVmId() == null) {
+            s_logger.info("Hmmm.. we got to releasing a nic, but there isn't a elastic ip vm to found");
+            return true;
+        }
+        DomainRouterVO elasticIpVm = _routerDao.findById(nic.getElasticIpVmId());
+        IPAddressVO publicIp = _ipAddressDao.findByAssociatedVmId(vm.getId());
+        if (publicIp == null) {
+            s_logger.info("Hmmm.. we got to releasing a nic, but there isn't a public ip to found");
+            return true;
+        }
+        _routerMgr.associateElasticIp(elasticIpVm, publicIp.getId(), nic.getIp4Address(), false, null);
         return true;
     }
     
