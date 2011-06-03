@@ -315,6 +315,7 @@ public class NicVO implements Nic {
     }
 
 
+    @Override
     public Long getElasticIpVmId() {
         return elasticIpVmId;
     }
