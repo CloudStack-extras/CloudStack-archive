@@ -146,4 +146,6 @@ public interface Nic {
     VirtualMachine.Type getVmType();
 
     AddressFormat getAddressFormat();
+
+    Long getElasticIpVmId();
 }

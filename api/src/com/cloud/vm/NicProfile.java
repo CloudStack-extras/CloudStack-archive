@@ -209,6 +209,7 @@ public class NicProfile {
         this.netmask = nic.getNetmask();
         this.isSecurityGroupEnabled = network.isSecurityGroupEnabled();
         this.vmId = nic.getInstanceId();
+        this.elasticIpVmId = nic.getElasticIpVmId();
 
         if (networkRate != null) {
             this.networkRate = networkRate;
