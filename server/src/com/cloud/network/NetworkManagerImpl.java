@@ -455,16 +455,18 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
 
         boolean success = true;
-        for (NetworkElement element : _networkElements) {
-            try {
-                s_logger.trace("Asking " + element + " to apply ip associations");
-                element.applyIps(network, publicIps);
-            } catch (ResourceUnavailableException e) {
-                success = false;
-                if (!continueOnError) {
-                    throw e;
-                } else {
-                    s_logger.debug("Resource is not available: " + element.getName(), e);
+        if (network.getGuestType() != GuestIpType.Direct) {
+            for (NetworkElement element : _networkElements) {
+                try {
+                    s_logger.trace("Asking " + element + " to apply ip associations");
+                    element.applyIps(network, publicIps);
+                } catch (ResourceUnavailableException e) {
+                    success = false;
+                    if (!continueOnError) {
+                        throw e;
+                    } else {
+                        s_logger.debug("Resource is not available: " + element.getName(), e);
+                    }
                 }
             }
         }
@@ -618,10 +620,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
 
         Network network = _networksDao.findById(ipToAssoc.getAssociatedWithNetworkId());
-        if (network.getGuestType() == GuestIpType.Direct) {
-            return ipToAssoc; // no actual associations done with public ips. 
-        }
-
+       
         IPAddressVO ip = _ipAddressDao.findById(cmd.getEntityId());
         boolean success = false;
         try {
