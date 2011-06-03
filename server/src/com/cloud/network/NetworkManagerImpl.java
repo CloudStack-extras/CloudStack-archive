@@ -2946,6 +2946,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
     }
     
+    @Override
     @DB
     public boolean applyElasticIpAssociations(Network network, IPAddressVO userIp, boolean associate) throws ResourceUnavailableException {
         List<PublicIp> publicIps = new ArrayList<PublicIp>();
@@ -2971,12 +2972,12 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             userIp.setState(State.Allocated);
             for (IPAddressVO ip: assocIps) {
                 if (ip.getId() != userIp.getId()) {
-                    ip.setAssociatedWithVmId(null);
-                    _ipAddressDao.update(ip.getId(), ip);
+
                     if (ip.getAccountId() == Account.ACCOUNT_ID_SYSTEM) {
                         _ipAddressDao.unassignIpAddress(ip.getId());
                     } else {
-                        ip.setState(State.Allocating);
+                        ip.setState(State.Allocated);
+                        ip.setAssociatedWithVmId(null);
                         ip.setOneToOneNat(false);
                         _ipAddressDao.update(ip.getId(), ip);
                     }
