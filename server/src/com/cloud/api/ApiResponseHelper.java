@@ -1314,26 +1314,26 @@ public class ApiResponseHelper implements ResponseGenerator {
 
             List<NicProfile> nicProfiles = ApiDBUtils.getNics(systemVM);
             for (NicProfile singleNicProfile : nicProfiles) {
-               Network network = ApiDBUtils.findNetworkById(singleNicProfile.getNetworkId());
-               if (network != null) {
-                   TrafficType trafficType = TrafficType.Public;
-                   if(zone.getNetworkType() == NetworkType.Basic || zone.isSecurityGroupEnabled()) {
-                       trafficType = TrafficType.Guest;
-                   }                  
-                   if (network.getTrafficType() == trafficType) {
-                       vmResponse.setPublicIp(singleNicProfile.getIp4Address());
-                       vmResponse.setPublicMacAddress(singleNicProfile.getMacAddress());
-                       vmResponse.setPublicNetmask(singleNicProfile.getNetmask());
-                   } else if (network.getTrafficType() == TrafficType.Management) {
-                       vmResponse.setPrivateIp(singleNicProfile.getIp4Address());
-                       vmResponse.setPrivateMacAddress(singleNicProfile.getMacAddress());
-                       vmResponse.setPrivateNetmask(singleNicProfile.getNetmask());
-                   } else if (network.getTrafficType() == TrafficType.Control) {
-                       vmResponse.setLinkLocalIp(singleNicProfile.getIp4Address());
-                       vmResponse.setLinkLocalMacAddress(singleNicProfile.getMacAddress());
-                       vmResponse.setLinkLocalNetmask(singleNicProfile.getNetmask());
-                   }
-               }
+                Network network = ApiDBUtils.findNetworkById(singleNicProfile.getNetworkId());
+                if (network != null) {
+                    if (network.getTrafficType() == TrafficType.Public) {
+                        vmResponse.setPublicIp(singleNicProfile.getIp4Address());
+                        vmResponse.setPublicMacAddress(singleNicProfile.getMacAddress());
+                        vmResponse.setPublicNetmask(singleNicProfile.getNetmask());
+                    } else if (network.getTrafficType() == TrafficType.Management) {
+                        vmResponse.setPrivateIp(singleNicProfile.getIp4Address());
+                        vmResponse.setPrivateMacAddress(singleNicProfile.getMacAddress());
+                        vmResponse.setPrivateNetmask(singleNicProfile.getNetmask());
+                    } else if (network.getTrafficType() == TrafficType.Control) {
+                        vmResponse.setLinkLocalIp(singleNicProfile.getIp4Address());
+                        vmResponse.setLinkLocalMacAddress(singleNicProfile.getMacAddress());
+                        vmResponse.setLinkLocalNetmask(singleNicProfile.getNetmask());
+                    } else if (network.getTrafficType() == TrafficType.Guest) {
+                        vmResponse.setPublicIp(singleNicProfile.getIp4Address());
+                        vmResponse.setPublicMacAddress(singleNicProfile.getMacAddress());
+                        vmResponse.setPublicNetmask(singleNicProfile.getNetmask());
+                    }
+                }
             }
         }
         vmResponse.setObjectName("systemvm");
