@@ -18,4 +18,12 @@ public class IPAddressDaoImplTest extends TestCase{
             System.out.println("Public: " + r.first() + " Guest:" + r.second());
         }
     }
+    
+    public void testIsElasticIp() {
+        IPAddressDaoImpl ipDao = ComponentLocator.inject(IPAddressDaoImpl.class);
+        
+        boolean result = ipDao.isAssociatedElasticIp(12);
+        System.out.println(result);
+    }
+    
 }
