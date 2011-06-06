@@ -895,7 +895,7 @@ def cleanup_rules(session, args):
     cleanup = []
     for chain in chains:
         if 1 in [ chain.startswith(c) for c in ['r-', 'i-', 's-', 'v-'] ]:
-            vm = session.xenapi.VM.get_by_name_label(vm_name)
+            vm = session.xenapi.VM.get_by_name_label(chain)
             if len(vm) != 1:
                 util.SMlog("chain " + chain + " does not correspond to a vm, cleaning up")
                 cleanup.append(vm_name)
