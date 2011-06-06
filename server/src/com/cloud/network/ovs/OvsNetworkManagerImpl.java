@@ -395,7 +395,7 @@ public class OvsNetworkManagerImpl implements OvsNetworkManager {
 		long hostId = dest.getHost().getId();
 		long accountId = instance.getAccountId();
 		List<UserVmVO>vms = _userVmDao.listByAccountId(accountId);
-		/* FIXME: Redundant virtual router doesn't support OVM */
+		/* FIXME: Redundant virtual router doesn't support OVS */
 		DomainRouterVO router = _routerDao.findBy(accountId, instance.getDataCenterId()).get(0);
 		List<VMInstanceVO>ins = new ArrayList<VMInstanceVO>();
 		ins.addAll(vms);
@@ -539,7 +539,7 @@ public class OvsNetworkManagerImpl implements OvsNetworkManager {
 		}
 		
 		long accountId = instance.getAccountId();
-		/* FIXME: Redundant virtual router doesn't support OVM */
+		/* FIXME: Redundant virtual router doesn't support OVS */
 		DomainRouterVO router = _routerDao.findBy(accountId, instance.getDataCenterId()).get(0);
 		if (router == null) {
 			return;
@@ -641,7 +641,7 @@ public class OvsNetworkManagerImpl implements OvsNetworkManager {
 		}
 		
 		if (tellRouter && instance.getType() != VirtualMachine.Type.DomainRouter) {
-		    /* FIXME: Redundant virtual router doesn't support OVM */
+		    /* FIXME: Redundant virtual router doesn't support OVS */
 			DomainRouterVO router = _routerDao.findBy(accountId, instance.getDataCenterId()).get(0);
 			if (router != null) {
 				affectedVms.add(new Long(router.getId()));
