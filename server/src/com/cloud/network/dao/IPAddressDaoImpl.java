@@ -322,6 +322,39 @@ public class IPAddressDaoImpl extends GenericDaoBase<IPAddressVO, Long> implemen
         }
         return result;
     }
+    
+    @Override
+    public boolean isAssociatedElasticIp(long ipId) {
+        Transaction txn = Transaction.currentTxn();
+        PreparedStatement pstmt = null;
+        List< Long> result = new ArrayList<Long>();
+        ResultSet rs = null;
+        try {
+            String sql = "select count(*)  from nics n, user_ip_address u, "
+                       + "user_vm v where v.id = u.vm_id and u.vm_id = n.instance_id "
+                       + "and u.id = ? and n.elastic_ip_vm_id is not null;";
+            pstmt = txn.prepareStatement(sql);
+            
+            pstmt.setLong(1, ipId);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                result.add(new Long(rs.getLong(1)));
+            }
+        } catch (Exception e) {
+            s_logger.warn("Exception: ", e);
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+            } catch (SQLException e) {
+            }
+        }
+        return result.size() > 0 && result.get(0) > 0;
+    }
 
     @Override
     public IPAddressVO findBySourceNetworkAndIp(long networkId, String ipAddress) {

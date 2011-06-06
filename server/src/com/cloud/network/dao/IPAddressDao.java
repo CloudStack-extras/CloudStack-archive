@@ -59,5 +59,7 @@ public interface IPAddressDao extends GenericDao<IPAddressVO, Long> {
 	IPAddressVO findBySourceNetworkAndIp(long networkId, String ipAddress);
 
     List<Pair<String, String>> findAllElasticIpsForElasticIpVm(long elasticIpVmId);
+
+    boolean isAssociatedElasticIp(long ipId);
 	
 }
