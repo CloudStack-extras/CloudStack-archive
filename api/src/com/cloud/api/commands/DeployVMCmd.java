@@ -147,24 +147,27 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
     }
 
     public List<Long> getSecurityGroupIdList() {
-        if (securityGroupIdList != null && securityGroupIdList != null) {
+        if (securityGroupNameList != null && securityGroupIdList != null) {
             throw new InvalidParameterValueException("securitygroupids parameter is mutually exclusive with securitygroupnames parameter");
+        } else if (securityGroupNameList == null && securityGroupIdList == null) {
+            throw new InvalidParameterValueException("securitygroupids or securitygroupnames must be specified");
         }
         
        //transform group names to ids here
        if (securityGroupNameList != null) {
-            securityGroupIdList = new ArrayList<Long>();
+            List<Long> securityGroupIds = new ArrayList<Long>();
             for (String groupName : securityGroupNameList) {
                 Long groupId = _responseGenerator.getSecurityGroupId(groupName, getEntityOwnerId());
                 if (groupId == null) {
                     throw new InvalidParameterValueException("Unable to find group by name " + groupName + " for account " + getEntityOwnerId());
                 } else {
-                    securityGroupIdList.add(groupId);
+                    securityGroupIds.add(groupId);
                 }
             }    
+            return securityGroupIds;
+        } else {
+            return securityGroupIdList;
         }
-       
-       return securityGroupIdList;
     }
 
     public Long getServiceOfferingId() {
@@ -334,15 +337,15 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
 					if (getNetworkIds() != null) {
 						throw new InvalidParameterValueException("Can't specify network Ids in Basic zone");
 					} else {
-						vm = _userVmService.createBasicSecurityGroupVirtualMachine(zone, serviceOffering, template, securityGroupIdList, owner, name,
+						vm = _userVmService.createBasicSecurityGroupVirtualMachine(zone, serviceOffering, template, getSecurityGroupIdList(), owner, name,
 								displayName, diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, destinationHost);
 					}
 				} else {
 					if (zone.isSecurityGroupEnabled()) {
-						vm = _userVmService.createAdvancedSecurityGroupVirtualMachine(zone, serviceOffering, template, getNetworkIds(), securityGroupIdList,
+						vm = _userVmService.createAdvancedSecurityGroupVirtualMachine(zone, serviceOffering, template, getNetworkIds(), getSecurityGroupIdList(),
 								owner, name, displayName, diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, destinationHost);
 					} else {
-						if (securityGroupIdList != null && !securityGroupIdList.isEmpty()) {
+						if (getSecurityGroupIdList() != null && !getSecurityGroupIdList().isEmpty()) {
 							throw new InvalidParameterValueException("Can't create vm with security groups; security group feature is not enabled per zone");
 						}
 						vm = _userVmService.createAdvancedVirtualMachine(zone, serviceOffering, template, getNetworkIds(), owner, name, displayName,
