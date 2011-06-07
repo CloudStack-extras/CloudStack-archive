@@ -193,6 +193,12 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
             }
              UserVmVO vm = _userVmDao.findById(vmId);
              NicVO nic = _nicDao.findByInstanceIdAndNetworkId(network.getId(), vmId);
+             if (vm.getState() != VirtualMachine.State.Running) {
+                 throw new ResourceUnavailableException("Instance (vm) is not in a state that supports this operation", UserVm.class, vmId);
+             }
+             if (nic.getIp4Address() == null) {
+                 throw new ResourceUnavailableException("Instance (vm) does not have a guest ip address", UserVm.class, vmId);
+             }
              DomainRouterVO elasticIpVm = findElasticIpVmForUserVm(network.getId(), vm);
              List<IPAddressVO> assocIps = _ipAddressDao.findAllByAssociatedVmId(publicIp.getAssociatedWithVmId());
              Long oldId = null;
