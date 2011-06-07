@@ -434,6 +434,14 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
         if (ip != null && dcVO.getNetworkType() == NetworkType.Advanced) {
             throw new InvalidParameterValueException("Failed to enable static nat for the ip address id=" + ipId + " as vm id=" + " is already associated with ip id=" + ip.getId());
         }
+        
+        if (dcVO.getNetworkType() == NetworkType.Basic) {
+            if (vm.getState() != VirtualMachine.State.Running) {
+                //FIXME: should probably enclose the check inside a transaction that includes
+                //the update below
+                throw new InvalidParameterValueException("The requested instance is not in a state that can support this operation");
+            }
+        }
 
         ipAddress.setOneToOneNat(true);
         ipAddress.setAssociatedWithVmId(vmId);
