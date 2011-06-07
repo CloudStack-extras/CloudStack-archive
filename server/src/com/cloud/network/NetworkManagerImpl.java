@@ -454,20 +454,20 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
 
         boolean success = true;
-        if (network.getGuestType() != GuestIpType.Direct) {
-            for (NetworkElement element : _networkElements) {
-                try {
-                    s_logger.trace("Asking " + element + " to apply ip associations");
-                    element.applyIps(network, publicIps);
-                } catch (ResourceUnavailableException e) {
-                    success = false;
-                    if (!continueOnError) {
-                        throw e;
-                    } else {
-                        s_logger.debug("Resource is not available: " + element.getName(), e);
-                    }
+
+        for (NetworkElement element : _networkElements) {
+            try {
+                s_logger.trace("Asking " + element + " to apply ip associations");
+                element.applyIps(network, publicIps);
+            } catch (ResourceUnavailableException e) {
+                success = false;
+                if (!continueOnError) {
+                    throw e;
+                } else {
+                    s_logger.debug("Resource is not available: " + element.getName(), e);
                 }
             }
+
         }
 
         if (success) {
@@ -1404,6 +1404,13 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         // Check for account wide pool. It will have an entry for account_vlan_map.
         if (_accountVlanMapDao.findAccountVlanMap(ipVO.getAccountId(), ipVO.getVlanId()) != null) {
             throw new InvalidParameterValueException("Ip address id=" + ipAddressId + " belongs to Account wide IP pool and cannot be disassociated");
+        }
+        
+        if (_ipAddressDao.isAssociatedElasticIp(ipVO.getId())) {
+            IpAddress result = disassociateElasticIP(ipVO);
+            if (result == null) {
+                throw new CloudRuntimeException("Failed to disassociate elastic ip address " + ipVO.getAddress().addr());
+            }
         }
 
         return releasePublicIpAddress(ipAddressId, userId, caller);
@@ -2927,6 +2934,12 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             s_logger.debug("Unable to find ip address by id: " + cmd.getIpAddressId());
             return null;
         }
+        
+        return disassociateElasticIP(ipToDisAssoc);
+    }
+    
+    
+    protected IpAddress disassociateElasticIP(IPAddressVO ipToDisAssoc) {
 
         Network network = _networksDao.findById(ipToDisAssoc.getAssociatedWithNetworkId());
         Account systemAccount = _accountMgr.getSystemAccount();
@@ -2941,9 +2954,9 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         try {
             success = applyElasticIpAssociations(network, newPublicIpForVm.ip(), false);
             if (success) {
-                s_logger.debug("Successfully disassociated ip address " + ipToDisAssoc.getAddress().addr() + " for account " + owner.getId() + " in zone " + network.getDataCenterId());
+                s_logger.debug("Successfully disassociated ip address " + ipToDisAssoc.getAddress().addr()  + " in zone " + network.getDataCenterId());
             } else {
-                s_logger.warn("Failed to disassociate ip address " + ipToDisAssoc.getAddress().addr() + " for account " + owner.getId() + " in zone " + network.getDataCenterId());
+                s_logger.warn("Failed to disassociate ip address " + ipToDisAssoc.getAddress().addr()  + " in zone " + network.getDataCenterId());
             }
             return ipToDisAssoc;
         } catch (ResourceUnavailableException e) {
