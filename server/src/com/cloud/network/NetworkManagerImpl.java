@@ -2924,12 +2924,10 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     @Override
     public IpAddress disassociateElasticIP(DisableStaticNatCmd cmd) {
         Account caller = UserContext.current().getCaller();
-        Account owner = null;
 
         IPAddressVO ipToDisAssoc = _ipAddressDao.findById(cmd.getIpAddressId());
         if (ipToDisAssoc != null) {
             _accountMgr.checkAccess(caller, ipToDisAssoc);
-            owner = _accountMgr.getAccount(ipToDisAssoc.getAccountId());
         } else {
             s_logger.debug("Unable to find ip address by id: " + cmd.getIpAddressId());
             return null;
@@ -2997,7 +2995,6 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             userIp.setState(State.Allocated);
             for (IPAddressVO ip: assocIps) {
                 if (ip.getId() != userIp.getId()) {
-
                     if (ip.getAccountId() == Account.ACCOUNT_ID_SYSTEM) {
                         _ipAddressDao.unassignIpAddress(ip.getId());
                     } else {
