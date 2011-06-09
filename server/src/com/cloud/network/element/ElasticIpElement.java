@@ -143,6 +143,7 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
         if (vm.getType() != VirtualMachine.Type.User) {
             return true;
         }
+        //We get here when the user vm is stopping or stopped. We need to release the association of public -> guest
         if (nic.getElasticIpVmId() == null) {
             s_logger.info("Hmmm.. we got to releasing a nic, but there isn't a elastic ip vm to found");
             return true;
@@ -190,6 +191,15 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
         if (network.getGuestType() != GuestIpType.Direct)
             return false;
         boolean result = true;
+        //this is a little it convoluted since it can get here in several different contexts
+        //context #1: associate public ip with a vm. In this case we need to release the old public ip
+        //            if the old ip was system owned then it needs to get unassigned (return to the free pool). 
+        //            if the vm is not running, then disallow it.
+        //context #2: disassociate public ip with a vm. In this case a new public ip has been allocated for the vm and is
+        //            passed in the ipAddressList. We have to disassociate the old public ip address. If the old ip was
+        //            system owned then it needs to get unassigned (returned to the free pool)
+        //context #3: release an elastic ip. this is like context #2.
+        //context #4: restart network or restart elastic ip vm. In this case there is no old ip to disassociate
         for (PublicIpAddress publicIp: ipAddressList){
             Long vmId = publicIp.getAssociatedWithVmId();
             if (vmId == null) {
