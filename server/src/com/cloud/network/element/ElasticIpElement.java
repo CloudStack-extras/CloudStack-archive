@@ -121,6 +121,10 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
             Map<VirtualMachineProfile.Param, Object> params = new HashMap<VirtualMachineProfile.Param, Object>(1);
             params.put(VirtualMachineProfile.Param.RestartNetwork, true);
             s_logger.debug("Asking router manager to deploy elastic ip vm if necessary");
+            //What happens really is that the DhcpElement gets the prepare request first and calls 
+            //addVirtualMachineIntoNetwork on the VirtualNetworkApplianceManager. That routine needs to know the 
+            //elastic ip vm's guest ip so that the dhcp server can tell the user vm its default route goes through
+            //the elastic ip vm. 
             VirtualRouter eipVm = _routerMgr.deployElasticIpVm(network, dest, context.getAccount(), params);
             s_logger.debug("Elastic ip vm = " + eipVm);
             if (eipVm != null) {
