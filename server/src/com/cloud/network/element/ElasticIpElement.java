@@ -250,7 +250,7 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
         DeployDestination dest = new DeployDestination(dc, null, null, null);
         DomainRouterVO router = _routerDao.findByNetwork(network.getId());
         if (router == null) {
-            s_logger.trace("Can't find dhcp element in network " + network.getId());
+            s_logger.trace("Can't find elastic ip vm element in network " + network.getId());
             return true;
         }
         
@@ -262,13 +262,13 @@ public class ElasticIpElement extends AdapterBase implements NetworkElement{
                 result = _routerMgr.rebootRouter(router.getId(), false);
             }
             if (result == null) {
-                s_logger.warn("Failed to restart dhcp element " + router + " as a part of netowrk " + network + " restart");
+                s_logger.warn("Failed to restart elastic ip vm element " + router + " as a part of netowrk " + network + " restart");
                 return false;
             } else {
                 return true;
             }
         } else {
-            s_logger.trace("Dhcp element doesn't handle network restart for the network " + network);
+            s_logger.trace("Elastic ip vm element doesn't handle network restart for the network " + network);
             return true;
         }
     }
