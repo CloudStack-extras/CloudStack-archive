@@ -1339,7 +1339,7 @@ public class NetworkManagerImpl implements NetworkManager, VirtualMachineManager
         			vifMacAddress = macAddresses[1];
         		}
 
-        		cmds[i++] = new IPAssocCommand(router.getInstanceName(), router.getPrivateIpAddress(), ip.getAddress(), add, firstIP, sourceNat, vlanId, vlanGateway, vlanNetmask, vifMacAddress);
+        		cmds[i++] = new IPAssocCommand(router.getInstanceName(), router.getPrivateIpAddress(), ip.getAddress(), add, firstIP, sourceNat, vlanId, vlanGateway, vlanNetmask, vifMacAddress, _networkRate);
 
         		firstIP = false;
         	}
@@ -1385,7 +1385,7 @@ public class NetworkManagerImpl implements NetworkManager, VirtualMachineManager
 			String[] macAddresses = _dcDao.getNextAvailableMacAddressPair(ip.getDataCenterId());
 			vifMacAddress = macAddresses[1];
 		}
-        IPAssocCommand cmd = new IPAssocCommand(router.getInstanceName(), router.getPrivateIpAddress(), ip.getAddress(), add, firstIP, sourceNat, vlanId, vlanGateway, vlanNetmask, vifMacAddress);
+        IPAssocCommand cmd = new IPAssocCommand(router.getInstanceName(), router.getPrivateIpAddress(), ip.getAddress(), add, firstIP, sourceNat, vlanId, vlanGateway, vlanNetmask, vifMacAddress, _networkRate);
         Answer[] answers = null;
         try {
             answers = _agentMgr.send(router.getHostId(), new Command[]{cmd}, false);

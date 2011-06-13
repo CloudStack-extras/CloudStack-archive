@@ -949,7 +949,7 @@ public abstract class CitrixResourceBase implements StoragePoolResource, ServerR
     }
 
     protected void assignPublicIpAddress(final String vmName, final String privateIpAddress, final String publicIpAddress, final boolean add, final boolean firstIP,
-            final boolean sourceNat, final String vlanId, final String vlanGateway, final String vlanNetmask, final String vifMacAddress) throws InternalErrorException {
+            final boolean sourceNat, final String vlanId, final String vlanGateway, final String vlanNetmask, final String vifMacAddress, final int networkRate) throws InternalErrorException {
 
         try {
             Connection conn = getConnection();
@@ -981,7 +981,7 @@ public abstract class CitrixResourceBase implements StoragePoolResource, ServerR
                     throw new InternalErrorException("There were no more available slots for a new VIF on router: " + router.getNameLabel(conn));
                 }
                 
-                correctVif = createVIF(conn, router, vifMacAddress, vlanId, 0, vifDeviceNum, true);              
+                correctVif = createVIF(conn, router, vifMacAddress, vlanId, networkRate, vifDeviceNum, true);              
                 correctVif.plug(conn);
                 // Add iptables rule for network usage
                 networkUsage(privateIpAddress, "addVif", "eth" + correctVif.getDevice(conn));
@@ -1074,7 +1074,7 @@ public abstract class CitrixResourceBase implements StoragePoolResource, ServerR
     protected Answer execute(final IPAssocCommand cmd) {
         try {
             assignPublicIpAddress(cmd.getRouterName(), cmd.getRouterIp(), cmd.getPublicIp(), cmd.isAdd(), cmd.isFirstIP(), cmd.isSourceNat(), cmd.getVlanId(),
-                    cmd.getVlanGateway(), cmd.getVlanNetmask(), cmd.getVifMacAddress());
+                    cmd.getVlanGateway(), cmd.getVlanNetmask(), cmd.getVifMacAddress(), cmd.getNetworkRate());
         } catch (InternalErrorException e) {
             return new Answer(cmd, false, e.getMessage());
         }
