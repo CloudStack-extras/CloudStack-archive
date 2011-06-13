@@ -182,7 +182,6 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory {
 			11);
 	protected List<Pair<Integer, Listener>> _cmdMonitors = new ArrayList<Pair<Integer, Listener>>(
 			11);
-    protected List<Long> _loadingAgents = new ArrayList<Long>();
 	protected int _monitorId = 0;
 
 	protected NioServer _connection;
@@ -926,13 +925,6 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory {
 		if (attache != null) {
 			disconnect(attache, event, investigate);
 		} else {
-            synchronized (_loadingAgents) {
-                if (_loadingAgents.contains(hostId)) {
-                    s_logger.info("Host " + hostId + " is being loaded so no disconnects needed.");
-                    return;
-                }
-            }
-
 			HostVO host = _hostDao.findById(hostId);
 			if (host != null && host.getRemoved() == null) {
 				_hostDao.updateStatus(host, event, _nodeId);
@@ -1229,68 +1221,54 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory {
 				.getDetails(), null));
 	}
 
-    protected AgentAttache simulateStart(Long id, ServerResource resource, Map<String, String> details, boolean old, List<String> hostTags) throws IllegalArgumentException {
+	protected AgentAttache simulateStart(Long id, ServerResource resource,
+			Map<String, String> details, boolean old, List<String> hostTags)
+			throws IllegalArgumentException {
         HostVO host = null;
         if (id != null) {
-            synchronized (_loadingAgents) {
-                s_logger.debug("Adding to loading agents " + id);
-                _loadingAgents.add(id);
-            }
-        }
-        AgentAttache attache = null;
-        StartupCommand[] cmds = null;
-        try {
-            if (id != null) {
-                host = _hostDao.findById(id);
-                if (!_hostDao.directConnect(host, _nodeId, false)) {
-                    s_logger.info("MS " + host.getManagementServerId() + " is loading " + host);
-                    return null;
-                }
-            }
-
-            cmds = resource.initialize();
-            if (cmds == null) {
-                s_logger.info("Unable to fully initialize the agent because no StartupCommands are returned");
+            host = _hostDao.findById(id);
+            if (!_hostDao.directConnect(host, _nodeId, false)) {
+                s_logger.info("MS " + host.getManagementServerId() + " is loading " + host);
                 return null;
             }
-
-            if (host != null) {
-                if (!_hostDao.directConnect(host, _nodeId, true)) {
-                    host = _hostDao.findById(id);
-                    s_logger.info("MS " + host.getManagementServerId() + " is loading " + host + " after it has been initialized.");
-                    return null;
-                }
-            }
-
-            if (s_logger.isDebugEnabled()) {
-                s_logger.debug("Startup request from directly connected host: " + new Request(0l, -1l, -1l, cmds, true, false).toString());
-            }
-            try {
-                attache = handleDirectConnect(resource, cmds, details, old, hostTags);
-            } catch (IllegalArgumentException ex) {
-                s_logger.warn("Unable to connect due to ", ex);
-                throw ex;
-            } catch (Exception e) {
-                s_logger.warn("Unable to connect due to ", e);
-            }
-
-        } finally {
+        }
+        StartupCommand[] cmds = resource.initialize();
+        if (cmds == null) {
+            s_logger.info("Unable to fully initialize the agent because no StartupCommands are returned");
             if (id != null) {
-                synchronized (_loadingAgents) {
-                    _loadingAgents.remove(id);
-                }
-            }
-            if (attache == null) {
-                if (cmds != null) {
-                    resource.disconnected();
-                }
-                if (host != null) {
-                    _hostDao.updateStatus(host, Event.AgentDisconnected, _nodeId);
-                }
+                _hostDao.updateStatus(host, Event.AgentDisconnected, _nodeId);
             }
         }
-        return attache;
-    }
+
+        if (host != null) {
+            if (!_hostDao.directConnect(host, _nodeId, true)) {
+                host = _hostDao.findById(id);
+                s_logger.info("MS " + host.getManagementServerId() + " is loading " + host + " after it has been initialized.");
+				resource.disconnected();
+				return null;
+			}
+		}
+		AgentAttache attache = null;
+		if (s_logger.isDebugEnabled()) {
+			s_logger.debug("Startup request from directly connected host: "
+					+ new Request(0, -1, -1, cmds, false).toString());
+		}
+		try {
+			attache = handleDirectConnect(resource, cmds, details, old,
+					hostTags);
+		} catch (IllegalArgumentException ex) {
+			s_logger.warn("Unable to connect due to ", ex);
+			throw ex;
+		} catch (Exception e) {
+			s_logger.warn("Unable to connect due to ", e);
+		}
+
+		if (attache == null) {
+			resource.disconnected();
+			return null;
+		}
+		return attache;
+	}
 
 	@Override
 	public boolean stop() {
@@ -2550,6 +2528,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory {
 			}
 		}
 	}
+
 
 	protected AgentManagerImpl() {
 	}

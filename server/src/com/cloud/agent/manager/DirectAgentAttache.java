@@ -41,9 +41,9 @@ import com.cloud.utils.concurrency.NamedThreadFactory;
 
 public class DirectAgentAttache extends AgentAttache {
     private final static Logger s_logger = Logger.getLogger(DirectAgentAttache.class);
-
+   
     static ScheduledExecutorService s_executor = Executors.newScheduledThreadPool(100, new NamedThreadFactory("DirectAgent"));
-
+    
     ServerResource _resource;
     List<ScheduledFuture<?>> _futures = new ArrayList<ScheduledFuture<?>>();
     AgentManagerImpl _mgr;

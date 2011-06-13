@@ -78,18 +78,14 @@ public class ConnectedAgentAttache extends AgentAttache {
             return false;
         }
     }
-
+    
     @Override
-    protected void finalize() throws Throwable {
-        try {
-            assert _link == null : "Duh...Says you....Forgot to call disconnect()!";
-            synchronized (this) {
-                if (_link != null) {
-                    disconnect(Status.Alert);
-                }
+    public void finalize() {
+        assert _link == null : "Duh...Says you....Forgot to call disconnect()!";
+        synchronized(this) {
+            if (_link != null) {
+                disconnect(Status.Alert);
             }
-        } finally {
-            super.finalize();
         }
     }
 }

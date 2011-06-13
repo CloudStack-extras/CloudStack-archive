@@ -283,6 +283,7 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
     public void markHostsAsDisconnected(long msId, Status... states) {
         SearchCriteria sc = MsStatusSearch.create();
         sc.setParameters("ms", msId);
+        sc.setParameters("statuses", (Object[]) states);
 
         HostVO host = createForUpdate();
         host.setManagementServerId(null);

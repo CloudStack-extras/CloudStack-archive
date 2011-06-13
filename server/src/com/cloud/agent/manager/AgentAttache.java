@@ -56,9 +56,8 @@ import com.cloud.agent.api.MaintainCommand;
  */
 public abstract class AgentAttache {
     private static final Logger s_logger = Logger.getLogger(AgentAttache.class);
-
     private static final ScheduledExecutorService s_listenerExecutor = Executors.newScheduledThreadPool(10, new NamedThreadFactory("ListenerTimer"));
-
+    
     protected static final Comparator<Request> s_reqComparator =
         new Comparator<Request>() {
             @Override
