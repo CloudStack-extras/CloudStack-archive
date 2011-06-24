@@ -101,7 +101,7 @@ public class VMInstanceVO implements VirtualMachine, FiniteStateObject<State, Vi
     @Column(name="data_center_id", updatable=true, nullable=false)
     protected long dataCenterId;
 
-    @Column(name="type", updatable=false, nullable=false, length=32)
+    @Column(name="vm_type", updatable=false, nullable=false, length=32)
     @Enumerated(value=EnumType.STRING)
     protected Type type;
 
@@ -134,7 +134,7 @@ public class VMInstanceVO implements VirtualMachine, FiniteStateObject<State, Vi
     protected String reservationId;
     
     @Column(name="hypervisor_type")
-    @Enumerated(value=EnumType.STRING) 
+    @Enumerated(value=EnumType.STRING)
     protected HypervisorType hypervisorType;
     
     public VMInstanceVO(long id,
