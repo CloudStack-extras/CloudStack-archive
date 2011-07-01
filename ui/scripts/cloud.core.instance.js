@@ -392,7 +392,8 @@ function initVMWizard() {
 				var $securityGroupDropdown = $vmPopup.find("#security_group_dropdown").empty();	
 				if (items != null && items.length > 0) {
 					for (var i = 0; i < items.length; i++) {
-					    $securityGroupDropdown.append("<option value='" + fromdb(items[i].id) + "'>" + fromdb(items[i].name) + "</option>"); 
+						if(items[i].name != "default") //exclude default security group because it is always applied
+						    $securityGroupDropdown.append("<option value='" + fromdb(items[i].id) + "'>" + fromdb(items[i].name) + "</option>"); 
 					}
 				}					    
 			}
@@ -781,9 +782,10 @@ function initVMWizard() {
 		$thisPopup.find("#step4").find("#for_no_network_support").hide();
 	    
 	    var zoneObj = $thisPopup.find("#wizard_zone option:selected").data("zoneObj");
-	    		    
+	    		   
+                zoneId=$thisPopup.find("#wizard_zone").val() 
 		$.ajax({
-			data: createURL("command=listNetworks&domainid="+g_domainid+"&account="+g_account+"&zoneId="+$thisPopup.find("#wizard_zone").val()),
+			data: createURL("command=listNetworks&isshared=false&domainid="+g_domainid+"&account="+g_account+"&zoneId="+zoneId),
 			dataType: "json",
 			async: false,
 			success: function(json) {
@@ -859,6 +861,23 @@ function initVMWizard() {
 				var $networkDirectContainer = $("#network_direct_container").empty();
 				var $networkDirectSecondaryContainer = $("#network_direct_secondary_container").empty();
 				
+
+                                $.ajax({
+                                   data: createURL("command=listNetworks&isShared=true&domainid="+g_domainid+"&account="+g_account+"&zoneId="+$thisPopup.find("#wizard_zone").val()),
+                                   dataType: "json",
+                                   async: false,
+                                   success: function(json) {
+                                        var directNetworks = json.listnetworksresponse.network;
+                                        if (directNetworks != null && directNetworks.length > 0) {
+                                        for (var i = 0; i < directNetworks.length; i++) {
+                                                if (directNetworks[i].zoneid == zoneId) {
+                                                         networks.push(directNetworks[i]);
+                                                }
+                                        }
+
+                                     }
+                                  }
+                                });
 				if (networks != null && networks.length > 0) {
 					for (var i = 0; i < networks.length; i++) {
 						//if zoneObj.securitygroupsenabled is true and users still choose to select network instead of security group, then UI won't show networks whose securitygroupenabled is true.
