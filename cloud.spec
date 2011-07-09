@@ -314,9 +314,9 @@ The Cloud.com premium components expand the range of features on your Cloud.com 
 Summary:   Cloud.com usage monitor
 Obsoletes: vmops-usage < %{version}-%{release}
 Requires: java >= 1.6.0
-Requires: %{name}-utils = %{version}, %{name}-core = %{version}, %{name}-deps = %{version}, %{name}-server = %{version}, %{name}-premium = %{version}, %{name}-daemonize = %{version}
-Requires: %{name}-setup = %{version}
-Requires: %{name}-client = %{version}
+Requires: %{name}-utils >= %{version}, %{name}-core >= %{version}, %{name}-deps >= %{version}, %{name}-server >= %{version}, %{name}-premium >= %{version}, %{name}-daemonize >= %{version}
+Requires: %{name}-setup >= %{version}
+Requires: %{name}-client >= %{version}
 License:   CSL 1.1
 Group:     System Environment/Libraries
 %description usage
