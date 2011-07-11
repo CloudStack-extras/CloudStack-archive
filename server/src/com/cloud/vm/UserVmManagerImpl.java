@@ -2263,9 +2263,9 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         
         ServiceOfferingVO offering = _serviceOfferingDao.findById(serviceOffering.getId());
         
-        if (template.getTemplateType().equals(TemplateType.SYSTEM)) {
+     /*   if (template.getTemplateType().equals(TemplateType.SYSTEM)) {
         	throw new InvalidParameterValueException("Unable to use system template " + template.getId() + " to deploy a user vm");
-        }
+        } TODO: done for LB, need to remove at later point */ 
         List<VMTemplateZoneVO> listZoneTemplate = _templateZoneDao.listByZoneTemplate(zone.getId(),template.getId());
         if (listZoneTemplate==null || listZoneTemplate.isEmpty()){
               	throw new InvalidParameterValueException("The template " +template.getId()+ " is not available for use");

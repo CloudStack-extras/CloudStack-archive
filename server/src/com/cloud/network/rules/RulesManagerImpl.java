@@ -109,7 +109,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
     @Override
     public void detectRulesConflict(FirewallRule newRule, IpAddress ipAddress) throws NetworkRuleConflictException {
         assert newRule.getSourceIpAddressId() == ipAddress.getId() : "You passed in an ip address that doesn't match the address in the new rule";
-
+        
         List<FirewallRuleVO> rules = _firewallDao.listByIpAndPurposeAndNotRevoked(newRule.getSourceIpAddressId(), null);
         assert (rules.size() >= 1) : "For network rules, we now always first persist the rule and then check for network conflicts so we should at least have one rule at this point.";
 
@@ -191,9 +191,9 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
             throw new InvalidParameterValueException("Invalid user vm: " + userVm.getId());
         }
 
-        if (rule.getAccountId() != userVm.getAccountId()) {
+     /*   if (rule.getAccountId() != userVm.getAccountId()) {
             throw new InvalidParameterValueException("Rule id=" + rule.getId() + " and vm id=" + userVm.getId() + " belong to different accounts");
-        }
+        } commented for direct IP LB */
     }
 
     @Override

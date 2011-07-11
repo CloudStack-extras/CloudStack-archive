@@ -281,6 +281,7 @@ public class UserVmDaoImpl extends GenericDaoBase<UserVmVO, Long> implements Use
         return findOneBy(sc);
     }
 
+  
 	@Override
 	public List<UserVmVO> listByAccountIdAndHostId(long accountId, long hostId) {
 		SearchCriteria<UserVmVO> sc = AccountHostSearch.create();
