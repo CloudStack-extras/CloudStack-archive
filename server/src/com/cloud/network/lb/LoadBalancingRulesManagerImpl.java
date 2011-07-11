@@ -30,15 +30,25 @@ import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 
+import com.cloud.api.ApiDispatcher;
+import com.cloud.api.ApiGsonHelper;
+import com.cloud.api.BaseAsyncCmd;
+import com.cloud.api.BaseAsyncCreateCmd;
+import com.cloud.api.BaseCmd;
+import com.cloud.api.ServerApiException;
+import com.cloud.api.commands.DeployVMCmd;
 import com.cloud.api.commands.ListLoadBalancerRuleInstancesCmd;
 import com.cloud.api.commands.ListLoadBalancerRulesCmd;
 import com.cloud.api.commands.UpdateLoadBalancerRuleCmd;
+import com.cloud.async.AsyncJobManager;
+import com.cloud.async.AsyncJobVO;
 import com.cloud.dc.dao.VlanDao;
 import com.cloud.domain.Domain;
 import com.cloud.domain.DomainVO;
 import com.cloud.domain.dao.DomainDao;
 import com.cloud.event.ActionEvent;
 import com.cloud.event.EventTypes;
+import com.cloud.event.EventUtils;
 import com.cloud.event.UsageEventVO;
 import com.cloud.event.dao.EventDao;
 import com.cloud.event.dao.UsageEventDao;
@@ -61,12 +71,15 @@ import com.cloud.network.rules.FirewallRule.Purpose;
 import com.cloud.network.rules.FirewallRuleVO;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.network.rules.RulesManager;
+import com.cloud.server.ManagementServer;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
+import com.cloud.user.User;
 import com.cloud.user.UserContext;
 import com.cloud.user.dao.AccountDao;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.Pair;
+import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.component.Manager;
 import com.cloud.utils.db.DB;
@@ -82,15 +95,20 @@ import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.UserVmDao;
+import com.cloud.network.lb.ElasticLoadBalancerManager;
 
 @Local(value = { LoadBalancingRulesManager.class, LoadBalancingRulesService.class })
 public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager, LoadBalancingRulesService, Manager {
     private static final Logger s_logger = Logger.getLogger(LoadBalancingRulesManagerImpl.class);
-
+    ComponentLocator locator = ComponentLocator.getLocator(ManagementServer.Name);
+    private AsyncJobManager _asyncMgr = locator.getManager(AsyncJobManager.class);
+   // Properties apiCommands=ApiServer.get_apiCommands();
     String _name;
 
     @Inject
     NetworkManager _networkMgr;
+    @Inject
+    ElasticLoadBalancerManager _elbMgr;
     @Inject
     RulesManager _rulesMgr;
     @Inject
@@ -143,9 +161,9 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
             
             _rulesMgr.checkRuleAndUserVm(loadBalancer, vm, caller);
             
-            if (vm.getAccountId() != loadBalancer.getAccountId()) {
+         /*   if (vm.getAccountId() != loadBalancer.getAccountId()) {
                 throw new PermissionDeniedException("Cannot add virtual machines that do not belong to the same owner.");
-            }
+            } commented out for DirectIP LB */
             
             // Let's check to make sure the vm has a nic in the same network as the load balancing rule.
             List<? extends Nic> nics = _networkMgr.getNics(vm.getId());
@@ -334,13 +352,26 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
         return true;
     }
 
-
+    
     @Override @ActionEvent (eventType=EventTypes.EVENT_LOAD_BALANCER_CREATE, eventDescription="creating load balancer") 
     public LoadBalancer createLoadBalancerRule(LoadBalancer lb) throws NetworkRuleConflictException {
         UserContext caller = UserContext.current();
 
         long ipId = lb.getSourceIpAddressId();
 
+        /* ELB_TODO: this is special id for the direct ip, it will be removed later */
+        if (ipId == 1) {
+            LoadBalancerVO lbvo;
+            /* ELB_TODO : hardcoded - need to get the current account */
+            lbvo = _lbDao.findByAccountAndName(new Long(1), lb.getName());
+            if (lbvo == null) {
+                ipId = _elbMgr.deployLoadBalancerVM();
+
+            } else {
+
+            }
+        }
+        
         // make sure ip address exists
         IPAddressVO ipAddr = _ipAddressDao.findById(ipId);
         if (ipAddr == null || !ipAddr.readyToUse()) {
@@ -387,9 +418,11 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
             throw new InvalidParameterValueException("LB service is not supported in network id=" + networkId);
         }
         
-        LoadBalancerVO newRule = new LoadBalancerVO(lb.getXid(), lb.getName(), lb.getDescription(), lb.getSourceIpAddressId(), lb.getSourcePortEnd(),
+        //  deployLoadBalancerVM(networkId);
+      /*  LoadBalancerVO newRule = new LoadBalancerVO(lb.getXid(), lb.getName(), lb.getDescription(), lb.getSourceIpAddressId(), lb.getSourcePortEnd(),
+                lb.getDefaultPortStart(), lb.getAlgorithm(), networkId, ipAddr.getAccountId(), ipAddr.getDomainId()); TODO : ELB - updated source ip address id for direct mnetwork */
+        LoadBalancerVO newRule = new LoadBalancerVO(lb.getXid(), lb.getName(), lb.getDescription(), ipAddr.getId(), lb.getSourcePortEnd(),
                 lb.getDefaultPortStart(), lb.getAlgorithm(), networkId, ipAddr.getAccountId(), ipAddr.getDomainId());
-
         newRule = _lbDao.persist(newRule);
 
         try {

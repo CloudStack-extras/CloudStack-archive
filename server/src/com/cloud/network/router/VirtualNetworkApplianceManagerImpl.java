@@ -1753,6 +1753,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             throw new ResourceUnavailableException("Unable to assign ip addresses, domR is not in right state " + router.getState(), DataCenter.class, network.getDataCenterId());
         }
     }
+   
 
     @Override
     public boolean applyFirewallRules(Network network, List<? extends FirewallRule> rules) throws ResourceUnavailableException {
@@ -1822,7 +1823,100 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         return _routerDao.findByNetwork(networkId);
 
     }
+    
+    @Override
+    @DB
+    public DomainRouterVO deployELBVm(Network guestNetwork, DeployDestination dest, Account owner, Map<Param, Object> params) throws InsufficientCapacityException, StorageUnavailableException,
+                ConcurrentOperationException, ResourceUnavailableException {
+        long dcId = dest.getDataCenter().getId();
 
+        // lock guest network
+        Long guestNetworkId = guestNetwork.getId();
+        guestNetwork = _networkDao.acquireInLockTable(guestNetworkId);
+
+        if (guestNetwork == null) {
+            throw new ConcurrentOperationException("Unable to acquire network configuration: " + guestNetworkId);
+        }
+
+        try {
+
+            NetworkOffering offering = _networkOfferingDao.findByIdIncludingRemoved(guestNetwork.getNetworkOfferingId());
+            if (offering.isSystemOnly() || guestNetwork.getIsShared()) {
+                owner = _accountService.getSystemAccount();
+            }
+
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug("Starting a elastic ip vm for network configurations: " + guestNetwork + " in " + dest);
+            }
+            assert guestNetwork.getState() == Network.State.Implemented 
+                || guestNetwork.getState() == Network.State.Setup 
+                || guestNetwork.getState() == Network.State.Implementing 
+                : "Network is not yet fully implemented: "+ guestNetwork;
+
+            DataCenterDeployment plan = null;
+            DataCenter dc = _dcDao.findById(dcId);
+            DomainRouterVO router = null;
+            Long podId = dest.getPod().getId();
+
+            // In Basic zone and Guest network we have to start at least one per
+            // pod
+            // if ((dc.getNetworkType() == NetworkType.Basic ||
+            // guestNetwork.isSecurityGroupEnabled())
+            // && guestNetwork.getTrafficType() == TrafficType.Guest
+            // ) {
+            
+            router = _routerDao.findByNetworkAndPodAndRole(guestNetwork.getId(), podId, Role.LB);   
+            plan = new DataCenterDeployment(dcId, podId, null, null, null);
+            
+            // } else {
+            // s_logger.debug("Not deploying elastic ip vm");
+            // return null;
+            // }
+
+            if (router == null) {
+                long id = _routerDao.getNextInSequence(Long.class, "id");
+                if (s_logger.isDebugEnabled()) {
+                    s_logger.debug("Creating the elastic ip vm " + id);
+                }
+
+
+
+                List<NetworkOfferingVO> offerings = _networkMgr.getSystemAccountNetworkOfferings(NetworkOfferingVO.SystemControlNetwork);
+                NetworkOfferingVO controlOffering = offerings.get(0);
+                NetworkVO controlConfig = _networkMgr.setupNetwork(_systemAcct, controlOffering, plan, null, null, false, false).get(0);
+
+                List<Pair<NetworkVO, NicProfile>> networks = new ArrayList<Pair<NetworkVO, NicProfile>>(3);
+                NetworkOfferingVO publicOffering = _networkMgr.getSystemAccountNetworkOfferings(NetworkOfferingVO.SystemPublicNetwork).get(0);
+                List<NetworkVO> publicNetworks = _networkMgr.setupNetwork(_systemAcct, publicOffering, plan, null, null, false, false);
+                NicProfile defaultNic = new NicProfile();
+                defaultNic.setDefaultNic(true);
+                defaultNic.setBroadcastType(BroadcastDomainType.Vlan);
+                defaultNic.setDeviceId(2);
+                networks.add(new Pair<NetworkVO, NicProfile>(publicNetworks.get(0), defaultNic));
+                NicProfile gatewayNic = new NicProfile();
+                networks.add(new Pair<NetworkVO, NicProfile>((NetworkVO) guestNetwork, gatewayNic));
+                networks.add(new Pair<NetworkVO, NicProfile>(controlConfig, null));
+
+                VMTemplateVO template = _templateDao.findRoutingTemplate(dest.getCluster().getHypervisorType());
+
+                /* ELB_TODO : need to replace the elasticIpVmOffering with ELB VM offering */
+                router = new DomainRouterVO(id, _elasticIpVmOffering.getId(), VirtualMachineName.getRouterName(id, _instance), template.getId(), template.getHypervisorType(), template.getGuestOSId(),
+                        owner.getDomainId(), owner.getId(), guestNetwork.getId(), _elasticIpVmOffering.getOfferHA());
+                router.setRole(Role.LB);
+                router = _itMgr.allocate(router, template, _offering, networks, plan, null, owner);
+            }
+
+            State state = router.getState();
+            if (state != State.Running) {
+                router = this.start(router, _accountService.getSystemUser(), _accountService.getSystemAccount(), params);
+            }
+
+
+            return router;
+        } finally {
+            _networkDao.releaseFromLockTable(guestNetworkId);
+        }
+    }
     @Override
     @DB
     public DomainRouterVO deployElasticIpVm(Network guestNetwork, DeployDestination dest, Account owner, Map<Param, Object> params) throws InsufficientCapacityException, StorageUnavailableException,

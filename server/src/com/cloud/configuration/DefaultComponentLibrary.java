@@ -78,6 +78,7 @@ import com.cloud.network.dao.NetworkRuleConfigDaoImpl;
 import com.cloud.network.dao.RemoteAccessVpnDaoImpl;
 import com.cloud.network.dao.VpnUserDaoImpl;
 import com.cloud.network.lb.LoadBalancingRulesManagerImpl;
+import com.cloud.network.lb.ElasticLoadBalancerManagerImpl;
 import com.cloud.network.ovs.OvsNetworkManagerImpl;
 import com.cloud.network.ovs.OvsTunnelManagerImpl;
 import com.cloud.network.ovs.dao.GreTunnelDaoImpl;
@@ -297,6 +298,7 @@ public class DefaultComponentLibrary extends ComponentLibraryBase implements Com
         addManager("DomainRouterManager", VirtualNetworkApplianceManagerImpl.class);
         addManager("EntityManager", EntityManagerImpl.class);
         addManager("LoadBalancingRulesManager", LoadBalancingRulesManagerImpl.class);
+        addManager("ElasticLoadBalancerManager", ElasticLoadBalancerManagerImpl.class);
         addManager("RulesManager", RulesManagerImpl.class);
         addManager("RemoteAccessVpnManager", RemoteAccessVpnManagerImpl.class);
         addManager("OvsNetworkManager", OvsNetworkManagerImpl.class);

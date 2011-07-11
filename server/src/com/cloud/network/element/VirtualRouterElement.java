@@ -43,6 +43,7 @@ import com.cloud.network.VpnUser;
 import com.cloud.network.dao.LoadBalancerDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.lb.LoadBalancingRulesManager;
+import com.cloud.network.lb.ElasticLoadBalancerManager;
 import com.cloud.network.router.VirtualNetworkApplianceManager;
 import com.cloud.network.router.VirtualRouter;
 import com.cloud.network.rules.FirewallRule;
@@ -82,7 +83,7 @@ public class VirtualRouterElement extends DhcpElement implements NetworkElement,
     @Inject DomainRouterDao _routerDao;
     @Inject LoadBalancerDao _lbDao;
     @Inject AccountManager _accountMgr;
-    
+    @Inject ElasticLoadBalancerManager _elbMgr;
     private boolean canHandle(GuestIpType ipType, DataCenter dc) {
         String provider = dc.getGatewayProvider();
         boolean result = (provider != null && ipType == GuestIpType.Virtual && provider.equals(Provider.VirtualRouter.getName()));
@@ -165,7 +166,11 @@ public class VirtualRouterElement extends DhcpElement implements NetworkElement,
             
             return _routerMgr.applyFirewallRules(config, rules);
         } else {
-            return true;
+        	 
+            if (config.getGuestType() == GuestIpType.Direct) {
+                return _elbMgr.applyFirewallRules(config, rules);
+            } else
+                return true;
         }
     }
     

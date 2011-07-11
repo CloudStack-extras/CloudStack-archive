@@ -744,7 +744,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         NetworkOfferingVO defaultGuestDirectNetworkOffering = new NetworkOfferingVO(NetworkOffering.DefaultDirectNetworkOffering, "Direct", TrafficType.Guest, false, true, null, null, null, true,
                 Availability.Optional,
                 // services - all true except for firewall/lb/vpn and gateway services
-                true, true, true, false, false, false, false, GuestIpType.Direct);
+                true, true, true, false, false, true, false, GuestIpType.Direct);/* Added lb */
         defaultGuestDirectNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(defaultGuestDirectNetworkOffering);
 
         AccountsUsingNetworkSearch = _accountDao.createSearchBuilder();
