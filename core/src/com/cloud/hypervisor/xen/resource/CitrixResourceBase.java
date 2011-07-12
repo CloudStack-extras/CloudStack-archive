@@ -1946,6 +1946,7 @@ public abstract class CitrixResourceBase implements StoragePoolResource, ServerR
                     }
                 }
                 final Map<String, String> options = new HashMap<String, String>();
+                options.put("live", "true");
                 vm.poolMigrate(conn, dsthost, options);
                 state = State.Stopping;
 
