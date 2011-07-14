@@ -760,7 +760,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
                 true, false, null, null, null, true, 
                 Availability.Required, 
                 true, true, true, //services - all true except for lb/vpn and gateway
-                false, true, false, false, GuestIpType.Direct);
+                false, true, true, false, GuestIpType.Direct);
 
         guestNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(guestNetworkOffering);
         

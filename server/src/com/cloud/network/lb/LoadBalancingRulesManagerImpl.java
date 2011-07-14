@@ -61,6 +61,8 @@ import com.cloud.network.LoadBalancerVMMapVO;
 import com.cloud.network.LoadBalancerVO;
 import com.cloud.network.Network.Service;
 import com.cloud.network.NetworkManager;
+import com.cloud.network.NetworkVO;
+import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.LoadBalancerDao;
@@ -68,6 +70,7 @@ import com.cloud.network.dao.LoadBalancerVMMapDao;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.FirewallRule.Purpose;
+import com.cloud.network.Network.GuestIpType;
 import com.cloud.network.rules.FirewallRuleVO;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.network.rules.RulesManager;
@@ -107,6 +110,8 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
 
     @Inject
     NetworkManager _networkMgr;
+    @Inject 
+    NetworkDao _networkDao;
     @Inject
     ElasticLoadBalancerManager _elbMgr;
     @Inject
@@ -359,21 +364,23 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
 
         long ipId = lb.getSourceIpAddressId();
 
-        /* ELB_TODO: this is special id for the direct ip, it will be removed later */
-        if (ipId == 1) {
+        IPAddressVO ipAddr = _ipAddressDao.findById(ipId);
+        Long networkId= ipAddr.getSourceNetworkId();
+        NetworkVO network=_networkDao.findById(networkId);
+        
+        if (network.getGuestType() == GuestIpType.Direct) {
             LoadBalancerVO lbvo;
-            /* ELB_TODO : hardcoded - need to get the current account */
-            lbvo = _lbDao.findByAccountAndName(new Long(1), lb.getName());
+            Account account=caller.getCaller();
+            lbvo = _lbDao.findByAccountAndName(account.getId(),lb.getName());
             if (lbvo == null) {
-                ipId = _elbMgr.deployLoadBalancerVM();
-
+                ipId = _elbMgr.deployLoadBalancerVM(networkId,account.getId());
             } else {
 
             }
         }
         
         // make sure ip address exists
-        IPAddressVO ipAddr = _ipAddressDao.findById(ipId);
+        ipAddr = _ipAddressDao.findById(ipId);
         if (ipAddr == null || !ipAddr.readyToUse()) {
             throw new InvalidParameterValueException("Unable to create load balancer rule, invalid IP address id" + ipId);
         }
@@ -405,7 +412,7 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
             throw new InvalidParameterValueException("Invalid algorithm: " + lb.getAlgorithm());
         }
         
-        Long networkId = ipAddr.getAssociatedWithNetworkId();
+        networkId = ipAddr.getAssociatedWithNetworkId();
         if (networkId == null) {
             throw new InvalidParameterValueException("Unable to create load balancer rule ; ip id=" + ipId + " is not associated with any network");
 
@@ -417,10 +424,7 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
         if (!_networkMgr.isServiceSupported(networkId, Service.Lb)) {
             throw new InvalidParameterValueException("LB service is not supported in network id=" + networkId);
         }
-        
-        //  deployLoadBalancerVM(networkId);
-      /*  LoadBalancerVO newRule = new LoadBalancerVO(lb.getXid(), lb.getName(), lb.getDescription(), lb.getSourceIpAddressId(), lb.getSourcePortEnd(),
-                lb.getDefaultPortStart(), lb.getAlgorithm(), networkId, ipAddr.getAccountId(), ipAddr.getDomainId()); TODO : ELB - updated source ip address id for direct mnetwork */
+        /* ELB_TODO : all the rules currently owned by the system , may need to change this */
         LoadBalancerVO newRule = new LoadBalancerVO(lb.getXid(), lb.getName(), lb.getDescription(), ipAddr.getId(), lb.getSourcePortEnd(),
                 lb.getDefaultPortStart(), lb.getAlgorithm(), networkId, ipAddr.getAccountId(), ipAddr.getDomainId());
         newRule = _lbDao.persist(newRule);

@@ -137,6 +137,7 @@ import com.cloud.storage.dao.VolumeDao;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.AccountService;
+import com.cloud.user.AccountVO;
 import com.cloud.user.User;
 import com.cloud.user.UserContext;
 import com.cloud.user.UserStatisticsVO;
@@ -1841,9 +1842,9 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         try {
 
             NetworkOffering offering = _networkOfferingDao.findByIdIncludingRemoved(guestNetwork.getNetworkOfferingId());
-            if (offering.isSystemOnly() || guestNetwork.getIsShared()) {
+         /*   if (offering.isSystemOnly() || guestNetwork.getIsShared()) {
                 owner = _accountService.getSystemAccount();
-            }
+            }*/
 
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("Starting a elastic ip vm for network configurations: " + guestNetwork + " in " + dest);
@@ -1858,22 +1859,17 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             DomainRouterVO router = null;
             Long podId = dest.getPod().getId();
 
-            // In Basic zone and Guest network we have to start at least one per
-            // pod
-            // if ((dc.getNetworkType() == NetworkType.Basic ||
-            // guestNetwork.isSecurityGroupEnabled())
-            // && guestNetwork.getTrafficType() == TrafficType.Guest
-            // ) {
-            
-            router = _routerDao.findByNetworkAndPodAndRole(guestNetwork.getId(), podId, Role.LB);   
+            router = null;   
             plan = new DataCenterDeployment(dcId, podId, null, null, null);
             
-            // } else {
-            // s_logger.debug("Not deploying elastic ip vm");
-            // return null;
-            // }
+            List<DomainRouterVO> domainRouters = _routerDao.listBy(owner.getId());
+            for (DomainRouterVO domainRouter : domainRouters) {                
+                if (domainRouter.getDomainId() != dcId || domainRouter.getRole() != Role.LB ) continue;
+                router = domainRouter;
+                break;
+            }   
 
-            if (router == null) {
+           if (router == null) {
                 long id = _routerDao.getNextInSequence(Long.class, "id");
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Creating the elastic ip vm " + id);
@@ -1888,11 +1884,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                 List<Pair<NetworkVO, NicProfile>> networks = new ArrayList<Pair<NetworkVO, NicProfile>>(3);
                 NetworkOfferingVO publicOffering = _networkMgr.getSystemAccountNetworkOfferings(NetworkOfferingVO.SystemPublicNetwork).get(0);
                 List<NetworkVO> publicNetworks = _networkMgr.setupNetwork(_systemAcct, publicOffering, plan, null, null, false, false);
-                NicProfile defaultNic = new NicProfile();
-                defaultNic.setDefaultNic(true);
-                defaultNic.setBroadcastType(BroadcastDomainType.Vlan);
-                defaultNic.setDeviceId(2);
-                networks.add(new Pair<NetworkVO, NicProfile>(publicNetworks.get(0), defaultNic));
+          
                 NicProfile gatewayNic = new NicProfile();
                 networks.add(new Pair<NetworkVO, NicProfile>((NetworkVO) guestNetwork, gatewayNic));
                 networks.add(new Pair<NetworkVO, NicProfile>(controlConfig, null));
@@ -1904,13 +1896,12 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                         owner.getDomainId(), owner.getId(), guestNetwork.getId(), _elasticIpVmOffering.getOfferHA());
                 router.setRole(Role.LB);
                 router = _itMgr.allocate(router, template, _offering, networks, plan, null, owner);
-            }
+           }
 
             State state = router.getState();
             if (state != State.Running) {
                 router = this.start(router, _accountService.getSystemUser(), _accountService.getSystemAccount(), params);
             }
-
 
             return router;
         } finally {

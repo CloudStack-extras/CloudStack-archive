@@ -88,6 +88,7 @@ import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
 import com.cloud.network.router.VirtualNetworkApplianceManager;
 import com.cloud.network.router.VirtualRouter;
+import com.cloud.network.router.VirtualRouter.Role;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.FirewallRule.Purpose;
 import com.cloud.network.rules.FirewallRuleVO;
@@ -164,31 +165,32 @@ public class ElasticLoadBalancerManagerImpl implements
     String _name;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public long deployLoadBalancerVM() {  /* ELB_TODO :need to remove hardcoded network id,account id,pod id , cluster id */
+    public long deployLoadBalancerVM(Long networkId,Long accountId) {  /* ELB_TODO :need to remove hardcoded  pod id, cluster id */
+        /* ELB_TODO : after creating the vm , for various reasons if the the rule is not able to create then the ELB vm need to be destroyed */
+        /* ELB_TODO : dhcp service is started in the newly created ELB vm(domain router), need to disable dhscp service in the ELB vm */
         @SuppressWarnings("unchecked")
-        DataCenter dc = _dcDao.findById(new Long(1));
+        NetworkVO network=_networkDao.findById(networkId);
+        DataCenter dc = _dcDao.findById(network.getDataCenterId());
         HostPodVO pod = _podDao.findById(new Long(1));
-        Cluster clusterVO = _clusterDao.findById(new Long(1));
+        Cluster clusterVO = _clusterDao.findById(new Long(2));
 
-        NetworkVO network = _networkDao.findById(new Long(204));
-        Map<VirtualMachineProfile.Param, Object> params = new HashMap<VirtualMachineProfile.Param, Object>(
-                1);
+
+
+        Map<VirtualMachineProfile.Param, Object> params = new HashMap<VirtualMachineProfile.Param, Object>(1);  
         params.put(VirtualMachineProfile.Param.RestartNetwork, true);
-        Account owner = _accountService.getActiveAccount("system", new Long(1));
+        Account owner = _accountService.getAccount(accountId);
         DeployDestination dest = new DeployDestination(dc, pod, clusterVO, null);
 
-        s_logger.debug("Asking router manager to deploy elastic ip vm if necessary");
+      
         // What happens really is that the DhcpElement gets the prepare request
         // first and calls
         // addVirtualMachineIntoNetwork on the VirtualNetworkApplianceManager.
         // That routine needs to know the
-        // elastic ip vm's guest ip so that the dhcp server can tell the user vm
+        // elb ip vm's guest ip so that the dhcp server can tell the user vm
         // its default route goes through
         // the elastic ip vm.
         try {
-            VirtualRouter elbVm = _routerMgr.deployELBVm(network, dest, owner,
-                    params);
-
+            VirtualRouter elbVm = _routerMgr.deployELBVm(network, dest, owner,params);
             s_logger.debug("ELB ip vm = " + elbVm);
             if (elbVm == null) {
                 throw new InvalidParameterValueException("No VM with id '"
@@ -196,8 +198,8 @@ public class ElasticLoadBalancerManagerImpl implements
             }
             DomainRouterVO elbRouterVm = _routerDao.findById(elbVm.getId());
             String PublicIp = elbRouterVm.getGuestIpAddress();
-            IPAddressVO ipvo = _ipAddressDao.findBySourceNetworkAndIp(204,PublicIp);
-            ipvo.setAssociatedWithNetworkId(new Long(204)); 
+            IPAddressVO ipvo = _ipAddressDao.findBySourceNetworkAndIp(networkId,PublicIp);
+            ipvo.setAssociatedWithNetworkId(networkId); 
             _ipAddressDao.update(ipvo.getId(), ipvo);
             return ipvo.getId();
         } catch (Throwable t) {
@@ -278,8 +280,17 @@ public class ElasticLoadBalancerManagerImpl implements
     public boolean applyFirewallRules(Network network,
             List<? extends FirewallRule> rules)
             throws ResourceUnavailableException {
-        DomainRouterVO router = _routerDao.findByNetwork(network.getId());/* ELB_TODO :may have multiple LB's , need to get the correct LB based on network id and account id */
-                                                                          
+        UserContext caller = UserContext.current();
+        Account account=caller.getCaller();
+        DomainRouterVO router = null;
+        
+        List<DomainRouterVO> domainRouters = _routerDao.listBy(account.getId());
+        for (DomainRouterVO domainRouter : domainRouters) {                
+            if (domainRouter.getNetworkId() != network.getId() ) continue;
+            router = domainRouter;
+            break;
+        } 
+                                                                            
         if (router == null) {
             s_logger.warn("Unable to apply lb rules, virtual router doesn't exist in the network "
                     + network.getId());
