@@ -29,7 +29,7 @@ import com.cloud.user.Account;
 
 public interface ElasticLoadBalancerManager {
 
-    public long deployLoadBalancerVM();
+    public long deployLoadBalancerVM(Long networkId,Long accountId);
 
     public boolean applyFirewallRules(Network network,
             List<? extends FirewallRule> rules)
