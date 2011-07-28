@@ -251,7 +251,8 @@
           // Put label and hidden edit field in each cell
           $(fields).each(function() {
             var value = instance[this];
-            var $td = $('<td></td>').addClass(this);
+            var type = this.toString();
+            var $td = $('<td></td>').addClass(type);
 
             // Non-editable
             var $label = $('<span></span>').attr({
