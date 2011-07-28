@@ -68,7 +68,9 @@
   <property name="client.dir" location="${base.dir}/client" />
   <property name="client.test.dir" location="${client.dir}/test" />
   <property name="client.target.dir" location="${target.dir}/ui" />
+  <property name="client3.target.dir" location="${target.dir}/ui-cloudstack3" />
   <property name="ui.user.dir" location="${base.dir}/ui" />
+  <property name="ui3.user.dir" location="${base.dir}/ui-cloudstack3" />
   <property name="setup.db.dir" location="${base.dir}/setup/db" />
   <property name="setup.apidoc.dir" location="${base.dir}/setup/apidoc" />
 
@@ -263,6 +265,37 @@
       </fileset>
     </copy>
     <copy todir="${client.target.dir}">
+      <fileset dir="${client.dir}/WEB-INF/classes">
+        <include name="**/*.properties"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="build-ui-cloudstack3" depends="-init" description="Builds the UI - CloudStack3">
+    <mkdir dir="${client3.target.dir}" />
+    <copy todir="${client3.target.dir}">
+      <fileset dir="${ui3.user.dir}">
+        <include name="**/*.html" />
+        <include name="**/*.js"/>
+        <include name="**/*.jsp"/>
+        <exclude name="**/.classpath" />
+        <exclude name="**/.project" />
+      </fileset>
+      <filterset>
+        <filter token="VERSION" value="${impl.version}"/>
+      </filterset>
+    </copy>
+    <copy todir="${client3.target.dir}">
+      <fileset dir="${ui3.user.dir}">
+        <include name="**/*"/>
+        <exclude name="**/*.html" />
+        <exclude name="**/*.js"/>
+        <exclude name="**/*.jsp"/>
+        <exclude name="**/.classpath" />
+        <exclude name="**/.project" />
+      </fileset>
+    </copy>
+    <copy todir="${client3.target.dir}">
       <fileset dir="${client.dir}/WEB-INF/classes">
         <include name="**/*.properties"/>
       </fileset>

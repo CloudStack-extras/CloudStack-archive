@@ -168,7 +168,30 @@
     </war>
   </target>
 
+  <target name="build-war-oss-cloudstack3" depends="-init-package" description="Compile the GWT client UI and builds WAR file.">
+    <mkdir dir="${client.dist.dir}" />
 
+    <war destfile="${client.dist.dir}/client-cloudstack3.war" webxml="${client.dir}/WEB-INF/web.xml" update="true">
+      <fileset dir="${client3.target.dir}">
+        <include name="**/*" />
+      	<exclude name="**/*.properties" />
+      </fileset>
+      <classes dir="${client3.target.dir}">
+    	  <include name="**/resources/*.properties" />
+      </classes>
+      <lib dir="${jar.dir}">
+        <include name="cloud-*.jar" />
+        <exclude name="cloud-servlet-api.jar"/>
+      </lib>
+      <zipfileset dir="${scripts.target.dir}" prefix="WEB-INF/lib/scripts" filemode="555">
+        <include name="**/*" />
+      </zipfileset>
+      <zipfileset dir="${db.scripts.dir}" prefix="WEB-INF/lib/db" filemode="555">
+        <include name="**/*"/>
+      </zipfileset>
+    </war>
+  </target>
+  
   <target name="package-oss-systemvm" depends="-init-package">
     <zip destfile="${dist.dir}/systemvm.zip" duplicate="preserve" update="true">
       <!-- Console proxy now includes an agent shell, therefore we need to package agent related distribution -->
