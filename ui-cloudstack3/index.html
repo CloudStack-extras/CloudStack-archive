@@ -1,0 +1,394 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>CloudStack 3.0</title>
+    <link type="text/css" rel="stylesheet" href="../lib/reset.css"/>
+    <link type="text/css" rel="stylesheet" href="css/cloudstack3.css" />
+  </head>
+  <body>
+    <div id="container">
+      <div id="header">
+        <div class="logo"></div>
+        <div class="controls">
+          <div ui-id="notifications-sample" class="button notifications">
+            <div class="total"><span>30</span></div>
+            <span>Notifications</span>
+          </div>
+          <div ui-id="switcher" class="button view-switcher">
+            <div class="default-view"><span class="icon">&nbsp;</span>Default View</div>
+            <div class="select"><span class="icon">&nbsp;</span>Select View</div>
+          </div>
+          <div id="user" class="button">
+            <div class="name">Will Chan</div>
+            <div class="icon options"></div>
+          </div>
+        </div>
+      </div>
+      <div id="main-area">
+        <!-- Side nav bar -->
+        <div id="navigation">
+          <ul>
+            <li class="dashboard first" ui-id="nav-dashboard">
+              <span class="icon">&nbsp;</span>
+              <span>Dashboard</span>
+            </li>
+            <li class="instances" ui-id="nav-instances">
+              <span class="icon">&nbsp;</span>
+              <span>Instances</span>
+            </li>
+            <li class="storage" ui-id="nav-storage">
+              <span class="icon">&nbsp;</span>
+              <span>Storage</span>
+            </li>
+            <li class="network" ui-id="nav-network">
+              <span class="icon">&nbsp;</span>
+              <span>Network</span>
+            </li>
+            <li class="templates" ui-id="nav-templates">
+              <span class="icon">&nbsp;</span>
+              <span>Templates</span>
+            </li>
+            <li class="projects" ui-id="nav-projects">
+              <span class="icon">&nbsp;</span>
+              <span>Projects</span>
+            </li>
+            <li class="events last" ui-id="nav-events">
+              <span class="icon">&nbsp;</span>
+              <span>Events</span>
+            </li>
+          </ul>
+        </div>
+        <!-- Browser -->
+        <div id="browser">
+          <!-- Breadcrumbs -->
+          <div id="breadcrumbs">
+            <div class="home"></div>
+            <div class="active-project">Project A</div>
+            <div class="end"></div>
+          </div>
+          <div class="container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Template data - never displayed! -->
+    <div id="template">
+      <!-- Groups toolbar -->
+      <div template-type="toolbar" template-id="groups">
+        <div class="panel-controls">
+          <div class="control expand" ui-id="toggle-expand-panel"></div>
+        </div>
+      </div>
+
+      <!-- Instance details page -->
+      <div template-type="instances" template-id="details">
+        <ul>
+          <li><a href="#instance-details-tab-main">Details</a></li>
+          <li><a href="#instance-details-tab-nics">NICs</a></li>
+          <li><a href="#instance-details-tab-volumes">Volumes</a></li>
+          <li><a href="#instance-details-tab-stats">Statistics</a></li>
+        </ul>
+
+
+        <!-- Basic -->
+        <div id="instance-details-tab-main" detail-set="details">
+          <div class="detail-group head">
+            <table>
+              <tbody>
+                <tr>
+                  <td class="name">Name</td>
+                  <td class="value">
+                    <span class="id"></span>
+                  </td>
+                  
+                  <!-- Actions -->
+                  <td class="detail-actions">
+                    <div class="action edit">
+                      <a alt="edit" title="edit" href="#">&nbsp;</a>
+                    </div>
+                    <div class="action stop">
+                      <a alt="stop" title="stop" href="#">&nbsp;</a>
+                    </div>
+                    <div class="action restart">
+                      <a alt="restart" title="restart" href="#">&nbsp;</a>
+                    </div>
+                    <div class="action destroy">
+                      <a alt="destroy" title="destroy" href="#">&nbsp;</a>
+                    </div>
+                    <div class="action migrate">
+                      <a alt="migrate" title="migrate" href="#">&nbsp;</a>
+                    </div>
+                    <div class="action attach">
+                      <a alt="attach" title="attach" href="#">&nbsp;</a>
+                    </div>
+                    <div class="action reset-password">
+                      <a alt="reset-password" title="reset-password" href="#">&nbsp;</a>
+                    </div>
+                    <div class="action change">
+                      <a alt="change" title="change" href="#">&nbsp;</a>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="detail-group full">
+            <table>
+              <tbody>
+                <tr prop-id="id">
+                  <td class="name">ID</td>
+                  <td class="value"></td>
+                </tr>
+                <tr class="odd" prop-id="zone">
+                  <td class="name">Zone</td>
+                  <td class="value"></td>
+                </tr>
+                <tr prop-id="template">
+                  <td class="name">Template</td>
+                  <td class="value"></td>
+                </tr>
+                <tr class="odd" prop-id="osType">
+                  <td class="name">OS Type</td>
+                  <td class="value"></td>
+                </tr>
+                <tr prop-id="serviceOffering">
+                  <td class="name">Service Offering</td>
+                  <td class="value"></td>
+                </tr>
+                <tr class="odd" prop-id="haEnabled">
+                  <td class="name">HA Enabled</td>
+                  <td class="value"></td>
+                </tr>
+                <tr prop-id="created">
+                  <td class="name">Created</td>
+                  <td class="value"></td>
+                </tr>
+                <tr class="odd" prop-id="account">
+                  <td class="name">Account</td>
+                  <td class="value"></td>
+                </tr>
+                <tr prop-id="domain">
+                  <td class="name">Domain</td>
+                  <td class="value"></td>
+                </tr>
+                <tr class="odd" prop-id="host">
+                  <td class="name">Host</td>
+                  <td class="value"></td>
+                </tr>
+                <tr prop-id="attachedISO">
+                  <td class="name">Attached ISO</td>
+                  <td class="value"></td>
+                </tr>
+                <tr class="odd" prop-id="group">
+                  <td class="name">Group</td>
+                  <td class="value"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="instance-details-tab-nics" detail-set="nics" class="group-multiple">
+          <div class="detail-group">
+            <table class="header">
+              <thead>
+                <tr prop-id="name">
+                  <th class="value"></th>
+                  <th></th>
+                </tr>
+              </thead>
+            </table>
+            <table>
+              <tbody>
+                <tr prop-id="ip">
+                  <td class="name">
+                    IP
+                  </td>
+                  <td class="value">
+                  </td>
+                </tr>
+                <tr class="odd" prop-id="netmask">
+                  <td class="name">
+                    Netmask
+                  </td>
+                  <td class="value">
+                  </td>
+                </tr>
+                <tr prop-id="type">
+                  <td class="name">
+                    Type
+                  </td>
+                  <td class="value">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="instance-details-tab-volumes" detail-set="volumes" class="group-multiple">
+          <div class="detail-group">
+            <table class="header">
+              <thead>
+                <tr prop-id="name">
+                  <th class="value"></th>
+                  <th>
+                  </th>
+                </tr>
+              </thead>
+            </table>
+            <table>
+              <tbody>
+                <tr prop-id="id">
+                  <td class="name">
+                    ID
+                  </td>
+                  <td class="value">
+                  </td>
+                </tr>
+                <tr class="odd" prop-id="type">
+                  <td class="name">
+                    Type
+                  </td>
+                  <td class="value">
+                  </td>
+                </tr>
+                <tr prop-id="size">
+                  <td class="name">
+                    Size
+                  </td>
+                  <td class="value">
+                  </td>
+                </tr>
+                <tr class="odd" prop-id="created">
+                  <td class="name">
+                    Created
+                  </td>
+                  <td class="value">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="instance-details-tab-stats" detail-set="stats">
+          <div class="detail-group">
+            <table>
+              <tbody>
+                <tr prop-id="cpuTotal">
+                  <td class="name">
+                    Total CPU
+                  </td>
+                  <td class="value">
+                  </td>
+                </tr>
+                <tr class="odd" prop-id="cpuUtilized">
+                  <td class="name">
+                    CPU Utilized
+                  </td>
+                  <td class="value">
+                  </td>
+                </tr>
+                <tr prop-id="networkRead">
+                  <td class="name">
+                    Network Read
+                  </td>
+                  <td class="value">
+                  </td>
+                </tr>
+                <tr class="odd" prop-id="networkWrite">
+                  <td class="name">
+                    Network Write
+                  </td>
+                  <td class="value">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instances toolbars -->
+      <div template-type="toolbar" template-id="instance-details">
+        
+      </div>
+      <div template-type="toolbar" template-id="instances">
+        <!-- Toolbar -->
+        <div class="filters reduced-hide">
+          <label>Filter By:</label>
+          <select>
+            <option>All</option>
+            <option>Filter 1</option>
+            <option>Filter 2</option>
+            <option>Filter 3</option>
+            <option>Filter 4</option>
+          </select>
+        </div>
+        <div class="search-bar reduced-hide">
+          <input type="text" />
+          <div class="filter">Everything</div>
+        </div>
+        <div class="button search"></div>
+        <div ui-id="add-instance" class="button add-instance"></div>
+        <div ui-id="show-groups" class="button add-group"></div>
+        <div class="panel-controls">
+          <div class="control expand" ui-id="toggle-expand-panel"></div>
+        </div>
+      </div>
+      <div template-type="wizard" template-id="sample-wizard">
+        <!-- Step 1: Choose location -->
+        <div step="1" title="Choose your location">
+          <div class="location">
+            <input type="radio" name="location" value="americas"/>
+          </div>
+          <div class="location">
+            <input type="radio" name="location" value="japan"/>
+          </div>
+          <div class="location">
+            <input type="radio" name="location" value="uk"/>
+          </div>
+          <div class="location">
+            <input type="radio" name="location" value="australia"/>
+          </div>
+        </div>
+
+        <!-- Step 2: Name VM -->
+        <div step="2" title="Name your new VM">
+          <span>Name:</span>
+          <input type="text" name="vm-name" />
+        </div>
+
+        <!-- Step 3: Specify OS -->
+        <div step="3" title="Specify OS">
+          <div class="os-selection">
+            <input type="radio" name="linux"/>
+            <span>Linux</span>
+          </div>
+          <div class="os-selection">
+            <input type="radio" name="win7"/>
+            <span>Windows 7</span>
+          </div>
+          <div class="os-selection">
+            <input type="radio" name="maxosx"/>
+            <span>Mac OS X</span>
+          </div>
+        </div>
+
+        <!-- Step 4: Confirmation -->
+        <div step="4" title="Confirm and Create">
+          <p>Your VM is now created!!!</p>
+        </div>
+      </div>
+    </div>
+
+    <script src="../lib/jquery.js" type="text/javascript"></script>
+    <script src="../lib/jquery-ui/js/jquery-ui.js" type="text/javascript"></script>
+    <script src="../widgets/jquery.dataTable.js" type="text/javascript"></script>
+    <script src="../widgets/jquery.cloudBrowser.js" type="text/javascript"></script>
+    <script src="js/base.js" type="text/javascript"></script>
+    <script src="js/data.js" type="text/javascript"></script>
+    <script src="js/ui-elems.js" type="text/javascript"></script>
+    <script src="js/ui-api.js" type="text/javascript"></script>
+  </body>
+</html>
