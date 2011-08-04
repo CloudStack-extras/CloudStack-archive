@@ -2,7 +2,6 @@ build/replace.properties
 build/build.number
 bin/
 cloudstack-proprietary/
-premium/
 .lock-wscript
 artifacts/
 .waf-*
@@ -20,4 +19,3 @@ build.number
 api.log.*.gz
 cloud.log.*.*
 unittest
-deps/cloud.userlibraries
