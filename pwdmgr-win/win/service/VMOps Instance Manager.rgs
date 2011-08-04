@@ -1,0 +1,11 @@
+HKCR
+{
+	NoRemove AppID
+	{
+		'%APPID%' = s 'CloudInstanceManager'
+		'cloudservice.exe'
+		{
+			val AppID = s '%APPID%'
+		}
+	}
+}
