@@ -1,0 +1,16 @@
+#### usage commands
+generateUsageRecords=com.cloud.server.api.commands.GenerateUsageRecordsCmd;1;com.cloud.server.api.response.UsageRecordResponse
+listUsageRecords=com.cloud.server.api.commands.GetUsageRecordsCmd;1;com.cloud.server.api.response.UsageRecordResponse
+
+#### external firewall commands
+addExternalFirewall=com.cloud.api.commands.AddExternalFirewallCmd
+removeExternalFirewall=com.cloud.api.commands.RemoveExternalFirewallCmd
+listExternalFirewalls=com.cloud.api.commands.ListExternalFirewallsCmd
+
+#### external loadbalancer commands
+addExternalLoadBalancer=com.cloud.api.commands.AddExternalLoadBalancerCmd
+removeExternalLoadBalancer=com.cloud.api.commands.RemoveExternalLoadBalancerCmd
+listExternalLoadBalancers=com.cloud.api.commands.ListExternalLoadBalancersCmd
+
+### PXE server commands
+addPxeServer=com.cloud.baremetal.AddPxeServerCmd;1
