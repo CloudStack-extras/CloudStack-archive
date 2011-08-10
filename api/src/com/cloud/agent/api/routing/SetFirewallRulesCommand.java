@@ -17,9 +17,12 @@
  */
 package com.cloud.agent.api.routing;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.cloud.agent.api.to.FirewallRuleTO;
+import com.cloud.agent.api.to.LoadBalancerTO;
 
 /**
  * SetFirewallRulesCommand is the transport for firewall rules.
@@ -40,4 +43,28 @@ public class SetFirewallRulesCommand extends NetworkElementCommand {
     public FirewallRuleTO[] getRules() {
         return rules;
     }
+
+	public String[][] generateFwRules() {
+		String [][] result = new String [3][];
+		Set<String> toAdd = new HashSet<String>();
+		Set<String> toRemove = new HashSet<String>();
+		
+		
+		for (FirewallRuleTO fwTO: rules) {
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append(fwTO.getProtocol()).append(":");
+			sb.append(fwTO.getStringSrcPortRange()).append(":");
+			//sb.append(fwTO.getSrcIp()).append(":");
+			String fwRuleEntry = sb.toString();
+		
+			toAdd.add(fwRuleEntry);
+			
+		}
+		result[0] = toAdd.toArray(new String[toAdd.size()]);
+		
+		
+
+		return result;
+	}
 }
