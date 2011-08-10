@@ -6455,16 +6455,36 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 	}
 	
   protected SetFirewallRulesAnswer execute(SetFirewallRulesCommand cmd) {
-        Connection conn = getConnection();
-        
-        String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
-        String[] results = new String[cmd.getRules().length];
-        int i = 0;
-        for (FirewallRuleTO rule : cmd.getRules()) {
-           //FIXME - Jana, add implementation here
-        }
+	  String[] results = new String[cmd.getRules().length];
+	  String ret;
+	  Connection conn = getConnection();
+      String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
 
-        return new SetFirewallRulesAnswer(cmd, results);
+      if (routerIp == null) {
+        	 return new SetFirewallRulesAnswer(cmd, results);
+      }
+
+      String[][] rules = cmd.generateFwRules();
+      String args = "";
+      args +=  routerIp+" -F ";
+      StringBuilder sb = new StringBuilder();
+      String[] addRules = rules[0];
+      if (addRules.length > 0) {
+          for (int i = 0; i < addRules.length; i++) {
+                sb.append(addRules[i]).append(',');
+           }
+
+           args += " -a " + sb.toString();
+      }
+
+      ret = callHostPlugin(conn, "vmops", "setFirewallRule", "args", args);
+   
+      if (ret == null || ret.isEmpty()) { /* TODO : handling error cases */
+           // return new Answer(cmd, false, "LoadBalancerConfigCommand failed");
+            return new SetFirewallRulesAnswer(cmd, results);
+      }
+      return new SetFirewallRulesAnswer(cmd, results); /* TODO */
+
   }
 	
 }
