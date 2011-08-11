@@ -931,6 +931,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         }
 
         VirtualMachineGuru<T> vmGuru = getVmGuru(vm);
+        VirtualMachineProfile<T> profile = new VirtualMachineProfileImpl<T>(vm);
 
         try {
             if (!stateTransitTo(vm, Event.StopRequested, vm.getHostId())) {
@@ -941,62 +942,51 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 throw new CloudRuntimeException("We cannot stop " + vm + " when it is in state " + vm.getState());
             }
             s_logger.debug("Unable to transition the state but we're moving on because it's forced stop");
-        }
-
-        VirtualMachineProfile<T> profile = new VirtualMachineProfileImpl<T>(vm);
-        if ((vm.getState() == State.Starting || vm.getState() == State.Stopping || vm.getState() == State.Migrating) && forced) {
-            ItWorkVO work = _workDao.findByOutstandingWork(vm.getId(), vm.getState());
-            if (work == null) {
-                if (cleanup(vmGuru, new VirtualMachineProfileImpl<T>(vm), work, Event.StopRequested, forced, user, account)) {
-                    try {
-                        return stateTransitTo(vm, Event.AgentReportStopped, null);
-                    } catch (NoTransitionException e) {
-                        s_logger.warn("Unable to cleanup " + vm);
-                        return false;
-                    }
-                }
-            } else {
-                try {
-                    return stateTransitTo(vm, Event.AgentReportStopped, null);
-                } catch (NoTransitionException e) {
-                    s_logger.warn("Unable to cleanup " + vm);
-                    return false;
-                }
-            }
-        }
-
-        if (vm.getHostId() != null) {
-            String routerPrivateIp = null;
-            if (vm.getType() == VirtualMachine.Type.DomainRouter) {
-                routerPrivateIp = vm.getPrivateIpAddress();
-            }
-            StopCommand stop = new StopCommand(vm, vm.getInstanceName(), null, routerPrivateIp);
-            boolean stopped = false;
-            StopAnswer answer = null;
-            try {
-                answer = (StopAnswer) _agentMgr.send(vm.getHostId(), stop);
-                stopped = answer.getResult();
-                if (!stopped) {
-                    throw new CloudRuntimeException("Unable to stop the virtual machine due to " + answer.getDetails());
-                }
-                vmGuru.finalizeStop(profile, answer);
-
-            } catch (AgentUnavailableException e) {
-            } catch (OperationTimedoutException e) {
-            } finally {
-                if (!stopped) {
-                    if (!forced) {
-                        s_logger.warn("Unable to stop vm " + vm);
+            if (state == State.Starting || state == State.Stopping || state == State.Migrating) {
+                ItWorkVO work = _workDao.findByOutstandingWork(vm.getId(), vm.getState());
+                if (work != null) {
+                    if (cleanup(vmGuru, new VirtualMachineProfileImpl<T>(vm), work, Event.StopRequested, forced, user, account)) {
                         try {
-                            stateTransitTo(vm, Event.OperationFailed, vm.getHostId());
+                            return stateTransitTo(vm, Event.AgentReportStopped, null);
                         } catch (NoTransitionException e) {
-                            s_logger.warn("Unable to transition the state " + vm);
+                            s_logger.warn("Unable to cleanup " + vm);
+                            return false;
                         }
-                        return false;
-                    } else {
-                        s_logger.warn("Unable to actually stop " + vm + " but continue with release because it's a force stop");
-                        vmGuru.finalizeStop(profile, answer);
                     }
+                }
+            }
+        }
+
+        String routerPrivateIp = null;
+        if (vm.getType() == VirtualMachine.Type.DomainRouter) {
+            routerPrivateIp = vm.getPrivateIpAddress();
+        }
+        StopCommand stop = new StopCommand(vm, vm.getInstanceName(), null, routerPrivateIp);
+        boolean stopped = false;
+        StopAnswer answer = null;
+        try {
+            answer = (StopAnswer) _agentMgr.send(vm.getHostId(), stop);
+            stopped = answer.getResult();
+            if (!stopped) {
+                throw new CloudRuntimeException("Unable to stop the virtual machine due to " + answer.getDetails());
+            }
+            vmGuru.finalizeStop(profile, answer);
+
+        } catch (AgentUnavailableException e) {
+        } catch (OperationTimedoutException e) {
+        } finally {
+            if (!stopped) {
+                if (!forced) {
+                    s_logger.warn("Unable to stop vm " + vm);
+                    try {
+                        stateTransitTo(vm, Event.OperationFailed, vm.getHostId());
+                    } catch (NoTransitionException e) {
+                        s_logger.warn("Unable to transition the state " + vm);
+                    }
+                    return false;
+                } else {
+                    s_logger.warn("Unable to actually stop " + vm + " but continue with release because it's a force stop");
+                    vmGuru.finalizeStop(profile, answer);
                 }
             }
         }
