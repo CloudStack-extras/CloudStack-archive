@@ -1230,8 +1230,14 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             throws ConcurrentOperationException, InsufficientCapacityException, ResourceUnavailableException {
 
         DomainRouterVO startedRouter = startDhcp ? deployDhcp(network, dest, profile.getOwner(), profile.getParameters()) : deployVirtualRouter(network, dest, profile.getOwner(), profile.getParameters());
-        List<DomainRouterVO> routers = _routerDao.listByNetworkAndState(network.getId(), State.Running);
-        
+        DataCenter dc = dest.getDataCenter();
+        List<DomainRouterVO> routers = null;
+        if (dc.getNetworkType() == NetworkType.Basic && _dnsBasicZoneUpdates.equalsIgnoreCase("pod")) {
+            routers = new ArrayList<DomainRouterVO>(1);
+            routers.add(startedRouter);
+        } else {
+            routers = _routerDao.listByNetworkAndState(network.getId(), State.Running);
+        }
         
         for (DomainRouterVO router : routers) {
             boolean sendPasswordAndVmData = true;
@@ -1241,7 +1247,6 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             //for basic zone: 
             //1) send vm data/password information only to the dhcp in the same pod
             //2) send dhcp/dns information to all routers in the cloudstack only when _dnsBasicZoneUpdates is set to "all" value
-            DataCenter dc = dest.getDataCenter();
             if (dc.getNetworkType() == NetworkType.Basic) {
                 Long podId = dest.getPod().getId();
                 if (router.getPodIdToDeployIn().longValue() != podId.longValue()) {
