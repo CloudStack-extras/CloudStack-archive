@@ -1535,6 +1535,13 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         
         if(trackExternalChange) {
         	if(vm.getHostId() == null || hostId != vm.getHostId()) {
+        		if(serverState == State.Starting) {
+        			if(vm.getHostId() != null && vm.getHostId() != hostId) {
+        				s_logger.info("CloudStack is starting VM on host " + vm.getHostId() + ", but status report comes from a different host " + hostId + ", skip status sync for vm: " + vm.getInstanceName());
+        				return null;
+        			}
+        		}
+        		
         		try {
         			stateTransitTo(vm, VirtualMachine.Event.AgentReportMigrated, hostId);
         		} catch (NoTransitionException e) {
