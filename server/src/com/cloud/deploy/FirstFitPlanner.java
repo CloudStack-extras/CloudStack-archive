@@ -235,7 +235,7 @@ public class FirstFitPlanner extends PlannerBase implements DeploymentPlanner {
 				return checkClustersforDestination(clusterList, vmProfile, plan, avoid, dc, _allocationAlgorithm);
 			}else{
 				s_logger.debug("The specified cluster cannot be found, returning.");
-				avoid.addPod(plan.getClusterId());
+				avoid.addCluster(plan.getClusterId());
 				return null;
 			}
 		}else if (plan.getPodId() != null) {
@@ -575,8 +575,8 @@ public class FirstFitPlanner extends PlannerBase implements DeploymentPlanner {
 					if(!pool.isInMaintenance()){
 						if(!avoid.shouldAvoid(pool)){
 							long exstPoolDcId = pool.getDataCenterId();
-                            Long exstPoolPodId = pool.getPodId();
-                            Long exstPoolClusterId = pool.getClusterId();
+                            Long exstPoolPodId = pool.getPodId() != null ? pool.getPodId() : -1;
+                            Long exstPoolClusterId = pool.getClusterId() != null ? pool.getClusterId() : -1;
                         	if(plan.getDataCenterId() == exstPoolDcId && plan.getPodId() == exstPoolPodId && plan.getClusterId() == exstPoolClusterId){
 								s_logger.debug("Planner need not allocate a pool for this volume since its READY");
 								suitablePools.add(pool);
