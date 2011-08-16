@@ -1701,23 +1701,28 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         }
 
         for (final AgentVmInfo left : infos.values()) {
+            boolean found = false;
             for (VirtualMachineGuru<? extends VMInstanceVO> vmGuru : _vmGurus.values()) {
                 VMInstanceVO vm = vmGuru.findByName(left.name);
-                if (vm == null) {
-                    s_logger.warn("Stopping a VM that we have no record of: " + left.name);
-                    commands.addCommand(cleanup(left.name));
-                } else {
+                if (vm != null) {
+                    found = true;
                     HypervisorGuru hvGuru = _hvGuruMgr.getGuru(vm.getHypervisorType());
                     if(hvGuru.trackVmHostChange()) {
-	                    Command command = compareState(hostId, vm, left, true, true);
-	                    if (command != null) {
-	                        commands.addCommand(command);
-	                    }
+                        Command command = compareState(hostId, vm, left, true, true);
+                        if (command != null) {
+                            commands.addCommand(command);
+                        }
                     } else {
-                        s_logger.warn("Stopping a VM that we have no record of: " + left.name);
+                        s_logger.warn("Stopping a VM,  VM " + left.name + " migrate from Host " + vm.getHostId() + " to Host " + hostId );
                         commands.addCommand(cleanup(left.name));
                     }
+                    break;
                 }
+            }
+            
+            if ( ! found ) {
+                s_logger.warn("Stopping a VM that we have no record of: " + left.name);
+                commands.addCommand(cleanup(left.name));
             }
         }
 
