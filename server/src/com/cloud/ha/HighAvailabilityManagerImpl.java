@@ -187,12 +187,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager, Clu
             return;
         }
         
-        if(host.getHypervisorType() == HypervisorType.VMware) {
-        	if(s_logger.isDebugEnabled())
-        		s_logger.debug("Skip HA on host " + host.getId() + " as it is from VMware cluster");
-        	return;
-        }
-        
         s_logger.warn("Scheduling restart for VMs on host " + host.getId());
 
         final List<VMInstanceVO> vms = _instanceDao.listByHostId(host.getId());
@@ -267,11 +261,6 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager, Clu
     @Override
     public void scheduleRestart(VMInstanceVO vm, boolean investigate) {
     	Long hostId = vm.getHostId();
-    	
-    	if(vm.getHypervisorType() == HypervisorType.VMware) {
-	        s_logger.debug("Skip HA for VM " + vm.getInstanceName() + " as it is from VMware cluster");
-    		return;
-    	}
     	
     	if (hostId == null) {
     	    try {
