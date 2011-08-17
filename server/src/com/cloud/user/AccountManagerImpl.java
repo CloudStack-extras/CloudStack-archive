@@ -1198,7 +1198,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
         String accountName = cmd.getAccountName();
         short userType = cmd.getAccountType().shortValue();
         DomainVO domain = _domainDao.findById(domainId);
-        checkAccess(UserContext.current().getCaller(), domain);
+        
         try {
             if (accountName == null) {
                 accountName = username;
@@ -1219,6 +1219,8 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
                     throw new CloudRuntimeException("The account cannot be created as domain " + domain.getName() + " is being deleted");
                 }
             }
+            
+            checkAccess(UserContext.current().getCaller(), domain);
 
             if (!_userAccountDao.validateUsernameInDomain(username, domainId)) {
                 throw new CloudRuntimeException("The user " + username + " already exists in domain " + domainId);
