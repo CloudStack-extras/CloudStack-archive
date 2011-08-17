@@ -74,7 +74,7 @@ public class XenServerConnectionPool {
                 }
                 search = props.getProperty("sleep.interval.on.error");
                 if (search != null) {
-                    s_sleepOnError = NumbersUtil.parseInterval(search,  10) * 1000;
+                    s_sleepOnError = NumbersUtil.parseInt(search,  10) * 1000;
                 }
                 s_logger.info("XenServer Connection Pool Configs: manage.xenserver.pool.master=" + s_managePool + "; sleep.interval.on.error=" + s_sleepOnError);
             } catch (FileNotFoundException e) {
