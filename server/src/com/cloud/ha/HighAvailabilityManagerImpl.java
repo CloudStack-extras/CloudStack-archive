@@ -187,6 +187,13 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager, Clu
             return;
         }
         
+        if(host.getHypervisorType() == HypervisorType.VMware) {
+        	// still need to disable HA attempts when host is down because in VMware, any HA attempt that tries
+        	// to operate on VMs previously running at this host will fail
+        	s_logger.info("Skip host-level HA for host " + host.getId() + " as it is a VMware host");
+        	return;
+        }
+        
         s_logger.warn("Scheduling restart for VMs on host " + host.getId());
 
         final List<VMInstanceVO> vms = _instanceDao.listByHostId(host.getId());
