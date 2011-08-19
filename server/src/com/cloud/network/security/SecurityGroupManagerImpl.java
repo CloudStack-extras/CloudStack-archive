@@ -886,7 +886,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
                 }
             }
         } finally {
-            _workDao.updateStep(work.getId(), Step.Done);
+            _workDao.remove(work.getId());
         }
     }
 
