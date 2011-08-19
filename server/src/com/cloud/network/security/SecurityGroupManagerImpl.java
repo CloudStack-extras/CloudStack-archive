@@ -860,48 +860,33 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
         Long seqnum = null;
         s_logger.debug("Working on " + work);
 
-        boolean locked = false;
         try {
-            vm = _userVMDao.acquireInLockTable(work.getInstanceId());
-            if (vm == null) {
-                vm = _userVMDao.findById(work.getInstanceId());
-                if (vm == null) {
-                    s_logger.info("VM " + work.getInstanceId() + " is removed");
-                    locked = true;
-                    return;
-                }
-                s_logger.warn("Unable to acquire lock on vm id=" + userVmId);
-                return;
-            }
-            locked = true;
-            Long agentId = null;
-            VmRulesetLogVO log = _rulesetLogDao.findByVmId(userVmId);
-            if (log == null) {
-                s_logger.warn("Cannot find log record for vm id=" + userVmId);
-                return;
-            }
-            seqnum = log.getLogsequence();
+            vm = _userVMDao.findById(userVmId);
 
             if (vm != null && vm.getState() == State.Running) {
                 Map<PortAndProto, Set<String>> rules = generateRulesForVM(userVmId);
-                agentId = vm.getHostId();
+                Long agentId = vm.getHostId();
                 if (agentId != null) {
-                    SecurityIngressRulesCmd cmd = generateRulesetCmd(vm.getInstanceName(), vm.getPrivateIpAddress(), vm.getPrivateMacAddress(), vm.getId(), generateRulesetSignature(rules), seqnum,
-                            rules);
+                    SecurityIngressRulesCmd cmd = generateRulesetCmd(vm.getInstanceName(), vm.getPrivateIpAddress(), 
+                            vm.getPrivateMacAddress(), vm.getId(), generateRulesetSignature(rules), 
+                            work.getLogsequenceNumber(), rules);
                     Commands cmds = new Commands(cmd);
                     try {
                         _agentMgr.send(agentId, cmds, _answerListener);
                     } catch (AgentUnavailableException e) {
                         s_logger.debug("Unable to send updates for vm: " + userVmId + "(agentid=" + agentId + ")");
-                        _workDao.updateStep(work.getInstanceId(), seqnum, Step.Done);
                     }
+                }
+            } else {
+                if (s_logger.isTraceEnabled()) {
+                    if (vm != null)
+                        s_logger.trace("No rules sent to vm " + vm + "state=" + vm.getState());
+                    else
+                        s_logger.trace("Could not find vm: No rules sent to vm " + userVmId );
                 }
             }
         } finally {
-            if (locked) {
-                _userVMDao.releaseFromLockTable(userVmId);
-                _workDao.updateStep(work.getId(), Step.Done);
-            }
+            _workDao.updateStep(work.getId(), Step.Done);
         }
     }
 
