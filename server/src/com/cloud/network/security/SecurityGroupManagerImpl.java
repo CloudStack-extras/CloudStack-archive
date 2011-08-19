@@ -859,8 +859,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
         UserVm vm = null;
         Long seqnum = null;
         s_logger.debug("Working on " + work);
-        final Transaction txn = Transaction.currentTxn();
-        txn.start();
+
         boolean locked = false;
         try {
             vm = _userVMDao.acquireInLockTable(work.getInstanceId());
@@ -903,7 +902,6 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
                 _userVMDao.releaseFromLockTable(userVmId);
                 _workDao.updateStep(work.getId(), Step.Done);
             }
-            txn.commit();
         }
     }
 
