@@ -82,11 +82,14 @@ public class SecurityGroupListener implements Listener {
                 SecurityIngressRuleAnswer ruleAnswer = (SecurityIngressRuleAnswer) ans;
                 if (ans.getResult()) {
                     s_logger.debug("Successfully programmed rule " + ruleAnswer.toString() + " into host " + agentId);
-                    _workDao.updateStep(ruleAnswer.getVmId(), ruleAnswer.getLogSequenceNumber(), Step.Done);
+                    int deleted = _workDao.deleteWork(ruleAnswer.getVmId(), ruleAnswer.getLogSequenceNumber());
+                    if (s_logger.isTraceEnabled()) {
+                        s_logger.trace("Security Group Listener deleted " + deleted + " jobs");
+                    }
 
                 } else {
-                    _workDao.updateStep(ruleAnswer.getVmId(), ruleAnswer.getLogSequenceNumber(), Step.Error);
-                    s_logger.debug("Failed to program rule " + ruleAnswer.toString() + " into host " + agentId);
+                    int deleted = _workDao.deleteWork(ruleAnswer.getVmId(), ruleAnswer.getLogSequenceNumber());
+                    s_logger.debug("Failed to program rule " + ruleAnswer.toString() + " into host " + agentId + " and deleted " + deleted + " jobs");
                     affectedVms.add(ruleAnswer.getVmId());
                 }
                 commandNum++;

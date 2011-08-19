@@ -167,6 +167,20 @@ public class SecurityGroupWorkDaoImpl extends GenericDaoBase<SecurityGroupWorkVO
 
         txn.commit();
 	}
+	
+	@Override
+	public int deleteWork(Long vmId, Long logSequenceNumber) {
+        final Transaction txn = Transaction.currentTxn();
+        txn.start();
+        SearchCriteria<SecurityGroupWorkVO> sc = VmIdSeqNumSearch.create();
+        sc.setParameters("vmId", vmId);
+        sc.setParameters("seqno", logSequenceNumber);
+
+        int removed = remove(sc);
+
+        txn.commit();
+        return removed;
+    }
 
 	@Override
 	public SecurityGroupWorkVO findByVmIdStep(long vmId, Step step) {

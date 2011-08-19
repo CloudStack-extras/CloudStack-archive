@@ -813,7 +813,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
 
     @Override
     public boolean start() {
-        _cleanupExecutor.scheduleAtFixedRate(new CleanupThread(), _timeBetweenCleanups, _timeBetweenCleanups, TimeUnit.SECONDS);
+        //_cleanupExecutor.scheduleAtFixedRate(new CleanupThread(), _timeBetweenCleanups, _timeBetweenCleanups, TimeUnit.SECONDS);
         return true;
     }
 

@@ -46,5 +46,7 @@ public interface SecurityGroupWorkDao extends GenericDao<SecurityGroupWorkVO, Lo
 	
 	List<SecurityGroupWorkVO> findScheduledWork();
 
+    int deleteWork(Long vmId, Long logSequenceNumber);
+
     
 }
