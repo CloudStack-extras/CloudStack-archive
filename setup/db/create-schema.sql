@@ -1399,11 +1399,7 @@ CREATE TABLE `cloud`.`op_nwgrp_work` (
   `step` varchar(32) NOT NULL COMMENT 'Step in the work',
   `seq_no` bigint unsigned  COMMENT 'seq number to be sent to agent, uniquely identifies ruleset update',
   PRIMARY KEY (`id`),
-  INDEX `i_op_nwgrp_work__instance_id`(`instance_id`),
-  INDEX `i_op_nwgrp_work__mgmt_server_id`(`mgmt_server_id`),
-  INDEX `i_op_nwgrp_work__taken`(`taken`),
-  INDEX `i_op_nwgrp_work__step`(`step`),
-  INDEX `i_op_nwgrp_work__seq_no`(`seq_no`)
+  INDEX `i_op_nwgrp_work__instance_id`(`instance_id`)
 ) ENGINE=MEMORY DEFAULT CHARSET=utf8;
 
 CREATE TABLE `cloud`.`op_vm_ruleset_log` (
