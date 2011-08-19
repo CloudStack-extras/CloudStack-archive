@@ -1400,7 +1400,7 @@ CREATE TABLE `cloud`.`op_nwgrp_work` (
   `seq_no` bigint unsigned  COMMENT 'seq number to be sent to agent, uniquely identifies ruleset update',
   PRIMARY KEY (`id`),
   INDEX `i_op_nwgrp_work__instance_id`(`instance_id`)
-) ENGINE=MEMORY DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `cloud`.`op_vm_ruleset_log` (
   `id` bigint unsigned UNIQUE NOT NULL AUTO_INCREMENT COMMENT 'id',
