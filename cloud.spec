@@ -36,7 +36,7 @@ BuildRequires: glibc-devel
 BuildRequires: /usr/bin/mkisofs
 BuildRequires: MySQL-python
 
-%global _premium %(tar jtvmf %{SOURCE0} '*/cloudstack-proprietary/' --occurrence=1 2>/dev/null | wc -l)
+#%global _premium %(tar jtvmf %{SOURCE0} '*/cloudstack-proprietary/' --occurrence=1 2>/dev/null | wc -l)
 
 %description
 This is the Cloud.com Stack, a highly-scalable elastic, open source,
@@ -84,6 +84,7 @@ Requires: unzip
 Requires: /sbin/mount.nfs
 Requires: openssh-clients
 Requires: nfs-utils
+Requires: wget
 # there is a fsimage.so in the source code, which adds xen-libs as a dependence, needs to supress it, as rhel doesn't have this pacakge
 AutoReqProv: no
 Obsoletes: vmops-agent-scripts < %{version}-%{release}
@@ -161,6 +162,8 @@ Requires: /usr/bin/ssh-keygen
 Requires: mkisofs
 Requires: MySQL-python
 Requires: python-paramiko
+Requires: ipmitool
+Requires: %{name}-utils = %{version}
 Group:     System Environment/Libraries
 %description client
 The Cloud.com management server is the central point of coordination,
@@ -297,17 +300,6 @@ Group:     System Environment/Libraries
 %description cli
 The Cloud.com command line tools contain a few Python modules that can call cloudStack APIs.
 
-
-%if %{_premium}
-
-%package premium-agent
-Summary: Cloud.com premium agent
-Requires: cloud-agent
-Requires: jnetpcap
-Group:     System Environment/Libraries
-%description premium-agent
-The Cloud.com premium agent
-
 %package test
 Summary:   Cloud.com test suite
 Requires: java >= 1.6.0
@@ -319,43 +311,28 @@ The Cloud.com test package contains a suite of automated tests
 that the very much appreciated QA team at Cloud.com constantly
 uses to help increase the quality of the Cloud.com Stack.
 
-%package premium
-Summary:   Cloud.com premium components
-Obsoletes: vmops-premium < %{version}-%{release}
-Provides: %{name}-premium-plugin-zynga = %{version}-%{release}
-Obsoletes: %{name}-premium-plugin-zynga < %{version}-%{release}
-Provides: %{name}-premium-vendor-zynga = %{version}-%{release}
-Obsoletes: %{name}-premium-vendor-zynga < %{version}-%{release}
-Requires: java >= 1.6.0
-Requires: ipmitool
-Requires: %{name}-utils = %{version}
-License:   CSL 1.1
-Group:     System Environment/Libraries
-%description premium
-The Cloud.com premium components expand the range of features on your Cloud.com Stack.
 
-%package usage
-Summary:   Cloud.com usage monitor
-Obsoletes: vmops-usage < %{version}-%{release}
-Requires: java >= 1.6.0
-Requires: %{name}-utils = %{version}, %{name}-core = %{version}, %{name}-deps = %{version}, %{name}-server = %{version}, %{name}-premium = %{version}, %{name}-daemonize = %{version}
-Requires: %{name}-setup = %{version}
-Requires: %{name}-client = %{version}
-License:   CSL 1.1
-Group:     System Environment/Libraries
-%description usage
-The Cloud.com usage monitor provides usage accounting across the entire cloud for
-cloud operators to charge based on usage parameters.
-
-%endif
+#%if %{_premium}
+#
+#
+#%package usage
+#Summary:   Cloud.com usage monitor
+#Obsoletes: vmops-usage < %{version}-%{release}
+#Requires: java >= 1.6.0
+#Requires: %{name}-utils = %{version}, %{name}-core = %{version}, %{name}-deps = %{version}, %{name}-server = %{version}, %{name}-premium = %{version}, %{name}-daemonize = %{version}
+#Requires: %{name}-setup = %{version}
+#Requires: %{name}-client = %{version}
+#License:   CSL 1.1
+#Group:     System Environment/Libraries
+#%description usage
+#The Cloud.com usage monitor provides usage accounting across the entire cloud for
+#cloud operators to charge based on usage parameters.
+#
+#%endif
 
 %prep
 
-%if %{_premium}
-echo Doing premium build
-%else
-echo Doing open source build
-%endif
+echo Doing CloudStack build
 
 %setup -q -n %{name}-%{_ver}
 
@@ -415,28 +392,28 @@ fi
 
 
 
-%if %{_premium}
-
-%preun usage
-if [ "$1" == "0" ] ; then
-    /sbin/chkconfig --del %{name}-usage  > /dev/null 2>&1 || true
-    /sbin/service %{name}-usage stop > /dev/null 2>&1 || true
-fi
-
-%pre usage
-id %{name} > /dev/null 2>&1 || /usr/sbin/useradd -M -c "Cloud.com unprivileged user" \
-     -r -s /bin/sh -d %{_sharedstatedir}/%{name}/management %{name}|| true
-# user harcoded here, also hardcoded on wscript
-
-%post usage
-if [ "$1" == "1" ] ; then
-    /sbin/chkconfig --add %{name}-usage > /dev/null 2>&1 || true
-    /sbin/chkconfig --level 345 %{name}-usage on > /dev/null 2>&1 || true
-else
-    /sbin/service %{name}-usage condrestart >/dev/null 2>&1 || true
-fi
-
-%endif
+#%if %{_premium}
+#
+#%preun usage
+#if [ "$1" == "0" ] ; then
+#    /sbin/chkconfig --del %{name}-usage  > /dev/null 2>&1 || true
+#    /sbin/service %{name}-usage stop > /dev/null 2>&1 || true
+#fi
+#
+#%pre usage
+#id %{name} > /dev/null 2>&1 || /usr/sbin/useradd -M -c "Cloud.com unprivileged user" \
+#     -r -s /bin/sh -d %{_sharedstatedir}/%{name}/management %{name}|| true
+## user harcoded here, also hardcoded on wscript
+#
+#%post usage
+#if [ "$1" == "1" ] ; then
+#    /sbin/chkconfig --add %{name}-usage > /dev/null 2>&1 || true
+#    /sbin/chkconfig --level 345 %{name}-usage on > /dev/null 2>&1 || true
+#else
+#    /sbin/service %{name}-usage condrestart >/dev/null 2>&1 || true
+#fi
+#
+#%endif
 
 %pre agent-scripts
 id %{name} > /dev/null 2>&1 || /usr/sbin/useradd -M -c "Cloud.com unprivileged user" \
@@ -490,6 +467,8 @@ fi
 %files server
 %defattr(0644,root,root,0755)
 %{_javadir}/%{name}-server.jar
+%{_javadir}/%{name}-vmware-base.jar
+%{_javadir}/%{name}-ovm.jar
 %{_sysconfdir}/%{name}/server/*
 
 %files agent-scripts
@@ -530,10 +509,7 @@ fi
 %{_javadir}/%{name}-jsch-0.1.42.jar
 %{_javadir}/%{name}-iControl.jar
 %{_javadir}/%{name}-manageontap.jar
-
-%defattr(0644,root,root,0755)
-%{_javadir}/%{name}-premium/*.jar
-%exclude %{_javadir}/%{name}-premium/servlet-api.jar
+%{_javadir}/vmware*.jar
 
 %files core
 %defattr(0644,root,root,0755)
@@ -560,17 +536,15 @@ fi
 
 %files client
 %defattr(0644,root,root,0775)
-%{_sysconfdir}/%{name}/management/*
-%if %{_premium}
-%exclude %{_sysconfdir}/%{name}/management/*premium*
-%endif
+%config(noreplace) %{_sysconfdir}/%{name}/management/*
+%config(noreplace) %{_sysconfdir}/%{name}/management/*premium*
 %config(noreplace) %attr(0640,root,%{name}) %{_sysconfdir}/%{name}/management/db.properties
 %config(noreplace) %{_sysconfdir}/%{name}/management/log4j-%{name}.xml
 %config(noreplace) %{_sysconfdir}/%{name}/management/tomcat6.conf
 %dir %attr(0770,root,%{name}) %{_sysconfdir}/%{name}/management/Catalina
 %dir %attr(0770,root,%{name}) %{_sysconfdir}/%{name}/management/Catalina/localhost
 %dir %attr(0770,root,%{name}) %{_sysconfdir}/%{name}/management/Catalina/localhost/client
-%config %{_sysconfdir}/sysconfig/%{name}-management
+%config(noreplace) %{_sysconfdir}/sysconfig/%{name}-management
 %attr(0755,root,root) %{_initrddir}/%{name}-management
 %dir %{_datadir}/%{name}/management
 %{_datadir}/%{name}/management/*
@@ -591,8 +565,8 @@ fi
 %files agent
 %defattr(0644,root,root,0755)
 %config(noreplace) %{_sysconfdir}/%{name}/agent/agent.properties
-%config %{_sysconfdir}/%{name}/agent/developer.properties.template
-%config %{_sysconfdir}/%{name}/agent/environment.properties
+%config(noreplace) %{_sysconfdir}/%{name}/agent/developer.properties.template
+%config(noreplace)  %{_sysconfdir}/%{name}/agent/environment.properties
 %config(noreplace) %{_sysconfdir}/%{name}/agent/log4j-%{name}.xml
 %attr(0755,root,root) %{_initrddir}/%{name}-agent
 %attr(0755,root,root) %{_libexecdir}/agent-runner
@@ -602,6 +576,7 @@ fi
 %{_libdir}/%{name}/agent/images
 %attr(0755,root,root) %{_bindir}/%{name}-setup-agent
 %dir %attr(0770,root,root) %{_localstatedir}/log/%{name}/agent
+%attr(0755,root,root) %{_bindir}/mycloud-setup-agent
 
 %files console-proxy
 %defattr(0644,root,root,0755)
@@ -616,7 +591,7 @@ fi
 %files cli
 %{_bindir}/%{name}-tool
 %{_bindir}/cloudvoladm
-%{_sysconfdir}/%{name}/cli/commands.xml
+%config(noreplace) %{_sysconfdir}/%{name}/cli/commands.xml
 %dir %{_prefix}/lib*/python*/site-packages/%{name}tool
 %{_prefix}/lib*/python*/site-packages/%{name}tool/*
 %{_prefix}/lib*/python*/site-packages/%{name}apis.py
@@ -624,43 +599,28 @@ fi
 %files baremetal-agent
 %attr(0755,root,root) %{_bindir}/cloud-setup-baremetal
 
-%if %{_premium}
-
-%files premium-agent
-%{_javadir}/cloud-agent-extras.jar
-%attr(0755,root,root) %{_bindir}/mycloud-setup-agent
-
 %files test
 %defattr(0644,root,root,0755)
 %attr(0755,root,root) %{_bindir}/%{name}-run-test
 %{_javadir}/%{name}-test.jar
 %{_sharedstatedir}/%{name}/test/*
 %{_libdir}/%{name}/test/*
-%{_sysconfdir}/%{name}/test/*
+%config(noreplace) %{_sysconfdir}/%{name}/test/*
 
-%files premium
-%defattr(0644,root,root,0755)
-%{_javadir}/%{name}-core-extras.jar
-%{_javadir}/%{name}-server-extras.jar
-%{_javadir}/%{name}-vmware-base.jar
-# maintain the following list in sync with files agent-scripts
-%{_libdir}/%{name}/agent/premium-scripts/*
-%{_sysconfdir}/%{name}/management/commands-ext.properties
-%{_sysconfdir}/%{name}/management/components-premium.xml
-%{_datadir}/%{name}/setup/create-database-premium.sql
-%{_datadir}/%{name}/setup/create-schema-premium.sql
-
-%files usage
-%defattr(0644,root,root,0775)
-%{_javadir}/%{name}-usage.jar
-%attr(0755,root,root) %{_initrddir}/%{name}-usage
-%attr(0755,root,root) %{_libexecdir}/usage-runner
-%dir %attr(0770,root,%{name}) %{_localstatedir}/log/%{name}/usage
-%{_sysconfdir}/%{name}/usage/usage-components.xml
-%config(noreplace) %{_sysconfdir}/%{name}/usage/log4j-%{name}_usage.xml
-%config(noreplace) %attr(0640,root,%{name}) %{_sysconfdir}/%{name}/usage/db.properties
-
-%endif
+#%if %{_premium}
+#
+#
+#%files usage
+#%defattr(0644,root,root,0775)
+#%{_javadir}/%{name}-usage.jar
+#%attr(0755,root,root) %{_initrddir}/%{name}-usage
+#%attr(0755,root,root) %{_libexecdir}/usage-runner
+#%dir %attr(0770,root,%{name}) %{_localstatedir}/log/%{name}/usage
+#%{_sysconfdir}/%{name}/usage/usage-components.xml
+#%config(noreplace) %{_sysconfdir}/%{name}/usage/log4j-%{name}_usage.xml
+#%config(noreplace) %attr(0640,root,%{name}) %{_sysconfdir}/%{name}/usage/db.properties
+#
+#%endif
 
 %changelog
 * Mon May 3 2010 Manuel Amador (Rudd-O) <manuel@vmops.com> 1.9.12

@@ -58,6 +58,7 @@ createSnapshotPolicy=com.cloud.api.commands.CreateSnapshotPolicyCmd;15
 deleteSnapshotPolicies=com.cloud.api.commands.DeleteSnapshotPoliciesCmd;15
 listSnapshotPolicies=com.cloud.api.commands.ListSnapshotPoliciesCmd;15
 
+
 #### template commands
 createTemplate=com.cloud.api.commands.CreateTemplateCmd;15
 registerTemplate=com.cloud.api.commands.RegisterTemplateCmd;15
@@ -68,6 +69,7 @@ listTemplates=com.cloud.api.commands.ListTemplatesCmd;15
 updateTemplatePermissions=com.cloud.api.commands.UpdateTemplatePermissionsCmd;15
 listTemplatePermissions=com.cloud.api.commands.ListTemplatePermissionsCmd;15
 extractTemplate=com.cloud.api.commands.ExtractTemplateCmd;15
+prepareTemplate=com.cloud.api.commands.PrepareTemplateCmd;1
 
 #### iso commands
 attachIso=com.cloud.api.commands.AttachIsoCmd;15
@@ -170,6 +172,7 @@ listAlerts=com.cloud.api.commands.ListAlertsCmd;3
 
 #### system capacity commands
 listCapacity=com.cloud.api.commands.ListCapacityCmd;3
+listCapacityByType=com.cloud.api.commands.ListCapacityByTypeCmd;3
 
 #### host commands
 addHost=com.cloud.api.commands.AddHostCmd;3
@@ -218,6 +221,8 @@ createSecurityGroup=com.cloud.api.commands.CreateSecurityGroupCmd;15
 deleteSecurityGroup=com.cloud.api.commands.DeleteSecurityGroupCmd;15
 authorizeSecurityGroupIngress=com.cloud.api.commands.AuthorizeSecurityGroupIngressCmd;15
 revokeSecurityGroupIngress=com.cloud.api.commands.RevokeSecurityGroupIngressCmd;15
+authorizeSecurityGroupEgress=com.cloud.api.commands.AuthorizeSecurityGroupEgressCmd;15
+revokeSecurityGroupEgress=com.cloud.api.commands.RevokeSecurityGroupEgressCmd;15
 listSecurityGroups=com.cloud.api.commands.ListSecurityGroupsCmd;15
 
 #### vm group commands
@@ -264,3 +269,9 @@ listSSHKeyPairs=com.cloud.api.commands.ListSSHKeyPairsCmd;15
 createProject=com.cloud.api.commands.CreateProjectCmd;15
 deleteProject=com.cloud.api.commands.DeleteProjectCmd;15
 listProjects=com.cloud.api.commands.ListProjectsCmd;15
+
+#### 
+createFirewallRule=com.cloud.api.commands.CreateFirewallRuleCmd;15
+deleteFirewallRule=com.cloud.api.commands.DeleteFirewallRuleCmd;15
+listFirewallRules=com.cloud.api.commands.ListFirewallRulesCmd;15
+

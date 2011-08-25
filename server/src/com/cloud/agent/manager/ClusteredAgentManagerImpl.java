@@ -71,7 +71,6 @@ import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.db.DB;
-import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.nio.Link;
@@ -156,6 +155,8 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
         // for agents that are self-managed, threshold to be considered as disconnected is 3 ping intervals
         long cutSeconds = (System.currentTimeMillis() >> 10) - (_pingInterval * 3);
         List<HostVO> hosts = _hostDao.findAndUpdateDirectAgentToLoad(cutSeconds, _loadSize, _nodeId);
+        List<HostVO> appliances = _hostDao.findAndUpdateApplianceToLoad(cutSeconds, _nodeId);
+        hosts.addAll(appliances);
         
         if (hosts != null && hosts.size() > 0) {
             s_logger.debug("Found " + hosts.size() + " unmanaged direct hosts, processing connect for them...");
@@ -1003,7 +1004,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
         ClusteredAgentAttache forwardAttache = (ClusteredAgentAttache)attache;
         
         if (success) {
-            
+
             //1) Set transfer mode to false - so the agent can start processing requests normally
             forwardAttache.setTransferMode(false);
             
@@ -1018,6 +1019,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
                 
                 requestToTransfer = forwardAttache.getRequestToTransfer();
             }
+            s_logger.debug("Management server " + _nodeId + " completed agent " + hostId + " rebalance");
            
         } else {
             failRebalance(hostId);

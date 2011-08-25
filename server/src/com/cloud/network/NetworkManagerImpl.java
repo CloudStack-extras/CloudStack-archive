@@ -94,14 +94,19 @@ import com.cloud.network.Networks.AddressFormat;
 import com.cloud.network.Networks.BroadcastDomainType;
 import com.cloud.network.Networks.TrafficType;
 import com.cloud.network.addr.PublicIp;
+import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.NetworkDomainDao;
 import com.cloud.network.element.NetworkElement;
 import com.cloud.network.guru.NetworkGuru;
 import com.cloud.network.lb.LoadBalancingRulesManager;
+import com.cloud.network.rules.FirewallManager;
 import com.cloud.network.rules.FirewallRule;
+import com.cloud.network.rules.FirewallRule.Purpose;
+import com.cloud.network.rules.FirewallRuleVO;
 import com.cloud.network.rules.RulesManager;
+import com.cloud.network.rules.StaticNat;
 import com.cloud.network.vpn.PasswordResetElement;
 import com.cloud.network.vpn.RemoteAccessVpnElement;
 import com.cloud.network.vpn.RemoteAccessVpnService;
@@ -214,6 +219,10 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     NetworkDomainDao _networkDomainDao;
     @Inject
     VMInstanceDao _vmDao;
+    @Inject
+    FirewallManager _firewallMgr;
+    @Inject 
+    FirewallRulesDao _firewallDao;
 
     @Inject DomainRouterDao _routerDao;
 
@@ -535,7 +544,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             throw new InvalidParameterValueException("Unable to find account " + accountName + " in domain " + domainId + ", permission denied");
         }
 
-        _accountMgr.checkAccess(caller, ipOwner);
+        _accountMgr.checkAccess(caller, null, ipOwner);
 
         DataCenterVO zone = null;
         if (zoneId != null) {
@@ -562,6 +571,16 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         // belongs to the system
         if (zone.getNetworkType() != NetworkType.Basic && network.getAccountId() != ipOwner.getId()) {
             throw new InvalidParameterValueException("The owner of the network is not the same as owner of the IP");
+        }
+        VlanType vlanType = VlanType.VirtualNetwork;
+        boolean assign = false;
+        //For basic zone, if there isn't a public network outside of the guest network, specify the vlan type to be direct attached
+        if (zone.getNetworkType() == NetworkType.Basic) {
+          if (network.getTrafficType() == TrafficType.Guest){
+              vlanType = VlanType.DirectAttached;
+              assign = true;
+          }
+          
         }
 
         PublicIp ip = null;
@@ -605,7 +624,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 }
             }
 
-            ip = fetchNewPublicIp(zoneId, null, null, ipOwner, VlanType.VirtualNetwork, network.getId(), isSourceNat, false, null);
+            ip = fetchNewPublicIp(zoneId, null, null, ipOwner, vlanType, network.getId(), isSourceNat, assign, null);
 
             if (ip == null) {
                 throw new InsufficientAddressCapacityException("Unable to find available public IP addresses", DataCenter.class, zoneId);
@@ -635,7 +654,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
 
         IpAddress ipToAssoc = getIp(cmd.getEntityId());
         if (ipToAssoc != null) {
-            _accountMgr.checkAccess(caller, ipToAssoc);
+            _accountMgr.checkAccess(caller, null, ipToAssoc);
             owner = _accountMgr.getAccount(ipToAssoc.getAccountId());
         } else {
             s_logger.debug("Unable to find ip address by id: " + cmd.getEntityId());
@@ -1326,7 +1345,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                     NetworkGuru guru = _networkGurus.get(network.getGuruName());
                     nic.setState(Nic.State.Releasing);
                     _nicDao.update(nic.getId(), nic);
-                    NicProfile profile = new NicProfile(nic, network, null, null, null);
+                    NicProfile profile = new NicProfile(nic, network, nic.getBroadcastUri(), nic.getIsolationUri(), null);
                     if (guru.release(profile, vmProfile, nic.getReservationId())) {
                         applyProfileToNicForRelease(nic, profile);
                         nic.setState(Nic.State.Allocated);
@@ -1394,7 +1413,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
 
         if (ipVO.getAllocatedToAccountId() != null) {
-            _accountMgr.checkAccess(caller, ipVO);
+            _accountMgr.checkAccess(caller, null, ipVO);
         }
 
         if (ipVO.isSourceNat()) {
@@ -1510,7 +1529,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         Account caller = UserContext.current().getCaller();
         List<String> tags = cmd.getTags();
         boolean isDomainSpecific = false;
-        
+
         if (tags != null && tags.size() > 1) {
             throw new InvalidParameterException("Only one tag can be specified for a network at this time");
         }
@@ -1823,33 +1842,39 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         if (isSystem != null && isSystem && (accountName != null || domainId != null)) {
             throw new InvalidParameterValueException("System network belongs to system, account and domainId parameters can't be specified");
         }
-
-        if (_accountMgr.isAdmin(caller.getType())) {
-            if (domainId != null) {
-                DomainVO domain = _domainDao.findById(domainId);
-                if (domain == null) {
-                    throw new InvalidParameterValueException("Domain id=" + domainId + " doesn't exist in the system");
-                }
-
-                _accountMgr.checkAccess(caller, domain);
-
-                if (accountName != null) {
-                    Account owner = _accountMgr.getActiveAccount(accountName, domainId);
-                    if (owner == null) {
-                        throw new InvalidParameterValueException("Unable to find account " + accountName + " in domain " + domainId);
-                    }
-                    accountId = owner.getId();
-                }
+        
+        if (domainId != null) {
+            DomainVO domain = _domainDao.findById(domainId);
+            if (domain == null) {
+                throw new InvalidParameterValueException("Domain id=" + domainId + " doesn't exist in the system");
             }
-            DomainVO domain = _domainDao.findById(caller.getDomainId());
-            path = domain.getPath();
 
-        } else {
+            _accountMgr.checkAccess(caller, domain);
+            if (accountName != null) {
+                Account owner = _accountMgr.getActiveAccount(accountName, domainId);
+                if (owner == null) {
+                    throw new InvalidParameterValueException("Unable to find account " + accountName + " in domain " + domainId);
+                }
+                
+                _accountMgr.checkAccess(caller, null, owner);
+                accountId = owner.getId();
+            }
+        }
+        
+        if (!_accountMgr.isAdmin(caller.getType())) {
             accountId = caller.getId();
         }
+        
+        path = _domainDao.findById(caller.getDomainId()).getPath();
 
         if ((isSystem == null || !isSystem) && (isShared == null || isShared)) {
-            sharedNetworkDomainId = domainId;
+            if (isShared != null && isShared && caller.getId() != Account.ACCOUNT_ID_SYSTEM && domainId == null) {
+                sharedNetworkDomainId = caller.getDomainId();
+            } else if (isShared == null && caller.getType() != Account.ACCOUNT_TYPE_ADMIN && domainId == null) {
+                sharedNetworkDomainId = caller.getDomainId();
+            }else{
+                sharedNetworkDomainId = domainId;
+            }
         }
 
         Filter searchFilter = new Filter(NetworkVO.class, "id", false, cmd.getStartIndex(), cmd.getPageSizeVal());
@@ -1888,6 +1913,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 networksToReturn.addAll(listDomainSpecificNetworks(buildNetworkSearchCriteria(sb, keyword, id, isSystem, zoneId, type, isDefault, trafficType, isShared), searchFilter, path));
             }
 
+            //if user requested only domain specific networks, don't return account/zone wide networks
             if (accountId != null || (domainId == null && accountName == null)) {
                 networksToReturn.addAll(listAccountSpecificAndZoneLevelNetworks(buildNetworkSearchCriteria(sb, keyword, id, isSystem, zoneId, type, isDefault, trafficType, isShared), searchFilter, accountId, path));
             }
@@ -1923,7 +1949,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         if (type != null) {
             sc.addAnd("guestType", SearchCriteria.Op.EQ, type);
         }
-        
+
         if (isDefault != null) {
             sc.addAnd("isDefault", SearchCriteria.Op.EQ, isDefault);
         }
@@ -1939,9 +1965,9 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         return sc;
     }
 
-    
+
     private List<NetworkVO> listDomainLevelNetworks(SearchCriteria<NetworkVO> sc, Filter searchFilter, long domainId) {
-        
+
         Set<Long> allowedDomains = new HashSet<Long>();
         if (_allowSubdomainNetworkAccess) {
             allowedDomains = _accountMgr.getDomainParentIds(domainId);
@@ -1954,7 +1980,6 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     }
 
     private List<NetworkVO> listAccountSpecificAndZoneLevelNetworks(SearchCriteria<NetworkVO> sc, Filter searchFilter, Long accountId, String path) {
-
 
         SearchCriteria<NetworkVO> ssc = _networksDao.createSearchCriteria();
 
@@ -2021,7 +2046,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 throw new PermissionDeniedException("Account " + caller.getAccountName() + " does not own network id=" + networkId + ", permission denied");
             }
         } else {
-            _accountMgr.checkAccess(caller, owner);
+            _accountMgr.checkAccess(caller, null, owner);
         }
 
         User callerUser = _accountMgr.getActiveUser(UserContext.current().getCallerUserId());
@@ -2207,6 +2232,20 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             success = false;
             s_logger.warn("Failed to cleanup LB rules as a part of network id=" + networkId + " cleanup");
         }
+        
+        //revoke all firewall rules for the network
+        try {
+            if (_firewallMgr.revokeAllFirewallRulesForNetwork(networkId, callerUserId, caller)) {
+                s_logger.debug("Successfully cleaned up firewallRules rules for network id=" + networkId);
+            } else {
+                success = false;
+                s_logger.warn("Failed to cleanup Firewall rules as a part of network id=" + networkId + " cleanup");
+            }
+        } catch (ResourceUnavailableException ex) {
+            success = false;
+            // shouldn't even come here as network is being cleaned up after all network elements are shutdown
+            s_logger.warn("Failed to cleanup Firewall rules as a part of network id=" + networkId + " cleanup due to resourceUnavailable ", ex);
+        }
 
         // release all ip addresses
         List<IPAddressVO> ipsToRelease = _ipAddressDao.listByAssociatedNetwork(networkId, null);
@@ -2339,7 +2378,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             throw new InvalidParameterValueException("Network is not in the right state to be restarted. Correct states are: " + Network.State.Implemented + ", " + Network.State.Setup);
         }
 
-        _accountMgr.checkAccess(callerAccount, network);
+        _accountMgr.checkAccess(callerAccount, null, network);
 
         boolean success = true;
 
@@ -2387,16 +2426,38 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             s_logger.debug("Restarting network elements for the network " + network);
             for (NetworkElement element : _networkElements) {
                 // stop and start the network element
-                if (!element.restart(network, context)) {
-                    s_logger.warn("Failed to restart network element(s) as a part of network id" + networkId + " restart");
+                try {
+                    boolean supported = element.restart(network, context);
+                    if (!supported) {
+                        s_logger.trace("Network element(s) " + element.getName() + " doesn't support network id" + networkId + " restart");
+                    }
+                } catch (Exception ex) {
+                    s_logger.warn("Failed to restart network element" + element.getName() + " as a part of network id" + networkId + " restart", ex);
                     success = false;
                 }
             }
         }
 
+        if (!success) {
+            return false;
+        }
+
         // associate all ip addresses
         if (!applyIpAssociations(network, false)) {
             s_logger.warn("Failed to apply ip addresses as a part of network id" + networkId + " restart");
+            success = false;
+        }
+        
+        // apply static nat
+        if (!_rulesMgr.applyStaticNatsForNetwork(networkId, false, caller)) {
+            s_logger.warn("Failed to apply static nats a part of network id" + networkId + " restart");
+            success = false;
+        }
+
+        // apply firewall rules
+        List<FirewallRuleVO> firewallRulesToApply = _firewallDao.listByNetworkAndPurpose(networkId, Purpose.Firewall);
+        if (!_firewallMgr.applyFirewallRules(firewallRulesToApply, false, caller)) {
+            s_logger.warn("Failed to reapply firewall rule(s) as a part of network id=" + networkId + " restart");
             success = false;
         }
 
@@ -2423,7 +2484,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         if (vpnsToReapply != null) {
             for (RemoteAccessVpn vpn : vpnsToReapply) {
                 // Start remote access vpn per ip
-                if (_vpnMgr.startRemoteAccessVpn(vpn.getServerAddressId()) == null) {
+                if (_vpnMgr.startRemoteAccessVpn(vpn.getServerAddressId(), false) == null) {
                     s_logger.warn("Failed to reapply vpn rules as a part of network id=" + networkId + " restart");
                     success = false;
                 }
@@ -2591,6 +2652,20 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     @Override
     public Nic getNicInNetwork(long vmId, long networkId) {
         return _nicDao.findByInstanceIdAndNetworkId(networkId, vmId);
+    }
+
+    @Override
+    public String getIpInNetwork(long vmId, long networkId) {
+        Nic guestNic = getNicInNetwork(vmId, networkId);
+        assert (guestNic != null && guestNic.getIp4Address() != null) : "Vm doesn't belong to network associated with ipAddress or ip4 address is null";
+        return guestNic.getIp4Address();
+    }
+    
+    @Override
+    public String getIpInNetworkIncludingRemoved(long vmId, long networkId) {
+        Nic guestNic = getNicInNetworkIncludingRemoved(vmId, networkId);
+        assert (guestNic != null && guestNic.getIp4Address() != null) : "Vm doesn't belong to network associated with ipAddress or ip4 address is null";
+        return guestNic.getIp4Address();
     }
 
     @Override
@@ -2767,9 +2842,11 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     private boolean cleanupIpResources(long ipId, long userId, Account caller) {
         boolean success = true;
 
+        
+        //Revoke all PF/Static nat rules for the ip
         try {
-            s_logger.debug("Revoking all PF/StaticNat rules as a part of public IP id=" + ipId + " release...");
-            if (!_rulesMgr.revokeAllRulesForIp(ipId, userId, caller)) {
+            s_logger.debug("Revoking all " + Purpose.PortForwarding + "/" + Purpose.StaticNat + " rules as a part of public IP id=" + ipId + " release...");
+            if (!_rulesMgr.revokeAllPFAndStaticNatRulesForIp(ipId, userId, caller)) {
                 s_logger.warn("Unable to revoke all the port forwarding rules for ip id=" + ipId + " as a part of ip release");
                 success = false;
             }
@@ -2778,7 +2855,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             success = false;
         }
 
-        s_logger.debug("Revoking all LB rules as a part of public IP id=" + ipId + " release...");
+        s_logger.debug("Revoking all " + Purpose.LoadBalancing + " rules as a part of public IP id=" + ipId + " release...");
         if (!_lbMgr.removeAllLoadBalanacersForIp(ipId, caller, userId)) {
             s_logger.warn("Unable to revoke all the load balancer rules for ip id=" + ipId + " as a part of ip release");
             success = false;
@@ -2793,6 +2870,18 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             _vpnMgr.destroyRemoteAccessVpn(ipId);
         } catch (ResourceUnavailableException e) {
             s_logger.warn("Unable to destroy remote access vpn for ip id=" + ipId + " as a part of ip release", e);
+            success = false;
+        }
+        
+        //Revoke all firewall rules for the ip
+        try {
+            s_logger.debug("Revoking all " + Purpose.Firewall + "rules as a part of public IP id=" + ipId + " release...");
+            if (!_firewallMgr.revokeFirewallRulesForIp(ipId, userId, caller)) {
+                s_logger.warn("Unable to revoke all the firewall rules for ip id=" + ipId + " as a part of ip release");
+                success = false;
+            }
+        } catch (ResourceUnavailableException e) {
+            s_logger.warn("Unable to revoke all firewall rules for ip id=" + ipId + " as a part of ip release", e);
             success = false;
         }
 
@@ -2944,8 +3033,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         if (tags != null && tags.size() > 1) {
             throw new InvalidParameterException("Unable to support more than one tag on network yet");
         }
-        
-        _accountMgr.checkAccess(caller, network);
+        _accountMgr.checkAccess(caller, null, network);
         
         // Don't allow to update system network - make an exception for the Guest network in Basic zone
         NetworkOffering offering = _networkOfferingDao.findByIdIncludingRemoved(network.getNetworkOfferingId());
@@ -2968,6 +3056,8 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             if (isUpdateDnsSupported == null || !Boolean.valueOf(isUpdateDnsSupported)) {
                 throw new InvalidParameterValueException("Domain name change is not supported for network id=" + network.getNetworkOfferingId() + " in zone id=" + network.getDataCenterId());
             }
+
+            //restart network if it has active network elements
             List<DomainRouterVO> routers = _routerDao.listActive(networkId);
             if (!routers.isEmpty()) {
                restartNetwork = true;
@@ -3051,7 +3141,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
 
     }
-    
+
     Random _rand = new Random(System.currentTimeMillis());
     
     @Override
@@ -3102,7 +3192,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         return result;
     }
     
-    
+
     protected String getZoneNetworkDomain(long zoneId) {
         return _dcDao.findById(zoneId).getDomain();
     }
@@ -3130,5 +3220,52 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     @Override
     public String getGlobalGuestDomainSuffix() {
         return _networkDomain;
+    }
+    
+    @Override
+    public String getStartIpAddress(long networkId) {
+        List<VlanVO> vlans = _vlanDao.listVlansByNetworkId(networkId);
+        if (vlans.isEmpty()) {
+            return null;
+        }
+        
+        String startIP = vlans.get(0).getIpRange().split("-")[0];
+        
+        for (VlanVO vlan : vlans) {
+            String startIP1 = vlan.getIpRange().split("-")[0];
+            long startIPLong = NetUtils.ip2Long(startIP);
+            long startIPLong1 = NetUtils.ip2Long(startIP1);
+            
+            if (startIPLong1 < startIPLong) {
+                startIP = startIP1; 
+            }
+        }
+        
+        return startIP;
+    }
+    
+    @Override
+    public boolean applyStaticNats(List<? extends StaticNat> staticNats, boolean continueOnError) throws ResourceUnavailableException {
+        if (staticNats == null || staticNats.size() == 0) {
+            s_logger.debug("There are no static nat rules for the network elements");
+            return true;
+        }
+
+        boolean success = true;
+        Network network = _networksDao.findById(staticNats.get(0).getNetworkId());
+        for (NetworkElement ne : _networkElements) {
+            try {
+                boolean handled = ne.applyStaticNats(network, staticNats);
+                s_logger.debug("Static Nat for network " + network.getId() + " were " + (handled ? "" : " not") + " handled by " + ne.getName());
+            } catch (ResourceUnavailableException e) {
+                if (!continueOnError) {
+                    throw e;
+                }
+                s_logger.warn("Problems with " + ne.getName() + " but pushing on", e);
+                success = false;
+            }
+        }
+
+        return success;
     }
 }

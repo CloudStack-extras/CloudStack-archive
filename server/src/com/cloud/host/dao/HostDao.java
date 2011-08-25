@@ -88,12 +88,7 @@ public interface HostDao extends GenericDao<HostVO, Long> {
 	HostVO findByStorageIpAddressInDataCenter(long dcId, String privateIpAddress);
     HostVO findByPrivateIpAddressInDataCenter(long dcId, String privateIpAddress);
 
-	/**
-	 * find a host by its mac address
-	 * @param macAddress
-	 * @return HostVO or null if not found.
-	 */
-	public HostVO findByGuid(String macAddress);
+	public HostVO findByGuid(String guid);
 
 	public HostVO findByName(String name);
 
@@ -113,14 +108,6 @@ public interface HostDao extends GenericDao<HostVO, Long> {
 	 * @return
 	 */
 	List<HostVO> listByType(Type type);
-
-	/**
-	 * Find hosts that have not responded to a ping regardless of state
-	 * @param timeout
-	 * @param type
-	 * @return
-	 */
-	List<HostVO> findLostHosts2(long timeout, Type type);
 
 	/**
 	 * update the host and changes the status depending on the Event and
@@ -186,4 +173,8 @@ public interface HostDao extends GenericDao<HostVO, Long> {
     List<HostVO> listSecondaryStorageVM(long dcId);
     
     List<HostVO> listAllRoutingAgents();
+
+	List<HostVO> findAndUpdateApplianceToLoad(long lastPingSecondsAfter, long managementServerId);
+
+    List<HostVO> listByInAllStatus(Type type, Long clusterId, Long podId, long dcId);    
 }

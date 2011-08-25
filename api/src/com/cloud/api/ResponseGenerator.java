@@ -32,6 +32,7 @@ import com.cloud.api.response.DomainResponse;
 import com.cloud.api.response.DomainRouterResponse;
 import com.cloud.api.response.EventResponse;
 import com.cloud.api.response.ExtractResponse;
+import com.cloud.api.response.FirewallResponse;
 import com.cloud.api.response.FirewallRuleResponse;
 import com.cloud.api.response.HostResponse;
 import com.cloud.api.response.IPAddressResponse;
@@ -76,10 +77,12 @@ import com.cloud.network.Network;
 import com.cloud.network.RemoteAccessVpn;
 import com.cloud.network.VpnUser;
 import com.cloud.network.router.VirtualRouter;
+import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.network.rules.PortForwardingRule;
 import com.cloud.network.rules.StaticNatRule;
 import com.cloud.network.security.IngressRule;
+import com.cloud.network.security.EgressRule;
 import com.cloud.network.security.SecurityGroup;
 import com.cloud.network.security.SecurityGroupRules;
 import com.cloud.offering.DiskOffering;
@@ -159,18 +162,23 @@ public interface ResponseGenerator {
     Account findAccountByNameDomain(String accountName, Long domainId);
 
     VirtualMachineTemplate findTemplateById(Long templateId);
-
+    
+    Host findHostById(Long hostId);
+    
+    List<TemplateResponse> createTemplateResponses(long templateId, long zoneId, boolean readyOnly);
+    
     VpnUsersResponse createVpnUserResponse(VpnUser user);
 
     RemoteAccessVpnResponse createRemoteAccessVpnResponse(RemoteAccessVpn vpn);
     List<TemplateResponse> createTemplateResponses(long templateId, Long zoneId, boolean readyOnly);
-    List<TemplateResponse> createTemplateResponses(long templateId, long zoneId, boolean readyOnly);
 
     List<TemplateResponse> createTemplateResponses(long templateId, Long snapshotId, Long volumeId, boolean readyOnly);
     
     ListResponse<SecurityGroupResponse> createSecurityGroupResponses(List<? extends SecurityGroupRules> networkGroups);
     
     SecurityGroupResponse createSecurityGroupResponseFromIngressRule(List<? extends IngressRule> ingressRules);
+
+    SecurityGroupResponse createSecurityGroupResponseFromEgressRule(List<? extends EgressRule> egressRules);
 
     SecurityGroupResponse createSecurityGroupResponse(SecurityGroup group);
 
@@ -201,7 +209,13 @@ public interface ResponseGenerator {
 	Long getSecurityGroupId(String groupName, long accountId);
 
     List<TemplateResponse> createIsoResponses(long isoId, Long zoneId, boolean readyOnly);
+
     ProjectResponse createProjectResponse(Project project);
+    
     List<TemplateResponse> createIsoResponses(VirtualMachineTemplate iso, long zoneId, boolean readyOnly);
+
+	List<TemplateResponse> createTemplateResponses(long templateId, Long vmId);
+	
+    FirewallResponse createFirewallResponse(FirewallRule fwRule);
 
 }

@@ -95,7 +95,8 @@ public class HyervisorTemplateAdapter extends TemplateAdapterBase implements Tem
 	        &&(!url.toLowerCase().endsWith("qcow2"))&&(!url.toLowerCase().endsWith("qcow2.zip"))
 	        &&(!url.toLowerCase().endsWith("qcow2.bz2"))&&(!url.toLowerCase().endsWith("qcow2.gz"))
 	        &&(!url.toLowerCase().endsWith("ova"))&&(!url.toLowerCase().endsWith("ova.zip"))
-	        &&(!url.toLowerCase().endsWith("ova.bz2"))&&(!url.toLowerCase().endsWith("ova.gz"))){
+	        &&(!url.toLowerCase().endsWith("ova.bz2"))&&(!url.toLowerCase().endsWith("ova.gz"))
+	        &&(!url.toLowerCase().endsWith("img"))&&(!url.toLowerCase().endsWith("raw"))){
 	        throw new InvalidParameterValueException("Please specify a valid "+ cmd.getFormat().toLowerCase());
 	    }
 		
@@ -107,7 +108,7 @@ public class HyervisorTemplateAdapter extends TemplateAdapterBase implements Tem
 	public VMTemplateVO create(TemplateProfile profile) {
 		VMTemplateVO template = persistTemplate(profile);
 		
-		_downloadMonitor.downloadTemplateToStorage(profile.getTemplateId(), profile.getZoneId());
+		_downloadMonitor.downloadTemplateToStorage(template, profile.getZoneId());
 		_accountMgr.incrementResourceCount(profile.getAccountId(), ResourceType.template);
 		
         return template;

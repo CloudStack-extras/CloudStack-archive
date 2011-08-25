@@ -17,6 +17,9 @@
  */
 package com.cloud.agent.api.to;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.FirewallRule.State;
 import com.cloud.utils.net.NetUtils;
@@ -43,33 +46,67 @@ import com.cloud.utils.net.NetUtils;
  */
 public class FirewallRuleTO {
     long id;
+    String srcVlanTag;
     String srcIp;
     String protocol;
     int[] srcPortRange;
     boolean revoked;
     boolean alreadyAdded;
+    private List<String> sourceCidrList;
     FirewallRule.Purpose purpose;
+    private Integer icmpType;
+    private Integer icmpCode;
+    
 
     protected FirewallRuleTO() {
     }
     
-    public FirewallRuleTO(long id, String srcIp, String protocol, int srcPortStart, int srcPortEnd, boolean revoked, boolean alreadyAdded, FirewallRule.Purpose purpose) {
+    public FirewallRuleTO(long id, String srcIp, String protocol, Integer srcPortStart, Integer srcPortEnd, boolean revoked, boolean alreadyAdded, FirewallRule.Purpose purpose, List<String> sourceCidr,Integer icmpType,Integer icmpCode) {
+       this(id,null,srcIp,protocol,srcPortStart,srcPortEnd,revoked,alreadyAdded,purpose,sourceCidr,icmpType,icmpCode);
+    } 
+    public FirewallRuleTO(long id,String srcVlanTag, String srcIp, String protocol, Integer srcPortStart, Integer srcPortEnd, boolean revoked, boolean alreadyAdded, FirewallRule.Purpose purpose, List<String> sourceCidr,Integer icmpType,Integer icmpCode) {
+        this.srcVlanTag = srcVlanTag;
         this.srcIp = srcIp;
         this.protocol = protocol;
-        this.srcPortRange = new int[] {srcPortStart, srcPortEnd};
+        
+        if (srcPortStart != null) {
+            List<Integer> portRange = new ArrayList<Integer>();
+            portRange.add(srcPortStart);
+            if (srcPortEnd != null) {
+                portRange.add(srcPortEnd);
+            }
+            
+            srcPortRange = new int[portRange.size()];
+            int i = 0;
+            for (Integer port : portRange) {
+                srcPortRange[i] = port.intValue();
+                i ++;
+            }   
+        } 
+        
         this.revoked = revoked;
         this.alreadyAdded = alreadyAdded;
         this.purpose = purpose;
+        this.sourceCidrList = sourceCidr;
+        this.icmpType = icmpType;
+        this.icmpCode = icmpCode;
+    }
+    public FirewallRuleTO(FirewallRule rule, String srcVlanTag, String srcIp) {
+        this(rule.getId(),srcVlanTag, srcIp, rule.getProtocol(), rule.getSourcePortStart(), rule.getSourcePortEnd(), rule.getState()==State.Revoke, rule.getState()==State.Active, rule.getPurpose(),rule.getSourceCidrList(),rule.getIcmpType(),rule.getIcmpCode());
     }
     
     public FirewallRuleTO(FirewallRule rule, String srcIp) {
-        this(rule.getId(), srcIp, rule.getProtocol(), rule.getSourcePortStart(), rule.getSourcePortEnd(), rule.getState()==State.Revoke, rule.getState()==State.Active, rule.getPurpose());
+        this(rule.getId(),null, srcIp, rule.getProtocol(), rule.getSourcePortStart(), rule.getSourcePortEnd(), rule.getState()==State.Revoke, rule.getState()==State.Active, rule.getPurpose(),rule.getSourceCidrList(),rule.getIcmpType(),rule.getIcmpCode());
     }
     
     public long getId() {
         return id;
     }
 
+    public String getSrcVlanTag() {
+    	return srcVlanTag;
+    }
+    
     public String getSrcIp() {
         return srcIp;
     }
@@ -82,12 +119,27 @@ public class FirewallRuleTO {
         return srcPortRange;
     }
     
+    public Integer getIcmpType(){
+    	return icmpType;
+    }
+    
+    public Integer getIcmpCode(){
+    	return icmpCode;  
+    }
+    
     public String getStringSrcPortRange() {
-        return NetUtils.portRangeToString(srcPortRange);
+    	if (srcPortRange == null || srcPortRange.length < 2)
+    		return "0:0";
+    	else
+    		return NetUtils.portRangeToString(srcPortRange);
     }
 
     public boolean revoked() {
         return revoked;
+    }
+    
+    public List<String> getSourceCidrList() {
+        return sourceCidrList;
     }
     
     public boolean isAlreadyAdded() {

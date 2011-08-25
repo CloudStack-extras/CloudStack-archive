@@ -18,7 +18,6 @@
 
 package com.cloud.storage.dao;
 
-import java.util.Date;
 import java.util.List;
 
 import com.cloud.storage.VMTemplateHostVO;
@@ -37,10 +36,6 @@ public interface VMTemplateHostDao extends GenericDao<VMTemplateHostVO, Long> {
     VMTemplateHostVO findByHostTemplate(long hostId, long templateId, boolean lock);
 
     List<VMTemplateHostVO> listByHostTemplate(long hostId, long templateId);
-
-    VMTemplateHostVO findByHostTemplatePool(long hostId, long templateId, long poolId);
-
-    List<VMTemplateHostVO> listByTemplatePool(long templateId, long poolId);
 
     void update(VMTemplateHostVO instance);    
 
@@ -61,5 +56,6 @@ public interface VMTemplateHostDao extends GenericDao<VMTemplateHostVO, Long> {
     void deleteByHost(Long hostId);
 
     VMTemplateHostVO findLocalSecondaryStorageByHostTemplate(long hostId, long templateId);
-	
+
+    List<VMTemplateHostVO> listByTemplateHostStatus(long templateId, long hostId, Status... states);
 }

@@ -27,6 +27,7 @@ import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
 import com.cloud.api.response.SuccessResponse;
 import com.cloud.event.EventTypes;
+import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.user.Account;
 import com.cloud.user.UserContext;
@@ -84,6 +85,8 @@ public class DeleteLoadBalancerRuleCmd extends BaseAsyncCmd {
     public void execute(){
         UserContext.current().setEventDetails("Load balancer Id: "+getId());
         boolean result = _lbService.deleteLoadBalancerRule(id, true);
+        result = result && _rulesService.revokeRelatedFirewallRule(id, true);
+        
         if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
@@ -99,6 +102,10 @@ public class DeleteLoadBalancerRuleCmd extends BaseAsyncCmd {
 
     @Override
     public Long getSyncObjId() {
-        return _lbService.findById(id).getNetworkId();
+    	LoadBalancer lb = _lbService.findById(id);
+    	if(lb == null){
+    		throw new InvalidParameterValueException("Unable to find load balancer rule: " + id);
+    	}
+        return lb.getNetworkId();
     }
 }

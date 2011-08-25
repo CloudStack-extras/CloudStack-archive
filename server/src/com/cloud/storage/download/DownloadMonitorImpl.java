@@ -20,7 +20,6 @@ package com.cloud.storage.download;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,9 +37,9 @@ import com.cloud.agent.api.Command;
 import com.cloud.agent.api.storage.DeleteTemplateCommand;
 import com.cloud.agent.api.storage.DownloadCommand;
 import com.cloud.agent.api.storage.DownloadProgressCommand;
+import com.cloud.agent.api.storage.DownloadProgressCommand.RequestType;
 import com.cloud.agent.api.storage.ListTemplateAnswer;
 import com.cloud.agent.api.storage.ListTemplateCommand;
-import com.cloud.agent.api.storage.DownloadProgressCommand.RequestType;
 import com.cloud.alert.AlertManager;
 import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.dc.DataCenterVO;
@@ -56,13 +55,11 @@ import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.storage.Storage.ImageFormat;
-import com.cloud.storage.StoragePoolHostVO;
 import com.cloud.storage.VMTemplateHostVO;
-import com.cloud.storage.VMTemplateStoragePoolVO;
 import com.cloud.storage.VMTemplateStorageResourceAssoc;
-import com.cloud.storage.VMTemplateZoneVO;
 import com.cloud.storage.VMTemplateStorageResourceAssoc.Status;
 import com.cloud.storage.VMTemplateVO;
+import com.cloud.storage.VMTemplateZoneVO;
 import com.cloud.storage.dao.StoragePoolHostDao;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VMTemplateHostDao;
@@ -78,6 +75,7 @@ import com.cloud.utils.db.JoinBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
+import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.SecondaryStorageVm;
 import com.cloud.vm.SecondaryStorageVmVO;
 import com.cloud.vm.UserVmManager;
@@ -189,17 +187,9 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
 		return true;
 	}
 	
-	
-	public boolean isTemplateUpdateable(Long templateId) {
+	public boolean isTemplateUpdateable(Long templateId, Long hostId) {
 		List<VMTemplateHostVO> downloadsInProgress =
-			_vmTemplateHostDao.listByTemplateStatus(templateId, VMTemplateHostVO.Status.DOWNLOAD_IN_PROGRESS);
-		return (downloadsInProgress.size() == 0);
-	}
-	
-	
-	public boolean isTemplateUpdateable(Long templateId, Long datacenterId) {
-		List<VMTemplateHostVO> downloadsInProgress =
-			_vmTemplateHostDao.listByTemplateStatus(templateId, datacenterId, VMTemplateHostVO.Status.DOWNLOAD_IN_PROGRESS);
+			_vmTemplateHostDao.listByTemplateHostStatus(templateId.longValue(), hostId.longValue(), VMTemplateHostVO.Status.DOWNLOAD_IN_PROGRESS, VMTemplateHostVO.Status.DOWNLOADED);
 		return (downloadsInProgress.size() == 0);
 	}
 	
@@ -220,7 +210,7 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
         String url = generateCopyUrl(sourceServer, srcTmpltHost);
 	    if (url == null) {
 			s_logger.warn("Unable to start/resume copy of template " + template.getUniqueName() + " to " + destServer.getName() + ", no secondary storage vm in running state in source zone");
-			throw new StorageUnavailableException("No secondary VM in running state in zone " + sourceServer.getDataCenterId(), srcTmpltHost.getPoolId());
+			throw new CloudRuntimeException("No secondary VM in running state in zone " + sourceServer.getDataCenterId());
 	    }
         destTmpltHost = _vmTemplateHostDao.findByHostTemplate(destServer.getId(), template.getId());
         if (destTmpltHost == null) {
@@ -233,15 +223,21 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
         }
 
         Long maxTemplateSizeInBytes = getMaxTemplateSizeInBytes();
+        if (srcTmpltHost.getSize() > maxTemplateSizeInBytes){
+        	throw new CloudRuntimeException("Cant copy the template as the template's size " +srcTmpltHost.getSize()+
+        			" is greater than max.template.iso.size " + maxTemplateSizeInBytes);
+        }
         
 		if(destTmpltHost != null) {
 		    start();
-		    
+            String sourceChecksum = _vmMgr.getChecksum(srcTmpltHost.getHostId(), srcTmpltHost.getInstallPath());
 			DownloadCommand dcmd =  
-              new DownloadCommand(destServer.getStorageUrl(), url, template, TemplateConstants.DEFAULT_HTTP_AUTH_USER, _copyAuthPasswd, maxTemplateSizeInBytes);
+              new DownloadCommand(destServer.getStorageUrl(), url, template, TemplateConstants.DEFAULT_HTTP_AUTH_USER, _copyAuthPasswd, maxTemplateSizeInBytes); 
+			
 			if (downloadJobExists) {
 				dcmd = new DownloadProgressCommand(dcmd, destTmpltHost.getJobId(), RequestType.GET_OR_RESTART);
-	 		} 
+	 		}
+			dcmd.setChecksum(sourceChecksum); // We need to set the checksum as the source template might be a compressed url and have cksum for compressed image. Bug #10775
             HostVO ssAhost = _agentMgr.getSSAgent(destServer);
             if( ssAhost == null ) {
                  s_logger.warn("There is no secondary storage VM for secondary storage host " + destServer.getName());
@@ -355,19 +351,23 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
 
 
 	@Override
-	public boolean downloadTemplateToStorage(Long templateId, Long zoneId) {
+	public boolean downloadTemplateToStorage(VMTemplateVO template, Long zoneId) {
         List<DataCenterVO> dcs = new ArrayList<DataCenterVO>();       
         if (zoneId == null) {
             dcs.addAll(_dcDao.listAll());
         } else {
             dcs.add(_dcDao.findById(zoneId));
         }
+        long templateId = template.getId();
+        boolean isPublic = template.isFeatured() || template.isPublicTemplate(); 
         for ( DataCenterVO dc : dcs ) {
     	    List<HostVO> ssHosts = _hostDao.listAllSecondaryStorageHosts(dc.getId());
     	    for ( HostVO ssHost : ssHosts ) {
-        		if (isTemplateUpdateable(ssHost.getId(), templateId)) {
-         
+        		if (isTemplateUpdateable(templateId, ssHost.getId())) {
        				initiateTemplateDownload(templateId, ssHost);
+       				if (! isPublic ) {
+       				    break;
+       				}
         		}
     	    }
 	    }
@@ -395,38 +395,7 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
 		VMTemplateHostVO vmTemplateHost = _vmTemplateHostDao.findByHostTemplate(host.getId(), template.getId());
 		
 		Transaction txn = Transaction.currentTxn();
-        txn.start();
-		
-		if (vmTemplateHost != null) {
-			Long poolId = vmTemplateHost.getPoolId();
-			if (poolId != null) {
-				VMTemplateStoragePoolVO vmTemplatePool = _vmTemplatePoolDao.findByPoolTemplate(poolId, template.getId());
-				StoragePoolHostVO poolHost = _poolHostDao.findByPoolHost(poolId, host.getId());
-				if (vmTemplatePool != null && poolHost != null) {
-					vmTemplatePool.setDownloadPercent(vmTemplateHost.getDownloadPercent());
-					vmTemplatePool.setDownloadState(vmTemplateHost.getDownloadState());
-					vmTemplatePool.setErrorString(vmTemplateHost.getErrorString());
-					String localPath = poolHost.getLocalPath();
-					String installPath = vmTemplateHost.getInstallPath();
-					if (installPath != null) {
-						if (!installPath.startsWith("/")) {
-							installPath = "/" + installPath;
-						}
-						if (!(localPath == null) && !installPath.startsWith(localPath)) {
-							localPath = localPath.replaceAll("/\\p{Alnum}+/*$", ""); //remove instance if necessary
-						}
-						if (!(localPath == null) && installPath.startsWith(localPath)) {
-							installPath = installPath.substring(localPath.length());
-						}
-					}
-					vmTemplatePool.setInstallPath(installPath);
-					vmTemplatePool.setLastUpdated(vmTemplateHost.getLastUpdated());
-					vmTemplatePool.setJobId(vmTemplateHost.getJobId());
-					vmTemplatePool.setLocalDownloadPath(vmTemplateHost.getLocalDownloadPath());
-					_vmTemplatePoolDao.update(vmTemplatePool.getId(),vmTemplatePool);
-				}
-			}
-		}
+        txn.start();		
 
         if (dnldStatus == Status.DOWNLOADED) {
             long size = -1;

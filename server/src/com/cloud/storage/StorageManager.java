@@ -26,7 +26,6 @@ import com.cloud.capacity.CapacityVO;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.HostPodVO;
 import com.cloud.deploy.DeployDestination;
-import com.cloud.deploy.DeploymentPlan;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientStorageCapacityException;
 import com.cloud.exception.StorageUnavailableException;
@@ -201,8 +200,11 @@ public interface StorageManager extends Manager {
 
     List<StoragePoolVO> ListByDataCenterHypervisor(long datacenterId, HypervisorType type);
 
-    VMTemplateHostVO getTemplateHostRef(long zoneId, long tmpltId, boolean readyOnly);
+
     List<VMInstanceVO> listByStoragePool(long storagePoolId);
 
     StoragePoolVO findLocalStorageOnHost(long hostId);
+
+    VMTemplateHostVO getTemplateHostRef(long zoneId, long tmpltId, boolean readyOnly);
+
 }

@@ -18,6 +18,7 @@
 package com.cloud.vm;
 
 import java.util.Date;
+import java.util.Map;
 
 import com.cloud.acl.ControlledEntity;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
@@ -30,6 +31,9 @@ import com.cloud.utils.fsm.StateObject;
  *
  */
 public interface VirtualMachine extends RunningOn, ControlledEntity, StateObject<VirtualMachine.State> {
+	
+	public static final String PARAM_KEY_KEYBOARD = "keyboard";
+		
     public enum State {
         Starting(true, "VM is being started.  At this state, you should find host id filled which means it's being started on that host."),
         Running(false, "VM is running.  host id has the host that it is running on."),
@@ -69,7 +73,12 @@ public interface VirtualMachine extends RunningOn, ControlledEntity, StateObject
             s_fsm.addTransition(State.Stopped, VirtualMachine.Event.DestroyRequested, State.Destroyed);
             s_fsm.addTransition(State.Stopped, VirtualMachine.Event.StopRequested, State.Stopped);
             s_fsm.addTransition(State.Stopped, VirtualMachine.Event.AgentReportStopped, State.Stopped);
-            s_fsm.addTransition(State.Stopped, VirtualMachine.Event.OperationFailed, State.Error);
+            
+            // please pay attention about state transition to Error state, there should be only one case (failed in VM creation process)
+            // that can have such transition
+            s_fsm.addTransition(State.Stopped, VirtualMachine.Event.OperationFailedToError, State.Error);
+            
+            s_fsm.addTransition(State.Stopped, VirtualMachine.Event.OperationFailed, State.Stopped);
             s_fsm.addTransition(State.Stopped, VirtualMachine.Event.ExpungeOperation, State.Expunging);
             s_fsm.addTransition(State.Stopped, VirtualMachine.Event.AgentReportShutdowned, State.Stopped);
             s_fsm.addTransition(State.Stopped, VirtualMachine.Event.AgentReportMigrated, State.Stopped);
@@ -156,6 +165,7 @@ public interface VirtualMachine extends RunningOn, ControlledEntity, StateObject
     	ExpungeOperation,
     	OperationSucceeded,
     	OperationFailed,
+    	OperationFailedToError,
     	OperationRetry,
     	AgentReportShutdowned,
     	AgentReportMigrated
@@ -166,6 +176,8 @@ public interface VirtualMachine extends RunningOn, ControlledEntity, StateObject
         DomainRouter,
         ConsoleProxy,
         SecondaryStorageVm,
+        ElasticIpVm,
+        ElasticLoadBalancerVm,
         
         /*
          * UserBareMetal is only used for selecting VirtualMachineGuru, there is no
@@ -269,4 +281,6 @@ public interface VirtualMachine extends RunningOn, ControlledEntity, StateObject
 	Type getType();
 	
 	HypervisorType getHypervisorType();
+	
+	public Map<String, String> getDetails();
 }

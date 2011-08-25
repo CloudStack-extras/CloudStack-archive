@@ -25,6 +25,9 @@
 # $2 : the associated ip address
 # $3 : the hostname
 
+grep "redundant_router=1" /var/cache/cloud/cmdline > /dev/null
+no_redundant=$?
+
 wait_for_dnsmasq () {
   local _pid=$(pidof dnsmasq)
   for i in 0 1 2 3 4 5 6 7 8 9 10
@@ -34,9 +37,11 @@ wait_for_dnsmasq () {
     [ "$_pid" != "" ] && break;
   done
   [ "$_pid" != "" ] && return 0;
-  echo "edithosts: timed out waiting for dnsmasq to start"
+  logger -t cloud "edithosts: timed out waiting for dnsmasq to start"
   return 1
 }
+
+logger -t cloud "edithosts: update $1 $2 $3 to hosts"
 
 [ ! -f /etc/dhcphosts.txt ] && touch /etc/dhcphosts.txt
 [ ! -f /var/lib/misc/dnsmasq.leases ] && touch /var/lib/misc/dnsmasq.leases
@@ -62,13 +67,51 @@ sed -i  /"$2 "/d /etc/hosts
 sed -i  /"$3"/d /etc/hosts
 echo "$2 $3" >> /etc/hosts
 
+locked=0
+if [ $no_redundant -eq 0 ]
+then
+#for redundant router, grap the lock to prevent racy with keepalived process
+LOCK=/tmp/rrouter.lock
+
+# Wait the lock
+for i in `seq 1 5`
+do
+    if [ ! -e $LOCK ]
+    then
+        touch $LOCK
+        locked=1
+        break
+    fi
+    sleep 1
+    logger -t cloud "edithosts: sleep 1 second wait for the redundant router lock"
+done
+
+if [ $locked -eq 0 ]
+then
+    logger -t cloud "edithosts: fail to get the redundant router lock"
+    logger -t cloud "edithosts: keepalived should able to handle the dnsmasq restart"
+    exit
+fi
+fi
+
 # make dnsmasq re-read files
 pid=$(pidof dnsmasq)
 if [ "$pid" != "" ]
 then
   service dnsmasq restart
 else
-  wait_for_dnsmasq
+  if [ $no_redundant -eq 1 ]
+  then
+      wait_for_dnsmasq
+  else
+      logger -t cloud "edithosts: skip wait dnsmasq due to redundant virtual router"
+  fi
 fi
 
-exit $?
+ret=$?
+if [ $locked -eq 1 ]
+then
+	rm $LOCK
+fi
+
+exit $ret

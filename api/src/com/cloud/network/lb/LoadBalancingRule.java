@@ -67,12 +67,6 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     }
 
     @Override
-    public List<String> getSourceCidrList() {
-        return lb.getSourceCidrList();
-    }
-    
-
-    @Override
     public String getAlgorithm() {
         return lb.getAlgorithm();
     }
@@ -88,12 +82,12 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     }
     
     @Override
-    public int getSourcePortStart() {
+    public Integer getSourcePortStart() {
         return lb.getSourcePortStart();
     }
     
     @Override
-    public int getSourcePortEnd() {
+    public Integer getSourcePortEnd() {
         return lb.getSourcePortEnd();
     }
 
@@ -158,5 +152,25 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
         public boolean isRevoked() {
             return revoked;
         }
+    }
+    
+    @Override
+    public Integer getIcmpCode() {
+        return null;
+    }
+    
+    @Override
+    public Integer getIcmpType() {
+        return null;
+    }
+    
+    @Override
+    public List<String> getSourceCidrList() {
+        return null;
+    }
+    
+    @Override
+    public Long getRelated() {
+        return null;
     }
 }

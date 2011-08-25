@@ -33,6 +33,7 @@ public class ApiConstants {
     public static final String CERTIFICATE = "certificate";    
     public static final String PRIVATE_KEY = "privatekey";    
     public static final String DOMAIN_SUFFIX = "domainsuffix";    
+    public static final String DNS_SEARCH_ORDER = "dnssearchorder";    
     public static final String CIDR = "cidr";
     public static final String CIDR_LIST = "cidrlist";
     public static final String CLEANUP = "cleanup";
@@ -74,6 +75,7 @@ public class ApiConstants {
     public static final String HA_ENABLE = "haenable";
     public static final String HOST_ID = "hostid";
     public static final String HYPERVISOR = "hypervisor";
+    public static final String INLINE = "inline";
     public static final String INSTANCE = "instance";
     public static final String ICMP_CODE = "icmpcode";
     public static final String ICMP_TYPE = "icmptype";
@@ -249,6 +251,9 @@ public class ApiConstants {
     public static final String VOLUME_NAME = "volumename";
     public static final String SNAPSHOT_POLICY = "snapshotpolicy";
     public static final String SNAPSHOT_RESERVATION = "snapshotreservation";
-    public static final String REDUNDANT_ROUTER = "redundantrouter";
     public static final String IP_NETWORK_LIST = "iptonetworklist";
+    public static final String REDUNDANT_ROUTER = "redundantrouter";
+    public static final String FOR_LOAD_BALANCING = "forloadbalancing";
+    public static final String KEYBOARD="keyboard";
+    public static final String OPEN_FIREWALL="openfirewall";
 }

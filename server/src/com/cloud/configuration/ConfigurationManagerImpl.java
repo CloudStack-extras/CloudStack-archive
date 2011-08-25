@@ -57,6 +57,8 @@ import com.cloud.api.commands.UpdateNetworkOfferingCmd;
 import com.cloud.api.commands.UpdatePodCmd;
 import com.cloud.api.commands.UpdateServiceOfferingCmd;
 import com.cloud.api.commands.UpdateZoneCmd;
+import com.cloud.capacity.Capacity;
+import com.cloud.capacity.dao.CapacityDao;
 import com.cloud.configuration.ResourceCount.ResourceType;
 import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.dc.AccountVlanMapVO;
@@ -121,6 +123,7 @@ import com.cloud.user.UserContext;
 import com.cloud.user.dao.AccountDao;
 import com.cloud.user.dao.UserDao;
 import com.cloud.utils.NumbersUtil;
+import com.cloud.utils.StringUtils;
 import com.cloud.utils.component.Adapters;
 import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.component.Inject;
@@ -194,6 +197,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
     AlertManager _alertMgr;
     @Inject(adapter = SecurityChecker.class)
     Adapters<SecurityChecker> _secChecker;
+    @Inject
+    CapacityDao _capacityDao;
 
     // FIXME - why don't we have interface for DataCenterLinkLocalIpAddressDao?
     protected static final DataCenterLinkLocalIpAddressDaoImpl _LinkLocalIpAllocDao = ComponentLocator.inject(DataCenterLinkLocalIpAddressDaoImpl.class);
@@ -658,6 +663,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
     @DB
     public boolean deletePod(DeletePodCmd cmd) {
         Long podId = cmd.getId();
+        
+        Transaction txn = Transaction.currentTxn();
 
         // Make sure the pod exists
         if (!validPod(podId)) {
@@ -668,14 +675,19 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
 
         HostPodVO pod = _podDao.findById(podId);
 
+        txn.start();
+        
         // Delete private ip addresses for the pod if there are any
         List<DataCenterIpAddressVO> privateIps = _privateIpAddressDao.listByPodIdDcId(Long.valueOf(podId), pod.getDataCenterId());
-        if (privateIps != null && privateIps.size() != 0) {
+        if (!privateIps.isEmpty()) {
             if (!(_privateIpAddressDao.deleteIpAddressByPod(podId))) {
                 throw new CloudRuntimeException("Failed to cleanup private ip addresses for pod " + podId);
             }
+            
+            // Delete corresponding capacity record
+            _capacityDao.removeBy(Capacity.CAPACITY_TYPE_PRIVATE_IP, null, podId, null);
         }
-
+        
         // Delete link local ip addresses for the pod
         List<DataCenterLinkLocalIpAddressVO> localIps = _LinkLocalIpAllocDao.listByPodIdDcId(podId, pod.getDataCenterId());
         if (!localIps.isEmpty()) {
@@ -696,6 +708,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         if (!(_podDao.remove(podId))) {
             throw new CloudRuntimeException("Failed to delete pod " + podId);
         }
+        
+        txn.commit();
 
         return true;
     }
@@ -1137,6 +1151,11 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
             }
         }
         success = _zoneDao.remove(zoneId);
+        
+        if (success) {
+            //delete all capacity records for the zone
+            _capacityDao.removeBy(null, zoneId, null, null);
+        }
 
         txn.commit();
 
@@ -1155,6 +1174,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         String internalDns2 = cmd.getInternalDns2();
         String vnetRange = cmd.getVlan();
         String guestCidr = cmd.getGuestCidrAddress();
+        List<String> dnsSearchOrder = cmd.getDnsSearchOrder();
         Long userId = UserContext.current().getCallerUserId();
         int startVnetRange = 0;
         int stopVnetRange = 0;
@@ -1181,7 +1201,19 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
     				}*/
                 newDetails.put(key, value);
             }
-        }        
+        }  
+        
+        // add the domain prefix list to details if not null
+        if (dnsSearchOrder != null){
+            for(String dom : dnsSearchOrder){
+                if (!NetUtils.verifyDomainName(dom)) {
+                    throw new InvalidParameterValueException(
+                            "Invalid network domain suffixes. Total length shouldn't exceed 190 chars. Each domain label must be between 1 and 63 characters long, can contain ASCII letters 'a' through 'z', the digits '0' through '9', "
+                            + "and the hyphen ('-'); can't start or end with \"-\"");
+                }
+            }
+            newDetails.put(ZoneConfig.DnsSearchOrder.getName(), StringUtils.join(dnsSearchOrder, ","));
+        }
 
         if (userId == null) {
             userId = Long.valueOf(User.UID_SYSTEM);
@@ -1559,8 +1591,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         }
 
         Long memory = cmd.getMemory();
-        if ((memory == null) || (memory.intValue() <= 0) || (memory.intValue() > 2147483647)) {
-            throw new InvalidParameterValueException("Failed to create service offering " + name + ": specify the memory value between 1 and 2147483647");
+        if ((memory == null) || (memory.intValue() < 32) || (memory.intValue() > 2147483647)) {
+            throw new InvalidParameterValueException("Failed to create service offering " + name + ": specify the memory value between 32 and 2147483647 MB");
         }
 
         // check if valid domain
@@ -1610,15 +1642,15 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         }
 
         return createServiceOffering(userId, cmd.getIsSystem(), vm_type, cmd.getServiceOfferingName(), cpuNumber.intValue(), memory.intValue(), cpuSpeed.intValue(), cmd.getDisplayText(), localStorageRequired, offerHA,
-                limitCpuUse, cmd.getTags(), cmd.getDomainId(), cmd.getHostTag());
+                limitCpuUse, cmd.getTags(), cmd.getDomainId(), cmd.getHostTag(), cmd.getNetworkRate());
     }
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_SERVICE_OFFERING_CREATE, eventDescription = "creating service offering")
     public ServiceOfferingVO createServiceOffering(long userId, boolean isSystem, VirtualMachine.Type vm_type, String name, int cpu, int ramSize, int speed, String displayText, boolean localStorageRequired, 
-            boolean offerHA, boolean limitResourceUse, String tags,  Long domainId, String hostTag) {
+            boolean offerHA, boolean limitResourceUse, String tags,  Long domainId, String hostTag, Integer networkRate) {
         tags = cleanupTags(tags);
-        ServiceOfferingVO offering = new ServiceOfferingVO(name, cpu, ramSize, speed, null, null, offerHA, limitResourceUse, displayText, localStorageRequired, false, tags, isSystem, vm_type, domainId, hostTag);
+        ServiceOfferingVO offering = new ServiceOfferingVO(name, cpu, ramSize, speed, networkRate, null, offerHA, limitResourceUse, displayText, localStorageRequired, false, tags, isSystem, vm_type, domainId, hostTag);
 
         if ((offering = _serviceOfferingDao.persist(offering)) != null) {
             UserContext.current().setEventDetails("Service offering id=" + offering.getId());
@@ -2777,6 +2809,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         String guestIpTypeString = cmd.getGuestIpType();
         Boolean redundantRouter = cmd.getRedundantRouter();
 
+        Integer networkRate = cmd.getNetworkRate();
+
         TrafficType trafficType = null;
         GuestIpType guestIpType = null;
         Availability availability = null;
@@ -2816,15 +2850,15 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         }
 
         Integer maxConnections = cmd.getMaxconnections();
-        return createNetworkOffering(userId, name, displayText, trafficType, tags, maxConnections, specifyVlan, availability, guestIpType, redundantRouter);
+
+        return createNetworkOffering(userId, name, displayText, trafficType, tags, maxConnections, specifyVlan, availability, guestIpType, redundantRouter, networkRate);
     }
 
     @Override
-    public NetworkOfferingVO createNetworkOffering(long userId, String name, String displayText, TrafficType trafficType, String tags, Integer maxConnections, boolean specifyVlan,
-            Availability availability, GuestIpType guestIpType, boolean redundantRouter) {
-        String networkRateStr = _configDao.getValue("network.throttling.rate");
+    public NetworkOfferingVO createNetworkOffering(long userId, String name, String displayText, TrafficType trafficType, String tags, Integer maxConnections, boolean specifyVlan, 
+            Availability availability, GuestIpType guestIpType, boolean redundantRouter, Integer networkRate) {
+
         String multicastRateStr = _configDao.getValue("multicast.throttling.rate");
-        int networkRate = ((networkRateStr == null) ? 200 : Integer.parseInt(networkRateStr));
         int multicastRate = ((multicastRateStr == null) ? 10 : Integer.parseInt(multicastRateStr));
         tags = cleanupTags(tags);
 

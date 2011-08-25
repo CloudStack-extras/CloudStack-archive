@@ -124,7 +124,7 @@ function networkPopulateMiddleMenu($leftmenuItem1) {
         listMidMenuItems2(("listNetworks&type=Direct&zoneId="+zoneObj.id), networkGetSearchParams, "listnetworksresponse", "network", directNetworkToMidmenu, directNetworkToRightPanel, directNetworkGetMidmenuId, false, 1);
     }
     
-	if(showPublicNetwork == true) { //public network           
+	if(showPublicNetwork == true && zoneObj.securitygroupsenabled == false) { //public network           
 	    $midmenuContainer.find("#midmenu_container_no_items_available").remove();  //There is always at least one item (i.e. public network) in middle menu. So, "no items available" shouldn't be in middle menu even there is zero direct network item in middle menu.   
 	    $.ajax({
 	        data: createURL("command=listNetworks&trafficType=Public&isSystem=true&zoneId="+zoneObj.id),
@@ -144,9 +144,33 @@ function networkPopulateMiddleMenu($leftmenuItem1) {
 	        }
 	    });  
 	}
+        else if (showPublicNetwork == true && zoneObj.securitygroupsenabled == true){
+                 $midmenuContainer.find("#midmenu_container_no_items_available").remove();  //There is always at least one item (i.e. public network) in middle menu. So, "no items available" shouldn't be in middle menu even there is zero direct network item in middle menu.   
+	    $.ajax({
+	        data: createURL("command=listNetworks&type=Direct&trafficType=Guest&isSystem=true&zoneId="+zoneObj.id),
+	        dataType: "json",
+	        async: false,
+	        success: function(json) {       
+	            var items = json.listnetworksresponse.network;       
+	            if(items != null && items.length > 0) {
+	                var item = items[0];
+	                var $midmenuItem1 = $("#midmenu_item").clone();                      
+	                $midmenuItem1.data("toRightPanelFn", publicNetworkToRightPanel);                             
+	                publicNetworkToMidmenu(item, $midmenuItem1);    
+	                bindClickToMidMenu($midmenuItem1, publicNetworkToRightPanel, publicNetworkGetMidmenuId);   
+	                $midmenuContainer.prepend($midmenuItem1.show());    //prepend public network on the top of middle menu
+	                $midmenuItem1.click();  
+	            }
+	        }
+	    });  
+        }
 	else {
 		publicNetworkToRightPanel(null);	
 	}
+
+
+
+
 }
 
 //***** Public Network (begin) ******************************************************************************************************
@@ -261,7 +285,7 @@ function publicNetworkJsonToIpAllocationTab() {
     $thisTab.find("#tab_spinning_wheel").show();   
          
     $.ajax({
-		data: createURL("command=listVlanIpRanges&zoneid="+ jsonObj.zoneid+"&forvirtualnetwork=true"), //don't need networkid because one zone has only one public network
+                data: createURL("command=listVlanIpRanges&zoneid="+ jsonObj.zoneid+"&networkId=" + jsonObj.id),     
 		dataType: "json",		
 		success: function(json) {		    
 		    var items = json.listvlaniprangesresponse.vlaniprange;		    
@@ -654,10 +678,16 @@ function bindAddIpRangeToPublicNetworkButton() {
 				var endip = $thisDialog.find("#add_publicip_vlan_endip").val();	//optional field (might be empty)
 				if(endip != null && endip.length > 0)
 				    array1.push("&endip="+todb(endip));			
-													
+				
+				//zoneObj.networktype == "Advanced", only advanced zone has option to Add IP Range (in network node)
+				if(zoneObj.securitygroupsenabled == false)   
+                    array1.push("&forVirtualNetwork=true");
+				else
+					array1.push("&forVirtualNetwork=false");
+				
 				// Add IP Range to public network
 				$.ajax({
-					data: createURL("command=createVlanIpRange&forVirtualNetwork=true&zoneId="+zoneObj.id+vlan+scopeParams+array1.join("")),
+					data: createURL("command=createVlanIpRange&zoneId="+zoneObj.id+vlan+scopeParams+array1.join("")),
 					dataType: "json",
 					success: function(json) {	
 						$thisDialog.find("#spinning_wheel").hide();
@@ -1495,13 +1525,11 @@ var directNetworkActionMap = {
         dialogBeforeActionFn : doDeleteDirectNetwork,        
         inProcessText: "label.action.delete.network.processing",
         afterActionSeccessFn: function(json, $midmenuItem1, id) {   
-            $midmenuItem1.slideUp("slow", function() {
-                $(this).remove();                
-                if(id.toString() == $("#right_panel_content").find("#direct_network_page").find("#tab_content_details").find("#id").text()) {
-                    clearRightPanel();
-                    directNetworkClearRightPanel();
-                }                
-            });              
+            $midmenuItem1.remove();                             
+            if(id.toString() == $("#right_panel_content").find("#direct_network_page").find("#tab_content_details").find("#id").text()) {
+                clearRightPanel();
+                directNetworkClearRightPanel();
+            }           
         }
     }    
 }  

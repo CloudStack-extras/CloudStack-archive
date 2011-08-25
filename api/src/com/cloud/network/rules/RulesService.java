@@ -32,10 +32,11 @@ public interface RulesService {
      * an ip address and a virtual machine.
      * @param rule rule to be created.
      * @param vmId vm to be linked to.  If specified the destination ip address is ignored.
+     * @param openFirewall TODO
      * @return PortForwardingRule if created.
      * @throws NetworkRuleConflictException if conflicts in the network rules are detected.
      */
-    PortForwardingRule createPortForwardingRule(PortForwardingRule rule, Long vmId) throws NetworkRuleConflictException;
+    PortForwardingRule createPortForwardingRule(PortForwardingRule rule, Long vmId, boolean openFirewall) throws NetworkRuleConflictException;
     
     /**
      * Revokes a port forwarding rule 
@@ -53,14 +54,14 @@ public interface RulesService {
 
     boolean applyPortForwardingRules(long ipAdddressId, Account caller) throws ResourceUnavailableException;
     
-    boolean enableOneToOneNat(long ipAddressId, long vmId) throws NetworkRuleConflictException;
+    boolean enableStaticNat(long ipAddressId, long vmId) throws NetworkRuleConflictException;
     
-    boolean disableOneToOneNat(long ipAddressId) throws ResourceUnavailableException;
+    boolean disableStaticNat(long ipAddressId) throws ResourceUnavailableException;
     
     PortForwardingRule getPortForwardigRule(long ruleId);
     FirewallRule getFirewallRule(long ruleId);
     
-    StaticNatRule createStaticNatRule(StaticNatRule rule) throws NetworkRuleConflictException;
+    StaticNatRule createStaticNatRule(StaticNatRule rule, boolean openFirewall) throws NetworkRuleConflictException;
     
     boolean revokeStaticNatRule(long ruleId, boolean apply);
     
@@ -70,4 +71,6 @@ public interface RulesService {
     
     List<String> getSourceCidrs(long ruleId);
     
+    boolean revokeRelatedFirewallRule(long ruleId, boolean apply);
+  
 }
