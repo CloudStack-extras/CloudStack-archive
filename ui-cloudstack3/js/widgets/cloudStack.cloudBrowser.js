@@ -7,6 +7,10 @@
   $.fn.cloudBrowser = function(method) {
     var $browserContainer = this;
     var $browserWindow = $browserContainer.parent();
+    var animateOptions = {
+      easing: $.easing.easeInOut,
+      queue: false
+    };
 
     var panelWidth = function(args) {
       if (!args) args = {};
@@ -38,12 +42,19 @@
 
     var repositionToPanel = function($panel) {
       var maximizeIfFirstPanel = function() {
-        if (!$panel.prev().size() && $panel.siblings().size() >= 1) {
+        if ((!$panel.prev().size() && $panel.siblings().size() >= 1)) {
           $browserContainer.cloudBrowser('toggleMaximizePanel', {
             panel: $panel,
-            noAnimate: true,
-            useReducedSize: true
+            noAnimate: true
           });
+        }
+
+        $browserContainer.cloudBrowser('removePanelChildren', {
+          panel: $panel
+        });
+
+        if ($panel.index() == 0 && $panel.siblings().size() == 0) {
+          $panel.addClass('single');
         }
       };
 
@@ -56,20 +67,30 @@
         $navigationItem.addClass('active');
         $navigationItem.prev().prev().addClass('reduced');
 
+        var maximizeIfSelected = $panel.hasClass('maximize-if-selected');
+
         if ($browserContainer.children().size() > 1) {
           var targetPos = 0;
 
-          $panel.animate({ width: panelWidth() }, { queue: false });
-          $panel.siblings().animate({ width: panelWidth({ useReducedSize: true }) }, { queue: false });
+          if (maximizeIfSelected)
+            $panel.animate({ width: $browserContainer.parent().width() }, animateOptions);
+          else
+            $panel.animate({ width: panelWidth() }, animateOptions);
 
-          if ($panel.index() >= 2)
+          $panel.siblings().animate({ width: panelWidth({ useReducedSize: true }) }, animateOptions);
+
+          if ($panel.index() >= 2 && !maximizeIfSelected)
             targetPos = -panelWidth({ useReducedSize: true }) * ($panel.index() - 1);
+          
+          if (maximizeIfSelected) {
+            targetPos = -panelWidth({ useReducedSize: true }) * ($panel.index());            
+          }
 
           // Small size for following panel
           $('div.panel').removeClass('reduced');
           var $prevPanel = $panel.prev();
           if ($prevPanel.size()) {
-            $prevPanel.animate({ width: panelWidth({ useReducedSize: true })}, { queue: false });
+            $prevPanel.animate({ width: panelWidth({ useReducedSize: true })}, animateOptions);
             $prevPanel.addClass('reduced');
           }
 
@@ -80,13 +101,15 @@
             {
               queue: false,
               complete: function() {
-                maximizeIfFirstPanel()
+                maximizeIfFirstPanel();
               }
             }
           );
         }
 
         maximizeIfFirstPanel();
+
+        return $browserContainer;
       };
 
       var $maximizedPanel = $browserContainer.find('div.panel').filter(function() {
@@ -149,10 +172,10 @@
         $panel.siblings().removeClass('selected');
         $panel.addClass('selected');
 
-        if (!$panelNavItem.hasClass('active')) {
+        if (!$panelNavItem.is('.active'))
           repositionToPanel($panel);
-        }
-        
+
+        return $panel;
       },
 
       addPanel: function(args) {
@@ -161,6 +184,14 @@
         var $navigation = $('#breadcrumbs').find('ul');
         var $newBreadcrumb = $('<li></li>');
 
+        if (args.parent) {
+          var $parentPanel = args.parent;
+          $browserContainer.cloudBrowser('removePanelChildren', {
+            panel: $parentPanel
+          });
+        }
+
+        $panels.removeClass('single');
         $newPanel.appendTo($browserContainer);
         $newBreadcrumb.html('<div class="title">' + args.title + '</div>');
         $navigation.append($newBreadcrumb);
@@ -176,6 +207,13 @@
         if (!args.noSelectPanel) {
           repositionToPanel($newPanel);
           $browserContainer.cloudBrowser('selectPanel', { panel: $newPanel });
+        } else {
+          $('#breadcrumbs').find('ul li').removeClass('active reduced');
+          $('#breadcrumbs').find('ul li:last').addClass('active');
+        }
+
+        if (args.maximizeIfSelected) {
+          $newPanel.addClass('maximize-if-selected');
         }
 
         // Add panel
@@ -193,7 +231,7 @@
 
         var callback = args.callback;
         var newPanelWidth = 0;
-        var useReducedSize = $panel.hasClass('reduced') || $panel.hasClass('maximized-reduced') || args.useReducedSize;
+        var useReducedSize = $panel.hasClass('reduced') || $panel.hasClass('maximized-reduced');
 
         if (!callback) callback = function() {
           return false;
@@ -206,10 +244,13 @@
 
           newPanelWidth = panelWidth({ useReducedSize: useReducedSize });
           $panel.removeClass('maximized');
-          getNavItem($panel).removeClass('maximized').siblings().animate({ opacity: 1 });
+          getNavItem($panel)
+            .removeClass('maximized')
+            .siblings().find('div.title')
+            .animate({ opacity: 1 }, animateOptions);
 
           if (!args.noAnimate) {
-            $panel.animate({ width: newPanelWidth }, { queue: false });
+            $panel.animate({ width: newPanelWidth }, animateOptions);
           } else {
             $panel.width(newPanelWidth);
           }
@@ -227,10 +268,12 @@
           }
 
           if (!args.noAnimate) {
-            $browserContainer.animate({ left: targetPos }, { queue: false });
+            $browserContainer.animate({ left: targetPos }, animateOptions);
           } else {
             $browserContainer.css({ left: targetPos });
           }
+
+          return $panel;
         };
 
         var doMaximize = function() {
@@ -243,21 +286,19 @@
           }
 
           $panel.addClass('maximized');
-          getNavItem($panel).addClass('maximized').siblings('li').animate({ opacity: 0.3 });
+          var $navItem = getNavItem($panel);
+          $navItem.addClass('maximized');
+          
+          if (!$panel.hasClass('maximize-if-selected')) {
+            $navItem.siblings().find('div.title')
+              .animate({ opacity: 0.3 });
+          }
 
           if (!args.noAnimate) {
             $panel.animate({ width: newPanelWidth });
-
-            // Reset other panels to normal if target is reduced
-            if (useReducedSize) $panel.siblings().animate({ width: panelWidth() });
-            
             $browserContainer.animate({ left: -$panel.position().left}, { queue: false });
           } else {
             $panel.width(newPanelWidth);
-            
-            // Reset other panels to normal if target is reduced
-            if (useReducedSize) $panel.siblings().width(panelWidth());
-            
             $browserContainer.css({ left: -$panel.position().left });
           }
 
@@ -326,5 +367,7 @@
     } else {
       $.error('Method ' + method + ' does not exist on jQuery.cloudBrowser');
     }
+
+    return this;
   };
 }(jQuery));

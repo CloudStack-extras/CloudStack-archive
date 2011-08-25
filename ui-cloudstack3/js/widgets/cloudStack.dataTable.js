@@ -13,6 +13,7 @@
      * @return boolean, true if position is within bounds
      */
     var withinResizeBounds = function($elem, posX) {
+      return false; // Disabled for now
       var leftBound = $elem.offset().left + $elem.width() / 1.2;
 
       return posX > leftBound;
@@ -22,6 +23,7 @@
      * Handles actual resizing of table headers
      */
     var resizeDragEvent = function(event) {
+      return false; // Disabled for now
       var $elem = $(this);
 
       if (event.type == 'mousedown') {
@@ -44,8 +46,8 @@
 
       // Get all TDs from column
       var columnCells = [$elem];
-      $table.find('thead tr').each(function() {
-        var targetCell = $($(this).find('th')[columnIndex]);
+      $table.find('thead tr, tbody tr:first').each(function() {
+        var targetCell = $($(this).find('th, td')[columnIndex]);
 
         columnCells.push(targetCell);
       });
@@ -59,6 +61,21 @@
       });
 
       return true;
+    };
+
+    var splitTable = function() {
+      var $mainContainer = $('<div>')
+            .addClass('data-table')
+            .appendTo($table.parent())
+            .append(
+              $table.remove()
+            );
+      $table = $mainContainer;
+      var $theadContainer = $('<div>').addClass('fixed-header').prependTo($table);
+      var $theadTable = $('<table>').appendTo($theadContainer);
+      var $thead = $table.find('thead').remove().appendTo($theadTable);
+
+      return $thead;
     };
 
     /**
@@ -75,7 +92,7 @@
       }
 
       return true;
-    }
+    };
 
     /**
      * Make row at specified index selected or unselected
@@ -112,6 +129,7 @@
      * @param columnIndex Index of column (starting at 0) to sort by
      */
     var sortTable = function(columnIndex) {
+      return false; // Disabled for now
       var direction = 'asc';
 
       if ($table.find('thead th').hasClass('sorted ' + direction)) {
@@ -147,6 +165,34 @@
 
       computeEvenOddRows();
     };
+    
+    var resizeHeaders = function() {
+      var $thead = $table.closest('div.data-table').find('thead');
+      var $tbody = $table.find('tbody');
+      var $ths = $thead.find('th');
+      var $tds = $tbody.find('tr:first td');
+
+      if ($ths.size() > $tds.size()) {
+        $ths.width(
+          $table.width() / $ths.size()
+        );
+        return false;
+      }
+
+      $ths.each(function() {
+        var $th = $(this);
+
+        var $td = $tds.filter(function() {
+          return $(this).index() == $th.index();
+        });
+
+        $th.width($td.width());
+
+        return true;
+      });
+
+      return $ths;
+    };
 
     var methods = {
       removeRow: function(rowIndex) {
@@ -158,10 +204,17 @@
         });
 
         return $row;
+      },
+
+      refresh: function() {
+        resizeHeaders();
+        computeEvenOddRows();
       }
     };
 
     var init = function() {
+      if (!$table.closest('div.data-table').size() && !$table.hasClass('no-split')) splitTable();
+
       $table.find('th').bind('mousemove mouseout', hoverResizableEvent);
       $table.find('th').bind('mousedown mousemove mouseup mouseout', resizeDragEvent);
       $table.find('th').bind('click', function(event) {
@@ -170,6 +223,8 @@
         }
 
         sortTable($(event.target).index());
+
+        return false;
       });
 
       $table.find('tbody tr').bind('click', function(event) {
@@ -179,8 +234,7 @@
       });
 
       computeEvenOddRows();
-
-      $('th, td').width(120);
+      resizeHeaders();
     };
 
     if (methods[method]) {
@@ -190,5 +244,7 @@
     } else {
       $.error('Method ' + method + ' does not exist on jQuery.dataTable');
     }
+
+    return $table;
   };
 }(jQuery));
