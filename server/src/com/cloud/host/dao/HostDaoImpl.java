@@ -73,8 +73,6 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
     protected final SearchBuilder<HostVO> IdStatusSearch;
     protected final SearchBuilder<HostVO> TypeDcSearch;
     protected final SearchBuilder<HostVO> TypeDcStatusSearch;
-    protected final SearchBuilder<HostVO> LastPingedSearch;
-    protected final SearchBuilder<HostVO> LastPingedSearch2;
     protected final SearchBuilder<HostVO> MsStatusSearch;
     protected final SearchBuilder<HostVO> DcPrivateIpAddressSearch;
     protected final SearchBuilder<HostVO> DcStorageIpAddressSearch;
@@ -89,7 +87,7 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
     protected final SearchBuilder<HostVO> SequenceSearch;
     protected final SearchBuilder<HostVO> DirectlyConnectedSearch;
     protected final SearchBuilder<HostVO> UnmanagedDirectConnectSearch;
-    protected final SearchBuilder<HostVO> UnmanagedExternalNetworkApplianceSearch;
+    protected final SearchBuilder<HostVO> UnmanagedApplianceSearch;
     protected final SearchBuilder<HostVO> MaintenanceCountSearch;
     protected final SearchBuilder<HostVO> ClusterSearch;
     protected final SearchBuilder<HostVO> ConsoleProxyHostSearch;
@@ -99,11 +97,12 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
     protected final SearchBuilder<HostVO> ManagedDirectConnectSearch;
     protected final SearchBuilder<HostVO> ManagedRoutingServersSearch;
     protected final SearchBuilder<HostVO> SecondaryStorageVMSearch;
+    
 
     protected final GenericSearchBuilder<HostVO, Long> HostsInStatusSearch;
     protected final GenericSearchBuilder<HostVO, Long> CountRoutingByDc;
     protected final SearchBuilder<HostTransferMapVO> HostTransferSearch;
-    protected final SearchBuilder<ClusterVO> ClusterManagedSearch;
+    protected SearchBuilder<ClusterVO> ClusterManagedSearch;
     protected final SearchBuilder<HostVO> RoutingSearch;
 
     protected final Attribute _statusAttr;
@@ -131,16 +130,6 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         TypePodDcStatusSearch.and("cluster", entity.getClusterId(), SearchCriteria.Op.EQ);
         TypePodDcStatusSearch.and("status", entity.getStatus(), SearchCriteria.Op.EQ);
         TypePodDcStatusSearch.done();
-
-        LastPingedSearch = createSearchBuilder();
-        LastPingedSearch.and("ping", LastPingedSearch.entity().getLastPinged(), SearchCriteria.Op.LT);
-        LastPingedSearch.and("state", LastPingedSearch.entity().getStatus(), SearchCriteria.Op.IN);
-        LastPingedSearch.done();
-
-        LastPingedSearch2 = createSearchBuilder();
-        LastPingedSearch2.and("ping", LastPingedSearch2.entity().getLastPinged(), SearchCriteria.Op.LT);
-        LastPingedSearch2.and("type", LastPingedSearch2.entity().getType(), SearchCriteria.Op.EQ);
-        LastPingedSearch2.done();
 
         MsStatusSearch = createSearchBuilder();
         MsStatusSearch.and("ms", MsStatusSearch.entity().getManagementServerId(), SearchCriteria.Op.EQ);
@@ -247,6 +236,7 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         UnmanagedDirectConnectSearch.done();
         
 
+
         DirectConnectSearch = createSearchBuilder();
         DirectConnectSearch.and("resource", DirectConnectSearch.entity().getResource(), SearchCriteria.Op.NNULL);
         DirectConnectSearch.and("id", DirectConnectSearch.entity().getId(), SearchCriteria.Op.EQ);
@@ -255,12 +245,12 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         DirectConnectSearch.cp();
         DirectConnectSearch.done();
 
-        UnmanagedExternalNetworkApplianceSearch = createSearchBuilder();
-        UnmanagedExternalNetworkApplianceSearch.and("resource", UnmanagedExternalNetworkApplianceSearch.entity().getResource(), SearchCriteria.Op.NNULL);
-        UnmanagedExternalNetworkApplianceSearch.and("server", UnmanagedExternalNetworkApplianceSearch.entity().getManagementServerId(), SearchCriteria.Op.NULL);
-        UnmanagedExternalNetworkApplianceSearch.and("types", UnmanagedExternalNetworkApplianceSearch.entity().getType(), SearchCriteria.Op.IN);
-        UnmanagedExternalNetworkApplianceSearch.and("lastPinged", UnmanagedExternalNetworkApplianceSearch.entity().getLastPinged(), SearchCriteria.Op.LTEQ);
-        UnmanagedExternalNetworkApplianceSearch.done();
+        UnmanagedApplianceSearch = createSearchBuilder();
+        UnmanagedApplianceSearch.and("resource", UnmanagedApplianceSearch.entity().getResource(), SearchCriteria.Op.NNULL);
+        UnmanagedApplianceSearch.and("server", UnmanagedApplianceSearch.entity().getManagementServerId(), SearchCriteria.Op.NULL);
+        UnmanagedApplianceSearch.and("types", UnmanagedApplianceSearch.entity().getType(), SearchCriteria.Op.IN);
+        UnmanagedApplianceSearch.and("lastPinged", UnmanagedApplianceSearch.entity().getLastPinged(), SearchCriteria.Op.LTEQ);
+        UnmanagedApplianceSearch.done();
 
         AvailHypevisorInZone = createSearchBuilder();
         AvailHypevisorInZone.and("zoneId", AvailHypevisorInZone.entity().getDataCenterId(), SearchCriteria.Op.EQ);
@@ -363,7 +353,7 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         return search(sc, null);
 
     }    
-    
+
     @Override
     public List<HostVO> listAllSecondaryStorageHosts(long dataCenterId) {
         SearchCriteria<HostVO> sc = createSearchCriteria();                            
@@ -371,7 +361,7 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         sc.addAnd("type", SearchCriteria.Op.IN, new Object[]{Host.Type.LocalSecondaryStorage, Host.Type.SecondaryStorage});
         return search(sc, null);
     }
-    
+
     @Override
     public List<HostVO> findDirectlyConnectedHosts() {
         SearchCriteria<HostVO> sc = DirectlyConnectedSearch.create();
@@ -381,8 +371,7 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
     @Override @DB
     public List<HostVO> findAndUpdateDirectAgentToLoad(long lastPingSecondsAfter, Long limit, long managementServerId) {
         Transaction txn = Transaction.currentTxn();
-        txn.start();
-        
+        txn.start();       
     	SearchCriteria<HostVO> sc = UnmanagedDirectConnectSearch.create();
     	sc.setParameters("lastPinged", lastPingSecondsAfter);
         sc.setParameters("statuses", Status.ErrorInMaintenance, Status.Maintenance, Status.PrepareForMaintenance);
@@ -397,6 +386,26 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         txn.commit();
         
         return hosts;
+    }
+    
+    @Override @DB
+    public List<HostVO> findAndUpdateApplianceToLoad(long lastPingSecondsAfter, long managementServerId) {
+    	Transaction txn = Transaction.currentTxn();
+    	
+    	txn.start();
+    	SearchCriteria<HostVO> sc = UnmanagedApplianceSearch.create();
+    	sc.setParameters("lastPinged", lastPingSecondsAfter);
+    	sc.setParameters("types", Type.ExternalDhcp, Type.ExternalFirewall, Type.ExternalLoadBalancer, Type.PxeServer);
+    	List<HostVO> hosts = lockRows(sc, null, true);
+    	
+    	for (HostVO host : hosts) {
+    		host.setManagementServerId(managementServerId);
+    		update(host.getId(), host);
+    	}
+    	
+    	txn.commit();
+    	
+    	return hosts;
     }
 
     @Override
@@ -442,6 +451,23 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         return listBy(sc);
     }
 
+    @Override
+    public List<HostVO> listByInAllStatus(Host.Type type, Long clusterId, Long podId, long dcId) {
+        SearchCriteria<HostVO> sc = TypePodDcStatusSearch.create();
+        if ( type != null ) {
+            sc.setParameters("type", type.toString());
+        }
+        if (clusterId != null) {
+            sc.setParameters("cluster", clusterId);
+        }
+        if (podId != null ) {
+            sc.setParameters("pod", podId);
+        }
+        sc.setParameters("dc", dcId);
+
+        return listBy(sc);
+    }
+    
     @Override
     public List<HostVO> listBy(Long clusterId, Long podId, long dcId) {
         SearchCriteria<HostVO> sc = TypePodDcStatusSearch.create();
@@ -608,20 +634,29 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
             ub.set(host, _pingTimeAttr, ((System.currentTimeMillis() >> 10) - (10 * 60)));
         }
         int result = update(ub, sc, null);
+        
         assert result <= 1 : "How can this update " + result + " rows? ";
+        if (result < 1) {
+            s_logger.warn("Unable to update db record for host id=" + host.getId() + "; it's possible that the host is removed");
+        }
 
-        if (s_logger.isDebugEnabled() && result == 0) {
+        if (s_logger.isDebugEnabled() && result == 1) {
             HostVO vo = findById(host.getId());
-            assert vo != null : "How how how? : " + host.getId();
+      
+            if (vo != null) {
+                StringBuilder str = new StringBuilder("Unable to update host for event:").append(event.toString());
+                str.append(". New=[status=").append(newStatus.toString()).append(":msid=").append(newStatus.lostConnection() ? "null" : msId).append(":lastpinged=").append(host.getLastPinged())
+                .append("]");
+                str.append("; Old=[status=").append(oldStatus.toString()).append(":msid=").append(msId).append(":lastpinged=").append(oldPingTime).append("]");
+                str.append("; DB=[status=").append(vo.getStatus().toString()).append(":msid=").append(vo.getManagementServerId()).append(":lastpinged=").append(vo.getLastPinged()).append("]");
+                s_logger.debug(str.toString());
+            } else {
+                s_logger.warn("Can't find host db record by id=" + host.getId() + "; host might be already marked as removed");
+            }
 
-            StringBuilder str = new StringBuilder("Unable to update host for event:").append(event.toString());
-            str.append(". New=[status=").append(newStatus.toString()).append(":msid=").append(newStatus.lostConnection() ? "null" : msId).append(":lastpinged=").append(host.getLastPinged())
-                    .append("]");
-            str.append("; Old=[status=").append(oldStatus.toString()).append(":msid=").append(msId).append(":lastpinged=").append(oldPingTime).append("]");
-            str.append("; DB=[status=").append(vo.getStatus().toString()).append(":msid=").append(vo.getManagementServerId()).append(":lastpinged=").append(vo.getLastPinged()).append("]");
-            s_logger.debug(str.toString());
         }
         return result > 0;
+
     }
 
     @Override
@@ -661,12 +696,36 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         return findOneBy(sc);
     }
 
+    @DB
     @Override
     public List<HostVO> findLostHosts(long timeout) {
-        SearchCriteria<HostVO> sc = LastPingedSearch.create();
-        sc.setParameters("ping", timeout);
-        sc.setParameters("state", Status.Up, Status.Updating, Status.Disconnected, Status.Connecting);
-        return listBy(sc);
+        Transaction txn = Transaction.currentTxn();
+        PreparedStatement pstmt = null;
+        List<HostVO> result = new ArrayList<HostVO>();
+        ResultSet rs = null;
+        try {
+            String sql = "select h.id from host h left join  cluster c on h.cluster_id=c.id where h.mgmt_server_id is not null and h.last_ping < ? and h.status in ('Up', 'Updating', 'Disconnected', 'Connecting') and h.type not in ('ExternalFirewall', 'ExternalLoadBalancer', 'TrafficMonitor', 'SecondaryStorage', 'LocalSecondaryStorage') and (h.cluster_id is null or c.managed_state = 'Managed') ;" ;
+            pstmt = txn.prepareStatement(sql);
+            pstmt.setLong(1, timeout);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                long id = rs.getLong(1); //ID column
+                result.add(findById(id));
+            }
+        } catch (Exception e) {
+            s_logger.warn("Exception: ", e);
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+            } catch (SQLException e) {
+            }
+        }
+        return result;
     }
 
     @Override
@@ -676,13 +735,7 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         return listBy(sc);
     }
 
-    @Override
-    public List<HostVO> findLostHosts2(long timeout, Type type) {
-        SearchCriteria<HostVO> sc = LastPingedSearch2.create();
-        sc.setParameters("ping", timeout);
-        sc.setParameters("type", type.toString());
-        return listBy(sc);
-    }
+
 
     @Override
     public List<HostVO> listByDataCenter(long dcId) {
@@ -735,6 +788,7 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
 
         return listBy(sc);
     }
+
     @Override
     public List<HostVO> listByType(Type type) {
         SearchCriteria<HostVO> sc = TypeSearch.create();
@@ -939,19 +993,20 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         sc.setParameters("type", Type.Routing);
         return listBy(sc);
     }
-    
+
     @Override
     public List<HostVO> listByManagementServer(long msId) {
         SearchCriteria<HostVO> sc = MsStatusSearch.create();
         sc.setParameters("ms", msId);
-        
+
         return listBy(sc);
     }
-    
+
     @Override
     public List<HostVO> listAllRoutingAgents() {
         SearchCriteria<HostVO> sc = RoutingSearch.create();
         sc.setParameters("type", Type.Routing);
         return listBy(sc);
     }
+
 }

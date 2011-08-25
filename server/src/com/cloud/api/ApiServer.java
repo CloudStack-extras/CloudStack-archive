@@ -31,8 +31,11 @@ import java.net.Socket;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.SecureRandom;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -49,6 +52,10 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 
 import org.apache.http.ConnectionClosedException;
 import org.apache.http.HttpException;
@@ -132,7 +139,8 @@ public class ApiServer implements HttpRequestHandler {
     private static List<String> s_adminCommands = null;
     private static List<String> s_resourceDomainAdminCommands = null;
     private static List<String> s_allCommands = null;
-
+    private static final DateFormat _dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+    
     private static ExecutorService _executor = new ThreadPoolExecutor(10, 150, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("ApiServer"));
 
     static {
@@ -150,6 +158,7 @@ public class ApiServer implements HttpRequestHandler {
         if (s_instance == null) {
             s_instance = new ApiServer();
             s_instance.init(apiConfig);
+            s_instance.createCache();
         }
     }
 
@@ -346,7 +355,7 @@ public class ApiServer implements HttpRequestHandler {
                 if (cmdClassName != null) {
                     Class<?> cmdClass = Class.forName(cmdClassName);
                     BaseCmd cmdObj = (BaseCmd) cmdClass.newInstance();
-
+                    cmdObj.setFullUrlParams(paramMap);
                     cmdObj.setResponseType(responseType);
                     // This is where the command is either serialized, or directly dispatched
                     response = queueCommand(cmdObj, paramMap);
@@ -546,6 +555,9 @@ public class ApiServer implements HttpRequestHandler {
 
             Collections.sort(parameterNames);
 
+            String signatureVersion = null;
+            String expires = null;
+            
             for (String paramName : parameterNames) {
                 // parameters come as name/value pairs in the form String/String[]
                 String paramValue = ((String[]) requestParameters.get(paramName))[0];
@@ -556,7 +568,12 @@ public class ApiServer implements HttpRequestHandler {
                     if ("apikey".equalsIgnoreCase(paramName)) {
                         apiKey = paramValue;
                     }
-
+                    else if ("signatureversion".equalsIgnoreCase(paramName)) {
+                    	signatureVersion = paramValue;
+                    } else if ("expires".equalsIgnoreCase(paramName)) {
+                    	expires = paramValue;
+                    }
+                    
                     if (unsignedRequest == null) {
                         unsignedRequest = paramName + "=" + URLEncoder.encode(paramValue, "UTF-8").replaceAll("\\+", "%20");
                     } else {
@@ -573,6 +590,27 @@ public class ApiServer implements HttpRequestHandler {
                 return false; // no signature, bad request
             }
 
+            Date expiresTS = null;
+            if("3".equals(signatureVersion)){
+            	// New signature authentication. Check for expire parameter and its validity
+            	if(expires == null){
+            		s_logger.info("missing Expires parameter -- ignoring request...sig: " + signature + ", apiKey: " + apiKey);
+            		return false;
+            	}
+            	synchronized (_dateFormat) {
+            		expiresTS = _dateFormat.parse(expires);
+            	}
+            	Date now = new Date(System.currentTimeMillis());
+            	if(expiresTS.before(now)){
+            		s_logger.info("Request expired -- ignoring ...sig: " + signature + ", apiKey: " + apiKey);
+            		return false;
+            	}
+            	if(_cache.isKeyInCache(signature)){
+            		s_logger.info("Duplicate signature -- ignoring ...sig: " + signature + ", apiKey: " + apiKey);
+            		return false;
+            	}
+            }
+            
             Transaction txn = Transaction.open(Transaction.CLOUD_DB);
             txn.close();
             User user = null;
@@ -617,6 +655,11 @@ public class ApiServer implements HttpRequestHandler {
             boolean equalSig = signature.equals(computedSignature);
             if (!equalSig) {
                 s_logger.info("User signature: " + signature + " is not equaled to computed signature: " + computedSignature);
+            } else {
+            	if("3".equals(signatureVersion)){
+            		//Add signature along with its time to live calculated based on expires timestamp
+            		_cache.put(new Element(signature, "", false, 0, (int)(expiresTS.getTime() - System.currentTimeMillis())/1000));
+            	}
             }
             return equalSig;
         } catch (Exception ex) {
@@ -890,5 +933,16 @@ public class ApiServer implements HttpRequestHandler {
         }
         return responseText;
     }
-    
+
+    protected Cache _cache;
+    protected void createCache() {
+    	final CacheManager cm = CacheManager.create();
+    	//ToDo: Make following values configurable
+    	final int maxElements = 100;
+    	final int live = 300;
+    	final int idle = 300;
+    	_cache = new Cache("signaturesCache", maxElements, false, false, live, idle);
+    	cm.addCache(_cache);
+    	s_logger.info("Cache created: " + _cache.toString());
+    }
 }

@@ -53,6 +53,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
+import com.cloud.acl.SecurityChecker.AccessType;
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.GetVncPortAnswer;
 import com.cloud.agent.api.GetVncPortCommand;
@@ -75,6 +76,7 @@ import com.cloud.api.commands.ListAccountsCmd;
 import com.cloud.api.commands.ListAlertsCmd;
 import com.cloud.api.commands.ListAsyncJobsCmd;
 import com.cloud.api.commands.ListCapabilitiesCmd;
+import com.cloud.api.commands.ListCapacityByTypeCmd;
 import com.cloud.api.commands.ListCapacityCmd;
 import com.cloud.api.commands.ListCfgsByCmd;
 import com.cloud.api.commands.ListClustersCmd;
@@ -125,6 +127,7 @@ import com.cloud.async.dao.AsyncJobDao;
 import com.cloud.capacity.Capacity;
 import com.cloud.capacity.CapacityVO;
 import com.cloud.capacity.dao.CapacityDao;
+import com.cloud.capacity.dao.CapacityDaoImpl.SummedCapacity;
 import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;
 import com.cloud.configuration.ConfigurationVO;
@@ -174,8 +177,10 @@ import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.info.ConsoleProxyInfo;
 import com.cloud.keystore.KeystoreManager;
 import com.cloud.network.IPAddressVO;
+import com.cloud.network.LoadBalancerVO;
 import com.cloud.network.NetworkVO;
 import com.cloud.network.dao.IPAddressDao;
+import com.cloud.network.dao.LoadBalancerDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.security.SecurityGroupVO;
 import com.cloud.network.security.dao.SecurityGroupDao;
@@ -325,6 +330,7 @@ public class ManagementServerImpl implements ManagementServer {
     private final UploadMonitor _uploadMonitor;
     private final UploadDao _uploadDao;
     private final SSHKeyPairDao _sshKeyPairDao;
+    private final LoadBalancerDao _loadbalancerDao;
 
     private final KeystoreManager _ksMgr;
 
@@ -354,6 +360,7 @@ public class ManagementServerImpl implements ManagementServer {
         _clusterDao = locator.getDao(ClusterDao.class);
         _nicDao = locator.getDao(NicDao.class);
         _networkDao = locator.getDao(NetworkDao.class);
+        _loadbalancerDao = locator.getDao(LoadBalancerDao.class);
 
         _accountMgr = locator.getManager(AccountManager.class);
         _agentMgr = locator.getManager(AgentManager.class);
@@ -1704,7 +1711,7 @@ public class ManagementServerImpl implements ManagementServer {
             // if template is not public, perform permission check here
             if (!template.isPublicTemplate() && caller.getType() != Account.ACCOUNT_TYPE_ADMIN) {
                 Account owner = _accountMgr.getAccount(template.getAccountId());
-                _accountMgr.checkAccess(caller, owner);
+                _accountMgr.checkAccess(caller, null, owner);
             }
             templateZonePairSet.add(new Pair<Long, Long>(template.getId(), zoneId));
         }
@@ -1787,7 +1794,7 @@ public class ManagementServerImpl implements ManagementServer {
                 throw new InvalidParameterValueException("Unable to find account by id " + accountId);
             }
 
-            _accountMgr.checkAccess(caller, account);
+            _accountMgr.checkAccess(caller, null, account);
         }
         
         if (domainId != null) {
@@ -1803,7 +1810,7 @@ public class ManagementServerImpl implements ManagementServer {
                     throw new InvalidParameterValueException("Unable to find account by name " + accountName + " in domain " + domainId);
                 }
 
-                _accountMgr.checkAccess(caller, account);
+                _accountMgr.checkAccess(caller, null, account);
             }
         }
 
@@ -2005,7 +2012,7 @@ public class ManagementServerImpl implements ManagementServer {
         }
 
         // do a permission check
-        _accountMgr.checkAccess(account, template);
+        _accountMgr.checkAccess(account, AccessType.ModifyEntry, template);
 
         boolean updateNeeded = !(name == null && displayText == null && format == null && guestOSId == null && passwordEnabled == null && bootable == null);
         if (!updateNeeded) {
@@ -2501,6 +2508,7 @@ public class ManagementServerImpl implements ManagementServer {
         Object address = cmd.getIpAddress();
         Object vlan = cmd.getVlanId();
         Object forVirtualNetwork = cmd.isForVirtualNetwork();
+        Object forLoadBalancing = cmd.isForLoadBalancing();
         Object ipId = cmd.getId();
 
         SearchBuilder<IPAddressVO> sb = _publicIpAddressDao.createSearchBuilder();
@@ -2515,6 +2523,12 @@ public class ManagementServerImpl implements ManagementServer {
             SearchBuilder<DomainVO> domainSearch = _domainDao.createSearchBuilder();
             domainSearch.and("path", domainSearch.entity().getPath(), SearchCriteria.Op.LIKE);
             sb.join("domainSearch", domainSearch, sb.entity().getAllocatedInDomainId(), domainSearch.entity().getId(), JoinBuilder.JoinType.INNER);
+        }
+        
+        if (forLoadBalancing != null && (Boolean)forLoadBalancing) {
+            SearchBuilder<LoadBalancerVO> lbSearch = _loadbalancerDao.createSearchBuilder();
+            sb.join("lbSearch", lbSearch, sb.entity().getId(), lbSearch.entity().getSourceIpAddressId(), JoinType.INNER);
+            sb.groupBy(sb.entity().getId());
         }
 
         if (keyword != null && address == null) {
@@ -3139,7 +3153,6 @@ public class ManagementServerImpl implements ManagementServer {
         if (networkDomain != null) {
             domain.setNetworkDomain(networkDomain);
         }
-        
         _domainDao.update(domainId, domain);
         
         txn.commit();
@@ -3218,6 +3231,17 @@ public class ManagementServerImpl implements ManagementServer {
         return _alertDao.search(sc, searchFilter);
     }
 
+    @Override
+    public List<CapacityVO> listCapacityByType(ListCapacityByTypeCmd cmd) {
+    	
+    	List<SummedCapacity> results = _capacityDao.findCapacityByType(cmd.getType().shortValue(), cmd.getZoneId(), cmd.getPodId(), cmd.getClusterId(), cmd.getStartIndex(), cmd.getPageSizeVal());
+    	for (SummedCapacity sum : results){
+    		s_logger.info("Total - " +sum.sumTotal+ " Used - " +sum.sumUsed+ " cluster " +sum.clusterId+ " pod " +sum.podId);
+    	}
+    	return null;
+    	
+    }
+    
     @Override
     public List<CapacityVO> listCapacities(ListCapacityCmd cmd) {
 
@@ -3322,7 +3346,7 @@ public class ManagementServerImpl implements ManagementServer {
             }
         }
 
-        _accountMgr.checkAccess(caller, template);
+        _accountMgr.checkAccess(caller, AccessType.ModifyEntry, template);
 
         // If command is executed via 8096 port, set userId to the id of System account (1)
         if (userId == null) {
@@ -3462,7 +3486,7 @@ public class ManagementServerImpl implements ManagementServer {
         }
 
         if (!template.isPublicTemplate()) {
-            _accountMgr.checkAccess(caller, template);
+            _accountMgr.checkAccess(caller, null, template);
         }
 
         List<String> accountNames = new ArrayList<String>();
@@ -4103,7 +4127,7 @@ public class ManagementServerImpl implements ManagementServer {
         }
         
         // check permissions
-        _accountMgr.checkAccess(caller, _accountMgr.getAccount(user.getAccountId()));
+        _accountMgr.checkAccess(caller, null, _accountMgr.getAccount(user.getAccountId()));
 
         String cloudIdentifier = _configDao.getValue("cloud.identifier");
         if (cloudIdentifier == null) {
@@ -4195,16 +4219,28 @@ public class ManagementServerImpl implements ManagementServer {
         Map<String, Object> capabilities = new HashMap<String, Object>();
 
         boolean securityGroupsEnabled = false;
+        boolean elasticLoadBalancerEnabled = false;
+        String supportELB = "false";
         List<DataCenterVO> dc = _dcDao.listSecurityGroupEnabledZones();
         if (dc != null && !dc.isEmpty()) {
             securityGroupsEnabled = true;
+            String elbEnabled = _configDao.getValue(Config.ElasticLoadBalancerEnabled.key());
+            elasticLoadBalancerEnabled = elbEnabled==null?false:Boolean.parseBoolean(elbEnabled);
+            if (elasticLoadBalancerEnabled) {
+                String networkType = _configDao.getValue(Config.ElasticLoadBalancerNetwork.key());
+                if (networkType != null)
+                    supportELB = networkType;
+            }
         }
 
+        String firewallRuleUiEnabled = _configs.get(Config.FirewallRuleUiEnabled.key());
         String userPublicTemplateEnabled = _configs.get(Config.AllowPublicUserTemplates.key());
 
         capabilities.put("securityGroupsEnabled", securityGroupsEnabled);
         capabilities.put("userPublicTemplateEnabled", (userPublicTemplateEnabled == null || userPublicTemplateEnabled.equals("false") ? false : true));
         capabilities.put("cloudStackVersion", getVersion());
+        capabilities.put("supportELB", supportELB);
+        capabilities.put("firewallRuleUiEnabled", (firewallRuleUiEnabled != null && firewallRuleUiEnabled.equals("true")) ? true : false);
         return capabilities;
     }
 
@@ -4221,9 +4257,9 @@ public class ManagementServerImpl implements ManagementServer {
     @Override
     public long getPsMaintenanceCount(long podId) {
         List<StoragePoolVO> poolsInTransition = new ArrayList<StoragePoolVO>();
-        poolsInTransition.addAll(_poolDao.listPoolsByStatus(StoragePoolStatus.Maintenance));
-        poolsInTransition.addAll(_poolDao.listPoolsByStatus(StoragePoolStatus.PrepareForMaintenance));
-        poolsInTransition.addAll(_poolDao.listPoolsByStatus(StoragePoolStatus.ErrorInMaintenance));
+        poolsInTransition.addAll(_poolDao.listByStatus(StoragePoolStatus.Maintenance));
+        poolsInTransition.addAll(_poolDao.listByStatus(StoragePoolStatus.PrepareForMaintenance));
+        poolsInTransition.addAll(_poolDao.listByStatus(StoragePoolStatus.ErrorInMaintenance));
 
         return poolsInTransition.size();
     }
@@ -4288,7 +4324,7 @@ public class ManagementServerImpl implements ManagementServer {
             extractMode = mode.equals(Upload.Mode.FTP_UPLOAD.toString()) ? Upload.Mode.FTP_UPLOAD : Upload.Mode.HTTP_DOWNLOAD;
         }
 
-        _accountMgr.checkAccess(account, volume);
+        _accountMgr.checkAccess(account, null, volume);
         // If mode is upload perform extra checks on url and also see if there is an ongoing upload on the same.
         if (extractMode == Upload.Mode.FTP_UPLOAD) {
             URI uri = new URI(url);
@@ -4737,7 +4773,7 @@ public class ManagementServerImpl implements ManagementServer {
         }
 
         // make permission check
-        _accountMgr.checkAccess(caller, vm);
+        _accountMgr.checkAccess(caller, null, vm);
 
         _userVmDao.loadDetails(vm);
         String password = vm.getDetail("Encrypted.Password");

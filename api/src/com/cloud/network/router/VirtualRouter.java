@@ -26,7 +26,7 @@ import com.cloud.vm.VirtualMachine;
 public interface VirtualRouter extends VirtualMachine {
 	public enum Role {
 		DHCP_FIREWALL_LB_PASSWD_USERDATA,
-		DHCP_USERDATA
+		DHCP_USERDATA, LB
 	}
     Role getRole();
     boolean getIsRedundantRouter();
@@ -37,4 +37,5 @@ public interface VirtualRouter extends VirtualMachine {
         FAULT
     }
     RedundantState getRedundantState();
+    String getGuestIpAddress();
 }

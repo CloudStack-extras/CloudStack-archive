@@ -25,6 +25,7 @@
 <components.xml>
     <system-integrity-checker class="com.cloud.upgrade.DatabaseUpgradeChecker">
         <checker name="ManagementServerNode" class="com.cloud.cluster.ManagementServerNode"/>
+        <checker name="DatabaseIntegrityChecker" class="com.cloud.upgrade.DatabaseIntegrityChecker"/>
         <checker name="DatabaseUpgradeChecker" class="com.cloud.upgrade.DatabaseUpgradeChecker"/>
     </system-integrity-checker>
 
@@ -94,6 +95,8 @@
             <adapter name="DomainRouter" class="com.cloud.network.element.VirtualRouterElement"/>
             <adapter name="Dhcp" class="com.cloud.network.element.DhcpElement"/>
             <adapter name="Ovs" class="com.cloud.network.element.OvsElement"/>
+            <adapter name="ElasticLoadBalancer" class="com.cloud.network.element.ElasticLoadBalancerElement"/>
+            
         </adapters>
         <adapters key="com.cloud.acl.SecurityChecker">
             <adapter name="DomainChecker" class="com.cloud.acl.DomainChecker"/>

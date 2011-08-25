@@ -12,7 +12,7 @@ cleanup()
   if [ ! -z $localmp ]; then 
     umount -fl $localmp
     if [ $? -eq 0 ];  then
-      rm $localmp -rf
+      rmdir $localmp
     fi
   fi
 }
@@ -48,7 +48,7 @@ if [ $? -ne 0 ]; then
   exit 0
 fi
 
-mount $mountpoint $localmp -r
+mount -o tcp,ro $mountpoint $localmp
 if [ $? -ne 0 ]; then
   echo "6#can't mount $mountpoint to $localmp"
   exit 0

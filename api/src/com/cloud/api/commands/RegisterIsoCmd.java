@@ -26,7 +26,6 @@ import com.cloud.api.BaseCmd;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
-import com.cloud.api.BaseCmd.CommandType;
 import com.cloud.api.response.ListResponse;
 import com.cloud.api.response.TemplateResponse;
 import com.cloud.exception.InvalidParameterValueException;
@@ -78,6 +77,9 @@ public class RegisterIsoCmd extends BaseCmd {
     @Parameter(name=ApiConstants.ACCOUNT, type=CommandType.STRING, description="an optional account name. Must be used with domainId.")
     private String accountName;
     
+    @Parameter(name=ApiConstants.CHECKSUM, type=CommandType.STRING, description="the MD5 checksum value of this ISO")
+    private String checksum;
+    
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -126,6 +128,10 @@ public class RegisterIsoCmd extends BaseCmd {
 		return accountName;
 	}
 
+    public String getChecksum() {
+        return checksum;
+    }	
+    
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////

@@ -39,6 +39,8 @@ import com.cloud.agent.api.AgentControlAnswer;
 import com.cloud.agent.api.AgentControlCommand;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.Command;
+import com.cloud.agent.api.SetupAnswer;
+import com.cloud.agent.api.SetupCommand;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
 import com.cloud.alert.AlertManager;
@@ -76,14 +78,13 @@ import com.cloud.user.Account;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.exception.HypervisorVersionChangedException;
 import com.xensource.xenapi.Connection;
 import com.xensource.xenapi.Host;
 import com.xensource.xenapi.Pool;
 import com.xensource.xenapi.Session;
 import com.xensource.xenapi.Types.SessionAuthenticationFailed;
 import com.xensource.xenapi.Types.XenAPIException;
-import com.cloud.agent.api.SetupCommand;
-import com.cloud.agent.api.SetupAnswer;
 
 @Local(value=Discoverer.class)
 public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, Listener {
@@ -110,7 +111,7 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
     }
     
     @Override
-    public Map<? extends ServerResource, Map<String, String>> find(long dcId, Long podId, Long clusterId, URI url, String username, String password) throws DiscoveryException {
+    public Map<? extends ServerResource, Map<String, String>> find(long dcId, Long podId, Long clusterId, URI url, String username, String password, List<String> hostTags) throws DiscoveryException {
         Map<CitrixResourceBase, Map<String, String>> resources = new HashMap<CitrixResourceBase, Map<String, String>>();
         Connection conn = null;
         if (!url.getScheme().equals("http")) {
@@ -379,7 +380,7 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
         String prodBrand = record.softwareVersion.get("product_brand").trim();
         String prodVersion = record.softwareVersion.get("product_version").trim();
         
-        if(prodBrand.equals("XenCloudPlatform") && prodVersion.equals("0.1.1")) 
+        if(prodBrand.equals("XCP") && prodVersion.equals("1.0.0")) 
         	return new XcpServerResource();
         
         if(prodBrand.equals("XenServer") && prodVersion.equals("5.6.0")) 
@@ -397,7 +398,7 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
             }
         }
         
-        String msg = "Only support XCP 0.1.1, XenServer 5.6,  XenServer 5.6 FP1 and XenServer 5.6 SP2, but this one is " + prodBrand + " " + prodVersion;
+        String msg = "Only support XCP 1.0.0, XenServer 5.6,  XenServer 5.6 FP1 and XenServer 5.6 SP2, but this one is " + prodBrand + " " + prodVersion;
         _alertMgr.sendAlert(AlertManager.ALERT_TYPE_HOST, dcId, podId, msg, msg);
         s_logger.debug(msg);
         throw new RuntimeException(msg);
@@ -524,7 +525,7 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
         String prodBrand = details.get("product_brand").trim();
         String prodVersion = details.get("product_version").trim();
         
-        if(prodBrand.equals("XenCloudPlatform") && prodVersion.equals("0.1.1")) {
+        if(prodBrand.equals("XCP") && prodVersion.equals("1.0.0")) {
             resource = XcpServerResource.class.getName();
         } else if(prodBrand.equals("XenServer") && prodVersion.equals("5.6.0")) {
             resource = XenServer56Resource.class.getName();
@@ -539,7 +540,7 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
             }
         }
         if( resource == null ){
-            String msg = "Only support XCP 0.1.1, XenServer 5.6,  XenServer 5.6 FP1 and XenServer 5.6 SP2, but this one is " + prodBrand + " " + prodVersion;
+            String msg = "Only support XCP 1.0.0, XenServer 5.6,  XenServer 5.6 FP1 and XenServer 5.6 SP2, but this one is " + prodBrand + " " + prodVersion;
             s_logger.debug(msg);
             throw new RuntimeException(msg);
         }
@@ -549,7 +550,7 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
             _hostDao.update(agentId, host);
             String msg = "host " + host.getPrivateIpAddress() + " changed from " + host.getResource() + " to " + resource;
             s_logger.debug(msg);
-            throw new RuntimeException(msg);
+            throw new HypervisorVersionChangedException(msg);
         }
         
         
@@ -600,6 +601,5 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
     @Override
     public boolean processTimeout(long agentId, long seq) {
         return false;
-    }
-    
+    }    
 }

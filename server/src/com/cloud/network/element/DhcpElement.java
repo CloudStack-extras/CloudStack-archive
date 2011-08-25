@@ -44,9 +44,12 @@ import com.cloud.network.PublicIpAddress;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.router.VirtualNetworkApplianceManager;
 import com.cloud.network.router.VirtualRouter;
+import com.cloud.network.router.VirtualRouter.Role;
 import com.cloud.network.rules.FirewallRule;
+import com.cloud.network.rules.StaticNat;
 import com.cloud.network.vpn.PasswordResetElement;
 import com.cloud.offering.NetworkOffering;
+import com.cloud.user.AccountManager;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.component.AdapterBase;
 import com.cloud.utils.component.Inject;
@@ -75,6 +78,7 @@ public class DhcpElement extends AdapterBase implements NetworkElement, Password
     @Inject DomainRouterDao _routerDao;
     @Inject ConfigurationManager _configMgr;
     @Inject HostPodDao _podDao;
+    @Inject AccountManager _accountMgr;
      
     private boolean canHandle(GuestIpType ipType, DeployDestination dest, TrafficType trafficType) {
         DataCenter dc = dest.getDataCenter();
@@ -102,7 +106,7 @@ public class DhcpElement extends AdapterBase implements NetworkElement, Password
         
         Map<VirtualMachineProfile.Param, Object> params = new HashMap<VirtualMachineProfile.Param, Object>(1);
         params.put(VirtualMachineProfile.Param.RestartNetwork, true);
-        _routerMgr.deployDhcp(network, dest, context.getAccount(), params);
+        _routerMgr.deployDhcp(network, dest, _accountMgr.getAccount(network.getAccountId()), params);
         return true;
     }
 
@@ -118,8 +122,19 @@ public class DhcpElement extends AdapterBase implements NetworkElement, Password
             VirtualMachineProfile<UserVm> uservm = (VirtualMachineProfile<UserVm>)vm;
             Map<VirtualMachineProfile.Param, Object> params = new HashMap<VirtualMachineProfile.Param, Object>(1);
             params.put(VirtualMachineProfile.Param.RestartNetwork, true);
-            List<DomainRouterVO> routers = _routerMgr.deployDhcp(network, dest, uservm.getOwner(), uservm.getParameters());
-            List<VirtualRouter> rets = _routerMgr.addVirtualMachineIntoNetwork(network, nic, uservm, dest, context, routers);
+
+            List<DomainRouterVO> routers = _routerMgr.deployDhcp(network, dest, _accountMgr.getAccount(network.getAccountId()), uservm.getParameters());
+            
+            //for Basic zone, add all Running routers - we have to send Dhcp/vmData/password info to them when network.dns.basiczone.updates is set to "all"
+            Long podId = dest.getPod().getId();
+            DataCenter dc = dest.getDataCenter();
+            boolean isPodBased = (dc.getNetworkType() == NetworkType.Basic || network.isSecurityGroupEnabled()) && network.getTrafficType() == TrafficType.Guest;
+            if (isPodBased && _routerMgr.getDnsBasicZoneUpdate().equalsIgnoreCase("all")) {
+                List<DomainRouterVO> allRunningRoutersOutsideThePod = _routerDao.findByNetworkOutsideThePod(network.getId(), podId, State.Running, Role.DHCP_USERDATA);
+                routers.addAll(allRunningRoutersOutsideThePod);
+            }
+            
+            List<VirtualRouter> rets = _routerMgr.addVirtualMachineIntoNetwork(network, nic, uservm, dest, context, routers);                                                                                                                      
             return (rets != null) && (!rets.isEmpty());
         } else {
             return false;
@@ -133,7 +148,7 @@ public class DhcpElement extends AdapterBase implements NetworkElement, Password
     
     @Override
     public boolean shutdown(Network network, ReservationContext context) throws ConcurrentOperationException, ResourceUnavailableException {
-        List<DomainRouterVO> routers = _routerDao.findByNetwork(network.getId());
+        List<DomainRouterVO> routers = _routerDao.listByNetworkAndRole(network.getId(), Role.DHCP_USERDATA);
         if (routers == null || routers.isEmpty()) {
             return true;
         }
@@ -146,7 +161,7 @@ public class DhcpElement extends AdapterBase implements NetworkElement, Password
     
     @Override
     public boolean destroy(Network config) throws ConcurrentOperationException, ResourceUnavailableException{
-        List<DomainRouterVO> routers = _routerDao.findByNetwork(config.getId());
+        List<DomainRouterVO> routers = _routerDao.listByNetworkAndRole(config.getId(), Role.DHCP_USERDATA);
         if (routers == null || routers.isEmpty()) {
             return true;
         }
@@ -194,9 +209,15 @@ public class DhcpElement extends AdapterBase implements NetworkElement, Password
     @Override
     public boolean restart(Network network, ReservationContext context) throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException{
         DataCenter dc = _configMgr.getZone(network.getDataCenterId());
-        NetworkOffering offering = _configMgr.getNetworkOffering(network.getNetworkOfferingId());
         DeployDestination dest = new DeployDestination(dc, null, null, null);
-        List<DomainRouterVO> routers = _routerDao.findByNetwork(network.getId());
+        NetworkOffering offering = _configMgr.getNetworkOffering(network.getNetworkOfferingId());
+        
+        if (!canHandle(network.getGuestType(), dest, offering.getTrafficType())) {
+            s_logger.trace("Dhcp element doesn't handle network restart for the network " + network);
+            return false;
+        } 
+        
+        List<DomainRouterVO> routers = _routerDao.listByNetworkAndRole(network.getId(), Role.DHCP_USERDATA);
         if (routers == null || routers.isEmpty()) {
             s_logger.trace("Can't find dhcp element in network " + network.getId());
             return true;
@@ -205,29 +226,37 @@ public class DhcpElement extends AdapterBase implements NetworkElement, Password
         VirtualRouter result = null;
         boolean ret = true;
         for (DomainRouterVO router : routers) {
-            if (canHandle(network.getGuestType(), dest, offering.getTrafficType())) {
-                if (router.getState() == State.Stopped) {
-                    result = _routerMgr.startRouter(router.getId(), false);
-                } else {
-                    result = _routerMgr.rebootRouter(router.getId(), false);
-                }
-                if (result == null) {
-                    s_logger.warn("Failed to restart dhcp element " + router + " as a part of netowrk " + network + " restart");
-                    ret = false;
-                }
+            if (router.getState() == State.Stopped) {
+                result = _routerMgr.startRouter(router.getId(), false);
             } else {
-                s_logger.trace("Dhcp element doesn't handle network restart for the network " + network);
+                result = _routerMgr.rebootRouter(router.getId(), false);
             }
+            if (result == null) {
+                s_logger.warn("Failed to restart dhcp element " + router + " as a part of netowrk " + network + " restart");
+                ret = false;
+            }
+          
         }
         return ret;
     }
     
     @Override
     public boolean savePassword(Network network, NicProfile nic, VirtualMachineProfile<? extends VirtualMachine> vm) throws ResourceUnavailableException{
+
+        List<DomainRouterVO> routers = _routerDao.listByNetworkAndRole(network.getId(), Role.DHCP_USERDATA);
+        if (routers == null || routers.isEmpty()) {
+            s_logger.trace("Can't find dhcp element in network " + network.getId());
+            return true;
+        }
         
         @SuppressWarnings("unchecked")
         VirtualMachineProfile<UserVm> uservm = (VirtualMachineProfile<UserVm>)vm;
  
-        return _routerMgr.savePasswordToRouter(network, nic, uservm);
+        return _routerMgr.savePasswordToRouter(network, nic, uservm, routers);
+    }
+    
+    @Override
+    public boolean applyStaticNats(Network config, List<? extends StaticNat> rules) throws ResourceUnavailableException {
+        return false;
     }
 }

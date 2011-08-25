@@ -99,16 +99,15 @@ public class DomainDaoImpl extends GenericDaoBase<DomainVO, Long> implements Dom
     		return null;
     	}
     	
-        GlobalLock lock = GlobalLock.getInternLock("lock.domain." + parent);
-        if(!lock.lock(3600)) {
-        	// wait up to 1 hour, if it comes up to here, something is wrong
-            s_logger.error("Unable to lock parent domain: " + parent);
-    		return null;
-        }
-    	
         Transaction txn = Transaction.currentTxn();
     	try {
     		txn.start();
+
+    		parentDomain = this.lockRow(parent, true);
+            if(parentDomain == null) {
+                s_logger.error("Unable to lock parent domain: " + parent);
+                return null;
+            }
     		
             domain.setPath(allocPath(parentDomain, domain.getName()));
             domain.setLevel(parentDomain.getLevel() + 1);
@@ -124,9 +123,7 @@ public class DomainDaoImpl extends GenericDaoBase<DomainVO, Long> implements Dom
     		s_logger.error("Unable to create domain due to " + e.getMessage(), e);
     		txn.rollback();
     		return null;
-    	} finally {
-    		lock.unlock();
-    	}
+    	} 
     }
 
     @Override

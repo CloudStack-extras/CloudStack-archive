@@ -18,15 +18,11 @@
 
 package com.cloud.network;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 import com.cloud.network.rules.FirewallRuleVO;
 import com.cloud.network.rules.LoadBalancer;
@@ -41,7 +37,7 @@ public class LoadBalancerVO extends FirewallRuleVO implements LoadBalancer {
     @Column(name="name")
     private String name;
 
-    @Column(name="description")
+    @Column(name="description", length=4096)
     private String description;
 
     @Column(name="algorithm")
@@ -52,21 +48,17 @@ public class LoadBalancerVO extends FirewallRuleVO implements LoadBalancer {
     
     @Column(name="default_port_end")
     private int defaultPortEnd;
-    
-    @Transient
-    List<String> sourceCidrs;
 
     public LoadBalancerVO() { 
     }
 
-    public LoadBalancerVO(String xId, String name, String description, long srcIpId, int srcPort, int dstPort, List<String> sourceCidrs, String algorithm, long networkId, long accountId, long domainId) {
-        super(xId, srcIpId, srcPort, NetUtils.TCP_PROTO, networkId, accountId, domainId, Purpose.LoadBalancing);
+    public LoadBalancerVO(String xId, String name, String description, long srcIpId, int srcPort, int dstPort, String algorithm, long networkId, long accountId, long domainId) {
+        super(xId, srcIpId, srcPort, NetUtils.TCP_PROTO, networkId, accountId, domainId, Purpose.LoadBalancing, null, null, null, null);
         this.name = name;
         this.description = description;
         this.algorithm = algorithm;
         this.defaultPortStart = dstPort;
         this.defaultPortEnd = dstPort;
-        this.sourceCidrs = sourceCidrs;
     }
     
     @Override
@@ -77,14 +69,6 @@ public class LoadBalancerVO extends FirewallRuleVO implements LoadBalancer {
     @Override
     public String getDescription() {
         return description;
-    }
-
-    public void setSourceCidrList(List<String> sourceCidrs) {
-        this.sourceCidrs=sourceCidrs;
-    }
-    @Override
-    public List<String> getSourceCidrList() {
-        return sourceCidrs;
     }
 
     @Override

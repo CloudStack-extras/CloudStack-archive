@@ -111,8 +111,18 @@ dictionary = {
 	                    <div class="row_celltitles" id="state">
 	                    </div>
 	                </div>
-	            </div>
+	            </div>	            
 	            <div class="grid_rows even">
+	                <div class="grid_row_cell" style="width: 20%;">
+	                    <div class="row_celltitles">
+	                        <fmt:message key="label.host.tags"/>:</div>
+	                </div>
+	                <div class="grid_row_cell" style="width: 79%;">
+	                    <div class="row_celltitles" id="hosttags">
+	                    </div>
+	                </div>
+	            </div>
+	            <div class="grid_rows odd">
 	                <div class="grid_row_cell" style="width: 20%;">
 	                    <div class="row_celltitles">
 	                        <fmt:message key="label.type"/>:</div>
@@ -122,7 +132,7 @@ dictionary = {
 	                    </div>
 	                </div>
 	            </div>
-	            <div class="grid_rows odd">
+	            <div class="grid_rows even">
 	                <div class="grid_row_cell" style="width: 20%;">
 	                    <div class="row_celltitles">
 	                        <fmt:message key="label.zone"/>:</div>
@@ -132,7 +142,7 @@ dictionary = {
 	                    </div>
 	                </div>
 	            </div>
-	            <div class="grid_rows even">
+	            <div class="grid_rows odd">
 	                <div class="grid_row_cell" style="width: 20%;">
 	                    <div class="row_celltitles">
 	                        <fmt:message key="label.pod"/>:</div>
@@ -142,7 +152,7 @@ dictionary = {
 	                    </div>
 	                </div>
 	            </div>
-	            <div class="grid_rows odd">
+	            <div class="grid_rows even">
 	                <div class="grid_row_cell" style="width: 20%;">
 	                    <div class="row_celltitles">
 	                        <fmt:message key="label.cluster"/>:</div>
@@ -152,7 +162,7 @@ dictionary = {
 	                    </div>
 	                </div>
 	            </div>
-	            <div class="grid_rows even">
+	            <div class="grid_rows odd">
 	                <div class="grid_row_cell" style="width: 20%;">
 	                    <div class="row_celltitles">
 	                        <fmt:message key="label.ip.address"/>:</div>
@@ -162,7 +172,7 @@ dictionary = {
 	                    </div>
 	                </div>
 	            </div>
-	            <div class="grid_rows odd">
+	            <div class="grid_rows even">
 	                <div class="grid_row_cell" style="width: 20%;">
 	                    <div class="row_celltitles">
 	                        <fmt:message key="label.version"/>:</div>
@@ -172,7 +182,7 @@ dictionary = {
 	                    </div>
 	                </div>
 	            </div>
-	            <div class="grid_rows even">
+	            <div class="grid_rows odd">
 	                <div class="grid_row_cell" style="width: 20%;">
 	                    <div class="row_celltitles">
 	                        <fmt:message key="label.os.preference"/>:</div>
@@ -182,7 +192,7 @@ dictionary = {
 	                    </div>
 	                </div>
 	            </div>
-	            <div class="grid_rows odd">
+	            <div class="grid_rows even">
 	                <div class="grid_row_cell" style="width: 20%;">
 	                    <div class="row_celltitles">
 	                        <fmt:message key="label.last.disconnected"/>:</div>
@@ -809,6 +819,20 @@ dictionary = {
                 <div id="host_baremetal_mac_errormsg" class="dialog_formcontent_errormsg" style="display: none;">
                 </div>
             </li>
+            <li input_group="Ovm" style="display: none;">
+                <label>
+                    Agent Username:</label>
+                <input class="text" type="text" id="agent_username" value="oracle" />
+                <div id="agent_username_errormsg" class="dialog_formcontent_errormsg" style="display: none;">
+                </div>
+            </li>
+			<li input_group="Ovm" style="display: none;">
+                <label>
+                    Agent Password:</label>
+                <input class="text" type="password" id="agent_password" />
+                <div id="agent_password_errormsg" class="dialog_formcontent_errormsg" style="display: none;">
+                </div>
+            </li>          
 			<li>
                 <label input_group="general">                    
 					<fmt:message key="label.host.tags"/>:</label>

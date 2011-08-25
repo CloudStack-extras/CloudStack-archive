@@ -72,10 +72,12 @@ import com.cloud.storage.Snapshot.Type;
 import com.cloud.storage.SnapshotPolicyVO;
 import com.cloud.storage.SnapshotScheduleVO;
 import com.cloud.storage.SnapshotVO;
+import com.cloud.storage.Storage;
 import com.cloud.storage.StorageManager;
 import com.cloud.storage.StoragePool;
 import com.cloud.storage.StoragePoolVO;
 import com.cloud.storage.SwiftVO;
+import com.cloud.storage.VMTemplateVO;
 import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.DiskOfferingDao;
@@ -84,6 +86,7 @@ import com.cloud.storage.dao.SnapshotPolicyDao;
 import com.cloud.storage.dao.SnapshotScheduleDao;
 import com.cloud.storage.dao.StoragePoolDao;
 import com.cloud.storage.dao.SwiftDao;
+import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
@@ -114,7 +117,8 @@ import com.cloud.vm.dao.UserVmDao;
 @Local(value = { SnapshotManager.class, SnapshotService.class })
 public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Manager {
     private static final Logger s_logger = Logger.getLogger(SnapshotManagerImpl.class);
-
+    @Inject
+    protected VMTemplateDao _templateDao;
     @Inject
     protected HostDao _hostDao;
     @Inject
@@ -261,7 +265,8 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
                 preSnapshotPath = preSnapshotVO.getPath();
             }
         }
-        ManageSnapshotCommand cmd = new ManageSnapshotCommand(snapshotId, volume.getPath(), preSnapshotPath, snapshot.getName(), vmName);
+        StoragePoolVO srcPool = _storagePoolDao.findById(volume.getPoolId());
+        ManageSnapshotCommand cmd = new ManageSnapshotCommand(snapshotId, volume.getPath(), srcPool, preSnapshotPath, snapshot.getName(), vmName);
 
         ManageSnapshotAnswer answer = (ManageSnapshotAnswer) sendToPool(volume, cmd);
         // Update the snapshot in the database
@@ -274,6 +279,7 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
                 snapshot.setBackupSnapshotId(preSnapshotVO.getBackupSnapshotId());
                 snapshot.setStatus(Snapshot.Status.BackedUp);
                 snapshot.setPrevSnapshotId(preId);
+                snapshot.setSecHostId(preSnapshotVO.getSecHostId());
                 _snapshotDao.update(snapshotId, snapshot);
             } else {
                 long preSnapshotId = 0;
@@ -553,7 +559,8 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
             }
             boolean isVolumeInactive = _storageMgr.volumeInactive(volume);
             String vmName = _storageMgr.getVmNameOnVolume(volume);
-            BackupSnapshotCommand backupSnapshotCommand = new BackupSnapshotCommand(primaryStoragePoolNameLabel, secondaryStoragePoolUrl, dcId, accountId, volumeId, snapshot.getId(), volume.getPath(), snapshotUuid,
+            StoragePoolVO srcPool = _storagePoolDao.findById(volume.getPoolId());
+            BackupSnapshotCommand backupSnapshotCommand = new BackupSnapshotCommand(primaryStoragePoolNameLabel, secondaryStoragePoolUrl, dcId, accountId, volumeId, snapshot.getId(), volume.getPath(), srcPool, snapshotUuid,
                     snapshot.getName(), prevSnapshotUuid, prevBackupUuid, isVolumeInactive, vmName);
 
             if ( swift != null ) {
@@ -1039,6 +1046,17 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
             throw new InvalidParameterValueException("Failed to create snapshot policy, unable to find a volume with id " + volumeId);
         }
 
+        if (volume.getState() != Volume.State.Ready) {
+            throw new InvalidParameterValueException("VolumeId: " + volumeId + " is not in " + Volume.State.Ready + " state but " + volume.getState() + ". Cannot take snapshot.");
+        }
+
+        if ( volume.getTemplateId() != null ) {
+            VMTemplateVO  template = _templateDao.findById(volume.getTemplateId());
+            if( template != null && template.getTemplateType() == Storage.TemplateType.SYSTEM ) {
+                throw new InvalidParameterValueException("VolumeId: " + volumeId + " is for System VM , Creating snapshot against System VM volumes is not supported");
+            }
+        }
+
         AccountVO owner = _accountDao.findById(volume.getAccountId());
         DomainVO domain = _domainDao.findById(owner.getDomainId());
 
@@ -1251,13 +1269,21 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
         if (volume.getState() != Volume.State.Ready) {
             throw new InvalidParameterValueException("VolumeId: " + volumeId + " is not in " + Volume.State.Ready + " state but " + volume.getState() + ". Cannot take snapshot.");
         }
+
+        if ( volume.getTemplateId() != null ) {
+            VMTemplateVO  template = _templateDao.findById(volume.getTemplateId());
+            if( template != null && template.getTemplateType() == Storage.TemplateType.SYSTEM ) {
+                throw new InvalidParameterValueException("VolumeId: " + volumeId + " is for System VM , Creating snapshot against System VM volumes is not supported");
+            }
+        }
+
         StoragePoolVO storagePoolVO = _storagePoolDao.findById(volume.getPoolId());
         if (storagePoolVO == null) {
             throw new InvalidParameterValueException("VolumeId: " + volumeId + " please attach this volume to a VM before create snapshot for it");
         }
 
         // Verify permissions
-        _accountMgr.checkAccess(caller, volume);
+        _accountMgr.checkAccess(caller, null, volume);
 
         Account owner = _accountMgr.getAccount(volume.getAccountId());
         if (_accountMgr.resourceLimitExceeded(owner, ResourceType.snapshot)) {

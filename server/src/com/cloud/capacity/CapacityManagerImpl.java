@@ -415,7 +415,7 @@ public class CapacityManagerImpl implements CapacityManager, StateListener<State
 
         }        
     }
-
+    
     @Override
 	public void updateCapacityForHost(HostVO host){
     	// prep the service offerings
@@ -535,13 +535,7 @@ public class CapacityManagerImpl implements CapacityManager, StateListener<State
                 + vm.getLastHostId() + " new host id: " + vm.getHostId() + " host id before state transition: " + oldHostId);
 
         if (oldState == State.Starting) {
-            if (event == Event.OperationFailed) {
-                releaseVmCapacity(vm, false, false, oldHostId);
-            } else if (event == Event.OperationRetry) {
-                releaseVmCapacity(vm, false, false, oldHostId);
-            } else if (event == Event.AgentReportStopped) {
-                releaseVmCapacity(vm, false, true, oldHostId);
-            } else if(event == Event.AgentReportMigrated) {
+            if(newState != State.Running) {
             	releaseVmCapacity(vm, false, false, oldHostId);
             }
         } else if (oldState == State.Running) {
@@ -554,7 +548,7 @@ public class CapacityManagerImpl implements CapacityManager, StateListener<State
             if (event == Event.AgentReportStopped) {
                 /* Release capacity from original host */
                 releaseVmCapacity(vm, false, false, vm.getLastHostId());
-                releaseVmCapacity(vm, false, true, oldHostId);
+                releaseVmCapacity(vm, false, false, oldHostId);
             } else if (event == Event.OperationFailed) {
                 /* Release from dest host */
                 releaseVmCapacity(vm, false, false, oldHostId);
@@ -562,8 +556,10 @@ public class CapacityManagerImpl implements CapacityManager, StateListener<State
                 releaseVmCapacity(vm, false, false, vm.getLastHostId());
             }
         } else if (oldState == State.Stopping) {
-            if (event == Event.AgentReportStopped || event == Event.OperationSucceeded) {
+            if (event == Event.OperationSucceeded) {
                 releaseVmCapacity(vm, false, true, oldHostId);
+            } else if (event == Event.AgentReportStopped) {
+                releaseVmCapacity(vm, false, false, oldHostId);
             } else if(event == Event.AgentReportMigrated) {
                 releaseVmCapacity(vm, false, false, oldHostId);
             }
