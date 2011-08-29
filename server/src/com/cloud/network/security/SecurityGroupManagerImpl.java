@@ -859,7 +859,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
             }
             ArrayList<Long> affectedVms = new ArrayList<Long>();
             affectedVms.add(userVmId);
-            scheduleRulesetUpdateToHosts(affectedVms, true, _timeBetweenCleanups*1000l);
+            scheduleRulesetUpdateToHosts(affectedVms, false, _timeBetweenCleanups*1000l);
             return;
         }
         UserVm vm = null;
