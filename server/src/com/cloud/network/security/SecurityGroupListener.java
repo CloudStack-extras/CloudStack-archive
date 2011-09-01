@@ -33,6 +33,7 @@ import com.cloud.agent.api.PingRoutingWithNwGroupsCommand;
 import com.cloud.agent.api.SecurityIngressRuleAnswer;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
+import com.cloud.agent.api.SecurityIngressRuleAnswer.FailureReason;
 import com.cloud.agent.manager.Commands;
 import com.cloud.exception.AgentUnavailableException;
 import com.cloud.host.HostVO;
@@ -89,8 +90,15 @@ public class SecurityGroupListener implements Listener {
 
                 } else {
                     int deleted = _workDao.deleteWork(ruleAnswer.getVmId(), ruleAnswer.getLogSequenceNumber());
-                    s_logger.debug("Failed to program rule " + ruleAnswer.toString() + " into host " + agentId + " and deleted " + deleted + " jobs");
-                    affectedVms.add(ruleAnswer.getVmId());
+                    s_logger.debug("Failed to program rule " + ruleAnswer.toString() + " into host " + agentId 
+                            +" due to " + ruleAnswer.getDetails()
+                            +" and deleted " + deleted + " jobs");
+                    if (ruleAnswer.getReason() == FailureReason.CANNOT_BRIDGE_FIREWALL) {
+                        s_logger.debug("Not retrying security group rules for vm " + ruleAnswer.getVmId() + " on failure since host " + agentId + " cannot do bridge firewalling");
+                    } else if (ruleAnswer.getReason() == FailureReason.PROGRAMMING_FAILED){
+                        s_logger.debug("Retrying on failure for vm " + ruleAnswer.getVmId());
+                        affectedVms.add(ruleAnswer.getVmId());
+                    }
                 }
                 commandNum++;
             }
