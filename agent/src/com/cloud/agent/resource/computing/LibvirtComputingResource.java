@@ -153,6 +153,7 @@ import com.cloud.agent.api.to.StorageFilerTO;
 import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.agent.api.to.VolumeTO;
 import com.cloud.agent.resource.computing.KVMHABase.NfsStoragePool;
+import com.cloud.agent.resource.computing.LibvirtStoragePoolDef.poolType;
 import com.cloud.agent.resource.computing.LibvirtStorageVolumeDef.volFormat;
 import com.cloud.agent.resource.computing.LibvirtVMDef.ConsoleDef;
 import com.cloud.agent.resource.computing.LibvirtVMDef.DevicesDef;
@@ -178,6 +179,7 @@ import com.cloud.resource.ServerResource;
 import com.cloud.resource.ServerResourceBase;
 import com.cloud.storage.Storage;
 import com.cloud.storage.Storage.ImageFormat;
+import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.storage.StorageLayer;
 import com.cloud.storage.Volume;
 import com.cloud.storage.template.Processor;
@@ -1022,20 +1024,33 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         	  primaryPool = _storageResource.getStoragePool(conn, pool.getUuid());
         	  
         	  if (cmd.getTemplateUrl() != null) {
-        		  tmplVol = _storageResource.getVolume(conn, primaryPool, cmd.getTemplateUrl());
-        		  
-        		  vol = _storageResource.createVolumeFromTempl(primaryPool, tmplVol);
+        		  // FIXME: assume nfs protocol is for direct copy from secondary storage templates
+        		  if (cmd.getTemplateUrl().startsWith("nfs://")) {
+        			  // Libvirt's PrimaryStorageDownloadCommand ignores name, accountId and ImageFormat
+        			  PrimaryStorageDownloadCommand dcmd = new PrimaryStorageDownloadCommand(UUID.randomUUID().toString(),
+        				  cmd.getTemplateUrl(), ImageFormat.QCOW2, 0 /* accountId */, pool.getId(), pool.getUuid());
+        			  PrimaryStorageDownloadAnswer answer = execute(dcmd);
+        			  if (answer == null || !answer.getResult()) {
+        				  return new Answer(cmd, false, " Can't create storage volume on storage pool");
+        			  }
+        			  vol = _storageResource.getVolume(conn, primaryPool, answer.getInstallPath());
+        			  disksize = vol.getInfo().capacity;
+        		  } else {
+        			  tmplVol = _storageResource.getVolume(conn, primaryPool, cmd.getTemplateUrl());
+        			  vol = _storageResource.createVolumeFromTempl(primaryPool, tmplVol);
+        			  disksize = tmplVol.getInfo().capacity;
+			  }
 
         		  if (vol == null) {
         			  return new Answer(cmd, false, " Can't create storage volume on storage pool");
         		  }
-        		  disksize = tmplVol.getInfo().capacity;
         	  } else {
+        		  volFormat format = pool.getType() == StoragePoolType.CLVM ? volFormat.RAW : volFormat.QCOW2;
+        		  vol = _storageResource.createVolume(conn, primaryPool, UUID.randomUUID().toString(), dskch.getSize(), format);
         		  disksize = dskch.getSize();
-        		  vol = _storageResource.createVolume(conn, primaryPool, UUID.randomUUID().toString(),  dskch.getSize(), volFormat.QCOW2);
         	  }
         	  VolumeTO volume = new VolumeTO(cmd.getVolumeId(), dskch.getType(), pool.getType(), pool.getUuid(), 
-    			  pool.getPath(), vol.getName(), vol.getKey(),disksize, null);
+    			  pool.getPath(), vol.getName(), vol.getPath(), disksize, null);
         	  return new CreateAnswer(cmd, volume);
           } catch (LibvirtException e) {
         	 
@@ -1178,7 +1193,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     			}
     		}
     		
-    		if (state == DomainInfo.DomainState.VIR_DOMAIN_RUNNING) {
+    		if (state == DomainInfo.DomainState.VIR_DOMAIN_RUNNING && ! VolPath.startsWith("/dev/") /* CLVM */) {
     			String vmUuid = vm.getUUIDString();
     			Object[] args = new Object[] {snapshotName, vmUuid};
     			String snapshot = SnapshotXML.format(args);
@@ -1223,6 +1238,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	 Long dcId = cmd.getDataCenterId();
          Long accountId = cmd.getAccountId();
          Long volumeId = cmd.getVolumeId();
+         String volumePath = cmd.getVolumePath();
          String secondaryStoragePoolURL = cmd.getSecondaryStoragePoolURL();
          String snapshotName = cmd.getSnapshotName();
          String snapshotPath = cmd.getSnapshotUuid();
@@ -1258,7 +1274,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 				}
 			}
 			
-			if (state == DomainInfo.DomainState.VIR_DOMAIN_RUNNING) {
+			if (state == DomainInfo.DomainState.VIR_DOMAIN_RUNNING && ! volumePath.startsWith("/dev/") /* CLVM */) {
 				String vmUuid = vm.getUUIDString();
 				Object[] args = new Object[] {snapshotName, vmUuid};
 				String snapshot = SnapshotXML.format(args);
@@ -1350,7 +1366,26 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     		String primaryPath = spd.getTargetPath();
     		String volUuid = UUID.randomUUID().toString();
     		String volPath = primaryPath + File.separator + volUuid;
-    		String result = executeBashScript("cp " + snapshotPath + " " + volPath);
+    		String result = null;
+    		if (spd.getPoolType() == poolType.LOGICAL) {
+    			Long size = 0L;
+    			OutputInterpreter.OneLineParser sizeParser = new OutputInterpreter.OneLineParser();
+    			result = executeBashScript("qemu-img info " + snapshotPath + " | awk '/^virtual size/ {print $4}' | tr -d '('", sizeParser);
+    			if (result == null && sizeParser.getLine() != null) {
+    				size = Long.parseLong(sizeParser.getLine());
+    			} else {
+    				return new CreateVolumeFromSnapshotAnswer(cmd, false, result, null);
+    			}
+    			if (size > 0) {
+    				StorageVol vol = _storageResource.createVolume(conn, primaryPool, volUuid, size, volFormat.RAW);
+    				result = executeBashScript("qemu-img convert -f qcow2 -O raw " + snapshotPath + " " + vol.getPath());
+    				volPath = vol.getPath();
+    			} else {
+    				return new CreateVolumeFromSnapshotAnswer(cmd, false, "Unable to get snapshot size", null);
+    			}
+    		} else {
+    			result = executeBashScript("cp " + snapshotPath + " " + volPath);
+    		}
     		if (result != null) {
     			return new CreateVolumeFromSnapshotAnswer(cmd, false, result, null);
     		}
@@ -1534,12 +1569,18 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
         	 
         	 /*Copy volume to primary storage*/
         	 primaryPool = _storageResource.getStoragePool(conn, cmd.getPoolUuid());
-        	 LibvirtStorageVolumeDef vol = new LibvirtStorageVolumeDef(UUID.randomUUID().toString(), tmplVol.getInfo().capacity, volFormat.QCOW2, null, null);
+        	 LibvirtStoragePoolDef spd = _storageResource.getStoragePoolDef(conn, primaryPool);
+        	 LibvirtStorageVolumeDef vol;
+        	 if (spd.getPoolType() == poolType.LOGICAL) {
+        		 vol = new LibvirtStorageVolumeDef(UUID.randomUUID().toString(), tmplVol.getInfo().capacity, volFormat.RAW, null, null);
+        	 } else {
+        		 vol = new LibvirtStorageVolumeDef(UUID.randomUUID().toString(), tmplVol.getInfo().capacity, volFormat.QCOW2, null, null);
+        	 }
         	 s_logger.debug(vol.toString());
         	 primaryVol = _storageResource.copyVolume(primaryPool, vol, tmplVol, _cmdsTimeout);
         	 
         	 StorageVolInfo priVolInfo = primaryVol.getInfo();
-        	 return new PrimaryStorageDownloadAnswer(primaryVol.getKey(), priVolInfo.allocation);
+        	 return new PrimaryStorageDownloadAnswer(primaryVol.getPath(), priVolInfo.allocation);
          } catch (LibvirtException e) {
         	 s_logger.debug(e.toString());
         	 return new PrimaryStorageDownloadAnswer(e.toString());
@@ -2319,7 +2360,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 			} else {
 				int devId = (int)volume.getDeviceId();
 				
-				disk.defFileBasedDisk(volume.getPath(), devId, diskBusType, DiskDef.diskFmtType.QCOW2);
+				if (volume.getPath().startsWith("/dev/")) {
+					disk.defBlockBasedDisk(volume.getPath(), devId, diskBusType);
+				} else {
+					disk.defFileBasedDisk(volume.getPath(), devId, diskBusType, DiskDef.diskFmtType.QCOW2);
+				}
 			}
 
 			//Centos doesn't support scsi hotplug. For other host OSes, we attach the disk after the vm is running, so that we can hotplug it.
@@ -2360,11 +2405,15 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 		VolumeTO rootVol = getVolume(vmSpec, Volume.Type.ROOT);
 		StoragePool pool = _storageResource.getStoragePool(conn, rootVol.getPoolUuid());
 		StorageVol tmplVol = _storageResource.createTmplDataDisk(conn, pool, 10L * 1024 * 1024);
-		String datadiskPath = tmplVol.getKey();
+		String datadiskPath = tmplVol.getPath();
 		
 		/*add patch disk*/
 		DiskDef patchDisk = new DiskDef();
-		patchDisk.defFileBasedDisk(rootDisk.getDiskPath(), 1, rootDisk.getBusType(), DiskDef.diskFmtType.RAW);
+		if (rootDisk.getDiskPath().startsWith("/dev/")) {
+			patchDisk.defBlockBasedDisk(rootDisk.getDiskPath(), 1, rootDisk.getBusType());
+		} else {
+			patchDisk.defFileBasedDisk(rootDisk.getDiskPath(), 1, rootDisk.getBusType(), DiskDef.diskFmtType.RAW);
+		}
 		disks.add(patchDisk);
 		patchDisk.setDiskPath(datadiskPath);
 

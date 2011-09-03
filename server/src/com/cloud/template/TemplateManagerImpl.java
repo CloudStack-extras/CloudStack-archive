@@ -380,6 +380,25 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
     }
     
     @Override @DB
+    public String getTemplateURLForPrepare(VMTemplateVO template, StoragePool pool) {
+        SearchCriteria<VMTemplateHostVO> sc = HostTemplateStatesSearch.create();
+        sc.setParameters("id", template.getId());
+        sc.setParameters("state", Status.DOWNLOADED);
+        sc.setJoinParameters("host", "dcId", pool.getDataCenterId());
+        List<VMTemplateHostVO> templateHostRefs = _tmpltHostDao.search(sc, null);
+
+        if (templateHostRefs.size() == 0) {
+            s_logger.debug("Unable to find a secondary storage host who has completely downloaded the template.");
+            return null;
+        }
+
+        VMTemplateHostVO templateHostRef = templateHostRefs.get(0);
+        HostVO secondaryStorageHost = _hostDao.findSecondaryStorageHost(pool.getDataCenterId());
+
+        return secondaryStorageHost.getStorageUrl() + "/" + templateHostRef.getInstallPath();
+    }
+    
+    @Override @DB
     public VMTemplateStoragePoolVO prepareTemplateForCreate(VMTemplateVO template, StoragePool pool) {
     	template = _tmpltDao.findById(template.getId(), true);
     	

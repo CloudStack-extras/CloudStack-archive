@@ -46,6 +46,10 @@ public class LibvirtStorageVolumeDef {
 		_backingFormat = tmplFormat;
 	}
 	
+	public volFormat getVolFormat() {
+		return _volFormat;
+	}
+	
 	@Override
 	public String toString() {
 		StringBuilder storageVolBuilder = new StringBuilder();

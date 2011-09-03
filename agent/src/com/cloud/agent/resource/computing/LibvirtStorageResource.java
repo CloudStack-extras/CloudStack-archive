@@ -118,13 +118,13 @@ public class LibvirtStorageResource {
     public StorageVol getVolume(Connect conn, StoragePool pool, String volPath) throws LibvirtException {
         StorageVol vol = null;
         try {
-            vol = conn.storageVolLookupByKey(volPath);
+            vol = conn.storageVolLookupByPath(volPath);
         } catch (LibvirtException e) {
             
         }
         if (vol == null) {
             storagePoolRefresh(pool);
-            vol = conn.storageVolLookupByKey(volPath);
+            vol = conn.storageVolLookupByPath(volPath);
         }
         return vol;
     }
@@ -178,7 +178,7 @@ public class LibvirtStorageResource {
 
         /*Format/create fs on this disk*/
         final Script command = new Script(_createvmPath, _timeout, s_logger);
-        command.add("-f", dataVol.getKey());
+        command.add("-f", dataVol.getPath());
         String result = command.execute();
         if (result != null) {
             s_logger.debug("Failed to create data disk: " + result);
@@ -335,6 +335,35 @@ public class LibvirtStorageResource {
         }
     }
     
+    private StoragePool CreateCLVMStoragePool(Connect conn, StorageFilerTO pool) {
+        String volgroupPath = pool.getPath();
+        String volgroupName = pool.getPath();
+        volgroupName = volgroupName.replaceFirst("/dev/", "");
+        LibvirtStoragePoolDef spd = new LibvirtStoragePoolDef(poolType.LOGICAL, volgroupName, pool.getUuid(),
+                                                             pool.getHost(), volgroupPath, volgroupPath);
+        StoragePool sp = null;
+        try {
+            s_logger.debug(spd.toString());
+            addStoragePool(pool.getUuid());
+            synchronized (getStoragePool(pool.getUuid())) {
+                sp = conn.storagePoolDefineXML(spd.toString(), 0);
+                sp.create(0);
+            }
+            return sp;
+        } catch (LibvirtException e) {
+            s_logger.debug(e.toString());
+            if (sp != null) {
+                try {
+                    sp.undefine();
+                    sp.free();
+                } catch (LibvirtException l) {
+                    s_logger.debug("Failed to define clvm storage pool with: " + l.toString());
+                }
+            }
+            return null;
+        }
+    }
+    
     public StoragePool getStoragePool(Connect conn, StorageFilerTO spt) {
         StoragePool sp = null;
         try {
@@ -348,6 +377,8 @@ public class LibvirtStorageResource {
                 sp = createNfsStoragePool(conn, spt);
             } else if (spt.getType() == StoragePoolType.SharedMountPoint) {
                 sp = CreateSharedStoragePool(conn, spt);
+            } else if (spt.getType() == StoragePoolType.CLVM) {
+                sp = CreateCLVMStoragePool(conn, spt);
             }
             if (sp == null) {
                 s_logger.debug("Failed to create storage Pool");
@@ -380,9 +411,13 @@ public class LibvirtStorageResource {
     
     public StorageVol copyVolume(StoragePool destPool, LibvirtStorageVolumeDef destVol, StorageVol srcVol, int timeout) throws LibvirtException {
         StorageVol vol = destPool.storageVolCreateXML(destVol.toString(), 0);
-        String srcPath = srcVol.getKey();
-        String destPath = vol.getKey();
-        Script.runSimpleBashScript("cp " + srcPath + " " + destPath, timeout);
+        String srcPath = srcVol.getPath();
+        String destPath = vol.getPath();
+        if (destVol.getVolFormat() == volFormat.RAW) {
+            Script.runSimpleBashScript("qemu-img convert -f qcow2 -O raw " + srcPath + " " + destPath, timeout);
+        } else {
+            Script.runSimpleBashScript("cp " + srcPath + " " + destPath, timeout);
+        }
         return vol;
     }
     

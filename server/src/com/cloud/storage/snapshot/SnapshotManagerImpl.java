@@ -72,6 +72,7 @@ import com.cloud.storage.Snapshot.Type;
 import com.cloud.storage.SnapshotPolicyVO;
 import com.cloud.storage.SnapshotScheduleVO;
 import com.cloud.storage.SnapshotVO;
+import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.storage.Storage;
 import com.cloud.storage.StorageManager;
 import com.cloud.storage.StoragePool;
@@ -215,6 +216,8 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
         long[] hostIdsToTryFirst = null;
         if (vm != null && vm.getHostId() != null) {
             hostIdsToTryFirst = new long[] { vm.getHostId() };
+        } else {
+            hostIdsToTryFirst = new long[] { _storageMgr.getMinUpHostId(pool) };
         }
 
         List<Long> hostIdsToAvoid = new ArrayList<Long>();
@@ -256,6 +259,12 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
         String vmName = _storageMgr.getVmNameOnVolume(volume);
         long volumeId = volume.getId();
         long preId = _snapshotDao.getLastSnapshot(volumeId, snapshotId);
+
+        /* Disable empty snapshot for the CLVM storage type */
+        StoragePool pool = _storagePoolDao.findById(volume.getPoolId());
+        if (pool.getPoolType() == StoragePoolType.CLVM) {
+            preId = 0;
+        }
 
         String preSnapshotPath = null;
         SnapshotVO preSnapshotVO = null;

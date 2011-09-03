@@ -40,6 +40,15 @@ import com.cloud.storage.VMTemplateVO;
 public interface TemplateManager extends TemplateService{
 
     /**
+     * Return template URL on secondary strorage for a certain storage pool.
+     * 
+     * @param template template to prepare
+     * @param pool pool to make sure the template is ready in.
+     * @return String if searching is succesfull; null if not.
+     */
+    String getTemplateURLForPrepare(VMTemplateVO template, StoragePool pool);
+    
+    /**
      * Prepares a template for vm creation for a certain storage pool.
      * 
      * @param template
