@@ -705,7 +705,13 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
             VMTemplateStoragePoolVO tmpltStoredOn = null;
 
             for (int i = 0; i < 2; i++) {
-                if (volume.getVolumeType() == Type.ROOT && Storage.ImageFormat.ISO != template.getFormat()) {
+                if (volume.getVolumeType() == Type.ROOT && pool.getPoolType() == StoragePoolType.CLVM && Storage.ImageFormat.ISO != template.getFormat()) {
+                    String templateURL = _tmpltMgr.getTemplateURLForPrepare(template, pool);
+                    if (templateURL == null) {
+                        continue;
+                    }
+                    cmd = new CreateCommand(dskCh, templateURL, new StorageFilerTO(pool));
+                } else if (volume.getVolumeType() == Type.ROOT && Storage.ImageFormat.ISO != template.getFormat()) {
                     tmpltStoredOn = _tmpltMgr.prepareTemplateForCreate(template, pool);
                     if (tmpltStoredOn == null) {
                         continue;
@@ -1113,6 +1119,11 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
                 if (uriPath == null) {
                     throw new InvalidParameterValueException("host or path is null, should be sharedmountpoint://localhost/path");
                 }
+            } else if (uri.getScheme().equalsIgnoreCase("clvm")) {
+                String uriPath = uri.getPath();
+                if (uriPath == null) {
+                    throw new InvalidParameterValueException("volgroup is null, should be clvm://localhost/volgroup");
+                }
             }
         } catch (URISyntaxException e) {
             throw new InvalidParameterValueException(cmd.getUrl() + " is not a valid uri");
@@ -1190,6 +1201,10 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
                 port = 2049;
             }
             pool = new StoragePoolVO(StoragePoolType.ISO, storageHost, port, hostPath);
+        } else if (scheme.equalsIgnoreCase("clvm")) {
+            hostPath = "/dev/" + hostPath;
+            hostPath = hostPath.replace("//", "/");
+            pool = new StoragePoolVO(StoragePoolType.CLVM, storageHost, 0, hostPath);
         } else if (scheme.equalsIgnoreCase("vmfs")) {
             pool = new StoragePoolVO(StoragePoolType.VMFS, "VMFS datastore: " + hostPath, 0, hostPath);
         } else if (scheme.equalsIgnoreCase("ocfs2")) {
@@ -1206,14 +1221,14 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
         }
 
         List<StoragePoolVO> pools = _storagePoolDao.listPoolByHostPath(storageHost, hostPath);
-        if (!pools.isEmpty() && !scheme.equalsIgnoreCase("sharedmountpoint")) {
+        if (!pools.isEmpty() && !scheme.equalsIgnoreCase("sharedmountpoint") && !scheme.equalsIgnoreCase("clvm")) {
             Long oldPodId = pools.get(0).getPodId();
             throw new ResourceInUseException("Storage pool " + uri + " already in use by another pod (id=" + oldPodId + ")", "StoragePool", uri.toASCIIString());
         }
 
         long poolId = _storagePoolDao.getNextInSequence(Long.class, "id");
         String uuid = null;
-        if (scheme.equalsIgnoreCase("sharedmountpoint")) {
+        if (scheme.equalsIgnoreCase("sharedmountpoint") || scheme.equalsIgnoreCase("clvm")) {
             uuid = UUID.randomUUID().toString();
         } else if (scheme.equalsIgnoreCase("PreSetup")) {
             uuid = hostPath.replace("/", "");
@@ -1435,7 +1450,7 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
         s_logger.debug("creating pool " + pool.getName() + " on  host " + hostId);
         if (pool.getPoolType() != StoragePoolType.NetworkFilesystem && pool.getPoolType() != StoragePoolType.Filesystem && pool.getPoolType() != StoragePoolType.IscsiLUN
                 && pool.getPoolType() != StoragePoolType.Iscsi && pool.getPoolType() != StoragePoolType.VMFS && pool.getPoolType() != StoragePoolType.SharedMountPoint
-                && pool.getPoolType() != StoragePoolType.PreSetup && pool.getPoolType() != StoragePoolType.OCFS2) {
+                && pool.getPoolType() != StoragePoolType.PreSetup && pool.getPoolType() != StoragePoolType.CLVM && pool.getPoolType() != StoragePoolType.OCFS2) {
             s_logger.warn(" Doesn't support storage pool type " + pool.getPoolType());
             return false;
         }
@@ -1919,6 +1934,17 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
         }
 
         throw new StorageUnavailableException("Unable to send command to the pool ", pool.getId());
+    }
+
+    @Override
+    public Long getMinUpHostId(StoragePool pool) {
+        SearchCriteria<Long> sc = UpHostsInPoolSearch.create();
+        sc.setParameters("pool", pool.getId());
+        sc.setJoinParameters("hosts", "status", Status.Up);
+        List<Long> hostIds = _storagePoolHostDao.customSearch(sc, null);
+        Collections.sort(hostIds);
+        Long[] hostIdsArray = hostIds.toArray(new Long[hostIds.size()]);
+        return hostIdsArray[0];
     }
 
     @Override
@@ -2734,7 +2760,14 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
             VMTemplateStoragePoolVO tmpltStoredOn = null;
 
             for (int i = 0; i < 2; i++) {
-                if (template != null && template.getFormat() != Storage.ImageFormat.ISO) {
+                if (template != null && pool.getPoolType() == StoragePoolType.CLVM && template.getFormat() != Storage.ImageFormat.ISO) {
+                    String templateURL = _tmpltMgr.getTemplateURLForPrepare(template, pool);
+                    if (templateURL == null) {
+                        s_logger.debug("Cannot use this pool " + pool + " because we can't propagate template " + template);
+                        return null;
+                    }
+                    cmd = new CreateCommand(diskProfile, templateURL, new StorageFilerTO(pool));
+                } else if (template != null && template.getFormat() != Storage.ImageFormat.ISO) {
                     tmpltStoredOn = _tmpltMgr.prepareTemplateForCreate(template, pool);
                     if (tmpltStoredOn == null) {
                         s_logger.debug("Cannot use this pool " + pool + " because we can't propagate template " + template);

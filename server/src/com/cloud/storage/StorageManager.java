@@ -133,6 +133,7 @@ public interface StorageManager extends Manager {
     Answer[] sendToPool(StoragePool pool, Commands cmds) throws StorageUnavailableException;
 	Pair<Long, Answer[]> sendToPool(StoragePool pool, long[] hostIdsToTryFirst, List<Long> hostIdsToAvoid, Commands cmds) throws StorageUnavailableException;
 	Pair<Long, Answer> sendToPool(StoragePool pool, long[] hostIdsToTryFirst, List<Long> hostIdsToAvoid, Command cmd) throws StorageUnavailableException;
+	Long getMinUpHostId(StoragePool pool);
 	
 	/**
 	 * Checks that one of the following is true:
