@@ -151,6 +151,7 @@ import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.net.MacAddress;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.vm.DomainRouterVO;
 import com.cloud.vm.NicProfile;
@@ -276,7 +277,9 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
     int _routerStatsInterval = 300;
     private ServiceOfferingVO _offering;
     private String trafficSentinelHostname;
-
+    
+    private long mgmtSrvrId = MacAddress.getMacAddress().toLong();
+    
     ScheduledExecutorService _executor;
 
     Account _systemAcct;
@@ -637,13 +640,14 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         @Override
         public void run() {
             
-            final List<DomainRouterVO> routers = _routerDao.listByStateAndNetworkType(State.Running, GuestIpType.Virtual);
+            final List<DomainRouterVO> routers = _routerDao.listByStateAndNetworkType(State.Running, GuestIpType.Virtual, mgmtSrvrId);
             s_logger.debug("Found " + routers.size() + " running routers. ");
 
             for (DomainRouterVO router : routers) {
                 String privateIP = router.getPrivateIpAddress();
                 if (privateIP != null) {
                     final NetworkUsageCommand usageCmd = new NetworkUsageCommand(privateIP, router.getHostName());
+                    UserStatisticsVO previousStats = _statsDao.findBy(router.getAccountId(), router.getDataCenterIdToDeployIn(), router.getNetworkId(), null, router.getId(), router.getType().toString());
                     final NetworkUsageAnswer answer = (NetworkUsageAnswer) _agentMgr.easySend(router.getHostId(), usageCmd);
                     if (answer != null) {
                         Transaction txn = Transaction.open(Transaction.CLOUD_DB);
@@ -658,9 +662,16 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                                 s_logger.warn("unable to find stats for account: " + router.getAccountId());
                                 continue;
                             }
+                            
+                            if(previousStats != null 
+                            		&& ((previousStats.getCurrentBytesReceived() != stats.getCurrentBytesReceived()) || (previousStats.getCurrentBytesSent() != stats.getCurrentBytesSent()))){
+                            	s_logger.debug("Router stats changed from the time NetworkUsageCommand was sent. Ignoring current answer. Router: "+answer.getRouterName()+" Rcvd: " + answer.getBytesReceived()+ "Sent: " +answer.getBytesSent());
+                            	continue;
+                            }
+                            
                             if (stats.getCurrentBytesReceived() > answer.getBytesReceived()) {
                                 if (s_logger.isDebugEnabled()) {
-                                    s_logger.debug("Received # of bytes that's less than the last one.  Assuming something went wrong and persisting it.  Reported: " + answer.getBytesReceived()
+                                    s_logger.debug("Received # of bytes that's less than the last one.  Assuming something went wrong and persisting it. Router: "+answer.getRouterName()+" Reported: " + answer.getBytesReceived()
                                             + " Stored: " + stats.getCurrentBytesReceived());
                                 }
                                 stats.setNetBytesReceived(stats.getNetBytesReceived() + stats.getCurrentBytesReceived());
@@ -668,7 +679,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                             stats.setCurrentBytesReceived(answer.getBytesReceived());
                             if (stats.getCurrentBytesSent() > answer.getBytesSent()) {
                                 if (s_logger.isDebugEnabled()) {
-                                    s_logger.debug("Received # of bytes that's less than the last one.  Assuming something went wrong and persisting it.  Reported: " + answer.getBytesSent()
+                                    s_logger.debug("Received # of bytes that's less than the last one.  Assuming something went wrong and persisting it. Router: "+answer.getRouterName()+" Reported: " + answer.getBytesSent()
                                             + " Stored: " + stats.getCurrentBytesSent());
                                 }
                                 stats.setNetBytesSent(stats.getNetBytesSent() + stats.getCurrentBytesSent());
