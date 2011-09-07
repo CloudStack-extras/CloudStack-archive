@@ -1,0 +1,252 @@
+(function($) {
+  /**
+   * Notification handling
+   */
+  var notifications = {
+    activeTasks: [],
+    cornerAlert: function(args) {
+      var $container = $('#container'); // Put in main container box
+      var $cornerAlert = $('<div>').addClass('notification corner-alert')
+            .hide()
+            .appendTo($container)
+            .append(
+              $('<div>').addClass('title').append(
+                $('<span>').html('Task completed')
+              )
+            )
+            .append(
+              $('<div>').addClass('message')
+                .append(
+                  $('<span>').html(args.message)
+                )
+            );
+
+      $cornerAlert
+        .css({
+          position: 'absolute',
+          top: $($container).height(),
+          left: $($container).width() - $cornerAlert.width()
+        })
+        .animate({
+          opacity: 1,
+          top: function() {
+            if ($('.corner-alert:visible').size()) {
+              return $('.corner-alert:visible').filter(':last').position().top - $cornerAlert.height();
+            } else {
+              return $container.height() - $cornerAlert.height();
+            }
+          }()
+        }, {
+          complete: function() {
+            setTimeout(function() {
+              $cornerAlert.fadeOut('fast', function() {
+                $('.corner-alert:visible').each(function() {
+                  $(this).animate({
+                    top: $(this).position().top + $(this).height()
+                  });
+                });
+                $cornerAlert.remove();
+              });
+            }, 5000);
+          }
+        })
+        .show();
+    },
+    add: function(args, $popup, $total) {
+      var currentTotal = parseInt($total.html());
+      var newTotal = currentTotal + 1;
+      var desc = args.desc;
+      var section = $('html body')
+            .find('[cloudStack-container]')
+            .data('cloudStack-args')
+            .sections[args.section];
+
+      var $item = $('<li>')
+            .append(
+              $('<span>').html(args.desc)
+            )
+            .append(
+              $('<div>').addClass('remove')
+            );
+
+      // Get information for specified section path
+      $item.data('notification-section', args.section);
+      $popup.find('ul').append($item);
+      $total.html(newTotal);
+      $total.parent().addClass('pending');
+      $item.addClass('pending');
+
+      // Setup timer
+      var pollTimer = setInterval(function() {
+        args.poll({
+          complete: function(args) {
+            clearInterval(pollTimer);
+
+            notifications.cornerAlert({ message: $item.html() });
+            notifications.activeTasks.pop(pollTimer);
+            $item.removeClass('pending');
+
+            if (!notifications.activeTasks.length) {
+              $total.parent().removeClass('pending');
+            }
+          },
+          incomplete: function(args) {}
+        });
+      }, args.interval);
+      notifications.activeTasks.push(pollTimer);
+
+      return $total;
+    },
+    removeItem: function($popup, $item) {
+      if ($item.closest('li').hasClass('pending')) return false;
+
+      var $total = $popup.data('notifications-attach-to').find('div.total span');
+      $item.remove();
+      $total.html(parseInt($total.html()) - 1);
+      
+      return true;
+    },
+    clear: function($popup) {
+      $popup.find('ul li').each(function() {
+        var $item = $(this);
+
+        if (!$item.hasClass('pending')) {
+          notifications.removeItem($popup, $item);
+        }
+      });
+    },
+    popup: {
+      create: function($attachTo) {
+        var $popup = $('<div>')
+              .addClass('notification-box')
+              .append(
+                // Header
+                $('<h3>').html('Notifications')
+              )
+              .append(
+                // Container
+                $('<div>').addClass('container')
+                  .append(
+                    // Notification list
+                    $('<ul>')
+                  )
+              )
+              .append(
+                // Buttons
+                $('<div>').addClass('buttons')
+                  .append(
+                    // Clear list
+                    $('<div>').addClass('button clear-list')
+                      .append(
+                        $('<span>').html('Clear List')
+                      )
+                  )
+                  .append(
+                    $('<div>').addClass('button close')
+                      .append(
+                        $('<span>').html('Close')
+                      )
+                  )
+              )
+              .css({ position: 'absolute' })
+              .data('notifications-attach-to', $attachTo)
+              .hide();
+
+        if (!$attachTo.hasClass('notifications')) $attachTo.addClass('notifications');
+        $attachTo.data('notifications-popup', $popup);
+
+        return $popup;
+      },
+      show: function($popup, $attachTo) {
+        return notifications.popup.reposition($popup, $attachTo)
+          .overlay({
+            closeAction: function() {
+              notifications.popup.hide($popup);
+            }
+          })
+          .fadeIn();
+      },
+      hide: function($popup) {
+        $popup.fadeOut();      
+      },
+      reposition: function($popup, $attachTo) {
+        return $popup
+          .css({
+            zIndex: 10000,
+            top: $attachTo.offset().top + $attachTo.height() + 10,
+            left: $attachTo.offset().left - $attachTo.width()
+          });        
+      }
+    }
+  };
+
+  $.fn.notifications = function(method, args) {
+    var $attachTo = this;
+    var $total = $attachTo.find('div.total span');
+    var $popup;
+
+    var init = function() {
+      $popup = notifications.popup.create($attachTo).appendTo('html body');
+    };
+
+    if (method == 'add')
+      notifications.add(args, $attachTo.data('notifications-popup'), $total);
+    else
+      init();
+
+    return this;
+  };
+
+  // Events
+  $(document).click(function(event) {
+    var $target = $(event.target);
+    var $attachTo, $popup;
+
+    // Notifications header area
+    if ($target.closest('.notifications').size()) {
+      $attachTo = $target.closest('.notifications');
+      $popup = $attachTo.data('notifications-popup');
+      notifications.popup.show($popup, $attachTo);
+
+      return false;
+    }
+
+    // Notification item
+    if ($target.closest('.notification-box li').size()) {
+      var $li = $target.closest('.notification-box li');
+
+      $('#navigation ul li').filter(function() {
+        return $(this).hasClass($li.data('notification-section'));
+      }).click();
+      $('div.overlay').click();
+
+      return false;
+    }
+
+    // Popup
+    if ($target.closest('div.notification-box').size()) {
+      $popup = $target.closest('div.notification-box');
+
+      // Clear list
+      if ($target.closest('.button.clear-list').size())
+        notifications.clear($popup);
+      // Remove instance item
+      else if ($target.hasClass('remove'))
+        notifications.removeItem($popup, $target.closest('li'));
+      // Close button
+      else if ($target.closest('.button.close'))
+        $('div.overlay').click();
+
+      return false;
+    }
+
+    return true;
+  });
+
+  $(window).resize(function(event) {
+    var $popup = $('div.notification-box:visible');
+
+    if ($popup.size())
+      notifications.popup.reposition($popup, $popup.data('notifications-attach-to'));
+  });
+})(window.jQuery);

@@ -1,6 +1,7 @@
 (function(cloudStack) {
   cloudStack.sections.storage = {
     title: 'Storage',
+    id: 'storage',
     sections: {
       /**
        * Volumes
@@ -46,7 +47,10 @@
                 title: 'Add volume',
                 desc: 'Please fill in the following data to add a new volume.',
                 fields: {
-                  name: { label: 'Name' },
+                  name: {
+                    label: 'Name',
+                    validation: { required: true }
+                  },
                   availabilityZone: {
                     label: 'Availability Zone',
                     select: [
@@ -62,7 +66,10 @@
                       { id: 'large', description: 'Large Disk, 100GB' }
                     ]
                   },
-                  diskSize: { label: 'Disk size (in GB)' }
+                  diskSize: {
+                    label: 'Disk size (in GB)',
+                    validation: { required: true, number: true }
+                  }
                 }
               },
 

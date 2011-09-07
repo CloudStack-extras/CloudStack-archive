@@ -1,6 +1,7 @@
 (function(cloudStack) {
   cloudStack.sections.configuration = {
     title: 'Configuration',
+    id: 'configuration',
     sectionSelect: {
       label: 'Select Offering'
     },

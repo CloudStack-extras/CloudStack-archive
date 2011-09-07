@@ -5,7 +5,7 @@
     notifications: {
       testPoll: function(args) {
         if (!testRestartPoll) testRestartPoll = 0;
-        if (testRestartPoll == 10) {
+        if (testRestartPoll == 3) {
           args.complete();
           return true;
         }
@@ -37,6 +37,11 @@
             });
           }, 300);
         };
+      },
+      instanceWizard: function(args) {
+        setTimeout(function() {
+          args.response.success();
+        });
       }
     },
     data: {

@@ -1,5 +1,5 @@
 (function($, testData) {
-  window.cloudStack = {
+  $.extend(window.cloudStack, {
     home: 'dashboard',
 
     sections: {
@@ -12,12 +12,13 @@
       storage: {},
       network: {},
       templates: {},
+      accounts: {},
+      domains: {},
       events: {},
       system: {},
-      accounts: {},
       configuration: {}
     }
-  };
+  });
 
   $(function() {
     $('#cloudStack3-container').cloudStack(cloudStack);

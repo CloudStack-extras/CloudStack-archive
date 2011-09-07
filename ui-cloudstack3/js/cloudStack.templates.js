@@ -1,6 +1,7 @@
 (function(cloudStack) {
   cloudStack.sections.templates = {
     title: 'Templates',
+    id: 'templates',
     sections: {
       templates: {
         title: 'Templates',

@@ -1,6 +1,7 @@
 (function(cloudStack) {
   cloudStack.sections.accounts = {
     title: 'Accounts',
+    id: 'accounts',
     listView: {
       fields: {
         name: { label: 'Name', editable: true },
