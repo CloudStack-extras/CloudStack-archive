@@ -1181,27 +1181,22 @@ div.detail-group.actions td {
   margin: 5px 0 0 12px;
   background: #FFFFFF;
   border: 1px solid #8B7E7E;
-  /*+border-radius:6px;*/
-  -moz-border-radius: 6px;
-  -webkit-border-radius: 6px;
-  -khtml-border-radius: 6px;
-  border-radius: 6px 6px 6px 6px;
   z-index: 50;
   position: relative;
   border-right: 1px solid #8B8989;
+  /*+border-radius:3px 0 0 3px;*/
+  -moz-border-radius: 3px 0 0 3px;
+  -webkit-border-radius: 3px 0 0 3px;
+  -khtml-border-radius: 3px 0 0 3px;
+  border-radius: 3px 0 0 3px;
 }
 
 #browser div.toolbar div.text-search div.search-bar input {
   float: left;
   border: none;
   margin: 3px;
-  width: 97%;
+  width: 90%;
   height: 70%;
-  /*+border-radius:10px;*/
-  -moz-border-radius: 10px;
-  -webkit-border-radius: 10px;
-  -khtml-border-radius: 10px;
-  border-radius: 10px 10px 10px 10px;
 }
 
 #browser div.toolbar div.text-search div.search-bar div.filter {
@@ -1220,9 +1215,9 @@ div.detail-group.actions td {
   background: url(../images/sprites.png) no-repeat -592px -328px;
   width: 33px;
   height: 22px;
-  /*+placement:shift -11px 5px;*/
+  /*+placement:shift -10px 5px;*/
   position: relative;
-  left: -11px;
+  left: -10px;
   top: 5px;
   z-index: 20;
   cursor: pointer;
