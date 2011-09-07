@@ -50,6 +50,11 @@
       var messages = action.messages;
       var messageArgs = {};
       var section;
+      var data = {
+        id: $detailView.data('view-args').id
+      };
+
+      if (args.data) $.extend(data, args.data);
 
       if (listViewArgs)
         section = listViewArgs.id;
@@ -60,6 +65,7 @@
       if (additional && additional.before) additional.before(args);
 
       action.action({
+        data: data,
         response: {
           success: function(args) {
             if (additional && additional.success) additional.success(args);
@@ -79,7 +85,9 @@
 
     create: function($detailView, args, additional) {
       (function($tr) {
-        uiActionsMulti.standard($detailView, args, {
+        uiActionsMulti.standard($detailView, $.extend(args, {
+          data: cloudStack.serializeForm($detailView.find('form'))
+        }), {
           before: function(args) {
             $tr.find('td .action').remove();
             $tr.css({ opacity: 0.5 });
@@ -127,7 +135,7 @@
           additional.$multiEditRow.animate({
             opacity: 0.5
           })
-          .find('td.actions .action').remove();
+            .find('td.actions .action').remove();
         }
       });
     }
@@ -431,13 +439,17 @@
           if (!value.editable) return false;
 
           var $input = $('<input>')
-            .attr({
-              type: 'text',
-              name: key
-            });
+                .attr({
+                  type: 'text',
+                  name: key
+                });
 
           if (value.select) {
-            $input = $('<select>').append();
+            $input = $('<select>')
+              .attr({
+                name: key
+              })
+              .append();
 
             $(value.select).each(function() {
               $('<option>')
@@ -523,8 +535,8 @@
 
       // Actions column
       var $actions = $('<td>')
-        .addClass('actions')
-        .appendTo($tr);
+            .addClass('actions')
+            .appendTo($tr);
 
       $.each(tabData.actions, function(key, value) {
         // Don't render create button for existing entries
