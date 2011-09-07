@@ -20,7 +20,7 @@
             label: 'Remove domain',
             messages: {
               confirm: function(args) {
-                return 'Are you sure you want to destroy this domain?'
+                return 'Are you sure you want to destroy this domain?';
               },
               notification: function(args) {
                 return 'Removed domain: ' + args.name;
@@ -61,7 +61,7 @@
 
             messages: {
               notification: function(args) {
-                return 'Created domain'
+                return 'Created domain';
               }
             },
 
