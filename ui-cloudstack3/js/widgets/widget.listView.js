@@ -50,9 +50,12 @@
       var messageArgs = { name: $instanceRow.find('td.name span').html() };
       var action = args.action.action;
       var section;
+      var data = {
+        id: $instanceRow.data('list-view-item-id')
+      };
 
-      if (listViewArgs)
-        section = listViewArgs.section;
+      if (args.data) $.extend(data, args.data);
+      if (listViewArgs) section = listViewArgs.section;
 
       notification.desc = messages.notification(messageArgs);
 
@@ -71,6 +74,7 @@
           });
         } else {
           action({
+            data: data,
             response: {
               success: function(args) {
                 if (additional && additional.success) additional.success(args);
@@ -131,9 +135,22 @@
       var showLabel = function(val) {
         if (val) $label.html(val);
 
-        $edit.hide();
-        $label.fadeIn();
-        $instanceRow.closest('div.data-table').dataTable('refresh');
+        var data = {
+          id: $instanceRow.data('list-view-item-id')
+        };
+
+        data[$td.data('list-view-item-field')] = $editInput.val();
+
+        args.callback({
+          data: data,
+          response: {
+            success: function(args) {
+              $edit.hide();
+              $label.fadeIn();
+              $instanceRow.closest('div.data-table').dataTable('refresh');    
+            }
+          }
+        });
       };
 
       if (args.cancel) {
@@ -311,7 +328,10 @@
 
       $.each(fields, function(key) {
         var field = this;
-        var $td = $('<td>').addClass(key).appendTo($tr);
+        var $td = $('<td>')
+              .addClass(key)
+              .data('list-view-item-field', key)
+              .appendTo($tr);
         var content = dataItem[key];
 
         if (field.id == true) id = field.id;
