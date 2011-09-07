@@ -50,7 +50,6 @@
       var messageArgs = { name: $instanceRow.find('td.name span').html() };
       var action = args.action.action;
       var section;
-      var id = $instanceRow.data('list-view-item-id');
 
       if (listViewArgs)
         section = listViewArgs.section;
@@ -73,7 +72,6 @@
         } else {
           action({
             response: {
-              data: { id: id },
               success: function(args) {
                 if (additional && additional.success) additional.success(args);
                 addNotification(notification, function() {
@@ -118,8 +116,6 @@
       var $edit = $td.find('div.edit');
       var $editInput = $edit.find('input');
       var $label = $td.find('span');
-      var id = $instanceRow.data('list-view-item-id');
-      var action = args.action;
 
       // Hide label, show edit field
       var showEditField = function() {
@@ -135,21 +131,9 @@
       var showLabel = function(val) {
         if (val) $label.html(val);
 
-        action({
-          response: {
-            data: {
-              id: id
-            },
-            success: function(args) {
-              $edit.hide();
-              $label.fadeIn();
-              $instanceRow.closest('div.data-table').dataTable('refresh');
-            },
-            error: function(args) {
-              showLabe();
-            }
-          }
-        })
+        $edit.hide();
+        $label.fadeIn();
+        $instanceRow.closest('div.data-table').dataTable('refresh');
       };
 
       if (args.cancel) {
