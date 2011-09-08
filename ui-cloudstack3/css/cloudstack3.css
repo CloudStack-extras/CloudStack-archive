@@ -1119,10 +1119,14 @@ div.detail-group.actions td {
   background: #F7F7F7;
   border-right: 1px solid #A5A5A5;
   overflow: hidden;
+  /*+box-shadow:-5px 6px 10px #8F8F8F;*/
+  -moz-box-shadow: -5px 6px 10px #8F8F8F;
+  -webkit-box-shadow: -5px 6px 10px #8F8F8F;
+  -o-box-shadow: -5px 6px 10px #8F8F8F;
+  box-shadow: -5px 6px 10px #8F8F8F;
 }
 
 .ui-tabs div.ui-tabs-panel {
-  background: #FFFFFF;
 }
 
 /*Toolbar*/
