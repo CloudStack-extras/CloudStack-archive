@@ -14,5 +14,22 @@
     });
 
     return data;
-  }; 
+  };
+
+  // Even/odd row handling
+  cloudStack.evenOdd = function($container, itemSelector, args) {
+    var even = false;
+
+    $container.find(itemSelector).each(function() {
+      var $elem = $(this);
+      
+      if (even) {
+        even = false;
+        args.odd($elem);
+      } else {
+        even = true;
+        args.even($elem);
+      }
+    });
+  };
 })(jQuery, cloudStack);

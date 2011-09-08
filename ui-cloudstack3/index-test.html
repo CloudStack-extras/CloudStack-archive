@@ -27,7 +27,7 @@
         <form>
           <div class="steps">
             <!-- Step 1: Setup -->
-            <div class="setup">
+            <div class="setup" wizard-step-id="setup">
               <div class="content">
                 <!-- Select a zone -->
                 <div class="section select-zone">
@@ -37,9 +37,6 @@
                     <div class="desc">Description of this select area goes here.</div>
                     <select name="zoneid" class="required">
                       <option default="default" value="" >Select a zone</option>
-                      <option value="zoneA">Zone A</option>
-                      <option value="zoneB">Zone B</option>
-                      <option value="zoneC">Zone C</option>
                     </select>
                   </div>
                 </div>
@@ -63,7 +60,7 @@
             </div>
 
             <!-- Step 2: Select ISO -->
-            <div class="select-iso">
+            <div class="select-iso" wizard-step-id="select-iso">
               <div class="main-desc">
                 <p>
                   Please select an ISO for your new virtual instance.
@@ -79,96 +76,29 @@
 
                 <div id="instance-wizard-featured-isos">
                   <div class="select-container">
-                    <div class="select">
-                      <input type="radio" name="templateid" value="58" />
-                      <div class="select-desc">
-                        <div class="name">CentOS 5.3</div>
-                        <div class="desc">CentOS 5.3 (64-bit) no GUI</div>
-                      </div>
-                    </div>
-                    <div class="select odd">
-                      <input type="radio" name="templateid" value="234" />
-                      <div class="select-desc">
-                        <div class="name">Windows 7 Pro</div>
-                        <div class="desc">Windows 7 Professional (32-bit)</div>
-                      </div>
-                    </div>
-                    <div class="select">
-                      <input type="radio" name="templateid" value="2987"/>
-                      <div class="select-desc">
-                        <div class="name">Ubuntu 10.04</div>
-                        <div class="desc">Ubuntu 10.4 LTS (64-bit)</div>
-                      </div>
-                    </div>
-                    <div class="select odd">
-                      <input type="radio" name="templateid" value="2985" />
-                      <div class="select-desc">
-                        <div class="name">Windows 7 Pro</div>
-                        <div class="desc">Windows 7 Professional (32-bit)</div>
-                      </div>
-                    </div>
-                    <div class="select">
-                      <input type="radio" name="templateid" value="12345" />
-                      <div class="select-desc">
-                        <div class="name">CentOS 5.3</div>
-                        <div class="desc">CentOS 5.3 (64-bit) no GUI</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
                 <div id="instance-wizard-community-isos">
                   <div class="select-container">
-                    <div class="select">
-                      <input type="radio" name="templateid" value="12315" />
-                      <div class="select-desc">
-                        <div class="name">Ubuntu 10.04</div>
-                        <div class="desc">Ubuntu 10.4 LTS (64-bit)</div>
-                      </div>
-                    </div>
-                    <div class="select odd">
-                      <input type="radio" name="templateid" value="12314" />
-                      <div class="select-desc">
-                        <div class="name">Windows 7 Pro</div>
-                        <div class="desc">Windows 7 Professional (32-bit)</div>
-                      </div>
-                    </div>
-                    <div class="select">
-                      <input type="radio" name="templateid" value="12321" />
-                      <div class="select-desc">
-                        <div class="name">CentOS 5.3</div>
-                        <div class="desc">CentOS 5.3 (64-bit) no GUI</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
-                <div id="instance-wizard-my-isos"></div>
+                <div id="instance-wizard-my-isos">
+                  <div class="select-container">
+                  </div>
+                </div>
               </div>
             </div>
 
             <!-- Step 3: Service Offering -->
-            <div class="service-offering">
+            <div class="service-offering" wizard-step-id="service-offering">
               <div class="content">
                 <div class="select-container">
-                  <div class="select">
-                    <input type="radio" name="serviceofferingid" value="16" />
-                    <div class="select-desc">
-                      <div class="name">Service Offering A</div>
-                      <div class="desc">Some desc</div>
-                    </div>
-                  </div>
-                  <div class="select odd">
-                    <input type="radio" name="serviceofferingid" value="13" />
-                    <div class="select-desc">
-                      <div class="name">Service Offering B</div>
-                      <div class="desc">Some desc</div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
 
             <!-- Step 4: Data Disk Offering -->
-            <div class="data-disk-offering">
+            <div class="data-disk-offering" wizard-step-id="data-disk-offering">
               <div class="content">
                 <div class="section no-thanks">
                   <input type="radio" name="diskofferingid" value="23" />
@@ -186,34 +116,15 @@
                   <input type="text" name="size" value="1" />
                   <label class="size">GB</label>
                 </div>
+
+                <!-- Existing offerings -->
                 <div class="select-container">
-                  <div class="select">
-                    <input type="radio" name="diskofferingid" value="42" />
-                    <div class="select-desc">
-                      <div class="name">Small Disk</div>
-                      <div class="desc">10 GB</div>
-                    </div>
-                  </div>
-                  <div class="select odd">
-                    <input type="radio" name="diskofferingid" value="35" />
-                    <div class="select-desc">
-                      <div class="name">Medium Disk</div>
-                      <div class="desc">50 GB</div>
-                    </div>
-                  </div>
-                  <div class="select">
-                    <input type="radio" name="diskofferingid" value="2" />
-                    <div class="select-desc">
-                      <div class="name">Large Disk</div>
-                      <div class="desc">100 GB</div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
 
             <!-- Step 5: Network -->
-            <div class="network">
+            <div class="network" wizard-step-id="network">
               <!-- 5a: Network description -->
               <div class="wizard-step-conditional no-network">
                 <p>Description of what a network is can go here.</p>
@@ -238,34 +149,6 @@
                         <tr>
                           <td>
                             <div class="select-container">
-                              <div class="select">
-                                <input type="radio" name="networkid" />
-                                <div class="select-desc">
-                                  <div class="name">Network A</div>
-                                  <div class="desc">Network A description</div>
-                                </div>
-                              </div>
-                              <div class="select odd">
-                                <input type="radio" name="networkid" />
-                                <div class="select-desc">
-                                  <div class="name">Network B</div>
-                                  <div class="desc">Network B description</div>
-                                </div>
-                              </div>
-                              <div class="select">
-                                <input type="radio" name="networkid" />
-                                <div class="select-desc">
-                                  <div class="name">Network C</div>
-                                  <div class="desc">Network C description</div>
-                                </div>
-                              </div>
-                              <div class="select odd">
-                                <input type="radio" name="networkid" />
-                                <div class="select-desc">
-                                  <div class="name">Network D</div>
-                                  <div class="desc">Network D description</div>
-                                </div>
-                              </div>
                             </div>
                           </td>
                         </tr>
@@ -283,34 +166,6 @@
                         <tr>
                           <td>
                             <div class="select-container">
-                              <div class="select">
-                                <input type="checkbox" name="networkid-optional" value="e" />
-                                <div class="select-desc">
-                                  <div class="name">Network E</div>
-                                  <div class="desc">Network E description</div>
-                                </div>
-                              </div>
-                              <div class="select odd">
-                                <input type="checkbox" name="networkid-optional" value="f" />
-                                <div class="select-desc">
-                                  <div class="name">Network F</div>
-                                  <div class="desc">Network F description</div>
-                                </div>
-                              </div>
-                              <div class="select">
-                                <input type="checkbox" name="networkid-optional" value="g" />
-                                <div class="select-desc">
-                                  <div class="name">Network G</div>
-                                  <div class="desc">Network G description</div>
-                                </div>
-                              </div>
-                              <div class="select odd">
-                                <input type="checkbox" name="networkid-optional" value="h" />
-                                <div class="select-desc">
-                                  <div class="name">Network H</div>
-                                  <div class="desc">Network H description</div>
-                                </div>
-                              </div>
                             </div>
                           </td>
                         </tr>
@@ -347,7 +202,7 @@
             </div>
 
             <!-- Step 6: Review -->
-            <div class="review">
+            <div class="review" wizard-step-id="review">
               <div class="main-desc">
                 Please review the following information and confirm that your virtual instance is correct before launch
               </div>
@@ -370,10 +225,6 @@
                     </div>
                     <div class="value">
                       <select name="groupid">
-                        <option value="groupA">Group A</option>
-                        <option value="groupB">Group B</option>
-                        <option value="groupC">Group C</option>
-                        <option value="groupD">Group D</option>
                       </select>
                     </div>
                   </div>
