@@ -1,5 +1,9 @@
 (function($, window) {
-  window.cloudStack = {};
+  window.cloudStack = {
+    ui: {
+      api: {} // Defines API methods for UI widgets
+    }
+  };
 
   /**
    * Generate navigation <li>s

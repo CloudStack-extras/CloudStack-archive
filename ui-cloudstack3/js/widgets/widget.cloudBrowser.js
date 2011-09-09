@@ -1,5 +1,6 @@
 (function($, cloudStack) {
-  var panel = {
+  cloudStack.ui.api.browser = {};
+  var panel = cloudStack.ui.api.browser.panel = {
     calc: {
       // Compute width of panel, relative to container
       width: function($container, options) {
@@ -13,7 +14,8 @@
       
       // Get left position
       position: function($container) {
-        return $container.find('div.panel').size() ? panel.calc.width($container) - panel.calc.width($container) / 1.5 : 0;
+        return $container.find('div.panel').size() ? 
+          panel.calc.width($container) - panel.calc.width($container) / 1.5 : 0;
       },
 
       // Get the top panel z-index, for proper stacking
@@ -58,12 +60,14 @@
       var $items;
       var duration = 400;
 
-      if (args.parent) {
-        // Clear out panels past parent
+      // Parent panel behavior
+      if (args.parent && args.parent.size()) {
         $items = $container.find('div.panel').filter(function() {
           return $(this).index() > args.parent.index();
         }).remove();
       }
+
+      $container.find('div.panel:first').css({ opacity: 0.7 });
       
       // Don't animate panel if it is the first or there is a parent
       if ($items && $items.size() || 
@@ -71,12 +75,19 @@
         duration = 0;
       }
 
+      // Animation and positioning
       $panel
         .html(args.data)
-        .css(panel.initialState($panel))
+        .css(panel.initialState($container, $panel))
         .animate({
           left: panel.calc.position($container)
-        }, duration)
+        }, {
+          duration: duration,
+          complete: function() {
+            if (args.complete)
+              args.complete($panel).hide().fadeIn(duration / 1.5);
+          }
+        })
         .appendTo($container);
 
       return $panel;

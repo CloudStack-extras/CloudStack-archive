@@ -302,20 +302,24 @@
     var id = args.id;
     var data = $.extend(args.data, { id: id });
     var $detailView, $detailsPanel;
+
+    // Make detail view element
+    if (!args.pageGenerator)
+      $detailView = $('<div>').addClass('detail-view').detailView(data);
+    else
+      $detailView = args.pageGenerator(data);
+
     var panelArgs = {
       title: title,
       data: '<div class="detail-view"></div>',
-      parent: $panel
+      parent: $panel,
+      complete: function($newPanel) {
+        return $detailView.appendTo($newPanel);
+      }
     };
 
     // Create panel
     $detailsPanel = data.$browser.cloudBrowser('addPanel', panelArgs);
-
-    // Make detail view element
-    if (!args.pageGenerator)
-      $detailView = $detailsPanel.find('div.detail-view').detailView(data);
-    else
-      $detailView = args.pageGenerator(data).appendTo($detailsPanel);
 
     return $detailView;
   };

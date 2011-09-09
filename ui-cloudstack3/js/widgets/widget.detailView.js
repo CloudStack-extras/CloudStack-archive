@@ -345,6 +345,7 @@
     var cloudStackArgs = $('[cloudstack-container]').data('cloudStack-args');
     var $browser = args.$browser;
     var listViewArgs, viewAllPath;
+    var $listView;
 
     // Get path in cloudStack args
     viewAllPath = viewAllID.split('.');
@@ -354,17 +355,6 @@
     else
       listViewArgs = cloudStackArgs.sections[viewAllPath[0]];
 
-    // Make panel
-    var $panel = $browser.cloudBrowser('addPanel', {
-      title: listViewArgs.title,
-      data: '',
-      noSelectPanel: true,
-      maximizeIfSelected: true
-    });
-    $browser.cloudBrowser('toggleMaximizePanel', {
-      panel: $panel
-    });
-
     // Make list view
     listViewArgs.$browser = $browser;
 
@@ -373,7 +363,16 @@
     else
       listViewArgs.id = viewAllID;
 
-    $panel.listView(listViewArgs);
+    // Make panel
+    var $panel = $browser.cloudBrowser('addPanel', {
+      title: listViewArgs.title,
+      data: '',
+      noSelectPanel: true,
+      maximizeIfSelected: true,
+      complete: function($newPanel) {
+        return $newPanel.listView(listViewArgs);
+      }
+    });
   };
 
   /**
@@ -498,7 +497,7 @@
           )
           .append(
             $('<tbody>')
-          )
+          );
 
     // Header
     $.each(tabData.fields, function(key, value) {
