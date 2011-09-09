@@ -93,7 +93,7 @@ public class AgentMonitor extends Thread implements Listener {
         	
             try {
                 long time = (System.currentTimeMillis() >> 10) - _pingTimeout;
-                List<HostVO> hosts = _hostDao.findLostHosts(time);
+                List<HostVO> hosts = _hostDao.findLostHosts(_msId, time);
                 if (s_logger.isInfoEnabled()) {
                     s_logger.info("Found " + hosts.size() + " hosts behind on ping. pingTimeout : " + _pingTimeout + ", mark time : " + time);
                 }
