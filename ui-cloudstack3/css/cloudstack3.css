@@ -1118,15 +1118,20 @@ div.detail-group.actions td {
   height: 698px;
   background: #F7F7F7;
   border-right: 1px solid #A5A5A5;
-  overflow: hidden;
-  /*+box-shadow:-5px 6px 10px #8F8F8F;*/
-  -moz-box-shadow: -5px 6px 10px #8F8F8F;
-  -webkit-box-shadow: -5px 6px 10px #8F8F8F;
-  -o-box-shadow: -5px 6px 10px #8F8F8F;
-  box-shadow: -5px 6px 10px #8F8F8F;
+  overflow: visible;
 }
 
 .ui-tabs div.ui-tabs-panel {
+}
+
+#browser div.panel .shadow {
+  width: 10px;
+  height: 100%;
+  top: 0px;
+  left: -10px;
+  position: absolute;
+  z-index: 7000;
+  background: url(../images/bg-panel-shadow.png) repeat-y 0px 0px;
 }
 
 /*Toolbar*/

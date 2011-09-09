@@ -42,6 +42,9 @@
           width: panel.calc.width($container),
           zIndex: panel.calc.topIndex($container)
         }
+      ).prepend(
+        // Shadow
+        $('<div>').addClass('shadow')
       );
     },
 
@@ -67,8 +70,6 @@
         }).remove();
       }
 
-      $container.find('div.panel:first').css({ opacity: 0.7 });
-      
       // Don't animate panel if it is the first or there is a parent
       if ($items && $items.size() || 
           !$container.find('div.panel').size()) {
@@ -77,7 +78,7 @@
 
       // Animation and positioning
       $panel
-        .html(args.data)
+        .append(args.data)
         .css(panel.initialState($container, $panel))
         .animate({
           left: panel.calc.position($container)
