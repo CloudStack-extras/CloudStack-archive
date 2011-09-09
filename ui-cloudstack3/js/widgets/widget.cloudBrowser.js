@@ -4,24 +4,23 @@
     calc: {
       // Compute width of panel, relative to container
       width: function($container, options) {
-        var width = $container.width();
+        options = options ? options : {};
+        var width = $container.find('div.panel').size() < 1 || options.maximized == true ? 
+              $container.width() : $container.width() - $container.width() / 4;
 
-        if ($container.find('div.panel').size() || (options && options.reduced))
-          width = width - width / 4;
-        
         return width;
       },
-      
+
       // Get left position
-      position: function($container) {
-        return $container.find('div.panel').size() ? 
-          panel.calc.width($container) - panel.calc.width($container) / 1.5 : 0;
+      position: function($container, options) {
+        return $container.find('div.panel').size() <= 1 || options.maximized == true ?
+          0 : panel.calc.width($container, options) - panel.calc.width($container, options) / 1.5;
       },
 
       // Get the top panel z-index, for proper stacking
       topIndex: function($container) {
         var base = 1000; // Minimum z-index
-        
+
         return Math.max.apply(
           null,
           $.map(
@@ -31,20 +30,62 @@
             }
           )
         ) + 1;
-      }     
+      }
     },
 
     // Generate new panel
-    create: function($container, options) {
-      return $('<div>').addClass('panel').css(
+    create: function($container, options, complete) {
+      var $panel = $('<div>').addClass('panel').css(
         {
           position: 'absolute',
-          width: panel.calc.width($container),
+          width: panel.calc.width($container, { maximized: options.maximized }),
           zIndex: panel.calc.topIndex($container)
         }
-      ).prepend(
+      ).append(
         // Shadow
         $('<div>').addClass('shadow')
+      ).append(options.data);
+
+
+      if (complete) complete($container, $panel, options.maximized);
+
+      return $panel;
+    },
+
+    stack: function($container, $topPanel, duration, data, actions, options) {
+      // Position panel
+      actions.initial($container, $topPanel, panel.initialState($container, $topPanel));
+
+      // Slide-in panel
+      var position = panel.calc.position($container, { maximized: options.maximized });
+      actions.slideIn(
+        $container,
+        
+        // Panel to slide-in
+        $topPanel,
+
+        // Positioning
+        { left: position },
+
+        // Complete
+        function(complete) {
+          return function() {
+            complete ? complete() : function() { return false; };
+
+            actions.reduce(
+              $topPanel.siblings().filter(function() {
+                return $(this).index() < $topPanel.index();
+              }),
+              $topPanel.siblings().filter(function() {
+                return $(this).width() == $topPanel.width();
+              }),
+              duration
+            );
+          };
+        },
+
+        // Duration
+        $container.find('div.panel').size() > 1 ? duration : 0
       );
     },
 
@@ -58,50 +99,55 @@
   $.widget('cloudStack.cloudBrowser', {
     // Append new panel
     addPanel: function(args) {
-      var $container = this.element;
-      var $panel = panel.create(this.element);
-      var $items;
-      var duration = 500;
+      return panel.create(
+        this.element, // Container
 
-      // Parent panel behavior
-      if (args.parent && args.parent.size()) {
-        $items = $container.find('div.panel').filter(function() {
-          return $(this).index() > args.parent.index();
-        }).remove();
-      }
+        // Data
+        {
+          maximized: args.maximizeIfSelected,
+          data: args.data
+        },
 
-      // Don't animate panel if it is the first or there is a parent
-      if ($items && $items.size() || 
-          !$container.find('div.panel').size()) {
-        duration = 0;
-      }
-
-      // Animation and positioning
-      $panel
-        .append(args.data)
-        .css(panel.initialState($container, $panel))
-        .animate({
-          // Panel slide-in
-          left: panel.calc.position($container)
-        }, {
-          duration: duration,
-          easing: 'easeOutCirc',
-          complete: function() {
-            if (args.complete)
-              args.complete($panel).hide().fadeIn();
-          }
-        })
-        .appendTo($container);
-
-      $container.find('div.panel').filter(function() {
-        return $(this).index() === $panel.index() - 1;
-      }).addClass('reduced');
-
-      $container.find('div.panel').filter(function() {
-        return $(this).index() === $panel.index() - 1 && $(this).index() >= 1;
-      }).delay(duration / 1.2).fadeOut();
-
-      return $panel;
+        // Post-creation
+        function($container, $panel, maximized) {
+          $panel.appendTo($container);
+          
+          panel.stack(
+            $container, // Container
+            $panel, // Top panel
+            500, // Duration
+            args.data, // Initial panel data
+            {
+              initial: function($container, $target, position, options) {
+                $target.css(position);
+              },
+              slideIn: function($container, $target, position, complete, duration) {
+                var completeFn = complete(function() {
+                  args.complete ? args.complete($panel) : function() { return false; };
+                });
+                
+                if (args.parent && args.parent.index() < $target.index() - 1) {
+                  $target.css(position);
+                  completeFn();
+                } else {
+                  $target.animate(position, {
+                    duration: duration,
+                    easing: 'easeOutCirc',
+                    complete: completeFn
+                  });                  
+                }
+              },
+              reduce: function($reduced, $hide, duration) {
+                $reduced.addClass('reduced');
+                $hide.hide();
+              }
+            },
+            {
+              maximized: maximized ? true : false
+            }
+          );
+        }
+      );
     },
 
     // Clear all panels
