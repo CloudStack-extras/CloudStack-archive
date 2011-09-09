@@ -61,7 +61,7 @@
       var $container = this.element;
       var $panel = panel.create(this.element);
       var $items;
-      var duration = 400;
+      var duration = 500;
 
       // Parent panel behavior
       if (args.parent && args.parent.size()) {
@@ -81,15 +81,19 @@
         .append(args.data)
         .css(panel.initialState($container, $panel))
         .animate({
+          // Panel slide-in
           left: panel.calc.position($container)
         }, {
           duration: duration,
+          easing: 'easeOutQuart',
           complete: function() {
             if (args.complete)
-              args.complete($panel).hide().fadeIn(duration / 1.5);
+              args.complete($panel).hide().fadeIn(duration / 2);
           }
         })
-        .appendTo($container);
+        .appendTo($container)
+        .siblings('div.panel').filter(':first')
+        .find('.reduced-hide').css({ opacity: 0.5 });
 
       return $panel;
     },

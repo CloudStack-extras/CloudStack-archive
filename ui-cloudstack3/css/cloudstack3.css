@@ -391,6 +391,7 @@ div.notification.corner-alert {
   -moz-opacity: 0.7;
   opacity: 0.7;
   overflow: hidden;
+  z-index: 8000;
 }
 
 div.notification.corner-alert {
@@ -1110,7 +1111,7 @@ div.detail-group.actions td {
   max-width: 794px;
   position: relative;
   float: left;
-  background: #D2D2D2;
+  background: #FFFFFF;
   overflow: hidden;
 }
 
