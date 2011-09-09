@@ -59,7 +59,7 @@ public interface HostDao extends GenericDao<HostVO, Long> {
      */
     void markHostsAsDisconnected(long msId);
 
-	List<HostVO> findLostHosts(long timeout);
+	List<HostVO> findLostHosts(long misId, long timeout);
 
 	List<HostVO> findHostsLike(String hostName);
 

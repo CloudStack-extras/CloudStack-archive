@@ -126,6 +126,7 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         TypePodDcStatusSearch.done();
 
         LastPingedSearch = createSearchBuilder();
+        LastPingedSearch.and("msId", LastPingedSearch.entity().getManagementServerId(), SearchCriteria.Op.EQ);
         LastPingedSearch.and("ping", LastPingedSearch.entity().getLastPinged(), SearchCriteria.Op.LT);
         LastPingedSearch.and("state", LastPingedSearch.entity().getStatus(), SearchCriteria.Op.IN);
         LastPingedSearch.done();
@@ -637,8 +638,9 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
     }
 
     @Override
-    public List<HostVO> findLostHosts(long timeout) {
+    public List<HostVO> findLostHosts(long msId, long timeout) {
         SearchCriteria<HostVO> sc = LastPingedSearch.create();
+        sc.setParameters("msId", msId);
         sc.setParameters("ping", timeout);
         sc.setParameters("state", Status.Up, Status.Updating, Status.Disconnected, Status.Connecting);
         return listBy(sc);
