@@ -56,6 +56,13 @@
       // Position panel
       actions.initial($container, $topPanel, panel.initialState($container, $topPanel));
 
+      // Reduced appearance for previous panels
+      actions.reduce(
+        $topPanel.siblings().filter(function() {
+          return $(this).index() < $topPanel.index();
+        })
+      );
+
       // Slide-in panel
       var position = panel.calc.position($container, { maximized: options.maximized });
       actions.slideIn(
@@ -72,14 +79,10 @@
           return function() {
             complete ? complete() : function() { return false; };
 
-            actions.reduce(
-              $topPanel.siblings().filter(function() {
-                return $(this).index() < $topPanel.index();
-              }),
+            actions.hide(
               $topPanel.siblings().filter(function() {
                 return $(this).width() == $topPanel.width();
-              }),
-              duration
+              })
             );
           };
         },
@@ -137,8 +140,10 @@
                   });                  
                 }
               },
-              reduce: function($reduced, $hide, duration) {
-                $reduced.addClass('reduced');
+              reduce: function($reduce) {
+                $reduce.addClass('reduced');
+              },
+              hide: function($hide) {
                 $hide.hide();
               }
             },
