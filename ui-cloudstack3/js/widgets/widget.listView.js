@@ -296,32 +296,31 @@
   /**
    * Initialize detail view for specific ID from list view
    */
-  var createDetailView = function(args) {
+  var createDetailView = function(args, complete) {
     var $panel = args.$panel;
     var title = args.title;
     var id = args.id;
     var data = $.extend(args.data, { id: id });
     var $detailView, $detailsPanel;
-
-    // Make detail view element
-    if (!args.pageGenerator)
-      $detailView = $('<div>').addClass('detail-view').detailView(data);
-    else
-      $detailView = args.pageGenerator(data);
-
     var panelArgs = {
       title: title,
       data: '<div class="detail-view"></div>',
       parent: $panel,
       complete: function($newPanel) {
+        // Make detail view element
+        if (!args.pageGenerator)
+          $detailView = $('<div>').addClass('detail-view').detailView(data);
+        else
+          $detailView = args.pageGenerator(data);
+
+        if (complete) complete($detailView);
+                
         return $detailView.appendTo($newPanel);
       }
     };
 
     // Create panel
     $detailsPanel = data.$browser.cloudBrowser('addPanel', panelArgs);
-
-    return $detailView;
   };
 
   var addTableRows = function(fields, data, $tbody, actions) {
@@ -380,7 +379,7 @@
               })
           );
 
-    $('div.list-view').scrollTop($table.height() + 100);
+    $table.closest('div.list-view').scrollTop($table.height() + 100);
 
     return completeFn({
       loadingCompleted: function() {
@@ -655,7 +654,9 @@
           detailViewArgs.pageGenerator = listViewData.detailView.pageGenerator;
         }
 
-        createDetailView(detailViewArgs).data('list-view', $listView);
+        createDetailView(detailViewArgs, function($detailView) {
+            $detailView.data('list-view', $listView);
+        });
 
         return false;
       }

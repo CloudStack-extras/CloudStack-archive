@@ -370,7 +370,7 @@
       noSelectPanel: true,
       maximizeIfSelected: true,
       complete: function($newPanel) {
-        return $newPanel.listView(listViewArgs);
+        return $('<div>').listView(listViewArgs).appendTo($newPanel);
       }
     });
   };

@@ -85,15 +85,21 @@
           left: panel.calc.position($container)
         }, {
           duration: duration,
-          easing: 'easeOutQuart',
+          easing: 'easeOutCirc',
           complete: function() {
             if (args.complete)
-              args.complete($panel).hide().fadeIn(duration / 2);
+              args.complete($panel).hide().fadeIn();
           }
         })
-        .appendTo($container)
-        .siblings('div.panel').filter(':first')
-        .find('.reduced-hide').css({ opacity: 0.5 });
+        .appendTo($container);
+
+      $container.find('div.panel').filter(function() {
+        return $(this).index() === $panel.index() - 1;
+      }).addClass('reduced');
+
+      $container.find('div.panel').filter(function() {
+        return $(this).index() === $panel.index() - 1 && $(this).index() >= 1;
+      }).delay(duration / 1.2).fadeOut();
 
       return $panel;
     },

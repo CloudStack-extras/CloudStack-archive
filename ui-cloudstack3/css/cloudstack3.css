@@ -346,10 +346,6 @@ div.panel div.list-view div.data-table table {
   margin-top: 44px;
 }
 
-div.panel.reduced div.list-view div.data-table table {
-  width: 171px;
-}
-
 div.panel div.list-view div.fixed-header {
   position: absolute;
   top: 28px;
@@ -1416,10 +1412,6 @@ div.detail-group.actions td {
   margin: 0 9px 0 0;
 }
 
-#browser div.panel.reduced div.toolbar {
-  width: 198px;
-}
-
 /*Breadcrumbs*/
 #browser div.toolbar div.filters {
   margin: 5px 0px 0 12px;
@@ -1614,28 +1606,11 @@ div.panel div.view.group-thumbnail ul.groups li span.vm-count {
 
 /*Reduced view*/
 #browser div.panel.reduced .reduced-hide {
+  color: #BBB8B8;
+}
+
+#browser div.panel.reduced div.toolbar .reduced-hide {
   display: none;
-}
-
-#browser div.panel.reduced {
-  /*+box-shadow:inset -5px 5px 7px #CDCDCD;*/
-  -moz-box-shadow: inset -5px 5px 7px #CDCDCD;
-  -webkit-box-shadow: inset -5px 5px 7px #CDCDCD;
-  -o-box-shadow: inset -5px 5px 7px #CDCDCD;
-  box-shadow: inset -5px 5px 7px #CDCDCD;
-}
-
-#browser div.panel.reduced div.view table {
-  width: 155px;
-}
-
-#browser div.panel.reduced div.view div.fixed-header {
-  width: 155px;
-  margin: 0;
-}
-
-#browser div.panel.reduced div.view {
-  width: 189px;
 }
 
 /*List view -- edit field*/
