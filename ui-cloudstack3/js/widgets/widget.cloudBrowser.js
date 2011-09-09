@@ -1,5 +1,18 @@
 (function($, cloudStack) {
   cloudStack.ui.api.browser = {};
+
+  // Breadcrumb-related functions
+  var breadcrumb = cloudStack.ui.api.browser.breadcrumb = {
+    // Generate new breadcrumb
+    create: function($panel, title) {
+      return $('<div>')
+        .append($('<li>').html(title))
+        .append($('<div>').addClass('end'))
+        .children();
+    }
+  };
+
+  // Panel-related functions
   var panel = cloudStack.ui.api.browser.panel = {
     calc: {
       // Compute width of panel, relative to container
@@ -33,6 +46,12 @@
       }
     },
 
+    initialState: function($container, $panel) {
+      return {
+        left: $container.width()
+      };
+    },
+
     // Generate new panel
     create: function($container, options, complete) {
       var $panel = $('<div>').addClass('panel').css(
@@ -52,7 +71,7 @@
       return $panel;
     },
 
-    stack: function($container, $topPanel, duration, data, actions, options) {
+    stack: function($container, $topPanel, duration, actions, options) {
       // Position panel
       actions.initial($container, $topPanel, panel.initialState($container, $topPanel));
 
@@ -90,16 +109,19 @@
         // Duration
         $container.find('div.panel').size() > 1 ? duration : 0
       );
-    },
-
-    initialState: function($container, $panel) {
-      return {
-        left: $container.width()
-      };
     }
   };
 
   $.widget('cloudStack.cloudBrowser', {
+    _init: function() {
+      $('#breadcrumbs').append(
+        $('<ul>')
+      );
+    },
+
+    selectPanel: function(args) {
+    },
+
     // Append new panel
     addPanel: function(args) {
       return panel.create(
@@ -114,12 +136,12 @@
         // Post-creation
         function($container, $panel, maximized) {
           $panel.appendTo($container);
+          breadcrumb.create($panel, args.title).appendTo('#breadcrumbs ul');
           
           panel.stack(
             $container, // Container
             $panel, // Top panel
             500, // Duration
-            args.data, // Initial panel data
             {
               initial: function($container, $target, position, options) {
                 $target.css(position);
@@ -148,7 +170,8 @@
               }
             },
             {
-              maximized: maximized ? true : false
+              maximized: maximized ? true : false,
+              parent: args.parent
             }
           );
         }
@@ -158,6 +181,8 @@
     // Clear all panels
     removeAllPanels: function(args) {
       this.element.find('div.panel').remove();
+      $('#breadcrumbs').find('ul li').remove();
+      $('#breadcrumbs').find('ul div.end').remove();
     }
   });
 })(jQuery, cloudStack);
