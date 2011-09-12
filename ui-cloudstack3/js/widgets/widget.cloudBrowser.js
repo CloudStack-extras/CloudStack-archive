@@ -181,7 +181,8 @@
       var $toRemove = panel.higher($container, $panel);
 
       breadcrumb.filter($toRemove).remove();
-      $toRemove.animate(
+      $toRemove.filter(':not(:last)').remove();
+      $toRemove.filter(':last').animate(
         panel.initialState($container),
         {
           duration: 500,
@@ -191,7 +192,13 @@
        }
       );
       $toShow.show();
-      $panel.show();
+      $panel.show().removeClass('reduced');
+    },
+
+    toggleMaximizePanel: function(args) {
+      this.element.cloudBrowser('selectPanel', {
+        panel: args.panel
+      });
     },
 
     // Append new panel
