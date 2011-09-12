@@ -27,7 +27,6 @@ import com.cloud.api.ApiDBUtils;
 import com.cloud.network.security.SecurityGroup;
 import com.cloud.network.security.SecurityGroupRules;
 import com.cloud.network.security.SecurityGroupRulesVO;
-import com.cloud.network.security.SecurityGroupEgressRulesVO;
 import com.cloud.serializer.Param;
 import com.cloud.user.Account;
 
@@ -38,6 +37,9 @@ public class SecurityGroupResultObject {
     @Param(name = "name")
     private String name;
 
+    @Param(name = "type")
+    private int type;
+    
     @Param(name = "description")
     private String description;
 
@@ -77,6 +79,14 @@ public class SecurityGroupResultObject {
         this.id = id;
     }
 
+    public Long getType() {
+        return id;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+    
     public String getName() {
         return name;
     }
@@ -163,6 +173,7 @@ public class SecurityGroupResultObject {
                     groupResult.setName(netGroupRule.getName());
                     groupResult.setDescription(netGroupRule.getDescription());
                     groupResult.setDomainId(netGroupRule.getDomainId());
+                    groupResult.setType(netGroupRule.getType());
 
                     Account account = accounts.get(netGroupRule.getAccountId());
                     if (account == null) {
@@ -175,11 +186,6 @@ public class SecurityGroupResultObject {
 
                     currentGroup = groupResult;
                 }
-                SecurityGroupRulesVO  dummyIngressobj=new SecurityGroupRulesVO(); 
-                SecurityGroupEgressRulesVO  dummyEgressobj=new SecurityGroupEgressRulesVO() ;
-String str=dummyIngressobj.getClass().getName();
- 
-String s1=netGroupRule.getClass().getSimpleName();
 
                 if (netGroupRule.getRuleId() != null && netGroupRule.getClass().getSimpleName().indexOf("SecurityGroupRulesVO") != -1) {
                     // there's at least one ingress rule for this network group, add the ingress rule data
@@ -188,6 +194,7 @@ String s1=netGroupRule.getClass().getSimpleName();
                     ingressData.setStartPort(netGroupRule.getStartPort());
                     ingressData.setId(netGroupRule.getRuleId());
                     ingressData.setProtocol(netGroupRule.getProtocol());
+                    ingressData.setType(netGroupRule.getType());
 
                     Long allowedSecurityGroupId = netGroupRule.getAllowedNetworkId();
                     if (allowedSecurityGroupId != null) {
@@ -245,6 +252,9 @@ String s1=netGroupRule.getClass().getSimpleName();
             if (currentGroup != null) {
                 if (!ingressDataList.isEmpty()) {
                     currentGroup.setIngressRules(ingressDataList);
+                }
+                if (!egressDataList.isEmpty()) {
+                    currentGroup.setEgressRules(egressDataList);
                 }
                 resultObjects.add(currentGroup);
             }

@@ -38,6 +38,8 @@ import com.cloud.host.Host.Type;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.host.dao.HostDetailsDao;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.hypervisor.dao.HypervisorCapabilitiesDao;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.service.dao.ServiceOfferingDao;
 import com.cloud.storage.GuestOSCategoryVO;
@@ -55,6 +57,7 @@ import com.cloud.vm.dao.ConsoleProxyDao;
 import com.cloud.vm.dao.DomainRouterDao;
 import com.cloud.vm.dao.SecondaryStorageVmDao;
 import com.cloud.vm.dao.UserVmDao;
+import com.cloud.vm.dao.VMInstanceDao;
 
 /**
  * An allocator that tries to find a fit on a computing host.  This allocator does not care whether or not the host supports routing.
@@ -73,15 +76,23 @@ public class FirstFitAllocator implements HostAllocator {
     @Inject ConfigurationDao _configDao = null;
     @Inject GuestOSDao _guestOSDao = null; 
     @Inject GuestOSCategoryDao _guestOSCategoryDao = null;
+    @Inject HypervisorCapabilitiesDao _hypervisorCapabilitiesDao = null;
+    @Inject VMInstanceDao _vmInstanceDao = null;  
     float _factor = 1;
     protected String _allocationAlgorithm = "random";
     @Inject CapacityManager _capacityMgr;
     
+    
 	@Override
 	public List<Host> allocateTo(VirtualMachineProfile<? extends VirtualMachine> vmProfile, DeploymentPlan plan, Type type,
 			ExcludeList avoid, int returnUpTo) {
-
-		long dcId = plan.getDataCenterId();
+	    return allocateTo(vmProfile, plan, type, avoid, returnUpTo, true);
+	}
+	
+    @Override
+    public List<Host> allocateTo(VirtualMachineProfile<? extends VirtualMachine> vmProfile, DeploymentPlan plan, Type type, ExcludeList avoid, int returnUpTo, boolean considerReservedCapacity) {
+	
+	    long dcId = plan.getDataCenterId();
 		Long podId = plan.getPodId();
 		Long clusterId = plan.getClusterId();
 		ServiceOffering offering = vmProfile.getServiceOffering();
@@ -92,24 +103,63 @@ public class FirstFitAllocator implements HostAllocator {
         	return new ArrayList<Host>();
         }
         
-        String hostTag = offering.getHostTag();
-        if(hostTag != null){
-        	s_logger.debug("Looking for hosts in dc: " + dcId + "  pod:" + podId + "  cluster:" + clusterId + " having host tag:" + hostTag);
-        }else{
-        	s_logger.debug("Looking for hosts in dc: " + dcId + "  pod:" + podId + "  cluster:" + clusterId);
+        if(s_logger.isDebugEnabled()){
+            s_logger.debug("Looking for hosts in dc: " + dcId + "  pod:" + podId + "  cluster:" + clusterId );
         }
+        
+        String hostTagOnOffering = offering.getHostTag();
+        String hostTagOnTemplate = template.getTemplateTag();
+        
+        boolean hasSvcOfferingTag = hostTagOnOffering != null ? true : false;
+        boolean hasTemplateTag = hostTagOnTemplate != null ? true : false;
 
         List<HostVO> clusterHosts = new ArrayList<HostVO>();
-        if(hostTag != null){
-        	clusterHosts = _hostDao.listByHostTag(type, clusterId, podId, dcId, hostTag);
+        if(hostTagOnOffering == null && hostTagOnTemplate == null){
+            clusterHosts = _hostDao.listBy(type, clusterId, podId, dcId);
         }else{
-        	clusterHosts = _hostDao.listBy(type, clusterId, podId, dcId);
+            List<HostVO> hostsMatchingOfferingTag = new ArrayList<HostVO>();
+            List<HostVO> hostsMatchingTemplateTag = new ArrayList<HostVO>();
+            if(hasSvcOfferingTag){
+                if(s_logger.isDebugEnabled()){            
+                    s_logger.debug("Looking for hosts having tag specified on SvcOffering:" + hostTagOnOffering);
+                }
+                hostsMatchingOfferingTag = _hostDao.listByHostTag(type, clusterId, podId, dcId, hostTagOnOffering);
+                if(s_logger.isDebugEnabled()){            
+                    s_logger.debug("Hosts with tag '"+hostTagOnOffering+"' are:" + hostsMatchingOfferingTag);
+                }                
+            }
+            if(hasTemplateTag){
+                if(s_logger.isDebugEnabled()){            
+                    s_logger.debug("Looking for hosts having tag specified on Template:" + hostTagOnTemplate);
+                }
+                hostsMatchingTemplateTag = _hostDao.listByHostTag(type, clusterId, podId, dcId, hostTagOnTemplate);    
+                if(s_logger.isDebugEnabled()){            
+                    s_logger.debug("Hosts with tag '"+hostTagOnTemplate+"' are:" + hostsMatchingTemplateTag);
+                }                  
+            }
+            
+            if(hasSvcOfferingTag && hasTemplateTag){
+                hostsMatchingOfferingTag.retainAll(hostsMatchingTemplateTag);
+                clusterHosts = _hostDao.listByHostTag(type, clusterId, podId, dcId, hostTagOnTemplate);    
+                if(s_logger.isDebugEnabled()){            
+                    s_logger.debug("Found "+ hostsMatchingOfferingTag.size() +" Hosts satisfying both tags, host ids are:" + hostsMatchingOfferingTag);
+                }
+                
+                clusterHosts = hostsMatchingOfferingTag;
+            }else{
+                if(hasSvcOfferingTag){
+                    clusterHosts = hostsMatchingOfferingTag;
+                }else{
+                    clusterHosts = hostsMatchingTemplateTag;
+                }
+            }
+            
         }
 
-        return allocateTo(offering, template, avoid, clusterHosts, returnUpTo);
+        return allocateTo(offering, template, avoid, clusterHosts, returnUpTo, considerReservedCapacity);
     }
 
-    protected List<Host> allocateTo(ServiceOffering offering, VMTemplateVO template, ExcludeList avoid, List<HostVO> hosts, int returnUpTo) {
+    protected List<Host> allocateTo(ServiceOffering offering, VMTemplateVO template, ExcludeList avoid, List<HostVO> hosts, int returnUpTo, boolean considerReservedCapacity) {
         if (_allocationAlgorithm.equals("random")) {
         	// Shuffle this so that we don't check the hosts in the same order.
             Collections.shuffle(hosts);
@@ -150,11 +200,21 @@ public class FirstFitAllocator implements HostAllocator {
                 }
                 continue;
             }
+            
+            //find number of guest VMs occupying capacity on this host.
+            Long vmCount = _vmInstanceDao.countRunningByHostId(host.getId());
+            Long maxGuestLimit = getHostMaxGuestLimit(host);
+            if (vmCount.longValue() == maxGuestLimit.longValue()){
+                if (s_logger.isDebugEnabled()) {
+                    s_logger.debug("Host name: " + host.getName() + ", hostId: "+ host.getId() +" already has max Running VMs(count includes system VMs), limit is: " + maxGuestLimit + " , skipping this and trying other available hosts");
+                }
+                continue;
+            }
 
             boolean numCpusGood = host.getCpus().intValue() >= offering.getCpu();
     		int cpu_requested = offering.getCpu() * offering.getSpeed();
     		long ram_requested = offering.getRamSize() * 1024L * 1024L;	
-    		boolean hostHasCapacity = _capacityMgr.checkIfHostHasCapacity(host.getId(), cpu_requested, ram_requested, false, _factor);
+    		boolean hostHasCapacity = _capacityMgr.checkIfHostHasCapacity(host.getId(), cpu_requested, ram_requested, false, _factor, considerReservedCapacity);
 
             if (numCpusGood && hostHasCapacity) {
                 if (s_logger.isDebugEnabled()) {
@@ -288,6 +348,14 @@ public class FirstFitAllocator implements HostAllocator {
     	return guestOSCategory.getName();
     }
     
+    protected Long getHostMaxGuestLimit(HostVO host) {
+        HypervisorType hypervisorType = host.getHypervisorType();
+        String hypervisorVersion = host.getHypervisorVersion();
+
+        Long maxGuestLimit = _hypervisorCapabilitiesDao.getMaxGuestsLimit(hypervisorType, hypervisorVersion);
+        return maxGuestLimit;
+    }
+    
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
         _name = name;
@@ -319,6 +387,5 @@ public class FirstFitAllocator implements HostAllocator {
     public boolean stop() {
         return true;
     }
-
 
 }

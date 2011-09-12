@@ -133,6 +133,7 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
 
         MsStatusSearch = createSearchBuilder();
         MsStatusSearch.and("ms", MsStatusSearch.entity().getManagementServerId(), SearchCriteria.Op.EQ);
+        MsStatusSearch.and("type", MsStatusSearch.entity().getType(), SearchCriteria.Op.EQ);
         MsStatusSearch.and("statuses", MsStatusSearch.entity().getStatus(), SearchCriteria.Op.NIN);
         MsStatusSearch.done();
 
@@ -640,7 +641,7 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
             s_logger.warn("Unable to update db record for host id=" + host.getId() + "; it's possible that the host is removed");
         }
 
-        if (s_logger.isDebugEnabled() && result == 1) {
+        if (s_logger.isDebugEnabled() && result == 0) {
             HostVO vo = findById(host.getId());
       
             if (vo != null) {
@@ -995,9 +996,10 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
     }
 
     @Override
-    public List<HostVO> listByManagementServer(long msId) {
+    public List<HostVO> listRoutingHostsByManagementServer(long msId) {
         SearchCriteria<HostVO> sc = MsStatusSearch.create();
         sc.setParameters("ms", msId);
+        sc.setParameters("type", Type.Routing);
 
         return listBy(sc);
     }

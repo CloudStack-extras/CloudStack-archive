@@ -64,6 +64,7 @@ import com.cloud.event.UsageEventVO;
 import com.cloud.event.dao.EventDao;
 import com.cloud.event.dao.UsageEventDao;
 import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.exception.PermissionDeniedException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.StorageUnavailableException;
 import com.cloud.host.HostVO;
@@ -103,6 +104,7 @@ import com.cloud.storage.upload.UploadMonitor;
 import com.cloud.template.TemplateAdapter.TemplateAdapterType;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
+import com.cloud.user.AccountService;
 import com.cloud.user.AccountVO;
 import com.cloud.user.UserContext;
 import com.cloud.user.dao.AccountDao;
@@ -159,9 +161,10 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
     @Inject StorageManager _storageMgr;
     @Inject AsyncJobManager _asyncMgr;
     @Inject UserVmManager _vmMgr;
-    @Inject ConfigurationDao _configDao;
     @Inject UsageEventDao _usageEventDao;
     @Inject HypervisorGuruManager _hvGuruMgr;
+    @Inject AccountService _accountService;
+    int _primaryStorageDownloadWait;
     protected SearchBuilder<VMTemplateHostVO> HostTemplateStatesSearch;
     
     int _storagePoolMaxWaitSeconds = 3600;
@@ -197,6 +200,12 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_TEMPLATE_CREATE, eventDescription = "creating template")
     public VirtualMachineTemplate registerTemplate(RegisterTemplateCmd cmd) throws URISyntaxException, ResourceAllocationException{
+        if(cmd.getTemplateTag() != null){
+            Account account = UserContext.current().getCaller();
+            if(!_accountService.isRootAdmin(account.getType())){
+                throw new PermissionDeniedException("Parameter templatetag can only be specified by a Root Admin, permission denied");
+            }
+        }        
     	TemplateAdapter adapter = getAdapter(HypervisorType.getType(cmd.getHypervisor()));
     	TemplateProfile profile = adapter.prepare(cmd);
     	return adapter.create(profile);
@@ -240,21 +249,23 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
     }
 
     private Long extract(Account caller, Long templateId, String url, Long zoneId, String mode, Long eventId, boolean isISO, AsyncJobVO job, AsyncJobManager mgr) {
-        String desc = "template";
+        String desc = Upload.Type.TEMPLATE.toString();
         if (isISO) {
-            desc = "ISO";
+            desc = Upload.Type.ISO.toString();
         }
         eventId = eventId == null ? 0:eventId;
+        
         VMTemplateVO template = _tmpltDao.findById(templateId);
         if (template == null || template.getRemoved() != null) {
             throw new InvalidParameterValueException("Unable to find " +desc+ " with id " + templateId);
         }
+        
         if (template.getTemplateType() ==  Storage.TemplateType.SYSTEM){
             throw new InvalidParameterValueException("Unable to extract the " + desc + " " + template.getName() + " as it is a default System template");
-        }
-        if (template.getTemplateType() ==  Storage.TemplateType.PERHOST){
+        } else if (template.getTemplateType() ==  Storage.TemplateType.PERHOST){
             throw new InvalidParameterValueException("Unable to extract the " + desc + " " + template.getName() + " as it resides on host and not on SSVM");
         }
+        
         if (isISO) {
             if (template.getFormat() != ImageFormat.ISO ){
                 throw new InvalidParameterValueException("Unsupported format, could not extract the ISO");
@@ -264,11 +275,12 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
                 throw new InvalidParameterValueException("Unsupported format, could not extract the template");
             }
         }
+        
         if (_dcDao.findById(zoneId) == null) {
             throw new IllegalArgumentException("Please specify a valid zone.");
         }
         
-        if (!template.isExtractable()) {
+        if (!_accountMgr.isRootAdmin(caller.getType()) && !template.isExtractable()) {
             throw new InvalidParameterValueException("Unable to extract template id=" + templateId + " as it's not extractable");
         }
         
@@ -291,14 +303,15 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
             }
         }
         
-        if ( tmpltHostRef == null ) {
+        if (tmpltHostRef == null ) {
             throw new InvalidParameterValueException("The " + desc + " has not been downloaded ");
         }
+        
         Upload.Mode extractMode;
-        if( mode == null || (!mode.equals(Upload.Mode.FTP_UPLOAD.toString()) && !mode.equals(Upload.Mode.HTTP_DOWNLOAD.toString())) ){
-            throw new InvalidParameterValueException("Please specify a valid extract Mode "+Upload.Mode.values());
-        }else{
-            extractMode = mode.equals(Upload.Mode.FTP_UPLOAD.toString()) ? Upload.Mode.FTP_UPLOAD : Upload.Mode.HTTP_DOWNLOAD;
+        if (mode == null || (!mode.equalsIgnoreCase(Upload.Mode.FTP_UPLOAD.toString()) && !mode.equalsIgnoreCase(Upload.Mode.HTTP_DOWNLOAD.toString())) ){
+            throw new InvalidParameterValueException("Please specify a valid extract Mode. Supported modes: "+ Upload.Mode.FTP_UPLOAD + ", " + Upload.Mode.HTTP_DOWNLOAD);
+        } else {
+            extractMode = mode.equalsIgnoreCase(Upload.Mode.FTP_UPLOAD.toString()) ? Upload.Mode.FTP_UPLOAD : Upload.Mode.HTTP_DOWNLOAD;
         }
         
         if (extractMode == Upload.Mode.FTP_UPLOAD){
@@ -325,7 +338,7 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
                 throw new InvalidParameterValueException("Unable to resolve " + host);
             }
                     
-            if ( _uploadMonitor.isTypeUploadInProgress(templateId, isISO ? Type.ISO : Type.TEMPLATE) ){
+            if (_uploadMonitor.isTypeUploadInProgress(templateId, isISO ? Type.ISO : Type.TEMPLATE) ){
                 throw new IllegalArgumentException(template.getName() + " upload is in progress. Please wait for some time to schedule another upload for the same"); 
             }
         
@@ -333,7 +346,7 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
         }
         
         UploadVO vo = _uploadMonitor.createEntityDownloadURL(template, tmpltHostRef, zoneId, eventId);
-        if (vo!=null){                                  
+        if (vo != null){                                  
             return vo.getId();
         }else{
             return null;
@@ -438,7 +451,7 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
             }
             String url = origUrl + "/" + templateHostRef.getInstallPath();
             PrimaryStorageDownloadCommand dcmd = new PrimaryStorageDownloadCommand(template.getUniqueName(), url, template.getFormat(), 
-            	template.getAccountId(), pool.getId(), pool.getUuid());
+                   template.getAccountId(), pool.getId(), pool.getUuid(), _primaryStorageDownloadWait);
             HostVO secondaryStorageHost = _hostDao.findById(templateHostRef.getHostId());
             assert(secondaryStorageHost != null);
             dcmd.setSecondaryStorageUrl(secondaryStorageHost.getStorageUrl());
@@ -453,7 +466,7 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
             	// set 120 min timeout for this command
             	
             	PrimaryStorageDownloadAnswer answer = (PrimaryStorageDownloadAnswer)_agentMgr.easySend(
-            		_hvGuruMgr.getGuruProcessedCommandTargetHost(vo.getHostId(), dcmd), dcmd, 120*60*1000);
+                       _hvGuruMgr.getGuruProcessedCommandTargetHost(vo.getHostId(), dcmd), dcmd);
                 if (answer != null && answer.getResult() ) {
             		templateStoragePoolRef.setDownloadPercent(100);
             		templateStoragePoolRef.setDownloadState(Status.DOWNLOADED);
@@ -720,7 +733,10 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
         
         final Map<String, String> configs = configDao.getConfiguration("AgentManager", params);
         _routerTemplateId = NumbersUtil.parseInt(configs.get("router.template.id"), 1);
-        
+
+        String value = configDao.getValue(Config.PrimaryStorageDownloadWait.toString());
+        _primaryStorageDownloadWait = NumbersUtil.parseInt(value, Integer.parseInt(Config.PrimaryStorageDownloadWait.getDefaultValue()));
+
         HostTemplateStatesSearch = _tmpltHostDao.createSearchBuilder();
         HostTemplateStatesSearch.and("id", HostTemplateStatesSearch.entity().getTemplateId(), SearchCriteria.Op.EQ);
         HostTemplateStatesSearch.and("state", HostTemplateStatesSearch.entity().getDownloadState(), SearchCriteria.Op.EQ);

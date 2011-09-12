@@ -108,7 +108,6 @@ DROP TABLE IF EXISTS `cloud`.`ovs_work`;
 DROP TABLE IF EXISTS `cloud`.`remote_access_vpn`;
 DROP TABLE IF EXISTS `cloud`.`resource_count`;
 DROP TABLE IF EXISTS `cloud`.`security_ingress_rule`;
-DROP TABLE IF EXISTS `cloud`.`security_egress_rule`;
 DROP TABLE IF EXISTS `cloud`.`stack_maid`;
 DROP TABLE IF EXISTS `cloud`.`storage_pool_work`;
 DROP TABLE IF EXISTS `cloud`.`user_vm_details`;
@@ -682,6 +681,7 @@ CREATE TABLE  `cloud`.`host` (
   `url` varchar(255) COMMENT 'iqn for the servers',
   `fs_type` varchar(32),
   `hypervisor_type` varchar(32) COMMENT 'hypervisor type, can be NONE for storage',
+  `hypervisor_version` varchar(32) COMMENT 'hypervisor version',
   `ram` bigint unsigned,
   `resource` varchar(255) DEFAULT NULL COMMENT 'If it is a local resource, this is the class name',
   `version` varchar(40) NOT NULL,
@@ -856,6 +856,7 @@ CREATE TABLE  `cloud`.`vm_template` (
   `extractable` int(1) unsigned NOT NULL default 0 COMMENT 'Is this template extractable',
   `hypervisor_type` varchar(32) COMMENT 'hypervisor that the template belongs to',
   `source_template_id` bigint unsigned COMMENT 'Id of the original template, if this template is created from snapshot',
+  `template_tag` varchar(255) COMMENT 'template tag',
   PRIMARY KEY  (`id`),
   INDEX `i_vm_template__removed`(`removed`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -917,13 +918,14 @@ CREATE TABLE `cloud`.`user_vm` (
   CONSTRAINT `fk_user_vm__id` FOREIGN KEY `fk_user_vm__id` (`id`) REFERENCES `vm_instance`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- note, uer_vm_details is now used for all VMs (not just for user vms)
 CREATE TABLE `cloud`.`user_vm_details` (
   `id` bigint unsigned NOT NULL auto_increment,
   `vm_id` bigint unsigned NOT NULL COMMENT 'vm id',
   `name` varchar(255) NOT NULL,
   `value` varchar(1024) NOT NULL,
   PRIMARY KEY (`id`),
-  CONSTRAINT `fk_user_vm_details__vm_id` FOREIGN KEY `fk_user_vm_details__vm_id`(`vm_id`) REFERENCES `user_vm`(`id`) ON DELETE CASCADE
+  CONSTRAINT `fk_user_vm_details__vm_id` FOREIGN KEY `fk_user_vm_details__vm_id`(`vm_id`) REFERENCES `vm_instance`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -1346,6 +1348,28 @@ CREATE TABLE `cloud`.`guest_os_category` (
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+CREATE TABLE `cloud`.`hypervisor_capabilities` (
+  `id` bigint unsigned NOT NULL auto_increment,
+  `hypervisor_type` varchar(32) NOT NULL,
+  `hypervisor_version` varchar(32),
+  `max_guests_limit` bigint unsigned DEFAULT 50,
+  `security_group_enabled` int(1) unsigned DEFAULT 1 COMMENT 'Is security group supported',
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('XenServer', 'default', 50, 1);
+INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('XenServer', 'XCP 1.0', 50, 1);
+INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('XenServer', '5.6', 50, 1);
+INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('XenServer', '5.6 FP1', 50, 1);
+INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('XenServer', '5.6 SP2', 50, 1);
+INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('XenServer', '6.0 beta', 50, 1);
+INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('VMware', 'default', 128, 0);
+INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('VMware', '4.0', 128, 0);
+INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('VMware', '4.1', 128, 0);
+INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('KVM', 'default', 50, 1);
+INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('Ovm', 'default', 25, 1);
+INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('Ovm', '2.3', 25, 1);
+
 CREATE TABLE  `cloud`.`launch_permission` (
   `id` bigint unsigned NOT NULL auto_increment,
   `template_id` bigint unsigned NOT NULL,
@@ -1398,6 +1422,7 @@ CREATE TABLE `cloud`.`security_group` (
 CREATE TABLE `cloud`.`security_ingress_rule` (
   `id` bigint unsigned NOT NULL auto_increment,
   `security_group_id` bigint unsigned NOT NULL,
+  `type` bigint unsigned NOT NULL,
   `start_port` varchar(10) default NULL,
   `end_port` varchar(10) default NULL,
   `protocol` varchar(16) NOT NULL default 'TCP',
@@ -1407,17 +1432,6 @@ CREATE TABLE `cloud`.`security_ingress_rule` (
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `cloud`.`security_egress_rule` (
-  `id` bigint unsigned NOT NULL auto_increment,
-  `security_group_id` bigint unsigned NOT NULL,
-  `start_port` varchar(10) default NULL,
-  `end_port` varchar(10) default NULL,
-  `protocol` varchar(16) NOT NULL default 'TCP',
-  `allowed_network_id` bigint unsigned,
-  `allowed_ip_cidr`  varchar(44),
-  `create_status` varchar(32) COMMENT 'rule creation status',
-  PRIMARY KEY  (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `cloud`.`security_group_vm_map` (
   `id` bigint unsigned NOT NULL auto_increment,
