@@ -5,51 +5,103 @@
   var breadcrumb = cloudStack.ui.api.browser.breadcrumb = {
     // Generate new breadcrumb
     create: function($panel, title) {
-      return $('<div>')
-        .append($('<li>').html(title))
-        .append($('<div>').addClass('end'))
-        .children();
+      // Attach panel as ref for breadcrumb
+      return cloudStack.ui.event.elem(
+        'cloudBrowser', 'breadcrumb',
+        $('<div>')
+          .append($('<li>').html(title))
+          .append($('<div>').addClass('end'))
+          .children(),
+        {
+          panel: $panel
+        }
+      );
+    },
+
+    filter: function($panels) {
+      var $breadcrumbs = $('#breadcrumbs ul li');
+      var $result = $([]);
+
+      $panels.each(function() {
+        var $panel = $(this);
+
+        $.merge(
+          $result,
+          $.merge(
+            $breadcrumbs.filter(function() {
+              return $(this).index('#breadcrumbs ul li') == $panel.index();
+            }),
+
+            // Also include ends
+            $breadcrumbs.siblings('div.end').filter(function() {
+              return $(this).index('div.end') == $panel.index() + 1;
+            })
+          )
+        );
+      });
+
+      return $result;
+    }
+  };
+
+  var container = cloudStack.ui.api.browser.container = {
+    // Get all panels from container
+    panels: function($container) {
+      return $container.find('div.panel');
     }
   };
 
   // Panel-related functions
   var panel = cloudStack.ui.api.browser.panel = {
-    calc: {
-      // Compute width of panel, relative to container
-      width: function($container, options) {
-        options = options ? options : {};
-        var width = $container.find('div.panel').size() < 1 || options.maximized == true ? 
-              $container.width() : $container.width() - $container.width() / 4;
+    // Compute width of panel, relative to container
+    width: function($container, options) {
+      options = options ? options : {};
+      var width = $container.find('div.panel').size() < 1 || options.maximized == true ? 
+        $container.width() : $container.width() - $container.width() / 4;
 
-        return width;
-      },
-
-      // Get left position
-      position: function($container, options) {
-        return $container.find('div.panel').size() <= 1 || options.maximized == true ?
-          0 : panel.calc.width($container, options) - panel.calc.width($container, options) / 1.5;
-      },
-
-      // Get the top panel z-index, for proper stacking
-      topIndex: function($container) {
-        var base = 1000; // Minimum z-index
-
-        return Math.max.apply(
-          null,
-          $.map(
-            $container.find('div.panel'),
-            function(elem) {
-              return parseInt($(elem).css('z-index')) || base;
-            }
-          )
-        ) + 1;
-      }
+      return width;
     },
 
-    initialState: function($container, $panel) {
+    // Get left position
+    position: function($container, options) {
+      return $container.find('div.panel').size() <= 1 || options.maximized == true ?
+        0 : panel.width($container, options) - panel.width($container, options) / 1.5;
+    },
+
+    // Get the top panel z-index, for proper stacking
+    topIndex: function($container) {
+      var base = 1000; // Minimum z-index
+
+      return Math.max.apply(
+        null,
+        $.map(
+          $container.find('div.panel'),
+          function(elem) {
+            return parseInt($(elem).css('z-index')) || base;
+          }
+        )
+      ) + 1;
+    },
+
+    // State when panel is outside container
+    initialState: function($container) {
       return {
         left: $container.width()
       };
+    },
+
+    // Get panel and breadcrumb behind specific panel
+    lower: function($container, $panel) {
+      return container.panels($container).filter(function() {
+        return $(this).index() < $panel.index();
+      });
+    },
+
+    // Get panel and breadcrumb stacked above specific panel
+    higher: function($container, $panel) {
+      return container.panels($container).filter(function() {
+        return $(this).index() > $panel.index();
+      });
     },
 
     // Generate new panel
@@ -57,8 +109,8 @@
       var $panel = $('<div>').addClass('panel').css(
         {
           position: 'absolute',
-          width: panel.calc.width($container, { maximized: options.maximized }),
-          zIndex: panel.calc.topIndex($container)
+          width: panel.width($container, { maximized: options.maximized }),
+          zIndex: panel.topIndex($container)
         }
       ).append(
         // Shadow
@@ -71,7 +123,8 @@
       return $panel;
     },
 
-    stack: function($container, $topPanel, duration, actions, options) {
+    // Add panel to container effect
+    appendToContainer: function($container, $topPanel, duration, actions, options) {
       // Position panel
       actions.initial($container, $topPanel, panel.initialState($container, $topPanel));
 
@@ -83,7 +136,7 @@
       );
 
       // Slide-in panel
-      var position = panel.calc.position($container, { maximized: options.maximized });
+      var position = panel.position($container, { maximized: options.maximized });
       actions.slideIn(
         $container,
         
@@ -114,12 +167,31 @@
 
   $.widget('cloudStack.cloudBrowser', {
     _init: function() {
+      this.element.addClass('cloudStack-widget cloudBrowser');
       $('#breadcrumbs').append(
         $('<ul>')
       );
     },
 
+    // Make target panel the top-most
     selectPanel: function(args) {
+      var $panel = args.panel;
+      var $container = this.element;
+      var $toShow = panel.lower($container, $panel);
+      var $toRemove = panel.higher($container, $panel);
+
+      breadcrumb.filter($toRemove).remove();
+      $toRemove.animate(
+        panel.initialState($container),
+        {
+          duration: 500,
+          complete: function() {
+            $(this).remove();
+          }
+       }
+      );
+      $toShow.show();
+      $panel.show();
     },
 
     // Append new panel
@@ -137,8 +209,8 @@
         function($container, $panel, maximized) {
           $panel.appendTo($container);
           breadcrumb.create($panel, args.title).appendTo('#breadcrumbs ul');
-          
-          panel.stack(
+
+          panel.appendToContainer(
             $container, // Container
             $panel, // Top panel
             500, // Duration
@@ -150,8 +222,9 @@
                 var completeFn = complete(function() {
                   args.complete ? args.complete($panel) : function() { return false; };
                 });
-                
+
                 if (args.parent && args.parent.index() < $target.index() - 1) {
+                  // Just show immediately if this is the first panel
                   $target.css(position);
                   completeFn();
                 } else {
@@ -159,7 +232,7 @@
                     duration: duration,
                     easing: 'easeOutCirc',
                     complete: completeFn
-                  });                  
+                  });
                 }
               },
               reduce: function($reduce) {
@@ -185,4 +258,13 @@
       $('#breadcrumbs').find('ul div.end').remove();
     }
   });
+
+  $(window).bind('click', cloudStack.ui.event.bind(
+    'cloudBrowser',
+    {
+      'breadcrumb': function($target, $browser, data) {
+        $browser.cloudBrowser('selectPanel', { panel: data.panel });
+      }
+    }
+  ));
 })(jQuery, cloudStack);
