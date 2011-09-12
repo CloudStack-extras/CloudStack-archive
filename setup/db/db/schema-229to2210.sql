@@ -27,11 +27,11 @@ ALTER TABLE `cloud`.`firewall_rules` ADD CONSTRAINT `fk_firewall_rules__related`
 ALTER TABLE `cloud`.`firewall_rules` MODIFY `start_port` int(10) COMMENT 'starting port of a port range';
 ALTER TABLE `cloud`.`firewall_rules` MODIFY `end_port` int(10) COMMENT 'end port of a port range';
 
-INSERT IGNORE INTO `cloud`.`configuration` (category, instance, name, value, description) VALUES ('Network', 'DEFAULT', 'firewall.rule.ui.enabled', 'true', 'enable/disable UI that separates firewall rules from NAT/LB rules');
+INSERT IGNORE INTO `cloud`.`configuration` (category, instance, name, value, description) VALUES ('Network', 'DEFAULT', 'firewall.rule.ui.enabled', 'false', 'enable/disable UI that separates firewall rules from NAT/LB rules');
 
 
 INSERT IGNORE INTO configuration VALUES ('Advanced', 'DEFAULT', 'management-server', 'agent.load.threshold', '0.70', 'Percentage (as a value between 0 and 1) of connected agents after which agent load balancing will start happening');
-INSERT IGNORE INTO configuration VALUES ('Network', 'DEFAULT', 'management-server', 'network.loadbalancer.haproxy.stats.visibility', 'global', 'Load Balancer(haproxy) stats visibilty, it can be global,guest-network,disabled');
+INSERT IGNORE INTO configuration VALUES ('Network', 'DEFAULT', 'management-server', 'network.loadbalancer.haproxy.stats.visibility', 'global', 'Load Balancer(haproxy) stats visibilty, it can take the following four parameters : global,guest-network,link-local,disabled');
 INSERT IGNORE INTO configuration VALUES ('Network', 'DEFAULT', 'management-server', 'network.loadbalancer.haproxy.stats.uri','/admin?stats','Load Balancer(haproxy) uri.');
 INSERT IGNORE INTO configuration VALUES ('Network', 'DEFAULT', 'management-server', 'network.loadbalancer.haproxy.stats.auth','admin1:AdMiN123','Load Balancer(haproxy) authetication string in the format username:password');
 INSERT IGNORE INTO configuration VALUES ('Network', 'DEFAULT', 'management-server', 'network.loadbalancer.haproxy.stats.port','8081','Load Balancer(haproxy) stats port number.');
@@ -44,6 +44,12 @@ INSERT IGNORE INTO configuration VALUES ('Advanced', 'DEFAULT', 'management-serv
 INSERT IGNORE INTO configuration VALUES ('Advanced', 'DEFAULT', 'management-server', 'network.loadbalancer.basiczone.elb.vm.ram.size', '128', 'Memory in MB for the elastic load balancer vm');
 INSERT IGNORE INTO configuration VALUES ('Advanced', 'DEFAULT', 'management-server', 'network.loadbalancer.basiczone.elb.vm.vcpu.num', '1', 'Number of VCPU  for the elastic load balancer vm');
 
+INSERT IGNORE INTO configuration VALUES ('Advanced', 'DEFAULT', 'management-server', 'vmware.reserve.mem', 'false', 'Specify whether or not to reserve memory based on memory overprovisioning factor');
+INSERT IGNORE INTO configuration VALUES ('Advanced', 'DEFAULT', 'management-server', 'mem.overprovisioning.factor', '1', 'Used for memory overprovisioning calculation');
+
+INSERT IGNORE INTO configuration VALUES ('Network', 'DEFAULT', 'AgentManager', 'remote.access.vpn.psk.length', '24', 'The length of the ipsec preshared key (minimum 8, maximum 256)');
+INSERT IGNORE INTO configuration VALUES ('Network', 'DEFAULT', 'AgentManager', 'remote.access.vpn.client.iprange', '10.1.2.1-10.1.2.8', 'The range of ips to be allocated to remote access vpn clients. The first ip in the range is used by the VPN server');
+INSERT IGNORE INTO configuration VALUES ('Network', 'DEFAULT', 'AgentManager', 'remote.access.vpn.user.limit', '8', 'The maximum number of VPN users that can be created per account');
 
 CREATE TABLE IF NOT exists `cloud`.`elastic_lb_vm_map` (
   `id` bigint unsigned NOT NULL auto_increment,
@@ -57,14 +63,3 @@ CREATE TABLE IF NOT exists `cloud`.`elastic_lb_vm_map` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 UPDATE `cloud`.`network_offerings` SET lb_service=1 where unique_name='System-Guest-Network';
-
-UPDATE `cloud`.`vm_template` SET type='SYSTEM' WHERE name='systemvm-xenserver-2.2.10';
-UPDATE `cloud`.`vm_template` SET type='SYSTEM' WHERE name='systemvm-kvm-2.2.10';
-UPDATE `cloud`.`vm_template` SET type='SYSTEM' WHERE name='systemvm-vSphere-2.2.10';
-
-UPDATE vm_instance SET vm_template_id=(SELECT id FROM vm_template WHERE name='systemvm-xenserver-2.2.10' AND removed IS NULL) where vm_template_id=1;
-UPDATE vm_instance SET vm_template_id=(SELECT id FROM vm_template WHERE name='systemvm-kvm-2.2.10' AND removed IS NULL) where vm_template_id=3;
-UPDATE vm_instance SET vm_template_id=(SELECT id FROM vm_template WHERE name='systemvm-vSphere-2.2.10' AND removed IS NULL) where vm_template_id=8;
-
--- Update system Vms using systemvm-xenserver-2.2.4 template;
-UPDATE vm_instance SET vm_template_id=(SELECT id FROM vm_template WHERE name='systemvm-xenserver-2.2.10' AND removed IS NULL) where vm_template_id=(SELECT id FROM vm_template WHERE name='systemvm-xenserver-2.2.4' AND removed IS NULL);

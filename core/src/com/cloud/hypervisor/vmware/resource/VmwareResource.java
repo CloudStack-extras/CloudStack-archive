@@ -146,6 +146,7 @@ import com.cloud.hypervisor.vmware.mo.HostMO;
 import com.cloud.hypervisor.vmware.mo.HostVirtualNicType;
 import com.cloud.hypervisor.vmware.mo.HypervisorHostHelper;
 import com.cloud.hypervisor.vmware.mo.NetworkDetails;
+import com.cloud.hypervisor.vmware.mo.VirtualEthernetCardType;
 import com.cloud.hypervisor.vmware.mo.VirtualMachineMO;
 import com.cloud.hypervisor.vmware.mo.VmwareHypervisorHost;
 import com.cloud.hypervisor.vmware.mo.VmwareHypervisorHostNetworkSummary;
@@ -178,7 +179,9 @@ import com.cloud.vm.DiskProfile;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.VirtualMachineName;
+import com.cloud.vm.VmDetailConstants;
 import com.google.gson.Gson;
+import com.vmware.vim25.AboutInfo;
 import com.vmware.vim25.ClusterDasConfigInfo;
 import com.vmware.vim25.ComputeResourceSummary;
 import com.vmware.vim25.DatastoreSummary;
@@ -238,8 +241,12 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     protected String _privateNetworkVSwitchName;
     protected String _publicNetworkVSwitchName;
     protected String _guestNetworkVSwitchName;
+
     protected float _cpuOverprovisioningFactor = 1;
     protected boolean _reserveCpu = false;
+    
+    protected float _memOverprovisioningFactor = 1;
+    protected boolean _reserveMem = false;
 
     protected ManagedObjectReference _morHyperHost;
     protected VmwareContext _serviceContext;
@@ -598,6 +605,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
             try {
                 String[] addRules = rules[LoadBalancerConfigurator.ADD];
                 String[] removeRules = rules[LoadBalancerConfigurator.REMOVE];
+                String[] statRules = rules[LoadBalancerConfigurator.STATS];
 
                 String args = "";
                 args += "-i " + routerIp;
@@ -621,6 +629,15 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
                     args += " -d " + sb.toString();
                 }
 
+                sb = new StringBuilder();
+                if (statRules.length > 0) {
+                    for (int i = 0; i < statRules.length; i++) {
+                        sb.append(statRules[i]).append(',');
+                    }
+
+                    args += " -s " + sb.toString();
+                }
+                
                 Pair<Boolean, String> result = SshHelper.sshExecute(controlIp, DEFAULT_DOMR_SSHPORT, "root", mgr.getSystemVMKeyFile(), null, "scp " + tmpCfgFilePath + " /etc/haproxy/haproxy.cfg.new");
 
                 if (!result.first()) {
@@ -757,7 +774,8 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
         
         VmwareManager mgr = getServiceContext().getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
 
-        VirtualDevice nic = VmwareHelper.prepareNicDevice(vmMo, networkInfo.first(), mgr.getGuestNicDeviceType(), 
+        // Note: public NIC is plugged inside system VM
+        VirtualDevice nic = VmwareHelper.prepareNicDevice(vmMo, networkInfo.first(), VirtualEthernetCardType.Vmxnet3, 
         	networkInfo.second(), vifMacAddress, -1, 1, true, true);
         vmMo.plugDevice(nic);
     }
@@ -1044,7 +1062,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
 
         VirtualMachineTO vmSpec = cmd.getVirtualMachine();
         String vmName = vmSpec.getName();
-
+        
         State state = State.Stopped;
         VmwareContext context = getServiceContext();
         try {
@@ -1055,6 +1073,10 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
                 _vms.put(vmName, State.Starting);
             }
 
+            VirtualEthernetCardType nicDeviceType = VirtualEthernetCardType.valueOf(vmSpec.getDetails().get(VmDetailConstants.NIC_ADAPTER));
+            if(s_logger.isDebugEnabled())
+            	s_logger.debug("VM " + vmName + " will be started with NIC device type: " + nicDeviceType);
+            
             VmwareHypervisorHost hyperHost = getHyperHost(context);
             VolumeTO[] disks = validateDisks(vmSpec.getDisks());
             assert (disks.length > 0);
@@ -1073,6 +1095,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
                 if (getVmState(vmMo) != State.Stopped)
                     vmMo.safePowerOff(_shutdown_waitMs);
                 vmMo.tearDownDevices(new Class<?>[] { VirtualDisk.class, VirtualEthernetCard.class });
+                vmMo.ensureScsiDeviceController();
             } else {
                 ManagedObjectReference morDc = hyperHost.getHyperHostDatacenter();
                 assert (morDc != null);
@@ -1088,6 +1111,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
                     if (getVmState(vmMo) != State.Stopped)
                         vmMo.safePowerOff(_shutdown_waitMs);
                     vmMo.tearDownDevices(new Class<?>[] { VirtualDisk.class, VirtualEthernetCard.class });
+                    vmMo.ensureScsiDeviceController();
                 } else {
                     int ramMb = (int) (vmSpec.getMinRam() / (1024 * 1024));
                     Pair<ManagedObjectReference, DatastoreMO> rootDiskDataStoreDetails = null;
@@ -1099,7 +1123,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
 
                     assert (vmSpec.getSpeed() != null) && (rootDiskDataStoreDetails != null);
                     if (!hyperHost.createBlankVm(vmName, vmSpec.getCpus(), vmSpec.getSpeed().intValue(), 
-                    		getReserveCpuMHz(vmSpec.getSpeed().intValue()), vmSpec.getLimitCpuUse(), ramMb, 
+                    		getReserveCpuMHz(vmSpec.getSpeed().intValue()), vmSpec.getLimitCpuUse(), ramMb, getReserveMemMB(ramMb),
                     	translateGuestOsIdentifier(vmSpec.getArch(), vmSpec.getOs()).toString(), rootDiskDataStoreDetails.first(), false)) {
                         throw new Exception("Failed to create VM. vmName: " + vmName);
                     }
@@ -1131,7 +1155,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
             VirtualMachineConfigSpec vmConfigSpec = new VirtualMachineConfigSpec();
             int ramMb = (int) (vmSpec.getMinRam() / (1024 * 1024));
             VmwareHelper.setBasicVmConfig(vmConfigSpec, vmSpec.getCpus(), vmSpec.getSpeed().intValue(), 
-            	getReserveCpuMHz(vmSpec.getSpeed().intValue()), ramMb, 
+            	getReserveCpuMHz(vmSpec.getSpeed().intValue()), ramMb, getReserveMemMB(ramMb),
         		translateGuestOsIdentifier(vmSpec.getArch(), vmSpec.getOs()).toString(), vmSpec.getLimitCpuUse());
             
             VirtualDeviceConfigSpec[] deviceConfigSpecArray = new VirtualDeviceConfigSpec[totalChangeDevices];
@@ -1253,14 +1277,12 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
             }
 
             VirtualDevice nic;
-            int nicDeviceNumber = -1;
             for (NicTO nicTo : sortNicsByDeviceId(nics)) {
                 s_logger.info("Prepare NIC device based on NicTO: " + _gson.toJson(nicTo));
 
                 Pair<ManagedObjectReference, String> networkInfo = prepareNetworkFromNicInfo(vmMo.getRunningHost(), nicTo);
                 
-                nic = VmwareHelper.prepareNicDevice(vmMo, networkInfo.first(), mgr.getGuestNicDeviceType(), networkInfo.second(), nicTo.getMac(), nicDeviceNumber, i + 1, true, true);
-                nicDeviceNumber = nic.getUnitNumber() + 1;
+                nic = VmwareHelper.prepareNicDevice(vmMo, networkInfo.first(), nicDeviceType, networkInfo.second(), nicTo.getMac(), i, i + 1, true, true);
                 deviceConfigSpecArray[i] = new VirtualDeviceConfigSpec();
                 deviceConfigSpecArray[i].setDevice(nic);
                 deviceConfigSpecArray[i].setOperation(VirtualDeviceConfigSpecOperation.add);
@@ -1274,14 +1296,18 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
             vmConfigSpec.setDeviceChange(deviceConfigSpecArray);
 
             // pass boot arguments through machine.id
-            OptionValue[] machineIdOptions = new OptionValue[1];
+            OptionValue[] machineIdOptions = new OptionValue[2];
             machineIdOptions[0] = new OptionValue();
             machineIdOptions[0].setKey("machine.id");
             machineIdOptions[0].setValue(vmSpec.getBootArgs());
             
+            machineIdOptions[1] = new OptionValue();
+            machineIdOptions[1].setKey("devices.hotplug");
+            machineIdOptions[1].setValue("true");
+            
             String keyboardLayout = null;
             if(vmSpec.getDetails() != null)
-            	keyboardLayout = vmSpec.getDetails().get(VirtualMachine.PARAM_KEY_KEYBOARD);
+            	keyboardLayout = vmSpec.getDetails().get(VmDetailConstants.KEYBOARD);
             vmConfigSpec.setExtraConfig(configureVnc(machineIdOptions, hyperHost, vmName, vmSpec.getVncPassword(), keyboardLayout));
 
             if (!vmMo.configureVm(vmConfigSpec)) {
@@ -1317,6 +1343,14 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     private int getReserveCpuMHz(int cpuMHz) {
     	if(this._reserveCpu) {
     		return (int)(cpuMHz / this._cpuOverprovisioningFactor);
+    	}
+    	
+    	return 0;
+    }
+    
+    private int getReserveMemMB(int memMB) {
+    	if(this._reserveMem) {
+    		return (int)(memMB / this._memOverprovisioningFactor);
     	}
     	
     	return 0;
@@ -2928,6 +2962,26 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
 
     @Override
     public StartupCommand[] initialize() {
+        String hostApiVersion = "4.1";
+    	VmwareContext context = getServiceContext();
+        try {
+            VmwareHypervisorHost hyperHost = getHyperHost(context);
+            assert(hyperHost instanceof HostMO);
+            if(!((HostMO)hyperHost).isHyperHostConnected()) {
+            	s_logger.info("Host " + hyperHost.getHyperHostName() + " is not in connected state");
+            	return null;
+            }
+            
+            AboutInfo aboutInfo = ((HostMO)hyperHost).getHostAboutInfo();
+            hostApiVersion = aboutInfo.getApiVersion();
+            
+        } catch (Exception e) {
+            String msg = "VmwareResource intialize() failed due to : " + VmwareHelper.getExceptionMessage(e);
+            s_logger.error(msg);
+            invalidateServiceContext();
+            return null;
+        }
+    	
         StartupRoutingCommand cmd = new StartupRoutingCommand();
         fillHostInfo(cmd);
 
@@ -2940,6 +2994,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
         cmd.setHypervisorType(HypervisorType.VMware);
         cmd.setStateChanges(changes);
         cmd.setCluster(_cluster);
+        cmd.setVersion(hostApiVersion);
 
         List<StartupStorageCommand> storageCmds = initializeLocalStorage();
         StartupCommand[] answerCmds = new StartupCommand[1 + storageCmds.size()];
@@ -3155,7 +3210,13 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
                         if (s_logger.isDebugEnabled()) {
                             s_logger.debug("VM " + vm + " is now missing from host report but we detected that it might be migrated to other host by vCenter");
                         }
-                        _vms.remove(vm);
+                        
+                        if(oldState != State.Starting && oldState != State.Migrating) {
+                            s_logger.debug("VM " + vm + " is now missing from host report and VM is not at starting/migrating state, remove it from host VM-sync map, oldState: " + oldState);
+                        	_vms.remove(vm);
+                        } else {
+                        	s_logger.debug("VM " + vm + " is missing from host report, but we will ignore VM " + vm + " in transition state " + oldState);
+                        }
                         continue;
                     }
 
@@ -3659,6 +3720,14 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
         value = (String) params.get("vmware.reserve.cpu");
         if(value != null && value.equalsIgnoreCase("true"))
         	_reserveCpu = true;
+        
+        value = (String) params.get("mem.overprovisioning.factor");
+        if(value != null)
+        	_memOverprovisioningFactor = Float.parseFloat(value);
+        
+        value = (String) params.get("vmware.reserve.mem");
+        if(value != null && value.equalsIgnoreCase("true"))
+        	_reserveMem = true;
 
         String[] tokens = _guid.split("@");
         _vCenterAddress = tokens[1];

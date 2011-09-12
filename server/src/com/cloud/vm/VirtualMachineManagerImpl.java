@@ -218,7 +218,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
     protected Adapters<DeploymentPlanner> _planners;
 
     @Inject(adapter = HostAllocator.class)
-    protected Adapters<HostAllocator>                                    _hostAllocators;
+    protected Adapters<HostAllocator> _hostAllocators;
 
     Map<VirtualMachine.Type, VirtualMachineGuru<? extends VMInstanceVO>> _vmGurus = new HashMap<VirtualMachine.Type, VirtualMachineGuru<? extends VMInstanceVO>>();
     protected StateMachine2<State, VirtualMachine.Event, VirtualMachine> _stateMachine;
@@ -1122,7 +1122,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("VM is not Running, unable to migrate the vm " + vm);
             }
-            throw new VirtualMachineMigrationException("VM is not Running, unable to migrate the vm currently " + vm);
+            throw new VirtualMachineMigrationException("VM is not Running, unable to migrate the vm currently " + vm + " , current state: " + vm.getState().toString());
         }
 
         short alertType = AlertManager.ALERT_TYPE_USERVM_MIGRATE;
@@ -1594,13 +1594,20 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         		}
         	}
         	
-            if(vm.getHostId() == null || hostId != vm.getHostId()) {
+        	if(serverState == State.Running) {
                 try {
-                    stateTransitTo(vm, VirtualMachine.Event.AgentReportMigrated, hostId);
+	        		if(hostId != vm.getHostId()) {
+	                    if (s_logger.isDebugEnabled()) {
+	                        s_logger.debug("detected host change when VM " + vm + " is at running state, VM could be live-migrated externally from host " 
+	                        	+ vm.getHostId() + " to host " + hostId);
+	                    }
+	        			
+	            		stateTransitTo(vm, VirtualMachine.Event.AgentReportMigrated, hostId);
+	        		}
                 } catch (NoTransitionException e) {
                     s_logger.warn(e.getMessage());
                 }
-            }
+        	}
         }
 
         if (agentState == serverState) {

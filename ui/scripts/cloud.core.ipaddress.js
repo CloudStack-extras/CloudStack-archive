@@ -307,14 +307,14 @@ function afterLoadIpJSP() {
 	    //*** Firewall tab (begin) ***
 	    var $createFirewallRow = $("#tab_content_firewall").find("#create_firewall_row");     
 	  
-	    $createFirewallRow.find("#protocol").bind("click", function(event) {	
+	    $createFirewallRow.find("#protocol").bind("change", function(event) {	
 	    	if($(this).val() == null)
 	    		return true;
 	    	var protocol = $(this).val().toLowerCase();	    
 	    	if(protocol == "tcp" || protocol == "udp") {
 	    		$createFirewallRow.find("#start_port,#end_port").show();
 	    		$createFirewallRow.find("#ICMP_type,#ICMP_code").hide();
-	    		$createFirewallRow.find("#ICMP_type,#ICMP_code").val("")
+	    		$createFirewallRow.find("#ICMP_type,#ICMP_code").val("");
 	    	}
 	    	else { //protocol == icmp
 	    		$createFirewallRow.find("#ICMP_type,#ICMP_code").show();
@@ -1923,12 +1923,12 @@ function firewallJsonToTemplate(jsonObj, $template) {
 
 function refreshCreateFirewallRow() {  
 	var $createFirewallRow = $("#tab_content_firewall").find("#create_firewall_row");    
-	$createFirewallRow.find("#cidr").text("");     
-	$createFirewallRow.find("#start_port").text("");           
-	$createFirewallRow.find("#end_port").text("");    
-	$createFirewallRow.find("#ICMP_type").text("");          
-	$createFirewallRow.find("#ICMP_code").text("");    
-	$createFirewallRow.find("#protocol").click();
+	$createFirewallRow.find("#cidr").val("");     
+	$createFirewallRow.find("#start_port").val("");           
+	$createFirewallRow.find("#end_port").val("");    
+	$createFirewallRow.find("#ICMP_type").val("");          
+	$createFirewallRow.find("#ICMP_code").val("");    
+	$createFirewallRow.find("#protocol").change();
 }
 
 //***** Firewall tab (end) **********************************************************************************************************

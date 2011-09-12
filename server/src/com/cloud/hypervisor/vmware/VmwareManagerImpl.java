@@ -39,9 +39,7 @@ import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.dc.ClusterDetailsDao;
 import com.cloud.dc.ClusterVO;
 import com.cloud.dc.dao.ClusterDao;
-import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.DiscoveredWithErrorException;
-import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.host.HostVO;
 import com.cloud.host.Status;
 import com.cloud.host.dao.HostDao;
@@ -64,7 +62,6 @@ import com.cloud.org.Cluster.ClusterType;
 import com.cloud.secstorage.CommandExecLogDao;
 import com.cloud.serializer.GsonHelper;
 import com.cloud.storage.StorageLayer;
-import com.cloud.user.UserContext;
 import com.cloud.utils.FileUtil;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.Pair;
@@ -77,8 +74,6 @@ import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.Script;
 import com.cloud.vm.DomainRouterVO;
-import com.cloud.vm.VirtualMachine.State;
-import com.cloud.vm.dao.DomainRouterDao;
 import com.google.gson.Gson;
 import com.vmware.apputils.vim25.ServiceUtil;
 import com.vmware.vim25.HostConnectSpec;
@@ -106,7 +101,6 @@ public class VmwareManagerImpl implements VmwareManager, VmwareStorageMount, Lis
     @Inject ClusterManager _clusterMgr;
     @Inject CheckPointManager _checkPointMgr;
     @Inject VirtualNetworkApplianceManager _routerMgr;
-    @Inject DomainRouterDao _routerDao;
 
     String _mountParent;
     StorageLayer _storage;
@@ -118,11 +112,13 @@ public class VmwareManagerImpl implements VmwareManager, VmwareStorageMount, Lis
     String _managemetPortGroupName;
     int _additionalPortRangeStart;
     int _additionalPortRangeSize;
-    VirtualEthernetCardType _guestNicDeviceType;
     int _maxHostsPerCluster;
     
     String _cpuOverprovisioningFactor = "1";
     String _reserveCpu = "false";
+    
+    String _memOverprovisioningFactor = "1";
+    String _reserveMem = "false";
     
     Map<String, String> _storageMounts = new HashMap<String, String>();
 
@@ -234,25 +230,20 @@ public class VmwareManagerImpl implements VmwareManager, VmwareStorageMount, Lis
         _cpuOverprovisioningFactor = configDao.getValue(Config.CPUOverprovisioningFactor.key());
         if(_cpuOverprovisioningFactor == null || _cpuOverprovisioningFactor.isEmpty())
         	_cpuOverprovisioningFactor = "1";
+
+        _memOverprovisioningFactor = configDao.getValue(Config.MemOverprovisioningFactor.key());
+        if(_memOverprovisioningFactor == null || _memOverprovisioningFactor.isEmpty())
+        	_memOverprovisioningFactor = "1";
         
         _reserveCpu = configDao.getValue(Config.VmwareReserveCpu.key());
         if(_reserveCpu == null || _reserveCpu.isEmpty())
         	_reserveCpu = "false";
+        _reserveMem = configDao.getValue(Config.VmwareReserveMem.key());
+        if(_reserveMem == null || _reserveMem.isEmpty())
+        	_reserveMem = "false";
         
     	s_logger.info("Additional VNC port allocation range is settled at " + _additionalPortRangeStart + " to " + (_additionalPortRangeStart + _additionalPortRangeSize));
 
-    	value = configDao.getValue(Config.VmwareGuestNicDeviceType.key());
-    	if(value == null || "E1000".equalsIgnoreCase(value))
-    		this._guestNicDeviceType = VirtualEthernetCardType.E1000;
-    	else if("PCNet32".equalsIgnoreCase(value))
-    		this._guestNicDeviceType = VirtualEthernetCardType.PCNet32;
-    	else if("Vmxnet2".equalsIgnoreCase(value))
-    		this._guestNicDeviceType = VirtualEthernetCardType.Vmxnet2;
-    	else if("Vmxnet3".equalsIgnoreCase(value))
-    		this._guestNicDeviceType = VirtualEthernetCardType.Vmxnet3;
-    	else
-    		this._guestNicDeviceType = VirtualEthernetCardType.E1000;
-    	
         value = configDao.getValue("vmware.host.scan.interval");
         _hostScanInterval = NumbersUtil.parseLong(value, DEFAULT_HOST_SCAN_INTERVAL);
         s_logger.info("VmwareManagerImpl config - vmware.host.scan.interval: " + _hostScanInterval);
@@ -461,6 +452,8 @@ public class VmwareManagerImpl implements VmwareManager, VmwareStorageMount, Lis
         params.put("management.portgroup.name", _managemetPortGroupName);
         params.put("cpu.overprovisioning.factor", _cpuOverprovisioningFactor);
         params.put("vmware.reserve.cpu", _reserveCpu);
+        params.put("mem.overprovisioning.factor", _memOverprovisioningFactor);
+        params.put("vmware.reserve.mem", _reserveMem);
     }
 
     @Override
@@ -793,29 +786,7 @@ public class VmwareManagerImpl implements VmwareManager, VmwareStorageMount, Lis
 
     @Override
     public boolean processDisconnect(long agentId, Status state) {
-        UserContext context = UserContext.current();
-        context.setAccountId(1);
-        /* Stopped VMware Host's virtual routers */
-        HostVO host = _hostDao.findById(agentId);
-        if (host.getHypervisorType() != HypervisorType.VMware) {
-            return true;
-        }
-        List<DomainRouterVO> routers = _routerDao.listByHostId(agentId);
-        for (DomainRouterVO router : routers) {
-            try {
-                State oldState = router.getState();
-                _routerMgr.stopRouter(router.getId(), true);
-                //In case only vCenter is disconnected, we want to shut down router directly
-                if (oldState == State.Running) {
-                    shutdownRouterVM(router);
-                }
-            } catch (ResourceUnavailableException e) {
-                s_logger.warn("Fail to stop router " + router.getInstanceName() + " when host disconnected!", e);
-            } catch (ConcurrentOperationException e) {
-                s_logger.warn("Fail to stop router " + router.getInstanceName() + " when host disconnected!", e);
-            }
-        }
-        return true;
+        return false;
     }
 
     @Override
@@ -846,11 +817,6 @@ public class VmwareManagerImpl implements VmwareManager, VmwareStorageMount, Lis
     @Override
 	public Pair<Integer, Integer> getAddiionalVncPortRange() {
     	return new Pair<Integer, Integer>(_additionalPortRangeStart, _additionalPortRangeSize);
-    }
-    
-    @Override
-	public VirtualEthernetCardType getGuestNicDeviceType() {
-    	return this._guestNicDeviceType;
     }
     
     @Override

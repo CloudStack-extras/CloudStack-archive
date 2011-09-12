@@ -59,6 +59,7 @@ import com.cloud.agent.api.GetVncPortAnswer;
 import com.cloud.agent.api.GetVncPortCommand;
 import com.cloud.agent.api.storage.CopyVolumeAnswer;
 import com.cloud.agent.api.storage.CopyVolumeCommand;
+import com.cloud.agent.manager.allocator.HostAllocator;
 import com.cloud.alert.Alert;
 import com.cloud.alert.AlertVO;
 import com.cloud.alert.dao.AlertDao;
@@ -151,6 +152,8 @@ import com.cloud.dc.dao.DataCenterIpAddressDao;
 import com.cloud.dc.dao.HostPodDao;
 import com.cloud.dc.dao.PodVlanMapDao;
 import com.cloud.dc.dao.VlanDao;
+import com.cloud.deploy.DataCenterDeployment;
+import com.cloud.deploy.DeploymentPlanner.ExcludeList;
 import com.cloud.domain.Domain;
 import com.cloud.domain.DomainVO;
 import com.cloud.domain.dao.DomainDao;
@@ -174,6 +177,9 @@ import com.cloud.host.Status;
 import com.cloud.host.dao.HostDao;
 import com.cloud.host.dao.HostDetailsDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.hypervisor.HypervisorCapabilities;
+import com.cloud.hypervisor.HypervisorCapabilitiesVO;
+import com.cloud.hypervisor.dao.HypervisorCapabilitiesDao;
 import com.cloud.info.ConsoleProxyInfo;
 import com.cloud.keystore.KeystoreManager;
 import com.cloud.network.IPAddressVO;
@@ -263,6 +269,8 @@ import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.VirtualMachineManager;
+import com.cloud.vm.VirtualMachineProfile;
+import com.cloud.vm.VirtualMachineProfileImpl;
 import com.cloud.vm.dao.ConsoleProxyDao;
 import com.cloud.vm.dao.DomainRouterDao;
 import com.cloud.vm.dao.InstanceGroupDao;
@@ -331,7 +339,9 @@ public class ManagementServerImpl implements ManagementServer {
     private final UploadDao _uploadDao;
     private final SSHKeyPairDao _sshKeyPairDao;
     private final LoadBalancerDao _loadbalancerDao;
-
+    private final HypervisorCapabilitiesDao _hypervisorCapabilitiesDao;
+    private final Adapters<HostAllocator> _hostAllocators;
+    
     private final KeystoreManager _ksMgr;
 
     private final ScheduledExecutorService _eventExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("EventChecker"));
@@ -401,8 +411,14 @@ public class ManagementServerImpl implements ManagementServer {
         _itMgr = locator.getManager(VirtualMachineManager.class);
         _ksMgr = locator.getManager(KeystoreManager.class);
         _userAuthenticators = locator.getAdapters(UserAuthenticator.class);
+        _hypervisorCapabilitiesDao = locator.getDao(HypervisorCapabilitiesDao.class);
         if (_userAuthenticators == null || !_userAuthenticators.isSet()) {
             s_logger.error("Unable to find an user authenticator.");
+        }
+        
+        _hostAllocators = locator.getAdapters(HostAllocator.class);
+        if (_hostAllocators == null || !_hostAllocators.isSet()) {
+            s_logger.error("Unable to find HostAllocators");
         }
         
         _templateMgr = locator.getManager(TemplateManager.class);
@@ -1245,7 +1261,7 @@ public class ManagementServerImpl implements ManagementServer {
     }
 
     @Override
-    public Pair<List<? extends Host>, List<Long>> listHostsForMigrationOfVM(UserVm vm, Long startIndex, Long pageSize) {
+    public Pair<List<? extends Host>, List<? extends Host>> listHostsForMigrationOfVM(UserVm vm, Long startIndex, Long pageSize) {
         // access check - only root admin can migrate VM
         Account caller = UserContext.current().getCaller();
         if (caller.getType() != Account.ACCOUNT_TYPE_ADMIN) {
@@ -1297,25 +1313,36 @@ public class ManagementServerImpl implements ManagementServer {
             s_logger.debug("Other Hosts in this cluster: " + allHostsInCluster);
         }
 
-        int requiredCpu = svcOffering.getCpu() * svcOffering.getSpeed();
-        long requiredRam = svcOffering.getRamSize() * 1024L * 1024L;
-
         if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Searching for hosts in cluster: " + cluster + " having required CPU: " + requiredCpu + " and RAM:" + requiredRam);
+            s_logger.debug("Calling HostAllocators to search for hosts in cluster: " + cluster + " having enough capacity and suitable for migration");
         }
 
-        String opFactor = _configDao.getValue(Config.CPUOverprovisioningFactor.key());
-        float cpuOverprovisioningFactor = NumbersUtil.parseFloat(opFactor, 1);
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("CPUOverprovisioningFactor considered: " + cpuOverprovisioningFactor);
-        }
-        List<Long> hostsWithCapacity = _capacityDao.listHostsWithEnoughCapacity(requiredCpu, requiredRam, cluster, hostType.name(), cpuOverprovisioningFactor);
+        
+        List<Host> suitableHosts = new ArrayList<Host>();
+        Enumeration<HostAllocator> enHost = _hostAllocators.enumeration();
+        UserVmVO vmVO = (UserVmVO)vm;
+        VirtualMachineProfile<VMInstanceVO> vmProfile = new VirtualMachineProfileImpl<VMInstanceVO>(vmVO);
 
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Hosts having capacity: " + hostsWithCapacity);
+        DataCenterDeployment plan = new DataCenterDeployment(srcHost.getDataCenterId(), srcHost.getPodId(), srcHost.getClusterId(), null, null);
+        ExcludeList excludes = new ExcludeList();
+        excludes.addHost(srcHostId);
+        while (enHost.hasMoreElements()) {
+            final HostAllocator allocator = enHost.nextElement();
+            suitableHosts = allocator.allocateTo(vmProfile, plan, Host.Type.Routing, excludes, HostAllocator.RETURN_UPTO_ALL, false);
+            if (suitableHosts != null && !suitableHosts.isEmpty()) {
+                break;
+            }
         }
 
-        return new Pair<List<? extends Host>, List<Long>>(allHostsInCluster, hostsWithCapacity);
+        if(suitableHosts.isEmpty()){
+            s_logger.debug("No suitable hosts found");
+        }else{
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug("Hosts having capacity and suitable for migration: " + suitableHosts);
+            }
+        }
+
+        return new Pair<List<? extends Host>, List<? extends Host>>(allHostsInCluster, suitableHosts);
     }
 
     private List<HostVO> searchForServers(Long startIndex, Long pageSize, Object name, Object type, Object state, Object zone, Object pod, Object cluster, Object id, Object keyword,
@@ -2255,11 +2282,11 @@ public class ManagementServerImpl implements ManagementServer {
         SearchCriteria<DomainRouterVO> sc = sb.create();
         if (keyword != null) {
             SearchCriteria<DomainRouterVO> ssc = _routerDao.createSearchCriteria();
-            ssc.addOr("name", SearchCriteria.Op.LIKE, "%" + keyword + "%");
+            ssc.addOr("hostName", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("instanceName", SearchCriteria.Op.LIKE, "%" + keyword + "%");
             ssc.addOr("state", SearchCriteria.Op.LIKE, "%" + keyword + "%");
 
-            sc.addAnd("name", SearchCriteria.Op.SC, ssc);
+            sc.addAnd("hostName", SearchCriteria.Op.SC, ssc);
         }
 
         if (name != null) {
@@ -2947,7 +2974,7 @@ public class ManagementServerImpl implements ManagementServer {
         String name = cmd.getDomainName();
         Long parentId = cmd.getParentDomainId();
         Long ownerId = UserContext.current().getCaller().getId();
-        Account account = UserContext.current().getCaller();
+        Account caller = UserContext.current().getCaller();
         String networkDomain = cmd.getNetworkDomain();
 
         if (ownerId == null) {
@@ -2962,11 +2989,13 @@ public class ManagementServerImpl implements ManagementServer {
         if (parentDomain == null) {
             throw new InvalidParameterValueException("Unable to create domain " + name + ", parent domain " + parentId + " not found.");
         }
-
-        if ((account != null) && !_domainDao.isChildDomain(account.getDomainId(), parentId)) {
-            throw new PermissionDeniedException("Unable to create domain " + name + ", permission denied.");
+        
+        if (parentDomain.getState().equals(Domain.State.Inactive)) {
+            throw new CloudRuntimeException("The domain cannot be created as the parent domain " + parentDomain.getName() + " is being deleted");
         }
         
+        _accountMgr.checkAccess(caller, parentDomain);
+
         if (networkDomain != null) {
             if (!NetUtils.verifyDomainName(networkDomain)) {
                 throw new InvalidParameterValueException(
@@ -2995,41 +3024,48 @@ public class ManagementServerImpl implements ManagementServer {
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_DOMAIN_DELETE, eventDescription = "deleting Domain", async = true)
     public boolean deleteDomain(DeleteDomainCmd cmd) {
-        Account account = UserContext.current().getCaller();
+        Account caller = UserContext.current().getCaller();
         Long domainId = cmd.getId();
         Boolean cleanup = cmd.getCleanup();
-
-        if ((domainId == DomainVO.ROOT_DOMAIN) || ((account != null) && !_domainDao.isChildDomain(account.getDomainId(), domainId))) {
-            throw new PermissionDeniedException("Unable to delete domain " + domainId + ", permission denied.");
+        
+        DomainVO domain = _domainDao.findById(domainId);
+        
+        if (domain == null) {
+            throw new InvalidParameterValueException("Failed to delete domain " + domainId + ", domain not found");
+        } else if (domainId == DomainVO.ROOT_DOMAIN) {
+            throw new PermissionDeniedException("Can't delete ROOT domain");
         }
+        
+        _accountMgr.checkAccess(caller, domain);
+        
+        //mark domain as inactive
+        s_logger.debug("Marking domain id=" + domainId + " as " + Domain.State.Inactive + " before actually deleting it");
+        domain.setState(Domain.State.Inactive);
+        _domainDao.update(domainId, domain);
 
         try {
-            DomainVO domain = _domainDao.findById(domainId);
-            if (domain != null) {
-                long ownerId = domain.getAccountId();
-                if ((cleanup != null) && cleanup.booleanValue()) {
-                    boolean success = cleanupDomain(domainId, ownerId);
-                    if (!success) {
-                        s_logger.error("Failed to clean up domain resources and sub domains, delete failed on domain " + domain.getName() + " (id: " + domainId + ").");
-                        return false;
-                    }
-                } else {
+            long ownerId = domain.getAccountId();
+            if ((cleanup != null) && cleanup.booleanValue()) {
+                if (!cleanupDomain(domainId, ownerId)) {
+                    s_logger.error("Failed to clean up domain resources and sub domains, delete failed on domain " + domain.getName() + " (id: " + domainId + ").");
+                    return false;
+                }
+            } else { 
+                List<AccountVO> accountsForCleanup = _accountDao.findCleanupsForRemovedAccounts(domainId);
+                if (accountsForCleanup.isEmpty()) {
                     if (!_domainDao.remove(domainId)) {
                         s_logger.error("Delete failed on domain " + domain.getName() + " (id: " + domainId
                                 + "); please make sure all users and sub domains have been removed from the domain before deleting");
                         return false;
-                    } else {
-                        domain.setState(Domain.State.Inactive);
-                        _domainDao.update(domainId, domain);
-                    }
+                    } 
+                } else {
+                    s_logger.warn("Can't delete the domain yet because it has " + accountsForCleanup.size() + "accounts that need a cleanup");
+                    return false;
                 }
-            } else {
-                throw new InvalidParameterValueException("Failed to delete domain " + domainId + ", domain not found");
             }
+            
             cleanupDomainOfferings(domainId);
             return true;
-        } catch (InvalidParameterValueException ex) {
-            throw ex;
         } catch (Exception ex) {
             s_logger.error("Exception deleting domain with id " + domainId, ex);
             return false;
@@ -3079,21 +3115,25 @@ public class ManagementServerImpl implements ManagementServer {
             }
         }
 
-        {
-            // delete users which will also delete accounts and release resources for those accounts
-            SearchCriteria<AccountVO> sc = _accountDao.createSearchCriteria();
-            sc.addAnd("domainId", SearchCriteria.Op.EQ, domainId);
-            List<AccountVO> accounts = _accountDao.search(sc, null);
-            for (AccountVO account : accounts) {
-                success = (success && _accountMgr.deleteAccount(account, UserContext.current().getCallerUserId(), UserContext.current().getCaller()));
-                if (!success) {
-                    s_logger.warn("Failed to cleanup account id=" + account.getId() + " as a part of domain cleanup");
-                }
+        // delete users which will also delete accounts and release resources for those accounts
+        SearchCriteria<AccountVO> sc = _accountDao.createSearchCriteria();
+        sc.addAnd("domainId", SearchCriteria.Op.EQ, domainId);
+        List<AccountVO> accounts = _accountDao.search(sc, null);
+        for (AccountVO account : accounts) {
+            success = (success && _accountMgr.deleteAccount(account, UserContext.current().getCallerUserId(), UserContext.current().getCaller()));
+            if (!success) {
+                s_logger.warn("Failed to cleanup account id=" + account.getId() + " as a part of domain cleanup");
             }
         }
-
-        // delete the domain itself
-        boolean deleteDomainSuccess = _domainDao.remove(domainId);
+      
+        //don't remove the domain if there are accounts required cleanup
+        boolean deleteDomainSuccess = true;
+        List<AccountVO> accountsForCleanup = _accountDao.findCleanupsForRemovedAccounts(domainId);
+        if (accountsForCleanup.isEmpty()) {
+            deleteDomainSuccess = _domainDao.remove(domainId);
+        } else {
+            s_logger.debug("Can't delete the domain yet because it has " + accountsForCleanup.size() + "accounts that need a cleanup");
+        }
 
         return success && deleteDomainSuccess;
     }
@@ -3285,9 +3325,9 @@ public class ManagementServerImpl implements ManagementServer {
     }
 
     @Override
-    public long getMemoryUsagebyHost(Long hostId) {
+    public long getMemoryOrCpuCapacityByHost(Long hostId, short capacityType) {
 
-        CapacityVO capacity = _capacityDao.findByHostIdType(hostId, CapacityVO.CAPACITY_TYPE_MEMORY);
+        CapacityVO capacity = _capacityDao.findByHostIdType(hostId, capacityType);
         return capacity == null ? 0 : capacity.getReservedCapacity() + capacity.getUsedCapacity();
 
     }
@@ -4375,9 +4415,10 @@ public class ManagementServerImpl implements ManagementServer {
                 _asyncMgr.updateAsyncJobAttachment(job.getId(), Upload.Type.VOLUME.toString(), volumeId);
                 _asyncMgr.updateAsyncJobStatus(job.getId(), AsyncJobResult.STATUS_IN_PROGRESS, resultObj);
             }
-
+            String value = _configs.get(Config.CopyVolumeWait.toString());
+            int copyvolumewait  = NumbersUtil.parseInt(value, Integer.parseInt(Config.CopyVolumeWait.getDefaultValue()));
             // Copy the volume from the source storage pool to secondary storage
-            CopyVolumeCommand cvCmd = new CopyVolumeCommand(volume.getId(), volume.getPath(), srcPool, secondaryStorageURL, true);
+            CopyVolumeCommand cvCmd = new CopyVolumeCommand(volume.getId(), volume.getPath(), srcPool, secondaryStorageURL, true, copyvolumewait);
             CopyVolumeAnswer cvAnswer = null;
             try {
                 cvAnswer = (CopyVolumeAnswer) _storageMgr.sendToPool(srcPool, cvCmd);
@@ -4847,5 +4888,55 @@ public class ManagementServerImpl implements ManagementServer {
             s_logger.error("Error while listing Event Types", e);
         }
         return null;
+    }
+    
+    @Override
+    public List<HypervisorCapabilitiesVO> listHypervisorCapabilities(Long id, HypervisorType hypervisorType, Long startIndex, Long pageSizeVal){
+        Filter searchFilter = new Filter(HypervisorCapabilitiesVO.class, "id", true, startIndex, pageSizeVal);
+        SearchCriteria<HypervisorCapabilitiesVO> sc = _hypervisorCapabilitiesDao.createSearchCriteria();
+
+        if (id != null) {
+            sc.addAnd("id", SearchCriteria.Op.EQ, id);
+        }
+
+        if (hypervisorType != null) {
+            sc.addAnd("hypervisorType", SearchCriteria.Op.EQ, hypervisorType);
+        }
+
+        return _hypervisorCapabilitiesDao.search(sc, searchFilter);
+        
+    }
+    
+    @Override
+    public HypervisorCapabilities updateHypervisorCapabilities(Long id, Long maxGuestsLimit, Boolean securityGroupEnabled){
+        HypervisorCapabilitiesVO hpvCapabilities = _hypervisorCapabilitiesDao.findById(id, true);
+        
+        if(hpvCapabilities == null){
+            throw new InvalidParameterValueException("unable to find the hypervisor capabilities " + id);
+        }
+        
+        boolean updateNeeded = (maxGuestsLimit != null || securityGroupEnabled != null);
+        if (!updateNeeded) {
+            return hpvCapabilities;
+        }
+        
+        
+        hpvCapabilities = _hypervisorCapabilitiesDao.createForUpdate(id);
+
+        if(maxGuestsLimit != null){
+            hpvCapabilities.setMaxGuestsLimit(maxGuestsLimit);
+        }
+        
+        if(securityGroupEnabled != null){
+            hpvCapabilities.setSecurityGroupEnabled(securityGroupEnabled);
+        }
+
+        if(_hypervisorCapabilitiesDao.update(id, hpvCapabilities)){
+            hpvCapabilities = _hypervisorCapabilitiesDao.findById(id);
+            UserContext.current().setEventDetails("Hypervisor Capabilities id=" + hpvCapabilities.getId());
+            return hpvCapabilities;            
+        }else{
+            return null;
+        }
     }
 }

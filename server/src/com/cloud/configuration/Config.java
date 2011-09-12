@@ -33,6 +33,7 @@ import com.cloud.storage.StorageManager;
 import com.cloud.storage.allocator.StoragePoolAllocator;
 import com.cloud.storage.secondary.SecondaryStorageVmManager;
 import com.cloud.storage.snapshot.SnapshotManager;
+import com.cloud.template.TemplateManager;
 import com.cloud.vm.UserVmManager;
 
 public enum Config {
@@ -56,9 +57,15 @@ public enum Config {
 	TotalRetries("Storage", AgentManager.class, Integer.class, "total.retries", "4", "The number of times each command sent to a host should be retried in case of failure.", null),
 	StoragePoolMaxWaitSeconds("Storage", ManagementServer.class, Integer.class, "storage.pool.max.waitseconds", "3600", "Timeout (in seconds) to synchronize storage pool operations.", null),
 	StorageTemplateCleanupEnabled("Storage", ManagementServer.class, Boolean.class, "storage.template.cleanup.enabled", "true", "Enable/disable template cleanup activity, only take effect when overall storage cleanup is enabled", null),
-	
+	PrimaryStorageDownloadWait("Storage", TemplateManager.class, Integer.class, "primary.storage.download.wait", "10800", "In second, timeout for download template to primary storage", null),
+	CreateVolumeFromSnapshotWait("Storage", StorageManager.class, Integer.class, "create.volume.from.snapshot.wait", "10800", "In second, timeout for create template from snapshot", null),
+	CopyVolumeWait("Storage", StorageManager.class, Integer.class, "copy.volume.wait", "10800", "In second, timeout for copy volume command", null),
+	CreatePrivateTemplateFromVolumeWait("Storage", UserVmManager.class, Integer.class, "create.private.template.from.volume.wait", "10800", "In second, timeout for CreatePrivateTemplateFromVolumeCommand", null),
+	CreatePrivateTemplateFromSnapshotWait("Storage", UserVmManager.class, Integer.class, "create.private.template.from.snapshot.wait", "10800", "In second, timeout for CreatePrivateTemplateFromSnapshotCommand", null),
+	BackupSnapshotWait("Storage", StorageManager.class, Integer.class, "backup.snapshot.wait", "10800", "In second, timeout for BackupSnapshotCommand", null),
+
 	// Network
-	NetworkLBHaproxyStatsVisbility("Network", ManagementServer.class, String.class, "network.loadbalancer.haproxy.stats.visibility", "global", "Load Balancer(haproxy) stats visibilty, it can be global,guest-network,disabled", null),
+	NetworkLBHaproxyStatsVisbility("Network", ManagementServer.class, String.class, "network.loadbalancer.haproxy.stats.visibility", "global", "Load Balancer(haproxy) stats visibilty, it can take the following four parameters : global,guest-network,link-local,disabled", null),
 	NetworkLBHaproxyStatsUri("Network", ManagementServer.class, String.class, "network.loadbalancer.haproxy.stats.uri","/admin?stats","Load Balancer(haproxy) uri.",null),
 	NetworkLBHaproxyStatsAuth("Network", ManagementServer.class, String.class, "network.loadbalancer.haproxy.stats.auth","admin1:AdMiN123","Load Balancer(haproxy) authetication string in the format username:password",null),
 	NetworkLBHaproxyStatsPort("Network", ManagementServer.class, String.class, "network.loadbalancer.haproxy.stats.port","8081","Load Balancer(haproxy) stats port number.",null),		
@@ -79,7 +86,7 @@ public enum Config {
 	SecurityGroupWorkerThreads("Network", ManagementServer.class, Integer.class, "network.securitygroups.workers.pool.size", "50", "Number of worker threads processing the security group update work queue", null),
 	SecurityGroupWorkGlobalLockTimeout("Network", ManagementServer.class, Integer.class, "network.securitygroups.work.lock.timeout", "300", "Lock wait timeout (seconds) while updating the security group work queue", null),
 
-	FirewallRuleUiEnabled("Network", ManagementServer.class, Boolean.class, "firewall.rule.ui.enabled", "true", "enable/disable UI that separates firewall rules from NAT/LB rules", null),
+	FirewallRuleUiEnabled("Network", ManagementServer.class, Boolean.class, "firewall.rule.ui.enabled", "false", "enable/disable UI that separates firewall rules from NAT/LB rules", null),
 	
 	//VPN
 	RemoteAccessVpnPskLength("Network", AgentManager.class, Integer.class, "remote.access.vpn.psk.length", "24", "The length of the ipsec preshared key (minimum 8, maximum 256)", null),
@@ -87,7 +94,6 @@ public enum Config {
 	RemoteAccessVpnUserLimit("Network", AgentManager.class, String.class, "remote.access.vpn.user.limit", "8", "The maximum number of VPN users that can be created per account", null),
 	
 	// Usage
-	
 	CapacityCheckPeriod("Usage", ManagementServer.class, Integer.class, "capacity.check.period", "300000", "The interval in milliseconds between capacity checks", null),
 	StorageAllocatedCapacityThreshold("Usage", ManagementServer.class, Float.class, "storage.allocated.capacity.threshold", "0.85", "Percentage (as a value between 0 and 1) of allocated storage utilization above which alerts will be sent about low storage available.", null),
 	StorageCapacityThreshold("Usage", ManagementServer.class, Float.class, "storage.capacity.threshold", "0.85", "Percentage (as a value between 0 and 1) of storage utilization above which alerts will be sent about low storage available.", null),
@@ -153,13 +159,14 @@ public enum Config {
 	UpdateWait("Advanced", AgentManager.class, Integer.class, "update.wait", "600", "Time to wait (in seconds) before alerting on a updating agent", null),
 	Wait("Advanced", AgentManager.class, Integer.class, "wait", "1800", "Time in seconds to wait for control commands to return", null),
 	XapiWait("Advanced", AgentManager.class, Integer.class, "xapiwait", "600", "Time (in seconds) to wait for XAPI to return", null),
-    CmdsWait("Advanced", AgentManager.class, Integer.class, "cmd.wait", "7200", "Time (in seconds) to wait for some heavy time-consuming commands", null),
+	MigrateWait("Advanced", AgentManager.class, Integer.class, "migratewait", "3600", "Time (in seconds) to wait for VM migrate finish", null),
 	Workers("Advanced", AgentManager.class, Integer.class, "workers", "5", "Number of worker threads.", null),
 	MountParent("Advanced", ManagementServer.class, String.class, "mount.parent", "/var/lib/cloud/mnt", "The mount point on the Management Server for Secondary Storage.", null),
 //	UpgradeURL("Advanced", ManagementServer.class, String.class, "upgrade.url", "http://example.com:8080/client/agent/update.zip", "The upgrade URL is the URL of the management server that agents will connect to in order to automatically upgrade.", null),
 	SystemVMUseLocalStorage("Advanced", ManagementServer.class, Boolean.class, "system.vm.use.local.storage", "false", "Indicates whether to use local storage pools or shared storage pools for system VMs.", null),
     SystemVMAutoReserveCapacity("Advanced", ManagementServer.class, Boolean.class, "system.vm.auto.reserve.capacity", "true", "Indicates whether or not to automatically reserver system VM standby capacity.", null),
 	CPUOverprovisioningFactor("Advanced", ManagementServer.class, String.class, "cpu.overprovisioning.factor", "1", "Used for CPU overprovisioning calculation; available CPU will be (actualCpuCapacity * cpu.overprovisioning.factor)", null),
+	MemOverprovisioningFactor("Advanced", ManagementServer.class, String.class, "mem.overprovisioning.factor", "1", "Used for memory overprovisioning calculation", null),
 	LinkLocalIpNums("Advanced", ManagementServer.class, Integer.class, "linkLocalIp.nums", "10", "The number of link local ip that needed by domR(in power of 2)", null),
 	HypervisorList("Advanced", ManagementServer.class, String.class, "hypervisor.list", HypervisorType.KVM + "," + HypervisorType.XenServer + "," + HypervisorType.VMware + "," + HypervisorType.BareMetal + "," + HypervisorType.Ovm, "The list of hypervisors that this deployment will use.", "hypervisorList"),
 	ManagementHostIPAdr("Advanced", ManagementServer.class, String.class, "host", "localhost", "The ip address of management server", null),
@@ -199,8 +206,6 @@ public enum Config {
     ElasticLoadBalancerVmNumVcpu("Advanced", ManagementServer.class, Integer.class, "network.loadbalancer.basiczone.elb.vm.vcpu.num", "1", "Number of VCPU  for the elastic load balancer vm", null),
     ElasticLoadBalancerVmGcInterval("Advanced", ManagementServer.class, Integer.class, "network.loadbalancer.basiczone.elb.gc.interval.minutes", "30", "Garbage collection interval to destroy unused ELB vms in minutes. Minimum of 5", null),
 
-
-	
 	// XenServer
     VmAllocationAlgorithm("Advanced", ManagementServer.class, String.class, "vm.allocation.algorithm", "random", "If 'random', hosts within a pod will be randomly considered for VM/volume allocation. If 'firstfit', they will be considered on a first-fit basis.", null),
     XenPublicNetwork("Network", ManagementServer.class, String.class, "xen.public.network.device", null, "[ONLY IF THE PUBLIC NETWORK IS ON A DEDICATED NIC]:The network name label of the physical device dedicated to the public network on a XenServer host", null),
@@ -221,9 +226,10 @@ public enum Config {
     VmwareManagementPortGroup("Advanced", ManagementServer.class, String.class, "vmware.management.portgroup", "Management Network", "Specify the management network name(for ESXi hosts)", null),
     VmwareAdditionalVncPortRangeStart("Advanced", ManagementServer.class, Integer.class, "vmware.additional.vnc.portrange.start", "59000", "Start port number of additional VNC port range", null),
     VmwareAdditionalVncPortRangeSize("Advanced", ManagementServer.class, Integer.class, "vmware.additional.vnc.portrange.size", "1000", "Start port number of additional VNC port range", null),
-    VmwareGuestNicDeviceType("Advanced", ManagementServer.class, String.class, "vmware.guest.nic.device.type", "E1000", "Ethernet card type used in guest VM, valid values are E1000, PCNet32, Vmxnet2, Vmxnet3", null),
+    //VmwareGuestNicDeviceType("Advanced", ManagementServer.class, String.class, "vmware.guest.nic.device.type", "E1000", "Ethernet card type used in guest VM, valid values are E1000, PCNet32, Vmxnet2, Vmxnet3", null),
     VmwarePerClusterHostMax("Advanced", ManagementServer.class, Integer.class, "vmware.percluster.host.max", "8", "maxmium hosts per vCenter cluster(do not let it grow over 8)", "1-8"),
     VmwareReserveCpu("Advanced", ManagementServer.class, Boolean.class, "vmware.reserve.cpu", "false", "Specify whether or not to reserve CPU based on CPU overprovisioning factor", null),
+    VmwareReserveMem("Advanced", ManagementServer.class, Boolean.class, "vmware.reserve.mem", "false", "Specify whether or not to reserve memory based on memory overprovisioning factor", null),
     
     // KVM
     KvmPublicNetwork("Advanced", ManagementServer.class, String.class, "kvm.public.network.device", null, "Specify the public bridge on host for public network", null),
@@ -236,6 +242,7 @@ public enum Config {
     EnableUsageServer("Premium", ManagementServer.class, Boolean.class, "enable.usage.server", "true", "Flag for enabling usage", null),
     DirectNetworkStatsInterval("Premium", ManagementServer.class, Integer.class, "direct.network.stats.interval", "86400", "Interval (in seconds) to collect stats from Traffic Monitor", null),
     UsageSanityCheckInterval("Premium", ManagementServer.class, Integer.class, "usage.sanity.check.interval", null, "Interval (in days) to check sanity of usage data", null),
+    UsageAggregationTimezone("Premium", ManagementServer.class, String.class, "usage.aggregation.timezone", "GMT", "The timezone to use for usage stats aggregation", null),
     
 	// Hidden
 	UseSecondaryStorageVm("Hidden", ManagementServer.class, Boolean.class, "secondary.storage.vm", "false", "Deploys a VM per zone to manage secondary storage if true, otherwise secondary storage is mounted on management server", null),
@@ -273,7 +280,9 @@ public enum Config {
 	DnsBasicZoneUpdates("Advanced", NetworkManager.class, String.class, "network.dns.basiczone.updates", "all", "This parameter can take 2 values: all (default) and pod. It defines if DHCP/DNS requests have to be send to all dhcp servers in cloudstack, or only to the one in the same pod", "all,pod"),
 
 	ClusterMessageTimeOutSeconds("Advanced", ManagementServer.class, Integer.class, "cluster.message.timeout.seconds", "300", "Time (in seconds) to wait before a inter-management server message post times out.", null),
-	AgentLoadThreshold("Advanced", ManagementServer.class, Float.class, "agent.load.threshold", "0.7", "Percentage (as a value between 0 and 1) of connected agents after which agent load balancing will start happening", null);
+	AgentLoadThreshold("Advanced", ManagementServer.class, Float.class, "agent.load.threshold", "0.7", "Percentage (as a value between 0 and 1) of connected agents after which agent load balancing will start happening", null),
+	
+	JavaScriptDefaultContentType("Advanced", ManagementServer.class, String.class, "json.content.type", "text/javascript", "Http response content type for .js files (default is text/javascript)", null);
 
 	private final String _category;
 	private final Class<?> _componentClass;

@@ -13,6 +13,7 @@
     -->
   <dirname property="base.dir" file="${ant.file.Cloud Stack}/.." />
   <property name="build.dir" location="${base.dir}/build" />
+  <property name="test.classes.dir" location="${test.target.dir}/classes" />
 
   <!-- Import anything that the user wants to set-->
   <!-- Import properties files and environment variables here -->
@@ -61,8 +62,8 @@
   <property name="dep.cache.dir" location="${target.dir}/dep-cache" />
   <property name="build.log" location="${target.dir}/ant_verbose.txt" />
 
-  <property name="thirdparty.dir" location="${base.dir}/thirdparty" />
   <property name="deps.dir" location="${base.dir}/deps" />
+  <property name="tools.jar.dir" location="${base.dir}/tools/tooljars" />
 
   <!-- directories for client compilation-->
   <property name="client.dir" location="${base.dir}/client" />
@@ -148,11 +149,10 @@
   <path id="src.classpath">
   </path>
 
-  <path id="thirdparty.classpath">
-    <!--filelist files="${thirdparty.classpath}" /-->
-    <fileset dir="${thirdparty.dir}" erroronmissingdir="false">
-      <include name="*.jar" />
-    </fileset>
+  <path id="compile.deps.classpath">
+      <fileset dir="${tools.jar.dir}" erroronmissingdir="true">
+          <include name="*.jar" />
+      </fileset>
   </path>
 
   <path id="deps.classpath">
@@ -160,11 +160,15 @@
     <fileset dir="${deps.dir}" erroronmissingdir="false">
       <include name="*.jar" />
     </fileset>
+    <path refid="compile.deps.classpath" />
   </path>
 
   <path id="dist.classpath">
     <fileset dir="${target.dir}">
       <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${target.dir}/jar">
+        <include name="**/*.jar" />
     </fileset>
   </path>
 
@@ -209,7 +213,7 @@
   </target>
 
   <path id="vmware-base.classpath">
-    <path refid="thirdparty.classpath" />
+    <path refid="deps.classpath" />
     <path refid="dist.classpath" />
   </path>
   <target name="compile-vmware-base" depends="-init, compile-utils" description="Compile the VMware support library">
@@ -500,7 +504,6 @@
 
   <path id="agent.classpath">
     <path refid="deps.classpath" />
-    <path refid="thirdparty.classpath"/>
     <fileset dir="${target.dir}">
       <include name="**/${core.jar}" />
       <include name="**/${utils.jar}" />
@@ -574,6 +577,13 @@
         <include name="setup/**/*" />
       </fileset>
     </copy>
+    
+    <copy overwrite="true" todir="${jar.dir}">
+      <fileset dir="${deps.dir}">
+        <include name="vmware-*.jar" />
+      </fileset>
+    </copy>
+    
     <chmod file="${dist.dir}/deploy-agent.sh" perm="uog+xr" />
     <chmod file="${dist.dir}/deploy-server.sh" perm="uog+xr" />
   </target>
@@ -667,7 +677,7 @@
   <property name="ovm.dir" location="${base.dir}/ovm" />
   <property name="ovm-scripts.dir" location="${ovm.dir}/scripts" />
   <path id="ovm.classpath" >
-    <path refid="thirdparty.classpath" />
+    <path refid="deps.classpath" />
     <path refid="dist.classpath" />
   </path>
   <target name="compile-ovm" depends="-init, compile-server" description="Compile OVM">

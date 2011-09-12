@@ -26,6 +26,15 @@
 #
 # @VERSION@
 
+source /root/func.sh
+
+lock="biglock"
+locked=$(getLockFile $lock)
+if [ "$locked" != "1" ]
+then
+    exit 1
+fi
+
 usage() {
   printf "Usage: %s:  -i <domR eth1 ip>  -a <added public ip address ip:port> -d <removed ip:port> -f <load balancer config> -s <stats ip ip:port:cidr>  \n" $(basename $0) >&2
 }
@@ -79,7 +88,7 @@ fw_remove_backup() {
     sudo iptables -X back_load_balancer_$vif 2> /dev/null
   done
   sudo iptables -F back_lb_stats 2> /dev/null
-  sudo iptables -D INPUT -i $STAT_IF -p tcp  -j back_lb_stats 2> /dev/null
+  sudo iptables -D INPUT -p tcp  -j back_lb_stats 2> /dev/null
   sudo iptables -X back_lb_stats 2> /dev/null
 }
 fw_restore() {
@@ -90,7 +99,7 @@ fw_restore() {
     sudo iptables -E back_load_balancer_$vif load_balancer_$vif 2> /dev/null
   done
   sudo iptables -F lb_stats 2> /dev/null
-  sudo iptables -D INPUT -i $STAT_IF -p tcp  -j lb_stats 2> /dev/null
+  sudo iptables -D INPUT -p tcp  -j lb_stats 2> /dev/null
   sudo iptables -X lb_stats 2> /dev/null
   sudo iptables -E back_lb_stats lb_stats 2> /dev/null
 }
@@ -121,7 +130,7 @@ fw_entry() {
   done
   sudo iptables -E lb_stats back_lb_stats 2> /dev/null
   sudo iptables -N lb_stats 2> /dev/null
-  sudo iptables -A INPUT -i $STAT_IF -p tcp  -j lb_stats
+  sudo iptables -A INPUT  -p tcp  -j lb_stats
 
   for i in $a
   do
@@ -225,7 +234,7 @@ do
 		statsIp="$OPTARG"
 		;;
   ?)	usage
-		exit 2
+                unlock_exit 2 $lock $locked
 		;;
   esac
 done
@@ -259,8 +268,6 @@ if [ "$VIF_LIST" == "eth0"  ]
 then
    ip_entry $addedIps $removedIps
 fi
-# FIXME make the load balancer stat interface generic
-STAT_IF="eth0"
 
 # hot reconfigure haproxy
 reconfig_lb $cfgfile
@@ -273,7 +280,7 @@ then
   then
      ip_entry $removedIps $addedIps
   fi
-  exit 1
+  unlock_exit 1 $lock $locked
 fi
 
 # iptables entry to ensure that haproxy receives traffic
@@ -297,12 +304,12 @@ then
      ip_entry $removedIps $addedIps
   fi
 
-  exit 1
+  unlock_exit 1 $lock $locked
 else
   # Remove backedup iptable rules
   fw_remove_backup
 fi
  
-exit 0
+unlock_exit 0 $lock $locked
   	
 

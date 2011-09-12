@@ -2809,8 +2809,15 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         DataCenterVO zone = _dcDao.findById(zoneId);
 
         if (zone.getNetworkType() == NetworkType.Advanced) {
-            return (zone.getGatewayProvider() != null && zone.getGatewayProvider().equals(Network.Provider.JuniperSRX.getName()) &&
-                    zone.getFirewallProvider() != null && zone.getFirewallProvider().equals(Network.Provider.JuniperSRX.getName()));
+        	
+        	if (zone.getGatewayProvider() != null && zone.getGatewayProvider().equals(Network.Provider.JuniperSRX.getName()) &&
+                    zone.getFirewallProvider() != null && zone.getFirewallProvider().equals(Network.Provider.JuniperSRX.getName())) {
+        		return true;
+        	} else if (zone.getGatewayProvider() != null && zone.getLoadBalancerProvider() != null && zone.getLoadBalancerProvider().equals(Network.Provider.NetscalerMPX.getName())) {
+        		return true;
+        	} else {
+                return false;
+        	}
         } else {
             return (zone.getFirewallProvider() != null && zone.getFirewallProvider().equals(Network.Provider.JuniperSRX.getName()));
         }
@@ -3121,25 +3128,24 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             vm = _vmDao.findById(vmId);
         }
         Network network = getNetwork(networkId);
-        NetworkOffering networkOffering = _configMgr.getNetworkOffering(network.getNetworkOfferingId());
+        NetworkOffering ntwkOff = _configMgr.getNetworkOffering(network.getNetworkOfferingId());
 
-        // For default vms network offering get rate information from the service offering; for other situations get information
+        // For default userVm Default network and domR guest/public network, get rate information from the service offering; for other situations get information
         // from the network offering
-        if (vm != null && vm.getType() == Type.User && network.isDefault()) {
+        boolean isUserVmsDefaultNetwork = false;
+        boolean isDomRGuestOrPublicNetwork = false;
+        if (vm != null) {
+            if (vm.getType() == Type.User && network.isDefault()) {
+                isUserVmsDefaultNetwork = true; 
+            } else if (vm.getType() == Type.DomainRouter && ((ntwkOff.getTrafficType() == TrafficType.Public && ntwkOff.getGuestType() == null) || (ntwkOff.getGuestType() != null && ntwkOff.getTrafficType() == TrafficType.Guest))) {
+                isDomRGuestOrPublicNetwork = true;
+            }    
+        }
+        if (isUserVmsDefaultNetwork || isDomRGuestOrPublicNetwork) {
             return _configMgr.getServiceOfferingNetworkRate(vm.getServiceOfferingId());
         } else {
-            // For router's public network we use networkRate from guestNetworkOffering
-            if (vm != null && vm.getType() == Type.DomainRouter && networkOffering.getTrafficType() == TrafficType.Public && networkOffering.getGuestType() == null) {
-                List<? extends NetworkOffering> guestOfferings = _networkOfferingDao.listByTrafficTypeAndGuestType(false, TrafficType.Guest, GuestIpType.Virtual);
-                if (!guestOfferings.isEmpty()) {
-                    // We have one default guest virtual network offering now
-                    networkOffering = guestOfferings.get(0);
-                }
-            }
-
-            return _configMgr.getNetworkOfferingNetworkRate(networkOffering.getId());
+            return _configMgr.getNetworkOfferingNetworkRate(ntwkOff.getId());
         }
-
     }
 
     Random _rand = new Random(System.currentTimeMillis());
