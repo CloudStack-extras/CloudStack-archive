@@ -1851,7 +1851,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
 	        cmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, router.getPrivateIpAddress());
 	        cmd.setAccessDetail(NetworkElementCommand.ROUTER_GUEST_IP, router.getGuestIpAddress());
 	        cmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
-	        DataCenterVO dcVo = _dcDao.findById(router.getPodIdToDeployIn());
+	        DataCenterVO dcVo = _dcDao.findById(router.getDataCenterIdToDeployIn());
 	        cmd.setAccessDetail(NetworkElementCommand.ZONE_NETWORK_TYPE, dcVo.getNetworkType().toString());
 	        
 	        cmds.addCommand(cmd);
@@ -2234,9 +2234,9 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                     disconnectedRouters.add(router);
                 }
 
-                //If rules fail to apply on one domR, no need to proceed with the rest
+                //If ip fails to apply on one domR, no need to proceed with the rest
                 if (!result) {
-                    throw new ResourceUnavailableException("Unable to apply firewall rules on router ", VirtualRouter.class, router.getId());
+                    throw new ResourceUnavailableException("Unable to associate ip addresses on router ", VirtualRouter.class, router.getId());
                 }
 
             } else if (router.getState() == State.Stopped || router.getState() == State.Stopping) {

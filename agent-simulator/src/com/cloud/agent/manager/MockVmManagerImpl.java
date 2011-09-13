@@ -352,32 +352,82 @@ public class MockVmManagerImpl implements MockVmManager {
     }
 
     @Override
-    public SecurityIngressRuleAnswer AddSecurityIngressRules(SecurityIngressRulesCmd cmd) {
+    public SecurityIngressRuleAnswer AddSecurityIngressRules(SecurityIngressRulesCmd cmd, String hostGuid) {
         MockVMVO vm = _mockVmDao.findByVmName(cmd.getVmName());
         if (vm == null) {
             return new SecurityIngressRuleAnswer(cmd, false, "cant' find the vm: " + cmd.getVmName());
         }
-        
+        boolean update = logSecurityGroupAction(cmd);
          MockSecurityRulesVO rules = _mockSecurityDao.findByVmId(cmd.getVmId());
         if (rules == null) {
             rules = new MockSecurityRulesVO();
             rules.setRuleSet(cmd.stringifyRules());
             rules.setSeqNum(cmd.getSeqNum());
             rules.setSignature(cmd.getSignature());
-            rules.setVmId(vm.getId());
-            rules.setHostId(vm.getHostId());
+            rules.setVmId(cmd.getVmId());
+            rules.setHostId(hostGuid);
 
             _mockSecurityDao.persist(rules);
-        } else {
+        } else if (update){
             rules.setSeqNum(cmd.getSeqNum());
             rules.setSignature(cmd.getSignature());
             rules.setRuleSet(cmd.stringifyRules());
             rules.setVmId(cmd.getVmId());
-            rules.setHostId(vm.getHostId());
+            rules.setHostId(hostGuid);
             _mockSecurityDao.update(rules.getId(), rules);
         }
         
         return new SecurityIngressRuleAnswer(cmd);
+    }
+    
+    private boolean logSecurityGroupAction(SecurityIngressRulesCmd cmd) {
+        String action = ", do nothing";
+        String reason = ", reason=";
+        MockSecurityRulesVO rule = _mockSecurityDao.findByVmId(cmd.getVmId());
+        Long currSeqnum = rule == null? null: rule.getSeqNum();
+        String currSig = rule == null? null: rule.getSignature();
+        boolean updateSeqnoAndSig = false;
+        if (currSeqnum != null) {
+            if (cmd.getSeqNum() > currSeqnum) {
+                s_logger.info("New seqno received: " + cmd.getSeqNum() + " curr=" + currSeqnum);
+                updateSeqnoAndSig = true;
+                if (!cmd.getSignature().equals(currSig)) {
+                    s_logger.info("New seqno received: " + cmd.getSeqNum() + " curr=" + currSeqnum 
+                            + " new signature received:" + cmd.getSignature()  + " curr=" + currSig + ", updated iptables");
+                    action = ", updated iptables";
+                    reason = reason + "seqno_increased_sig_changed";
+                } else {
+                    s_logger.info("New seqno received: " + cmd.getSeqNum() + " curr=" + currSeqnum 
+                            + " no change in signature:" + cmd.getSignature() +  ", do nothing"); 
+                    reason = reason + "seqno_increased_sig_same";
+                }
+            } else if (cmd.getSeqNum() < currSeqnum) {
+                s_logger.info("Older seqno received: " + cmd.getSeqNum() + " curr=" + currSeqnum + ", do nothing");
+                reason = reason + "seqno_decreased";
+            } else {
+                if (!cmd.getSignature().equals(currSig)) {
+                    s_logger.info("Identical seqno received: " + cmd.getSeqNum()   
+                            + " new signature received:" + cmd.getSignature()  + " curr=" + currSig + ", updated iptables");
+                    action = ", updated iptables";
+                    reason = reason + "seqno_same_sig_changed";
+                    updateSeqnoAndSig = true;
+                } else {
+                    s_logger.info("Identical seqno received: " + cmd.getSeqNum() + " curr=" + currSeqnum 
+                            + " no change in signature:" + cmd.getSignature() +  ", do nothing"); 
+                    reason = reason + "seqno_same_sig_same";
+                }
+            }
+        } else {
+            s_logger.info("New seqno received: " + cmd.getSeqNum() + " old=null");
+            updateSeqnoAndSig = true;
+            action = ", updated iptables";
+            reason = ", seqno_new";
+        }
+        s_logger.info("Programmed network rules for vm " + cmd.getVmName() + " seqno=" + cmd.getSeqNum() 
+                + " signature=" + cmd.getSignature() 
+                + " guestIp=" + cmd.getGuestIp() + ", numrules="
+                + cmd.getRuleSet().length + " total cidrs=" + cmd.getTotalNumCidrs() + action + reason);
+        return updateSeqnoAndSig;
     }
 
     @Override

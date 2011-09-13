@@ -17,6 +17,8 @@
  */
 package com.cloud.agent.api;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 import com.cloud.agent.api.LogLevel.Log4jLevel;
 
 
@@ -68,6 +70,7 @@ public class SecurityIngressRulesCmd extends Command {
     String signature;
     Long seqNum;
     Long vmId;
+    Long msId;
     IpPortAndProto [] ruleSet;
 
     public SecurityIngressRulesCmd() {
@@ -84,6 +87,10 @@ public class SecurityIngressRulesCmd extends Command {
         this.signature = signature;
         this.seqNum = seqNum;
         this.vmId  = vmId;
+        if (signature == null) {
+            String stringified = stringifyRules();
+            this.signature = DigestUtils.md5Hex(stringified);
+        }
     }
 
 
@@ -142,6 +149,23 @@ public class SecurityIngressRulesCmd extends Command {
 
     public Long getVmId() {
         return vmId;
+    }
+    
+    public int getTotalNumCidrs() {
+        //useful for logging
+        int count = 0;
+        for (IpPortAndProto i: ruleSet) {
+            count += i.allowedCidrs.length;
+        }
+        return count;
+    }
+    
+    public void setMsId(long msId) {
+        this.msId = msId;
+    }
+    
+    public Long getMsId() {
+        return msId;
     }
 
 }

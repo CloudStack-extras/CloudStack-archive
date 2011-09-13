@@ -17,8 +17,11 @@
  */
 package com.cloud.network.security;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
@@ -33,11 +36,12 @@ import com.cloud.agent.api.PingRoutingWithNwGroupsCommand;
 import com.cloud.agent.api.SecurityIngressRuleAnswer;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
+import com.cloud.agent.api.SecurityIngressRuleAnswer.FailureReason;
 import com.cloud.agent.manager.Commands;
 import com.cloud.exception.AgentUnavailableException;
 import com.cloud.host.HostVO;
 import com.cloud.host.Status;
-import com.cloud.network.security.SecurityGroupWorkVO.Step;
+import com.cloud.network.security.SecurityGroupWork.Step;
 import com.cloud.network.security.dao.SecurityGroupWorkDao;
 
 /**
@@ -47,9 +51,14 @@ import com.cloud.network.security.dao.SecurityGroupWorkDao;
 public class SecurityGroupListener implements Listener {
     public static final Logger s_logger = Logger.getLogger(SecurityGroupListener.class.getName());
 
+    private static final int MAX_RETRIES_ON_FAILURE = 3;
+    private static final int MIN_TIME_BETWEEN_CLEANUPS = 30*60;//30 minutes
+    private final Random _cleanupRandom = new Random();
+
     SecurityGroupManagerImpl _securityGroupManager;
     AgentManager _agentMgr;
     SecurityGroupWorkDao _workDao;
+    Map<Long, Integer> _vmFailureCounts = new ConcurrentHashMap<Long, Integer>();
 
 
     public SecurityGroupListener(SecurityGroupManagerImpl securityGroupManager,
@@ -75,7 +84,7 @@ public class SecurityGroupListener implements Listener {
 
     @Override
     public boolean processAnswers(long agentId, long seq, Answer[] answers) {
-        Set<Long> affectedVms = new HashSet<Long>();
+        List<Long> affectedVms = new ArrayList<Long>();
         int commandNum = 0;
         for (Answer ans: answers) {
             if (ans instanceof SecurityIngressRuleAnswer) {
@@ -83,11 +92,22 @@ public class SecurityGroupListener implements Listener {
                 if (ans.getResult()) {
                     s_logger.debug("Successfully programmed rule " + ruleAnswer.toString() + " into host " + agentId);
                     _workDao.updateStep(ruleAnswer.getVmId(), ruleAnswer.getLogSequenceNumber(), Step.Done);
-
+                    recordSuccess(ruleAnswer.getVmId());
                 } else {
-                    _workDao.updateStep(ruleAnswer.getVmId(), ruleAnswer.getLogSequenceNumber(), Step.Error);
-                    s_logger.debug("Failed to program rule " + ruleAnswer.toString() + " into host " + agentId);
-                    affectedVms.add(ruleAnswer.getVmId());
+                    _workDao.updateStep(ruleAnswer.getVmId(), ruleAnswer.getLogSequenceNumber(), Step.Error);;
+                    s_logger.debug("Failed to program rule " + ruleAnswer.toString() + " into host " + agentId 
+                            +" due to " + ruleAnswer.getDetails()
+                            +" and updated  jobs");
+                    if (ruleAnswer.getReason() == FailureReason.CANNOT_BRIDGE_FIREWALL) {
+                        s_logger.debug("Not retrying security group rules for vm " + ruleAnswer.getVmId() + " on failure since host " + agentId + " cannot do bridge firewalling");
+                    } else if (ruleAnswer.getReason() == FailureReason.PROGRAMMING_FAILED){
+                        if (checkShouldRetryOnFailure(ruleAnswer.getVmId())) {
+                            s_logger.debug("Retrying security group rules on failure for vm " + ruleAnswer.getVmId());
+                            affectedVms.add(ruleAnswer.getVmId());
+                        } else {
+                            s_logger.debug("Not retrying security group rules for vm " + ruleAnswer.getVmId() + " on failure: too many retries");
+                        }
+                    }
                 }
                 commandNum++;
             }
@@ -98,6 +118,23 @@ public class SecurityGroupListener implements Listener {
         }
 
         return true;
+    }
+    
+    protected boolean checkShouldRetryOnFailure(long vmId) {
+        Integer currCount = _vmFailureCounts.get(vmId);
+        if (currCount == null) 
+            currCount = 0;
+        
+        if (currCount.intValue() < MAX_RETRIES_ON_FAILURE) {
+            _vmFailureCounts.put(vmId, ++currCount);
+            return true;
+        }
+        
+        return false;
+    }
+    
+    protected void recordSuccess(long vmId) {
+        _vmFailureCounts.remove(vmId);
     }
 
     @Override
@@ -124,13 +161,15 @@ public class SecurityGroupListener implements Listener {
         if (cmd instanceof StartupRoutingCommand) {
             //if (Boolean.toString(true).equals(host.getDetail("can_bridge_firewall"))) {
             try {
-                CleanupNetworkRulesCmd cleanupCmd = new CleanupNetworkRulesCmd();
+                int interval = MIN_TIME_BETWEEN_CLEANUPS + _cleanupRandom.nextInt(MIN_TIME_BETWEEN_CLEANUPS/2);
+                CleanupNetworkRulesCmd cleanupCmd = new CleanupNetworkRulesCmd(interval);
                 Commands c = new Commands(cleanupCmd);
                 _agentMgr.send(host.getId(), c,  this);
                 if(s_logger.isInfoEnabled())
                     s_logger.info("Scheduled network rules cleanup, interval=" + cleanupCmd.getInterval());
             } catch (AgentUnavailableException e) {
-                s_logger.warn("Unable to schedule network rules cleanup");
+                //usually hypervisors that do not understand sec group rules.
+                s_logger.debug("Unable to schedule network rules cleanup for host " + host.getId(), e);
             }
         }
     }

@@ -48,7 +48,6 @@ public class IngressRuleDaoImpl extends GenericDaoBase<IngressRuleVO, Long> impl
     protected IngressRuleDaoImpl() {
         securityGroupIdSearch  = createSearchBuilder();
         securityGroupIdSearch.and("securityGroupId", securityGroupIdSearch.entity().getSecurityGroupId(), SearchCriteria.Op.EQ);
-        securityGroupIdSearch.and("type", securityGroupIdSearch.entity().getType(), SearchCriteria.Op.EQ);
         securityGroupIdSearch.done();
         
         allowedSecurityGroupIdSearch  = createSearchBuilder();
@@ -61,31 +60,26 @@ public class IngressRuleDaoImpl extends GenericDaoBase<IngressRuleVO, Long> impl
         protoPortsAndCidrSearch.and("startPort", protoPortsAndCidrSearch.entity().getStartPort(), SearchCriteria.Op.EQ);
         protoPortsAndCidrSearch.and("endPort", protoPortsAndCidrSearch.entity().getEndPort(), SearchCriteria.Op.EQ);
         protoPortsAndCidrSearch.and("cidr", protoPortsAndCidrSearch.entity().getAllowedSourceIpCidr(), SearchCriteria.Op.EQ);
-        protoPortsAndCidrSearch.and("type", protoPortsAndCidrSearch.entity().getType(), SearchCriteria.Op.EQ);
         protoPortsAndCidrSearch.done();
         
         protoPortsAndSecurityGroupIdSearch = createSearchBuilder();
         protoPortsAndSecurityGroupIdSearch.and("securityGroupId", protoPortsAndSecurityGroupIdSearch.entity().getSecurityGroupId(), SearchCriteria.Op.EQ);
         protoPortsAndSecurityGroupIdSearch.and("proto", protoPortsAndSecurityGroupIdSearch.entity().getProtocol(), SearchCriteria.Op.EQ);
         protoPortsAndSecurityGroupIdSearch.and("startPort", protoPortsAndSecurityGroupIdSearch.entity().getStartPort(), SearchCriteria.Op.EQ);
-        protoPortsAndSecurityGroupIdSearch.and("endPort", protoPortsAndSecurityGroupIdSearch.entity().getEndPort(), SearchCriteria.Op.EQ);   
-        protoPortsAndSecurityGroupIdSearch.and("type", protoPortsAndSecurityGroupIdSearch.entity().getType(), SearchCriteria.Op.EQ);
+        protoPortsAndSecurityGroupIdSearch.and("endPort", protoPortsAndSecurityGroupIdSearch.entity().getEndPort(), SearchCriteria.Op.EQ);        
         protoPortsAndSecurityGroupIdSearch.and("allowedNetworkId", protoPortsAndSecurityGroupIdSearch.entity().getAllowedNetworkId(), SearchCriteria.Op.EQ);
-        
 
     }
 
-    public List<IngressRuleVO> listBySecurityGroupId(long securityGroupId, int type) {
+    public List<IngressRuleVO> listBySecurityGroupId(long securityGroupId) {
         SearchCriteria<IngressRuleVO> sc = securityGroupIdSearch.create();
         sc.setParameters("securityGroupId", securityGroupId);
-		sc.setParameters("type", type);
         return listBy(sc);
     }
 
-    public int deleteBySecurityGroup(long securityGroupId,int type) {
+    public int deleteBySecurityGroup(long securityGroupId) {
         SearchCriteria<IngressRuleVO> sc = securityGroupIdSearch.create();
         sc.setParameters("securityGroupId", securityGroupId);
-		sc.setParameters("type", type);
         return expunge(sc);
     }
 
@@ -93,32 +87,29 @@ public class IngressRuleDaoImpl extends GenericDaoBase<IngressRuleVO, Long> impl
 	public List<IngressRuleVO> listByAllowedSecurityGroupId(long securityGroupId) {
 		 SearchCriteria<IngressRuleVO> sc = allowedSecurityGroupIdSearch.create();
 		 sc.setParameters("allowedNetworkId", securityGroupId);
-
 		 return listBy(sc);
 	}
 
 	@Override
 	public IngressRuleVO findByProtoPortsAndCidr(long securityGroupId, String proto, int startPort,
-			int endPort, String cidr,int type) {
+			int endPort, String cidr) {
 		SearchCriteria<IngressRuleVO> sc = protoPortsAndCidrSearch.create();
 		sc.setParameters("securityGroupId", securityGroupId);
 		sc.setParameters("proto", proto);
 		sc.setParameters("startPort", startPort);
 		sc.setParameters("endPort", endPort);
 		sc.setParameters("cidr", cidr);
-		sc.setParameters("type", type);
 		return findOneIncludingRemovedBy(sc);
 	}
 
 	@Override
 	public IngressRuleVO findByProtoPortsAndGroup(String proto, int startPort,
-			int endPort, String securityGroup,int type) {
+			int endPort, String securityGroup) {
 		SearchCriteria<IngressRuleVO> sc = protoPortsAndSecurityGroupNameSearch.create();
 		sc.setParameters("proto", proto);
 		sc.setParameters("startPort", startPort);
 		sc.setParameters("endPort", endPort);
 		sc.setJoinParameters("groupName", "groupName", securityGroup);
-		sc.setParameters("type", type);
 		return findOneIncludingRemovedBy(sc);
 	}
 
@@ -137,42 +128,39 @@ public class IngressRuleDaoImpl extends GenericDaoBase<IngressRuleVO, Long> impl
 	}
 
 	@Override
-	public int deleteByPortProtoAndGroup(long securityGroupId, String protocol, int startPort, int endPort, Long allowedGroupId,int type) {
+	public int deleteByPortProtoAndGroup(long securityGroupId, String protocol, int startPort, int endPort, Long allowedGroupId) {
 		SearchCriteria<IngressRuleVO> sc = protoPortsAndSecurityGroupIdSearch.create();
 		sc.setParameters("securityGroupId", securityGroupId);
 		sc.setParameters("proto", protocol);
 		sc.setParameters("startPort", startPort);
 		sc.setParameters("endPort", endPort);
 		sc.setParameters("allowedNetworkId", allowedGroupId);
-		sc.setParameters("type", type);
 		
         return expunge(sc);
 		
 	}
 
 	@Override
-	public int deleteByPortProtoAndCidr(long securityGroupId, String protocol, int startPort, int endPort, String cidr,int type) {
+	public int deleteByPortProtoAndCidr(long securityGroupId, String protocol, int startPort, int endPort, String cidr) {
 		SearchCriteria<IngressRuleVO> sc = protoPortsAndCidrSearch.create();
 		sc.setParameters("securityGroupId", securityGroupId);
 		sc.setParameters("proto", protocol);
 		sc.setParameters("startPort", startPort);
 		sc.setParameters("endPort", endPort);
 		sc.setParameters("cidr", cidr);
-		sc.setParameters("type", type);
 		
 		return expunge(sc);
 	}
 
 	@Override
 	public IngressRuleVO findByProtoPortsAndAllowedGroupId(long securityGroupId, String proto,
-			int startPort, int endPort, Long allowedGroupId,int type) {
+			int startPort, int endPort, Long allowedGroupId) {
 		SearchCriteria<IngressRuleVO> sc = protoPortsAndSecurityGroupIdSearch.create();
 		sc.addAnd("securityGroupId", SearchCriteria.Op.EQ, securityGroupId);
 		sc.setParameters("proto", proto);
 		sc.setParameters("startPort", startPort);
 		sc.setParameters("endPort", endPort);
 		sc.setParameters("allowedNetworkId", allowedGroupId);
-		sc.setParameters("type", type);
 		
         return findOneIncludingRemovedBy(sc);
 	}

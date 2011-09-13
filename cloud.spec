@@ -223,14 +223,10 @@ Requires: jpackage-utils
 Requires: %{name}-daemonize
 Requires: /sbin/service
 Requires: /sbin/chkconfig
+Requires: jna
 Group:     System Environment/Libraries
 
-%if 0%{?rhel} >= 6
-Requires: cloud-kvm
-Requires: cloud-qemu-img
-%else
 Requires: kvm
-%endif
 
 %if 0%{?fedora} >= 14
 Requires: cloud-qemu-kvm

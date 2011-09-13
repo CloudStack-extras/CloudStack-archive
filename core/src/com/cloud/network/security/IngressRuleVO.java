@@ -46,9 +46,6 @@ public class IngressRuleVO implements IngressRule {
 
     @Column(name = "end_port")
     private int endPort;
-    
-    @Column(name = "type")
-    private int type;
 
     @Column(name = "protocol")
     private String protocol;
@@ -67,22 +64,20 @@ public class IngressRuleVO implements IngressRule {
     public IngressRuleVO() {
     }
 
-    public IngressRuleVO(long securityGroupId, int fromPort, int toPort, String protocol, long allowedNetworkId, int type) {
+    public IngressRuleVO(long securityGroupId, int fromPort, int toPort, String protocol, long allowedNetworkId) {
         this.securityGroupId = securityGroupId;
         this.startPort = fromPort;
         this.endPort = toPort;
         this.protocol = protocol;
         this.allowedNetworkId = allowedNetworkId;
-        this.type = type;
     }
 
-    public IngressRuleVO(long securityGroupId, int fromPort, int toPort, String protocol, String allowedIpCidr, int type) {
+    public IngressRuleVO(long securityGroupId, int fromPort, int toPort, String protocol, String allowedIpCidr) {
         this.securityGroupId = securityGroupId;
         this.startPort = fromPort;
         this.endPort = toPort;
         this.protocol = protocol;
         this.allowedSourceIpCidr = allowedIpCidr;
-        this.type = type;
     }
 
     @Override
@@ -105,11 +100,6 @@ public class IngressRuleVO implements IngressRule {
         return endPort;
     }
 
-    @Override
-    public int getType() {
-        return type;
-    } 
-    
     @Override
     public String getProtocol() {
         return protocol;

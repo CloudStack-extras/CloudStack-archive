@@ -453,7 +453,6 @@ def ipset(ipsetname, proto, start, end, ips):
 def destroy_network_rules_for_vm(session, args):
     vm_name = args.pop('vmName')
     vmchain = chain_name(vm_name)
-    vmchain_egress = chain_name(vm_name) + "-egress"
     vmchain_default = chain_name_def(vm_name)
     
     delete_rules_for_vm_in_bridge_firewall_chain(vm_name)
@@ -473,11 +472,6 @@ def destroy_network_rules_for_vm(session, args):
         util.SMlog("Ignoring failure to delete  chain " + vmchain)
         
    
-    try:
-        util.pread2(['iptables', '-F', vmchain_egress])
-        util.pread2(['iptables', '-X', vmchain_egress])
-    except:
-        util.SMlog("Ignoring failure to delete  chain " + vmchain_egress)
     
     remove_rule_log_for_vm(vm_name)
     
@@ -654,7 +648,6 @@ def default_network_rules(session, args):
 
      
     vmchain =  chain_name(vm_name)
-    vmchain_egress =  chain_name(vm_name) +"-egress"
     vmchain_default = chain_name_def(vm_name)
     
     destroy_ebtables_rules(vmchain)
@@ -664,11 +657,6 @@ def default_network_rules(session, args):
         util.pread2(['iptables', '-N', vmchain])
     except:
         util.pread2(['iptables', '-F', vmchain])
-    
-    try:
-        util.pread2(['iptables', '-N', vmchain_egress])
-    except:
-        util.pread2(['iptables', '-F', vmchain_egress])
         
     try:
         util.pread2(['iptables', '-N', vmchain_default])
@@ -687,7 +675,7 @@ def default_network_rules(session, args):
 
         #don't let vm spoof its ip address
         for v in vifs:
-            util.pread2(['iptables', '-A', vmchain_default, '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', v, '--source', vm_ip, '-j', vmchain_egress])
+            util.pread2(['iptables', '-A', vmchain_default, '-m', 'physdev', '--physdev-is-bridged', '--physdev-in', v, '--source', vm_ip, '-j', 'RETURN'])
         util.pread2(['iptables', '-A', vmchain_default, '-j', vmchain])
     except:
         util.SMlog("Failed to program default rules for vm " + vm_name)
@@ -889,7 +877,7 @@ def cleanup_rules(session, args):
     instance = 'VM'
  
   try:
-    chainscmd = "iptables-save | grep '^:' | awk '{print $1}' | cut -d':' -f2 | sed 's/-def/-%s/' | sed 's/-egress//' |sort|uniq" % instance
+    chainscmd = "iptables-save | grep '^:' | awk '{print $1}' | cut -d':' -f2 | sed 's/-def/-%s/'|sort|uniq" % instance
     chains = util.pread2(['/bin/bash', '-c', chainscmd]).split('\n')
     cleaned = 0
     cleanup = []
@@ -922,7 +910,8 @@ def check_rule_log_for_vm(vmName, vmID, vmIP, domID, signature, seqno):
     vm_name = vmName;
     logfilename = "/var/run/cloud/" + vm_name +".log"
     if not os.path.exists(logfilename):
-        return [True, True, True, True, True, True]
+        util.SMlog("Failed to find logfile %s" %logfilename)
+        return [True, True, True]
         
     lines = (line.rstrip() for line in open(logfilename))
     
@@ -932,16 +921,43 @@ def check_rule_log_for_vm(vmName, vmID, vmIP, domID, signature, seqno):
             [_vmName,_vmID,_vmIP,_domID,_signature,_seqno] = line.split(',')
             break
     except:
-        util.SMlog("Failed to parse log file for vm " + vm_name)
-        remove_rule_log_for_vm(vm_name)
-        return False
+        util.SMlog("Failed to parse log file for vm " + vmName)
+        remove_rule_log_for_vm(vmName)
+        return [True, True, True]
     
-    return [(vm_name != _vmName), \
-        (vmID != _vmID), \
-        (vmIP != _vmIP), \
-        (domID != _domID), \
-        (signature != _signature), \
-        (seqno != _seqno)]
+    reprogramDefault = False
+    if (domID != _domID) or (vmID != _vmID) or (vmIP != _vmIP):
+        util.SMlog("Change in default info set of vm %s" % vmName)
+        return [True, True, True]
+    else:
+        util.SMlog("No change in default info set of vm %s" % vmName)
+    
+    reprogramChain = False
+    rewriteLog = True
+    if (int(seqno) > int(_seqno)):
+        if (_signature != signature):
+            reprogramChain = True
+            util.SMlog("Seqno increased from %s to %s: reprogamming "\
+                        "ingress rules for vm %s" % (_seqno, seqno, vmName))
+        else:
+            util.SMlog("Seqno increased from %s to %s: but no change "\
+                        "in signature for vm: skip programming ingress "\
+                        "rules %s" % (_seqno, seqno, vmName))
+    elif (int(seqno) < int(_seqno)):
+        util.SMlog("Seqno decreased from %s to %s: ignoring these "\
+                        "ingress rules for vm %s" % (_seqno, seqno, vmName))
+        rewriteLog = False
+    elif (signature != _signature):
+        util.SMlog("Seqno %s stayed the same but signature changed from "\
+                    "%s to %s for vm %s" % (seqno, _signature, signature, vmName))
+        rewriteLog = True
+        reprogramChain = True
+    else:
+        util.SMlog("Seqno and signature stayed the same: %s : ignoring these "\
+                        "ingress rules for vm %s" % (seqno, vmName))
+        rewriteLog = False
+        
+    return [reprogramDefault, reprogramChain, rewriteLog]
     
 
 @echo
@@ -983,7 +999,6 @@ def network_rules(session, args):
     vm_name = args.get('vmName')
     vm_ip = args.get('vmIP')
     vm_id = args.get('vmID')
-    type = args.get('type')
     signature = args.pop('signature')
     seqno = args.pop('seqno')
     try:
@@ -1008,26 +1023,36 @@ def network_rules(session, args):
         vifs.append(tap)
     except:
         pass
+   
+    vmchain = chain_name(vm_name)
+    reason = 'seqno_change_or_sig_change'
+    [reprogramDefault, reprogramChain, rewriteLog] = \
+             check_rule_log_for_vm (vm_name, vm_id, vm_ip, domid, signature, seqno)
     
-    if type == 'egress':
-        vmchain = chain_name(vm_name) + "-egress"
-    else:
-        vmchain = chain_name(vm_name)
-    
-    changes = check_rule_log_for_vm (vm_name, vm_id, vm_ip, domid, signature, seqno)
-    
-    if not 1 in changes:
-        util.SMlog("Rules already programmed for vm " + vm_name)
+    if not reprogramDefault and not reprogramChain:
+        util.SMlog("No changes detected between current state and received state")
+        reason = 'seqno_same_sig_same'
+        if rewriteLog:
+            reason = 'seqno_increased_sig_same'
+            write_rule_log_for_vm(vm_name, vm_id, vm_ip, domid, signature, seqno)
+        util.SMlog("Programming network rules for vm  %s seqno=%s signature=%s guestIp=%s,"\
+               " do nothing, reason=%s" % (vm_name, seqno, signature, vm_ip, reason))
         return 'true'
-    
-    if changes[1] or changes[2] or changes[3]:
+           
+    if not reprogramChain:
+        util.SMlog("###Not programming any ingress rules since no changes detected?")
+        return 'true'
+
+    if reprogramDefault:
         util.SMlog("Change detected in vmId or vmIp or domId, resetting default rules")
         default_network_rules(session, args)
-        
+        reason = 'domid_change'
+    
     rules = args.pop('rules')
     lines = rules.split(' ')
 
-    util.SMlog("    programming network rules for  IP: " + vm_ip + " vmname=" + vm_name)
+    util.SMlog("Programming network rules for vm  %s seqno=%s numrules=%s signature=%s guestIp=%s,"\
+              " update iptables, reason=%s" % (vm_name, seqno, len(lines), signature, vm_ip, reason))
     util.pread2(['iptables', '-F', vmchain])
     
     for line in lines:
@@ -1055,47 +1080,29 @@ def network_rules(session, args):
                 util.SMlog(" failed to create ipset for rule " + str(tokens))
 
             if protocol == 'all':
-                if type == 'egress':
-                    iptables = ['iptables', '-I', vmchain, '-m', 'state', '--state', 'NEW', '-m', 'set', '--match-set', ipsetname, 'dst', '-j', 'DROP']
-                else:
-                    iptables = ['iptables', '-I', vmchain, '-m', 'state', '--state', 'NEW', '-m', 'set', '--match-set', ipsetname, 'src', '-j', 'ACCEPT']
+                iptables = ['iptables', '-I', vmchain, '-m', 'state', '--state', 'NEW', '-m', 'set', '--match-set', ipsetname, 'src', '-j', 'ACCEPT']
             elif protocol != 'icmp':
-                if type == 'egress':
-                    iptables = ['iptables', '-I', vmchain, '-p',  protocol, '-m', protocol, '--dport', range, '-m', 'state', '--state', 'NEW', '-m', 'set', '--match-set', ipsetname, 'dst', '-j', 'DROP']
-                else:
-                    iptables = ['iptables', '-I', vmchain, '-p',  protocol, '-m', protocol, '--dport', range, '-m', 'state', '--state', 'NEW', '-m', 'set', '--match-set', ipsetname, 'src', '-j', 'ACCEPT']
+                iptables = ['iptables', '-I', vmchain, '-p',  protocol, '-m', protocol, '--dport', range, '-m', 'state', '--state', 'NEW', '-m', 'set', '--match-set', ipsetname, 'src', '-j', 'ACCEPT']
             else:
                 range = start + "/" + end
                 if start == "-1":
                     range = "any"
-                    if type == 'egress':
-                        iptables = ['iptables', '-I', vmchain, '-p',  'icmp', '--icmp-type',  range,  '-m', 'set', '--match-set', ipsetname, 'dst', '-j', 'DROP']
-                    else:
-                        iptables = ['iptables', '-I', vmchain, '-p',  'icmp', '--icmp-type',  range,  '-m', 'set', '--match-set', ipsetname, 'src', '-j', 'ACCEPT']
+                    iptables = ['iptables', '-I', vmchain, '-p',  'icmp', '--icmp-type',  range,  '-m', 'set', '--match-set', ipsetname, 'src', '-j', 'ACCEPT']
             util.pread2(iptables)
             util.SMlog(iptables)
         
         if allow_any and protocol != 'all':
             if protocol != 'icmp':
-                if type == 'egress':
-                    iptables = ['iptables', '-I', vmchain, '-p',  protocol, '-m', protocol, '--dport', range, '-m', 'state', '--state', 'NEW', '-j', 'DROP']
-                else:
-                    iptables = ['iptables', '-I', vmchain, '-p',  protocol, '-m', protocol, '--dport', range, '-m', 'state', '--state', 'NEW', '-j', 'ACCEPT']
+                iptables = ['iptables', '-I', vmchain, '-p',  protocol, '-m', protocol, '--dport', range, '-m', 'state', '--state', 'NEW', '-j', 'ACCEPT']
             else:
                 range = start + "/" + end
                 if start == "-1":
                     range = "any"
-                    if type == 'egress':
-                        iptables = ['iptables', '-I', vmchain, '-p',  'icmp', '--icmp-type',  range, '-j', 'DROP']
-                    else:
-                        iptables = ['iptables', '-I', vmchain, '-p',  'icmp', '--icmp-type',  range, '-j', 'ACCEPT']
+                    iptables = ['iptables', '-I', vmchain, '-p',  'icmp', '--icmp-type',  range, '-j', 'ACCEPT']
             util.pread2(iptables)
             util.SMlog(iptables)
             
-    if type == 'egress':
-        util.pread2(['iptables', '-A', vmchain, '-j', 'ACCEPT'])
-    else:
-        util.pread2(['iptables', '-A', vmchain, '-j', 'DROP'])
+    util.pread2(['iptables', '-A', vmchain, '-j', 'DROP'])
 
     if write_rule_log_for_vm(vm_name, vm_id, vm_ip, domid, signature, seqno) == False:
         return 'false'
@@ -1119,7 +1126,6 @@ def checkRouter(session, args):
     return txt
 
 if __name__ == "__main__":
-
      XenAPIPlugin.dispatch({"pingtest": pingtest, "setup_iscsi":setup_iscsi, "gethostvmstats": gethostvmstats, 
                             "getvncport": getvncport, "getgateway": getgateway, "preparemigration": preparemigration, 
                             "setIptables": setIptables, "pingdomr": pingdomr, "pingxenserver": pingxenserver,  

@@ -2390,9 +2390,8 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         }
 
         // check if we have available pools for vm deployment
-        List<StoragePoolVO> availablePools = _storagePoolDao.listByStatus(StoragePoolStatus.Up);
-
-        if (availablePools == null || availablePools.size() < 1) {
+        long availablePools = _storagePoolDao.countPoolsByStatus(StoragePoolStatus.Up);
+        if (availablePools  < 1) {
             throw new StorageUnavailableException("There are no available pools in the UP state for vm deployment", -1);
         }
 
@@ -3260,9 +3259,9 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             }
             throw new InvalidParameterValueException("VM is not Running, unable to migrate the vm " + vm);
         }
-        if (!vm.getHypervisorType().equals(HypervisorType.XenServer)) {
+        if (!vm.getHypervisorType().equals(HypervisorType.XenServer) && !vm.getHypervisorType().equals(HypervisorType.VMware)) {
             if (s_logger.isDebugEnabled()) {
-                s_logger.debug(vm + " is not XenServer, cannot migrate this VM.");
+                s_logger.debug(vm + " is not XenServer/VMware, cannot migrate this VM.");
             }
             throw new InvalidParameterValueException("Unsupported Hypervisor Type for VM migration, we support XenServer only");
         }
