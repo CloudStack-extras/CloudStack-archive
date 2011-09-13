@@ -1284,14 +1284,20 @@ div.detail-group.actions td {
   top: 1px;
 }
 
+#browser div.panel.selected div.toolbar {
+  border-right: 1px solid #43586B;
+}
+
+/*** Panel controls*/
 #browser div.panel div.toolbar div.panel-controls {
   float: right;
   width: 42px;
   height: 23px;
 }
 
-#browser div.panel.selected div.toolbar {
-  border-right: 1px solid #43586B;
+#browser div.panel.reduced div.toolbar div.panel-controls {
+  float: left;
+  width: 194px;
 }
 
 #browser div.panel div.toolbar div.panel-controls div.control {
@@ -1319,6 +1325,7 @@ div.detail-group.actions td {
   background-position: -617px -308px;
 }
 
+/*** Section switcher*/
 #browser div.panel div.list-view div.toolbar div.section-switcher {
   margin-top: 6px;
   margin-left: 10px;

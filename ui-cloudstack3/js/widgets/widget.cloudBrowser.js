@@ -117,7 +117,7 @@
         $('<div>').addClass('shadow')
       ).append(options.data);
 
-
+      if (options.maximized) $panel.addClass('always-maximized');
       if (complete) complete($container, $panel, options.maximized);
 
       return $panel;
@@ -181,8 +181,7 @@
       var $toRemove = panel.higher($container, $panel);
 
       breadcrumb.filter($toRemove).remove();
-      $toRemove.filter(':not(:last)').remove();
-      $toRemove.filter(':last').animate(
+      $toRemove.animate(
         panel.initialState($container),
         {
           duration: 500,
@@ -196,9 +195,21 @@
     },
 
     toggleMaximizePanel: function(args) {
-      this.element.cloudBrowser('selectPanel', {
-        panel: args.panel
-      });
+      var $panel = args.panel;
+      var $container = this.element;
+      var $toHide = $panel.siblings(':not(.always-maximized)');
+
+      if (args.panel.hasClass('maximized')) {
+        $panel.removeClass('maximized');
+        $panel.addClass('reduced');
+        $toHide.animate({ left: panel.position($container, {}) },
+                        { duration: 500 });
+      } else {
+        $panel.removeClass('reduced');
+        $panel.addClass('maximized');
+        $toHide.animate(panel.initialState($container),
+                        { duration: 500 });
+      }
     },
 
     // Append new panel
@@ -216,13 +227,15 @@
         function($container, $panel, maximized) {
           $panel.appendTo($container);
           breadcrumb.create($panel, args.title).appendTo('#breadcrumbs ul');
-
+          
           panel.appendToContainer(
             $container, // Container
             $panel, // Top panel
             500, // Duration
             {
               initial: function($container, $target, position, options) {
+                if ($panel.index() == 0) $panel.addClass('always-maximized');
+
                 $target.css(position);
               },
               slideIn: function($container, $target, position, complete, duration) {

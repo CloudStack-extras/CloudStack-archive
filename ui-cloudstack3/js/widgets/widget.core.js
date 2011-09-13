@@ -61,8 +61,6 @@
       $('#breadcrumbs').find('li:first, div.end:last').hide();
     }
 
-    $browser.cloudBrowser('toggleMaximizePanel', { panel: $panel, noAnimate: true });
-
     // Append specified widget to view
     if (data.show)
       $panel.append(data.show());
