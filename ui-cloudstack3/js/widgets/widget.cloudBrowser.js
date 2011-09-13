@@ -133,7 +133,7 @@
     /**
      * Generate new panel
      */
-    create: function($container, options, complete) {
+    create: function($container, options) {
       var $panel = $('<div>').addClass('panel').css(
         {
           position: 'absolute',
@@ -146,55 +146,14 @@
       ).append(options.data);
 
       if (options.maximized) $panel.addClass('always-maximized');
-      if (complete) complete($container, $panel, options.maximized);
 
       return $panel;
-    },
-
-    /**
-     * Add panel to container effect
-     */
-    appendToContainer: function($container, $topPanel, duration, actions, options) {
-      // Position panel
-      actions.initial($container, $topPanel, _panel.initialState($container, $topPanel));
-
-      // Reduced appearance for previous panels
-      actions.reduce(
-        $topPanel.siblings().filter(function() {
-          return $(this).index() < $topPanel.index();
-        })
-      );
-
-      // Slide-in panel
-      var position = _panel.position($container, { maximized: options.maximized });
-      actions.slideIn(
-        $container,
-        
-        // Panel to slide-in
-        $topPanel,
-
-        // Positioning
-        { left: position },
-
-        // Complete
-        function(complete) {
-          return function() {
-            complete ? complete() : function() { return false; };
-
-            actions.hide(
-              $topPanel.siblings().filter(function() {
-                return $(this).width() == $topPanel.width();
-              })
-            );
-          };
-        },
-
-        // Duration
-        $container.find('div.panel').size() > 1 ? duration : 0
-      );
     }
   };
 
+  /**
+   * Browser -- jQuery widget
+   */
   $.widget('cloudStack.cloudBrowser', {
     _init: function() {
       this.element.addClass('cloudStack-widget cloudBrowser');
@@ -251,67 +210,64 @@
      * Append new panel to end of container
      */
     addPanel: function(args) {
-      return _panel.create(
-        this.element, // Container
+      var duration = 500;
+      var $container = this.element;
+      var $panel, $reduced, targetPosition;
 
-        // Data
-        {
-          maximized: args.maximizeIfSelected,
-          data: args.data
-        },
+      // Create panel
+      $panel = _panel.create(this.element, {
+        maximized: args.maximizeIfSelected,
+        data: args.data
+      });
 
-        // Post-creation
-        function($container, $panel, maximized) {
-          if (args.parent) {
-            _breadcrumb.filter(args.parent.next()).remove();
-            $container.find(args.parent.next()).remove();
-          }
+      // Remove existing panels, if parent specified
+      if (args.parent) {
+        _breadcrumb.filter(args.parent.next()).remove();
+        $container.find(args.parent.next()).remove();
+      }
 
-          $panel.appendTo($container);
+      // Append panel
+      $panel.appendTo($container);
+      _breadcrumb.create($panel, args.title).appendTo('#breadcrumbs ul');
 
-          _breadcrumb.create($panel, args.title).appendTo('#breadcrumbs ul');
-          
-          _panel.appendToContainer(
-            $container, // Container
-            $panel, // Top panel
-            500, // Duration
-            {
-              initial: function($container, $target, position, options) {
-                if ($panel.index() == 0) $panel.addClass('always-maximized');
+      // Reduced appearance for previous panels
+      $panel.siblings().filter(function() {
+        return $(this).index() < $panel.index();
+      }).addClass('reduced');
 
-                $target.css(position);
-              },
-              slideIn: function($container, $target, position, complete, duration) {
-                var completeFn = complete(function() {
-                  args.complete ? args.complete($panel) : function() { return false; };
-                });
-
-                if (args.parent && args.parent.index() < $target.index() - 1) {
-                  // Just show immediately if this is the first panel
-                  $target.css(position);
-                  completeFn();
-                } else {
-                  $target.animate(position, {
-                    duration: duration,
-                    easing: 'easeOutCirc',
-                    complete: completeFn
-                  });
-                }
-              },
-              reduce: function($reduce) {
-                $reduce.addClass('reduced');
-              },
-              hide: function($hide) {
-                $hide.hide();
-              }
-            },
-            {
-              maximized: maximized ? true : false,
-              parent: args.parent
-            }
-          );
-        }
+      // Panel initial state
+      if ($panel.index() == 0) $panel.addClass('always-maximized');
+      $panel.css(
+        _panel.initialState($container, $panel)
       );
+
+      // Panel slide-in
+      targetPosition = _panel.position($container, {
+        maximized: args.maximizeIfSelected
+      });
+      if (!$panel.index() || (args.parent && args.parent.index() < $panel.index() - 1)) {
+        // Just show immediately if this is the first panel
+        $panel.css(
+          { left: targetPosition }
+        );
+        if (args.complete) args.complete($panel);
+      } else {
+        // Animate slide-in
+        $panel.animate({ left: targetPosition }, {
+          duration: duration,
+          easing: 'easeOutCirc',
+          complete: function() {
+            // Hide panels
+            $panel.siblings().filter(function() {
+              return $(this).width() == $panel.width();
+            });
+
+            if (args.complete) args.complete($panel);
+          }
+        });
+      };
+
+      return $panel;
     },
 
     /**
