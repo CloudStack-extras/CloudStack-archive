@@ -1,9 +1,13 @@
 (function($, cloudStack) {
   cloudStack.ui.api.browser = {};
 
-  // Breadcrumb-related functions
+  /**
+   * Breadcrumb-related functions
+   */
   var _breadcrumb = cloudStack.ui.api.browser.breadcrumb = {
-    // Generate new breadcrumb
+    /**
+     * Generate new breadcrumb
+     */
     create: function($panel, title) {
       // Attach panel as ref for breadcrumb
       return cloudStack.ui.event.elem(
@@ -18,6 +22,9 @@
       );
     },
 
+    /**
+     * Get breadcrumbs matching specified panels
+     */
     filter: function($panels) {
       var $breadcrumbs = $('#breadcrumbs ul li');
       var $result = $([]);
@@ -44,16 +51,25 @@
     }
   };
 
+  /**
+   * Container-related functions
+   */
   var _container = cloudStack.ui.api.browser.container = {
-    // Get all panels from container
+    /**
+     * Get all panels from container
+     */
     panels: function($container) {
       return $container.find('div.panel');
     }
   };
 
-  // Panel-related functions
+  /**
+   * Panel-related functions
+   */
   var _panel = cloudStack.ui.api.browser.panel = {
-    // Compute width of panel, relative to container
+    /**
+     * Compute width of panel, relative to container
+     */
     width: function($container, options) {
       options = options ? options : {};
       var width = $container.find('div.panel').size() < 1 || options.maximized == true ? 
@@ -62,13 +78,17 @@
       return width;
     },
 
-    // Get left position
+    /**
+     * Get left position
+     */
     position: function($container, options) {
       return $container.find('div.panel').size() <= 1 || options.maximized == true ?
         0 : _panel.width($container, options) - _panel.width($container, options) / 1.5;
     },
 
-    // Get the top panel z-index, for proper stacking
+    /**
+     * Get the top panel z-index, for proper stacking
+     */
     topIndex: function($container) {
       var base = 1000; // Minimum z-index
 
@@ -83,28 +103,36 @@
       ) + 1;
     },
 
-    // State when panel is outside container
+    /**
+     * State when panel is outside container
+     */
     initialState: function($container) {
       return {
         left: $container.width()
       };
     },
 
-    // Get panel and breadcrumb behind specific panel
+    /**
+     * Get panel and breadcrumb behind specific panel
+     */
     lower: function($container, $panel) {
       return _container.panels($container).filter(function() {
         return $(this).index() < $panel.index();
       });
     },
 
-    // Get panel and breadcrumb stacked above specific panel
+    /**
+     * Get panel and breadcrumb stacked above specific panel
+     */
     higher: function($container, $panel) {
       return _container.panels($container).filter(function() {
         return $(this).index() > $panel.index();
       });
     },
 
-    // Generate new panel
+    /**
+     * Generate new panel
+     */
     create: function($container, options, complete) {
       var $panel = $('<div>').addClass('panel').css(
         {
@@ -123,7 +151,9 @@
       return $panel;
     },
 
-    // Add panel to container effect
+    /**
+     * Add panel to container effect
+     */
     appendToContainer: function($container, $topPanel, duration, actions, options) {
       // Position panel
       actions.initial($container, $topPanel, _panel.initialState($container, $topPanel));
@@ -173,7 +203,9 @@
       );
     },
 
-    // Make target panel the top-most
+    /**
+     * Make target panel the top-most
+     */
     selectPanel: function(args) {
       var $panel = args.panel;
       var $container = this.element;
@@ -194,6 +226,9 @@
       $panel.show().removeClass('reduced');
     },
 
+    /**
+     * Toggle selected panel as fully expanded, hiding/showing other panels
+     */
     toggleMaximizePanel: function(args) {
       var $panel = args.panel;
       var $container = this.element;
@@ -212,7 +247,9 @@
       }
     },
 
-    // Append new panel
+    /**
+     * Append new panel to end of container
+     */
     addPanel: function(args) {
       return _panel.create(
         this.element, // Container
@@ -277,7 +314,9 @@
       );
     },
 
-    // Clear all panels
+    /**
+     * Clear all panels
+     */
     removeAllPanels: function(args) {
       this.element.find('div.panel').remove();
       $('#breadcrumbs').find('ul li').remove();
