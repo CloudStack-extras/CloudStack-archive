@@ -1,4 +1,4 @@
-(function(cloudStack) {
+(function(cloudStack, testData) {
   cloudStack.sections.events = {
     title: 'Events',
     id: 'events',
@@ -46,4 +46,4 @@
       }
     }
   };
-})(cloudStack);
+})(cloudStack, testData);

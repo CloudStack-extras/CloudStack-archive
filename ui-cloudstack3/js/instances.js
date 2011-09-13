@@ -1,4 +1,4 @@
-(function($, cloudStack) {
+(function($, cloudStack, testData) {
   cloudStack.sections.instances = {
     title: 'Instances',
     id: 'instances',
@@ -25,6 +25,44 @@
 
           action: {
             custom: cloudStack.instanceWizard({
+              dataProvider: function(args) {
+                args.response.success({
+                  data: {
+                    zones: testData.data.zones,
+                    isos: {
+                      featured: $.grep(testData.data.isos, function(elem) {
+                        return elem.isfeatured === true;
+                      }),
+                      community: [],
+                      mine: $.grep(testData.data.isos, function(elem) {
+                        return elem.account === 'admin';
+                      })
+                    },
+                    serviceOfferings: testData.data.serviceOfferings,
+                    diskOfferings: testData.data.diskOfferings,
+                    defaultNetworks: $.grep(testData.data.networks, function(elem) {
+                      return elem.isdefault === true;
+                    }),
+                    optionalNetworks: $.grep(testData.data.networks, function(elem) {
+                      return elem.isdefault === false;
+                    }),
+                    groups: [
+                      {
+                        id: '123',
+                        groupname: 'Group A'
+                      },
+                      {
+                        id: '1242',
+                        groupname: 'Group B'
+                      },
+                      {
+                        id: '125',
+                        groupname: 'Group C'
+                      }
+                    ]
+                  }
+                });
+              },
               complete: function(args) {
                 args.response.success({});
               }
@@ -309,4 +347,4 @@
       }
     }
   };
-})(jQuery, cloudStack);
+})(jQuery, cloudStack, testData);

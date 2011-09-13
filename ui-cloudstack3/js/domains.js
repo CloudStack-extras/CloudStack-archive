@@ -1,4 +1,4 @@
-(function(cloudStack) {
+(function(cloudStack, testData) {
   cloudStack.sections.domains = {
     title: 'Domains',
     id: 'domains',
@@ -20,7 +20,7 @@
             label: 'Remove domain',
             messages: {
               confirm: function(args) {
-                return 'Are you sure you want to destroy this domain?';
+                return 'Are you sure you want to destroy this domain?'
               },
               notification: function(args) {
                 return 'Removed domain: ' + args.name;
@@ -61,7 +61,7 @@
 
             messages: {
               notification: function(args) {
-                return 'Created domain';
+                return 'Created domain'
               }
             },
 
@@ -107,6 +107,42 @@
                 }
               });
             }
+          },
+          adminAccounts: {
+            title: 'Admin Accounts',
+            multiple: true,
+            fields: [
+              {
+                name: { label: 'Name' },
+                vmtotal: { label: 'VMs' },
+                iptotal: { label: 'IPs' },
+                receivedbytes: { label: 'Bytes received' },
+                sentbytes: { label: 'Bytes sent' },
+                state: { label: 'State' }
+              }
+            ],
+            dataProvider: function(args) {
+              args.response.success({
+                data: $.grep(testData.data.accounts, function(item, index) {
+                  return item.domain === 'ROOT' && index <= 5;
+                })
+              });
+            }
+          },
+          resourceLimits: {
+            title: 'Resource Limits',
+            fields: {
+              vmlimit: { label: 'Instance Limit' },
+              iplimit: { label: 'Public IP Limit' },
+              volumelimit: { label: 'Volume Limit' },
+              snapshotlimit: { label: 'Snapshot Limit' },
+              templatelimit: { label: 'Template Limit' }
+            },
+            dataProvider: function(args) {
+              args.response.success({
+                data: testData.data.accounts[4]
+              });
+            }
           }
         }
       },
@@ -121,4 +157,4 @@
       }
     }
   };
-})(cloudStack);
+})(cloudStack, testData);

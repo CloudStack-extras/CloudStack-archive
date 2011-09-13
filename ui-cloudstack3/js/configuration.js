@@ -1,4 +1,4 @@
-(function(cloudStack) {
+(function(cloudStack, testData) {
   cloudStack.sections.configuration = {
     title: 'Configuration',
     id: 'configuration',
@@ -123,4 +123,4 @@
       }
     }
   };  
-})(cloudStack);
+})(cloudStack, testData);

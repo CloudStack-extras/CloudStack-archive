@@ -1,4 +1,4 @@
-(function($, cloudStack) {
+(function($, cloudStack, testData) {
   cloudStack.sections.system = {
     title: 'System',
     id: 'system',
@@ -44,6 +44,58 @@
             }
           },
           dataProvider: testData.dataProvider.listView('zones'),
+          actions: {
+            add: {
+              pod: {
+                action: function(args) {
+                  args.response.success();
+                },
+
+                messages: {
+                  notification: function(args) {
+                    return 'Created new pod';
+                  }
+                },
+
+                createForm: {
+                  title: 'Add pod',
+                  desc: 'Please fill in the following data to add a new pod',
+                  fields: {
+                    name: {
+                      label: 'Name',
+                      validation: { required: true }
+                    },
+                    gateway: {
+                      label: 'Gateway',
+                      validation: { required: true }
+                    },
+                    netmask: {
+                      label: 'Netmask',
+                      validation: { required: true }
+                    },
+                    ipRange: {
+                      label: 'Private IP Range',
+                      range: true,
+                      validation: { required: true, number: true }
+                    }
+                  }
+                },
+
+                notification: {
+                  poll: testData.notifications.testPoll
+                }
+              },
+              cluster: {
+                
+              },
+              'primary-storage': {
+                
+              },
+              host: {
+                
+              }
+            }
+          },
           detailView: {
             pageGenerator: cloudStack.zoneChart({
               dataProvider: testData.dataProvider.detailView('zones'),
@@ -182,4 +234,4 @@
       }
     }
   };
-})($, cloudStack);
+})($, cloudStack, testData);

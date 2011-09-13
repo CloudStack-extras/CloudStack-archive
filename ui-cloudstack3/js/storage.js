@@ -1,4 +1,4 @@
-(function(cloudStack) {
+(function(cloudStack, testData) {
   cloudStack.sections.storage = {
     title: 'Storage',
     id: 'storage',
@@ -289,4 +289,4 @@
       }
     }
   };
-})(cloudStack);
+})(cloudStack, testData);

@@ -1,4 +1,4 @@
-(function(cloudStack) {
+(function(cloudStack, testData) {
   // Admin dashboard
   cloudStack.sections.dashboard = {
     title: 'Dashboard',
@@ -14,4 +14,4 @@
       return $('#template').find('div.dashboard.user').clone();
     }
   };
-})(cloudStack);
+})(cloudStack, testData);

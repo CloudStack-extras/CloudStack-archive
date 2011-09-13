@@ -1,4 +1,4 @@
-(function(cloudStack) {
+(function(cloudStack, testData) {
   cloudStack.sections.templates = {
     title: 'Templates',
     id: 'templates',
@@ -39,4 +39,4 @@
       }
     }
   };  
-})(cloudStack);
+})(cloudStack, testData);

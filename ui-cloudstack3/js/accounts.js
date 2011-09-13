@@ -1,4 +1,4 @@
-(function(cloudStack) {
+(function(cloudStack, testData) {
   cloudStack.sections.accounts = {
     title: 'Accounts',
     id: 'accounts',
@@ -15,4 +15,4 @@
       dataProvider: testData.dataProvider.listView('accounts')
     }
   };  
-})(cloudStack);
+})(cloudStack, testData);
