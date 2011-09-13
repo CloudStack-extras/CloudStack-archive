@@ -225,7 +225,13 @@
 
         // Post-creation
         function($container, $panel, maximized) {
+          if (args.parent) {
+            _breadcrumb.filter(args.parent.next()).remove();
+            $container.find(args.parent.next()).remove();
+          }
+
           $panel.appendTo($container);
+
           _breadcrumb.create($panel, args.title).appendTo('#breadcrumbs ul');
           
           _panel.appendToContainer(
