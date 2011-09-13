@@ -12,6 +12,14 @@
             .append(
               $('#template').find('div.zone-chart').clone()
             );
+
+      $(['pod', 'cluster', 'primary-storage', 'host']).each(function() {
+        $chartView.find('div.toolbar').append(
+          $('<div>').addClass('button add').addClass('add-' + this).append(
+            $('<span>').html('Add ' + this.replace('-', ' '))
+          )
+        );
+      });
       
       args.dataProvider({
         id: listViewArgs.id,

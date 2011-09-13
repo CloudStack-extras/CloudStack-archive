@@ -3641,3 +3641,8 @@ div.detail-group td.view-all div.view-all div.end {
   /*[empty]background-position:;*/
 }
 
+#browser .container .system-chart-view .toolbar .button.add {
+  float: left;
+  margin: 0 0 0 10px;
+}
+
