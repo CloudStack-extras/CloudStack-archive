@@ -2,7 +2,7 @@
   cloudStack.ui.api.browser = {};
 
   // Breadcrumb-related functions
-  var breadcrumb = cloudStack.ui.api.browser.breadcrumb = {
+  var _breadcrumb = cloudStack.ui.api.browser.breadcrumb = {
     // Generate new breadcrumb
     create: function($panel, title) {
       // Attach panel as ref for breadcrumb
@@ -44,7 +44,7 @@
     }
   };
 
-  var container = cloudStack.ui.api.browser.container = {
+  var _container = cloudStack.ui.api.browser.container = {
     // Get all panels from container
     panels: function($container) {
       return $container.find('div.panel');
@@ -52,7 +52,7 @@
   };
 
   // Panel-related functions
-  var panel = cloudStack.ui.api.browser.panel = {
+  var _panel = cloudStack.ui.api.browser.panel = {
     // Compute width of panel, relative to container
     width: function($container, options) {
       options = options ? options : {};
@@ -65,7 +65,7 @@
     // Get left position
     position: function($container, options) {
       return $container.find('div.panel').size() <= 1 || options.maximized == true ?
-        0 : panel.width($container, options) - panel.width($container, options) / 1.5;
+        0 : _panel.width($container, options) - _panel.width($container, options) / 1.5;
     },
 
     // Get the top panel z-index, for proper stacking
@@ -92,14 +92,14 @@
 
     // Get panel and breadcrumb behind specific panel
     lower: function($container, $panel) {
-      return container.panels($container).filter(function() {
+      return _container.panels($container).filter(function() {
         return $(this).index() < $panel.index();
       });
     },
 
     // Get panel and breadcrumb stacked above specific panel
     higher: function($container, $panel) {
-      return container.panels($container).filter(function() {
+      return _container.panels($container).filter(function() {
         return $(this).index() > $panel.index();
       });
     },
@@ -109,8 +109,8 @@
       var $panel = $('<div>').addClass('panel').css(
         {
           position: 'absolute',
-          width: panel.width($container, { maximized: options.maximized }),
-          zIndex: panel.topIndex($container)
+          width: _panel.width($container, { maximized: options.maximized }),
+          zIndex: _panel.topIndex($container)
         }
       ).append(
         // Shadow
@@ -126,7 +126,7 @@
     // Add panel to container effect
     appendToContainer: function($container, $topPanel, duration, actions, options) {
       // Position panel
-      actions.initial($container, $topPanel, panel.initialState($container, $topPanel));
+      actions.initial($container, $topPanel, _panel.initialState($container, $topPanel));
 
       // Reduced appearance for previous panels
       actions.reduce(
@@ -136,7 +136,7 @@
       );
 
       // Slide-in panel
-      var position = panel.position($container, { maximized: options.maximized });
+      var position = _panel.position($container, { maximized: options.maximized });
       actions.slideIn(
         $container,
         
@@ -177,12 +177,12 @@
     selectPanel: function(args) {
       var $panel = args.panel;
       var $container = this.element;
-      var $toShow = panel.lower($container, $panel);
-      var $toRemove = panel.higher($container, $panel);
+      var $toShow = _panel.lower($container, $panel);
+      var $toRemove = _panel.higher($container, $panel);
 
-      breadcrumb.filter($toRemove).remove();
+      _breadcrumb.filter($toRemove).remove();
       $toRemove.animate(
-        panel.initialState($container),
+        _panel.initialState($container),
         {
           duration: 500,
           complete: function() {
@@ -202,19 +202,19 @@
       if (args.panel.hasClass('maximized')) {
         $panel.removeClass('maximized');
         $panel.addClass('reduced');
-        $toHide.animate({ left: panel.position($container, {}) },
+        $toHide.animate({ left: _panel.position($container, {}) },
                         { duration: 500 });
       } else {
         $panel.removeClass('reduced');
         $panel.addClass('maximized');
-        $toHide.animate(panel.initialState($container),
+        $toHide.animate(_panel.initialState($container),
                         { duration: 500 });
       }
     },
 
     // Append new panel
     addPanel: function(args) {
-      return panel.create(
+      return _panel.create(
         this.element, // Container
 
         // Data
@@ -226,9 +226,9 @@
         // Post-creation
         function($container, $panel, maximized) {
           $panel.appendTo($container);
-          breadcrumb.create($panel, args.title).appendTo('#breadcrumbs ul');
+          _breadcrumb.create($panel, args.title).appendTo('#breadcrumbs ul');
           
-          panel.appendToContainer(
+          _panel.appendToContainer(
             $container, // Container
             $panel, // Top panel
             500, // Duration
