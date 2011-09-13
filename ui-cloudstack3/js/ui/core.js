@@ -1,7 +1,7 @@
 (function($, window) {
   window.cloudStack = {
     ui: {
-      api: {} // Defines API methods for UI widgets
+      widgets: {} // Defines API methods for UI widgets
     }
   };
 

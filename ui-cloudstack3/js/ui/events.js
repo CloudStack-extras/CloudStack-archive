@@ -31,6 +31,8 @@
       elem = data.elem;
 
       events[elem]($target, $widget, data);
+
+      return true;
     };
   };
 })(jQuery, cloudStack);

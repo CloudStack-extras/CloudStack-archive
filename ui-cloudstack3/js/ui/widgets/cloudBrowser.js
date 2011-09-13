@@ -1,10 +1,10 @@
 (function($, cloudStack) {
-  cloudStack.ui.api.browser = {};
+  cloudStack.ui.widgets.browser = {};
 
   /**
    * Breadcrumb-related functions
    */
-  var _breadcrumb = cloudStack.ui.api.browser.breadcrumb = {
+  var _breadcrumb = cloudStack.ui.widgets.browser.breadcrumb = {
     /**
      * Generate new breadcrumb
      */
@@ -54,7 +54,7 @@
   /**
    * Container-related functions
    */
-  var _container = cloudStack.ui.api.browser.container = {
+  var _container = cloudStack.ui.widgets.browser.container = {
     /**
      * Get all panels from container
      */
@@ -66,7 +66,7 @@
   /**
    * Panel-related functions
    */
-  var _panel = cloudStack.ui.api.browser.panel = {
+  var _panel = cloudStack.ui.widgets.browser.panel = {
     /**
      * Compute width of panel, relative to container
      */
