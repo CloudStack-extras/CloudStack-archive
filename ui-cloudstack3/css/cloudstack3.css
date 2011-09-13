@@ -1243,6 +1243,7 @@ div.detail-group.actions td {
   font-size: 11px;
   font-weight: bold;
   color: #4A5A6D;
+  margin: 0 14px 0 0;
   cursor: pointer;
   /*+text-shadow:0px 1px 1px #DEE5EA;*/
   -moz-text-shadow: 0px 1px 1px #DEE5EA;
@@ -1293,11 +1294,17 @@ div.detail-group.actions td {
   float: right;
   width: 42px;
   height: 23px;
+  display: none;
 }
 
 #browser div.panel.reduced div.toolbar div.panel-controls {
+  display: block;
   float: left;
   width: 194px;
+}
+
+#browser div.panel.maximized div.toolbar div.panel-controls {
+  display: block;
 }
 
 #browser div.panel div.toolbar div.panel-controls div.control {
@@ -3641,15 +3648,5 @@ input.error {
 }
 
 div.detail-group td.view-all div.view-all div.end {
-}
-
-#browser div.toolbar div.button.add:hover,
-#browser div.toolbar div.button.refresh:hover {
-  /*[empty]background-position:;*/
-}
-
-#browser .container .system-chart-view .toolbar .button.add {
-  float: left;
-  margin: 0 0 0 10px;
 }
 
