@@ -1494,6 +1494,15 @@ public class UserVmManagerImpl implements UserVmManager {
             return true;
         }
 
+        EventVO event = new EventVO();
+        event.setUserId(param.getUserId());
+        event.setAccountId(vm.getAccountId());
+        event.setStartId(param.getEventId());
+        event.setType(EventTypes.EVENT_VM_DESTROY);
+        event.setParameters("id="+vm.getId() + "\nvmName=" + vm.getName() + "\nsoId=" + vm.getServiceOfferingId() + "\ntId=" + vm.getTemplateId() + "\ndcId=" + vm.getDataCenterId());
+        event.setDescription("successfully destroyed VM instance : " + vm.getName());
+        _eventDao.persist(event);
+        
         // Now that the VM is destroyed, clean the network rules associated with it.
         cleanNetworkRules(param.getUserId(), vm.getId().longValue());
 
