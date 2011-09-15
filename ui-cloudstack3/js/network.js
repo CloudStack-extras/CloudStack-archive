@@ -1,4 +1,34 @@
 (function(cloudStack, testData) {
+    login();
+
+    var getIpAddresses = function(r) {        
+        $.ajax({
+	        url: createURL("listPublicIpAddresses"),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 	
+			    var items = json.listpublicipaddressesresponse.publicipaddress;
+			    if(items != null && items.length > 0) {
+				    r.response.success({data:items});		
+	            }    			
+		    }
+	    });  	
+    }
+
+	var getSecurityGroups = function(r) {        
+        $.ajax({
+	        url: createURL("listSecurityGroups"),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 	
+			    var items = json.listsecuritygroupsresponse.securitygroup;
+			    if(items != null && items.length > 0) {
+				    r.response.success({data:items});		
+	            }    			
+		    }
+	    });  	
+    }
+
   cloudStack.sections.network = {
     title: 'Network',
     id: 'network',
@@ -86,7 +116,9 @@
               }
             }
           },
-          dataProvider: testData.dataProvider.listView('network'),
+          
+		  //dataProvider: testData.dataProvider.listView('network'),
+		  dataProvider: getIpAddresses,
 
           // Detail view
           detailView: {
@@ -273,7 +305,10 @@
               }
             }
           },
-          dataProvider: testData.dataProvider.listView('securityGroups'),
+		  
+          //dataProvider: testData.dataProvider.listView('securityGroups'),
+		  dataProvider: getSecurityGroups,
+		  
           detailView: {
             name: 'Security group details',
             tabs: {

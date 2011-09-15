@@ -1,4 +1,34 @@
 (function(cloudStack, testData) {
+    login();
+
+    var getTemplates = function(r) {        
+        $.ajax({
+	        url: createURL("listTemplates&templatefilter=self"),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 	
+			    var items = json.listtemplatesresponse.template;
+			    if(items != null && items.length > 0) {
+				    r.response.success({data:items});		
+	            }    			
+		    }
+	    });  	
+    }
+	
+	var getISOs = function(r) {        
+        $.ajax({
+	        url: createURL("listIsos&isofilter=self"),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 	
+			    var items = json.listisosresponse.iso;
+			    if(items != null && items.length > 0) {
+				    r.response.success({data:items});		
+	            }    			
+		    }
+	    });  	
+    }
+
   cloudStack.sections.templates = {
     title: 'Templates',
     id: 'templates',
@@ -21,7 +51,10 @@
               }
             }
           },
-          dataProvider: testData.dataProvider.listView('templates')
+		  
+          //dataProvider: testData.dataProvider.listView('templates')
+		  dataProvider: getTemplates
+		  
         }
       },
       isos: {
@@ -34,7 +67,10 @@
             size: { label: 'Size' },
             zonename: { label: 'Zone' }
           },
-          dataProvider: testData.dataProvider.listView('isos')
+          
+		  //dataProvider: testData.dataProvider.listView('isos')
+		  dataProvider: getISOs
+		  
         }
       }
     }
