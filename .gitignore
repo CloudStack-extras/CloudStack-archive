@@ -22,3 +22,4 @@ cloud.log.*.*
 unittest
 deps/cloud.userlibraries
 *.swp
+.DS_Store

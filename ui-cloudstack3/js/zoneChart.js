@@ -12,15 +12,6 @@
             .append(
               $('#template').find('div.zone-chart').clone()
             );
-
-      $(['pod', 'cluster', 'primary-storage', 'host']).each(function() {
-        $chartView.find('div.toolbar').append(
-          $('<div>').addClass('button add').addClass('add-' + this).append(
-            $('<span>').html('Add ' + this.replace('-', ' '))
-          )
-        );
-      });
-      
       args.dataProvider({
         id: listViewArgs.id,
         response: {
@@ -39,21 +30,20 @@
               // View zone details button
               if ($target.is('ul li div.view-details')) {
                 $panel = $browser.cloudBrowser('addPanel', {
-                  title: $target.closest('li').find('div.name span').html(),
+                  title: 'Zone Details',
                   data: '',
                   noSelectPanel: true,
-                  maximizeIfSelected: true
-                });
-                $browser.cloudBrowser('toggleMaximizePanel', {
-                  panel: $panel
-                });
+                  maximizeIfSelected: true,
+                  complete: function($newPanel) {
+                    // Create detail view
+                    $.extend(args.detailView, {
+                      id: listViewArgs.id,
+                      $browser: listViewArgs.$browser
+                    });
 
-                // Create detail view
-                $.extend(args.detailView, {
-                  id: listViewArgs.id,
-                  $browser: listViewArgs.$browser
+                    $panel.detailView(args.detailView);
+                  }
                 });
-                $panel.detailView(args.detailView);
 
                 return false;
               }
@@ -64,20 +54,18 @@
                   title: $target.closest('li').find('div.name span').html(),
                   data: '',
                   noSelectPanel: true,
-                  maximizeIfSelected: true
+                  maximizeIfSelected: true,
+                  complete: function($newPanel) {
+                    $panel.listView(
+                      $.extend(cloudStack.sections.system.sections.physicalResources.subsections[
+                        $target.attr('zone-target')
+                      ], {
+                        $browser: $browser,
+                        $chartView: $chartView
+                      })
+                    );
+                  }
                 });
-                $browser.cloudBrowser('toggleMaximizePanel', {
-                  panel: $panel
-                });
-
-                $panel.listView(
-                  $.extend(cloudStack.sections.system.sections.physicalResources.subsections[
-                    $target.attr('zone-target')
-                  ], {
-                    $browser: $browser,
-                    $chartView: $chartView
-                  })
-                );
 
                 return false;
               };

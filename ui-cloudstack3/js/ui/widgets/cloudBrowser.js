@@ -13,7 +13,9 @@
       return cloudStack.ui.event.elem(
         'cloudBrowser', 'breadcrumb',
         $('<div>')
-          .append($('<li>').html(title))
+          .append(
+            $('<li>').append($('<span>').html(title))
+          )
           .append($('<div>').addClass('end'))
           .children(),
         {
@@ -90,7 +92,7 @@
      * Get the top panel z-index, for proper stacking
      */
     topIndex: function($container) {
-      var base = 1000; // Minimum z-index
+      var base = 50; // Minimum z-index
 
       return Math.max.apply(
         null,
@@ -171,7 +173,20 @@
       var $toShow = _panel.lower($container, $panel);
       var $toRemove = _panel.higher($container, $panel);
 
+      if ($panel.hasClass('maximized')) return false;
+
       _breadcrumb.filter($toRemove).remove();
+      _breadcrumb.filter($panel.siblings()).removeClass('active');
+      _breadcrumb.filter($panel).addClass('active');
+      _breadcrumb.filter($('div.panel')).find('span').animate({
+        opacity: 1
+      });
+      _breadcrumb.filter(
+        $('div.panel.maximized')
+          .removeClass('maximized')
+          .addClass('reduced')
+      ).removeClass('active maximized');
+
       $toRemove.animate(
         _panel.initialState($container),
         {
@@ -182,6 +197,9 @@
        }
       );
       $toShow.show();
+      $panel.animate({
+        left: _panel.position($container, { maximized: $panel.hasClass('always-maximized') })
+      });
       $panel.show().removeClass('reduced');
     },
 
@@ -194,13 +212,17 @@
       var $toHide = $panel.siblings(':not(.always-maximized)');
 
       if (args.panel.hasClass('maximized')) {
+        _breadcrumb.filter($panel).removeClass('maximized');
         $panel.removeClass('maximized');
         $panel.addClass('reduced');
+        _breadcrumb.filter($panel.siblings()).find('span').animate({ opacity: 1 });
         $toHide.animate({ left: _panel.position($container, {}) },
                         { duration: 500 });
       } else {
+        _breadcrumb.filter($panel).addClass('maximized');
         $panel.removeClass('reduced');
         $panel.addClass('maximized');
+        _breadcrumb.filter($panel.siblings()).find('span').animate({ opacity: 0.5 });
         $toHide.animate(_panel.initialState($container),
                         { duration: 500 });
       }
@@ -210,8 +232,9 @@
      * Append new panel to end of container
      */
     addPanel: function(args) {
-      var duration = 500;
+      var duration = args.duration ? args.duration : 500;
       var $container = this.element;
+      var $parent = args.parent;
       var $panel, $reduced, targetPosition;
 
       // Create panel
@@ -220,15 +243,25 @@
         data: args.data
       });
 
-      // Remove existing panels, if parent specified
-      if (args.parent) {
-        _breadcrumb.filter(args.parent.next()).remove();
-        $container.find(args.parent.next()).remove();
+      // Remove existing panels from parent
+      if ($parent) {
+        _breadcrumb.filter(
+          $('div.panel.maximized')
+            .removeClass('maximized')
+            .addClass('reduced')
+        ).removeClass('active maximized');
+   
+        $parent.removeClass('maximized');
+        _breadcrumb.filter($parent.next()).remove();
+        $container.find($parent.next()).remove();
       }
-
+      
       // Append panel
       $panel.appendTo($container);
-      _breadcrumb.create($panel, args.title).appendTo('#breadcrumbs ul');
+      _breadcrumb.filter($panel.siblings()).removeClass('active')
+      _breadcrumb.create($panel, args.title)
+        .addClass('active')
+        .appendTo('#breadcrumbs ul');
 
       // Reduced appearance for previous panels
       $panel.siblings().filter(function() {
@@ -245,7 +278,7 @@
       targetPosition = _panel.position($container, {
         maximized: args.maximizeIfSelected
       });
-      if (!$panel.index() || (args.parent && args.parent.index() < $panel.index() - 1)) {
+      if (!$panel.index()) {
         // Just show immediately if this is the first panel
         $panel.css(
           { left: targetPosition }

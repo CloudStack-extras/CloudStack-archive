@@ -97,15 +97,36 @@
 
       return $total;
     },
+
+    /**
+     * Set total to 0
+     */
+    resetTotal: function($popup) {
+      var $total = $popup.data('notifications-attach-to').find('div.total span');
+      var $items = $popup.find('ul li');
+      var total = $items.size();
+      var completed = $items.filter(':not(.pending)').size();
+      var newTotal = total - completed;
+
+      if (newTotal < 0) newTotal = completed;
+
+      $total.html(newTotal);
+    },
+
+    /**
+     * Remove item from notification list
+     */
     removeItem: function($popup, $item) {
       if ($item.closest('li').hasClass('pending')) return false;
 
-      var $total = $popup.data('notifications-attach-to').find('div.total span');
       $item.remove();
-      $total.html(parseInt($total.html()) - 1);
-      
+
       return true;
     },
+
+    /**
+     * Remove all completed notifications
+     */
     clear: function($popup) {
       $popup.find('ul li').each(function() {
         var $item = $(this);
@@ -158,6 +179,7 @@
         return $popup;
       },
       show: function($popup, $attachTo) {
+        notifications.resetTotal($popup);
         return notifications.popup.reposition($popup, $attachTo)
           .overlay({
             closeAction: function() {

@@ -234,9 +234,45 @@
       }
 
       // Project buttons
-      var $projectSwitcher = $target.closest('div.controls div.button.view-switcher');
+      var $defaultSwitcher = $target.closest('div.controls div.button.view-switcher .default-view');
+      if ($defaultSwitcher.size()) {
+        $container.removeClass('project-view');
+        $defaultSwitcher.closest('.view-switcher').removeClass('alt');
+        $('#navigation li.dashboard').click();
+        return false;
+      }
+
+      var $projectSwitcher = $target.closest('div.controls div.button.view-switcher .select');
       if ($projectSwitcher.size()) {
-        $projectSwitcher.toggleClass('alt');
+        $projectSwitcher.html('<span class="icon"></span>Projects');
+        $projectSwitcher.closest('.view-switcher').addClass('alt');
+        $('<div>')
+          .addClass('sample-project-view')
+          .appendTo($container)
+          .overlay()
+          .click(function(event) {
+            $container.addClass('project-view');
+            $('#navigation li.dashboard')
+              .click();
+            $('div.overlay').remove();
+            $(this).remove();
+            $('div.panel:first').children().remove()
+            $('div.panel:first')
+              .append(
+                $('<img>')
+                  .attr({ src: 'images/screens/ProjectDashboard.png' })
+                  .css({ cursor: 'pointer' })
+              );
+            $('#breadcrumbs ul')
+              .addClass('project-view')
+              .prepend(
+                $('<li>').addClass('active').append($('<span>').html('Project Name'))
+              )
+              .append(
+                $('<div>').addClass('end')
+              )
+          });
+
         return false;
       }
 

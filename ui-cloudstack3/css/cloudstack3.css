@@ -1,4 +1,4 @@
-/*[fmt]1C20-1C0D-E*/
+p/*[fmt]1C20-1C0D-E*/
 /*Base*/
 /*+clearfix {*/
 #browser div.toolbar:after,
@@ -169,6 +169,10 @@ table th div.ui-resizable-handle {
   text-shadow: 0px 1px 1px #FFFFFF;
 }
 
+#template {
+  display: none;
+}
+
 /*Notifications*/
 div.notification-box {
   width: 323px;
@@ -330,48 +334,6 @@ div.notification-box .button.close:hover {
   background-position: -4px -368px;
 }
 
-#template {
-  display: none;
-}
-
-div.panel div.list-view {
-  overflow: auto;
-  height: 91%;
-  margin-top: 30px;
-  border-bottom: 1px solid #E7E7E7;
-}
-
-div.panel div.list-view div.data-table table {
-  width: 755px;
-  margin-top: 44px;
-}
-
-div.panel div.list-view div.fixed-header {
-  position: absolute;
-  top: 28px;
-  left: 12px;
-  width: 740px;
-  height: 47px;
-  display: table;
-  background-color: #F7F7F7;
-  margin: 0;
-  z-index: 500;
-}
-
-div.panel div.list-view div.fixed-header table {
-  margin: 0;
-  /*+placement:shift 0px 18px;*/
-  position: relative;
-  left: 0px;
-  top: 18px;
-  width: 755px;
-  /*+box-shadow:0px 4px 10px #DFE1E3;*/
-  -moz-box-shadow: 0px 4px 10px #DFE1E3;
-  -webkit-box-shadow: 0px 4px 10px #DFE1E3;
-  -o-box-shadow: 0px 4px 10px #DFE1E3;
-  box-shadow: 0px 4px 10px #DFE1E3;
-}
-
 /*** Corner alert*/
 div.notification.corner-alert {
   background: #EBE8E8;
@@ -387,7 +349,7 @@ div.notification.corner-alert {
   -moz-opacity: 0.7;
   opacity: 0.7;
   overflow: hidden;
-  z-index: 8000;
+  z-index: 100;
 }
 
 div.notification.corner-alert {
@@ -421,6 +383,71 @@ div.notification.corner-alert div.message span {
   top: 10px;
 }
 
+/*List view*/
+div.panel div.list-view {
+  overflow: auto;
+  height: 91%;
+  margin-top: 30px;
+  border-bottom: 1px solid #E7E7E7;
+}
+
+div.panel div.list-view div.data-table table {
+  width: 755px;
+  margin-top: 44px;
+}
+
+div.panel div.list-view div.fixed-header {
+  position: absolute;
+  top: 28px;
+  left: 12px;
+  width: 740px;
+  height: 47px;
+  display: table;
+  background-color: #F7F7F7;
+  margin: 0;
+  z-index: 1;
+}
+
+div.panel div.list-view div.fixed-header table {
+  margin: 0;
+  /*+placement:shift 0px 18px;*/
+  position: relative;
+  left: 0px;
+  top: 18px;
+  width: 755px;
+  /*+box-shadow:0px 4px 10px #DFE1E3;*/
+  -moz-box-shadow: 0px 4px 10px #DFE1E3;
+  -webkit-box-shadow: 0px 4px 10px #DFE1E3;
+  -o-box-shadow: 0px 4px 10px #DFE1E3;
+  box-shadow: 0px 4px 10px #DFE1E3;
+}
+
+div.list-view td.state {
+  width: 129px;
+  background: url(../images/sprites.png) no-repeat -1px -452px;
+}
+
+div.list-view td.state span {
+  padding: 0 0 0 26px;
+  text-align: center;
+  width: 80px;
+  /*+text-shadow:0px 1px 1px #FFFFFF;*/
+  -moz-text-shadow: 0px 1px 1px #FFFFFF;
+  -webkit-text-shadow: 0px 1px 1px #FFFFFF;
+  -o-text-shadow: 0px 1px 1px #FFFFFF;
+  text-shadow: 0px 1px 1px #FFFFFF;
+}
+
+div.list-view td.state.on {
+  color: #008000;
+  background-position: 10px -452px;
+}
+
+div.list-view td.state.off {
+  color: #B90606;
+  background-position: 10px -488px;
+}
+
 /*Details page*/
 .detail-view {
   padding: 0 0 0 14px;
@@ -433,7 +460,7 @@ div.notification.corner-alert div.message span {
   border: none;
   overflow: hidden;
   display: inline-block;
-  z-index: 100;
+  z-index: 2;
   /*+placement:shift 0px 2px;*/
   position: relative;
   left: 0px;
@@ -820,18 +847,19 @@ div.detail-group.actions td {
 }
 
 #header div.logo {
-  width: 50%;
+  width: 35%;
   height: 100%;
   position: relative;
   float: left;
   margin: 0 0 0 5px;
-  background: transparent url(../images/logo.png) no-repeat 0px 3px;
+  background: transparent url(../images/logo.png) no-repeat 5px 0px;
 }
 
 #header div.controls {
   height: 100%;
   position: relative;
   float: right;
+  width: 614px;
 }
 
 .button {
@@ -844,7 +872,7 @@ div.detail-group.actions td {
   height: 18px;
   padding: 1px 0 0;
   margin: 8px 36px 0 62px;
-  width: 106px;
+  width: 110px;
 }
 
 #header div.notifications span {
@@ -875,11 +903,6 @@ div.detail-group.actions td {
 #header div.notifications div.total.pending {
   background-position: 0px -129px;
   font-weight: bold;
-  /*+box-shadow:0px 0px 13px #FFFFFF;*/
-  -moz-box-shadow: 0px 0px 13px #FFFFFF;
-  -webkit-box-shadow: 0px 0px 13px #FFFFFF;
-  -o-box-shadow: 0px 0px 13px #FFFFFF;
-  box-shadow: 0px 0px 13px #FFFFFF;
 }
 
 #header div.notifications div.total span {
@@ -893,10 +916,13 @@ div.detail-group.actions td {
 }
 
 #header div.view-switcher {
-  width: 253px;
+  width: 264px;
   height: 39px;
   background-position: 0px -5px;
-  display: none;
+  /*+placement:shift 0px 1px;*/
+  position: relative;
+  left: 0px;
+  top: 1px;
 }
 
 #header div.view-switcher.alt {
@@ -924,6 +950,19 @@ div.detail-group.actions td {
 
 #header div.view-switcher div.select span.icon {
   background-position: -47px 0px;
+}
+
+#header div.view-switcher.alt div.select span.icon {
+  background-position: -73px 0px;
+}
+
+#header div.view-switcher.alt div.select {
+  color: #FFFFFF;
+  /*+text-shadow:0px -1px 0px #787878;*/
+  -moz-text-shadow: 0px -1px 0px #787878;
+  -webkit-text-shadow: 0px -1px 0px #787878;
+  -o-text-shadow: 0px -1px 0px #787878;
+  text-shadow: 0px -1px 0px #787878;
 }
 
 #user {
@@ -983,6 +1022,18 @@ div.detail-group.actions td {
   top: 13px;
 }
 
+/*Sample project view*/
+.sample-project-view {
+  position: absolute;
+  background: url(../images/sample-project-view.png) no-repeat 0px 0px;
+  top: 25%;
+  left: 33%;
+  width: 421px;
+  height: 389px;
+  z-index: 200;
+  cursor: pointer;
+}
+
 /*Navigation*/
 #navigation,
 #browser {
@@ -1010,6 +1061,13 @@ div.detail-group.actions td {
 #navigation ul li:hover,
 #navigation ul li.active {
   background: url(../images/bg-nav-item-active.png);
+  background-position: 0px 0px;
+  width: 230px;
+}
+
+.project-view #navigation ul li:hover,
+.project-view #navigation ul li.active {
+  background: url(../images/bg-nav-item-active-project-view.png);
   background-position: 0px 0px;
   width: 230px;
 }
@@ -1119,6 +1177,7 @@ div.detail-group.actions td {
 }
 
 .ui-tabs div.ui-tabs-panel {
+  background: #FFFFFF;
 }
 
 #browser div.panel .shadow {
@@ -1127,7 +1186,6 @@ div.detail-group.actions td {
   top: 0px;
   left: -10px;
   position: absolute;
-  z-index: 7000;
   background: url(../images/bg-panel-shadow.png) repeat-y 0px 0px;
 }
 
@@ -1149,7 +1207,7 @@ div.detail-group.actions td {
   position: relative;
   left: 0px;
   top: -1px;
-  z-index: 1000;
+  z-index: 6;
   position: absolute;
 }
 
@@ -1182,12 +1240,12 @@ div.detail-group.actions td {
 
 #browser div.toolbar div.text-search div.search-bar {
   float: left;
-  width: 149px;
+  width: 145px;
   height: 20px;
   margin: 5px 0 0 12px;
   background: #FFFFFF;
   border: 1px solid #8B7E7E;
-  z-index: 50;
+  z-index: 4;
   position: relative;
   border-right: 1px solid #8B8989;
   /*+border-radius:3px 0 0 3px;*/
@@ -1225,7 +1283,7 @@ div.detail-group.actions td {
   position: relative;
   left: -10px;
   top: 5px;
-  z-index: 20;
+  z-index: 3;
   cursor: pointer;
 }
 
@@ -1465,6 +1523,11 @@ div.detail-group.actions td {
   width: 100%;
 }
 
+.project-view #breadcrumbs {
+  background-image: url(../images/bg-breadcrumbs-project-view.png);
+  background-position: 0px 1px;
+}
+
 #breadcrumbs div.home {
   width: 41px;
   height: 32px;
@@ -1476,6 +1539,14 @@ div.detail-group.actions td {
   top: -1px;
   cursor: pointer;
   z-index: 5;
+}
+
+.project-view #breadcrumbs div.home {
+  background-position: -61px -98px;
+}
+
+.project-view #breadcrumbs div.end {
+  background-position: -89px -98px;
 }
 
 #breadcrumbs ul li,
@@ -1500,8 +1571,12 @@ div.detail-group.actions td {
   margin: 0 0 0 2px;
 }
 
-#breadcrumbs ul li div.title,
-#breadcrumbs div.active-project div.title {
+.project-view #breadcrumbs ul li {
+  background: url(../images/bg-breadcrumb-project-view.png) 0px -2px;
+}
+
+#breadcrumbs ul li,
+#breadcrumbs div.active-project {
   /*+placement:shift 0px 0px;*/
   position: relative;
   left: 0px;
@@ -1515,16 +1590,15 @@ div.detail-group.actions td {
   font-weight: bold;
 }
 
-#breadcrumbs ul li:hover div.title,
-#breadcrumbs ul li.active div.title,
-#breadcrumbs ul li.maximized div.title {
+#breadcrumbs ul li:hover,
+#breadcrumbs ul li.active,
+#breadcrumbs ul li.maximized {
   color: #FFFFFF;
-  /*+text-shadow:inherit;*/
-  -moz-text-shadow: inherit;
-  -webkit-text-shadow: inherit;
-  -o-text-shadow: inherit;
-  text-shadow: inherit;
-  font-weight: bold;
+  /*+text-shadow:0px 1px 1px #000000;*/
+  -moz-text-shadow: 0px 1px 1px #000000;
+  -webkit-text-shadow: 0px 1px 1px #000000;
+  -o-text-shadow: 0px 1px 1px #000000;
+  text-shadow: 0px 1px 1px #000000;
   font-size: 12px;
 }
 
@@ -1537,7 +1611,7 @@ div.detail-group.actions td {
   position: relative;
   left: -13px;
   top: -1px;
-  z-index: 1000;
+  z-index: 5;
   margin-right: 23px;
 }
 
@@ -1557,6 +1631,7 @@ div.detail-group.actions td {
   top: 0px;
   margin-left: -10px;
   text-indent: 13px;
+  font-weight: bold;
 }
 
 #breadcrumbs div.active-project {
@@ -1767,14 +1842,16 @@ table td.actions div.action.snapshot:hover {
   text-align: center;
 }
 
+.ui-dialog-buttonset {
+  width: 285px;
+}
+
 .ui-dialog .ui-button {
   display: block;
   cursor: pointer;
   float: left;
   width: 82px;
   height: 31px;
-  margin-left: 39px;
-  margin-top: -29px;
   border: none;
   background: url(../images/gradients.png) -2px -481px;
   border: 1px solid #BFBCBC;
@@ -1783,6 +1860,10 @@ table td.actions div.action.snapshot:hover {
   -webkit-border-radius: 5px;
   -khtml-border-radius: 5px;
   border-radius: 5px 5px 5px 5px;
+  /*+placement:shift 0px -35px;*/
+  position: relative;
+  left: 0px;
+  top: -35px;
 }
 
 .ui-dialog .ui-button:hover {
@@ -1822,6 +1903,15 @@ table td.actions div.action.snapshot:hover {
 .ui-dialog .ui-button.ok:hover {
   background-position: -3px -368px;
   border: 1px solid #004FF7;
+}
+
+.ui-dialog.confirm .ui-button {
+  margin-top: -24px;
+  margin-left: 11px;
+}
+
+.ui-dialog.confirm .ui-button.cancel {
+  margin-left: 50px;
 }
 
 .ui-dialog span.message {
@@ -1871,6 +1961,13 @@ table td.actions div.action.snapshot:hover {
 
 .ui-dialog.create-form .ui-dialog-title {
   background: url(../images/icons.png) no-repeat 0px -256px;
+}
+
+.ui-dialog.confirm .ui-button {
+  /*+placement:shift 0px -8px;*/
+  position: relative;
+  left: 0px;
+  top: -8px;
 }
 
 /*** Create form*/
@@ -2517,7 +2614,13 @@ table td.actions div.action.snapshot:hover {
 }
 
 #browser div.panel .system-chart-view div.toolbar {
+  width: 595px;
   position: relative;
+}
+
+#browser div.panel .system-chart-view div.toolbar .button {
+  float: left;
+  margin: 0 0 0 10px;
 }
 
 .system-chart-view .zone-chart ul {
@@ -2727,7 +2830,7 @@ input.error {
   position: relative;
   left: 120px;
   top: 13px;
-  z-index: 1000;
+  z-index: 10;
   position: absolute;
   background: url(../images/icons.png) no-repeat 0px -422px;
 }
@@ -2914,6 +3017,7 @@ input.error {
   -webkit-border-radius: 0 3px 10px 10px;
   -khtml-border-radius: 0 3px 10px 10px;
   border-radius: 0 3px 10px 10px;
+  background: #FFFFFF;
 }
 
 /*** UI widgets*/
@@ -2929,7 +3033,7 @@ input.error {
   top: 5px;
   overflow: hidden;
   display: inline-block;
-  z-index: 3000;
+  z-index: 10;
 }
 
 .multi-wizard .ui-tabs ul li.first a {
@@ -2992,6 +3096,7 @@ input.error {
   height: 61px;
   text-align: left;
   border-bottom: 1px solid #EBEFF4;
+  background: #FFFFFF;
 }
 
 .multi-wizard .select-container .select.odd {
@@ -3004,7 +3109,11 @@ input.error {
 }
 
 .multi-wizard .select-container .select .select-desc {
+  max-width: 335px;
+  height: 34px;
+  overflow: hidden;
   float: left;
+  clear: none;
   margin: 15px 0 0;
 }
 
@@ -3235,7 +3344,9 @@ input.error {
 }
 
 .multi-wizard.instance-wizard .select-network .select-container .select {
+  width: 100%;
   height: 38px;
+  float: left;
 }
 
 .multi-wizard.instance-wizard .select-network .select-container .select input {

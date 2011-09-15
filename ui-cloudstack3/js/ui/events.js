@@ -20,19 +20,20 @@
   event.bind = function(widget, events) {
     return function(event) {
       var $target = $(event.target);
-      var $widget;
+      var $widget, $elem;
       var data, elem;
 
-      if (!$target.closest('.cloudStack-elem.' + widget).size())
-        return false;
+      $elem = $target.closest('.cloudStack-elem.' + widget);
+      if (!$elem.size())
+        return true;
 
       $widget = $('.cloudStack-widget.' + widget);
-      data = $target.data('cloudStack')[widget];
+      data = $elem.data('cloudStack')[widget];
       elem = data.elem;
 
-      events[elem]($target, $widget, data);
+      events[elem]($elem, $widget, data);
 
-      return true;
+      return false;
     };
   };
 })(jQuery, cloudStack);

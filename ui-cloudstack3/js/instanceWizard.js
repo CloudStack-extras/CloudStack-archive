@@ -178,7 +178,10 @@
 
           var $targetStep = $($steps.hide()[targetIndex]).show();
 
-          dataGenerators[$targetStep.attr('wizard-step-id')]($targetStep);
+          if (!$targetStep.data('wizard-generation-complete')) {
+            dataGenerators[$targetStep.attr('wizard-step-id')]($targetStep);
+            $targetStep.data('wizard-generation-complete', true);
+          }
 
           // Show launch vm button if last step
           var $nextButton = $wizard.find('.button.next');

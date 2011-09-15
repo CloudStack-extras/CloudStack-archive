@@ -304,7 +304,6 @@
     var $detailView, $detailsPanel;
     var panelArgs = {
       title: title,
-      data: '<div class="detail-view"></div>',
       parent: $panel,
       complete: function($newPanel) {
         // Make detail view element
@@ -337,6 +336,9 @@
               .appendTo($tr);
         var content = dataItem[key];
 
+        if (field.indicator) {
+          $td.addClass('state').addClass(field.indicator[content]);
+        }
         if (field.id == true) id = field.id;
         if ($td.index()) $td.addClass('reduced-hide');
         if (field.action) {
