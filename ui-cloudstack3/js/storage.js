@@ -7,14 +7,25 @@
 		    dataType: "json",
 		    async: true,
 		    success: function(json) { 				    
+			    var items = json.listvolumesresponse.volume;			    
+				r.response.success({data:items});			                			
+		    }
+	    });  	
+    };
+    var getOneVolume = function(r) {        
+        $.ajax({
+	        url: createURL("listVolumes&id="+r.id),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 				    
 			    var items = json.listvolumesresponse.volume;
 			    if(items != null && items.length > 0) {
-				    r.response.success({data:items});		
+				    r.response.success({data:items[0]});		
 	            }    			
 		    }
 	    });  	
-    }
-
+    };
+	
 	var getSnapshots = function(r) {        
         $.ajax({
 	        url: createURL("listSnapshots"),
@@ -24,6 +35,19 @@
 			    var items = json.listsnapshotsresponse.snapshot;
 			    if(items != null && items.length > 0) {
 				    r.response.success({data:items});		
+	            }    			
+		    }
+	    });  	
+    }
+	var getOneSnapshot = function(r) {        
+        $.ajax({
+	        url: createURL("listSnapshots&id="+r.id),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 				    
+			    var items = json.listsnapshotsresponse.snapshot;
+			    if(items != null && items.length > 0) {
+				    r.response.success({data:items[0]});		
 	            }    			
 		    }
 	    });  	
@@ -275,7 +299,8 @@
                     zone: { label: 'Zone' }
                   }
                 ],
-                dataProvider: testData.dataProvider.detailView('storage')
+                //dataProvider: testData.dataProvider.detailView('storage')
+				dataProvider: getOneVolume
               }
             }
           }
@@ -317,7 +342,8 @@
                     domain: { label: 'Domain' }
                   }
                 ],
-                dataProvider: testData.dataProvider.detailView('snapshots')
+                //dataProvider: testData.dataProvider.detailView('snapshots')
+				dataProvider: getOneSnapshot
               }
             }
           }

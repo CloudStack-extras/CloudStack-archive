@@ -7,14 +7,25 @@
 		    dataType: "json",
 		    async: true,
 		    success: function(json) { 	
+			    var items = json.listvirtualmachinesresponse.virtualmachine;			    
+				r.response.success({data:items});			                			
+		    }
+	    });  	
+    };	
+	var getOneVM = function(r) {	    
+		$.ajax({
+	        url: createURL("listVirtualMachines&id="+r.id),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 	
 			    var items = json.listvirtualmachinesresponse.virtualmachine;
 			    if(items != null && items.length > 0) {
-				    r.response.success({data:items});		
+				    r.response.success({data:items[0]});		
 	            }    			
 		    }
 	    });  	
-    }
-
+	};
+	
   cloudStack.sections.instances = {
     title: 'Instances',
     id: 'instances',
@@ -316,7 +327,8 @@
                 group: { label: 'Group', isEditable: true }
               }
             ],
-            dataProvider: testData.dataProvider.detailView('instances')
+            //dataProvider: testData.dataProvider.detailView('instances')
+			dataProvider: getOneVM
           },
 
           /**
