@@ -1,11 +1,11 @@
 (function($, cloudStack, testData) {
     login();
 
-    var getVMs = function(r) {        
+    var getItems = function(r) {        
         $.ajax({
 	        url: createURL("listVirtualMachines"),
 		    dataType: "json",
-		    async: false,
+		    async: true,
 		    success: function(json) { 	
 			    var items = json.listvirtualmachinesresponse.virtualmachine;
 			    if(items != null && items.length > 0) {
@@ -190,7 +190,7 @@
       },
       
 	  //dataProvider: testData.dataProvider.listView('instances'),
-	  dataProvider: getVMs,
+	  dataProvider: getItems,
 	  
       detailView: {
         name: 'Instance details',
