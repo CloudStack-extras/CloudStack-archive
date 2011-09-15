@@ -1,4 +1,21 @@
 (function(cloudStack, testData) {
+    login();
+    
+    var getItems = function(r) {        
+        $.ajax({
+	        url: createURL("listVolumes"),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 				    
+			    var items = json.listvolumesresponse.volume;
+			    if(items != null && items.length > 0) {
+				    r.response.success({data:items});		
+	            }    			
+		    }
+	    });  	
+    }
+
+
   cloudStack.sections.storage = {
     title: 'Storage',
     id: 'storage',
@@ -149,7 +166,10 @@
               }
             }
           },
-          dataProvider: testData.dataProvider.listView('storage'),
+          
+		  //dataProvider: testData.dataProvider.listView('storage'),
+		  dataProvider: getItems,
+		  
           detailView: {
             name: 'Volume details',
             viewAll: { path: 'storage.snapshots', label: 'Snapshots' },
