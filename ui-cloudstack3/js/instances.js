@@ -1,4 +1,20 @@
 (function($, cloudStack, testData) {
+    login();
+
+    var getVMs = function(r) {        
+        $.ajax({
+	        url: createURL("listVirtualMachines"),
+		    dataType: "json",
+		    async: false,
+		    success: function(json) { 	
+			    var items = json.listvirtualmachinesresponse.virtualmachine;
+			    if(items != null && items.length > 0) {
+				    r.response.success({data:items});		
+	            }    			
+		    }
+	    });  	
+    }
+
   cloudStack.sections.instances = {
     title: 'Instances',
     id: 'instances',
@@ -172,7 +188,10 @@
           }
         }
       },
-      dataProvider: testData.dataProvider.listView('instances'),
+      
+	  //dataProvider: testData.dataProvider.listView('instances'),
+	  dataProvider: getVMs,
+	  
       detailView: {
         name: 'Instance details',
         viewAll: { path: 'storage.volumes', label: 'Volumes' },
