@@ -32,10 +32,8 @@
 		    dataType: "json",
 		    async: true,
 		    success: function(json) { 				    
-			    var items = json.listsnapshotsresponse.snapshot;
-			    if(items != null && items.length > 0) {
-				    r.response.success({data:items});		
-	            }    			
+			    var items = json.listsnapshotsresponse.snapshot;			   
+				r.response.success({data:items});			                			
 		    }
 	    });  	
     }

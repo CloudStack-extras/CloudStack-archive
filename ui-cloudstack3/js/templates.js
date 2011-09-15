@@ -7,10 +7,8 @@
 		    dataType: "json",
 		    async: true,
 		    success: function(json) { 	
-			    var items = json.listtemplatesresponse.template;
-			    if(items != null && items.length > 0) {
-				    r.response.success({data:items});		
-	            }    			
+			    var items = json.listtemplatesresponse.template;			    
+				r.response.success({data:items});			                			
 		    }
 	    });  	
     }
@@ -21,10 +19,8 @@
 		    dataType: "json",
 		    async: true,
 		    success: function(json) { 	
-			    var items = json.listisosresponse.iso;
-			    if(items != null && items.length > 0) {
-				    r.response.success({data:items});		
-	            }    			
+			    var items = json.listisosresponse.iso;			    
+				r.response.success({data:items});		                			
 		    }
 	    });  	
     }

@@ -7,10 +7,8 @@
 		    dataType: "json",
 		    async: true,
 		    success: function(json) { 	
-			    var items = json.listaccountsresponse.account;
-			    if(items != null && items.length > 0) {
-				    r.response.success({data:items});		
-	            }    			
+			    var items = json.listaccountsresponse.account;			    
+				r.response.success({data:items});			               			
 		    }
 	    });  	
     }

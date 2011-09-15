@@ -1,16 +1,14 @@
 (function(cloudStack, testData) {
     login();
 
-    var getEvents = function(r) {        
+    var getEvents = function(r) {          
         $.ajax({
-	        url: createURL("listEvents"),
+	        url: createURL("listEvents&page="+r.page+"&pagesize="+pageSize),
 		    dataType: "json",
 		    async: true,
 		    success: function(json) { 	
-			    var items = json.listeventsresponse.event;
-			    if(items != null && items.length > 0) {
-				    r.response.success({data:items});		
-	            }    			
+			    var items = json.listeventsresponse.event;			    
+				r.response.success({data:items});			                			
 		    }
 	    });  	
     }
@@ -21,10 +19,8 @@
 		    dataType: "json",
 		    async: true,
 		    success: function(json) { 	
-			    var items = json.listalertsresponse.alert;
-			    if(items != null && items.length > 0) {
-				    r.response.success({data:items});		
-	            }    			
+			    var items = json.listalertsresponse.alert;			    
+				r.response.success({data:items});		                			
 		    }
 	    });  	
     }
