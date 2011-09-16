@@ -1,46 +1,45 @@
 (function($, cloudStack, testData) {
     login();
 
-    var getVMs = function(r) {        
+    var getVMs = function(args) {        
         $.ajax({
 	        url: createURL("listVirtualMachines"),
 		    dataType: "json",
 		    async: true,
 		    success: function(json) { 	
 			    var items = json.listvirtualmachinesresponse.virtualmachine;			    
-				r.response.success({data:items});			                			
+				args.response.success({data:items});			                			
 		    }
 	    });  	
     };	
-	var getOneVM = function(r) {	    
+	var getOneVM = function(args) {	    
 		$.ajax({
-	        url: createURL("listVirtualMachines&id="+r.id),
+	        url: createURL("listVirtualMachines&id="+args.id),
 		    dataType: "json",
 		    async: true,
 		    success: function(json) { 	
 			    var items = json.listvirtualmachinesresponse.virtualmachine;
 			    if(items != null && items.length > 0) {
-				    r.response.success({data:items[0]});		
+				    args.response.success({data:items[0]});		
 	            }    			
 		    }
 	    });  	
 	};
 	
-	var initStopVM = function(r) {	    
+	var initStopVM = function(args) {	    
 	    $.ajax({
-	        url: createURL("stopVirtualMachine&id=" + r.data.id),
+	        url: createURL("stopVirtualMachine&id=" + args.data.id),
 		    dataType: "json",
 		    async: true,
 		    success: function(json) { 			    
 				var jid = json.stopvirtualmachineresponse.jobid;    				
-                r.response.success({_custom:{jobId: jid}});							
+                args.response.success({_custom:{jobId: jid}});							
 		    }
 	    });  	
-	}
-	
-	var pollStopVM = function(r) {	        
+	}	
+	var pollStopVM = function(args) {	        
 		$.ajax({
-            url: createURL("command=queryAsyncJobResult&jobId=" + r._custom.jobId),
+            url: createURL("command=queryAsyncJobResult&jobId=" + args._custom.jobId),
             dataType: "json",									                    					                    
             success: function(json) {		                                                     							                       
                 var result = json.queryasyncjobresultresponse;										                   
@@ -48,14 +47,47 @@
                     return; //Job has not completed
                 } else {				                        			                          			                                             
                     if (result.jobstatus == 1) { // Succeeded 				                            	                            
-                        r.complete();
+                        args.complete();
                     } else if (result.jobstatus == 2) { // Failed	                        
-						r.error({message:result.jobresult.errortext});						
+						args.error({message:result.jobresult.errortext});						
                     }											                    
                 }
             },
             error: function(XMLHttpResponse) {	                            
-                r.error();
+                args.error();
+            }
+        });		
+	}
+	
+	var initStartVM = function(args) {	    
+	    $.ajax({
+	        url: createURL("startVirtualMachine&id=" + args.data.id),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 			    
+				var jid = json.startvirtualmachineresponse.jobid;    				
+                args.response.success({_custom:{jobId: jid}});							
+		    }
+	    });  	
+	}	
+	var pollStartVM = function(args) {	        
+		$.ajax({
+            url: createURL("command=queryAsyncJobResult&jobId=" + args._custom.jobId),
+            dataType: "json",									                    					                    
+            success: function(json) {		                                                     							                       
+                var result = json.queryasyncjobresultresponse;										                   
+                if (result.jobstatus == 0) {
+                    return; //Job has not completed
+                } else {				                        			                          			                                             
+                    if (result.jobstatus == 1) { // Succeeded 				                            	                            
+                        args.complete();
+                    } else if (result.jobstatus == 2) { // Failed	                        
+						args.error({message:result.jobresult.errortext});						
+                    }											                    
+                }
+            },
+            error: function(XMLHttpResponse) {	                            
+                args.error();
             }
         });		
 	}
@@ -194,16 +226,16 @@
 		  
           messages: {
             confirm: function(args) {
-              return 'Are you sure you want to shutdown ' + args.name + '?';
+              return 'Are you sure you want to stop ' + args.name + '?';
             },
             success: function(args) {
-              return args.name + ' is shutting down.';
+              return args.name + ' is stopping.';
             },
             notification: function(args) {
               return 'Rebooting VM: ' + args.name;
             },
             complete: function(args) {
-              return args.name + ' has been shut down.';
+              return args.name + ' has been stopped.';
             }
           },
           notification: {
@@ -211,7 +243,29 @@
 			poll: pollStopVM
           }
         },
-        start: { label: 'Start instance' },
+		
+        start: { 
+		  label: 'Start instance' ,
+		  action: initStartVM,
+		  messages: {
+            confirm: function(args) {
+              return 'Are you sure you want to start ' + args.name + '?';
+            },
+            success: function(args) {
+              return args.name + ' is starting.';
+            },
+            notification: function(args) {
+              return 'Started VM: ' + args.name;
+            },
+            complete: function(args) {
+              return args.name + ' has been started.';
+            }
+          },		  
+          notification: {           
+			poll: pollStartVM
+          }		  
+		},
+		
         destroy: {
           label: 'Destroy instance',
           messages: {
@@ -227,14 +281,14 @@
             complete: function(args) {
               return args.name + ' has been destroyed.';
             }
-          },
+          },		  
           action: function(args) {
             setTimeout(function() {
               args.response.success();
             }, 200);
           },
           notification: {
-            poll: testData.notifications.testPoll
+            poll: testData.notifications.testPoll			
           }
         }
       },
