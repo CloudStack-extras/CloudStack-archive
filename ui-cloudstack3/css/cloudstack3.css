@@ -1,4 +1,4 @@
-p/*[fmt]1C20-1C0D-E*/
+/*[fmt]1C20-1C0D-E*/
 /*Base*/
 /*+clearfix {*/
 #browser div.toolbar:after,
@@ -350,6 +350,7 @@ div.notification.corner-alert {
   opacity: 0.7;
   overflow: hidden;
   z-index: 100;
+  cursor: pointer;
 }
 
 div.notification.corner-alert {
@@ -377,16 +378,20 @@ div.notification.corner-alert div.title span {
 }
 
 div.notification.corner-alert div.message span {
-  /*+placement:shift 0px 10px;*/
   position: relative;
-  left: 0px;
-  top: 10px;
+  padding-top: 6px;
+  display: block;
+}
+
+div.notification.corner-alert:hover div.message span {
+  text-decoration: underline;
+  color: #5FAAF7;
 }
 
 /*List view*/
 div.panel div.list-view {
   overflow: auto;
-  height: 91%;
+  height: 668px;
   margin-top: 30px;
   border-bottom: 1px solid #E7E7E7;
 }
