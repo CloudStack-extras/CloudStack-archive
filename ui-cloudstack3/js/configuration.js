@@ -1,4 +1,54 @@
 (function(cloudStack, testData) {
+    login();
+
+    var getServiceOfferings = function(r) {          
+        $.ajax({
+	        url: createURL("listServiceOfferings&issystem=false&page="+r.page+"&pagesize="+pageSize),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 	
+			    var items = json.listserviceofferingsresponse.serviceoffering;			    
+				r.response.success({data:items});			                			
+		    }
+	    });  	
+    }
+	
+    var getDiskOfferings = function(r) {          
+        $.ajax({
+	        url: createURL("listDiskOfferings&page="+r.page+"&pagesize="+pageSize),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 	
+			    var items = json.listdiskofferingsresponse.diskoffering;			    
+				r.response.success({data:items});			                			
+		    }
+	    });  	
+    }
+
+	var getNetworkOfferings = function(r) {          
+        $.ajax({
+	        url: createURL("listNetworkOfferings&guestiptype=Virtual&page="+r.page+"&pagesize="+pageSize),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 	
+			    var items = json.listnetworkofferingsresponse.networkoffering;			    
+				r.response.success({data:items});			                			
+		    }
+	    });  	
+    }
+	
+	var getGlobalSettings = function(r) {          
+        $.ajax({
+	        url: createURL("listConfigurations&page="+r.page+"&pagesize="+pageSize),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 	
+			    var items = json.listconfigurationsresponse.configuration;			    
+				r.response.success({data:items});			                			
+		    }
+	    });  	
+    }
+
   cloudStack.sections.configuration = {
     title: 'Configuration',
     id: 'configuration',
@@ -68,7 +118,7 @@
               }
             }
           },
-          dataProvider: testData.dataProvider.listView('serviceOfferings')
+          dataProvider: getServiceOfferings
         }
       },
       diskOfferings: {
@@ -81,7 +131,7 @@
             disksize: { label: 'Disk Size' },
             domain: { label: 'Domain'}
           },
-          dataProvider: testData.dataProvider.listView('diskOfferings')
+          dataProvider: getDiskOfferings
         }
       },
       networkOfferings: {
@@ -94,7 +144,7 @@
             networkrate: { label: 'Network Rate' },
             traffictype: { label: 'Traffic Type'}
           },
-          dataProvider: testData.dataProvider.listView('networkOfferings')
+          dataProvider: getNetworkOfferings
         }
       },
       globalSettings: {
@@ -118,7 +168,7 @@
             description: { label: 'Description' },
             value: { label: 'Value', editable: true }
           },
-          dataProvider: testData.dataProvider.listView('globalSettings')
+          dataProvider: getGlobalSettings
         }
       }
     }

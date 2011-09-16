@@ -1,20 +1,55 @@
 (function(cloudStack, testData) {
     login();
     
-    var getItems = function(r) {        
+    var getVolumes = function(r) {        
         $.ajax({
 	        url: createURL("listVolumes"),
 		    dataType: "json",
 		    async: true,
 		    success: function(json) { 				    
+			    var items = json.listvolumesresponse.volume;			    
+				r.response.success({data:items});			                			
+		    }
+	    });  	
+    };
+    var getOneVolume = function(r) {        
+        $.ajax({
+	        url: createURL("listVolumes&id="+r.id),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 				    
 			    var items = json.listvolumesresponse.volume;
 			    if(items != null && items.length > 0) {
-				    r.response.success({data:items});		
+				    r.response.success({data:items[0]});		
+	            }    			
+		    }
+	    });  	
+    };
+	
+	var getSnapshots = function(r) {        
+        $.ajax({
+	        url: createURL("listSnapshots"),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 				    
+			    var items = json.listsnapshotsresponse.snapshot;			   
+				r.response.success({data:items});			                			
+		    }
+	    });  	
+    }
+	var getOneSnapshot = function(r) {        
+        $.ajax({
+	        url: createURL("listSnapshots&id="+r.id),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 				    
+			    var items = json.listsnapshotsresponse.snapshot;
+			    if(items != null && items.length > 0) {
+				    r.response.success({data:items[0]});		
 	            }    			
 		    }
 	    });  	
     }
-
 
   cloudStack.sections.storage = {
     title: 'Storage',
@@ -168,7 +203,7 @@
           },
           
 		  //dataProvider: testData.dataProvider.listView('storage'),
-		  dataProvider: getItems,
+		  dataProvider: getVolumes,
 		  
           detailView: {
             name: 'Volume details',
@@ -262,7 +297,8 @@
                     zone: { label: 'Zone' }
                   }
                 ],
-                dataProvider: testData.dataProvider.detailView('storage')
+                //dataProvider: testData.dataProvider.detailView('storage')
+				dataProvider: getOneVolume
               }
             }
           }
@@ -282,7 +318,10 @@
             intervaltype: { label: 'Interval Type' },
             created: { label: 'Date' }
           },
-          dataProvider: testData.dataProvider.listView('snapshots'),
+          
+		  //dataProvider: testData.dataProvider.listView('snapshots'),
+		  dataProvider: getSnapshots,
+		  
           detailView: {
             name: 'Snapshot detail',
             tabs: {
@@ -301,7 +340,8 @@
                     domain: { label: 'Domain' }
                   }
                 ],
-                dataProvider: testData.dataProvider.detailView('snapshots')
+                //dataProvider: testData.dataProvider.detailView('snapshots')
+				dataProvider: getOneSnapshot
               }
             }
           }

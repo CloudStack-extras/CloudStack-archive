@@ -1,4 +1,55 @@
 (function(cloudStack, testData) {
+    login();
+
+    var getIpAddresses = function(r) {        
+        $.ajax({
+	        url: createURL("listPublicIpAddresses"),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 	
+			    var items = json.listpublicipaddressesresponse.publicipaddress;			    
+				r.response.success({data:items});			                			
+		    }
+	    });  	
+    };
+    var getOneIpAddress = function(r) {        
+        $.ajax({
+	        url: createURL("listPublicIpAddresses&id="+r.id),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 	
+			    var items = json.listpublicipaddressesresponse.publicipaddress;		
+                if(items != null && items.length > 0) {				
+				    r.response.success({data:items[0]});	
+                }					
+		    }
+	    });  	
+    };
+	
+	var getSecurityGroups = function(r) {        
+        $.ajax({
+	        url: createURL("listSecurityGroups"),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 	
+			    var items = json.listsecuritygroupsresponse.securitygroup;			    
+				r.response.success({data:items});			                			
+		    }
+	    });  	
+    };
+    var getOneSecurityGroup = function(r) {        
+        $.ajax({
+	        url: createURL("listSecurityGroups&id="+r.id),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 	
+			    var items = json.listsecuritygroupsresponse.securitygroup;		
+				if(items != null && items.length > 0) {						
+				    r.response.success({data:items[0]});		
+                }					
+		    }
+	    });  	
+    };
   cloudStack.sections.network = {
     title: 'Network',
     id: 'network',
@@ -86,7 +137,9 @@
               }
             }
           },
-          dataProvider: testData.dataProvider.listView('network'),
+          
+		  //dataProvider: testData.dataProvider.listView('network'),
+		  dataProvider: getIpAddresses,
 
           // Detail view
           detailView: {
@@ -105,7 +158,10 @@
                     issourcenat: { label: 'Source NAT' }
                   }
                 ],
-                dataProvider: testData.dataProvider.detailView('network')
+                
+				//dataProvider: testData.dataProvider.detailView('network')
+				dataProvider: getOneIpAddress
+				
               },
 
               portRange: {
@@ -273,7 +329,10 @@
               }
             }
           },
-          dataProvider: testData.dataProvider.listView('securityGroups'),
+		  
+          //dataProvider: testData.dataProvider.listView('securityGroups'),
+		  dataProvider: getSecurityGroups,
+		  
           detailView: {
             name: 'Security group details',
             tabs: {
@@ -288,7 +347,10 @@
                     account: { label: 'Account' }
                   } 
                 ],
-                dataProvider: testData.dataProvider.detailView('securityGroups')
+				
+                //dataProvider: testData.dataProvider.detailView('securityGroups')
+				dataProvider: getOneSecurityGroup
+				
               },
               ingressRules: {
                 title: 'Ingress Rules',
