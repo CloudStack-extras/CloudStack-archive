@@ -397,11 +397,12 @@
 			  poll: pollAsyncJobResult
 			}			
 	      },
-          restart: {
-            label: 'Restart VM',
+          reboot: {
+            label: 'Reboot VM',
+			action: initRebootVM,
             messages: {
               confirm: function(args) {
-                return 'Are you sure you want to restart ' + args.name + '?';
+                return 'Are you sure you want to reboot ' + args.name + '?';
               },
               success: function(args) {
                 return args.name + ' is being rebooted.';
@@ -414,13 +415,8 @@
               }
             },
             notification: {
-              poll: testData.notifications.testPoll
-            },
-            action: function(args) {
-              setTimeout(function() {
-                args.response.success();
-              }, 1000);
-            }
+              poll: pollAsyncJobResult
+            }           
           },
           destroy: {
             label: 'Destroy VM',
