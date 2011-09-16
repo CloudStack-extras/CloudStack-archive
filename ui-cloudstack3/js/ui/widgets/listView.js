@@ -26,10 +26,12 @@
         section: notification.section,
         desc: notification.desc,
         interval: 1000,
+        _custom: notification._custom,
         poll: function(args) {
           var complete = args.complete;
 
           notification.poll({
+            _custom: args._custom,
             complete: function() {
               success(successArgs);
               complete();
@@ -66,7 +68,9 @@
         if (action.custom) {
           action.custom({
             complete: function(args) {
+              args = args ? args : {};
               notification.desc = messages.notification(args.messageArgs);
+              notification._custom = args._custom;
               addNotification(notification, function() {
                 return false;
               });
@@ -77,6 +81,8 @@
             data: data,
             response: {
               success: function(args) {
+                args = args ? args : {};
+                notification._custom = args._custom;
                 if (additional && additional.success) additional.success(args);
                 addNotification(notification, function() {
                   if ($instanceRow.is(':visible')) {
