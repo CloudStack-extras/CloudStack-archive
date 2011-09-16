@@ -369,7 +369,10 @@
     else
       listViewArgs.id = viewAllID;
 
-    listViewArgs.refID = args.id;
+    listViewArgs.ref = {
+      id: args.id,
+      type: $detailView.data('view-args').section
+    };
 
     // Make panel
     var $panel = $browser.cloudBrowser('addPanel', {
@@ -792,9 +795,9 @@
   // View all links
   $('a').live('click', function(event) {
     var $target = $(event.target);
+    var $viewAll = $target.closest('td.view-all a');
 
     if ($target.closest('div.detail-view').size() && $target.closest('td.view-all a').size()) {
-      var $viewAll = $target.closest('td.view-all a');
       viewAll($viewAll.data('detail-view-link-view-all').path);
       return false;
     }

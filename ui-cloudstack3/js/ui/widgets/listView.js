@@ -306,7 +306,7 @@
     var $panel = args.$panel;
     var title = args.title;
     var id = args.id;
-    var data = $.extend(args.data, { id: id });
+    var data = $.extend(args.data, { id: id, section: args.section });
     var $detailView, $detailsPanel;
     var panelArgs = {
       title: title,
@@ -559,7 +559,7 @@
       listViewData.fields,
       false,
       {
-        refID: args.refID
+        ref: args.ref
       },
       actions);
 
@@ -670,8 +670,14 @@
           detailViewArgs.pageGenerator = listViewData.detailView.pageGenerator;
         }
 
+        var listViewArgs = $listView.data('view-args');
+        if (listViewArgs.listView)
+          detailViewArgs.section = listViewArgs.listView.section;
+        else
+          detailViewArgs.section = listViewArgs.activeSection ? listViewArgs.activeSection : listViewArgs.id;
+
         createDetailView(detailViewArgs, function($detailView) {
-            $detailView.data('list-view', $listView);
+          $detailView.data('list-view', $listView);
         });
 
         return false;
