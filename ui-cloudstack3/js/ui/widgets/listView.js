@@ -553,7 +553,15 @@
 
     createFilters($toolbar, listViewData.filters);
     createSearchBar($toolbar);
-    loadBody($table, listViewData.dataProvider, listViewData.fields, false, null, actions);
+    loadBody(
+      $table,
+      listViewData.dataProvider,
+      listViewData.fields,
+      false,
+      {
+        refID: args.refID
+      },
+      actions);
 
     // Keyboard events
     $listView.bind('keypress', function(event) {

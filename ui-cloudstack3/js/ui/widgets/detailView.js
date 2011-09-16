@@ -369,6 +369,8 @@
     else
       listViewArgs.id = viewAllID;
 
+    listViewArgs.refID = args.id;
+
     // Make panel
     var $panel = $browser.cloudBrowser('addPanel', {
       title: listViewArgs.title,
