@@ -26,6 +26,40 @@
 	    });  	
 	};
 	
+	var initStopVM = function(r) {	    
+	    $.ajax({
+	        url: createURL("stopVirtualMachine&id=" + r.data.id),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 			    
+				var jid = json.stopvirtualmachineresponse.jobid;    				
+                r.response.success({_custom:{jobId: jid}});							
+		    }
+	    });  	
+	}
+	
+	var pollStopVM = function(r) {	        
+		$.ajax({
+            url: createURL("command=queryAsyncJobResult&jobId=" + r._custom.jobId),
+            dataType: "json",									                    					                    
+            success: function(json) {		                                                     							                       
+                var result = json.queryasyncjobresultresponse;										                   
+                if (result.jobstatus == 0) {
+                    return; //Job has not completed
+                } else {				                        			                          			                                             
+                    if (result.jobstatus == 1) { // Succeeded 				                            	                            
+                        r.complete();
+                    } else if (result.jobstatus == 2) { // Failed	                        
+						r.error({message:result.jobresult.errortext});						
+                    }											                    
+                }
+            },
+            error: function(XMLHttpResponse) {	                            
+                r.error();
+            }
+        });		
+	}
+	
   cloudStack.sections.instances = {
     title: 'Instances',
     id: 'instances',
@@ -149,11 +183,15 @@
         },
         stop: {
           label: 'Stop instance',
+		  /*
           action: function(args) {
             setTimeout(function() {
               args.response.success();
             }, 500);
           },
+		  */
+		  action: initStopVM,
+		  
           messages: {
             confirm: function(args) {
               return 'Are you sure you want to shutdown ' + args.name + '?';
@@ -169,7 +207,8 @@
             }
           },
           notification: {
-            poll: testData.notifications.testPoll
+            //poll: testData.notifications.testPoll
+			poll: pollStopVM
           }
         },
         start: { label: 'Start instance' },
