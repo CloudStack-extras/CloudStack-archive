@@ -29,22 +29,11 @@
         })
         .animate({
           opacity: 1,
-          top: function() {
-            if ($('.corner-alert:visible').size()) {
-              return $('.corner-alert:visible').filter(':last').position().top - $cornerAlert.height();
-            } else {
-              return $container.height() - $cornerAlert.height();
-            }
-          }()
+          top: $container.height() - $cornerAlert.height()
         }, {
           complete: function() {
             setTimeout(function() {
               $cornerAlert.fadeOut('fast', function() {
-                $('.corner-alert:visible').each(function() {
-                  $(this).animate({
-                    top: $(this).position().top + $(this).height()
-                  });
-                });
                 $cornerAlert.remove();
               });
             }, 5000);
@@ -60,6 +49,7 @@
             .find('[cloudStack-container]')
             .data('cloudStack-args')
             .sections[args.section];
+      var _custom = args._custom;
 
       var $item = $('<li>')
             .append(
@@ -71,6 +61,7 @@
 
       // Get information for specified section path
       $item.data('notification-section', args.section);
+      $item.data('notification-custom', _custom);
       $popup.find('ul').append($item);
       $total.html(newTotal);
       $total.parent().addClass('pending');
@@ -79,6 +70,7 @@
       // Setup timer
       var pollTimer = setInterval(function() {
         args.poll({
+          _custom: _custom,
           complete: function(args) {
             clearInterval(pollTimer);
 
