@@ -92,6 +92,40 @@
         });		
 	}
 	
+	var initRebootVM = function(args) {	    
+	    $.ajax({
+	        url: createURL("rebootVirtualMachine&id=" + args.data.id),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 			    
+				var jid = json.rebootvirtualmachineresponse.jobid;    				
+                args.response.success({_custom:{jobId: jid}});							
+		    }
+	    });  	
+	}	
+	var pollRebootVM = function(args) {	        
+		$.ajax({
+            url: createURL("command=queryAsyncJobResult&jobId=" + args._custom.jobId),
+            dataType: "json",									                    					                    
+            success: function(json) {		                                                     							                       
+                var result = json.queryasyncjobresultresponse;										                   
+                if (result.jobstatus == 0) {
+                    return; //Job has not completed
+                } else {				                        			                          			                                             
+                    if (result.jobstatus == 1) { // Succeeded 				                            	                            
+                        args.complete();
+                    } else if (result.jobstatus == 2) { // Failed	                        
+						args.error({message:result.jobresult.errortext});						
+                    }											                    
+                }
+            },
+            error: function(XMLHttpResponse) {	                            
+                args.error();
+            }
+        });		
+	}
+	
+	
   cloudStack.sections.instances = {
     title: 'Instances',
     id: 'instances',
@@ -188,16 +222,12 @@
           }
         },
 
-        restart: {
-          label: 'Restart instance',
-          action: function(args) {
-            setTimeout(function() {
-              args.response.success();
-            }, 1000);
-          },
+        reboot: {
+          label: 'Reboot instance',
+          action: initRebootVM,
           messages: {
             confirm: function(args) {
-              return 'Are you sure you want to restart ' + args.name + '?';
+              return 'Are you sure you want to reboot ' + args.name + '?';
             },
             success: function(args) {
               return args.name + ' is being rebooted.';
@@ -210,7 +240,7 @@
             }
           },
           notification: {
-            poll: testData.notifications.testPoll
+            poll: pollRebootVM
           }
         },
         stop: {
