@@ -349,16 +349,8 @@
             complete: function(args) {
               return args.name + ' has been destroyed.';
             }
-          },
-          /*		  
-          action: function(args) {
-            setTimeout(function() {
-              args.response.success();
-            }, 200);
-          },
-		  */
-		  action: initDestroyVM,
-		  
+          },         
+		  action: initDestroyVM,		  
           notification: {
             poll: pollAsyncJobResult	
           }
@@ -432,6 +424,7 @@
           },
           destroy: {
             label: 'Destroy VM',
+			action: initDestroyVM,
             messages: {
               confirm: function(args) {
                 return 'Are you sure you want to destroy ' + args.name + '?';
@@ -447,13 +440,8 @@
               }
             },
             notification: {
-              poll: testData.notifications.testPoll
-            },
-            action: function(args) {
-              setTimeout(function() {
-                args.response.success();
-              }, 1000);
-            }
+              poll: pollAsyncJobResult
+            }            
           },
           migrate: {
             notification: {
