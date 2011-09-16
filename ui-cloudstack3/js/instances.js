@@ -384,9 +384,27 @@
               poll: testData.notifications.testPoll
             }
           },
-          stop: { label: 'Shut down VM', action: function(args) {
-            args.response.success();
-          } },
+          stop: { 
+		    label: 'Stop VM', 			
+			action: initStopVM,		  
+			messages: {
+			  confirm: function(args) {
+				return 'Are you sure you want to stop ' + args.name + '?';
+		      },
+			  success: function(args) {
+				return args.name + ' is stopping.';
+			  },
+			  notification: function(args) {
+				return 'Rebooting VM: ' + args.name;
+			  },
+			  complete: function(args) {
+				return args.name + ' has been stopped.';
+			  }
+			},
+			notification: {			  
+			  poll: pollAsyncJobResult
+			}			
+	      },
           restart: {
             label: 'Restart VM',
             messages: {
