@@ -26,6 +26,28 @@
 	    });  	
 	};
 	
+	var pollAsyncJobResult = function(args) {	        
+		$.ajax({
+            url: createURL("command=queryAsyncJobResult&jobId=" + args._custom.jobId),
+            dataType: "json",									                    					                    
+            success: function(json) {		                                                     							                       
+                var result = json.queryasyncjobresultresponse;										                   
+                if (result.jobstatus == 0) {
+                    return; //Job has not completed
+                } else {				                        			                          			                                             
+                    if (result.jobstatus == 1) { // Succeeded 				                            	                            
+                        args.complete();
+                    } else if (result.jobstatus == 2) { // Failed	                        
+						args.error({message:result.jobresult.errortext});						
+                    }											                    
+                }
+            },
+            error: function(XMLHttpResponse) {	                            
+                args.error();
+            }
+        });		
+	}
+	
 	var initStopVM = function(args) {	    
 	    $.ajax({
 	        url: createURL("stopVirtualMachine&id=" + args.data.id),
@@ -37,6 +59,7 @@
 		    }
 	    });  	
 	}	
+	/*
 	var pollStopVM = function(args) {	        
 		$.ajax({
             url: createURL("command=queryAsyncJobResult&jobId=" + args._custom.jobId),
@@ -58,7 +81,7 @@
             }
         });		
 	}
-	
+	*/
 	var initStartVM = function(args) {	    
 	    $.ajax({
 	        url: createURL("startVirtualMachine&id=" + args.data.id),
@@ -70,6 +93,7 @@
 		    }
 	    });  	
 	}	
+	/*
 	var pollStartVM = function(args) {	        
 		$.ajax({
             url: createURL("command=queryAsyncJobResult&jobId=" + args._custom.jobId),
@@ -91,7 +115,7 @@
             }
         });		
 	}
-	
+	*/
 	var initRebootVM = function(args) {	    
 	    $.ajax({
 	        url: createURL("rebootVirtualMachine&id=" + args.data.id),
@@ -103,6 +127,7 @@
 		    }
 	    });  	
 	}	
+	/*
 	var pollRebootVM = function(args) {	        
 		$.ajax({
             url: createURL("command=queryAsyncJobResult&jobId=" + args._custom.jobId),
@@ -124,6 +149,19 @@
             }
         });		
 	}
+	*/
+	var initDestroyVM = function(args) {	    
+	    $.ajax({
+	        url: createURL("destroyVirtualMachine&id=" + args.data.id),
+		    dataType: "json",
+		    async: true,
+		    success: function(json) { 			    
+				var jid = json.destroyvirtualmachineresponse.jobid;    				
+                args.response.success({_custom:{jobId: jid}});							
+		    }
+	    });  	
+	}	
+	
 	
 	
   cloudStack.sections.instances = {
@@ -240,7 +278,7 @@
             }
           },
           notification: {
-            poll: pollRebootVM
+            poll: pollAsyncJobResult
           }
         },
         stop: {
@@ -270,7 +308,7 @@
           },
           notification: {
             //poll: testData.notifications.testPoll
-			poll: pollStopVM
+			poll: pollAsyncJobResult
           }
         },
 		
@@ -292,7 +330,7 @@
             }
           },		  
           notification: {           
-			poll: pollStartVM
+			poll: pollAsyncJobResult
           }		  
 		},
 		
@@ -311,14 +349,18 @@
             complete: function(args) {
               return args.name + ' has been destroyed.';
             }
-          },		  
+          },
+          /*		  
           action: function(args) {
             setTimeout(function() {
               args.response.success();
             }, 200);
           },
+		  */
+		  action: initDestroyVM,
+		  
           notification: {
-            poll: testData.notifications.testPoll			
+            poll: pollAsyncJobResult	
           }
         }
       },
