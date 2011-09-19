@@ -1,17 +1,5 @@
 (function(cloudStack, testData) {
     login();
-
-    var getEvents = function(r) {          
-        $.ajax({
-	        url: createURL("listEvents&page="+r.page+"&pagesize="+pageSize),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listeventsresponse.event;			    
-				r.response.success({data:items});			                			
-		    }
-	    });  	
-    }
 	
 	var getAlerts = function(r) {        
         $.ajax({
@@ -38,11 +26,18 @@
             description: { label: 'Description' },
             username: { label: 'Initiated By' },
             created: { label: 'Date' }
-          },
-          
-		  //dataProvider: testData.dataProvider.listView('events')
-		  dataProvider: getEvents
-		  
+          },          		  
+		  dataProvider: function(args) {   
+			$.ajax({
+			  url: createURL("listEvents&page="+args.page+"&pagesize="+pageSize),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 	
+				var items = json.listeventsresponse.event;			    
+				args.response.success({data:items});			                			
+			  }
+			});  	
+		  }		  
         }
       },
       alerts: {
@@ -53,11 +48,18 @@
             type: { label: 'Type' },
             description: { label: 'Description' },
             sent: { label: 'Date' }
-          },
-		  
-          //dataProvider: testData.dataProvider.listView('alerts'),
-		  dataProvider: getAlerts,
-		  
+          },          
+		  dataProvider: function(args) {        
+			$.ajax({
+			  url: createURL("listAlerts&page="+args.page+"&pagesize="+pageSize),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 	
+				var items = json.listalertsresponse.alert;			    
+				args.response.success({data:items});		                			
+			  }
+		    });  	
+		  },		  
           detailView: {
             name: 'Alert details',
             tabs: {
