@@ -559,6 +559,7 @@
       listViewData.fields,
       false,
       {
+	    page: page,
         ref: args.ref
       },
       actions);
