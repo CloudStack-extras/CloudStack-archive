@@ -1,168 +1,5 @@
 (function($, cloudStack, testData) {
-    login();
-
-    var getVMs = function(args) {        
-        $.ajax({
-	        url: createURL("listVirtualMachines"),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listvirtualmachinesresponse.virtualmachine;			    
-				args.response.success({data:items});			                			
-		    }
-	    });  	
-    };	
-	var getOneVM = function(args) {	    
-		$.ajax({
-	        url: createURL("listVirtualMachines&id="+args.id),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listvirtualmachinesresponse.virtualmachine;
-			    if(items != null && items.length > 0) {
-				    args.response.success({data:items[0]});		
-	            }    			
-		    }
-	    });  	
-	};
-	
-	var pollAsyncJobResult = function(args) {	        
-		$.ajax({
-            url: createURL("command=queryAsyncJobResult&jobId=" + args._custom.jobId),
-            dataType: "json",									                    					                    
-            success: function(json) {		                                                     							                       
-                var result = json.queryasyncjobresultresponse;										                   
-                if (result.jobstatus == 0) {
-                    return; //Job has not completed
-                } else {				                        			                          			                                             
-                    if (result.jobstatus == 1) { // Succeeded 				                            	                            
-                        args.complete();
-                    } else if (result.jobstatus == 2) { // Failed	                        
-						args.error({message:result.jobresult.errortext});						
-                    }											                    
-                }
-            },
-            error: function(XMLHttpResponse) {	                            
-                args.error();
-            }
-        });		
-	}
-	
-	var initStopVM = function(args) {	    
-	    $.ajax({
-	        url: createURL("stopVirtualMachine&id=" + args.data.id),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 			    
-				var jid = json.stopvirtualmachineresponse.jobid;    				
-                args.response.success({_custom:{jobId: jid}});							
-		    }
-	    });  	
-	}	
-	/*
-	var pollStopVM = function(args) {	        
-		$.ajax({
-            url: createURL("command=queryAsyncJobResult&jobId=" + args._custom.jobId),
-            dataType: "json",									                    					                    
-            success: function(json) {		                                                     							                       
-                var result = json.queryasyncjobresultresponse;										                   
-                if (result.jobstatus == 0) {
-                    return; //Job has not completed
-                } else {				                        			                          			                                             
-                    if (result.jobstatus == 1) { // Succeeded 				                            	                            
-                        args.complete();
-                    } else if (result.jobstatus == 2) { // Failed	                        
-						args.error({message:result.jobresult.errortext});						
-                    }											                    
-                }
-            },
-            error: function(XMLHttpResponse) {	                            
-                args.error();
-            }
-        });		
-	}
-	*/
-	var initStartVM = function(args) {	    
-	    $.ajax({
-	        url: createURL("startVirtualMachine&id=" + args.data.id),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 			    
-				var jid = json.startvirtualmachineresponse.jobid;    				
-                args.response.success({_custom:{jobId: jid}});							
-		    }
-	    });  	
-	}	
-	/*
-	var pollStartVM = function(args) {	        
-		$.ajax({
-            url: createURL("command=queryAsyncJobResult&jobId=" + args._custom.jobId),
-            dataType: "json",									                    					                    
-            success: function(json) {		                                                     							                       
-                var result = json.queryasyncjobresultresponse;										                   
-                if (result.jobstatus == 0) {
-                    return; //Job has not completed
-                } else {				                        			                          			                                             
-                    if (result.jobstatus == 1) { // Succeeded 				                            	                            
-                        args.complete();
-                    } else if (result.jobstatus == 2) { // Failed	                        
-						args.error({message:result.jobresult.errortext});						
-                    }											                    
-                }
-            },
-            error: function(XMLHttpResponse) {	                            
-                args.error();
-            }
-        });		
-	}
-	*/
-	var initRebootVM = function(args) {	    
-	    $.ajax({
-	        url: createURL("rebootVirtualMachine&id=" + args.data.id),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 			    
-				var jid = json.rebootvirtualmachineresponse.jobid;    				
-                args.response.success({_custom:{jobId: jid}});							
-		    }
-	    });  	
-	}	
-	/*
-	var pollRebootVM = function(args) {	        
-		$.ajax({
-            url: createURL("command=queryAsyncJobResult&jobId=" + args._custom.jobId),
-            dataType: "json",									                    					                    
-            success: function(json) {		                                                     							                       
-                var result = json.queryasyncjobresultresponse;										                   
-                if (result.jobstatus == 0) {
-                    return; //Job has not completed
-                } else {				                        			                          			                                             
-                    if (result.jobstatus == 1) { // Succeeded 				                            	                            
-                        args.complete();
-                    } else if (result.jobstatus == 2) { // Failed	                        
-						args.error({message:result.jobresult.errortext});						
-                    }											                    
-                }
-            },
-            error: function(XMLHttpResponse) {	                            
-                args.error();
-            }
-        });		
-	}
-	*/
-	var initDestroyVM = function(args) {	    
-	    $.ajax({
-	        url: createURL("destroyVirtualMachine&id=" + args.data.id),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 			    
-				var jid = json.destroyvirtualmachineresponse.jobid;    				
-                args.response.success({_custom:{jobId: jid}});							
-		    }
-	    });  	
-	}	
-	
-	
+  login();	
 	
   cloudStack.sections.instances = {
     title: 'Instances',
@@ -262,7 +99,17 @@
 
         reboot: {
           label: 'Reboot instance',
-          action: initRebootVM,
+          action: function(args) {	    
+			$.ajax({
+			  url: createURL("rebootVirtualMachine&id=" + args.data.id),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 			    
+				var jid = json.rebootvirtualmachineresponse.jobid;    				
+				args.response.success({_custom:{jobId: jid}});							
+			  }
+			});  	
+		  },
           messages: {
             confirm: function(args) {
               return 'Are you sure you want to reboot ' + args.name + '?';
@@ -290,8 +137,17 @@
             }, 500);
           },
 		  */
-		  action: initStopVM,
-		  
+		  action: function(args) {	    
+			$.ajax({
+			  url: createURL("stopVirtualMachine&id=" + args.data.id),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 			    
+				var jid = json.stopvirtualmachineresponse.jobid;    				
+				args.response.success({_custom:{jobId: jid}});							
+			  }
+			});  	
+		  },		  
           messages: {
             confirm: function(args) {
               return 'Are you sure you want to stop ' + args.name + '?';
@@ -314,7 +170,17 @@
 		
         start: { 
 		  label: 'Start instance' ,
-		  action: initStartVM,
+		  action: function(args) {	    
+			$.ajax({
+			  url: createURL("startVirtualMachine&id=" + args.data.id),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 			    
+				var jid = json.startvirtualmachineresponse.jobid;    				
+				args.response.success({_custom:{jobId: jid}});							
+			  }
+			});  	
+		  },
 		  messages: {
             confirm: function(args) {
               return 'Are you sure you want to start ' + args.name + '?';
@@ -350,7 +216,17 @@
               return args.name + ' has been destroyed.';
             }
           },         
-		  action: initDestroyVM,		  
+		  action: function(args) {	    
+			$.ajax({
+		      url: createURL("destroyVirtualMachine&id=" + args.data.id),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 			    
+				var jid = json.destroyvirtualmachineresponse.jobid;    				
+				args.response.success({_custom:{jobId: jid}});							
+			  }
+			});  	
+		  },		  
           notification: {
             poll: pollAsyncJobResult	
           }
@@ -358,7 +234,17 @@
       },
       
 	  //dataProvider: testData.dataProvider.listView('instances'),
-	  dataProvider: getVMs,
+	  dataProvider: function(args) {        
+		$.ajax({
+		  url: createURL("listVirtualMachines&page="+args.page+"&pagesize="+pageSize),
+		  dataType: "json",
+		  async: true,
+		  success: function(json) { 	
+			var items = json.listvirtualmachinesresponse.virtualmachine;			    
+			args.response.success({data:items});			                			
+		  }
+		});  	
+	  },
 	  
       detailView: {
         name: 'Instance details',
@@ -378,7 +264,17 @@
           },
           stop: { 
 		    label: 'Stop VM', 			
-			action: initStopVM,		  
+			action: function(args) {	    
+			  $.ajax({
+				url: createURL("stopVirtualMachine&id=" + args.data.id),
+				dataType: "json",
+				async: true,
+				success: function(json) { 			    
+				  var jid = json.stopvirtualmachineresponse.jobid;    				
+				  args.response.success({_custom:{jobId: jid}});							
+				}
+			  });  	
+			},		  
 			messages: {
 			  confirm: function(args) {
 				return 'Are you sure you want to stop ' + args.name + '?';
@@ -399,7 +295,17 @@
 	      },
           reboot: {
             label: 'Reboot VM',
-			action: initRebootVM,
+			action: function(args) {	    
+			  $.ajax({
+				url: createURL("rebootVirtualMachine&id=" + args.data.id),
+				dataType: "json",
+				async: true,
+				success: function(json) { 			    
+				  var jid = json.rebootvirtualmachineresponse.jobid;    				
+				  args.response.success({_custom:{jobId: jid}});							
+				}
+			  });  	
+			},
             messages: {
               confirm: function(args) {
                 return 'Are you sure you want to reboot ' + args.name + '?';
@@ -420,7 +326,17 @@
           },
           destroy: {
             label: 'Destroy VM',
-			action: initDestroyVM,
+			action: function(args) {	    
+			  $.ajax({
+				url: createURL("destroyVirtualMachine&id=" + args.data.id),
+				dataType: "json",
+				async: true,
+				success: function(json) { 			    
+				  var jid = json.destroyvirtualmachineresponse.jobid;    				
+				  args.response.success({_custom:{jobId: jid}});							
+				}
+			  });  	
+			},
             messages: {
               confirm: function(args) {
                 return 'Are you sure you want to destroy ' + args.name + '?';
@@ -494,8 +410,21 @@
                 group: { label: 'Group', isEditable: true }
               }
             ],
+			
             //dataProvider: testData.dataProvider.detailView('instances')
-			dataProvider: getOneVM
+			dataProvider: function(args) {	    
+			  $.ajax({
+				url: createURL("listVirtualMachines&id="+args.id),
+				dataType: "json",
+				async: true,
+				success: function(json) { 	
+				  var items = json.listvirtualmachinesresponse.virtualmachine;
+				  if(items != null && items.length > 0) {
+					args.response.success({data:items[0]});		
+				  }    			
+				}
+			  });  	
+		    }			
           },
 
           /**

@@ -1,17 +1,5 @@
 (function(cloudStack, testData) {
-    login();
-	
-	var getAlerts = function(r) {        
-        $.ajax({
-	        url: createURL("listAlerts"),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listalertsresponse.alert;			    
-				r.response.success({data:items});		                			
-		    }
-	    });  	
-    }
+  login();	
 
   cloudStack.sections.events = {
     title: 'Events',
