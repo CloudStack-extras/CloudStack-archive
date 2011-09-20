@@ -1,56 +1,6 @@
 (function(cloudStack, testData) {
-    login();
+  login();
     
-    var getVolumes = function(r) {        
-        $.ajax({
-	        url: createURL("listVolumes"),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 				    
-			    var items = json.listvolumesresponse.volume;			    
-				r.response.success({data:items});			                			
-		    }
-	    });  	
-    };
-    var getOneVolume = function(r) {        
-        $.ajax({
-	        url: createURL("listVolumes&id="+r.id),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 				    
-			    var items = json.listvolumesresponse.volume;
-			    if(items != null && items.length > 0) {
-				    r.response.success({data:items[0]});		
-	            }    			
-		    }
-	    });  	
-    };
-	
-	var getSnapshots = function(r) {        
-        $.ajax({
-	        url: createURL("listSnapshots"),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 				    
-			    var items = json.listsnapshotsresponse.snapshot;			   
-				r.response.success({data:items});			                			
-		    }
-	    });  	
-    }
-	var getOneSnapshot = function(r) {        
-        $.ajax({
-	        url: createURL("listSnapshots&id="+r.id),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 				    
-			    var items = json.listsnapshotsresponse.snapshot;
-			    if(items != null && items.length > 0) {
-				    r.response.success({data:items[0]});		
-	            }    			
-		    }
-	    });  	
-    }
-
   cloudStack.sections.storage = {
     title: 'Storage',
     id: 'storage',
@@ -203,7 +153,17 @@
           },
           
 		  //dataProvider: testData.dataProvider.listView('storage'),
-		  dataProvider: getVolumes,
+		  dataProvider: function(args) {        
+			$.ajax({
+			  url: createURL("listVolumes&page="+args.page+"&pagesize="+pageSize),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 				    
+				var items = json.listvolumesresponse.volume;			    
+				args.response.success({data:items});			                			
+			  }
+			});  	
+		  },
 		  
           detailView: {
             name: 'Volume details',
@@ -298,7 +258,19 @@
                   }
                 ],
                 //dataProvider: testData.dataProvider.detailView('storage')
-				dataProvider: getOneVolume
+				dataProvider: function(args) {        
+				  $.ajax({
+					url: createURL("listVolumes&id="+args.id),
+					dataType: "json",
+					async: true,
+					success: function(json) { 				    
+					  var items = json.listvolumesresponse.volume;
+					  if(items != null && items.length > 0) {
+						args.response.success({data:items[0]});		
+					  }    			
+					}
+				  });  	
+				}			
               }
             }
           }
@@ -320,7 +292,17 @@
           },
           
 		  //dataProvider: testData.dataProvider.listView('snapshots'),
-		  dataProvider: getSnapshots,
+		  dataProvider: function(args) {        
+			$.ajax({
+			  url: createURL("listSnapshots&page="+args.page+"&pagesize="+pageSize),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 				    
+				var items = json.listsnapshotsresponse.snapshot;			   
+				args.response.success({data:items});			                			
+			  }
+			});  	
+		  },
 		  
           detailView: {
             name: 'Snapshot detail',
@@ -341,7 +323,19 @@
                   }
                 ],
                 //dataProvider: testData.dataProvider.detailView('snapshots')
-				dataProvider: getOneSnapshot
+				dataProvider: function(args) {        
+				  $.ajax({
+					url: createURL("listSnapshots&id="+args.id),
+					dataType: "json",
+					async: true,
+					success: function(json) { 				    
+					  var items = json.listsnapshotsresponse.snapshot;
+					  if(items != null && items.length > 0) {
+						args.response.success({data:items[0]});		
+					  }    			
+					}
+				  });  	
+				}				
               }
             }
           }
