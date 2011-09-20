@@ -1,53 +1,5 @@
 (function(cloudStack, testData) {
-    login();
-
-    var getServiceOfferings = function(r) {          
-        $.ajax({
-	        url: createURL("listServiceOfferings&issystem=false&page="+r.page+"&pagesize="+pageSize),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listserviceofferingsresponse.serviceoffering;			    
-				r.response.success({data:items});			                			
-		    }
-	    });  	
-    }
-	
-    var getDiskOfferings = function(r) {          
-        $.ajax({
-	        url: createURL("listDiskOfferings&page="+r.page+"&pagesize="+pageSize),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listdiskofferingsresponse.diskoffering;			    
-				r.response.success({data:items});			                			
-		    }
-	    });  	
-    }
-
-	var getNetworkOfferings = function(r) {          
-        $.ajax({
-	        url: createURL("listNetworkOfferings&guestiptype=Virtual&page="+r.page+"&pagesize="+pageSize),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listnetworkofferingsresponse.networkoffering;			    
-				r.response.success({data:items});			                			
-		    }
-	    });  	
-    }
-	
-	var getGlobalSettings = function(r) {          
-        $.ajax({
-	        url: createURL("listConfigurations&page="+r.page+"&pagesize="+pageSize),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listconfigurationsresponse.configuration;			    
-				r.response.success({data:items});			                			
-		    }
-	    });  	
-    }
+  login();
 
   cloudStack.sections.configuration = {
     title: 'Configuration',
@@ -118,7 +70,17 @@
               }
             }
           },
-          dataProvider: getServiceOfferings
+          dataProvider: function(args) {          
+			$.ajax({
+			  url: createURL("listServiceOfferings&issystem=false&page="+args.page+"&pagesize="+pageSize),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 	
+				var items = json.listserviceofferingsresponse.serviceoffering;			    
+				args.response.success({data:items});			                			
+			  }
+			});  	
+		  }
         }
       },
       diskOfferings: {
@@ -131,7 +93,17 @@
             disksize: { label: 'Disk Size' },
             domain: { label: 'Domain'}
           },
-          dataProvider: getDiskOfferings
+          dataProvider: function(args) {          
+			$.ajax({
+			  url: createURL("listDiskOfferings&page="+args.page+"&pagesize="+pageSize),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 	
+				var items = json.listdiskofferingsresponse.diskoffering;			    
+				args.response.success({data:items});			                			
+			  }
+			});  	
+		  }
         }
       },
       networkOfferings: {
@@ -144,7 +116,17 @@
             networkrate: { label: 'Network Rate' },
             traffictype: { label: 'Traffic Type'}
           },
-          dataProvider: getNetworkOfferings
+          dataProvider: function(args) {          
+			$.ajax({
+			  url: createURL("listNetworkOfferings&guestiptype=Virtual&page="+args.page+"&pagesize="+pageSize),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 	
+				var items = json.listnetworkofferingsresponse.networkoffering;			    
+				args.response.success({data:items});			                			
+			  }
+			});  	
+		  }
         }
       },
       globalSettings: {
@@ -168,7 +150,17 @@
             description: { label: 'Description' },
             value: { label: 'Value', editable: true }
           },
-          dataProvider: getGlobalSettings
+          dataProvider: function(args) {          
+			$.ajax({
+			  url: createURL("listConfigurations&page="+args.page+"&pagesize="+pageSize),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 	
+				var items = json.listconfigurationsresponse.configuration;			    
+				args.response.success({data:items});			                			
+			  }
+			});  	
+		  }
         }
       }
     }
