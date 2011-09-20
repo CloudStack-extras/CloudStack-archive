@@ -1,29 +1,5 @@
 (function(cloudStack, testData) {
-    login();
-
-    var getTemplates = function(r) {        
-        $.ajax({
-	        url: createURL("listTemplates&templatefilter=self"),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listtemplatesresponse.template;			    
-				r.response.success({data:items});			                			
-		    }
-	    });  	
-    }
-	
-	var getISOs = function(r) {        
-        $.ajax({
-	        url: createURL("listIsos&isofilter=self"),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listisosresponse.iso;			    
-				r.response.success({data:items});		                			
-		    }
-	    });  	
-    }
+  login();
 
   cloudStack.sections.templates = {
     title: 'Templates',
@@ -49,8 +25,17 @@
           },
 		  
           //dataProvider: testData.dataProvider.listView('templates')
-		  dataProvider: getTemplates
-		  
+		  dataProvider: function(args) {        
+			$.ajax({
+			  url: createURL("listTemplates&templatefilter=self&page="+args.page+"&pagesize="+pageSize),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 	
+				var items = json.listtemplatesresponse.template;			    
+				args.response.success({data:items});			                			
+			  }
+		    });  	
+		  }		  
         }
       },
       isos: {
@@ -65,8 +50,17 @@
           },
           
 		  //dataProvider: testData.dataProvider.listView('isos')
-		  dataProvider: getISOs
-		  
+		  dataProvider: function(args) {        
+			$.ajax({
+			  url: createURL("listIsos&isofilter=self&page="+args.page+"&pagesize="+pageSize),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 	
+				var items = json.listisosresponse.iso;			    
+				args.response.success({data:items});		                			
+			  }
+			});  	
+		  }		  
         }
       }
     }
