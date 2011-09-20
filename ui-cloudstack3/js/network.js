@@ -1,55 +1,6 @@
 (function(cloudStack, testData) {
-    login();
+  login();
 
-    var getIpAddresses = function(r) {        
-        $.ajax({
-	        url: createURL("listPublicIpAddresses"),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listpublicipaddressesresponse.publicipaddress;			    
-				r.response.success({data:items});			                			
-		    }
-	    });  	
-    };
-    var getOneIpAddress = function(r) {        
-        $.ajax({
-	        url: createURL("listPublicIpAddresses&id="+r.id),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listpublicipaddressesresponse.publicipaddress;		
-                if(items != null && items.length > 0) {				
-				    r.response.success({data:items[0]});	
-                }					
-		    }
-	    });  	
-    };
-	
-	var getSecurityGroups = function(r) {        
-        $.ajax({
-	        url: createURL("listSecurityGroups"),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listsecuritygroupsresponse.securitygroup;			    
-				r.response.success({data:items});			                			
-		    }
-	    });  	
-    };
-    var getOneSecurityGroup = function(r) {        
-        $.ajax({
-	        url: createURL("listSecurityGroups&id="+r.id),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listsecuritygroupsresponse.securitygroup;		
-				if(items != null && items.length > 0) {						
-				    r.response.success({data:items[0]});		
-                }					
-		    }
-	    });  	
-    };
   cloudStack.sections.network = {
     title: 'Network',
     id: 'network',
@@ -139,7 +90,17 @@
           },
           
 		  //dataProvider: testData.dataProvider.listView('network'),
-		  dataProvider: getIpAddresses,
+		  dataProvider: function(args) {        
+			$.ajax({
+			  url: createURL("listPublicIpAddresses&page="+args.page+"&pagesize="+pageSize),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 	
+				var items = json.listpublicipaddressesresponse.publicipaddress;			    
+				args.response.success({data:items});			                			
+			  }
+			});  	
+		  },
 
           // Detail view
           detailView: {
@@ -160,8 +121,19 @@
                 ],
                 
 				//dataProvider: testData.dataProvider.detailView('network')
-				dataProvider: getOneIpAddress
-				
+				dataProvider: function(args) {        
+				  $.ajax({
+					url: createURL("listPublicIpAddresses&id="+args.id),
+					dataType: "json",
+					async: true,
+					success: function(json) { 	
+					  var items = json.listpublicipaddressesresponse.publicipaddress;		
+					  if(items != null && items.length > 0) {				
+						args.response.success({data:items[0]});	
+					  }					
+					}
+				  });  	
+				}				
               },
 
               portRange: {
@@ -331,7 +303,17 @@
           },
 		  
           //dataProvider: testData.dataProvider.listView('securityGroups'),
-		  dataProvider: getSecurityGroups,
+		  dataProvider: function(args) {        
+			$.ajax({
+		  	  url: createURL("listSecurityGroups&page="+args.page+"&pagesize="+pageSize),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 	
+				var items = json.listsecuritygroupsresponse.securitygroup;			    
+				args.response.success({data:items});			                			
+			  }
+			});  	
+		  },
 		  
           detailView: {
             name: 'Security group details',
@@ -349,8 +331,19 @@
                 ],
 				
                 //dataProvider: testData.dataProvider.detailView('securityGroups')
-				dataProvider: getOneSecurityGroup
-				
+				dataProvider: function(args) {        
+				  $.ajax({
+					url: createURL("listSecurityGroups&id="+args.id),
+					dataType: "json",
+					async: true,
+					success: function(json) { 	
+					  var items = json.listsecuritygroupsresponse.securitygroup;		
+					  if(items != null && items.length > 0) {						
+						args.response.success({data:items[0]});		
+					  }					
+					}
+				  });  	
+				}			
               },
               ingressRules: {
                 title: 'Ingress Rules',
