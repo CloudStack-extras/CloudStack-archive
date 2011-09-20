@@ -1,19 +1,6 @@
 (function(cloudStack, testData) {
-    login();
-
-    var getAccounts = function(r) {        
-        $.ajax({
-	        url: createURL("listAccounts"),
-		    dataType: "json",
-		    async: true,
-		    success: function(json) { 	
-			    var items = json.listaccountsresponse.account;			    
-				r.response.success({data:items});			               			
-		    }
-	    });  	
-    }
-
-
+  login();
+  
   cloudStack.sections.accounts = {
     title: 'Accounts',
     id: 'accounts',
@@ -29,7 +16,17 @@
       },
       
 	  //dataProvider: testData.dataProvider.listView('accounts')
-	  dataProvider: getAccounts
+	  dataProvider: function(args) {        
+		$.ajax({
+		  url: createURL("listAccounts&page="+args.page+"&pagesize="+pageSize),
+		  dataType: "json",
+		  async: true,
+		  success: function(json) { 	
+			var items = json.listaccountsresponse.account;			    
+			args.response.success({data:items});			               			
+		  }
+		});  	
+	  }
 	  
     }
   };  
