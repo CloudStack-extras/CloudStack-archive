@@ -6,11 +6,11 @@
     id: 'instances',
     listView: {
       section: 'instances',
-      filters: {
-        mine: { label: 'My instances' },
-        all: { label: 'All instances' },
-        running: { label: 'Running instances' },
-        destroyed: { label: 'Destroyed instances' }
+      filters: {       
+        mine: { label: 'Mine' },
+        running: { label: 'Running' },
+        stopped: { label: 'Stopped' },
+		destroyed: { label: 'Destroyed' }
       },
       fields: {
         name: { label: 'Name', editable: true },
@@ -97,7 +97,7 @@
           }
         },
 
-        reboot: {
+        restart: {
           label: 'Reboot instance',
           action: function(args) {	    
 			$.ajax({
@@ -234,9 +234,29 @@
       },
       
 	  //dataProvider: testData.dataProvider.listView('instances'),
-	  dataProvider: function(args) {        
+	  dataProvider: function(args) {           
+		var array1 = [];
+		if(args.filterBy != null) {
+		  if(args.filterBy.kind != null) {
+			switch(args.filterBy.kind) {				
+				case "mine":
+				  array1.push("&domainid=" + g_domainid + "&account=" + g_account);
+				  break;
+				case "running":
+				  array1.push("&state=Running");
+				  break;
+				case "stopped":
+				  array1.push("&state=Stopped");
+				  break;
+				case "destroyed":
+				  array1.push("&state=Destroyed");
+				  break;
+			}
+		  }
+		}
+		
 		$.ajax({
-		  url: createURL("listVirtualMachines&page="+args.page+"&pagesize="+pageSize),
+		  url: createURL("listVirtualMachines&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
 		  dataType: "json",
 		  async: true,
 		  success: function(json) { 	
