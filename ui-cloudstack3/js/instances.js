@@ -14,7 +14,7 @@
       },
       fields: {
         name: { label: 'Name', editable: true },
-        account: { label: 'Account' },
+        displayname: { label: 'Display Name' },
         zonename: { label: 'Zone' },
         state: { label: 'Status' }
       },
@@ -235,7 +235,7 @@
       
 	  //dataProvider: testData.dataProvider.listView('instances'),
 	  dataProvider: function(args) {           
-		var array1 = [];
+		var array1 = [];	
 		if(args.filterBy != null) {
 		  if(args.filterBy.kind != null) {
 			switch(args.filterBy.kind) {				
@@ -251,6 +251,13 @@
 				case "destroyed":
 				  array1.push("&state=Destroyed");
 				  break;
+			}
+		  }
+		  if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+		    switch(args.filterBy.search.by) {
+			  case "name":
+			    array1.push("&keyword=" + args.filterBy.search.value);
+			    break;
 			}
 		  }
 		}
