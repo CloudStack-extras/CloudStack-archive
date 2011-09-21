@@ -2701,6 +2701,14 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         UsageEventVO usageEvent = new UsageEventVO(EventTypes.EVENT_VM_START, vm.getAccountId(), vm.getDataCenterIdToDeployIn(), vm.getId(), vm.getHostName(), vm.getServiceOfferingId(), vm.getTemplateId(), vm
                 .getHypervisorType().toString());
         _usageEventDao.persist(usageEvent);
+        
+        Answer[] answersToCmds = cmds.getAnswers();
+        if(answersToCmds == null){
+            if(s_logger.isDebugEnabled()){
+                s_logger.debug("Returning from finalizeStart() since there are no answers to read");
+            }
+            return true;
+        }
         Answer startAnswer = cmds.getAnswer(StartAnswer.class);
         String returnedIp = null;
         String originalIp = null;
