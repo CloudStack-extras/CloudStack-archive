@@ -26,9 +26,23 @@
             add: {
               label: 'Add volume',
 
+			  /*
               action: function(args) {
                 args.response.success();
               },
+			  */
+			  action: function(args) {	
+                //Brian's to-do: make args include input field value from createForm 
+				$.ajax({
+				  url: createURL("createVolume&name=createFromHardcoding2&zoneId=10&diskOfferingId=9"),
+				  dataType: "json",
+				  async: true,
+				  success: function(json) { 			    
+					var jid = json.createvolumeresponse.jobid;	  				
+					args.response.success({_custom:{jobId: jid}});							
+				  }
+				});  	
+			  },			  		  
 
               messages: {
                 confirm: function(args) {
@@ -55,28 +69,33 @@
                   },
                   availabilityZone: {
                     label: 'Availability Zone',
-                    select: [
-                      { id: 'sanjose', description: 'San Jose' },
-                      { id: 'Chicago', description: 'Chicago' }
+                    select: [                      
+                      { id: '5' , description: 'CV' },
+					  { id: '6' , description: 'KS' },
+					  { id: '10', description: 'JW' }
                     ]
                   },
                   diskOffering: {
                     label: 'Disk Offering',
                     select: [
-                      { id: 'small', description: 'Small Disk, 5GB' },
-                      { id: 'medium', description: 'Medium Disk, 20GB' },
-                      { id: 'large', description: 'Large Disk, 100GB' }
+                      { id: '9' , description: 'Small Disk, 5 GB' },
+                      { id: '10', description: 'Medium Disk, 20 GB' },
+                      { id: '11', description: 'Large Disk, 100 GB' }
                     ]
-                  },
+                  }
+				  /*
+				  ,
                   diskSize: {
                     label: 'Disk size (in GB)',
                     validation: { required: true, number: true }
                   }
+				  */
                 }
               },
 
               notification: {
-                poll: testData.notifications.testPoll
+                //poll: testData.notifications.testPoll
+				poll: pollAsyncJobResult
               }
             },
             edit: {
