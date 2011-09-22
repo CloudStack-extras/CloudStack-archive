@@ -66,10 +66,13 @@
             text: 'Create',
             'class': 'ok',
             click: function() {
+              var $form = $formContainer.find('form');
+              var data = cloudStack.serializeForm($form);
+
               if (!$formContainer.find('form').valid()) return false;
 
               $('div.overlay').remove();
-              args.after($formContainer.find('form'));
+              args.after({ data: data });
               $(this).dialog('destroy');
 
               return true;

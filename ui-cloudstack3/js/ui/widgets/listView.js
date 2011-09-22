@@ -64,9 +64,10 @@
       if (listViewArgs)
         notification.section = listViewArgs.id;
 
-      var performAction = function() {
+      var performAction = function(data) {
         if (action.custom) {
           action.custom({
+            data: data,
             complete: function(args) {
               args = args ? args : {};
               notification.desc = messages.notification(args.messageArgs);
@@ -109,7 +110,9 @@
       else
         cloudStack.dialog.createForm({
           form: args.action.createForm,
-          after: performAction
+          after: function(args) {
+            performAction(args.data);
+          }
         });
     },
 
@@ -559,7 +562,7 @@
       listViewData.fields,
       false,
       {
-	    page: page,
+        page: page,
         ref: args.ref
       },
       actions);
