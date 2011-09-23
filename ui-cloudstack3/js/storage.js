@@ -67,19 +67,31 @@
                   },
                   availabilityZone: {
                     label: 'Availability Zone',
-                    select: [                      
-                      { id: '5' , description: 'CV' },
-					  { id: '6' , description: 'KS' },
-					  { id: '10', description: 'JW' }
-                    ]
+                    select: function(args) {	
+                      $.ajax({
+						url: createURL("listZones&available=true"),			 
+						dataType: "json",
+						async: true,
+						success: function(json) { 				   
+						  var items = json.listzonesresponse.zone;								  
+						  args.response.success({descriptionField: 'name', data: items});					  
+						}
+					  });  						 
+					}		
                   },
                   diskOffering: {
                     label: 'Disk Offering',
-                    select: [
-                      { id: '9' , description: 'Small Disk, 5 GB' },
-                      { id: '10', description: 'Medium Disk, 20 GB' },
-                      { id: '11', description: 'Large Disk, 100 GB' }
-                    ]
+                    select: function(args) {					  
+					  $.ajax({
+						url: createURL("listDiskOfferings"),			 
+						dataType: "json",
+						async: true,
+						success: function(json) { 				   
+						  var items = json.listdiskofferingsresponse.diskoffering;						  
+						  args.response.success({descriptionField: 'displaytext', data: items});					  
+						}
+					  });  		
+					}				
                   }
 				  /*
 				  ,
