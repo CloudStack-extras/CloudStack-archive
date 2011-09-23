@@ -151,7 +151,8 @@
         args.response.success({
           data: [
             { id: 'domainA', name: 'Domain A' },
-            { id: 'domainB', name: 'Domain B' }
+            { id: 'domainB', name: 'Domain B' },
+			{ id: 'domainC', name: 'Domain C' }
           ]
         });
       }

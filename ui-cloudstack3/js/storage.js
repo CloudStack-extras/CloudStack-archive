@@ -1,6 +1,4 @@
-(function(cloudStack, testData) {
-  login();
-    
+(function(cloudStack, testData) {  
   cloudStack.sections.storage = {
     title: 'Storage',
     id: 'storage',

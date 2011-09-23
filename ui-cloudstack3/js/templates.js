@@ -1,6 +1,4 @@
-(function(cloudStack, testData) {
-  login();
-
+(function(cloudStack, testData) { 
   cloudStack.sections.templates = {
     title: 'Templates',
     id: 'templates',

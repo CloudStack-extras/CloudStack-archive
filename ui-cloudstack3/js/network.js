@@ -1,6 +1,4 @@
-(function(cloudStack, testData) {
-  login();
-
+(function(cloudStack, testData) {  
   cloudStack.sections.network = {
     title: 'Network',
     id: 'network',

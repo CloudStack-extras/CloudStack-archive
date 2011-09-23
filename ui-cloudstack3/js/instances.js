@@ -1,6 +1,4 @@
-(function($, cloudStack, testData) {
-  login();	
-	
+(function($, cloudStack, testData) {	
   cloudStack.sections.instances = {
     title: 'Instances',
     id: 'instances',

@@ -1,6 +1,4 @@
 (function(cloudStack, testData) {
-  login();	
-
   cloudStack.sections.events = {
     title: 'Events',
     id: 'events',
