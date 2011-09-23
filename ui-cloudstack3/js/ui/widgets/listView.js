@@ -156,7 +156,7 @@
             success: function(args) {
               $edit.hide();
               $label.fadeIn();
-              $instanceRow.closest('div.data-table').dataTable('refresh');    
+              $instanceRow.closest('div.data-table').dataTable('refresh');
             }
           }
         });
@@ -178,7 +178,7 @@
         addNotification(
           {
             section: $instanceRow.closest('div.view').data('view-args').id,
-            desc: 'Renamed ' + originalName + ' to ' + newName 
+            desc: 'Renamed ' + originalName + ' to ' + newName
           },
           function(data) {
             showLabel(newName);
@@ -322,7 +322,7 @@
           $detailView = args.pageGenerator(data);
 
         if (complete) complete($detailView);
-                
+
         return $detailView.appendTo($newPanel);
       }
     };
@@ -380,6 +380,7 @@
 
   var setLoading = function($table, completeFn) {
     var $loading = $('<tr>')
+          .addClass('loading')
           .appendTo($table.find('tbody'))
           .append(
             $('<td>')
@@ -420,8 +421,14 @@
         response: {
           success: function(args) {
             setLoadingArgs.loadingCompleted();
-            addTableRows(fields, args.data, $tbody, actions);
-            $table.dataTable();
+
+            if (!args.data) {
+              $table.find('tr:not(.loading)')
+                .filter(':last').addClass('last');
+            } else {
+              addTableRows(fields, args.data, $tbody, actions);
+              $table.dataTable();
+            }
           },
           error: function() {
             alert('error');
@@ -496,7 +503,7 @@
    */
   var makeListView = function($container, args, section) {
     args.activeSection = section;
-    
+
     // Clear out any existing list view
     var $existingListView = $container.find('div.list-view');
     if ($existingListView.size()) {
@@ -526,7 +533,7 @@
     $('<div class="panel-controls">').append($('<div class="control expand">').attr({
       'ui-id': 'toggle-expand-panel'
     })).appendTo($toolbar);
-    
+
     if (listViewData.actions && listViewData.actions.add) {
       $toolbar
         .append(
@@ -549,7 +556,7 @@
       if (section) {
         $switcher
           .appendTo($toolbar)
-          .find('a.' + section).addClass('active'); 
+          .find('a.' + section).addClass('active');
         $switcher.find('div.section-select select').val(section);
       }
     }
@@ -616,7 +623,7 @@
 
     // Infinite scrolling event
     $listView.bind('scroll', function(event) {
-      if ($('td.loading:visible').size()) return false;
+      if ($listView.find('tr.last, td.loading:visible').size()) return false;
 
       clearTimeout(infScrollTimer);
       infScrollTimer = setTimeout(function() {
@@ -649,7 +656,7 @@
         $tr.animate({ opacity: 0.5 });
         $tr.bind('click', function() { return false; });
       }
-    }); 
+    });
 
     $listView.bind('click change', function(event) {
       var $target = $(event.target);

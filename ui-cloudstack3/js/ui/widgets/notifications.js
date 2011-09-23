@@ -226,7 +226,7 @@
     }
 
     // Notification item
-    if ($target.closest('.notification-box li').size()) {
+    if ($target.is('.notification-box li span')) {
       var $li = $target.closest('.notification-box li');
 
       $('#navigation ul li').filter(function() {
@@ -242,14 +242,19 @@
       $popup = $target.closest('div.notification-box');
 
       // Clear list
-      if ($target.closest('.button.clear-list').size())
+      if ($target.closest('.button.clear-list').size()) {
         notifications.clear($popup);
+      }
+
       // Remove instance item
-      else if ($target.hasClass('remove'))
+      else if ($target.hasClass('remove')) {
         notifications.removeItem($popup, $target.closest('li'));
+      }
+
       // Close button
-      else if ($target.closest('.button.close'))
-        $('div.overlay').click();
+      else if ($target.closest('.button.close')) {
+        $('div.overlay').click();        
+      }
 
       return false;
     }
