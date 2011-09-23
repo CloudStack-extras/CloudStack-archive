@@ -198,13 +198,14 @@
             });
           }
         });
-      else
+      else {
         cloudStack.dialog.createForm({
           form: action.createForm,
-          after: function($form) {
-            performAction(cloudStack.serializeForm($form));
+          after: function(args) {
+            performAction(args.data);
           }
-        });
+        });        
+      }
     },
 
     /**
