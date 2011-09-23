@@ -7,7 +7,7 @@
        * Dashboard
        */
       dashboard: {},
-      'dashboard-user': {},
+      //'dashboard-user': {},
       instances: {},
       storage: {},
       network: {},

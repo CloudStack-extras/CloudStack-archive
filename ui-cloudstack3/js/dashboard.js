@@ -8,10 +8,13 @@
   };  
 
   // User dashboard
+  /*
   cloudStack.sections['dashboard-user'] = {
     title: 'Dashboard (user)',
     show: function() {
       return $('#template').find('div.dashboard.user').clone();
     }
   };
+  */
+  
 })(cloudStack, testData);
