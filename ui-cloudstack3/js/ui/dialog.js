@@ -26,11 +26,18 @@
         // Determine field type of input
         if (this.select) {
           $input = $('<select>').attr({ name: key }).appendTo($value);
-          $(this.select).each(function() {
-            var $option = $('<option>')
-                  .appendTo($input)
-                  .val(this.id)
-                  .html(this.description);
+
+          this.select({
+            response: {
+              success: function(args) {
+                $(args.data).each(function() {
+                  var $option = $('<option>')
+                        .appendTo($input)
+                        .val(this.id)
+                        .html(this.description);
+                });   
+              }
+            }
           });
         } else if (this.isBoolean) {
           $input = $('<input>').attr({ name: key, type: 'checkbox' }).appendTo($value);

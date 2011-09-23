@@ -120,7 +120,7 @@
             $tr.css({ opacity: 1 })
               .siblings()
               .filter(function() {
-                return !$(this).hasClass('new') && 
+                return !$(this).hasClass('new') &&
                   $(this).find('td.actions .action').size();
               })
               .filter(':first')
@@ -129,7 +129,7 @@
                 $tr.find('td.actions')
               );
           }
-        });        
+        });
       })($detailView.find('.multi-edit tbody tr:first'));
     },
 
@@ -168,7 +168,7 @@
 
       notification.desc = messages.notification(messageArgs);
       notification.section = 'instances';
-      
+
       var performAction = function(data) {
         action.action({
           data: data,
@@ -279,6 +279,7 @@
 
         // Turn into form field
         var selectData = $value.data('detail-view-editable-select');
+
         if (selectData) {
           // Select
           var data = $value.html();
@@ -461,16 +462,22 @@
               })
               .append();
 
-            $(value.select).each(function() {
-              $('<option>')
-                .val(this.id)
-                .html(this.label)
-                .appendTo($input);
+            value.select({
+              response: {
+                success: function(args) {
+                  $(args.data).each(function() {
+                    $('<option>')
+                      .val(this.id)
+                      .html(this.label)
+                      .appendTo($input);
+                  });                  
+                }
+              }
             });
           }
 
           $input.addClass('required');
-          
+
           return $input;
         })
         .appendTo($blankRow);
@@ -631,19 +638,27 @@
           if (value.select) {
             value.selected = $value.html();
 
-            // Get matching select data
-            var matchedSelectValue = $.grep(value.select, function(option, index) {
-              return option.id == value.selected;
-            })[0];
+            value.select({
+              response: {
+                success: function(args) {
+                  // Get matching select data
+                  var matchedSelectValue = $.grep(args.data, function(option, index) {
+                    return option.id == value.selected;
+                  })[0];
 
-            if (!matchedSelectValue) {
-              $value.data('detail-view-is-editable', false);
-              return true;
-            }
+                  if (!matchedSelectValue) {
+                    $value.data('detail-view-is-editable', false);
+                    return false;
+                  }
 
-            $value.html(matchedSelectValue.description);
-            $value.data('detail-view-selected-option', matchedSelectValue.id);
-            $value.data('detail-view-editable-select', value.select);
+                  $value.html(matchedSelectValue.description);
+                  $value.data('detail-view-selected-option', matchedSelectValue.id);
+                  $value.data('detail-view-editable-select', args.data);
+
+                  return true;
+                }
+              }
+            });
           }
 
           return true;
@@ -810,7 +825,7 @@
     var $detailView = data.view;
     $('#browser .container').cloudBrowser('selectPanel', {
       panel: $detailView.closest('div.panel').prev()
-    }); 
+    });
   });
 
   // Setup action button events
