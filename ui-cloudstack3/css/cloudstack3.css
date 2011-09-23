@@ -940,6 +940,15 @@ div.detail-group.actions td {
   /*[empty]display:;*/
 }
 
+#header div.view-switcher div:hover {
+  color: #64ACF7;
+  /*+text-shadow:0px 1px 1px #F5F5F5;*/
+  -moz-text-shadow: 0px 1px 1px #F5F5F5;
+  -webkit-text-shadow: 0px 1px 1px #F5F5F5;
+  -o-text-shadow: 0px 1px 1px #F5F5F5;
+  text-shadow: 0px 1px 1px #F5F5F5;
+}
+
 #header div.view-switcher div span.icon {
   background: url(../images/icons.png) no-repeat;
   padding: 4px 14px 0px 6px;
