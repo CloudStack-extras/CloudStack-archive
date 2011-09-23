@@ -72,15 +72,23 @@
         };
 
         var dataGenerators = {
-          setup: function($step) {
+          setup: function($step) {		    
             // Zones
-            $(data.zones).each(function() {
-              $step.find('.select-zone select').append(
-                $('<option>')
-                  .attr({ value: this.id })
-                  .html(this.name)
-              );
-            });
+			$.ajax({
+			  url: createURL("listZones&available=true"),			 
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 				   
+				var items = json.listzonesresponse.zone;			    
+				$(items).each(function() {				  
+				  $step.find('.select-zone select').append(
+					$('<option>')
+					  .attr({ value: this.id })
+					  .html(this.name)
+				  );
+				});		
+			  }
+			});  	            
           },
 
           'select-iso': function($step) {
