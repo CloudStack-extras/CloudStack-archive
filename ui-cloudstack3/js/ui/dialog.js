@@ -31,10 +31,16 @@
             response: {
               success: function(args) {
                 $(args.data).each(function() {
+                  var id = this.id;
+                  var description = this.description;
+                  
+                  if (args.descriptionField)
+                    description = this[args.descriptionField];
+
                   var $option = $('<option>')
                         .appendTo($input)
-                        .val(this.id)
-                        .html(this.description);
+                        .val(id)
+                        .html(description);
                 });   
               }
             }
