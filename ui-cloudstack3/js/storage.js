@@ -30,9 +30,12 @@
               },
 			  */
 			  action: function(args) {	
-                //Brian's to-do: make args include input field value from createForm 
+                var array1 = [];
+				array1.push("&name=" + args.data.name);
+				array1.push("&zoneId=" + args.data.availabilityZone);
+				array1.push("&diskOfferingId=" + args.data.diskOffering);
 				$.ajax({
-				  url: createURL("createVolume&name=createFromHardcoding2&zoneId=10&diskOfferingId=9"),
+				  url: createURL("createVolume" + array1.join("")),
 				  dataType: "json",
 				  async: true,
 				  success: function(json) { 			    
