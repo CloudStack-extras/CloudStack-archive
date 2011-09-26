@@ -3,15 +3,9 @@
   cloudStack.sections.dashboard = {
     title: 'Dashboard',
     show: function() {
-      return $('#template').find('div.dashboard.admin').clone();
+      return $('<img>').attr({
+        src: 'images/screens/Dashboard2.jpg'
+      });
     }
   }; 
-
-  // User dashboard
-  cloudStack.sections['dashboard-user'] = {
-    title: 'Dashboard (user)',
-    show: function() {
-      return $('#template').find('div.dashboard.user').clone();
-    }
-  };
 })(cloudStack);

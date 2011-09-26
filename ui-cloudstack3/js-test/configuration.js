@@ -49,10 +49,15 @@
                   displayText: { label: 'Display Text' },
                   storageType: {
                     label: 'Storage Type',
-                    select: [
-                      { id: 'shared', description: 'Shared' },
-                      { id: 'local', description: 'Local' }
-                    ]
+                    select: function(args){
+                      args.response.success({
+                        data: [
+                          { id: 'small', description: 'Small Disk, 5GB' },
+                          { id: 'medium', description: 'Medium Disk, 20GB' },
+                          { id: 'large', description: 'Large Disk, 100GB' }
+                        ]
+                      });
+                    }
                   },
                   cpuCores: { label: '# of CPU cores' },
                   cpuSpeed: { label: 'CPU Speed (in MHz)'},

@@ -15,12 +15,13 @@
             allocationstate: { label: 'State' }
           },
           actions: {
+            destroy: testData.actions.destroy('zone'),
             add: {
               label: 'Add zone',
               action: {
                 custom: cloudStack.zoneWizard({
                   complete: function(args) {
-                    args.response.success({});
+                    args.response.success({ _custom: { jobID: new Date() } });
                   }
                 })
               },
@@ -44,58 +45,6 @@
             }
           },
           dataProvider: testData.dataProvider.listView('zones'),
-          actions: {
-            add: {
-              pod: {
-                action: function(args) {
-                  args.response.success();
-                },
-
-                messages: {
-                  notification: function(args) {
-                    return 'Created new pod';
-                  }
-                },
-
-                createForm: {
-                  title: 'Add pod',
-                  desc: 'Please fill in the following data to add a new pod',
-                  fields: {
-                    name: {
-                      label: 'Name',
-                      validation: { required: true }
-                    },
-                    gateway: {
-                      label: 'Gateway',
-                      validation: { required: true }
-                    },
-                    netmask: {
-                      label: 'Netmask',
-                      validation: { required: true }
-                    },
-                    ipRange: {
-                      label: 'Private IP Range',
-                      range: true,
-                      validation: { required: true, number: true }
-                    }
-                  }
-                },
-
-                notification: {
-                  poll: testData.notifications.testPoll
-                }
-              },
-              cluster: {
-                
-              },
-              'primary-storage': {
-                
-              },
-              host: {
-                
-              }
-            }
-          },
           detailView: {
             pageGenerator: cloudStack.zoneChart({
               dataProvider: testData.dataProvider.detailView('zones'),
@@ -186,22 +135,161 @@
                 endip: { label: 'End IP' },
                 allocationstate: { label: 'Status' }
               },
-              dataProvider: testData.dataProvider.listView('pods')
+              dataProvider: testData.dataProvider.listView('pods'),
+              actions: {
+                destroy: testData.actions.destroy('pod')
+              },
+              detailView: {
+                tabs: {
+                  details: {
+                    title: 'Details',
+                    fields: [
+                      {
+                        name: { label: 'Name' },
+                      },
+                      {
+                        allocationstate: { label: 'State' },
+                        startip: { label: 'Start IP' },
+                        endip: { label: 'End IP' },
+                      }
+                    ],
+                    dataProvider: testData.dataProvider.detailView('pods')
+                  },
+                }
+              }
             }
           },
           clusters: {
-            
+            listView: {
+              section: 'clusters',
+              fields: {
+                name: { label: 'Name' },
+                zonename: { label: 'Zone' },
+                podname: { label: 'Pod' }
+              },
+              dataProvider: testData.dataProvider.listView('clusters'),
+              actions: {
+                destroy: testData.actions.destroy('cluster')
+              },
+              detailView: {
+                tabs: {
+                  details: {
+                    title: 'Details',
+                    fields: [
+                      {
+                        name: { label: 'Name' },
+                      },
+                      {
+                        allocationstate: { label: 'State' },
+                        podname: { label: 'Pod' },
+                        hypervisortype: { label: 'Hypervisor' },
+                        clustertype: { label: 'Cluster' },
+                      }
+                    ],
+
+                    dataProvider: testData.dataProvider.detailView('clusters')
+                  },
+                }
+              }
+            }
           },
           hosts: {
-            
+           listView: {
+              section: 'hosts',
+              fields: {
+                name: { label: 'Name' },
+                zonename: { label: 'Zone' },
+                podname: { label: 'Pod' }
+              },
+              dataProvider: testData.dataProvider.listView('hosts'),
+              actions: {
+                destroy: testData.actions.destroy('host')
+              },
+              detailView: {
+                tabs: {
+                  details: {
+                    title: 'Details',
+                    fields: [
+                      {
+                        name: { label: 'Name' },
+                      },
+                      {
+                        type: { label: 'Type' },
+                        zonename: { label: 'Zone' },
+                      }
+                    ],
+
+                    dataProvider: testData.dataProvider.detailView('hosts')
+                  },
+                }
+              }
+            }
           },
-          primaryStorage: {
-            
+          'primary-storage': {
+            listView: {
+              section: 'primary-storage',
+              fields: {
+                name: { label: 'Name' },
+                zonename: { label: 'Zone' },
+                podname: { label: 'Pod' }
+              },
+              dataProvider: testData.dataProvider.listView('clusters'),
+              actions: {
+                destroy: testData.actions.destroy('cluster')
+              },
+              detailView: {
+                tabs: {
+                  details: {
+                    title: 'Details',
+                    fields: [
+                      {
+                      name: { label: 'Name' },
+                    },
+                    {
+                      zonename: { label: 'Zone' },
+                      hostname: { label: 'Host' }
+                    }
+                    ],
+
+                    dataProvider: testData.dataProvider.detailView('clusters')
+                  },
+                }
+              }
+            }
           },
-          secondaryStorage: {
-            
+          'secondary-storage': {
+            listView: {
+              section: 'seconary-storage',
+              fields: {
+                name: { label: 'Name' },
+                zonename: { label: 'Zone' },
+                podname: { label: 'Pod' }
+              },
+              dataProvider: testData.dataProvider.listView('clusters'),
+              actions: {
+                destroy: testData.actions.destroy('cluster')
+              },
+              detailView: {
+                tabs: {
+                  details: {
+                    title: 'Details',
+                    fields: [
+                      {
+                      name: { label: 'Name' },
+                    },
+                    {
+                      zonename: { label: 'Zone' },
+                      hostname: { label: 'Host' }
+                    }
+                    ],
+
+                    dataProvider: testData.dataProvider.detailView('clusters')
+                  },
+                }
+              }
+            }
           }
-        }        
+        }
       },
       virtualAppliances: {
         title: 'Virtual Appliances',

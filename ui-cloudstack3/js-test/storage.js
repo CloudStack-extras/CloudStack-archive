@@ -25,7 +25,7 @@
               label: 'Add volume',
 
               action: function(args) {
-                args.response.success();
+                args.response.success({ _custom: { jobID: new Date() } });
               },
 
               messages: {
@@ -53,18 +53,27 @@
                   },
                   availabilityZone: {
                     label: 'Availability Zone',
-                    select: [
-                      { id: 'sanjose', description: 'San Jose' },
-                      { id: 'Chicago', description: 'Chicago' }
-                    ]
+                    select: function(args) {
+                      args.response.success({
+                        descriptionField: 'displayname',
+                        data: [
+                          { id: 'sanjose', displayname: 'San Jose' },
+                          { id: 'Chicago', displayname: 'Chicago' }
+                        ]
+                      });
+                    }
                   },
                   diskOffering: {
                     label: 'Disk Offering',
-                    select: [
-                      { id: 'small', description: 'Small Disk, 5GB' },
-                      { id: 'medium', description: 'Medium Disk, 20GB' },
-                      { id: 'large', description: 'Large Disk, 100GB' }
-                    ]
+                    select: function(args) {
+                      args.response.success({
+                        data: [
+                          { id: 'small', description: 'Small Disk, 5GB' },
+                          { id: 'medium', description: 'Medium Disk, 20GB' },
+                          { id: 'large', description: 'Large Disk, 100GB' }
+                        ]
+                      });
+                    }
                   },
                   diskSize: {
                     label: 'Disk size (in GB)',
@@ -130,11 +139,15 @@
                   displayText: { label: 'Display text' },
                   osType: {
                     label: 'OS Type',
-                    select: [
-                      { id: 'centos53-64', description: 'CentOS 5.3 (64-bit)' },
-                      { id: 'rhel5-64', description: 'Red Hat Enterprise Linux 5.0 (64-bit)' },
-                      { id: 'deb6-32', description: 'Debian GNU/Linux 6.0 (32-bit)' }
-                    ]
+                    select: function(args){
+                      args.response.success({
+                        data: [
+                          { id: 'centos53-64', description: 'CentOS 5.3 (64-bit)' },
+                          { id: 'rhel5-64', description: 'Red Hat Enterprise Linux 5.0 (64-bit)' },
+                          { id: 'deb6-32', description: 'Debian GNU/Linux 6.0 (32-bit)' }
+                        ]
+                      });
+                    }
                   },
                   'public': {
                     label: 'Public', isBoolean: true
@@ -206,15 +219,19 @@
                   title: 'Create a template',
                   desc: 'To create a template from the selected volume, please complete the fields below.',
                   fields: {
-                    name: { label: 'Name' },
+                    name: { label: 'Name', validation: { required: true } },
                     displayText: { label: 'Display text' },
                     osType: {
                       label: 'OS Type',
-                      select: [
-                        { id: 'centos53-64', description: 'CentOS 5.3 (64-bit)' },
-                        { id: 'rhel5-64', description: 'Red Hat Enterprise Linux 5.0 (64-bit)' },
-                        { id: 'deb6-32', description: 'Debian GNU/Linux 6.0 (32-bit)' }
-                      ]
+                      select: function(args){
+                        args.response.success({
+                          data: [
+                            { id: 'centos53-64', description: 'CentOS 5.3 (64-bit)' },
+                            { id: 'rhel5-64', description: 'Red Hat Enterprise Linux 5.0 (64-bit)' },
+                            { id: 'deb6-32', description: 'Debian GNU/Linux 6.0 (32-bit)' }
+                          ]
+                        });
+                      }
                     },
                     'public': {
                       label: 'Public', isBoolean: true

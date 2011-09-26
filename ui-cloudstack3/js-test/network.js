@@ -48,10 +48,16 @@
                 fields: {
                   availabilityZone: {
                     label: 'Zone',
-                    select: [
-                      { id: 'sanjose', description: 'San Jose' },
-                      { id: 'Chicago', description: 'Chicago' }
-                    ]
+                    select: function(args) {
+                      setTimeout(function() {
+                        args.response.success({
+                          data: [
+                            { id: 'sanjose', description: 'San Jose' },
+                            { id: 'Chicago', description: 'Chicago' }
+                          ]
+                        });
+                      }, 10);
+                    }
                   }
                 }
               },
@@ -117,10 +123,14 @@
                   protocol: {
                     label: 'Protocol',
                     editable: true,
-                    select: [
-                      { id: 'tcp', label: 'TCP' },
-                      { id: 'udp', label: 'UDP' }
-                    ]
+                    select: function(args) {
+                      args.response.success({
+                        data: [
+                          { id: 'tcp', label: 'TCP' },
+                          { id: 'udp', label: 'UDP' }
+                        ]
+                      });
+                    }
                   },
                   state: { label: 'State' }
                 },
@@ -146,7 +156,7 @@
                     },
                     action: function(args) {
                       setTimeout(function() {
-                        args.response.success();                        
+                        args.response.success({ _custom: { jobID: args.data.id } });
                       }, 500);
                     }
                   },
@@ -171,7 +181,7 @@
                     },
                     action: function(args) {
                       setTimeout(function() {
-                        args.response.success();
+                        args.response.success({ _custom: { jobID: args.data.id } });
                       }, 400);
                     }
                   }
@@ -286,7 +296,7 @@
                   {
                     domain: { label: 'Domain' },
                     account: { label: 'Account' }
-                  } 
+                  }
                 ],
                 dataProvider: testData.dataProvider.detailView('securityGroups')
               },
@@ -294,13 +304,19 @@
                 title: 'Ingress Rules',
                 multiEdit: true,
                 fields: {
-                  protocol: { 
+                  protocol: {
                     label: 'Protocol',
                     editable: true,
-                    select: [
-                      { id: 'tcp', label: 'TCP' },
-                      { id: 'udp', label: 'UDP' }
-                    ]
+                    select: function(args) {
+                      setTimeout(function() {
+                        args.response.success({
+                          data: [
+                            { id: 'tcp', label: 'TCP' },
+                            { id: 'udp', label: 'UDP' }
+                          ]
+                        });
+                      }, 100);
+                    }
                   },
                   startport: { label: 'Start Port', editable: true },
                   endport: { label: 'End Port', editable: true },
@@ -323,14 +339,14 @@
                         return 'Port range has been added.';
                       }
                     },
-                    notification: { 
+                    notification: {
                       poll: testData.notifications.testPoll
                     },
                     action: function(args) {
                       setTimeout(function() {
                         args.response.success();
                       }, 500);
-                    } 
+                    }
                   },
                   destroy: {
                     label: 'Remove rule',
