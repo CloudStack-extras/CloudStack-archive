@@ -22,6 +22,7 @@
           response: {
             success: function(args) {
               listViewArgs.complete({
+                _custom: args._custom,
                 messageArgs: {
                   name: $wizard.find('div.review div.vm-instance-name input').val()
                 }
