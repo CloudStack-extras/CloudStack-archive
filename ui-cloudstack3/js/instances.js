@@ -469,18 +469,8 @@
             ],
 			
             //dataProvider: testData.dataProvider.detailView('instances')
-			dataProvider: function(args) {	    
-			  $.ajax({
-				url: createURL("listVirtualMachines&id="+args.id),
-				dataType: "json",
-				async: true,
-				success: function(json) { 	
-				  var items = json.listvirtualmachinesresponse.virtualmachine;
-				  if(items != null && items.length > 0) {
-					args.response.success({data:items[0]});		
-				  }    			
-				}
-			  });  	
+			dataProvider: function(args) {	              
+              args.response.success({data:args.jsonObj});	
 		    }			
           },
 

@@ -53,7 +53,8 @@
       var action = args.action.action;
       var section;
       var data = {
-        id: $instanceRow.data('list-view-item-id')
+        id: $instanceRow.data('list-view-item-id'),
+		jsonObj: $instanceRow.data('jsonObj')
       };
 
       if (args.data) $.extend(data, args.data);
@@ -145,7 +146,8 @@
         if (val) $label.html(val);
 
         var data = {
-          id: $instanceRow.data('list-view-item-id')
+          id: $instanceRow.data('list-view-item-id'),
+		  jsonObj: $instanceRow.data('jsonObj')
         };
 
         data[$td.data('list-view-item-field')] = $editInput.val();
@@ -309,7 +311,7 @@
     var $panel = args.$panel;
     var title = args.title;
     var id = args.id;
-    var data = $.extend(args.data, { id: id, section: args.section });
+    var data = $.extend(args.data, { id: id, jsonObj: args.jsonObj, section: args.section });
     var $detailView, $detailsPanel;
     var panelArgs = {
       title: title,
@@ -367,7 +369,8 @@
       });
 
       $tr.data('list-view-item-id', id);
-
+      $tr.data('jsonObj', dataItem);
+	  
       if (actions) {
         makeActionIcons(
           $('<td></td>').addClass('actions reduced-hide')
@@ -661,6 +664,7 @@
     $listView.bind('click change', function(event) {
       var $target = $(event.target);
       var id = $target.closest('tr').data('list-view-item-id');
+	  var jsonObj = $target.closest('tr').data('jsonObj');
       var detailViewArgs;
       var detailViewPresent = ($target.closest('div.data-table tr td').size() &&
                                $target.closest('div.data-table tr td').index() == 0 &&
@@ -673,7 +677,8 @@
           $panel: $target.closest('div.panel'),
           data: listViewData.detailView,
           title: $target.closest('td').find('span').html(),
-          id: id
+          id: id,
+		  jsonObj: jsonObj
         };
 
         // Create custom-generated detail view

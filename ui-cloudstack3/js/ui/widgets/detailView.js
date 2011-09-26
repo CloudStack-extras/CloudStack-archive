@@ -722,10 +722,11 @@
       $tabContent.closest('div.detail-view').data('view-args'),
       { activeTab: targetTabID }
     );
-
+   
     return dataProvider({
       tab: targetTabID,
       id: args.id,
+	  jsonObj: args.jsonObj,
       response: {
         success: function(args) {
           var tabData = $tabContent.data('detail-view-tab-data');
@@ -754,8 +755,8 @@
   $.fn.detailView = function(args) {
     var $detailView = this;
 
-    $detailView.addClass('detail-view');
-    $detailView.data('view-args', args);
+    $detailView.addClass('detail-view');    
+	$detailView.data('view-args', args);
 
     // Create toolbar
     var $toolbar = $('<div class="toolbar">')
