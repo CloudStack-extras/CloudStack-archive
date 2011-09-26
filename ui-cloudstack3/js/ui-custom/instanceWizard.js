@@ -72,15 +72,18 @@
           return $selects.children();
         };
 
-        var dataProvider = function(step, providerArgs) {
+        var dataProvider = function(step, providerArgs, callback) {
+          // Provide default response if none given
           if (!providerArgs) providerArgs = {
             response: {
               success: function(args) {
+                if (callback) callback(args);
                 return false;
               }
             }
           };
 
+          // Call appropriate data provider
           args.steps[step - 1]($.extend(providerArgs, {
             currentData: cloudStack.serializeForm($form)
           }));
@@ -174,6 +177,17 @@
             return {
               response: {
                 success: function(args) {
+                  // Show relevant conditional sub-step if present
+                  $step.find('.wizard-step-conditional').hide();
+                  if (args.type) {
+                    $step.find('.wizard-step-conditional').filter(function() {
+                      return $(this).hasClass(args.type);
+                    }).show();
+                  } else {
+                    $step.find('.select-network').show();
+                  }
+
+                  // Default network
                   $step.find('.default-network .select-container').append(
                     makeSelects('default-network', args.data.defaultNetworks, {
                       name: 'name',
@@ -182,10 +196,22 @@
                     })
                   );
 
+                  // Optional networks
                   $step.find('.optional-networks .select-container').append(
                     makeSelects('optional-networks', args.data.optionalNetworks, {
                       name: 'name',
                       desc: 'displaytext',
+                      id: 'id'
+                    }, {
+                      type: 'checkbox'
+                    })
+                  );
+
+                  // Security groups (alt. page)
+                  $step.find('.security-groups .select-container').append(
+                    makeSelects('security-groups', args.data.securityGroups, {
+                      name: 'name',
+                      desc: 'description',
                       id: 'id'
                     }, {
                       type: 'checkbox'
@@ -220,12 +246,20 @@
 
           var $targetStep = $($steps.hide()[targetIndex]).show();
           var stepID = $targetStep.attr('wizard-step-id');
+          var dataProviderResponse;
+          var dataProviderCallback = function(args) {
+            dataProviderResponse = args;
+          };
 
           if (!$targetStep.data('wizard-generation-complete')) {
-            dataProvider(index, dataGenerators[stepID]($targetStep));
+            dataProvider(
+              index,
+              dataGenerators[stepID]($targetStep),
+              dataProviderCallback
+            );
             $targetStep.data('wizard-generation-complete', true);
           } else {
-            dataProvider(index);
+            dataProvider(index, null, dataProviderCallback);
           }
 
           // Show launch vm button if last step
@@ -235,12 +269,6 @@
           if ($targetStep.hasClass('review')) {
             $nextButton.find('span').html('Launch VM');
             $nextButton.addClass('final');
-          }
-
-          // Show relevant conditional sub-step if present
-          if ($targetStep.has('.wizard-step-conditional')) {
-            $targetStep.find('.wizard-step-conditional').hide();
-            $targetStep.find('.wizard-step-conditional.select-network').show();
           }
 
           // Update progress bar

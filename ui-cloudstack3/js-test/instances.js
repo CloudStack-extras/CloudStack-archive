@@ -80,14 +80,15 @@
                 // Step 5: Network
                 function(args) {
                   args.response.success({
-                    type: 'network',
+                    type: 'select-network',
                     data: {
                       defaultNetworks: $.grep(testData.data.networks, function(elem) {
                         return elem.isdefault === true;
                       }),
                       optionalNetworks: $.grep(testData.data.networks, function(elem) {
                         return elem.isdefault === false;
-                      })
+                      }),
+                      securityGroups: testData.data.securityGroups
                     }
                   });
                 },
