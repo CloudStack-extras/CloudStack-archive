@@ -246,7 +246,7 @@ div.notification-box .container ul li span {
   overflow: hidden;
 }
 
-div.notification-box .container ul li:hover span {
+div.notification-box .container ul li span:hover {
   color: #5FAAF7;
   text-decoration: underline;
 }
@@ -3314,6 +3314,7 @@ input.error {
 .multi-wizard.instance-wizard .no-network {
   background: #FFFFFF;
   width: 773px;
+  height: 52px;
   position: absolute;
   top: 98px;
   left: 11px;
