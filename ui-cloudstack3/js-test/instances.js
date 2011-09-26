@@ -14,7 +14,13 @@
         name: { label: 'Name', editable: true },
         account: { label: 'Account' },
         zonename: { label: 'Zone' },
-        state: { label: 'Status' }
+        state: {
+          label: 'Status',
+          indicator: {
+            'Running': 'on',
+            'Stopped': 'off'
+          }
+        }
       },
 
       // List view actions
@@ -25,46 +31,74 @@
 
           action: {
             custom: cloudStack.instanceWizard({
-              dataProvider: function(args) {
-                args.response.success({
-                  data: {
-                    zones: testData.data.zones,
-                    isos: {
-                      featured: $.grep(testData.data.isos, function(elem) {
-                        return elem.isfeatured === true;
-                      }),
-                      community: [],
-                      mine: $.grep(testData.data.isos, function(elem) {
-                        return elem.account === 'admin';
-                      })
-                    },
-                    serviceOfferings: testData.data.serviceOfferings,
-                    diskOfferings: testData.data.diskOfferings,
-                    defaultNetworks: $.grep(testData.data.networks, function(elem) {
-                      return elem.isdefault === true;
-                    }),
-                    optionalNetworks: $.grep(testData.data.networks, function(elem) {
-                      return elem.isdefault === false;
-                    }),
-                    groups: [
-                      {
-                        id: '123',
-                        groupname: 'Group A'
-                      },
-                      {
-                        id: '1242',
-                        groupname: 'Group B'
-                      },
-                      {
-                        id: '125',
-                        groupname: 'Group C'
+              steps: [
+                // Step 1: Setup
+                function(args) {
+                  args.response.success({
+                    data: {
+                      zones: testData.data.zones
+                    }
+                  });
+                },
+
+                // Step 2: Select template
+                function(args) {
+                  args.response.success({
+                    type: 'templates',
+                    data: {
+                      isos: {
+                        featured: $.grep(testData.data.isos, function(elem) {
+                          return elem.isfeatured === true;
+                        }),
+                        community: [],
+                        mine: $.grep(testData.data.isos, function(elem) {
+                          return elem.account === 'admin';
+                        })
                       }
-                    ]
-                  }
-                });
-              },
+                    }
+                  });
+                },
+
+                // Step 3: Service offering
+                function(args) {
+                  args.response.success({
+                    data: {
+                      serviceOfferings: testData.data.serviceOfferings
+                    }
+                  });
+                },
+
+                // Step 4: Data disk offering
+                function(args) {
+                  args.response.success({
+                    data: {
+                      diskOfferings: testData.data.diskOfferings
+                    }
+                  });
+                },
+
+                // Step 5: Network
+                function(args) {
+                  args.response.success({
+                    type: 'network',
+                    data: {
+                      defaultNetworks: $.grep(testData.data.networks, function(elem) {
+                        return elem.isdefault === true;
+                      }),
+                      optionalNetworks: $.grep(testData.data.networks, function(elem) {
+                        return elem.isdefault === false;
+                      })
+                    }
+                  });
+                },
+
+                // Step 6: Review
+                function(args) {
+                  return false;
+                }
+              ],
               complete: function(args) {
-                args.response.success({});
+                args.response.success({ _custom: { jobID: 12345 } });
               }
             })
           },
@@ -99,7 +133,9 @@
           label: 'Restart instance',
           action: function(args) {
             setTimeout(function() {
-              args.response.success();
+              args.response.success({
+                _custom: { jobID: 'restart' + args.data.id }
+              })
             }, 1000);
           },
           messages: {
@@ -189,9 +225,12 @@
               poll: testData.notifications.testPoll
             }
           },
-          stop: { label: 'Shut down VM', action: function(args) {
-            args.response.success();
-          } },
+          stop: {
+            label: 'Shut down VM',
+            action: function(args) {
+              args.response.success();
+            }
+          },
           restart: {
             label: 'Restart VM',
             messages: {
@@ -213,7 +252,9 @@
             },
             action: function(args) {
               setTimeout(function() {
-                args.response.success();
+                args.response.success({
+                  _custom: { jobID: args.data.id }
+                });
               }, 1000);
             }
           },
@@ -283,15 +324,16 @@
                 templateid: {
                   label: 'Template type',
                   isEditable: true,
-                  select: (function() {
+                  select: function(args) {
                     var items = [];
 
                     $(testData.data.templates).each(function() {
                       items.push({ id: this.id, description: this.name });
                     });
-
-                    return items;
-                  })()
+                    setTimeout(function() {
+                      args.response.success({ data: items });
+                    }, 500);
+                  }
                 },
                 serviceofferingname: { label: 'Service offering', isEditable: false },
                 group: { label: 'Group', isEditable: true }

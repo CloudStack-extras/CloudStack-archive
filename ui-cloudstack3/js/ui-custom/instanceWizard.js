@@ -27,6 +27,7 @@
             response: {
               success: function(args) {
                 listViewArgs.complete({
+                  _custom: args._custom,
                   messageArgs: cloudStack.serializeForm($form)
                 });
                 close();
@@ -37,7 +38,7 @@
 
         var makeSelects = function(name, data, fields, options) {
           var $selects = $('<div>');
-          
+
           $(data).each(function() {
             $selects.append(
               $('<div>').addClass('select')
@@ -71,97 +72,138 @@
           return $selects.children();
         };
 
+        var dataProvider = function(step, providerArgs) {
+          if (!providerArgs) providerArgs = {
+            response: {
+              success: function(args) {
+                return false;
+              }
+            }
+          };
+
+          args.steps[step - 1]($.extend(providerArgs, {
+            currentData: cloudStack.serializeForm($form)
+          }));
+        };
+
         var dataGenerators = {
           setup: function($step) {
-            // Zones
-            $(data.zones).each(function() {
-              $step.find('.select-zone select').append(
-                $('<option>')
-                  .attr({ value: this.id })
-                  .html(this.name)
-              );
-            });
+            return {
+              response: {
+                success: function(args) {
+                  // Zones
+                  $(args.data.zones).each(function() {
+                    $step.find('.select-zone select').append(
+                      $('<option>')
+                        .attr({ value: this.id })
+                        .html(this.name)
+                    );
+                  });
+                }
+              }
+            };
           },
 
           'select-iso': function($step) {
-            var makeIsos = function(type, append) {
-              append(
-                makeSelects('templateid', data.isos[type], {
-                  name: 'name',
-                  desc: 'displaytext',
-                  id: 'id'
-                })
-              );
-            };
+            return {
+              response: {
+                success: function(args) {
+                  var makeIsos = function(type, append) {
+                    append(
+                      makeSelects('templateid', args.data.isos[type], {
+                        name: 'name',
+                        desc: 'displaytext',
+                        id: 'id'
+                      })
+                    );
+                  };
 
-            // Featured ISOs
-            $(
-              [
-                ['featured', 'instance-wizard-featured-isos'],
-                ['community', 'instance-wizard-community-isos'],
-                ['mine', 'instance-wizard-my-isos']
-              ]
-            ).each(function() {
-              var item = this;
-              var $selectContainer = $wizard.find('#' + item[1]).find('.select-container');
-              
-              makeIsos(item[0], function($elem) {
-                $selectContainer.append($elem);
-              });
-            });
+                  // Featured ISOs
+                  $(
+                    [
+                      ['featured', 'instance-wizard-featured-isos'],
+                      ['community', 'instance-wizard-community-isos'],
+                      ['mine', 'instance-wizard-my-isos']
+                    ]
+                  ).each(function() {
+                    var item = this;
+                    var $selectContainer = $wizard.find('#' + item[1]).find('.select-container');
+
+                    makeIsos(item[0], function($elem) {
+                      $selectContainer.append($elem);
+                    });
+                  });
+                }
+              }
+            };
           },
 
           'service-offering': function($step) {
-            $step.find('.content .select-container').append(
-              makeSelects('templateid', data.serviceOfferings, {
-                name: 'name',
-                desc: 'displaytext',
-                id: 'id'
-              })
-            );
+            return {
+              response: {
+                success: function(args) {
+                  $step.find('.content .select-container').append(
+                    makeSelects('templateid', args.data.serviceOfferings, {
+                      name: 'name',
+                      desc: 'displaytext',
+                      id: 'id'
+                    })
+                  );
+                }
+              }
+            };
           },
 
           'data-disk-offering': function($step) {
-            $step.find('.content .select-container').append(
-              makeSelects('diskofferingid', data.diskOfferings, {
-                id: 'id',
-                name: 'name',
-                desc: 'displaytext'
-              })
-            );
+            return {
+              response: {
+                success: function(args) {
+                  $step.find('.content .select-container').append(
+                    makeSelects('diskofferingid', args.data.diskOfferings, {
+                      id: 'id',
+                      name: 'name',
+                      desc: 'displaytext'
+                    })
+                  );
+                }
+              }
+            };
           },
 
           'network': function($step) {
-            $step.find('.default-network .select-container').append(
-              makeSelects('default-network', data.defaultNetworks, {
-                name: 'name',
-                desc: 'displaytext',
-                id: 'id'
-              })
-            );
+            return {
+              response: {
+                success: function(args) {
+                  $step.find('.default-network .select-container').append(
+                    makeSelects('default-network', args.data.defaultNetworks, {
+                      name: 'name',
+                      desc: 'displaytext',
+                      id: 'id'
+                    })
+                  );
 
-            $step.find('.optional-networks .select-container').append(
-              makeSelects('default-network', data.optionalNetworks, {
-                name: 'name',
-                desc: 'displaytext',
-                id: 'id'
-              }, {
-                type: 'checkbox'
-              })
-            );
+                  $step.find('.optional-networks .select-container').append(
+                    makeSelects('optional-networks', args.data.optionalNetworks, {
+                      name: 'name',
+                      desc: 'displaytext',
+                      id: 'id'
+                    }, {
+                      type: 'checkbox'
+                    })
+                  );
+                }
+              }
+            };
           },
 
           'review': function($step) {
-            var $select = $step.find('select[name=groupid]');
-            $(data.groups).each(function() {
-              $select.append(
-                $('<option>')
-                  .attr({
-                    value: this.id
-                  })
-                  .html(this.groupname)
-              );
-            });
+            return {
+              response: {
+                success: function(args) {
+                  return false;
+                }
+              }
+            };
           }
         };
 
@@ -177,10 +219,13 @@
           }
 
           var $targetStep = $($steps.hide()[targetIndex]).show();
+          var stepID = $targetStep.attr('wizard-step-id');
 
           if (!$targetStep.data('wizard-generation-complete')) {
-            dataGenerators[$targetStep.attr('wizard-step-id')]($targetStep);
+            dataProvider(index, dataGenerators[stepID]($targetStep));
             $targetStep.data('wizard-generation-complete', true);
+          } else {
+            dataProvider(index);
           }
 
           // Show launch vm button if last step
@@ -283,13 +328,8 @@
         })
           .closest('.ui-dialog').overlay();
       };
-      args.dataProvider({
-        response: {
-          success: function(args) {
-            instanceWizard(args.data);
-          }
-        }
-      });
+
+      instanceWizard(args);
     };
   };
 })(jQuery, cloudStack);
