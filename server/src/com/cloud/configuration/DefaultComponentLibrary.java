@@ -76,6 +76,7 @@ import com.cloud.network.dao.IPAddressDaoImpl;
 import com.cloud.network.dao.InlineLoadBalancerNicMapDaoImpl;
 import com.cloud.network.dao.LoadBalancerDaoImpl;
 import com.cloud.network.dao.LoadBalancerVMMapDaoImpl;
+import com.cloud.network.dao.LoadBalancerStickyPolicyDaoImpl;
 import com.cloud.network.dao.NetworkDaoImpl;
 import com.cloud.network.dao.NetworkDomainDaoImpl;
 import com.cloud.network.dao.NetworkRuleConfigDaoImpl;
@@ -200,6 +201,7 @@ public class DefaultComponentLibrary extends ComponentLibraryBase implements Com
         addDao("LoadBalancerDao", LoadBalancerDaoImpl.class);
         addDao("NetworkRuleConfigDao", NetworkRuleConfigDaoImpl.class);
         addDao("LoadBalancerVMMapDao", LoadBalancerVMMapDaoImpl.class);
+        addDao("LoadBalancerStickyPolicyDao", LoadBalancerStickyPolicyDaoImpl.class);
         addDao("DataCenterIpAddressDao", DataCenterIpAddressDaoImpl.class);
         addDao("SecurityGroupDao", SecurityGroupDaoImpl.class);
         addDao("IngressRuleDao", IngressRuleDaoImpl.class);

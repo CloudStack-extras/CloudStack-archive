@@ -21,6 +21,8 @@ package com.cloud.network;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
@@ -30,6 +32,7 @@ import com.cloud.utils.net.NetUtils;
 
 @Entity
 @Table(name=("load_balancing_rules"))
+@Inheritance(strategy=InheritanceType.JOINED)
 @DiscriminatorValue(value="LoadBalancing")
 @PrimaryKeyJoinColumn(name="id")
 public class LoadBalancerVO extends FirewallRuleVO implements LoadBalancer {

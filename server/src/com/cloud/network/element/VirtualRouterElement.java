@@ -291,6 +291,9 @@ public class VirtualRouterElement extends DhcpElement implements NetworkElement,
         Map<Capability, String> lbCapabilities = new HashMap<Capability, String>();
         lbCapabilities.put(Capability.SupportedLBAlgorithms, "roundrobin,leastconn,source");
         lbCapabilities.put(Capability.SupportedProtocols, "tcp, udp");
+        // Sticky Algorithm format stickyMethod:param1,required/optional,parame2...,paramN:description: 
+        // FIXME : instead of handwriting the capability if it can able to generate by probing the HAProxy object it will be clean.
+        lbCapabilities.put(Capability.SupportedStickyAlgorithms, "cookiebased:cookiename,required,cookielength,optional:cookiename and cookie length are optional :sourcebased::No parameters");
         
         capabilities.put(Service.Lb, lbCapabilities);
         

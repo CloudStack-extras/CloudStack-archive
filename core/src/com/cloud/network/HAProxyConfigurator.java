@@ -29,6 +29,7 @@ import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
 import com.cloud.agent.api.to.LoadBalancerTO;
 import com.cloud.agent.api.to.PortForwardingRuleTO;
 import com.cloud.agent.api.to.LoadBalancerTO.DestinationTO;
+import com.cloud.agent.api.to.LoadBalancerTO.StickyPolicyTO;
 import com.cloud.utils.net.NetUtils;
 
 
@@ -151,7 +152,29 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 		result.add(getBlankLine());
 		return result;
 	}
-	
+	private String getsubRuleForStickyRule(LoadBalancerTO lbTO)
+	{
+		int i=0;
+		if (lbTO.getStickyPolacies() == null ) return null;
+		StringBuilder sb = new StringBuilder();
+		for (StickyPolicyTO sticky: lbTO.getStickyPolacies()) {
+			if (sticky == null) continue;
+			i++;
+		    if (sticky.getMethodName().equals("cookiebased"))
+		    {
+		    	sb.append("\t").append("cookie LBSERVERID insert");
+		    }else if (sticky.getMethodName().equals("sourcebased"))
+		    {
+		    	sb.append("\t").append("stick-table type ip size 200k expire 30m");
+		    	sb.append("\n\t").append("stick on src");
+		    } else
+		    {
+		    	/* FIXEM: Not supposed to reach here, validation of methods are done at the higher layer */
+		    }
+		}
+		if (i==0) return null;
+		return sb.toString();
+	}
 	private List<String> getRulesForPool(LoadBalancerTO lbTO) {
 		StringBuilder sb = new StringBuilder();
 		String poolName  =  sb.append(lbTO.getSrcIp().replace(".", "_")).append('-').append(lbTO.getSrcPort()).toString();
@@ -168,6 +191,11 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 		sb = new StringBuilder();
 		sb.append("\t").append("balance ").append(algorithm);
 		result.add(sb.toString());
+	
+		String stickySubRule = getsubRuleForStickyRule(lbTO);
+		if (stickySubRule != null)
+		    result.add(stickySubRule);
+		
 		if (publicPort.equals(NetUtils.HTTP_PORT)) {
 			sb = new StringBuilder();
 			sb.append("\t").append("mode http");
