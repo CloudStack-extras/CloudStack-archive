@@ -39,8 +39,12 @@ import com.cloud.api.response.HypervisorCapabilitiesResponse;
 import com.cloud.api.response.IPAddressResponse;
 import com.cloud.api.response.InstanceGroupResponse;
 import com.cloud.api.response.IpForwardingRuleResponse;
+import com.cloud.api.response.LBStickyResponse;
 import com.cloud.api.response.ListResponse;
 import com.cloud.api.response.LoadBalancerResponse;
+import com.cloud.api.response.LBStickyRuleResponse;
+import com.cloud.network.rules.LBStickyPolicy;
+import com.cloud.network.lb.LBStickyRule;
 import com.cloud.api.response.NetworkOfferingResponse;
 import com.cloud.api.response.NetworkResponse;
 import com.cloud.api.response.PodResponse;
@@ -138,6 +142,12 @@ public interface ResponseGenerator {
     IPAddressResponse createIPAddressResponse(IpAddress ipAddress);
 
     LoadBalancerResponse createLoadBalancerResponse(LoadBalancer loadBalancer);
+    
+    LBStickyResponse createLBStickyPolicyResponse(List<? extends LBStickyPolicy> stickyRules, LoadBalancer lb);
+    
+    LBStickyResponse createLBStickyPolicyResponse( LBStickyPolicy stickyRule, LoadBalancer lb);
+    
+    LBStickyResponse createLBStickyMethodResponse(List<? extends LBStickyPolicy> stickyRules, LoadBalancer lb);
 
     PodResponse createPodResponse(Pod pod);
 

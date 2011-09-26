@@ -18,16 +18,28 @@
 package com.cloud.network.lb;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
 
+
+import com.cloud.api.commands.CreateLBStickyPolicyCmd;
 import com.cloud.api.commands.CreateLoadBalancerRuleCmd;
+import com.cloud.api.commands.ListLBStickyPoliciesCmd;
+import com.cloud.api.commands.ListLBStickyMethodsCmd;
+
 import com.cloud.api.commands.ListLoadBalancerRuleInstancesCmd;
 import com.cloud.api.commands.ListLoadBalancerRulesCmd;
 import com.cloud.api.commands.UpdateLoadBalancerRuleCmd;
 import com.cloud.exception.InsufficientAddressCapacityException;
 import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.network.rules.LBStickyPolicy;
 import com.cloud.network.rules.LoadBalancer;
+
+
 import com.cloud.uservm.UserVm;
+
 
 public interface LoadBalancingRulesService {
     /**
@@ -42,7 +54,11 @@ public interface LoadBalancingRulesService {
     LoadBalancer updateLoadBalancerRule(UpdateLoadBalancerRuleCmd cmd);
     
     boolean deleteLoadBalancerRule(long lbRuleId, boolean apply);
-    
+    /**
+     * Create a stickiness policy to a load balancer.
+     */
+    public LBStickyPolicy createLBStickyPolicy(CreateLBStickyPolicyCmd cmd) throws NetworkRuleConflictException;
+    boolean deleteLBStickyPolicy(long stickyPolicyId);
     /**
      * Assign a virtual machine, or list of virtual machines, to a load balancer.
      */
@@ -65,6 +81,8 @@ public interface LoadBalancingRulesService {
      * @return list of load balancers that match the criteria
      */
     List<? extends LoadBalancer> searchForLoadBalancers(ListLoadBalancerRulesCmd cmd);
+    List<? extends LBStickyPolicy> searchForLBStickyPolicies(ListLBStickyPoliciesCmd cmd);
+    List< LBStickyRule > getLBStickyMethods(ListLBStickyMethodsCmd cmd);
     
     List<LoadBalancingRule> listByNetworkId(long networkId);
     

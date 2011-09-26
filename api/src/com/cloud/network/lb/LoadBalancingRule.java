@@ -26,10 +26,17 @@ import com.cloud.network.rules.LoadBalancer;
 public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     private LoadBalancer lb;
     private List<LbDestination> destinations;
+    private List<StickyPolicy> stickiPolicies;
     
     public LoadBalancingRule(LoadBalancer lb, List<LbDestination> destinations) { 
         this.lb = lb;
         this.destinations = destinations;
+    }
+    
+    public LoadBalancingRule(LoadBalancer lb, List<LbDestination> destinations,List<StickyPolicy> stickyPolicies) { 
+        this.lb = lb;
+        this.destinations = destinations;
+        this.stickiPolicies = stickyPolicies;
     }
     
     @Override
@@ -119,13 +126,39 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
         return destinations;
     }
     
+    public List<StickyPolicy> getStickypolacies() {
+        return stickiPolicies;
+    }
+    
     public interface Destination {
         String getIpAddress();
         int getDestinationPortStart();
         int getDestinationPortEnd();
         boolean isRevoked();
     }
-    
+    public static class StickyPolicy {
+    	String methodName;
+    	String params;
+    	boolean revoke;
+    	public StickyPolicy(String methodName,String params, boolean revoke)
+    	{
+    		this.methodName = methodName;
+    		this.params = params;
+    		this.revoke = revoke;
+    	}
+    	public String getMethodName()
+    	{
+    		return methodName;
+    	}
+    	public String getParams()
+    	{
+    		return params;
+    	}
+    	public boolean isRevoked()
+    	{
+    		return revoke;
+    	}
+    }
     public static class LbDestination implements Destination {
         private int portStart;
         private int portEnd;

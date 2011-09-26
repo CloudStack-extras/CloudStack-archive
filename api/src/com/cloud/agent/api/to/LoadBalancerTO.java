@@ -20,6 +20,7 @@ package com.cloud.agent.api.to;
 import java.util.List;
 
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
+import com.cloud.network.lb.LoadBalancingRule.StickyPolicy;
 
 
 public class LoadBalancerTO {
@@ -30,8 +31,8 @@ public class LoadBalancerTO {
     boolean revoked;
     boolean alreadyAdded;
     DestinationTO[] destinations;
-    
-    
+    StickyPolicyTO[] stickyPolicies;
+   
     public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> destinations) {
         this.srcIp = srcIp;
         this.srcPort = srcPort;
@@ -45,6 +46,33 @@ public class LoadBalancerTO {
             this.destinations[i++] = new DestinationTO(destination.getIpAddress(), destination.getDestinationPortStart(), destination.isRevoked(), false);
         }
     }
+    
+    public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> arg_destinations,List<StickyPolicy> stickyPolicies) {
+        //LoadBalancerTO(srcIp,srcPort,protocol,algorithm,revoked,alreadyAdded,destination); FIXME : to remove some of below assigments
+        this.srcIp = srcIp;
+        this.srcPort = srcPort;
+        this.protocol = protocol;
+        this.algorithm = algorithm;     
+        this.revoked = revoked;
+        this.alreadyAdded = alreadyAdded;
+        this.destinations = new DestinationTO[arg_destinations.size()];
+        int i = 0;
+        for (LbDestination destination : arg_destinations) {
+            this.destinations[i++] = new DestinationTO(destination.getIpAddress(), destination.getDestinationPortStart(), destination.isRevoked(), false);
+        }
+        
+        if (stickyPolicies != null && stickyPolicies.size()>0)
+        {
+    	    this.stickyPolicies = new StickyPolicyTO[stickyPolicies.size()];
+            i = 0;
+            for (StickyPolicy stickypolicy : stickyPolicies) {
+        	    if (!stickypolicy.isRevoked())
+                    this.stickyPolicies[i++] = new StickyPolicyTO(stickypolicy.getMethodName(), stickypolicy.getParams());
+            }
+        }
+
+    }
+    
     
     protected LoadBalancerTO() {
     }
@@ -73,10 +101,31 @@ public class LoadBalancerTO {
         return alreadyAdded;
     }
     
+    public StickyPolicyTO[] getStickyPolacies() {
+        return stickyPolicies;
+    }
+    
     public DestinationTO[] getDestinations() {
         return destinations;
     }
-
+    
+    public static class StickyPolicyTO {
+    	String methodName;
+    	String params;
+    	public String getMethodName()
+    	{
+    		return methodName;
+    	}
+    	public String getParams()
+    	{
+    		return params;
+    	}
+    	public StickyPolicyTO(String methodName,String params )
+    	{
+    		this.methodName = methodName;
+    		this.params = params;
+    	}
+    }
     
     public static class DestinationTO {
         String destIp;

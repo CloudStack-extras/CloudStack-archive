@@ -140,6 +140,7 @@ import com.cloud.network.dao.RemoteAccessVpnDao;
 import com.cloud.network.dao.VpnUserDao;
 import com.cloud.network.lb.LoadBalancingRule;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
+import com.cloud.network.lb.LoadBalancingRule.StickyPolicy;
 import com.cloud.network.lb.LoadBalancingRulesManager;
 import com.cloud.network.router.VirtualRouter.RedundantState;
 import com.cloud.network.router.VirtualRouter.Role;
@@ -2195,7 +2196,8 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             String srcIp = _networkMgr.getIp(rule.getSourceIpAddressId()).getAddress().addr();
             int srcPort = rule.getSourcePortStart();
             List<LbDestination> destinations = rule.getDestinations();
-            LoadBalancerTO lb = new LoadBalancerTO(srcIp, srcPort, protocol, algorithm, revoked, false, destinations);
+            List<StickyPolicy> stickypolacies = rule.getStickypolacies();
+            LoadBalancerTO lb = new LoadBalancerTO(srcIp, srcPort, protocol, algorithm, revoked, false, destinations, stickypolacies);
             lbs[i++] = lb;
         }
         String RouterPublicIp = null;
@@ -2467,7 +2469,8 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                             List<LoadBalancingRule> lbRules = new ArrayList<LoadBalancingRule>();
                             for (LoadBalancerVO lb : lbs) {
                                 List<LbDestination> dstList = _lbMgr.getExistingDestinations(lb.getId());
-                                LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList);
+                                List<StickyPolicy> policyList = _lbMgr.getStickypolacies(lb.getId());
+                                LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList,policyList);
                                 lbRules.add(loadBalancing);
                             }
                             result = result && applyLBRules(router, lbRules);

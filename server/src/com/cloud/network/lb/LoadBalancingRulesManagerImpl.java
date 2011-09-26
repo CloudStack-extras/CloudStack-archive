@@ -30,10 +30,16 @@ import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 
+import com.cloud.api.ApiDBUtils;
+import com.cloud.api.commands.CreateLBStickyPolicyCmd;
 import com.cloud.api.commands.CreateLoadBalancerRuleCmd;
 import com.cloud.api.commands.ListLoadBalancerRuleInstancesCmd;
 import com.cloud.api.commands.ListLoadBalancerRulesCmd;
+import com.cloud.api.commands.ListLBStickyPoliciesCmd;
+import com.cloud.api.commands.ListLBStickyMethodsCmd;
 import com.cloud.api.commands.UpdateLoadBalancerRuleCmd;
+import com.cloud.api.response.CapabilityResponse;
+import com.cloud.api.response.ServiceResponse;
 import com.cloud.dc.dao.VlanDao;
 import com.cloud.domain.Domain;
 import com.cloud.domain.DomainVO;
@@ -50,7 +56,9 @@ import com.cloud.exception.PermissionDeniedException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.IPAddressVO;
 import com.cloud.network.LoadBalancerVMMapVO;
+import com.cloud.network.LoadBalancerStickyPolicyVO;
 import com.cloud.network.LoadBalancerVO;
+import com.cloud.network.Network.Capability;
 import com.cloud.network.Network.Service;
 import com.cloud.network.NetworkManager;
 import com.cloud.network.NetworkVO;
@@ -59,12 +67,15 @@ import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.LoadBalancerDao;
 import com.cloud.network.dao.LoadBalancerVMMapDao;
+import com.cloud.network.dao.LoadBalancerStickyPolicyDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
+import com.cloud.network.lb.LoadBalancingRule.StickyPolicy;
 import com.cloud.network.rules.FirewallManager;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.FirewallRule.Purpose;
 import com.cloud.network.rules.FirewallRuleVO;
+import com.cloud.network.rules.LBStickyPolicy;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.network.rules.RulesManager;
 import com.cloud.user.Account;
@@ -114,6 +125,8 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
     @Inject
     LoadBalancerVMMapDao _lb2VmMapDao;
     @Inject
+    LoadBalancerStickyPolicyDao _lb2stickypoliciesDao;
+    @Inject
     UserVmDao _vmDao;
     @Inject
     AccountDao _accountDao;
@@ -134,6 +147,127 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
     @Inject
     FirewallRulesDao _firewallDao;
 
+	private String getLBStickyCapability(long networkid) {
+		NetworkVO network = _networkDao.findById(networkid);
+
+		// populate capability
+		// Map<Service, Map<Capability, String>> serviceCapabilitiesMap =
+		// ApiDBUtils.getNetworkCapabilities(networkOffering.getId(),
+		// network.getDataCenterId());
+		Map<Service, Map<Capability, String>> serviceCapabilitiesMap = ApiDBUtils
+				.getNetworkCapabilities(network.getNetworkOfferingId(),
+						network.getDataCenterId());
+		if (serviceCapabilitiesMap != null) {
+			for (Service service : serviceCapabilitiesMap.keySet()) {
+				ServiceResponse serviceResponse = new ServiceResponse();
+				serviceResponse.setName(service.getName());
+				if (service.getName().equals("Lb")) {
+					Map<Capability, String> serviceCapabilities = serviceCapabilitiesMap
+							.get(service);
+					if (serviceCapabilities != null) {
+						for (Capability capability : serviceCapabilities
+								.keySet()) {
+							if (capability.getName().equals(
+									"SupportedStickyAlgorithms")) {
+								return serviceCapabilities.get(capability);
+							}
+						}
+					}
+				}
+			}
+		}
+		return null;
+	}
+    
+    @Override
+    @DB
+    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKYPOLICY_CREATE, eventDescription = "create lb stickinesspolicy to load balancer", async = true)
+    public LoadBalancerStickyPolicyVO createLBStickyPolicy(CreateLBStickyPolicyCmd cmd) throws NetworkRuleConflictException {
+    	
+    	/* Validation : check corresponding load balancer rule exist */
+        LoadBalancerVO loadBalancer = _lbDao.findById(cmd.getLbRuleId());
+        if (loadBalancer == null) {
+            throw new InvalidParameterValueException("Failed to assign to load balancer " + cmd.getLbRuleId() + ", the load balancer was not found.");
+        }
+
+        /* Validation : check for valid Method name and params */
+        List <LBStickyRule> stickyMethodList = getStickyMethods(getLBStickyCapability(loadBalancer.getNetworkId()));
+        boolean methodMatch = false;
+        for (LBStickyRule method : stickyMethodList) {
+            if (method.getMethodName().equals(cmd.getStickyMethodName()))
+            {
+            	/* FIXME : need to  validate params optionality and names here */
+            	methodMatch = true;
+            	break;
+            }
+        }
+        if (methodMatch == false)
+        {
+        	throw new InvalidParameterValueException("Failed to match method name/ corresponsing parameters :" + cmd.getLbRuleId() );
+        }
+        
+    	/* Validation : check for the multiple sticky policies */
+        List<LoadBalancerStickyPolicyVO> stickypolicies = _lb2stickypoliciesDao.listByLoadBalancerId(cmd.getLbRuleId(), false);
+        for (LoadBalancerStickyPolicyVO policy : stickypolicies) {
+        	if (policy.getMethodName().equals(cmd.getStickyMethodName()))
+        	    throw new InvalidParameterValueException("Failed to create to load balancer stickipolcy " + cmd.getLbRuleId() );
+        }
+
+        /* Insert into DB */
+        Transaction txn = Transaction.currentTxn();
+        txn.start();
+        LoadBalancerStickyPolicyVO policy = new LoadBalancerStickyPolicyVO(loadBalancer.getId(), cmd.getLBStickyPolicyName(),cmd.getStickyMethodName(), cmd.getparamList());
+        policy = _lb2stickypoliciesDao.persist(policy);
+        txn.commit();
+        
+        loadBalancer.setState(FirewallRule.State.Add);
+       _lbDao.persist(loadBalancer);
+      /*  try {
+            loadBalancer.setState(FirewallRule.State.Add);
+            _lbDao.persist(loadBalancer);
+            applyLoadBalancerConfig(loadBalancer.getId());
+        } catch (ResourceUnavailableException e) {
+            s_logger.warn("Unable to apply the load balancer config because resource is unavaliable.", e);
+            return policy;
+        }*/
+
+        return policy;
+    }
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKYPOLICY_DELETE, eventDescription = "removing from LB sticky ", async = true)
+    public boolean deleteLBStickyPolicy(long stickyPolicyId) {
+        UserContext caller = UserContext.current();
+        
+    	LoadBalancerStickyPolicyVO stickypolicy = _lb2stickypoliciesDao.findById(stickyPolicyId);
+        if (stickypolicy == null) {
+            throw new InvalidParameterException("Invalid Sticky policy value: " + stickyPolicyId);
+        }
+        LoadBalancerVO loadBalancer = _lbDao.findById(Long.valueOf(stickypolicy.getLoadBalancerId()));
+        if (loadBalancer == null) {
+            throw new InvalidParameterException("Invalid Sticky policy value: " + stickyPolicyId);
+        }
+        long loadBalancerId = loadBalancer.getId();
+        _accountMgr.checkAccess(caller.getCaller(), null, loadBalancer);
+        try {
+            loadBalancer.setState(FirewallRule.State.Add);
+            _lbDao.persist(loadBalancer);
+
+            stickypolicy.setRevoke(true);
+            _lb2stickypoliciesDao.persist(stickypolicy);
+                s_logger.debug("Set load balancer rule for revoke: rule id " + loadBalancerId + ", stickypolicyID " + stickyPolicyId);
+            
+            if (!applyLoadBalancerConfig(loadBalancerId)) {
+                s_logger.warn("Failed to remove load balancer rule id " + loadBalancerId + " for stickypolicyID " + stickyPolicyId);
+                throw new CloudRuntimeException("Failed to remove load balancer rule id " + loadBalancerId + " for stickypolicyID " + stickyPolicyId);
+            }
+
+        } catch (ResourceUnavailableException e) {
+            s_logger.warn("Unable to apply the load balancer config because resource is unavaliable.", e);
+            return false;
+        }
+    	return true;
+    }   
+    
     @Override
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_ASSIGN_TO_LOAD_BALANCER_RULE, eventDescription = "assigning to load balancer", async = true)
@@ -481,8 +615,9 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
         List<LoadBalancingRule> rules = new ArrayList<LoadBalancingRule>();
         for (LoadBalancerVO lb : lbs) {
             List<LbDestination> dstList = getExistingDestinations(lb.getId());
+            List<StickyPolicy> policyList = getStickypolacies(lb.getId());
 
-            LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList);
+            LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList,policyList);
             rules.add(loadBalancing);
         }
 
@@ -520,6 +655,13 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
                 _lbDao.persist(lb); 
                 s_logger.debug("LB rule " + lb.getId() + " state is set to Add as there are no more active LB-VM mappings");
             }
+            
+            // remove LB-Sticky policy mapping that were state to revoke
+            List<LoadBalancerStickyPolicyVO> stickypolicies = _lb2stickypoliciesDao.listByLoadBalancerId(lb.getId(), true);
+            if (!stickypolicies.isEmpty()){
+            	_lb2stickypoliciesDao.remove(lb.getId(), true);
+                s_logger.debug("Load balancer rule id " + lb.getId() + " is removed sticky policies");
+            }
 
             txn.commit();
         }
@@ -555,7 +697,21 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
         }
         return true;
     }
+    
+    @Override
+    public List<StickyPolicy> getStickypolacies(long lbId) {
+        List<StickyPolicy> stickypolicies = new ArrayList<StickyPolicy>();
+        List<LoadBalancerStickyPolicyVO> sDbpolicies = _lb2stickypoliciesDao.listByLoadBalancerId(lbId);
+        LoadBalancerVO lb = _lbDao.findById(lbId);
 
+        String dstIp = null;
+        for (LoadBalancerStickyPolicyVO sDbPolicy : sDbpolicies) {
+        	StickyPolicy sPolicy = new StickyPolicy(sDbPolicy.getMethodName(), sDbPolicy.getDBParams(), sDbPolicy.isRevoke());
+        	stickypolicies.add(sPolicy);
+        }
+        return stickypolicies;
+    }
+    
     @Override
     public List<LbDestination> getExistingDestinations(long lbId) {
         List<LbDestination> dstList = new ArrayList<LbDestination>();
@@ -681,7 +837,45 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
 
         return loadBalancerInstances;
     }
+    public  List<LBStickyRule> getStickyMethods(String capabilty)
+    {
+    	 List<LBStickyRule> result = new ArrayList<LBStickyRule>();
+    	 String[] temp;
+    	 
+    	 /* delimiter */
+    	 String delimiter = ":";
+    	 /* given string will be split by the argument delimiter provided. */
+    	 temp = capabilty.split(delimiter);
+    	 /* print substrings */
+    	 for(int i =0; i < temp.length ; i=i+3)
+    	 {
+    		 LBStickyRule method =new LBStickyRule(temp[i],temp[i+1],temp[i+2]);
+    		 result.add(method);
+    	 }
+    	 return result;
+    }
+   // @Override
+    public  List<LBStickyRule> getLBStickyMethods(ListLBStickyMethodsCmd cmd) {
+        List<LoadBalancerStickyPolicyVO> sDbpolicies = _lb2stickypoliciesDao.listByLoadBalancerId(cmd.getId());
+        if (sDbpolicies != null) {
+            for (LBStickyPolicy stickypolicy : sDbpolicies) {
+                LoadBalancerVO loadBalancer = _lbDao.findById(stickypolicy.getLoadBalancerId());
+               String capability= getLBStickyCapability(loadBalancer.getNetworkId());
+               if (capability == null) continue;
 
+               return getStickyMethods(capability); 
+            }
+        }
+        return null;
+    }
+    @Override
+    public List<LoadBalancerStickyPolicyVO> searchForLBStickyPolicies(ListLBStickyPoliciesCmd cmd) {
+    
+        List<LoadBalancerStickyPolicyVO> sDbpolicies = _lb2stickypoliciesDao.listByLoadBalancerId(cmd.getId());
+        
+        return sDbpolicies;
+    }
+    
     @Override
     public List<LoadBalancerVO> searchForLoadBalancers(ListLoadBalancerRulesCmd cmd) {
         Account caller = UserContext.current().getCaller();
