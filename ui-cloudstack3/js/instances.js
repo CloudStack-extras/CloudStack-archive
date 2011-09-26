@@ -24,48 +24,80 @@
           label: 'Add instance',
 
           action: {
-            custom: cloudStack.instanceWizard({
-              dataProvider: function(args) {
-                args.response.success({
-                  data: {
-                    zones: testData.data.zones,
-                    isos: {
-                      featured: $.grep(testData.data.isos, function(elem) {
-                        return elem.isfeatured === true;
-                      }),
-                      community: [],
-                      mine: $.grep(testData.data.isos, function(elem) {
-                        return elem.account === 'admin';
-                      })
-                    },
-                    serviceOfferings: testData.data.serviceOfferings,
-                    diskOfferings: testData.data.diskOfferings,
-                    defaultNetworks: $.grep(testData.data.networks, function(elem) {
-                      return elem.isdefault === true;
-                    }),
-                    optionalNetworks: $.grep(testData.data.networks, function(elem) {
-                      return elem.isdefault === false;
-                    }),
-                    groups: [
-                      {
-                        id: '123',
-                        groupname: 'Group A'
-                      },
-                      {
-                        id: '1242',
-                        groupname: 'Group B'
-                      },
-                      {
-                        id: '125',
-                        groupname: 'Group C'
+            custom: cloudStack.instanceWizard({		  
+			  steps: [
+                // Step 1: Setup
+                function(args) {				 
+				  $.ajax({
+					url: createURL("listZones&available=true"),			 
+					dataType: "json",
+					async: true,
+					success: function(json) { 				   
+					  var items = json.listzonesresponse.zone;								  
+					  args.response.success({ data: {zones: items}});					  
+					}
+				  });  
+                },
+
+                // Step 2: Select template
+                function(args) {
+                  args.response.success({
+                    type: 'templates',
+                    data: {
+                      isos: {
+                        featured: $.grep(testData.data.isos, function(elem) {
+                          return elem.isfeatured === true;
+                        }),
+                        community: [],
+                        mine: $.grep(testData.data.isos, function(elem) {
+                          return elem.account === 'admin';
+                        })
                       }
-                    ]
-                  }
-                });
-              },
+                    }
+                  });
+                },
+
+                // Step 3: Service offering
+                function(args) {
+                  args.response.success({
+                    data: {
+                      serviceOfferings: testData.data.serviceOfferings
+                    }
+                  });
+                },
+
+                // Step 4: Data disk offering
+                function(args) {
+                  args.response.success({
+                    data: {
+                      diskOfferings: testData.data.diskOfferings
+                    }
+                  });
+                },
+
+                // Step 5: Network
+                function(args) {
+                  args.response.success({
+                    type: 'network',
+                    data: {
+                      defaultNetworks: $.grep(testData.data.networks, function(elem) {
+                        return elem.isdefault === true;
+                      }),
+                      optionalNetworks: $.grep(testData.data.networks, function(elem) {
+                        return elem.isdefault === false;
+                      })
+                    }
+                  });
+                },
+
+                // Step 6: Review
+                function(args) {
+                  return false;
+                }
+              ],
               complete: function(args) {
-                args.response.success({});
-              }
+                args.response.success({ _custom: { jobID: 12345 } });
+              }			  
             })
           },
 
