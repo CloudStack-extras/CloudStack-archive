@@ -453,15 +453,15 @@
                 templateid: {
                   label: 'Template type',
                   isEditable: true,
-                  select: (function() {
+                  select: function(args) {
                     var items = [];
 
                     $(testData.data.templates).each(function() {
                       items.push({ id: this.id, description: this.name });
                     });
-
-                    return items;
-                  })()
+                   
+                    args.response.success({ data: items });                   
+                  }
                 },
                 serviceofferingname: { label: 'Service offering', isEditable: false },
                 group: { label: 'Group', isEditable: true }

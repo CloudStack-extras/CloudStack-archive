@@ -631,13 +631,12 @@
             isOddRow = true;
           }
 
-          $name.html(value.label);
-          $value.html(data[key]);
+          $name.html(value.label);          
 
           // Set up editable metadata
           $value.data('detail-view-is-editable', value.isEditable);
           if (value.select) {
-            value.selected = $value.html();
+            value.selected = data[key];
 
             value.select({
               response: {
@@ -647,13 +646,19 @@
                     return option.id == value.selected;
                   })[0];
 
+				  //even can't find a matched option, UI should still show dropdown.
+				  /*
                   if (!matchedSelectValue) {
                     $value.data('detail-view-is-editable', false);
                     return false;
-                  }
+                  }  
+                  */
 
-                  $value.html(matchedSelectValue.description);
-                  $value.data('detail-view-selected-option', matchedSelectValue.id);
+                  if(matchedSelectValue != null) {				  
+					$value.html(matchedSelectValue.description);
+					$value.data('detail-view-selected-option', matchedSelectValue.id);
+			      }				  
+				  
                   $value.data('detail-view-editable-select', args.data);
 
                   return true;
@@ -661,6 +666,9 @@
               }
             });
           }
+		  else {
+		    $value.html(data[key]);
+		  }
 
           return true;
         });
