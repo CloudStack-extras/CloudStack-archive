@@ -72,6 +72,29 @@
                       }
                     ],
                     dataProvider: testData.dataProvider.detailView('zones')
+                  },
+                  resources: {
+                    title: 'Resources',
+                    fields: [
+                      {
+                        iptotal: { label: 'Total IPs' },
+                        cputotal: { label: 'Total CPU' },
+                        bandwidthout: { label: 'Bandwidth (Out)'},
+                        bandwidthin: { label: 'Bandwidth (In)'}
+                      }
+                    ],
+                    dataProvider: function(args) {
+                      setTimeout(function() {
+                        args.response.success({
+                          data: {
+                            iptotal: 1000,
+                            cputotal: '500 Ghz',
+                            bandwidthout: '14081 mb',
+                            bandwidthin: '31000 mb'
+                          }
+                        });                        
+                      }, 500);
+                    }
                   }
                 }
               }
@@ -117,9 +140,9 @@
                         related: { label: 'related' },
                         broadcasturi: { label: 'broadcasturi' },
                         dns1: { label: 'dns1' },
-                        type: { label: 'type' } 
+                        type: { label: 'type' }
                       }
-                    ],                
+                    ],
                     dataProvider: testData.dataProvider.detailView('networks')
                   }
                 }

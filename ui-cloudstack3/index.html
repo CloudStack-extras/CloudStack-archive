@@ -47,12 +47,12 @@
                   <p>Descriptive text goes here.</p>
                   <div class="select-area">
                     <div class="desc">Description of a template goes here.</div>
-                    <input type="radio" name="select-template" value="template" />
+                    <input type="radio" name="select-template" value="select-template" />
                     <label>Template</label>
                   </div>
                   <div class="select-area">
                     <div class="desc">Description of a template goes here.</div>
-                    <input type="radio" name="select-template" value="iso" />
+                    <input type="radio" name="select-template" value="select-iso" />
                     <label>ISO</label>
                   </div>
                 </div>
@@ -61,29 +61,46 @@
 
             <!-- Step 2: Select ISO -->
             <div class="select-iso" wizard-step-id="select-iso">
-              <div class="main-desc">
-                <p>
-                  Please select an ISO for your new virtual instance.
-                  You can also choose to upload your own iso as well.
-                </p>
-              </div>
-              <div class="iso-select content tab-view">
-                <ul>
-                  <li class="first"><a href="#instance-wizard-featured-isos">Featured</a></li>
-                  <li><a href="#instance-wizard-community-isos">Community</a></li>
-                  <li class="last"><a href="#instance-wizard-my-isos">My ISOs</a></li>
-                </ul>
+              <!-- Select template -->
+              <div class="wizard-step-conditional select-template">
+                <div class="main-desc">
+                  <p>
+                    Please select a template for your new virtual instance.
+                  </p>
+                </div>
+                <div class="template-select content tab-view">
+                  <ul>
+                    <li class="first"><a href="#instance-wizard-featured-templates">Featured</a></li>
+                    <li class="last"><a href="#instance-wizard-community-templates">Community</a></li>
+                  </ul>
 
-                <div id="instance-wizard-featured-isos">
-                  <div class="select-container">
+                  <div id="instance-wizard-featured-templates">
+                    <div class="select-container">
+                    </div>
+                  </div>
+                  <div id="instance-wizard-community-templates">
+                    <div class="select-container">
+                    </div>
                   </div>
                 </div>
-                <div id="instance-wizard-community-isos">
-                  <div class="select-container">
-                  </div>
+              </div>
+
+              <!-- Select ISO -->
+              <div class="wizard-step-conditional select-iso">
+                <div class="main-desc">
+                  <p>
+                    Please select an ISO for your new virtual instance.
+                    You can also choose to upload your own iso as well.
+                  </p>
                 </div>
-                <div id="instance-wizard-my-isos">
-                  <div class="select-container">
+                <div class="iso-select content tab-view">
+                  <ul>
+                    <li class="first last"><a href="#instance-wizard-my-isos">My ISOs</a></li>
+                  </ul>
+
+                  <div id="instance-wizard-my-isos">
+                    <div class="select-container">
+                    </div>
                   </div>
                 </div>
               </div>

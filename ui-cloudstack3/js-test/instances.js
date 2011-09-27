@@ -44,17 +44,25 @@
                 // Step 2: Select template
                 function(args) {
                   args.response.success({
-                    type: 'templates',
+                    hypervisor: {
+                      idField: 'id',
+                      nameField: 'displayname'
+                    },
                     data: {
-                      isos: {
+                      templates: {
                         featured: $.grep(testData.data.isos, function(elem) {
                           return elem.isfeatured === true;
                         }),
                         community: [],
-                        mine: $.grep(testData.data.isos, function(elem) {
+                        isos: $.grep(testData.data.isos, function(elem) {
                           return elem.isfeatured === false;
                         })
-                      }
+                      },
+                      hypervisors: [
+                        { id: 123, displayname: 'KVM' },
+                        { id: 124, displayname: 'Xen' },
+                        { id: 125, displayname: 'VMWare' }
+                      ]
                     }
                   });
                 },
@@ -137,8 +145,7 @@
           action: function(args) {
             setTimeout(function() {
               args.response.success({
-                _custom: { jobID: 'restart' + args.data.id }
-              })
+              });
             }, 1000);
           },
           messages: {

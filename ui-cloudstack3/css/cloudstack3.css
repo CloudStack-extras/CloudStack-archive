@@ -3034,6 +3034,32 @@ input.error {
   background: #FFFFFF;
 }
 
+.multi-wizard.instance-wizard .select-iso .content .select .hypervisor {
+  float: left;
+  display: block;
+  clear: both;
+  margin: 0 0 0 58px;
+  /*+placement:shift 0px -6px;*/
+  position: relative;
+  left: 0px;
+  top: -6px;
+}
+
+.multi-wizard.instance-wizard .select-iso .content .select .hypervisor select {
+  width: 160px;
+}
+
+.multi-wizard.instance-wizard .select-iso .content .select .hypervisor label {
+  color: #000000;
+  font-size: 11px;
+  margin-right: 9px;
+  margin-left: 2px;
+}
+
+.multi-wizard.instance-wizard .select-iso .wizard-step-conditional.select-iso .content .select.selected {
+  height: 90px;
+}
+
 /*** UI widgets*/
 .multi-wizard .ui-tabs ul {
   margin-left: 2px;

@@ -18,6 +18,12 @@
             size: { label: 'Size' }
           },
 
+          filters: {
+            mine: { label: 'My volumes' },
+            large: { label: 'Large volumes' },
+            small: { label: 'Small volumes' }
+          },
+
           // List view actions
           actions: {
             // Add volume
@@ -278,6 +284,9 @@
             state: { label: 'State' },
             intervaltype: { label: 'Interval Type' },
             created: { label: 'Date' }
+          },
+          filters: {
+            mine: { label: 'My snapshots' }
           },
           dataProvider: testData.dataProvider.listView('snapshots'),
           detailView: {

@@ -40,24 +40,24 @@
           var $selects = $('<div>');
 
           $(data).each(function() {
-            $selects.append(
-              $('<div>').addClass('select')
-                .append(
-                  $('<input>')
-                    .attr({
-                      type: (function(type) {
-                        return type ? type : 'radio';
-                      })(options ? options.type : null),
-                      name: name,
-                      value: this[fields.id]
-                    })
-                )
-                .append(
-                  $('<div>').addClass('select-desc')
-                    .append($('<div>').addClass('name').html(this[fields.name]))
-                    .append($('<div>').addClass('desc').html(this[fields.desc]))
-                )
-            );
+            var $select = $('<div>').addClass('select')
+                  .append(
+                    $('<input>')
+                      .attr({
+                        type: (function(type) {
+                          return type ? type : 'radio';
+                        })(options ? options.type : null),
+                        name: name,
+                        value: this[fields.id]
+                      })
+                  )
+                  .append(
+                    $('<div>').addClass('select-desc')
+                      .append($('<div>').addClass('name').html(this[fields.name]))
+                      .append($('<div>').addClass('desc').html(this[fields.desc]))
+                  );
+
+            $selects.append($select);
           });
 
           cloudStack.evenOdd($selects, 'div.select', {
@@ -114,27 +114,61 @@
               $step.find('input[type=radio]').filter(function() {
                 return $(this).val() == formData.templateid;
               }).click();
+
+              $step.find('select[name=hypervisorid]:visible').val(
+                formData.hypervisorid
+              );
             };
 
             return {
               response: {
                 success: function(args) {
+                  $step.find('.wizard-step-conditional').hide();
+
+                  if (formData['select-template']) {
+                    $step.find('.wizard-step-conditional').filter(function() {
+                      return $(this).hasClass(formData['select-template']);
+                    }).show();
+                  } else {
+                    $step.find('.select-iso').show();
+                  }
                   var makeIsos = function(type, append) {
-                    append(
-                      makeSelects('templateid', args.data.isos[type], {
-                        name: 'name',
-                        desc: 'displaytext',
-                        id: 'id'
-                      })
-                    );
+                    var $selects = makeSelects('templateid', args.data.templates[type], {
+                      name: 'name',
+                      desc: 'displaytext',
+                      id: 'id'
+                    });
+
+                    if (type == 'isos') {
+                      // Create hypervisor select
+                      $selects.find('input').bind('click', function() {
+                        var $select = $(this).closest('.select');
+                        $select.siblings().removeClass('selected').find('.hypervisor').remove();
+                        $select.addClass('selected').append(
+                          $('<div>').addClass('hypervisor')
+                            .append($('<label>').html('Hypervisor:'))
+                            .append($('<select>').attr({ name: 'hypervisorid' }))
+                        );
+
+                        // Get hypervisor data
+                        $(args.data.hypervisors).each(function() {
+                          $select.find('select').append(
+                            $('<option>').attr({ value: this[args.hypervisor.idField] })
+                              .html(this[args.hypervisor.nameField])
+                          );
+                        });
+                      });
+                    }
+
+                    append($selects);
                   };
 
                   // Featured ISOs
                   $(
                     [
-                      ['featured', 'instance-wizard-featured-isos'],
-                      ['community', 'instance-wizard-community-isos'],
-                      ['mine', 'instance-wizard-my-isos']
+                      ['featured', 'instance-wizard-featured-templates'],
+                      ['community', 'instance-wizard-community-templates'],
+                      ['isos', 'instance-wizard-my-isos']
                     ]
                   ).each(function() {
                     var item = this;
@@ -177,9 +211,13 @@
 
           'data-disk-offering': function($step, formData) {
             var originalValues = function(formData) {
-              var $targetInput = $step.find('input[type=radio]').filter(function() { 
+              var $targetInput = $step.find('input[type=radio]').filter(function() {
                 return $(this).val() == formData.diskofferingid;
               }).click();
+
+              if (!$targetInput.size()) {
+                $step.find('input[type=radio]:visible').filter(':first').click();
+              }
             };
 
             $step.find('.section.custom-size').hide();
@@ -394,7 +432,8 @@
 
           // Previous button
           if ($target.closest('div.button.previous').size()) {
-            showStep($steps.filter(':visible').index());
+            var index = $steps.filter(':visible').index();
+            if (index) showStep(index);
 
             return false;
           }
