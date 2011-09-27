@@ -449,10 +449,31 @@
               },
               {
                 id: { label: 'ID', isEditable: false },
-                zonename: { label: 'Zone', isEditable: false },
-                templateid: {
-                  label: 'Template type',
+                zonename: { label: 'Zone', isEditable: false },                
+				guestosid: {
+                  label: 'OS Type',
                   isEditable: true,
+                  select: function(args) {	
+					$.ajax({
+					  url: createURL("listOsTypes"),			 
+					  dataType: "json",
+					  async: true,
+					  success: function(json) { 				   
+						var ostypes = json.listostypesresponse.ostype;
+                        var items = [];		
+                        $(ostypes).each(function() {
+						  items.push({id: this.id, description: this.description});
+						});						
+						args.response.success({data: items});					  
+					  }
+					});   
+                  }				  
+                },				
+				templateid: {
+                  label: 'Template type',
+                  isEditable: false
+				  /*
+				  ,
                   select: function(args) {
                     var items = [];
 
@@ -462,6 +483,7 @@
                    
                     args.response.success({ data: items });                   
                   }
+				  */
                 },
                 serviceofferingname: { label: 'Service offering', isEditable: false },
                 group: { label: 'Group', isEditable: true }
