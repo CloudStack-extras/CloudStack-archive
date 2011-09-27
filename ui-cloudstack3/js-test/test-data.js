@@ -2141,7 +2141,7 @@
       ],
       templates: [
         {
-          "id": 256,
+          "id": 2516,
           "name": "CumuLogic-Master-64bit-0622",
           "displaytext": "CumuLogic 64bit Master",
           desc: '64-bit master by CumuLogic. Based on CentOS 5.5',
@@ -2166,7 +2166,7 @@
           "isextractable": false
         },
         {
-          "id": 449,
+          "id": 4499,
           "name": "RightImage_CentOS_5.4_x64_v5.6.34_Dev1",
           desc: 'CentOS image by RightImage. Developer Preview',
           "displaytext": "RightImage CentOS",
@@ -2191,7 +2191,7 @@
           "isextractable": false
         },
         {
-          "id": 229,
+          "id": 229239,
           "name": "RightImage_Windows_2008R2_SP1_x64_v5.7.3",
           desc: 'Windows Server 2008 image by RightImage',
           "displaytext": "RightImage Windows 2008",
@@ -2217,7 +2217,7 @@
           "checksum": "15b2c450ef8b54467028faf6412ed8d0"
         },
         {
-          "id": 277,
+          "id": 27237,
           "name": "CH_RightImage_CentOS_5.4_x64_v5.6.34.dev3",
           desc: 'RightImage. Developer Preview',
           "displaytext": "CH RightImage CentOS 5",
@@ -2242,7 +2242,7 @@
           "isextractable": false
         },
         {
-          "id": 278,
+          "id": 279898,
           "name": "CH_RI_CLOCK",
           desc: 'CentOS RightImage -- testing only',
           "displaytext": "RI CentOS",
@@ -2267,7 +2267,7 @@
           "isextractable": false
         },
         {
-          "id": 230,
+          "id": 29930,
           "name": "RightImage_CentOS_5.4_x64_v5.6.34.dev3",
           desc: 'RightImage. Developer Preview',
           "displaytext": "CentOS Dev",
@@ -2292,7 +2292,7 @@
           "isextractable": false
         },
         {
-          "id": 311,
+          "id": 49311,
           "name": "RightImage_CentOS_5.4_x64_v5.6.32_XEN",
           desc: 'XenServer-enabled CentOS by RightImage',
           "displaytext": "RightImage CentOS Xen",
@@ -2317,7 +2317,7 @@
           "isextractable": false
         },
         {
-          "id": 310,
+          "id": 44449326,
           "name": "RightImage_CentOS_5.4_x64_v5.6.32_XEN",
           desc: 'XenServer-enabled CentOS by RightImage -- 32-bit only',
           "displaytext": "RightImage CentOS Xen 32",
@@ -2341,7 +2341,7 @@
           "isextractable": false
         },
         {
-          "id": 257,
+          "id": 5257,
           "name": "RightImage_CentOS_5.4_x64_v5.6.28.1_VMWARE",
           desc: 'VMWare-based CentOS image by RightImage',
           "displaytext": "RightImage CentOS 5.4 VMWare",
@@ -2366,7 +2366,7 @@
           "isextractable": false
         },
         {
-          "id": 266,
+          "id": 4266,
           "name": "RightImage_CentOS_5.4_x64_v5.6.34_Dev6_25c035c3878a93",
           desc: 'Developer testing CentOS by RightImage',
           "displaytext": "RightImage CentOS 5.4 Dev6",
@@ -2391,7 +2391,7 @@
           "isextractable": false
         },
         {
-          "id": 259,
+          "id": 0259,
           "name": "RightImage_CentOS_5.4_x64_v5.6.32.1_CDC_XEN",
           desc: 'XenServer image by RightImage',
           "displaytext": "RightImage CentOS 5.4 x64 v5.6 CDC XEN",
@@ -2416,7 +2416,7 @@
           "isextractable": false
         },
         {
-          "id": 296,
+          "id": 9296,
           "name": "CentOS Test",
           desc: 'For testing only!',
           "displaytext": "CentOS Test",
@@ -2441,7 +2441,7 @@
           "isextractable": false
         },
         {
-          "id": 298,
+          "id": 4298,
           "name": "MySQL5.032bit-CloudStack",
           desc: 'CentOS 5.1 with MySQL preinstalled -- 32-bit only',
           "displaytext": "MySQL 5 32-bit CloudStack",
@@ -2467,7 +2467,7 @@
       ],
       isos: [
         {
-          "id": 307,
+          "id": 1307,
           "name": "Gentoo AMD64 20110714",
           "displaytext": "Gentoo AMD64 20110714",
           desc: 'Gentoo Linux 64-bit. Contains basic installation',
@@ -2489,7 +2489,7 @@
           "isextractable": true
         },
         {
-          "id": 307,
+          "id": 1307,
           "name": "Gentoo AMD64 20110714",
           desc: 'Gentoo 64-bit with full installation',
           "displaytext": "Gentoo AMD64 20110714",
@@ -2511,7 +2511,7 @@
           "isextractable": true
         },
         {
-          "id": 244,
+          "id": 1244,
           "name": "Windows 8 (64 bit)",
           desc: 'Windows 8 Developer Preview; from MSDN image',
           "displaytext": "Windows 8 Developer Preview (64 bit)",
@@ -2533,7 +2533,7 @@
           "isextractable": true
         },
         {
-          "id": 246,
+          "id": 1246,
           "name": "Ubuntu 10-04 (64 bit)",
           desc: 'Ubuntu 10 64-bit; custom install',
           "displaytext": "Ubuntu 10-04 (64 bit)",
@@ -2555,7 +2555,7 @@
           "isextractable": true
         },
         {
-          "id": 245,
+          "id": 1245,
           "name": "Windows 7 Pro (32 bit)",
           desc: 'Windows 7 32-bit; not for server use',
           "displaytext": "Windows 7 Pro (32 bit)",
@@ -2577,7 +2577,7 @@
           "isextractable": true
         },
         {
-          "id": 246,
+          "id": 1246,
           "name": "Ubuntu 10-04 (64 bit)",
           desc: 'Ubuntu 10 64-bit; contains Apache Web Server',
           "displaytext": "Ubuntu 10-04 (64 bit)",
@@ -2599,7 +2599,7 @@
           "isextractable": true
         },
         {
-          "id": 244,
+          "id": 1244,
           "name": "Windows 2008 R2 (64 bit)",
           desc: 'Windows Server',
           "displaytext": "Windows 2008 R2 (64 bit)",
@@ -2621,7 +2621,7 @@
           "isextractable": true
         },
         {
-          "id": 245,
+          "id": 1245,
           "name": "Windows 7 Pro (32 bit)",
           desc: 'Windows 7 (Workstation only)',
           "displaytext": "Windows 7 Pro (32 bit)",
@@ -2643,7 +2643,7 @@
           "isextractable": true
         },
         {
-          "id": 243,
+          "id": 1243,
           "name": "RHEL 6.1 (64 bit)",
           desc: 'Red Hat Enterprise Linux 6 -- contains full server software',
           "displaytext": "RHEL 6.1 (64 bit)",
@@ -2665,7 +2665,7 @@
           "isextractable": true
         },
         {
-          "id": 243,
+          "id": 1243,
           "name": "RHEL 6.1 (64 bit)",
           desc: 'Red Hat Enterprise -- minimal installation',
           "displaytext": "RHEL 6.1 (64 bit)",
@@ -4017,7 +4017,20 @@
           "disksize": 100,
           "created": "2011-05-26T22:16:40-0700",
           "iscustomized": false
+        },
+        {
+          "id": 6,
+          "name": "Custom A",
+          "displaytext": "Custom Disk A",
+          "iscustomized": true
+        },
+        {
+          "id": 7,
+          "name": "Custom B",
+          "displaytext": "Custom Disk B",
+          "iscustomized": true
         }
+
       ],
       networkOfferings: [
         {

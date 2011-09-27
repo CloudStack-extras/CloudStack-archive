@@ -73,16 +73,6 @@
         };
 
         var dataProvider = function(step, providerArgs, callback) {
-          // Provide default response if none given
-          if (!providerArgs) providerArgs = {
-            response: {
-              success: function(args) {
-                if (callback) callback(args);
-                return false;
-              }
-            }
-          };
-
           // Call appropriate data provider
           args.steps[step - 1]($.extend(providerArgs, {
             currentData: cloudStack.serializeForm($form)
@@ -90,7 +80,17 @@
         };
 
         var dataGenerators = {
-          setup: function($step) {
+          setup: function($step, formData) {
+            var originalValues = function(formData) {
+              $step.find('select').val(
+                formData.zoneid
+              );
+
+              $step.find('input[type=radio]').filter(function() {
+                return $(this).val() == formData['select-template'];
+              }).click();
+            };
+
             return {
               response: {
                 success: function(args) {
@@ -102,12 +102,20 @@
                         .html(this.name)
                     );
                   });
+
+                  originalValues(formData);
                 }
               }
             };
           },
 
-          'select-iso': function($step) {
+          'select-iso': function($step, formData) {
+            var originalValues = function(formData) {
+              $step.find('input[type=radio]').filter(function() {
+                return $(this).val() == formData.templateid;
+              }).click();
+            };
+
             return {
               response: {
                 success: function(args) {
@@ -136,31 +144,58 @@
                       $selectContainer.append($elem);
                     });
                   });
+
+                  originalValues(formData);
                 }
               }
             };
           },
 
-          'service-offering': function($step) {
+          'service-offering': function($step, formData) {
+            var originalValues = function(formData) {
+              $step.find('input[type=radio]').filter(function() {
+                return $(this).val() == formData.serviceofferingid;
+              }).click();
+            };
+
             return {
               response: {
                 success: function(args) {
                   $step.find('.content .select-container').append(
-                    makeSelects('templateid', args.data.serviceOfferings, {
+                    makeSelects('serviceofferingid', args.data.serviceOfferings, {
                       name: 'name',
                       desc: 'displaytext',
                       id: 'id'
                     })
                   );
+
+                  originalValues(formData);
                 }
               }
             };
           },
 
-          'data-disk-offering': function($step) {
+          'data-disk-offering': function($step, formData) {
+            var originalValues = function(formData) {
+              var $targetInput = $step.find('input[type=radio]').filter(function() { 
+                return $(this).val() == formData.diskofferingid;
+              }).click();
+            };
+
+            $step.find('.section.custom-size').hide();
+
             return {
               response: {
                 success: function(args) {
+                  $step.removeClass('custom-disk-size');
+                  if (args.required) {
+                    $step.find('.section.no-thanks').hide();
+                    $step.addClass('required');
+                  } else {
+                    $step.find('.section.no-thanks').show();
+                    $step.removeClass('required');
+                  }
+
                   $step.find('.content .select-container').append(
                     makeSelects('diskofferingid', args.data.diskOfferings, {
                       id: 'id',
@@ -168,12 +203,65 @@
                       desc: 'displaytext'
                     })
                   );
+
+                  $step.find('input[type=radio]').bind('change', function() {
+                    var $target = $(this);
+                    var val = $target.val();
+                    var item = $.grep(args.data.diskOfferings, function(elem) {
+                      return elem.id == val;
+                    })[0];
+
+                    if (!item) return true;
+
+                    var custom = item[args.customFlag];
+
+                    if (custom) {
+                      $step.find('.section.custom-size').show();
+                      $step.addClass('custom-disk-size');
+                      $target.closest('.select-container').scrollTop(
+                        $target.position().top
+                      );
+                    } else {
+                      $step.find('.section.custom-size').hide();
+                      $step.removeClass('custom-disk-size');
+                    }
+
+                    return true;
+                  });
+
+                  originalValues(formData);
                 }
               }
             };
           },
 
-          'network': function($step) {
+          'network': function($step, formData) {
+            var originalValues = function(formData) {
+              // Default networks
+              $step.find('input[name=default-network]').filter(function() {
+                return $(this).val() == formData['default-network'];
+              }).click();
+
+              // Optional networks
+              var selectedOptionalNetworks = [];
+
+              if ($.isArray(formData['optional-networks'])) {
+                $(formData['optional-networks']).each(function() {
+                  selectedOptionalNetworks.push(this);
+                });
+              } else {
+                selectedOptionalNetworks.push(formData['optional-networks']);
+              }
+
+              var $checkboxes = $step.find('input[name=optional-networks]');
+              $(selectedOptionalNetworks).each(function() {
+                var networkID = this;
+                $checkboxes.filter(function() {
+                  return $(this).val() == networkID;
+                }).attr('checked', 'checked');
+              });
+            };
+
             return {
               response: {
                 success: function(args) {
@@ -217,6 +305,8 @@
                       type: 'checkbox'
                     })
                   );
+
+                  originalValues(formData);
                 }
               }
             };
@@ -226,7 +316,6 @@
             return {
               response: {
                 success: function(args) {
-                  return false;
                 }
               }
             };
@@ -246,21 +335,19 @@
 
           var $targetStep = $($steps.hide()[targetIndex]).show();
           var stepID = $targetStep.attr('wizard-step-id');
-          var dataProviderResponse;
-          var dataProviderCallback = function(args) {
-            dataProviderResponse = args;
-          };
+          var formData = cloudStack.serializeForm($form);
 
-          if (!$targetStep.data('wizard-generation-complete')) {
-            dataProvider(
-              index,
-              dataGenerators[stepID]($targetStep),
-              dataProviderCallback
-            );
-            $targetStep.data('wizard-generation-complete', true);
-          } else {
-            dataProvider(index, null, dataProviderCallback);
+          if (!$targetStep.hasClass('review')) { // Review row content is not autogenerated
+            $targetStep.find('.select-container div, option').remove();
           }
+
+          dataProvider(
+            index,
+            dataGenerators[stepID](
+              $targetStep,
+              formData
+            )
+          );
 
           // Show launch vm button if last step
           var $nextButton = $wizard.find('.button.next');

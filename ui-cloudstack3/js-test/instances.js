@@ -52,7 +52,7 @@
                         }),
                         community: [],
                         mine: $.grep(testData.data.isos, function(elem) {
-                          return elem.account === 'admin';
+                          return elem.isfeatured === false;
                         })
                       }
                     }
@@ -71,6 +71,8 @@
                 // Step 4: Data disk offering
                 function(args) {
                   args.response.success({
+                    required: true,
+                    customFlag: 'iscustomized', // Field determines if custom slider is shown
                     data: {
                       diskOfferings: testData.data.diskOfferings
                     }
@@ -95,7 +97,7 @@
 
                 // Step 6: Review
                 function(args) {
-                  return false;
+                  args.response.success({});
                 }
               ],
               complete: function(args) {

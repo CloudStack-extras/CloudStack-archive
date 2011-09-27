@@ -3267,6 +3267,26 @@ input.error {
 }
 
 .multi-wizard.instance-wizard .data-disk-offering .select-container {
+  height: 280px;
+  margin: -7px 6px 0 8px;
+  /*+border-radius:6px;*/
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  -khtml-border-radius: 6px;
+  border-radius: 6px 6px 6px 6px;
+}
+
+.multi-wizard.instance-wizard .data-disk-offering.required .select-container {
+  height: 344px;
+  position: relative;
+  margin-top: 9px !important;
+}
+
+.multi-wizard.instance-wizard .data-disk-offering.required.custom-disk-size .select-container {
+  height: 279px;
+}
+
+.multi-wizard.instance-wizard .data-disk-offering.custom-disk-size .select-container {
   height: 213px;
   margin: -7px 6px 0 8px;
   /*+border-radius:6px;*/
