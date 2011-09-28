@@ -40,32 +40,70 @@
                 },
 
                 // Step 2: Select template
-                function(args) {
+                function(args) {				  
+				  var hypervisorObjs;
+				  $.ajax({
+					url: createURL("listHypervisors&zoneid="+args.currentData.zoneid),			 
+					dataType: "json",
+					async: false,
+					success: function(json) { 				   
+					  hypervisorObjs = son.listhypervisorsresponse.hypervisor;		  				  
+					}
+				  });  
+				  
+				  var featuredTemplateObjs;
+				  $.ajax({
+					url: createURL("listTemplates&templatefilter=featured&zoneid="+args.currentData.zoneid),			 
+					dataType: "json",
+					async: false,
+					success: function(json) { 				   
+					  featuredTemplateObjs = json.listtemplatesresponse.template;						  			  
+					}
+				  });  		
+			  
+			      var communityTemplateObjs;
+				  $.ajax({
+					url: createURL("listTemplates&templatefilter=community&zoneid="+args.currentData.zoneid),			 
+					dataType: "json",
+					async: false,
+					success: function(json) { 				   
+					  communityTemplateObjs = json.listtemplatesresponse.template;						  			  
+					}
+				  });  		
+			  
+			      var myTemplateObjs;
+				  $.ajax({
+					url: createURL("listTemplates&templatefilter=selfexecutable&zoneid="+args.currentData.zoneid),			 
+					dataType: "json",
+					async: false,
+					success: function(json) { 				   
+					  myTemplateObjs = json.listtemplatesresponse.template;						  			  
+					}
+				  });  
+
+				  var isoObjs;
+				  $.ajax({
+					url: createURL("listIsos&isReady=true&bootable=true&isofilter=executable&zoneid="+args.currentData.zoneid),			 
+					dataType: "json",
+					async: false,
+					success: function(json) { 				   
+					  isoObjs = json.listisosresponse.iso;						  			  
+					}
+				  });  					  
+				  				  
                   args.response.success({
                     hypervisor: {
                       idField: 'id',
-                      nameField: 'displayname'
+                      nameField: 'name'
                     },
                     data: {
                       templates: {
-                        featuredtemplates: $.grep(testData.data.isos, function(elem) {
-                          return elem.isfeatured === true;
-                        }),
-                        communitytemplates:  $.grep(testData.data.isos, function(elem) {
-                          return elem.isfeatured === true;
-                        }),
-						mytemplates:  $.grep(testData.data.isos, function(elem) {
-                          return elem.isfeatured === true;
-                        }),
-                        isos: $.grep(testData.data.isos, function(elem) {
-                          return elem.isfeatured === false;
-                        })
+                        featuredtemplates: featuredTemplateObjs,
+                        communitytemplates: communityTemplateObjs,
+						mytemplates: myTemplateObjs,
+                        isos: isoObjs
                       },
-                      hypervisors: [
-                        { id: 123, displayname: 'KVM' },
-                        { id: 124, displayname: 'Xen' },
-                        { id: 125, displayname: 'VMWare' }
-                      ]
+                      hypervisors: hypervisorObjs
                     }
                   });
                 },
