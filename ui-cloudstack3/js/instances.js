@@ -42,17 +42,30 @@
                 // Step 2: Select template
                 function(args) {
                   args.response.success({
-                    type: 'templates',
+                    hypervisor: {
+                      idField: 'id',
+                      nameField: 'displayname'
+                    },
                     data: {
-                      isos: {
-                        featured: $.grep(testData.data.isos, function(elem) {
+                      templates: {
+                        featuredtemplates: $.grep(testData.data.isos, function(elem) {
                           return elem.isfeatured === true;
                         }),
-                        community: [],
-                        mine: $.grep(testData.data.isos, function(elem) {
-                          return elem.account === 'admin';
+                        communitytemplates:  $.grep(testData.data.isos, function(elem) {
+                          return elem.isfeatured === true;
+                        }),
+						mytemplates:  $.grep(testData.data.isos, function(elem) {
+                          return elem.isfeatured === true;
+                        }),
+                        isos: $.grep(testData.data.isos, function(elem) {
+                          return elem.isfeatured === false;
                         })
-                      }
+                      },
+                      hypervisors: [
+                        { id: 123, displayname: 'KVM' },
+                        { id: 124, displayname: 'Xen' },
+                        { id: 125, displayname: 'VMWare' }
+                      ]
                     }
                   });
                 },

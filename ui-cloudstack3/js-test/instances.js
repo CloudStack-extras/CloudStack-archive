@@ -50,10 +50,15 @@
                     },
                     data: {
                       templates: {
-                        featured: $.grep(testData.data.isos, function(elem) {
+                        featuredtemplates: $.grep(testData.data.isos, function(elem) {
                           return elem.isfeatured === true;
                         }),
-                        community: [],
+                        communitytemplates:  $.grep(testData.data.isos, function(elem) {
+                          return elem.isfeatured === true;
+                        }),
+						mytemplates:  $.grep(testData.data.isos, function(elem) {
+                          return elem.isfeatured === true;
+                        }),
                         isos: $.grep(testData.data.isos, function(elem) {
                           return elem.isfeatured === false;
                         })

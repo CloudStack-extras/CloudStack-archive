@@ -166,8 +166,9 @@
                   // Featured ISOs
                   $(
                     [
-                      ['featured', 'instance-wizard-featured-templates'],
-                      ['community', 'instance-wizard-community-templates'],
+                      ['featuredtemplates', 'instance-wizard-featured-templates'],
+                      ['communitytemplates', 'instance-wizard-community-templates'],
+					  ['mytemplates', 'instance-wizard-my-templates'],
                       ['isos', 'instance-wizard-my-isos']
                     ]
                   ).each(function() {
