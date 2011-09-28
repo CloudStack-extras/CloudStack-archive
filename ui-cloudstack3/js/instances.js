@@ -47,7 +47,7 @@
 					dataType: "json",
 					async: false,
 					success: function(json) { 				   
-					  hypervisorObjs = son.listhypervisorsresponse.hypervisor;		  				  
+					  hypervisorObjs = json.listhypervisorsresponse.hypervisor;		  				  
 					}
 				  });  
 				  
@@ -93,7 +93,7 @@
 				  				  
                   args.response.success({
                     hypervisor: {
-                      idField: 'id',
+                      idField: 'name',
                       nameField: 'name'
                     },
                     data: {
