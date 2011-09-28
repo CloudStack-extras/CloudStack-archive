@@ -109,12 +109,16 @@
                 },
 
                 // Step 3: Service offering
-                function(args) {
-                  args.response.success({
-                    data: {
-                      serviceOfferings: testData.data.serviceOfferings
-                    }
-                  });
+                function(args) {				  
+				  $.ajax({
+					url: createURL("listServiceOfferings&issystem=false"),			 
+					dataType: "json",
+					async: true,
+					success: function(json) { 				   
+					  var items = json.listserviceofferingsresponse.serviceoffering;								  
+					  args.response.success({ data: {serviceOfferings: items}});					  
+					}
+				  }); 				  
                 },
 
                 // Step 4: Data disk offering
