@@ -122,12 +122,16 @@
                 },
 
                 // Step 4: Data disk offering
-                function(args) {
-                  args.response.success({
-                    data: {
-                      diskOfferings: testData.data.diskOfferings
-                    }
-                  });
+                function(args) {				 
+				  $.ajax({
+					url: createURL("listDiskOfferings"),			 
+					dataType: "json",
+					async: true,
+					success: function(json) { 				   
+					  var items = json.listdiskofferingsresponse.diskoffering;								  
+					  args.response.success({ data: {diskOfferings: items}});					  
+					}
+				  }); 	
                 },
 
                 // Step 5: Network
