@@ -122,14 +122,21 @@
                 },
 
                 // Step 4: Data disk offering
-                function(args) {				 
+                function(args) {					  
+                  var isRequred = (args.currentData["select-template"] == "select-iso"? true: false); 					  
 				  $.ajax({
 					url: createURL("listDiskOfferings"),			 
 					dataType: "json",
 					async: true,
 					success: function(json) { 				   
-					  var items = json.listdiskofferingsresponse.diskoffering;								  
-					  args.response.success({ data: {diskOfferings: items}});					  
+					  var items = json.listdiskofferingsresponse.diskoffering;	
+                      args.response.success({
+						required: isRequred,
+						customFlag: 'iscustomized', // Field determines if custom slider is shown
+						data: {
+						  diskOfferings: testData.data.diskOfferings
+						}
+					  });	
 					}
 				  }); 	
                 },
