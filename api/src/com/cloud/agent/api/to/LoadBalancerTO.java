@@ -17,7 +17,9 @@
  */
 package com.cloud.agent.api.to;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
 import com.cloud.network.lb.LoadBalancingRule.StickyPolicy;
@@ -67,7 +69,7 @@ public class LoadBalancerTO {
             i = 0;
             for (StickyPolicy stickypolicy : stickyPolicies) {
         	    if (!stickypolicy.isRevoked())
-                    this.stickyPolicies[i++] = new StickyPolicyTO(stickypolicy.getMethodName(), stickypolicy.getParams());
+                    this.stickyPolicies[i++] = new StickyPolicyTO(stickypolicy.getMethodName(), stickypolicy.getDBParams());
             }
         }
 
@@ -111,19 +113,32 @@ public class LoadBalancerTO {
     
     public static class StickyPolicyTO {
     	String methodName;
-    	String params;
+    	String paramsDB;
+    	Map <String, String> paramsList;
+    	
     	public String getMethodName()
     	{
     		return methodName;
     	}
-    	public String getParams()
+    	public Map<String, String> getParams()
     	{
-    		return params;
+    		return paramsList;
     	}
-    	public StickyPolicyTO(String methodName,String params )
+    	public String getParamsDB()
+    	{
+    		return paramsDB;
+    	}
+    	public StickyPolicyTO(String methodName,String paramsDB )
     	{
     		this.methodName = methodName;
-    		this.params = params;
+    		this.paramsDB = paramsDB;
+    		String[] temp;
+    		temp = paramsDB.split("[,]");
+    		Map<String, String> paramList = new HashMap<String, String>();
+    		for (int i = 0; i < (temp.length - 1); i = i + 2) {
+    			paramList.put(temp[i], temp[i + 1]);
+    		}
+    		this.paramsList = paramList;
     	}
     }
     

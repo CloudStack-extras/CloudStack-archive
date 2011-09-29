@@ -128,8 +128,7 @@ public class CreateLBStickyPolicyCmd extends BaseAsyncCreateCmd  {
         try {
             UserContext.current().setEventDetails("Rule Id: " + getEntityId());
                    
-            _lbService.applyLoadBalancerConfig(getLbRuleId()); //FIXME: failing when the host is down 
-          //  success = success && _lbService.applyLoadBalancerConfig(getLbRuleId());
+            success = success && _lbService.applyLoadBalancerConfig(getLbRuleId());
             
             // State might be different after the rule is applied, so get new object here
             policy = _entityMgr.findById(LBStickyPolicy.class, getEntityId());

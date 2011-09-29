@@ -130,21 +130,21 @@ public class LBStickyRuleResponse extends BaseResponse {
     public void setState(String state) {
         this.state = state;
     }
-    public LBStickyRuleResponse()
-    {
-    	
-    }
     
 	public LBStickyRuleResponse(LBStickyPolicy stickypolicy) {
 		this.name = stickypolicy.getName();
 		String dbparams = stickypolicy.getDBParams();
 		this.methodName = stickypolicy.getMethodName();
 		this.description = stickypolicy.getDescription();
+		if (stickypolicy.isRevoke())
+		{
+			this.setState("Revoked");
+		}
 		if (stickypolicy.getId() != 0)
 		      this.id = stickypolicy.getId();
 
 		String[] temp;
-		temp = dbparams.split("[,/]");
+		temp = dbparams.split("[,]");
 		Map<String, String> paramList = new HashMap<String, String>();
 		for (int i = 0; i < (temp.length - 1); i = i + 2) {
 			paramList.put(temp[i], temp[i + 1]);

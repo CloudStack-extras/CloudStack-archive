@@ -725,6 +725,10 @@ public class ApiResponseHelper implements ResponseGenerator {
     public LBStickyResponse createLBStickyMethodResponse(List<? extends LBStickyPolicy> stickyRules, LoadBalancer lb){
     	LBStickyResponse spResponse = new LBStickyResponse();
 
+    	if (lb == null) {
+            spResponse.setObjectName("stickymethod");
+    		return spResponse;
+    	}
     	spResponse.setlbRuleId(lb.getId());
         Account accountTemp = ApiDBUtils.findAccountById(lb.getAccountId());
         if (accountTemp != null) {
@@ -733,12 +737,15 @@ public class ApiResponseHelper implements ResponseGenerator {
         	spResponse.setDomainName(ApiDBUtils.findDomainById(accountTemp.getDomainId()).getName());
         }
 
-        List<LBStickyRuleResponse> responses = new ArrayList<LBStickyRuleResponse>();
-        for (LBStickyPolicy stickymethod : stickyRules) {
-        	LBStickyRuleResponse ruleResponse = new LBStickyRuleResponse(stickymethod);
-        	responses.add(ruleResponse);
-        }
-        spResponse.setRules(responses);
+		if (stickyRules != null) {
+			List<LBStickyRuleResponse> responses = new ArrayList<LBStickyRuleResponse>();
+			for (LBStickyPolicy stickymethod : stickyRules) {
+				LBStickyRuleResponse ruleResponse = new LBStickyRuleResponse(
+						stickymethod);
+				responses.add(ruleResponse);
+			}
+			spResponse.setRules(responses);
+		}
         
         spResponse.setObjectName("stickymethod");
         return spResponse;

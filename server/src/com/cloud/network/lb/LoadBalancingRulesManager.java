@@ -34,7 +34,7 @@ public interface LoadBalancingRulesManager extends LoadBalancingRulesService {
     boolean removeAllLoadBalanacersForIp(long ipId, Account caller, long callerUserId);
     boolean removeAllLoadBalanacersForNetwork(long networkId, Account caller, long callerUserId);
     List<LbDestination> getExistingDestinations(long lbId);
-    List<StickyPolicy> getStickypolacies(long lbId);
+    List<StickyPolicy> getStickypolicies(long lbId);
     
     /**
      * Remove vm from all load balancers

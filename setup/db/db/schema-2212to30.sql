@@ -27,3 +27,14 @@ INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor
 INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('KVM', 'default', 50, 1);
 INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('Ovm', 'default', 25, 1);
 INSERT IGNORE INTO `cloud`.`hypervisor_capabilities`(hypervisor_type, hypervisor_version, max_guests_limit, security_group_enabled) VALUES ('Ovm', '2.3', 25, 1);
+CREATE TABLE `cloud`.`load_balancer_sticky_policies` (
+  `id` bigint unsigned NOT NULL auto_increment,
+  `load_balancer_id` bigint unsigned NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` varchar(4096) NULL COMMENT 'description',
+  `method_name` varchar(255) NOT NULL,
+  `params` varchar(4096) NOT NULL,
+  `revoke` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT '1 is when rule is set for Revoke',
+  PRIMARY KEY  (`id`),
+  CONSTRAINT `fk_load_balancer_sticky_polacies__load_balancer_id` FOREIGN KEY(`load_balancer_id`) REFERENCES `load_balancing_rules`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

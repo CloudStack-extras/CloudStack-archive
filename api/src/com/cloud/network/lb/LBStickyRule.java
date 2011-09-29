@@ -52,7 +52,7 @@ public class LBStickyRule implements LBStickyPolicy{
 		this.paramList = new HashMap<String, String>();
 		for (int i = 0; i < (temp.length-1); i=i+2) {
 			this.paramList.put(temp[i], temp[i+1]);
-			sb = sb.append(temp[i]).append("/").append(temp[i+1]).append(",");
+			sb = sb.append(temp[i]).append(",").append(temp[i+1]).append(",");
 		}
 		paramsInDb =  sb.toString();
 		this.id =  0;

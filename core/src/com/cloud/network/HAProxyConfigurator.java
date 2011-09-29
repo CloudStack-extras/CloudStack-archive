@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Iterator;
 
 import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
 import com.cloud.agent.api.to.LoadBalancerTO;
@@ -48,11 +49,6 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 			"\tdaemon"
 	};
 
- 
-	private static String [] statsSubrule = {
-		"\tmode http",
-		"\toption httpclose"
-     };
     
     
 	private static String [] defaultsSection = {"defaults",
@@ -152,20 +148,48 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 		result.add(getBlankLine());
 		return result;
 	}
+	
 	private String getsubRuleForStickyRule(LoadBalancerTO lbTO)
 	{
 		int i=0;
 		if (lbTO.getStickyPolacies() == null ) return null;
+		
 		StringBuilder sb = new StringBuilder();
+
 		for (StickyPolicyTO sticky: lbTO.getStickyPolacies()) {
 			if (sticky == null) continue;
+			Map <String, String> paramsList = sticky.getParams();
 			i++;
 		    if (sticky.getMethodName().equals("cookiebased"))
 		    {
-		    	sb.append("\t").append("cookie LBSERVERID insert");
+		    	/* Default Values */
+		    	String cookiename = null; /* required */
+		    	
+		    	Iterator it = paramsList.entrySet().iterator();
+		    	while (it.hasNext()) {
+		    	    Map.Entry pairs = (Map.Entry)it.next();
+		    	    if (pairs.getKey().equals("cookiename")) cookiename = (String)pairs.getValue();
+		    	}
+		    	if (cookiename == null) /* check all mandatory feilds */
+		    	{
+		    		return null; //FIXME :  Not supposed to reach here, Something wrong,  silently ignoring entire sticky policy
+		    	}
+		    	sb.append("\t").append("cookie ").append(cookiename).append(" insert");
 		    }else if (sticky.getMethodName().equals("sourcebased"))
 		    {
-		    	sb.append("\t").append("stick-table type ip size 200k expire 30m");
+		    	/* Default Values */
+		    	String tablesize = "200k" ; /* optional */
+		    	String expire = "30m" ; /* optional */
+		    	
+		    	/* overwrite default values with the stick parameters */
+		    	Iterator it = paramsList.entrySet().iterator();
+		    	while (it.hasNext()) {
+		    	    Map.Entry pairs = (Map.Entry)it.next();
+		    	    if (pairs.getKey().equals("tablesize")) tablesize = (String)pairs.getValue();
+		    	    if (pairs.getKey().equals("expire")) expire = (String)pairs.getValue();
+		    	}
+	    	
+		    	sb.append("\t").append("stick-table type ip size ").append(tablesize).append(" expire ").append(expire);
 		    	sb.append("\n\t").append("stick on src");
 		    } else
 		    {
