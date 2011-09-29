@@ -158,8 +158,62 @@
                     return;					
 				  }
 				 				  
+				  var containerType = 'no-network'; //'no-network', 'select-network', 'select-security-group'				  
+				  if (zoneObj.securitygroupsenabled == false) {  //show network container				
+					//vmWizardShowNetworkContainer($thisPopup);	 
+					containerType = 'select-network';
+				  } 
+				  else if (zoneObj.securitygroupsenabled == true) {  // if security group is enabled			    
+					var hasDedicatedDirectTaggedDefaultNetwork = false;					
+					$.ajax({
+					  url: createURL("listNetworks&type=Direct&domainid="+g_domainid+"&account="+g_account+"&zoneId="+args.currentData.zoneid),
+					  dataType: "json",
+					  async: false,
+					  success: function(json) {					    
+						var items = json.listnetworksresponse.network;											
+						if (items != null && items.length > 0) {
+						  for (var i = 0; i < items.length; i++) {								
+							if(items[i].isshared ==	false && items[i].isdefault == true) { //dedicated, is default one.
+							  var broadcasturi = items[i].broadcasturi;	//e.g. "vlan://53"
+							  if(broadcasturi != null && broadcasturi.length > 0) {
+							  var vlanIdString = broadcasturi.substring(7); //e.g. "53"
+							  if(isNaN(vlanIdString) == false)
+								hasDedicatedDirectTaggedDefaultNetwork = true;
+							  }
+							}
+						  }
+						}
+				      }
+					});							
+					if(hasDedicatedDirectTaggedDefaultNetwork == true) {
+					  /*
+					  $("#dialog_confirmation")
+					  .text(dictionary["message.launch.vm.on.private.network"])
+					  .dialog("option", "buttons", {	                    
+						"Yes": function() {
+						  //present the current UI we have today	
+						  //vmWizardShowNetworkContainer($thisPopup);  
+						  containerType = 'select-network';
+						  $(this).dialog("close");
+						},
+						"No": function() {	                         
+						  //present security groups for user to select
+						  //vmWizardShowSecurityGroupContainer($thisPopup);	
+						  containerType = 'select-security-group';
+						  $(this).dialog("close");	
+						}
+					  }).dialog("open");   
+                      */	
+                      containerType = 'select-network'; //temporary					  
+					}					    
+					else {
+					  //vmWizardShowSecurityGroupContainer($thisPopup);	
+                      containerType = 'select-security-group';					  
+					}
+				  }						              
+				 
                   args.response.success({
-                    type: 'select-network',
+                    type: containerType, //'no-network', 'select-network', 'select-security-group'
                     data: {
                       defaultNetworks: $.grep(testData.data.networks, function(elem) {
                         return elem.isdefault === true;
