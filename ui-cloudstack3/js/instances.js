@@ -1,4 +1,7 @@
-(function($, cloudStack, testData) {	
+(function($, cloudStack, testData) {
+
+  var zoneObjs;
+	
   cloudStack.sections.instances = {
     title: 'Instances',
     id: 'instances',
@@ -33,8 +36,8 @@
 					dataType: "json",
 					async: true,
 					success: function(json) { 				   
-					  var items = json.listzonesresponse.zone;								  
-					  args.response.success({ data: {zones: items}});					  
+					  zoneObjs = json.listzonesresponse.zone;								  
+					  args.response.success({ data: {zones: zoneObjs}});					  
 					}
 				  });  
                 },
@@ -142,16 +145,29 @@
                 },
 
                 // Step 5: Network
-                function(args) {
+                function(args) {				  			  
+				  var zoneObj;
+				  $(zoneObjs).each(function(){
+				    if(this.id == args.currentData.zoneid) {
+					  zoneObj = this;
+					  return false; //break the $.each() loop 
+					}
+				  });
+				  if(zoneObj == null) {
+				    alert("error: can't find matched zone object");		
+                    return;					
+				  }
+				 				  
                   args.response.success({
-                    type: 'network',
+                    type: 'select-network',
                     data: {
                       defaultNetworks: $.grep(testData.data.networks, function(elem) {
                         return elem.isdefault === true;
                       }),
                       optionalNetworks: $.grep(testData.data.networks, function(elem) {
                         return elem.isdefault === false;
-                      })
+                      }),
+                      securityGroups: testData.data.securityGroups
                     }
                   });
                 },
