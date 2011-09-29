@@ -19,8 +19,10 @@ package com.cloud.network.lb;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -196,14 +198,48 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
         for (LBStickyRule method : stickyMethodList) {
             if (method.getMethodName().equals(cmd.getStickyMethodName()))
             {
-            	/* FIXME : need to  validate params optionality and names here */
             	methodMatch = true;
+            	Map apiParamList = cmd.getparamList();
+            	Map methodParamList = method.getParams();
+        		Map<String, String> tempParamList = new HashMap<String, String>();
+		    	/*validation-1: check for any new params that are not present in the policymethod(capabilty)  */
+        		if (apiParamList != null) {
+					Collection userGroupCollection = apiParamList.values();
+					Iterator iter = userGroupCollection.iterator();
+					while (iter.hasNext()) {
+						HashMap paramKVpair = (HashMap) iter.next();
+						String paramName = (String) paramKVpair.get("name");
+						String paramValue = (String) paramKVpair.get("value");
+						tempParamList.put(paramName, paramValue);
+						String optionality = (String) methodParamList
+								.get(paramName);
+						if (optionality == null) {
+							throw new InvalidParameterValueException(
+									"Failed :This Sticky policy does not support param name :"
+											+ paramName);
+						}
+					}
+				}
+            	
+            	/*validation-2: check for mandatory params */
+		    	Iterator it = methodParamList.entrySet().iterator();
+		    	while (it.hasNext()) {
+		    	    Map.Entry pairs = (Map.Entry)it.next();
+		    	    if (pairs.getValue().equals("required")) {
+		    	    	String paramName = (String)tempParamList.get(pairs.getKey());
+		    	    	if (paramName == null ) {
+		    	    		throw new InvalidParameterValueException("Failed : Missing Manadatory Param :" + pairs.getKey());
+		    	    	}
+		    	    }
+		    	}
+		    	
+		    	/* Successfully completed the Validation */
             	break;
             }
         }
         if (methodMatch == false)
         {
-        	throw new InvalidParameterValueException("Failed to match method name/ corresponsing parameters :" + cmd.getLbRuleId() );
+        	throw new InvalidParameterValueException("Failed to match method name :" + cmd.getLbRuleId() );
         }
         
     	/* Validation : check for the multiple sticky policies */
@@ -222,15 +258,6 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
         
         loadBalancer.setState(FirewallRule.State.Add);
        _lbDao.persist(loadBalancer);
-      /*  try {
-            loadBalancer.setState(FirewallRule.State.Add);
-            _lbDao.persist(loadBalancer);
-            applyLoadBalancerConfig(loadBalancer.getId());
-        } catch (ResourceUnavailableException e) {
-            s_logger.warn("Unable to apply the load balancer config because resource is unavaliable.", e);
-            return policy;
-        }*/
-
         return policy;
     }
     @Override
@@ -615,7 +642,7 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
         List<LoadBalancingRule> rules = new ArrayList<LoadBalancingRule>();
         for (LoadBalancerVO lb : lbs) {
             List<LbDestination> dstList = getExistingDestinations(lb.getId());
-            List<StickyPolicy> policyList = getStickypolacies(lb.getId());
+            List<StickyPolicy> policyList = getStickypolicies(lb.getId());
 
             LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList,policyList);
             rules.add(loadBalancing);
@@ -699,7 +726,7 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
     }
     
     @Override
-    public List<StickyPolicy> getStickypolacies(long lbId) {
+    public List<StickyPolicy> getStickypolicies(long lbId) {
         List<StickyPolicy> stickypolicies = new ArrayList<StickyPolicy>();
         List<LoadBalancerStickyPolicyVO> sDbpolicies = _lb2stickypoliciesDao.listByLoadBalancerId(lbId);
         LoadBalancerVO lb = _lbDao.findById(lbId);
@@ -837,7 +864,7 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
 
         return loadBalancerInstances;
     }
-    public  List<LBStickyRule> getStickyMethods(String capabilty)
+    private  List<LBStickyRule> getStickyMethods(String capabilty)
     {
     	 List<LBStickyRule> result = new ArrayList<LBStickyRule>();
     	 String[] temp;
@@ -854,24 +881,19 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
     	 }
     	 return result;
     }
-   // @Override
+   @Override
     public  List<LBStickyRule> getLBStickyMethods(ListLBStickyMethodsCmd cmd) {
-        List<LoadBalancerStickyPolicyVO> sDbpolicies = _lb2stickypoliciesDao.listByLoadBalancerId(cmd.getId());
-        if (sDbpolicies != null) {
-            for (LBStickyPolicy stickypolicy : sDbpolicies) {
-                LoadBalancerVO loadBalancer = _lbDao.findById(stickypolicy.getLoadBalancerId());
-               String capability= getLBStickyCapability(loadBalancer.getNetworkId());
-               if (capability == null) continue;
-
-               return getStickyMethods(capability); 
-            }
+	    LoadBalancerVO lb = _lbDao.findById(cmd.getLbRuleId());
+        if (lb != null) {
+            String capability= getLBStickyCapability(lb.getNetworkId());
+            return getStickyMethods(capability); 
         }
         return null;
     }
     @Override
     public List<LoadBalancerStickyPolicyVO> searchForLBStickyPolicies(ListLBStickyPoliciesCmd cmd) {
     
-        List<LoadBalancerStickyPolicyVO> sDbpolicies = _lb2stickypoliciesDao.listByLoadBalancerId(cmd.getId());
+        List<LoadBalancerStickyPolicyVO> sDbpolicies = _lb2stickypoliciesDao.listByLoadBalancerId(cmd.getLbRuleId());
         
         return sDbpolicies;
     }

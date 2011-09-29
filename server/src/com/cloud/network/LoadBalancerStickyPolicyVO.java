@@ -83,13 +83,13 @@ public class LoadBalancerStickyPolicyVO  implements LBStickyPolicy{
 
         String paramName = (String) paramKVpair.get("name");
         String paramValue = (String) paramKVpair.get("value");
-        sb.append(paramName + "/" + paramValue);
+        sb.append(paramName + "," + paramValue);
 
         while (iter.hasNext()) {
         	paramKVpair = (HashMap) iter.next();
         	paramName = (String) paramKVpair.get("name");
             paramValue = (String) paramKVpair.get("value");
-            sb.append(", " + paramName + "/" + paramValue);
+            sb.append("," + paramName + "," + paramValue);
         }
         paramsInDb=sb.toString(); 
     }

@@ -28,6 +28,7 @@ import com.cloud.api.ApiConstants;
 import com.cloud.api.BaseListCmd;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
+import com.cloud.api.BaseCmd.CommandType;
 import com.cloud.api.response.LBStickyResponse;
 import com.cloud.api.response.ListResponse;
 import com.cloud.api.response.LBStickyRuleResponse;
@@ -46,19 +47,17 @@ public class ListLBStickyPoliciesCmd extends BaseListCmd {
     // ////////////// API parameters /////////////////////
     // ///////////////////////////////////////////////////
 
-    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, description = "the ID of the StickyPolicy rule")
-    private Long id;
 
-
+    @Parameter(name=ApiConstants.LBID, type=CommandType.LONG, required=true, description="the ID of the load balancer rule")
+    private Long lbRuleId;
 
     // ///////////////////////////////////////////////////
     // ///////////////// Accessors ///////////////////////
     // ///////////////////////////////////////////////////
 
-    public Long getId() {
-        return id;
+    public Long getLbRuleId() {
+        return lbRuleId;
     }
-
 
 
     // ///////////////////////////////////////////////////
@@ -75,7 +74,7 @@ public class ListLBStickyPoliciesCmd extends BaseListCmd {
 
         List<? extends LBStickyPolicy> stickypolicies = _lbService.searchForLBStickyPolicies(this);
 
-        LoadBalancer lb = _lbService.findById(getId());
+        LoadBalancer lb = _lbService.findById(getLbRuleId());
         
     	LBStickyResponse spResponse = _responseGenerator.createLBStickyPolicyResponse(stickypolicies,lb);
     	List<LBStickyResponse> spResponses = new ArrayList<LBStickyResponse>();

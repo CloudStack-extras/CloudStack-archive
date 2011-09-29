@@ -34,6 +34,7 @@ import com.cloud.api.commands.UpdateLoadBalancerRuleCmd;
 import com.cloud.exception.InsufficientAddressCapacityException;
 import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.network.lb.LoadBalancingRule.StickyPolicy;
 import com.cloud.network.rules.LBStickyPolicy;
 import com.cloud.network.rules.LoadBalancer;
 
@@ -82,7 +83,8 @@ public interface LoadBalancingRulesService {
      */
     List<? extends LoadBalancer> searchForLoadBalancers(ListLoadBalancerRulesCmd cmd);
     List<? extends LBStickyPolicy> searchForLBStickyPolicies(ListLBStickyPoliciesCmd cmd);
-    List< LBStickyRule > getLBStickyMethods(ListLBStickyMethodsCmd cmd);
+    List< LBStickyRule > getLBStickyMethods(ListLBStickyMethodsCmd cmd);   
+    List<StickyPolicy> getStickypolicies(long lbId);
     
     List<LoadBalancingRule> listByNetworkId(long networkId);
     

@@ -138,21 +138,21 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     }
     public static class StickyPolicy {
     	String methodName;
-    	String params;
+    	String paramsInDB;
     	boolean revoke;
     	public StickyPolicy(String methodName,String params, boolean revoke)
     	{
     		this.methodName = methodName;
-    		this.params = params;
+    		this.paramsInDB = params;
     		this.revoke = revoke;
     	}
     	public String getMethodName()
     	{
     		return methodName;
     	}
-    	public String getParams()
+    	public String getDBParams()
     	{
-    		return params;
+    		return paramsInDB;
     	}
     	public boolean isRevoked()
     	{

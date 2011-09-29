@@ -640,7 +640,7 @@ CREATE TABLE `cloud`.`load_balancer_sticky_policies` (
   `name` varchar(255) NOT NULL,
   `description` varchar(4096) NULL COMMENT 'description',
   `method_name` varchar(255) NOT NULL,
-  `params` varchar(255) NOT NULL,
+  `params` varchar(4096) NOT NULL,
   `revoke` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT '1 is when rule is set for Revoke',
   PRIMARY KEY  (`id`),
   CONSTRAINT `fk_load_balancer_sticky_polacies__load_balancer_id` FOREIGN KEY(`load_balancer_id`) REFERENCES `load_balancing_rules`(`id`) ON DELETE CASCADE

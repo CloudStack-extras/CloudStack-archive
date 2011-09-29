@@ -35,6 +35,8 @@ public interface LBStickyPolicy   {
 	    
 	  public String getDBParams();
 	  
+	  public boolean isRevoke();
+	  
 
     
 }
