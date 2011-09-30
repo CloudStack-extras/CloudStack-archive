@@ -5537,6 +5537,94 @@
           "tags": "",
           "state": "Up"
         } 
+      ],
+
+      users: [
+        {
+          "id": 2,
+          "username": "admin",
+          "firstname": "admin",
+          "lastname": "cloud",
+          "created": "2011-05-26T15:16:39-0700",
+          "state": "enabled",
+          "account": "admin",
+          "accounttype": 1,
+          "domainid": 1,
+          "domain": "ROOT",
+          "apikey": "EbZq4Tnn3flF9kKXzGKr2uMGLE0jLpKAAb1FZdIBKMlYdF_BbPyXpjQOHtSaUNmSs1UT6zyV-t4jw6eG77hCrQ",
+          "secretkey": "RIbGt6VapuiqGq-FxSaMKNf8s2OAXWrWEdw0m6SEsj8efIZ9QYCo37X7vKWRR4YKFRV5NDiRAKkLUbIv-xggVQ"
+        },
+        {
+          "id": 74,
+          "username": "kimihiko",
+          "firstname": "Kimihiko",
+          "lastname": "Kitase ",
+          "email": "Kimihiko.Kitase@citrix.co.jp",
+          "created": "2011-08-29T10:14:04-0700",
+          "state": "enabled",
+          "account": "admin",
+          "accounttype": 1,
+          "domainid": 1,
+          "domain": "ROOT",
+          "timezone": "Asia/Tokyo",
+          "apikey": "WdCpxA2zT3gU0DrANRHDnqvQe_O8L3FcwZx7jSP_weUTpo2qpp_ZMwWYkQOIjVCXf4MOKys8e6QBGaKfFDiLWA",
+          "secretkey": "Xep6DsGSKlcsqgtTZ3U6C1RAvNdSDFIHMXnaiU71kuLdo9LhUYKW_JWlZ49EGxp96MSWKnP4CdGtPVWiz0p7gQ"
+        },
+        {
+          "id": 79,
+          "username": "kimi",
+          "firstname": "Kimihiko",
+          "lastname": "Kitase2",
+          "email": "kimihiko.kitase@citrix.co.jp",
+          "created": "2011-08-31T19:30:40-0700",
+          "state": "enabled",
+          "account": "admin",
+          "accounttype": 1,
+          "domainid": 1,
+          "domain": "ROOT"
+        },
+        {
+          "id": 82,
+          "username": "tmackey",
+          "firstname": "Tim",
+          "lastname": "Mackey",
+          "email": "tim.mackey@citrix.com",
+          "created": "2011-09-06T07:58:01-0700",
+          "state": "enabled",
+          "account": "admin",
+          "accounttype": 1,
+          "domainid": 1,
+          "domain": "ROOT",
+          "timezone": "America/New_York"
+        },
+        {
+          "id": 89,
+          "username": "chris",
+          "firstname": "chris",
+          "lastname": "woolsey",
+          "email": "chris@cloud.com",
+          "created": "2011-09-13T16:39:55-0700",
+          "state": "enabled",
+          "account": "admin",
+          "accounttype": 1,
+          "domainid": 1,
+          "domain": "ROOT",
+          "timezone": "America/Los_Angeles"
+        },
+        {
+          "id": 95,
+          "username": "mikael",
+          "firstname": "Mikael",
+          "lastname": "Lindholm",
+          "email": "mikael.lindholm@kasetty.com",
+          "created": "2011-09-15T08:46:53-0700",
+          "state": "enabled",
+          "account": "admin",
+          "accounttype": 1,
+          "domainid": 1,
+          "domain": "ROOT",
+          "timezone": "CET"
+        }
       ]
     }
   };
