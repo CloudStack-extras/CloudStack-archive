@@ -1,6 +1,7 @@
 (function($, cloudStack, testData) {
 
-  var zoneObjs;
+  var zoneObjs, hypervisorObjs, featuredTemplateObjs, communityTemplateObjs, myTemplateObjs, isoObjs;
+  var containerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'		
 	
   cloudStack.sections.instances = {
     title: 'Instances',
@@ -43,8 +44,7 @@
                 },
 
                 // Step 2: Select template
-                function(args) {				  
-				  var hypervisorObjs;
+                function(args) {	
 				  $.ajax({
 					url: createURL("listHypervisors&zoneid="+args.currentData.zoneid),			 
 					dataType: "json",
@@ -53,8 +53,7 @@
 					  hypervisorObjs = json.listhypervisorsresponse.hypervisor;		  				  
 					}
 				  });  
-				  
-				  var featuredTemplateObjs;
+				  				 
 				  $.ajax({
 					url: createURL("listTemplates&templatefilter=featured&zoneid="+args.currentData.zoneid),			 
 					dataType: "json",
@@ -63,8 +62,7 @@
 					  featuredTemplateObjs = json.listtemplatesresponse.template;						  			  
 					}
 				  });  		
-			  
-			      var communityTemplateObjs;
+			  			      
 				  $.ajax({
 					url: createURL("listTemplates&templatefilter=community&zoneid="+args.currentData.zoneid),			 
 					dataType: "json",
@@ -73,8 +71,7 @@
 					  communityTemplateObjs = json.listtemplatesresponse.template;						  			  
 					}
 				  });  		
-			  
-			      var myTemplateObjs;
+			  			     
 				  $.ajax({
 					url: createURL("listTemplates&templatefilter=selfexecutable&zoneid="+args.currentData.zoneid),			 
 					dataType: "json",
@@ -83,8 +80,7 @@
 					  myTemplateObjs = json.listtemplatesresponse.template;						  			  
 					}
 				  });  
-
-				  var isoObjs;
+				  
 				  $.ajax({
 					url: createURL("listIsos&isReady=true&bootable=true&isofilter=executable&zoneid="+args.currentData.zoneid),			 
 					dataType: "json",
@@ -157,9 +153,8 @@
 				  if(zoneObj == null) {
 				    alert("error: can't find matched zone object");		
                     return;					
-				  }
-				 				  
-				  var containerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'				  
+				  }				 		  
+				  		  
 				  if (zoneObj.securitygroupsenabled == false) {  //show network container				
 					//vmWizardShowNetworkContainer($thisPopup);	 
 					containerType = 'select-network';
@@ -356,8 +351,147 @@
                   return false;
                 }
               ],
-              complete: function(args) {
-                args.response.success({ _custom: { jobID: 12345 } });
+              complete: function(args) {	
+				/*					
+				var isValid = true;									
+				isValid &= validateString("Name", $thisPopup.find("#wizard_vm_name"), $thisPopup.find("#wizard_vm_name_errormsg"), true);	 //optional	
+				isValid &= validateString("Group", $thisPopup.find("#wizard_vm_group"), $thisPopup.find("#wizard_vm_group_errormsg"), true); //optional					
+				if (!isValid) 
+					return;		    
+				*/
+				
+				// Create a new VM!!!!				
+				var array1 = [];
+				
+				//step 1 : select zone		    					
+				array1.push("&zoneId=" + args.data.zoneid);		
+				
+				var selectedTemplate;
+				if(args.data["select-template"] == "select-template") {	
+					for(var i=0; i < featuredTemplateObjs.length; i++) {
+						if(featuredTemplateObjs[i].id == args.data.templateid) {
+							selectedTemplate = featuredTemplateObjs[i];
+							break;
+						}            
+					}		        
+					if(selectedTemplate == null) {	
+						for(var i=0; i < communityTemplateObjs.length; i++) {
+							if(communityTemplateObjs[i].id == args.data.templateid) {
+								selectedTemplate = communityTemplateObjs[i];
+								break;
+							}            
+						}
+					}  
+					if(selectedTemplate == null) {	
+						for(var i=0; i < myTemplateObjs.length; i++) {
+							if(myTemplateObjs[i].id == args.data.templateid) {
+								selectedTemplate = myTemplateObjs[i];
+								break;
+							}            
+						}
+					}		        		        
+					if(selectedTemplate == null)		
+						alert("unable to find matched template object");  
+					else
+						array1.push("&hypervisor=" + selectedTemplate.hypervisor);	
+				}
+				else { //(args.data["select-template"] == "select-iso" 
+					array1.push("&hypervisor=" + args.data.hypervisorid);	
+				}
+				 
+				//step 2: select template        								
+				array1.push("&templateId=" + args.data.templateid);    	
+					
+				//step 3: select service offering						
+				array1.push("&serviceOfferingId=" + args.data.serviceofferingid);
+				
+				//step 4: select disk offering
+				/*		    
+				var diskOfferingId, $diskOfferingElement;    						
+				if ($thisPopup.find("#wiz_blank").hasClass("rev_wizmid_selectedtempbut")) {  //ISO
+					diskOfferingId = $thisPopup.find("#root_disk_offering_container input[name=data_disk_offering_radio]:checked").val();	
+					$diskOfferingElement = $thisPopup.find("#root_disk_offering_container input[name=data_disk_offering_radio]:checked").parent();
+				}
+				else { //template
+					diskOfferingId = $thisPopup.find("#data_disk_offering_container input[name=data_disk_offering_radio]:checked").val();	
+					$diskOfferingElement = $thisPopup.find("#data_disk_offering_container input[name=data_disk_offering_radio]:checked").parent();
+				}
+				if(diskOfferingId != null && diskOfferingId != "" && diskOfferingId != "no")
+					array1.push("&diskOfferingId="+diskOfferingId);						 
+									
+				if($diskOfferingElement.find("#custom_disk_size").length > 0) {    			
+					var customDiskSize = $diskOfferingElement.find("#custom_disk_size").val(); //unit is MB
+					if(customDiskSize != null && customDiskSize.length > 0)
+						array1.push("&size="+customDiskSize);	    
+				}
+				*/
+				array1.push("&diskOfferingId=" + args.data.diskofferingid);			
+				
+				//step 5: select network			
+				if (containerType == 'select-network') {	
+					/*	
+					var $selectedPrimaryNetworks;	
+					if($thisPopup.find("#network_virtual_container").css("display") == "none") 				
+						$selectedPrimaryNetworks = $thisPopup.find("#network_direct_container").find("input:radio[name=primary_network]:checked");
+					else 
+						$selectedPrimaryNetworks = $thisPopup.find("input:radio[name=primary_network]:checked");					
+					
+					var networkIds = $selectedPrimaryNetworks.data("jsonObj").id;
+
+					var directNetworkIds = $thisPopup.find("#wizard_review_secondary_network_container").data("directNetworkIds");
+					if (directNetworkIds != null) {
+						if (networkIds != null) {
+							networkIds = networkIds+","+directNetworkIds;
+						} else {
+							networkIds = directNetworkIds;
+						}
+					}
+					*/
+					
+					//array1.push("&networkIds="+networkIds);				
+				} 
+				else if (containerType == 'select-security-group') {  		
+                    debugger;	
+					var securityGroupList;
+                    var groups = args.data["security-groups"];	
+                    if(groups != null && groups.length > 0) {
+                        for(var i=0; i < groups.length; i++) {
+						    if(i == 0)
+							    securityGroupList = groups[i];
+						    else
+							    securityGroupList += ("," + groups[i]);
+						}
+                    }	
+                    if(securityGroupList != null)					
+					    array1.push("&securitygroupids=" + securityGroupList);				       			
+				}
+				
+				/*
+				var name = trim($thisPopup.find("#wizard_vm_name").val());
+				if (name != null && name.length > 0) 
+					array1.push("&displayname="+todb(name));	
+				
+				var group = trim($thisPopup.find("#wizard_vm_group").val());
+				if (group != null && group.length > 0) 
+					array1.push("&group="+todb(group));	
+				*/			    	
+				
+                debugger;				
+				$.ajax({
+					url: createURL("deployVirtualMachine"+array1.join("")),
+					dataType: "json",
+					success: function(json) {
+						var jobId = json.deployvirtualmachineresponse.jobid;
+						debugger;					    
+						args.response.success({ _custom: { jobID: jobId } });				    
+					},
+					error: function(XMLHttpResponse) {		
+                        debugger;					
+						//args.response.error(); //wait for Brian to implement
+					}					
+				});				
+								
+                //args.response.success({ _custom: { jobID: 12345 } });
               }			  
             })
           },
