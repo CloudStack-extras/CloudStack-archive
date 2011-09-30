@@ -305,7 +305,7 @@
 						}
 					});															
 					args.response.success({
-						type: containerType, //'no-network', 'select-network', 'select-security-group'
+						type: 'select-network', 
 						data: {
 						  defaultNetworks: defaultNetworkArray,
 						  optionalNetworks: optionalNetworkArray,
@@ -314,8 +314,30 @@
 					});							
 				  }
 				  
-				  else if(containerType == 'select-security-group') {
-				  
+				  else if(containerType == 'select-security-group') {				    
+					var securityGroupArray = [];
+					$.ajax({					
+						url: createURL("listSecurityGroups"+"&domainid="+g_domainid+"&account="+g_account),		
+						dataType: "json",
+						async: false,
+						success: function(json) {			    		
+							var items = json.listsecuritygroupsresponse.securitygroup;	
+							if (items != null && items.length > 0) {
+								for (var i = 0; i < items.length; i++) {
+									if(items[i].name != "default") //exclude default security group because it is always applied
+										securityGroupArray.push(items[i]);
+								}
+							}					    
+						}
+					});	
+					args.response.success({
+						type: 'select-security-group', 
+						data: {
+						  defaultNetworks: [],
+						  optionalNetworks: [],
+						  securityGroups: securityGroupArray
+						}
+					});	
 				  }
 				  
                 },
