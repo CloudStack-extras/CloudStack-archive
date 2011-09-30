@@ -199,8 +199,13 @@
 						},
 						"No": function() {	                         
 						  //present security groups for user to select
-						  //vmWizardShowSecurityGroupContainer($thisPopup);	
-						  containerType = 'select-security-group';
+						  //vmWizardShowSecurityGroupContainer($thisPopup);							  					  
+						  //if($selectedVmWizardTemplate.data("hypervisor") == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 		
+						  if(g_directAttachSecurityGroupsEnabled != "true") 
+						    containerType = 'no-network'; 
+                          else
+						    containerType = 'select-security-group';	
+						  
 						  $(this).dialog("close");	
 						}
 					  }).dialog("open");   
@@ -209,10 +214,15 @@
 					}					    
 					else {
 					  //vmWizardShowSecurityGroupContainer($thisPopup);	
-                      containerType = 'select-security-group';					  
+                      //if($selectedVmWizardTemplate.data("hypervisor") == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 	
+                      if(g_directAttachSecurityGroupsEnabled != "true") 						  
+						containerType = 'no-network'; 
+                      else
+						containerType = 'select-security-group';					  
 					}
 				  }						              
-				 
+				  
+				  //containerType = 'no-network'; //for testing only, comment it out before checking in.
 				  if(containerType == 'select-network') {	
                     var defaultNetworkArray = [], optionalNetworkArray = [];											  
 					$.ajax({
@@ -314,7 +324,7 @@
 					});							
 				  }
 				  
-				  else if(containerType == 'select-security-group') {				    
+				  else if(containerType == 'select-security-group') {	                    
 					var securityGroupArray = [];
 					$.ajax({					
 						url: createURL("listSecurityGroups"+"&domainid="+g_domainid+"&account="+g_account),		
@@ -336,6 +346,17 @@
 						  defaultNetworks: [],
 						  optionalNetworks: [],
 						  securityGroups: securityGroupArray
+						}
+					});	
+				  }
+				  				  
+				  else if(containerType == 'no-network') {	  
+					args.response.success({
+						type: 'no-network', 
+						data: {
+						  defaultNetworks: [],
+						  optionalNetworks: [],
+						  securityGroups: []
 						}
 					});	
 				  }
