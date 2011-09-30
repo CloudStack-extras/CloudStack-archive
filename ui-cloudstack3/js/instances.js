@@ -185,32 +185,20 @@
 						  }
 						}
 				      }
-					});							
+					});		
+
+                    //hasDedicatedDirectTaggedDefaultNetwork = true; //for testing only, comment it out before checking in!!!!!!!!!!!!					
 					if(hasDedicatedDirectTaggedDefaultNetwork == true) {
-					  /*
-					  $("#dialog_confirmation")
-					  .text(dictionary["message.launch.vm.on.private.network"])
-					  .dialog("option", "buttons", {	                    
-						"Yes": function() {
-						  //present the current UI we have today	
-						  //vmWizardShowNetworkContainer($thisPopup);  
-						  containerType = 'select-network';
-						  $(this).dialog("close");
-						},
-						"No": function() {	                         
-						  //present security groups for user to select
-						  //vmWizardShowSecurityGroupContainer($thisPopup);							  					  
-						  //if($selectedVmWizardTemplate.data("hypervisor") == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 		
-						  if(g_directAttachSecurityGroupsEnabled != "true") 
-						    containerType = 'nothing-to-select'; 
-                          else
-						    containerType = 'select-security-group';	
-						  
-						  $(this).dialog("close");	
-						}
-					  }).dialog("open");   
-                      */	
-                      containerType = 'select-network'; //temporary					  
+					  if(confirm("Do you wish to launch your instance on your own private dedicated network?")) {
+					    containerType = 'select-network';
+					  }
+					  else {
+					    //if($selectedVmWizardTemplate.data("hypervisor") == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 	
+						if(g_directAttachSecurityGroupsEnabled != "true") 
+						  containerType = 'nothing-to-select'; 
+                        else
+						  containerType = 'select-security-group';	
+					  }					 			  
 					}					    
 					else {
 					  //vmWizardShowSecurityGroupContainer($thisPopup);	
