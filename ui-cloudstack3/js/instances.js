@@ -147,8 +147,9 @@
                 // Step 5: Network
                 function(args) {				  			  
 				  var zoneObj;
+				  var zoneId = args.currentData.zoneid;
 				  $(zoneObjs).each(function(){
-				    if(this.id == args.currentData.zoneid) {
+				    if(this.id == zoneId) {
 					  zoneObj = this;
 					  return false; //break the $.each() loop 
 					}
@@ -166,7 +167,7 @@
 				  else if (zoneObj.securitygroupsenabled == true) {  // if security group is enabled			    
 					var hasDedicatedDirectTaggedDefaultNetwork = false;					
 					$.ajax({
-					  url: createURL("listNetworks&type=Direct&domainid="+g_domainid+"&account="+g_account+"&zoneId="+args.currentData.zoneid),
+					  url: createURL("listNetworks&type=Direct&domainid="+g_domainid+"&account="+g_account+"&zoneId="+zoneId),
 					  dataType: "json",
 					  async: false,
 					  success: function(json) {					    
@@ -212,18 +213,111 @@
 					}
 				  }						              
 				 
-                  args.response.success({
-                    type: containerType, //'no-network', 'select-network', 'select-security-group'
-                    data: {
-                      defaultNetworks: $.grep(testData.data.networks, function(elem) {
-                        return elem.isdefault === true;
-                      }),
-                      optionalNetworks: $.grep(testData.data.networks, function(elem) {
-                        return elem.isdefault === false;
-                      }),
-                      securityGroups: testData.data.securityGroups
-                    }
-                  });
+				  if(containerType == 'select-network') {	
+                    var defaultNetworkArray = [], optionalNetworkArray = [];											  
+					$.ajax({
+						url: createURL("listNetworks&domainid="+g_domainid+"&account="+g_account+"&zoneId="+zoneId),
+						dataType: "json",
+						async: false,
+						success: function(json) {						    
+							var networks = json.listnetworksresponse.network;								
+                            
+							//***** Setup Virtual Network (begin) *****
+							//virtualNetwork is first radio button in required network section. Show virtualNetwork when its networkofferingavailability is 'Required' or'Optional'							
+							var virtualNetwork = null;							
+							if(zoneObj.securitygroupsenabled == false) {								
+								if (networks != null && networks.length > 0) {
+									for (var i = 0; i < networks.length; i++) {
+										if (networks[i].type == 'Virtual') {
+											virtualNetwork = networks[i];
+											break;
+										}
+									}
+								}																
+								if (virtualNetwork == null) { //if there is no virtualNetwork
+									$.ajax({
+										url: createURL("listNetworkOfferings&guestiptype=Virtual"), //check DefaultVirtualizedNetworkOffering
+										dataType: "json",
+										async: false,
+										success: function(json) {
+											var networkOfferings = json.listnetworkofferingsresponse.networkoffering;
+											if (networkOfferings != null && networkOfferings.length > 0) {
+												for (var i = 0; i < networkOfferings.length; i++) {
+													if (networkOfferings[i].isdefault == true 
+													&& (networkOfferings[i].availability == "Required" || networkOfferings[i].availability == "Optional")
+													) {
+														// Create a virtual network
+														var networkName = "Virtual Network";
+														var networkDesc = "A dedicated virtualized network for your account.  The broadcast domain is contained within a VLAN and all public network access is routed out by a virtual router.";				
+														$.ajax({
+															url: createURL("createNetwork&networkOfferingId="+networkOfferings[i].id+"&name="+todb(networkName)+"&displayText="+todb(networkDesc)+"&zoneId="+$thisPopup.find("#wizard_zone").val()),
+															dataType: "json",
+															async: false,
+															success: function(json) {
+																virtualNetwork = json.createnetworkresponse.network;														
+																defaultNetworkArray.push(virtualNetwork);				 
+															}
+														});
+													}
+												}
+											}
+										}
+									});
+								} 
+								else { //virtualNetwork != null (there is already a virtualNetwork)
+									if (virtualNetwork.networkofferingavailability == 'Required' || virtualNetwork.networkofferingavailability == 'Optional') {		
+										defaultNetworkArray.push(virtualNetwork);										
+									} 
+									else { //virtualNetwork.networkofferingavailability == 'Unavailable'
+										//do not show virtualNetwork
+									}
+								}
+							}					
+							//***** Setup Virtual Network (end) *****
+														
+							
+							//***** Setup Direct Networks (begin) *****
+							//direct networks whose isdefault==true is 2nd~Nth radio buttons in required network section 
+							//direct networks whose isdefault==false is a bunch of checkboxes in optional network section 							
+							if (networks != null && networks.length > 0) {
+								for (var i = 0; i < networks.length; i++) {
+									//if zoneObj.securitygroupsenabled is true and users still choose to select network instead of security group (from dialog), then UI won't show networks whose securitygroupenabled is true.
+									if(zoneObj.securitygroupsenabled == true && networks[i].securitygroupenabled == true) {
+										continue;
+									}
+									
+									if (networks[i].type != 'Direct') {
+										continue;
+									}
+																		
+									if (networks[i].isdefault) {
+										if (virtualNetwork.networkofferingavailability == 'Required') { 
+											continue; //don't display 2nd~Nth radio buttons in required network section when networkofferingavailability == 'Required'
+										}										
+										defaultNetworkArray.push(networks[i]);											
+									} 
+									else {										
+										optionalNetworkArray.push(networks[i]);										
+									}									
+								}
+							}														
+							//***** Setup Direct Networks (end) *****
+						}
+					});															
+					args.response.success({
+						type: containerType, //'no-network', 'select-network', 'select-security-group'
+						data: {
+						  defaultNetworks: defaultNetworkArray,
+						  optionalNetworks: optionalNetworkArray,
+						  securityGroups: []
+						}
+					});							
+				  }
+				  
+				  else if(containerType == 'select-security-group') {
+				  
+				  }
+				  
                 },
 
                 // Step 6: Review
