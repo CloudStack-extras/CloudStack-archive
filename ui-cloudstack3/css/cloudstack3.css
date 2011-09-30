@@ -3357,7 +3357,7 @@ input.error {
 }
 
 /*** Network*/
-.multi-wizard.instance-wizard .no-network {
+.multi-wizard.instance-wizard .nothing-to-select {
   background: #FFFFFF;
   width: 773px;
   height: 52px;
@@ -3373,7 +3373,7 @@ input.error {
   padding: 162px 0 194px;
 }
 
-.multi-wizard.instance-wizard .no-network p {
+.multi-wizard.instance-wizard .nothing-to-select p {
   font-size: 22px;
   line-height: 25px;
 }

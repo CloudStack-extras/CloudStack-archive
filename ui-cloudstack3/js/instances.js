@@ -159,7 +159,7 @@
                     return;					
 				  }
 				 				  
-				  var containerType = 'no-network'; //'no-network', 'select-network', 'select-security-group'				  
+				  var containerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'				  
 				  if (zoneObj.securitygroupsenabled == false) {  //show network container				
 					//vmWizardShowNetworkContainer($thisPopup);	 
 					containerType = 'select-network';
@@ -202,7 +202,7 @@
 						  //vmWizardShowSecurityGroupContainer($thisPopup);							  					  
 						  //if($selectedVmWizardTemplate.data("hypervisor") == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 		
 						  if(g_directAttachSecurityGroupsEnabled != "true") 
-						    containerType = 'no-network'; 
+						    containerType = 'nothing-to-select'; 
                           else
 						    containerType = 'select-security-group';	
 						  
@@ -216,13 +216,13 @@
 					  //vmWizardShowSecurityGroupContainer($thisPopup);	
                       //if($selectedVmWizardTemplate.data("hypervisor") == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 	
                       if(g_directAttachSecurityGroupsEnabled != "true") 						  
-						containerType = 'no-network'; 
+						containerType = 'nothing-to-select'; 
                       else
 						containerType = 'select-security-group';					  
 					}
 				  }						              
 				  
-				  //containerType = 'no-network'; //for testing only, comment it out before checking in.
+				  //containerType = 'nothing-to-select'; //for testing only, comment it out before checking in!!!!!!!!!!!!
 				  if(containerType == 'select-network') {	
                     var defaultNetworkArray = [], optionalNetworkArray = [];											  
 					$.ajax({
@@ -350,9 +350,9 @@
 					});	
 				  }
 				  				  
-				  else if(containerType == 'no-network') {	  
+				  else if(containerType == 'nothing-to-select') {	  
 					args.response.success({
-						type: 'no-network', 
+						type: 'nothing-to-select', 
 						data: {
 						  defaultNetworks: [],
 						  optionalNetworks: [],
