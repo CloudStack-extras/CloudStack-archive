@@ -429,6 +429,19 @@
 				
 				//step 5: select network			
 				if (containerType == 'select-network') {	
+				    debugger;
+					var array2 = [];
+					var defaultNetwork = args.data["default-network"];
+					if(defaultNetwork != null && defaultNetwork.length > 0)
+					    array2.push(defaultNetwork);
+						
+					var optionalNetworks = args.data["optional-networks"];
+					if(optionalNetworks != null && optionalNetworks.length > 0) {
+					    for(var i=0; i < optionalNetworks.length; i++) {
+						    array2.push(optionalNetworks[i]);
+						}
+					}
+					
 					/*	
 					var $selectedPrimaryNetworks;	
 					if($thisPopup.find("#network_virtual_container").css("display") == "none") 				
@@ -448,10 +461,9 @@
 					}
 					*/
 					
-					//array1.push("&networkIds="+networkIds);				
+					array1.push("&networkIds=" + array2.join(","));				
 				} 
-				else if (containerType == 'select-security-group') {  		
-                    debugger;	
+				else if (containerType == 'select-security-group') {  	
 					var securityGroupList;
                     var groups = args.data["security-groups"];	
                     if(groups != null && groups.length > 0) {
