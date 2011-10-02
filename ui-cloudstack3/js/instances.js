@@ -425,7 +425,8 @@
 						array1.push("&size="+customDiskSize);	    
 				}
 				*/
-				array1.push("&diskOfferingId=" + args.data.diskofferingid);			
+				if(args.data.diskofferingid != null && args.data.diskofferingid != "0")
+				    array1.push("&diskOfferingId=" + args.data.diskofferingid);			
 				
 				//step 5: select network			
 				if (containerType == 'select-network') {	
