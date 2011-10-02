@@ -405,32 +405,12 @@
 				//step 3: select service offering						
 				array1.push("&serviceOfferingId=" + args.data.serviceofferingid);
 				
-				//step 4: select disk offering
-				/*		    
-				var diskOfferingId, $diskOfferingElement;    						
-				if ($thisPopup.find("#wiz_blank").hasClass("rev_wizmid_selectedtempbut")) {  //ISO
-					diskOfferingId = $thisPopup.find("#root_disk_offering_container input[name=data_disk_offering_radio]:checked").val();	
-					$diskOfferingElement = $thisPopup.find("#root_disk_offering_container input[name=data_disk_offering_radio]:checked").parent();
-				}
-				else { //template
-					diskOfferingId = $thisPopup.find("#data_disk_offering_container input[name=data_disk_offering_radio]:checked").val();	
-					$diskOfferingElement = $thisPopup.find("#data_disk_offering_container input[name=data_disk_offering_radio]:checked").parent();
-				}
-				if(diskOfferingId != null && diskOfferingId != "" && diskOfferingId != "no")
-					array1.push("&diskOfferingId="+diskOfferingId);						 
-									
-				if($diskOfferingElement.find("#custom_disk_size").length > 0) {    			
-					var customDiskSize = $diskOfferingElement.find("#custom_disk_size").val(); //unit is MB
-					if(customDiskSize != null && customDiskSize.length > 0)
-						array1.push("&size="+customDiskSize);	    
-				}
-				*/
+				//step 4: select disk offering				
 				if(args.data.diskofferingid != null && args.data.diskofferingid != "0")
 				    array1.push("&diskOfferingId=" + args.data.diskofferingid);			
 				
 				//step 5: select network			
-				if (containerType == 'select-network') {	
-                    debugger;				
+				if (containerType == 'select-network') {	                    		
 					var array2 = [];
 					var defaultNetwork = args.data["default-network"];
 					if(defaultNetwork != null && defaultNetwork.length > 0)
@@ -448,28 +428,7 @@
 					//optionalNetworks might be: (2) just an string, e.g. "202"
 					else if(typeof(optionalNetworks) == "string" && optionalNetworks.length > 0) {
 					    array2.push(optionalNetworks);
-					}
-					debugger;
-					
-					/*	
-					var $selectedPrimaryNetworks;	
-					if($thisPopup.find("#network_virtual_container").css("display") == "none") 				
-						$selectedPrimaryNetworks = $thisPopup.find("#network_direct_container").find("input:radio[name=primary_network]:checked");
-					else 
-						$selectedPrimaryNetworks = $thisPopup.find("input:radio[name=primary_network]:checked");					
-					
-					var networkIds = $selectedPrimaryNetworks.data("jsonObj").id;
-
-					var directNetworkIds = $thisPopup.find("#wizard_review_secondary_network_container").data("directNetworkIds");
-					if (directNetworkIds != null) {
-						if (networkIds != null) {
-							networkIds = networkIds+","+directNetworkIds;
-						} else {
-							networkIds = directNetworkIds;
-						}
-					}
-					*/
-					
+					}					
 					array1.push("&networkIds=" + array2.join(","));				
 				} 
 				else if (containerType == 'select-security-group') {  	
@@ -486,33 +445,28 @@
                     if(securityGroupList != null)					
 					    array1.push("&securitygroupids=" + securityGroupList);				       			
 				}
+								
+				var displayname = args.data.displayname;
+				if(displayname != null && displayname.length > 0)
+				    array1.push("&displayname="+todb(displayname));	
 				
-				/*
-				var name = trim($thisPopup.find("#wizard_vm_name").val());
-				if (name != null && name.length > 0) 
-					array1.push("&displayname="+todb(name));	
-				
-				var group = trim($thisPopup.find("#wizard_vm_group").val());
+				var group = args.data.groupname;
 				if (group != null && group.length > 0) 
-					array1.push("&group="+todb(group));	
-				*/			    	
-				
-                debugger;				
+					array1.push("&group="+todb(group));										    	
+				               			
 				$.ajax({
 					url: createURL("deployVirtualMachine"+array1.join("")),
 					dataType: "json",
 					success: function(json) {
-						var jobId = json.deployvirtualmachineresponse.jobid;
-						debugger;					    
-						args.response.success({ _custom: { jobID: jobId } });				    
+						var jobId = json.deployvirtualmachineresponse.jobid;					    
+						args.response.success({ _custom: { jobID: jobId } });	
+						//wait for Brian to implement "poll" function for instance wizard					    									    
 					},
-					error: function(XMLHttpResponse) {		
-                        debugger;					
+					error: function(XMLHttpResponse) {	                        				
 						//args.response.error(); //wait for Brian to implement
+						alert("Failed to deploy VM.");	
 					}					
-				});				
-								
-                //args.response.success({ _custom: { jobID: 12345 } });
+				});	               
               }			  
             })
           },
