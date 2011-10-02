@@ -430,18 +430,26 @@
 				
 				//step 5: select network			
 				if (containerType == 'select-network') {	
-				    debugger;
+                    debugger;				
 					var array2 = [];
 					var defaultNetwork = args.data["default-network"];
 					if(defaultNetwork != null && defaultNetwork.length > 0)
 					    array2.push(defaultNetwork);
 						
-					var optionalNetworks = args.data["optional-networks"];
-					if(optionalNetworks != null && optionalNetworks.length > 0) {
-					    for(var i=0; i < optionalNetworks.length; i++) {
-						    array2.push(optionalNetworks[i]);
+					var optionalNetworks = args.data["optional-networks"]; 
+					//optionalNetworks might be: (1) an array of string, e.g. ["203", "202"], 					
+					if(typeof(optionalNetworks) == "object" && optionalNetworks.length != null) {
+						if(optionalNetworks != null && optionalNetworks.length > 0) {
+							for(var i=0; i < optionalNetworks.length; i++) {
+								array2.push(optionalNetworks[i]);
+							}
 						}
+					}					
+					//optionalNetworks might be: (2) just an string, e.g. "202"
+					else if(typeof(optionalNetworks) == "string" && optionalNetworks.length > 0) {
+					    array2.push(optionalNetworks);
 					}
+					debugger;
 					
 					/*	
 					var $selectedPrimaryNetworks;	
