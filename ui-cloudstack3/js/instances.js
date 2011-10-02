@@ -1,8 +1,9 @@
 (function($, cloudStack, testData) {
 
   var zoneObjs, hypervisorObjs, featuredTemplateObjs, communityTemplateObjs, myTemplateObjs, isoObjs;
-  var containerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'		
-	
+  var selectedTemplate, selectedHypervisor;
+  var containerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'	
+  	
   cloudStack.sections.instances = {
     title: 'Instances',
     id: 'instances',
@@ -108,7 +109,39 @@
                 },
 
                 // Step 3: Service offering
-                function(args) {				  
+                function(args) {	                  
+				  if(args.currentData["select-template"] == "select-template") {	
+					for(var i=0; i < featuredTemplateObjs.length; i++) {
+						if(featuredTemplateObjs[i].id == args.currentData.templateid) {
+							selectedTemplate = featuredTemplateObjs[i];
+							break;
+						}            
+					}		        
+					if(selectedTemplate == null) {	
+						for(var i=0; i < communityTemplateObjs.length; i++) {
+							if(communityTemplateObjs[i].id == args.currentData.templateid) {
+								selectedTemplate = communityTemplateObjs[i];
+								break;
+							}            
+						}
+					}  
+					if(selectedTemplate == null) {	
+						for(var i=0; i < myTemplateObjs.length; i++) {
+							if(myTemplateObjs[i].id == args.currentData.templateid) {
+								selectedTemplate = myTemplateObjs[i];
+								break;
+						    }            
+					    }
+					}		        		        
+					if(selectedTemplate == null)		
+						alert("unable to find matched template object");  
+					else
+					    selectedHypervisor = selectedTemplate.hypervisor;							
+				  }
+				  else { //(args.currentData["select-template"] == "select-iso" 						
+                    selectedHypervisor = args.currentData.hypervisorid;						
+				  }
+  			      				
 				  $.ajax({
 					url: createURL("listServiceOfferings&issystem=false"),			 
 					dataType: "json",
@@ -188,17 +221,14 @@
 					    containerType = 'select-network';
 					  }
 					  else {
-					    //if($selectedVmWizardTemplate.data("hypervisor") == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 	
-						if(g_directAttachSecurityGroupsEnabled != "true") 
+					    if(selectedHypervisor == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 	
 						  containerType = 'nothing-to-select'; 
                         else
 						  containerType = 'select-security-group';	
 					  }					 			  
 					}					    
 					else {
-					  //vmWizardShowSecurityGroupContainer($thisPopup);	
-                      //if($selectedVmWizardTemplate.data("hypervisor") == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 	
-                      if(g_directAttachSecurityGroupsEnabled != "true") 						  
+					  if(selectedHypervisor == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 						  
 						containerType = 'nothing-to-select'; 
                       else
 						containerType = 'select-security-group';					  
@@ -365,42 +395,10 @@
 				
 				//step 1 : select zone		    					
 				array1.push("&zoneId=" + args.data.zoneid);		
-				
-				var selectedTemplate;
-				if(args.data["select-template"] == "select-template") {	
-					for(var i=0; i < featuredTemplateObjs.length; i++) {
-						if(featuredTemplateObjs[i].id == args.data.templateid) {
-							selectedTemplate = featuredTemplateObjs[i];
-							break;
-						}            
-					}		        
-					if(selectedTemplate == null) {	
-						for(var i=0; i < communityTemplateObjs.length; i++) {
-							if(communityTemplateObjs[i].id == args.data.templateid) {
-								selectedTemplate = communityTemplateObjs[i];
-								break;
-							}            
-						}
-					}  
-					if(selectedTemplate == null) {	
-						for(var i=0; i < myTemplateObjs.length; i++) {
-							if(myTemplateObjs[i].id == args.data.templateid) {
-								selectedTemplate = myTemplateObjs[i];
-								break;
-							}            
-						}
-					}		        		        
-					if(selectedTemplate == null)		
-						alert("unable to find matched template object");  
-					else
-						array1.push("&hypervisor=" + selectedTemplate.hypervisor);	
-				}
-				else { //(args.data["select-template"] == "select-iso" 
-					array1.push("&hypervisor=" + args.data.hypervisorid);	
-				}
-				 
+								 
 				//step 2: select template        								
-				array1.push("&templateId=" + args.data.templateid);    	
+				array1.push("&templateId=" + args.data.templateid);  
+                array1.push("&hypervisor=" + selectedHypervisor);					
 					
 				//step 3: select service offering						
 				array1.push("&serviceOfferingId=" + args.data.serviceofferingid);
