@@ -204,7 +204,7 @@
           after: function(args) {
             performAction(args.data);
           }
-        });        
+        });
       }
     },
 
@@ -358,8 +358,15 @@
     // Get path in cloudStack args
     viewAllPath = viewAllID.split('.');
 
-    if (viewAllPath.length == 2)
-      listViewArgs = cloudStackArgs.sections[viewAllPath[0]].sections[viewAllPath[1]];
+    if (viewAllPath.length == 2) {
+      if (viewAllPath[0] != '_zone')
+        listViewArgs = cloudStackArgs.sections[viewAllPath[0]].sections[viewAllPath[1]];
+      else {
+        // Sub-section of the zone chart
+        listViewArgs = cloudStackArgs.sections.system
+          .sections.physicalResources.subsections[viewAllPath[1]];
+      }
+    }
     else
       listViewArgs = cloudStackArgs.sections[viewAllPath[0]];
 
@@ -471,7 +478,7 @@
                       .val(this.id)
                       .html(this.label)
                       .appendTo($input);
-                  });                  
+                  });
                 }
               }
             });
@@ -631,12 +638,13 @@
             isOddRow = true;
           }
 
-          $name.html(value.label);          
+          $name.html(value.label);
+          $value.html(data[key]);
 
           // Set up editable metadata
           $value.data('detail-view-is-editable', value.isEditable);
           if (value.select) {
-            value.selected = data[key];
+            value.selected = $value.html();
 
             value.select({
               response: {
@@ -646,19 +654,11 @@
                     return option.id == value.selected;
                   })[0];
 
-				  //even can't find a matched option, UI should still show dropdown.
-				  /*
-                  if (!matchedSelectValue) {
-                    $value.data('detail-view-is-editable', false);
-                    return false;
-                  }  
-                  */
+                  if(matchedSelectValue != null) {
+                    $value.html(matchedSelectValue.description);
+                    $value.data('detail-view-selected-option', matchedSelectValue.id);
+                  }
 
-                  if(matchedSelectValue != null) {				  
-					$value.html(matchedSelectValue.description);
-					$value.data('detail-view-selected-option', matchedSelectValue.id);
-			      }				  
-				  
                   $value.data('detail-view-editable-select', args.data);
 
                   return true;
@@ -666,9 +666,6 @@
               }
             });
           }
-		  else {
-		    $value.html(data[key]);
-		  }
 
           return true;
         });
@@ -730,11 +727,11 @@
       $tabContent.closest('div.detail-view').data('view-args'),
       { activeTab: targetTabID }
     );
-   
+
     return dataProvider({
       tab: targetTabID,
       id: args.id,
-	  jsonObj: args.jsonObj,
+      jsonObj: args.jsonObj,
       response: {
         success: function(args) {
           var tabData = $tabContent.data('detail-view-tab-data');
@@ -763,8 +760,8 @@
   $.fn.detailView = function(args) {
     var $detailView = this;
 
-    $detailView.addClass('detail-view');    
-	$detailView.data('view-args', args);
+    $detailView.addClass('detail-view');
+    $detailView.data('view-args', args);
 
     // Create toolbar
     var $toolbar = $('<div class="toolbar">')

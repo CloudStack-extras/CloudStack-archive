@@ -54,7 +54,7 @@
       var section;
       var data = {
         id: $instanceRow.data('list-view-item-id'),
-		jsonObj: $instanceRow.data('jsonObj')
+		    jsonObj: $instanceRow.data('jsonObj')
       };
 
       if (args.data) $.extend(data, args.data);
@@ -147,7 +147,7 @@
 
         var data = {
           id: $instanceRow.data('list-view-item-id'),
-		  jsonObj: $instanceRow.data('jsonObj')
+		      jsonObj: $instanceRow.data('jsonObj')
         };
 
         data[$td.data('list-view-item-field')] = $editInput.val();
@@ -370,7 +370,7 @@
 
       $tr.data('list-view-item-id', id);
       $tr.data('jsonObj', dataItem);
-	  
+	    
       if (actions) {
         makeActionIcons(
           $('<td></td>').addClass('actions reduced-hide')
@@ -450,9 +450,6 @@
     var sections = args.sections;
     var $switcher = $('<div>').addClass('section-switcher reduced-hide');
     var $sectionSelect = $('<select></select>')
-          .append(
-            $('<option disabled=\"disabled\">')
-          )
           .appendTo(
             $('<div></div>')
               .addClass('section-select')
@@ -474,12 +471,12 @@
         $sectionButton = $('<div>')
           .addClass('section')
           .append(
-          $('<a>')
-            .addClass(key)
-            .attr({ href: '#' })
-            .data('list-view-section-id', key)
-            .html(this.title)
-        );
+            $('<a>')
+              .addClass(key)
+              .attr({ href: '#' })
+              .data('list-view-section-id', key)
+              .html(this.title)
+          );
 
         $sectionButton.appendTo($switcher);
       } else if (this.type == 'select') {
@@ -664,7 +661,7 @@
     $listView.bind('click change', function(event) {
       var $target = $(event.target);
       var id = $target.closest('tr').data('list-view-item-id');
-	  var jsonObj = $target.closest('tr').data('jsonObj');
+	    var jsonObj = $target.closest('tr').data('jsonObj');
       var detailViewArgs;
       var detailViewPresent = ($target.closest('div.data-table tr td').size() &&
                                $target.closest('div.data-table tr td').index() == 0 &&
@@ -678,7 +675,7 @@
           data: listViewData.detailView,
           title: $target.closest('td').find('span').html(),
           id: id,
-		  jsonObj: jsonObj
+		      jsonObj: jsonObj
         };
 
         // Create custom-generated detail view
