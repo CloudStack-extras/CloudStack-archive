@@ -19,7 +19,14 @@
         name: { label: 'Name', editable: true },
         displayname: { label: 'Display Name' },
         zonename: { label: 'Zone' },
-        state: { label: 'Status' }
+        state: { 
+		  label: 'Status',
+          indicator: {
+            'Running': 'on',
+            'Stopped': 'off',
+			'Error': 'off'
+          } 
+		}
       },
 
       // List view actions
@@ -381,7 +388,7 @@
                   return false;
                 }
               ],
-              complete: function(args) {	
+              complete: function(args) {	//Brian will rename "complete" to "action" later
 				/*					
 				var isValid = true;									
 				isValid &= validateString("Name", $thisPopup.find("#wizard_vm_name"), $thisPopup.find("#wizard_vm_name_errormsg"), true);	 //optional	
@@ -456,8 +463,8 @@
 					url: createURL("deployVirtualMachine"+array1.join("")),
 					dataType: "json",
 					success: function(json) {
-						var jobId = json.deployvirtualmachineresponse.jobid;					    
-						args.response.success({ _custom: { jobID: jobId } });	
+						var jid = json.deployvirtualmachineresponse.jobid;					    
+						args.response.success({ _custom: { jobId: jid } });	
 						//wait for Brian to implement "poll" function for instance wizard					    									    
 					},
 					error: function(XMLHttpResponse) {	                        				
@@ -484,7 +491,7 @@
             }
           },
           notification: {
-            poll: testData.notifications.testPoll
+            poll: pollAsyncJobResult
           }
         },
 
