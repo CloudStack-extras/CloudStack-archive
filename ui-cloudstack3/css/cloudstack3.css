@@ -429,7 +429,7 @@ div.panel div.list-view div.fixed-header table {
 
 div.list-view td.state {
   width: 129px;
-  background: url(../images/sprites.png) no-repeat -1px -452px;
+  background: url(../images/sprites.png) no-repeat 10px -527px;
 }
 
 div.list-view td.state span {
@@ -1157,7 +1157,8 @@ div.detail-group.actions td {
   background-position: -351px -23px;
 }
 
-#navigation ul li.configuration span.icon {
+#navigation ul li.configuration span.icon,
+#navigation ul li.global-settings span.icon {
   background-position: -400px -24px;
 }
 
@@ -3357,7 +3358,7 @@ input.error {
 }
 
 /*** Network*/
-.multi-wizard.instance-wizard .nothing-to-select {
+.multi-wizard.instance-wizard .no-network {
   background: #FFFFFF;
   width: 773px;
   height: 52px;
@@ -3373,7 +3374,7 @@ input.error {
   padding: 162px 0 194px;
 }
 
-.multi-wizard.instance-wizard .nothing-to-select p {
+.multi-wizard.instance-wizard .no-network p {
   font-size: 22px;
   line-height: 25px;
 }
