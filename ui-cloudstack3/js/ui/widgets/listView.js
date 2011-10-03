@@ -25,7 +25,7 @@
       $notifications.notifications('add', {
         section: notification.section,
         desc: notification.desc,
-        interval: 1000,
+        interval: 5000,
         _custom: notification._custom,
         poll: function(args) {
           var complete = args.complete;
