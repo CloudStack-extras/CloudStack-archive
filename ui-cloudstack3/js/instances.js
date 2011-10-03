@@ -1,8 +1,8 @@
 (function($, cloudStack, testData) {
 
-  var zoneObjs, hypervisorObjs, featuredTemplateObjs, communityTemplateObjs, myTemplateObjs, isoObjs;
-  var selectedTemplate, selectedHypervisor;
-  var containerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'	
+  var zoneObjs, hypervisorObjs, featuredTemplateObjs, communityTemplateObjs, myTemplateObjs, isoObjs, serviceOfferingObjs, diskOfferingObjs;
+  var selectedZoneObj, selectedTemplateObj, selectedHypervisor, selectedDiskOfferingObj;
+  var step5ContainerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'	
   	
   cloudStack.sections.instances = {
     title: 'Instances',
@@ -52,7 +52,18 @@
                 },
 
                 // Step 2: Select template
-                function(args) {	
+                function(args) {
+				  $(zoneObjs).each(function(){
+				    if(this.id == args.currentData.zoneid) {
+					  selectedZoneObj = this;
+					  return false; //break the $.each() loop 
+					}
+				  });
+				  if(selectedZoneObj == null) {
+				    alert("error: can't find matched zone object");		
+                    return;					
+				  }			
+				  				
 				  $.ajax({
 					url: createURL("listHypervisors&zoneid="+args.currentData.zoneid),			 
 					dataType: "json",
@@ -120,30 +131,30 @@
 				  if(args.currentData["select-template"] == "select-template") {	
 					for(var i=0; i < featuredTemplateObjs.length; i++) {
 						if(featuredTemplateObjs[i].id == args.currentData.templateid) {
-							selectedTemplate = featuredTemplateObjs[i];
+							selectedTemplateObj = featuredTemplateObjs[i];
 							break;
 						}            
 					}		        
-					if(selectedTemplate == null) {	
+					if(selectedTemplateObj == null) {	
 						for(var i=0; i < communityTemplateObjs.length; i++) {
 							if(communityTemplateObjs[i].id == args.currentData.templateid) {
-								selectedTemplate = communityTemplateObjs[i];
+								selectedTemplateObj = communityTemplateObjs[i];
 								break;
 							}            
 						}
 					}  
-					if(selectedTemplate == null) {	
+					if(selectedTemplateObj == null) {	
 						for(var i=0; i < myTemplateObjs.length; i++) {
 							if(myTemplateObjs[i].id == args.currentData.templateid) {
-								selectedTemplate = myTemplateObjs[i];
+								selectedTemplateObj = myTemplateObjs[i];
 								break;
 						    }            
 					    }
 					}		        		        
-					if(selectedTemplate == null)		
+					if(selectedTemplateObj == null)		
 						alert("unable to find matched template object");  
 					else
-					    selectedHypervisor = selectedTemplate.hypervisor;							
+					    selectedHypervisor = selectedTemplateObj.hypervisor;							
 				  }
 				  else { //(args.currentData["select-template"] == "select-iso" 						
                     selectedHypervisor = args.currentData.hypervisorid;						
@@ -154,8 +165,10 @@
 					dataType: "json",
 					async: true,
 					success: function(json) { 				   
-					  var items = json.listserviceofferingsresponse.serviceoffering;								  
-					  args.response.success({ data: {serviceOfferings: items}});					  
+					  serviceOfferingObjs = json.listserviceofferingsresponse.serviceoffering;								  
+					  args.response.success({ 
+					    data: {serviceOfferings: serviceOfferingObjs}
+					  });					  
 					}
 				  }); 				  
                 },
@@ -168,41 +181,35 @@
 					dataType: "json",
 					async: true,
 					success: function(json) { 				   
-					  var items = json.listdiskofferingsresponse.diskoffering;	
+					  diskOfferingObjs = json.listdiskofferingsresponse.diskoffering;	
                       args.response.success({
 						required: isRequred,
 						customFlag: 'iscustomized', // Field determines if custom slider is shown
-						data: {
-						  diskOfferings: testData.data.diskOfferings
-						}
+						data: {diskOfferings: diskOfferingObjs}
 					  });	
 					}
 				  }); 	
                 },
 
                 // Step 5: Network
-                function(args) {				  			  
-				  var zoneObj;
-				  var zoneId = args.currentData.zoneid;
-				  $(zoneObjs).each(function(){
-				    if(this.id == zoneId) {
-					  zoneObj = this;
-					  return false; //break the $.each() loop 
+                function(args) {	                 		 
+				  if(diskOfferingObjs != null && diskOfferingObjs.length > 0) {
+				    for(var i=0; i < diskOfferingObjs.length; i++) {
+					  if(diskOfferingObjs[i].id == args.currentData.diskofferingid) {
+					    selectedDiskOfferingObj = diskOfferingObjs[i];
+					    break;
+					  }
 					}
-				  });
-				  if(zoneObj == null) {
-				    alert("error: can't find matched zone object");		
-                    return;					
 				  }				 		  
 				  		  
-				  if (zoneObj.securitygroupsenabled == false) {  //show network container				
+				  if (selectedZoneObj.securitygroupsenabled == false) {  //show network container				
 					//vmWizardShowNetworkContainer($thisPopup);	 
-					containerType = 'select-network';
+					step5ContainerType = 'select-network';
 				  } 
-				  else if (zoneObj.securitygroupsenabled == true) {  // if security group is enabled			    
+				  else if (selectedZoneObj.securitygroupsenabled == true) {  // if security group is enabled			    
 					var hasDedicatedDirectTaggedDefaultNetwork = false;					
 					$.ajax({
-					  url: createURL("listNetworks&type=Direct&domainid="+g_domainid+"&account="+g_account+"&zoneId="+zoneId),
+					  url: createURL("listNetworks&type=Direct&domainid="+g_domainid+"&account="+g_account+"&zoneId="+args.currentData.zoneid),
 					  dataType: "json",
 					  async: false,
 					  success: function(json) {					    
@@ -225,28 +232,28 @@
                     //hasDedicatedDirectTaggedDefaultNetwork = true; //for testing only, comment it out before checking in!!!!!!!!!!!!					
 					if(hasDedicatedDirectTaggedDefaultNetwork == true) {
 					  if(confirm("Do you wish to launch your instance on your own private dedicated network?")) {
-					    containerType = 'select-network';
+					    step5ContainerType = 'select-network';
 					  }
 					  else {
 					    if(selectedHypervisor == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 	
-						  containerType = 'nothing-to-select'; 
+						  step5ContainerType = 'nothing-to-select'; 
                         else
-						  containerType = 'select-security-group';	
+						  step5ContainerType = 'select-security-group';	
 					  }					 			  
 					}					    
 					else {
 					  if(selectedHypervisor == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 						  
-						containerType = 'nothing-to-select'; 
+						step5ContainerType = 'nothing-to-select'; 
                       else
-						containerType = 'select-security-group';					  
+						step5ContainerType = 'select-security-group';					  
 					}
 				  }						              
 				  
-				  //containerType = 'nothing-to-select'; //for testing only, comment it out before checking in!!!!!!!!!!!!
-				  if(containerType == 'select-network') {	
+				  //step5ContainerType = 'nothing-to-select'; //for testing only, comment it out before checking in!!!!!!!!!!!!
+				  if(step5ContainerType == 'select-network') {	
                     var defaultNetworkArray = [], optionalNetworkArray = [];											  
 					$.ajax({
-						url: createURL("listNetworks&domainid="+g_domainid+"&account="+g_account+"&zoneId="+zoneId),
+						url: createURL("listNetworks&domainid="+g_domainid+"&account="+g_account+"&zoneId="+args.currentData.zoneid),
 						dataType: "json",
 						async: false,
 						success: function(json) {						    
@@ -255,7 +262,7 @@
 							//***** Setup Virtual Network (begin) *****
 							//virtualNetwork is first radio button in required network section. Show virtualNetwork when its networkofferingavailability is 'Required' or'Optional'							
 							var virtualNetwork = null;							
-							if(zoneObj.securitygroupsenabled == false) {								
+							if(selectedZoneObj.securitygroupsenabled == false) {								
 								if (networks != null && networks.length > 0) {
 									for (var i = 0; i < networks.length; i++) {
 										if (networks[i].type == 'Virtual') {
@@ -280,7 +287,7 @@
 														var networkName = "Virtual Network";
 														var networkDesc = "A dedicated virtualized network for your account.  The broadcast domain is contained within a VLAN and all public network access is routed out by a virtual router.";				
 														$.ajax({
-															url: createURL("createNetwork&networkOfferingId="+networkOfferings[i].id+"&name="+todb(networkName)+"&displayText="+todb(networkDesc)+"&zoneId="+$thisPopup.find("#wizard_zone").val()),
+															url: createURL("createNetwork&networkOfferingId="+networkOfferings[i].id+"&name="+todb(networkName)+"&displayText="+todb(networkDesc)+"&zoneId="+args.currentData.zoneid),
 															dataType: "json",
 															async: false,
 															success: function(json) {
@@ -311,8 +318,8 @@
 							//direct networks whose isdefault==false is a bunch of checkboxes in optional network section 							
 							if (networks != null && networks.length > 0) {
 								for (var i = 0; i < networks.length; i++) {
-									//if zoneObj.securitygroupsenabled is true and users still choose to select network instead of security group (from dialog), then UI won't show networks whose securitygroupenabled is true.
-									if(zoneObj.securitygroupsenabled == true && networks[i].securitygroupenabled == true) {
+									//if selectedZoneObj.securitygroupsenabled is true and users still choose to select network instead of security group (from dialog), then UI won't show networks whose securitygroupenabled is true.
+									if(selectedZoneObj.securitygroupsenabled == true && networks[i].securitygroupenabled == true) {
 										continue;
 									}
 									
@@ -344,7 +351,7 @@
 					});							
 				  }
 				  
-				  else if(containerType == 'select-security-group') {	                    
+				  else if(step5ContainerType == 'select-security-group') {	                    
 					var securityGroupArray = [];
 					$.ajax({					
 						url: createURL("listSecurityGroups"+"&domainid="+g_domainid+"&account="+g_account),		
@@ -370,7 +377,7 @@
 					});	
 				  }
 				  				  
-				  else if(containerType == 'nothing-to-select') {	  
+				  else if(step5ContainerType == 'nothing-to-select') {	  
 					args.response.success({
 						type: 'nothing-to-select', 
 						data: {
@@ -411,11 +418,14 @@
 				array1.push("&serviceOfferingId=" + args.data.serviceofferingid);
 				
 				//step 4: select disk offering				
-				if(args.data.diskofferingid != null && args.data.diskofferingid != "0")
-				    array1.push("&diskOfferingId=" + args.data.diskofferingid);			
+				if(args.data.diskofferingid != null && args.data.diskofferingid != "0") {
+				    array1.push("&diskOfferingId=" + args.data.diskofferingid);				    
+					if(selectedDiskOfferingObj.iscustomized == true) 
+					    array1.push("&size=" + args.data.size);									
+				}
 				
 				//step 5: select network			
-				if (containerType == 'select-network') {	                    		
+				if (step5ContainerType == 'select-network') {	                    		
 					var array2 = [];
 					var defaultNetwork = args.data["default-network"];
 					if(defaultNetwork != null && defaultNetwork.length > 0)
@@ -436,7 +446,7 @@
 					}					
 					array1.push("&networkIds=" + array2.join(","));				
 				} 
-				else if (containerType == 'select-security-group') {  	
+				else if (step5ContainerType == 'select-security-group') {  	
 					var securityGroupList;
                     var groups = args.data["security-groups"];	
                     if(groups != null && groups.length > 0) {
