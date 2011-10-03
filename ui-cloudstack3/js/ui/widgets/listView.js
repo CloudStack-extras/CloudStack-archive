@@ -104,7 +104,11 @@
       if (!args.action.createForm && !action.custom)
         cloudStack.dialog.confirm({
           message: messages.confirm(messageArgs),
-          action: performAction
+          action: function() {
+            performAction({
+              id: $instanceRow.data('list-view-item-id')
+            });
+          }
         });
       else if (action.custom)
         performAction();
