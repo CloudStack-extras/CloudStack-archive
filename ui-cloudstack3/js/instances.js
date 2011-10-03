@@ -173,7 +173,7 @@
 						required: isRequred,
 						customFlag: 'iscustomized', // Field determines if custom slider is shown
 						data: {
-						  diskOfferings: testData.data.diskOfferings
+						  diskOfferings: items
 						}
 					  });	
 					}
@@ -412,7 +412,15 @@
 				
 				//step 4: select disk offering				
 				if(args.data.diskofferingid != null && args.data.diskofferingid != "0")
-				    array1.push("&diskOfferingId=" + args.data.diskofferingid);			
+				    array1.push("&diskOfferingId=" + args.data.diskofferingid);		
+				/*
+				if($("#instance_wizard_step4").find('.section.custom-size').css("display") != "none") {
+				    var customDiskSize = $("#instance_wizard_step4").find("#custom_disk_offering_size").val(); //unit: GB
+					if(customDiskSize != null && customDiskSize.length > 0)
+						array1.push("&size="+customDiskSize);	 
+				}	
+				*/
+				
 				
 				//step 5: select network			
 				if (containerType == 'select-network') {	                    		
