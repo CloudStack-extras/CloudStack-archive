@@ -604,7 +604,7 @@
               return args.name + ' is starting.';
             },
             notification: function(args) {
-              return 'Started VM: ' + args.name;
+              return 'Starting VM: ' + args.name;
             },
             complete: function(args) {
               return args.name + ' has been started.';
@@ -725,7 +725,7 @@
 				return args.name + ' is stopping.';
 			  },
 			  notification: function(args) {
-				return 'Rebooting VM: ' + args.name;
+				return 'Stopping VM: ' + args.name;
 			  },
 			  complete: function(args) {
 				return args.name + ' has been stopped.';
