@@ -30,7 +30,7 @@ import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
 import com.cloud.agent.api.to.LoadBalancerTO;
 import com.cloud.agent.api.to.PortForwardingRuleTO;
 import com.cloud.agent.api.to.LoadBalancerTO.DestinationTO;
-import com.cloud.agent.api.to.LoadBalancerTO.StickyPolicyTO;
+import com.cloud.agent.api.to.LoadBalancerTO.StickinessPolicyTO;
 import com.cloud.utils.net.NetUtils;
 
 
@@ -149,18 +149,18 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 		return result;
 	}
 	
-	private String getsubRuleForStickyRule(LoadBalancerTO lbTO)
+	private String getsubRuleForStickinessRule(LoadBalancerTO lbTO)
 	{
 		int i=0;
-		if (lbTO.getStickyPolacies() == null ) return null;
+		if (lbTO.getStickinessPolacies() == null ) return null;
 		
 		StringBuilder sb = new StringBuilder();
 
-		for (StickyPolicyTO sticky: lbTO.getStickyPolacies()) {
-			if (sticky == null) continue;
-			Map <String, String> paramsList = sticky.getParams();
+		for (StickinessPolicyTO stickiness: lbTO.getStickinessPolacies()) {
+			if (stickiness == null) continue;
+			Map <String, String> paramsList = stickiness.getParams();
 			i++;
-		    if (sticky.getMethodName().equals("cookiebased"))
+		    if (stickiness.getMethodName().equals("cookiebased"))
 		    {
 		    	/* Default Values */
 		    	String cookiename = null; /* required */
@@ -172,10 +172,10 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 		    	}
 		    	if (cookiename == null) /* check all mandatory feilds */
 		    	{
-		    		return null; //FIXME :  Not supposed to reach here, Something wrong,  silently ignoring entire sticky policy
+		    		return null; //FIXME :  Not supposed to reach here, Something wrong,  silently ignoring entire stickiness policy
 		    	}
 		    	sb.append("\t").append("cookie ").append(cookiename).append(" insert");
-		    }else if (sticky.getMethodName().equals("sourcebased"))
+		    }else if (stickiness.getMethodName().equals("sourcebased"))
 		    {
 		    	/* Default Values */
 		    	String tablesize = "200k" ; /* optional */
@@ -216,9 +216,9 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 		sb.append("\t").append("balance ").append(algorithm);
 		result.add(sb.toString());
 	
-		String stickySubRule = getsubRuleForStickyRule(lbTO);
-		if (stickySubRule != null)
-		    result.add(stickySubRule);
+		String stickinessSubRule = getsubRuleForStickinessRule(lbTO);
+		if (stickinessSubRule != null)
+		    result.add(stickinessSubRule);
 		
 		if (publicPort.equals(NetUtils.HTTP_PORT)) {
 			sb = new StringBuilder();

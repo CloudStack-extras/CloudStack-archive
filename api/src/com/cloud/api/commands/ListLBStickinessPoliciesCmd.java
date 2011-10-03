@@ -29,19 +29,19 @@ import com.cloud.api.BaseListCmd;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.BaseCmd.CommandType;
-import com.cloud.api.response.LBStickyResponse;
+import com.cloud.api.response.LBStickinessResponse;
 import com.cloud.api.response.ListResponse;
-import com.cloud.api.response.LBStickyRuleResponse;
+import com.cloud.api.response.LBStickinessPolicyResponse;
 import com.cloud.api.response.SecurityGroupResponse;
-import com.cloud.network.rules.LBStickyPolicy;
+import com.cloud.network.rules.LBStickinessPolicy;
 import com.cloud.network.rules.LoadBalancer;
 
 
-@Implementation(description = "Lists load balancer rules.", responseObject = LBStickyResponse.class)
-public class ListLBStickyPoliciesCmd extends BaseListCmd {
-    public static final Logger s_logger = Logger.getLogger(ListLBStickyPoliciesCmd.class.getName());
+@Implementation(description = "Lists load balancer rules.", responseObject = LBStickinessResponse.class)
+public class ListLBStickinessPoliciesCmd extends BaseListCmd {
+    public static final Logger s_logger = Logger.getLogger(ListLBStickinessPoliciesCmd.class.getName());
 
-    private static final String s_name = "listLBStickyPoliciesresponse";
+    private static final String s_name = "listLBStickinessPoliciesresponse";
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////
@@ -72,13 +72,13 @@ public class ListLBStickyPoliciesCmd extends BaseListCmd {
     @Override
     public void execute() {
 
-        List<? extends LBStickyPolicy> stickypolicies = _lbService.searchForLBStickyPolicies(this);
+        List<? extends LBStickinessPolicy> stickinesspolicies = _lbService.searchForLBStickinessPolicies(this);
 
         LoadBalancer lb = _lbService.findById(getLbRuleId());
         
-    	LBStickyResponse spResponse = _responseGenerator.createLBStickyPolicyResponse(stickypolicies,lb);
-    	List<LBStickyResponse> spResponses = new ArrayList<LBStickyResponse>();
-    	ListResponse<LBStickyResponse> response = new ListResponse<LBStickyResponse>();
+    	LBStickinessResponse spResponse = _responseGenerator.createLBStickinessPolicyResponse(stickinesspolicies,lb);
+    	List<LBStickinessResponse> spResponses = new ArrayList<LBStickinessResponse>();
+    	ListResponse<LBStickinessResponse> response = new ListResponse<LBStickinessResponse>();
     	spResponses.add(spResponse);
 
         response.setResponses(spResponses);

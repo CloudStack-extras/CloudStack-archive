@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
-import com.cloud.network.lb.LoadBalancingRule.StickyPolicy;
+import com.cloud.network.lb.LoadBalancingRule.StickinessPolicy;
 
 
 public class LoadBalancerTO {
@@ -33,7 +33,7 @@ public class LoadBalancerTO {
     boolean revoked;
     boolean alreadyAdded;
     DestinationTO[] destinations;
-    StickyPolicyTO[] stickyPolicies;
+    StickinessPolicyTO[] stickinessPolicies;
    
     public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> destinations) {
         this.srcIp = srcIp;
@@ -49,7 +49,7 @@ public class LoadBalancerTO {
         }
     }
     
-    public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> arg_destinations,List<StickyPolicy> stickyPolicies) {
+    public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> arg_destinations,List<StickinessPolicy> stickinessPolicies) {
         //LoadBalancerTO(srcIp,srcPort,protocol,algorithm,revoked,alreadyAdded,destination); FIXME : to remove some of below assigments
         this.srcIp = srcIp;
         this.srcPort = srcPort;
@@ -63,13 +63,13 @@ public class LoadBalancerTO {
             this.destinations[i++] = new DestinationTO(destination.getIpAddress(), destination.getDestinationPortStart(), destination.isRevoked(), false);
         }
         
-        if (stickyPolicies != null && stickyPolicies.size()>0)
+        if (stickinessPolicies != null && stickinessPolicies.size()>0)
         {
-    	    this.stickyPolicies = new StickyPolicyTO[stickyPolicies.size()];
+    	    this.stickinessPolicies = new StickinessPolicyTO[stickinessPolicies.size()];
             i = 0;
-            for (StickyPolicy stickypolicy : stickyPolicies) {
-        	    if (!stickypolicy.isRevoked())
-                    this.stickyPolicies[i++] = new StickyPolicyTO(stickypolicy.getMethodName(), stickypolicy.getDBParams());
+            for (StickinessPolicy stickinesspolicy : stickinessPolicies) {
+        	    if (!stickinesspolicy.isRevoked())
+                    this.stickinessPolicies[i++] = new StickinessPolicyTO(stickinesspolicy.getMethodName(), stickinesspolicy.getDBParams());
             }
         }
 
@@ -103,15 +103,15 @@ public class LoadBalancerTO {
         return alreadyAdded;
     }
     
-    public StickyPolicyTO[] getStickyPolacies() {
-        return stickyPolicies;
+    public StickinessPolicyTO[] getStickinessPolacies() {
+        return stickinessPolicies;
     }
     
     public DestinationTO[] getDestinations() {
         return destinations;
     }
     
-    public static class StickyPolicyTO {
+    public static class StickinessPolicyTO {
     	String methodName;
     	String paramsDB;
     	Map <String, String> paramsList;
@@ -128,7 +128,7 @@ public class LoadBalancerTO {
     	{
     		return paramsDB;
     	}
-    	public StickyPolicyTO(String methodName,String paramsDB )
+    	public StickinessPolicyTO(String methodName,String paramsDB )
     	{
     		this.methodName = methodName;
     		this.paramsDB = paramsDB;

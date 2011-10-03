@@ -23,10 +23,9 @@ import java.util.HashMap;
 import java.util.ArrayList;
 
 
-import com.cloud.api.commands.CreateLBStickyPolicyCmd;
+import com.cloud.api.commands.CreateLBStickinessPolicyCmd;
 import com.cloud.api.commands.CreateLoadBalancerRuleCmd;
-import com.cloud.api.commands.ListLBStickyPoliciesCmd;
-import com.cloud.api.commands.ListLBStickyMethodsCmd;
+import com.cloud.api.commands.ListLBStickinessPoliciesCmd;
 
 import com.cloud.api.commands.ListLoadBalancerRuleInstancesCmd;
 import com.cloud.api.commands.ListLoadBalancerRulesCmd;
@@ -34,8 +33,8 @@ import com.cloud.api.commands.UpdateLoadBalancerRuleCmd;
 import com.cloud.exception.InsufficientAddressCapacityException;
 import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceUnavailableException;
-import com.cloud.network.lb.LoadBalancingRule.StickyPolicy;
-import com.cloud.network.rules.LBStickyPolicy;
+import com.cloud.network.lb.LoadBalancingRule.StickinessPolicy;
+import com.cloud.network.rules.LBStickinessPolicy;
 import com.cloud.network.rules.LoadBalancer;
 
 
@@ -58,8 +57,8 @@ public interface LoadBalancingRulesService {
     /**
      * Create a stickiness policy to a load balancer.
      */
-    public LBStickyPolicy createLBStickyPolicy(CreateLBStickyPolicyCmd cmd) throws NetworkRuleConflictException;
-    boolean deleteLBStickyPolicy(long stickyPolicyId);
+    public LBStickinessPolicy createLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws NetworkRuleConflictException;
+    boolean deleteLBStickinessPolicy(long stickinessPolicyId);
     /**
      * Assign a virtual machine, or list of virtual machines, to a load balancer.
      */
@@ -82,9 +81,9 @@ public interface LoadBalancingRulesService {
      * @return list of load balancers that match the criteria
      */
     List<? extends LoadBalancer> searchForLoadBalancers(ListLoadBalancerRulesCmd cmd);
-    List<? extends LBStickyPolicy> searchForLBStickyPolicies(ListLBStickyPoliciesCmd cmd);
-    List< LBStickyRule > getLBStickyMethods(ListLBStickyMethodsCmd cmd);   
-    List<StickyPolicy> getStickypolicies(long lbId);
+    List<? extends LBStickinessPolicy> searchForLBStickinessPolicies(ListLBStickinessPoliciesCmd cmd);
+  
+    List<StickinessPolicy> getStickinesspolicies(long lbId);
     
     List<LoadBalancingRule> listByNetworkId(long networkId);
     

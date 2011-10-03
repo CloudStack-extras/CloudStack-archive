@@ -634,7 +634,7 @@ CREATE TABLE `cloud`.`load_balancer_vm_map` (
   CONSTRAINT `fk_load_balancer_vm_map__instance_id` FOREIGN KEY(`instance_id`) REFERENCES `vm_instance`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `cloud`.`load_balancer_sticky_policies` (
+CREATE TABLE `cloud`.`load_balancer_stickiness_policies` (
   `id` bigint unsigned NOT NULL auto_increment,
   `load_balancer_id` bigint unsigned NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -643,7 +643,7 @@ CREATE TABLE `cloud`.`load_balancer_sticky_policies` (
   `params` varchar(4096) NOT NULL,
   `revoke` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT '1 is when rule is set for Revoke',
   PRIMARY KEY  (`id`),
-  CONSTRAINT `fk_load_balancer_sticky_polacies__load_balancer_id` FOREIGN KEY(`load_balancer_id`) REFERENCES `load_balancing_rules`(`id`) ON DELETE CASCADE
+  CONSTRAINT `fk_load_balancer_stickiness_policies__load_balancer_id` FOREIGN KEY(`load_balancer_id`) REFERENCES `load_balancing_rules`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `cloud`.`inline_load_balancer_nic_map` (

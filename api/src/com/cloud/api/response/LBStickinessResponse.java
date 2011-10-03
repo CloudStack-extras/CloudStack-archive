@@ -18,29 +18,20 @@
 package com.cloud.api.response;
 
 import com.cloud.api.ApiConstants;
-import com.cloud.network.rules.LBStickyPolicy;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class LBStickyRuleResponse extends BaseResponse {
-    @SerializedName("id")
-    @Param(description = "the LB stickiness policy rule ID")
-    private Long id;
-
-    @SerializedName("lbRuleId")
+public class LBStickinessResponse extends BaseResponse {
+    @SerializedName("lbruleid")
     @Param(description = "the LB rule ID")
     private Long lbRuleId;
     
     @SerializedName("name")
-    @Param(description = "the name of the sticky rule")
+    @Param(description = "the name of the load balancer")
     private String name;
-    
-    @SerializedName("methodName")
-    @Param(description = "the method name name of the sticky rule")
-    private String methodName;
 
     @SerializedName("description")
     @Param(description = "the description of the load balancer")
@@ -59,28 +50,27 @@ public class LBStickyRuleResponse extends BaseResponse {
     private String domainName;
 
     @SerializedName("state")
-    @Param(description = "the state of the rule")
+    @Param(description = "the state of the policy")
     private String state;
 
-    //FIXME : the format of display looks different from the input . input are of the form parame[0].name .... where as response is different , this is especially for the CreateLBstickyPolicy
     @SerializedName("params")
-    @Param(description = "the params of the rule")
+    @Param(description = "the params of the policy")
     private Map<String,String>  params;
     
     @SerializedName(ApiConstants.ZONE_ID)
     @Param(description = "the id of the zone the rule belongs to")
     private Long zoneId;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
+    @SerializedName("stickinessPolicies")  @Param(description="the list of stickinesspolicies", responseObject = LBStickinessPolicyResponse.class)
+    private List<LBStickinessPolicyResponse> stickinessPolicies;
+    
     public void setlbRuleId(Long lbRuleId) {
         this.lbRuleId = lbRuleId;
+    }
+    
+    public void setRules(List<LBStickinessPolicyResponse> policies)
+    {
+         this.stickinessPolicies = policies;
     }
     
     public String getName() {
@@ -130,27 +120,9 @@ public class LBStickyRuleResponse extends BaseResponse {
     public void setState(String state) {
         this.state = state;
     }
-    
-	public LBStickyRuleResponse(LBStickyPolicy stickypolicy) {
-		this.name = stickypolicy.getName();
-		String dbparams = stickypolicy.getDBParams();
-		this.methodName = stickypolicy.getMethodName();
-		this.description = stickypolicy.getDescription();
-		if (stickypolicy.isRevoke())
-		{
-			this.setState("Revoked");
-		}
-		if (stickypolicy.getId() != 0)
-		      this.id = stickypolicy.getId();
-
-		String[] temp;
-		temp = dbparams.split("[,]");
-		Map<String, String> paramList = new HashMap<String, String>();
-		for (int i = 0; i < (temp.length - 1); i = i + 2) {
-			paramList.put(temp[i], temp[i + 1]);
-		}
-		this.params = paramList;
-		setObjectName("stickypolicy");
-	}
+    public LBStickinessResponse()
+    {
+    	
+    }
 
 }

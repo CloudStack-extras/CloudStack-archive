@@ -22,16 +22,16 @@ import java.util.List;
 
 import javax.ejb.Local;
 
-import com.cloud.network.LoadBalancerStickyPolicyVO;
+import com.cloud.network.LBStickinessPolicyVO;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchCriteria;
 
-@Local(value={LoadBalancerStickyPolicyDao.class})
-public class LoadBalancerStickyPolicyDaoImpl extends GenericDaoBase<LoadBalancerStickyPolicyVO, Long> implements LoadBalancerStickyPolicyDao {
+@Local(value={LBStickinessPolicyDao.class})
+public class LBStickinessPolicyDaoImpl extends GenericDaoBase<LBStickinessPolicyVO, Long> implements LBStickinessPolicyDao {
 
     @Override
     public void remove(long loadBalancerId) {
-        SearchCriteria<LoadBalancerStickyPolicyVO> sc = createSearchCriteria();
+        SearchCriteria<LBStickinessPolicyVO> sc = createSearchCriteria();
         sc.addAnd("loadBalancerId", SearchCriteria.Op.EQ, loadBalancerId);
 
         expunge(sc);
@@ -39,7 +39,7 @@ public class LoadBalancerStickyPolicyDaoImpl extends GenericDaoBase<LoadBalancer
     
     @Override
     public void remove(long loadBalancerId,  Boolean revoke) {
-        SearchCriteria<LoadBalancerStickyPolicyVO> sc = createSearchCriteria();
+        SearchCriteria<LBStickinessPolicyVO> sc = createSearchCriteria();
         sc.addAnd("loadBalancerId", SearchCriteria.Op.EQ, loadBalancerId);
         if (revoke != null) {
             sc.addAnd("revoke", SearchCriteria.Op.EQ, revoke);
@@ -50,16 +50,16 @@ public class LoadBalancerStickyPolicyDaoImpl extends GenericDaoBase<LoadBalancer
 
 
     @Override
-    public List<LoadBalancerStickyPolicyVO> listByLoadBalancerId(long loadBalancerId) {
-        SearchCriteria<LoadBalancerStickyPolicyVO> sc = createSearchCriteria();
+    public List<LBStickinessPolicyVO> listByLoadBalancerId(long loadBalancerId) {
+        SearchCriteria<LBStickinessPolicyVO> sc = createSearchCriteria();
         sc.addAnd("loadBalancerId", SearchCriteria.Op.EQ, loadBalancerId);
 
         return listBy(sc);
     }
 
     @Override
-    public List<LoadBalancerStickyPolicyVO> listByLoadBalancerId(long loadBalancerId, boolean pending) {
-        SearchCriteria<LoadBalancerStickyPolicyVO> sc = createSearchCriteria();
+    public List<LBStickinessPolicyVO> listByLoadBalancerId(long loadBalancerId, boolean pending) {
+        SearchCriteria<LBStickinessPolicyVO> sc = createSearchCriteria();
         sc.addAnd("loadBalancerId", SearchCriteria.Op.EQ, loadBalancerId);
         sc.addAnd("revoke", SearchCriteria.Op.EQ, pending);
 

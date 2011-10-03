@@ -55,8 +55,8 @@ import com.cloud.api.response.IngressRuleResponse;
 import com.cloud.api.response.IngressRuleResultObject;
 import com.cloud.api.response.InstanceGroupResponse;
 import com.cloud.api.response.IpForwardingRuleResponse;
-import com.cloud.api.response.LBStickyRuleResponse;
-import com.cloud.api.response.LBStickyResponse;
+import com.cloud.api.response.LBStickinessPolicyResponse;
+import com.cloud.api.response.LBStickinessResponse;
 import com.cloud.api.response.ListResponse;
 import com.cloud.api.response.LoadBalancerResponse;
 import com.cloud.api.response.NetworkOfferingResponse;
@@ -118,7 +118,7 @@ import com.cloud.network.RemoteAccessVpn;
 import com.cloud.network.VpnUser;
 import com.cloud.network.router.VirtualRouter;
 import com.cloud.network.rules.FirewallRule;
-import com.cloud.network.rules.LBStickyPolicy;
+import com.cloud.network.rules.LBStickinessPolicy;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.network.rules.PortForwardingRule;
 import com.cloud.network.rules.StaticNatRule;
@@ -722,11 +722,11 @@ public class ApiResponseHelper implements ResponseGenerator {
         return ipResponse;
     }
     @Override
-    public LBStickyResponse createLBStickyMethodResponse(List<? extends LBStickyPolicy> stickyRules, LoadBalancer lb){
-    	LBStickyResponse spResponse = new LBStickyResponse();
+    public LBStickinessResponse createLBStickinessMethodResponse(List<? extends LBStickinessPolicy> stickinessPolicies, LoadBalancer lb){
+    	LBStickinessResponse spResponse = new LBStickinessResponse();
 
     	if (lb == null) {
-            spResponse.setObjectName("stickymethod");
+            spResponse.setObjectName("stickinessmethod");
     		return spResponse;
     	}
     	spResponse.setlbRuleId(lb.getId());
@@ -737,22 +737,22 @@ public class ApiResponseHelper implements ResponseGenerator {
         	spResponse.setDomainName(ApiDBUtils.findDomainById(accountTemp.getDomainId()).getName());
         }
 
-		if (stickyRules != null) {
-			List<LBStickyRuleResponse> responses = new ArrayList<LBStickyRuleResponse>();
-			for (LBStickyPolicy stickymethod : stickyRules) {
-				LBStickyRuleResponse ruleResponse = new LBStickyRuleResponse(
-						stickymethod);
+		if (stickinessPolicies != null) {
+			List<LBStickinessPolicyResponse> responses = new ArrayList<LBStickinessPolicyResponse>();
+			for (LBStickinessPolicy stickinessmethod : stickinessPolicies) {
+				LBStickinessPolicyResponse ruleResponse = new LBStickinessPolicyResponse(
+						stickinessmethod);
 				responses.add(ruleResponse);
 			}
 			spResponse.setRules(responses);
 		}
         
-        spResponse.setObjectName("stickymethod");
+        spResponse.setObjectName("stickinessmethod");
         return spResponse;
     }
     @Override
-    public LBStickyResponse createLBStickyPolicyResponse( LBStickyPolicy stickyRule, LoadBalancer lb){
-    	LBStickyResponse spResponse = new LBStickyResponse();
+    public LBStickinessResponse createLBStickinessPolicyResponse( LBStickinessPolicy stickinessRule, LoadBalancer lb){
+    	LBStickinessResponse spResponse = new LBStickinessResponse();
 
     	spResponse.setlbRuleId(lb.getId());
         Account accountTemp = ApiDBUtils.findAccountById(lb.getAccountId());
@@ -762,19 +762,19 @@ public class ApiResponseHelper implements ResponseGenerator {
         	spResponse.setDomainName(ApiDBUtils.findDomainById(accountTemp.getDomainId()).getName());
         }
 
-        List<LBStickyRuleResponse> responses = new ArrayList<LBStickyRuleResponse>();
-        LBStickyRuleResponse ruleResponse = new LBStickyRuleResponse(stickyRule);
+        List<LBStickinessPolicyResponse> responses = new ArrayList<LBStickinessPolicyResponse>();
+        LBStickinessPolicyResponse ruleResponse = new LBStickinessPolicyResponse(stickinessRule);
         responses.add(ruleResponse);
        
         spResponse.setRules(responses);
         
-        spResponse.setObjectName("stickypolicy");
+        spResponse.setObjectName("stickinesspolicy");
         return spResponse;
     }
     
     @Override
-    public LBStickyResponse createLBStickyPolicyResponse(List<? extends LBStickyPolicy> stickyRules, LoadBalancer lb){
-    	LBStickyResponse spResponse = new LBStickyResponse();
+    public LBStickinessResponse createLBStickinessPolicyResponse(List<? extends LBStickinessPolicy> stickinessPolicies, LoadBalancer lb){
+    	LBStickinessResponse spResponse = new LBStickinessResponse();
 
     	spResponse.setlbRuleId(lb.getId());
         Account accountTemp = ApiDBUtils.findAccountById(lb.getAccountId());
@@ -784,14 +784,14 @@ public class ApiResponseHelper implements ResponseGenerator {
         	spResponse.setDomainName(ApiDBUtils.findDomainById(accountTemp.getDomainId()).getName());
         }
 
-        List<LBStickyRuleResponse> responses = new ArrayList<LBStickyRuleResponse>();
-        for (LBStickyPolicy stickyRule : stickyRules) {
-        	LBStickyRuleResponse ruleResponse = new LBStickyRuleResponse(stickyRule);
+        List<LBStickinessPolicyResponse> responses = new ArrayList<LBStickinessPolicyResponse>();
+        for (LBStickinessPolicy stickinessRule : stickinessPolicies) {
+        	LBStickinessPolicyResponse ruleResponse = new LBStickinessPolicyResponse(stickinessRule);
         	responses.add(ruleResponse);
         }
         spResponse.setRules(responses);
         
-        spResponse.setObjectName("stickypolicy");
+        spResponse.setObjectName("stickinesspolicy");
         return spResponse;
     }
     

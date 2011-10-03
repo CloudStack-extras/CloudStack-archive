@@ -28,20 +28,20 @@ import com.cloud.api.ServerApiException;
 import com.cloud.api.response.SuccessResponse;
 import com.cloud.event.EventTypes;
 import com.cloud.exception.InvalidParameterValueException;
-import com.cloud.network.rules.LBStickyPolicy;
+import com.cloud.network.rules.LBStickinessPolicy;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.user.Account;
 import com.cloud.user.UserContext;
 
-@Implementation(description="Deletes a LB sticky rule.", responseObject=SuccessResponse.class)
-public class DeleteLBStickyPolicyCmd extends BaseAsyncCmd {
-    public static final Logger s_logger = Logger.getLogger(DeleteLBStickyPolicyCmd.class.getName());
-    private static final String s_name = "deleteLBstickyrruleresponse";
+@Implementation(description="Deletes a LB stickiness rule.", responseObject=SuccessResponse.class)
+public class DeleteLBStickinessPolicyCmd extends BaseAsyncCmd {
+    public static final Logger s_logger = Logger.getLogger(DeleteLBStickinessPolicyCmd.class.getName());
+    private static final String s_name = "deleteLBstickinessrruleresponse";
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.ID, type=CommandType.LONG, required=true, description="the ID of the LB sticky rule")
+    @Parameter(name=ApiConstants.ID, type=CommandType.LONG, required=true, description="the ID of the LB stickiness rule")
     private Long id;
 
 
@@ -64,7 +64,7 @@ public class DeleteLBStickyPolicyCmd extends BaseAsyncCmd {
 
     @Override
     public long getEntityOwnerId() {
-    	LBStickyPolicy policy = _entityMgr.findById(LBStickyPolicy.class, getId());
+    	LBStickinessPolicy policy = _entityMgr.findById(LBStickinessPolicy.class, getId());
     	
 		if (policy != null) {
 			LoadBalancer lb = _entityMgr.findById(LoadBalancer.class,
@@ -84,19 +84,19 @@ public class DeleteLBStickyPolicyCmd extends BaseAsyncCmd {
 
     @Override
     public String getEventDescription() {
-        return  "deleting load balancer sticky policy: " + getId();
+        return  "deleting load balancer stickiness policy: " + getId();
     }
 	
     @Override
     public void execute(){
-        UserContext.current().setEventDetails("Load balancer sticky policy Id: "+getId());
-        boolean result = _lbService.deleteLBStickyPolicy(getId());
+        UserContext.current().setEventDetails("Load balancer stickiness policy Id: "+getId());
+        boolean result = _lbService.deleteLBStickinessPolicy(getId());
         
         if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
         } else {
-            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to delete load balancer sticky policy");
+            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to delete load balancer stickiness policy");
         }
     }
     
@@ -107,13 +107,13 @@ public class DeleteLBStickyPolicyCmd extends BaseAsyncCmd {
 
     @Override
     public Long getSyncObjId() {
-    	LBStickyPolicy policy = _entityMgr.findById(LBStickyPolicy.class, getId());
+    	LBStickinessPolicy policy = _entityMgr.findById(LBStickinessPolicy.class, getId());
     	if (policy == null) {
-    		throw new InvalidParameterValueException("Unable to find LB sticky rule: " + id);
+    		throw new InvalidParameterValueException("Unable to find LB stickiness rule: " + id);
     	}
     	LoadBalancer lb = _lbService.findById(policy.getLoadBalancerId());
     	if(lb == null){
-    		throw new InvalidParameterValueException("Unable to find load balancer rule for sticky rule: " + id);
+    		throw new InvalidParameterValueException("Unable to find load balancer rule for stickiness rule: " + id);
     	}
         return lb.getNetworkId();
     }
