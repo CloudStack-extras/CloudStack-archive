@@ -418,10 +418,11 @@
 				array1.push("&serviceOfferingId=" + args.data.serviceofferingid);
 				
 				//step 4: select disk offering				
-				if(args.data.diskofferingid != null && args.data.diskofferingid != "0")
+				if(args.data.diskofferingid != null && args.data.diskofferingid != "0") {
 				    array1.push("&diskOfferingId=" + args.data.diskofferingid);				    
-				if(selectedDiskOfferingObj.iscustomized == true) 
-				  array1.push("&size=" + args.data.size);									
+					if(selectedDiskOfferingObj.iscustomized == true) 
+					    array1.push("&size=" + args.data.size);									
+				}
 				
 				//step 5: select network			
 				if (step5ContainerType == 'select-network') {	                    		
