@@ -17,7 +17,7 @@
         <div class="progress">
           <ul>
             <li class="first"><span class="number">1</span><span>Setup</span><span class="arrow"></span></li>
-            <li><span class="number">2</span><span class="multiline">Select an ISO</span><span class="arrow"></span></li>
+            <li><span class="number">2</span><span class="multiline">Select a template</span><span class="arrow"></span></li>
             <li><span class="number">3</span><span class="multiline">Service Offering</span><span class="arrow"></span></li>
             <li><span class="number">4</span><span class="multiline">Data Disk Offering</span><span class="arrow"></span></li>
             <li><span class="number">5</span><span>Network</span><span class="arrow"></span></li>
@@ -243,7 +243,7 @@
                       <span>Zone</span>
                     </div>
                     <div class="value">
-                      <span>San Jose</span>
+                      <span wizard-field="zone"></span>
                     </div>
                     <div class="edit">
                       <a href="1">Edit</a>
@@ -256,7 +256,7 @@
                       <span>Hypervisor</span>
                     </div>
                     <div class="value">
-                      <span>VMware</span>
+                      <span wizard-field="hypervisor"></span>
                     </div>
                     <div class="edit">
                       <a href="1">Edit</a>
@@ -269,7 +269,7 @@
                       <span>Template</span>
                     </div>
                     <div class="value">
-                      <span>CentOS 5.3 (64-bit)</span>
+                      <span wizard-field="template"></span>
                     </div>
                     <div class="edit">
                       <a href="2">Edit</a>
@@ -282,7 +282,7 @@
                       <span>Service offering</span>
                     </div>
                     <div class="value">
-                      <span>Medium Instance</span>
+                      <span wizard-field="service-offering"></span>
                     </div>
                     <div class="edit">
                       <a href="3">Edit</a>
@@ -295,7 +295,7 @@
                       <span>Data disk offering</span>
                     </div>
                     <div class="value">
-                      <span>Large disk</span>
+                      <span wizard-field="disk-offering"></span>
                     </div>
                     <div class="edit">
                       <a href="4">Edit</a>
@@ -308,7 +308,7 @@
                       <span>Primary network</span>
                     </div>
                     <div class="value">
-                      <span>Virtual network</span>:
+                      <span wizard-field="default-network"></span>
                     </div>
                     <div class="edit">
                       <a href="5">Edit</a>

@@ -38,6 +38,7 @@
 
         var makeSelects = function(name, data, fields, options) {
           var $selects = $('<div>');
+          options = options ? options : {};
 
           $(data).each(function() {
             var $select = $('<div>').addClass('select')
@@ -48,7 +49,8 @@
                           return type ? type : 'radio';
                         })(options ? options.type : null),
                         name: name,
-                        value: this[fields.id]
+                        value: this[fields.id],
+                        'wizard-field': options['wizard-field']
                       })
                   )
                   .append(
@@ -98,7 +100,10 @@
                   $(args.data.zones).each(function() {
                     $step.find('.select-zone select').append(
                       $('<option>')
-                        .attr({ value: this.id })
+                        .attr({
+                          value: this.id,
+                          'wizard-field': 'zone'
+                        })
                         .html(this.name)
                     );
                   });
@@ -111,10 +116,17 @@
 
           'select-iso': function($step, formData) {
             var originalValues = function(formData) {
-              $step.find('input[type=radio]').filter(function() {
+              var $inputs = $step.find('.wizard-step-conditional:visible')
+                    .find('input[type=radio]');
+              var $selected = $inputs.filter(function() {
                 return $(this).val() == formData.templateid;
-              }).click();
+              });
 
+              if (!$selected.size()) {
+                $inputs.filter(':first').click();
+              } else {
+                $selected.click();
+              }
               $step.find('select[name=hypervisorid]:visible').val(
                 formData.hypervisorid
               );
@@ -137,6 +149,8 @@
                       name: 'name',
                       desc: 'displaytext',
                       id: 'id'
+                    }, {
+                      'wizard-field': 'template'
                     });
 
                     if (type == 'isos') {
@@ -153,7 +167,10 @@
                         // Get hypervisor data
                         $(args.data.hypervisors).each(function() {
                           $select.find('select').append(
-                            $('<option>').attr({ value: this[args.hypervisor.idField] })
+                            $('<option>').attr({
+                              value: this[args.hypervisor.idField],
+                              'wizard-field': 'hypervisor'
+                            })
                               .html(this[args.hypervisor.nameField])
                           );
                         });
@@ -168,7 +185,7 @@
                     [
                       ['featuredtemplates', 'instance-wizard-featured-templates'],
                       ['communitytemplates', 'instance-wizard-community-templates'],
-					  ['mytemplates', 'instance-wizard-my-templates'],
+					            ['mytemplates', 'instance-wizard-my-templates'],
                       ['isos', 'instance-wizard-my-isos']
                     ]
                   ).each(function() {
@@ -201,6 +218,8 @@
                       name: 'name',
                       desc: 'displaytext',
                       id: 'id'
+                    }, {
+                      'wizard-field': 'service-offering'
                     })
                   );
 
@@ -240,6 +259,8 @@
                       id: 'id',
                       name: 'name',
                       desc: 'displaytext'
+                    }, {
+                      'wizard-field': 'disk-offering'
                     })
                   );
 
@@ -249,12 +270,36 @@
                     var item = $.grep(args.data.diskOfferings, function(elem) {
                       return elem.id == val;
                     })[0];
-
+                    
                     if (!item) return true;
 
                     var custom = item[args.customFlag];
 
+                    $step.find('.custom-size-label').remove();
+
                     if (custom) {
+                      $target.parent().find('.name')
+                        .append(
+                          $('<span>').addClass('custom-size-label')
+                            .append(': ')
+                            .append(
+                              $('<span>').addClass('custom-disk-size').html(
+                                $step.find('.custom-size input[name=size]').val()
+                              )
+                            )
+                            .append(' GB')
+                        );
+                      $target.parent().find('.select-desc .desc')
+                        .append(
+                          $('<span>').addClass('custom-size-label')
+                            .append(', ')
+                            .append(
+                              $('<span>').addClass('custom-disk-size').html(
+                                $step.find('.custom-size input[name=size]').val()
+                              )
+                            )
+                            .append(' GB')
+                        );
                       $step.find('.section.custom-size').show();
                       $step.addClass('custom-disk-size');
                       $target.closest('.select-container').scrollTop(
@@ -320,6 +365,8 @@
                       name: 'name',
                       desc: 'displaytext',
                       id: 'id'
+                    }, {
+                      'wizard-field': 'default-network'
                     })
                   );
 
@@ -351,10 +398,29 @@
             };
           },
 
-          'review': function($step) {
+          'review': function($step, formData) {
             return {
               response: {
                 success: function(args) {
+                  $step.find('[wizard-field]').each(function() {
+                    var field = $(this).attr('wizard-field');
+                    var fieldName;
+                    var $input = $wizard.find('[wizard-field=' + field + ']').filter(function() {
+                      return $(this).is(':selected') || $(this).is(':checked');
+                    });
+
+                    if ($input.is('option')) {
+                      fieldName = $input.html();
+                    } else if ($input.is('input[type=radio]')) {
+                      fieldName = $input.parent().find('.select-desc .name').html();
+                    }
+
+                    if (fieldName) {
+                      $(this).html(fieldName);                      
+                    } else {
+                      $(this).html('(None)');
+                    }
+                  });
                 }
               }
             };
@@ -470,6 +536,9 @@
           },
           slide: function(event, ui) {
             $wizard.find('div.data-disk-offering div.custom-size input[type=text]').val(
+              ui.value
+            );
+            $wizard.find('div.data-disk-offering span.custom-disk-size').html(
               ui.value
             );
           }
