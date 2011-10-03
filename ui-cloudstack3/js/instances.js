@@ -19,7 +19,14 @@
         name: { label: 'Name', editable: true },
         displayname: { label: 'Display Name' },
         zonename: { label: 'Zone' },
-        state: { label: 'Status' }
+        state: { 
+		  label: 'Status',
+          indicator: {
+            'Running': 'on',
+            'Stopped': 'off',
+			'Error': 'off'
+          } 
+		}
       },
 
       // List view actions
