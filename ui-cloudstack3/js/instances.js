@@ -474,8 +474,7 @@
 					dataType: "json",
 					success: function(json) {
 						var jid = json.deployvirtualmachineresponse.jobid;					    
-						args.response.success({ _custom: { jobId: jid } });	
-						//wait for Brian to implement "poll" function for instance wizard					    									    
+						args.response.success({ _custom: { jobId: jid } });											    									    
 					},
 					error: function(XMLHttpResponse) {	                        				
 						//args.response.error(); //wait for Brian to implement
@@ -486,17 +485,18 @@
             })
           },
 
-          messages: {
-            confirm: function(args) {
-              return 'Are you sure you want to add ' + args.name + '?';
-            },
-            success: function(args) {
+          messages: {		    
+            confirm: function(args) {  //never being called              		
+              return 'Are you sure you want to add ' + args.name + '?'; 
+            },			
+            success: function(args) {  //never being called 			 
               return args.name + ' is being created.';
             },
-            notification: function(args) {
-              return 'Creating new VM: ' + args.name;
+            notification: function(args) {	             		
+              //return 'Creating new VM: ' + args.name; //args.name is not available			  
+			  return 'Creating new VM';
             },
-            complete: function(args) {
+            complete: function(args) {  //never being called  			  
               return args.name + ' has been created successfully!';
             }
           },
@@ -571,7 +571,7 @@
               return args.name + ' is stopping.';
             },
             notification: function(args) {
-              return 'Rebooting VM: ' + args.name;
+              return 'Stopping VM: ' + args.name;
             },
             complete: function(args) {
               return args.name + ' has been stopped.';
