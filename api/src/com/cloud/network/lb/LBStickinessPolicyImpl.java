@@ -20,11 +20,11 @@ package com.cloud.network.lb;
 
 import java.util.HashMap;
 import java.util.Map;
-import com.cloud.network.rules.LBStickyPolicy;
+import com.cloud.network.rules.LBStickinessPolicy;
 
 
 
-public class LBStickyRule implements LBStickyPolicy{
+public class LBStickinessPolicyImpl implements LBStickinessPolicy{
 
 	private long id;
 
@@ -43,7 +43,7 @@ public class LBStickyRule implements LBStickyPolicy{
 	private Map<String,String> paramList;
 
 
-	public LBStickyRule(String methodName, String paramlist, String description) {
+	public LBStickinessPolicyImpl(String methodName, String paramlist, String description) {
 		String[] temp;
 		StringBuilder sb = new StringBuilder();
 		this.methodName = methodName;
@@ -98,3 +98,4 @@ public class LBStickyRule implements LBStickyPolicy{
 		this.paramList = param;
 	}
 }
+

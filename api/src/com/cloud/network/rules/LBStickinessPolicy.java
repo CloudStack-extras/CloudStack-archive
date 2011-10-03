@@ -15,18 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
+package com.cloud.network.rules;
+import java.util.Map;
 
-package com.cloud.network.dao;
+/**
+ * Definition for a LBStickinessPolicy 
+ */
+public interface LBStickinessPolicy   {
 
-import java.util.List;
+	  public long getId();
 
-import com.cloud.network.LoadBalancerStickyPolicyVO;
-import com.cloud.utils.db.GenericDao;
-
-public interface LoadBalancerStickyPolicyDao extends GenericDao<LoadBalancerStickyPolicyVO, Long> {
-    void remove(long loadBalancerId);
-    void remove(long loadBalancerId, Boolean pending);
-    List<LoadBalancerStickyPolicyVO> listByLoadBalancerId(long loadBalancerId);
-    List<LoadBalancerStickyPolicyVO> listByLoadBalancerId(long loadBalancerId, boolean revoke);
-
+	  public long getLoadBalancerId();
+	  
+	  public String getName();
+	  
+	  public String getDescription();
+	  
+	  public String getMethodName();
+	    
+	  public String getDBParams();
+	  
+	  public boolean isRevoke();
+	  
+	  public Map<String,String> getParams();
+	      
 }

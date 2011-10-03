@@ -31,14 +31,14 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import com.cloud.network.rules.LBStickyPolicy;
+import com.cloud.network.rules.LBStickinessPolicy;
 import com.cloud.network.rules.FirewallRuleVO;
 
 
 @Entity
-@Table(name=("load_balancer_sticky_policies"))
+@Table(name=("load_balancer_stickiness_policies"))
 @PrimaryKeyJoinColumn(name="load_balancer_id", referencedColumnName = "id")
-public class LoadBalancerStickyPolicyVO  implements LBStickyPolicy{
+public class LBStickinessPolicyVO  implements LBStickinessPolicy{
 	
 	
     @Id
@@ -67,31 +67,36 @@ public class LoadBalancerStickyPolicyVO  implements LBStickyPolicy{
     
 
     
-    protected LoadBalancerStickyPolicyVO()
+    protected LBStickinessPolicyVO()
     {
     }
 
-    public LoadBalancerStickyPolicyVO(long loadBalancerId, String name, String methodName, Map paramList) {	
+    public LBStickinessPolicyVO(long loadBalancerId, String name, String methodName, Map paramList) {	
         this.loadBalancerId = loadBalancerId;
         this.name = name;
         this.methodName = methodName;
         StringBuilder sb = new StringBuilder();
 
-        Collection userGroupCollection = paramList.values();
-        Iterator iter = userGroupCollection.iterator();
-        HashMap paramKVpair = (HashMap) iter.next();
+        if (paramList != null){
+			Collection userGroupCollection = paramList.values();
+			Iterator iter = userGroupCollection.iterator();
+			HashMap paramKVpair = (HashMap) iter.next();
 
-        String paramName = (String) paramKVpair.get("name");
-        String paramValue = (String) paramKVpair.get("value");
-        sb.append(paramName + "," + paramValue);
+			String paramName = (String) paramKVpair.get("name");
+			String paramValue = (String) paramKVpair.get("value");
+			sb.append(paramName + "," + paramValue);
 
-        while (iter.hasNext()) {
-        	paramKVpair = (HashMap) iter.next();
-        	paramName = (String) paramKVpair.get("name");
-            paramValue = (String) paramKVpair.get("value");
-            sb.append("," + paramName + "," + paramValue);
+			while (iter.hasNext()) {
+				paramKVpair = (HashMap) iter.next();
+				paramName = (String) paramKVpair.get("name");
+				paramValue = (String) paramKVpair.get("value");
+				sb.append("," + paramName + "," + paramValue);
+			}
+			paramsInDb = sb.toString();
+		}else
+        {
+        	paramsInDb = "";
         }
-        paramsInDb=sb.toString(); 
     }
 
     public long getId() {
@@ -119,6 +124,10 @@ public class LoadBalancerStickyPolicyVO  implements LBStickyPolicy{
         return paramsInDb;
     }
 
+    public Map getParams() {
+        return null;
+    }
+    
     public boolean isRevoke() {
         return revoke;
     }

@@ -31,7 +31,7 @@ import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
 import com.cloud.api.BaseCmd.CommandType;
-import com.cloud.api.response.LBStickyRuleResponse;
+import com.cloud.api.response.LBStickinessPolicyResponse;
 import com.cloud.api.response.LoadBalancerResponse;
 import com.cloud.api.response.SuccessResponse;
 import com.cloud.event.EventTypes;
@@ -40,8 +40,8 @@ import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
-import com.cloud.network.rules.LBStickyPolicy;
-import com.cloud.api.response.LBStickyResponse;
+import com.cloud.network.rules.LBStickinessPolicy;
+import com.cloud.api.response.LBStickinessResponse;
 import com.cloud.network.IpAddress;
 import com.cloud.network.lb.LoadBalancingRule;
 import com.cloud.network.rules.LoadBalancer;
@@ -50,11 +50,11 @@ import com.cloud.user.UserContext;
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.net.NetUtils;
 
-@Implementation(description="Creates a Load Balancer sticky policy ", responseObject=LBStickyResponse.class)
-public class CreateLBStickyPolicyCmd extends BaseAsyncCreateCmd  {
-    public static final Logger s_logger = Logger.getLogger(CreateLBStickyPolicyCmd.class.getName());
+@Implementation(description="Creates a Load Balancer stickiness policy ", responseObject=LBStickinessResponse.class)
+public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd  {
+    public static final Logger s_logger = Logger.getLogger(CreateLBStickinessPolicyCmd.class.getName());
 
-    private static final String s_name = "createLBStickyPolicy";
+    private static final String s_name = "createLBStickinessPolicy";
 
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
@@ -74,7 +74,7 @@ public class CreateLBStickyPolicyCmd extends BaseAsyncCreateCmd  {
     private String StickinessMethodName;
      
     @Parameter(name = ApiConstants.PARAM_LIST, type = CommandType.MAP, description = "param list. Example: param[0].name=cookiename&param0].value=LBCookie ")
-    private Map paramList;
+    private Map<String,String> paramList;
  
 
     
@@ -90,15 +90,15 @@ public class CreateLBStickyPolicyCmd extends BaseAsyncCreateCmd  {
         return description;
     }
 
-    public String getLBStickyPolicyName() {
+    public String getLBStickinessPolicyName() {
         return LBStickinessPolicyName;
     }
 
-    public String getStickyMethodName() {
+    public String getStickinessMethodName() {
         return StickinessMethodName;
     }
     
-    public Map getparamList() {
+    public Map<String,String> getparamList() {
         return paramList;
     }
  
@@ -124,24 +124,24 @@ public class CreateLBStickyPolicyCmd extends BaseAsyncCreateCmd  {
     public void execute() throws ResourceAllocationException, ResourceUnavailableException {            	
         UserContext callerContext = UserContext.current();
         boolean success = true;
-        LBStickyPolicy policy = null;
+        LBStickinessPolicy policy = null;
         try {
             UserContext.current().setEventDetails("Rule Id: " + getEntityId());
                    
             success = success && _lbService.applyLoadBalancerConfig(getLbRuleId());
             
             // State might be different after the rule is applied, so get new object here
-            policy = _entityMgr.findById(LBStickyPolicy.class, getEntityId());
+            policy = _entityMgr.findById(LBStickinessPolicy.class, getEntityId());
             LoadBalancer lb = _lbService.findById(policy.getLoadBalancerId());
-            LBStickyResponse spResponse =_responseGenerator.createLBStickyPolicyResponse(policy,lb);
+            LBStickinessResponse spResponse =_responseGenerator.createLBStickinessPolicyResponse(policy,lb);
             setResponseObject(spResponse);
             spResponse.setResponseName(getCommandName());
         } finally {
             if (!success || policy == null) {
                 // no need to apply the rule on the backend as it exists in the db only
-                _lbService.deleteLBStickyPolicy(getEntityId());
+                _lbService.deleteLBStickinessPolicy(getEntityId());
        
-                throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to create sticky policy rule");
+                throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to create stickiness policy rule");
             }
         }
     }
@@ -149,7 +149,7 @@ public class CreateLBStickyPolicyCmd extends BaseAsyncCreateCmd  {
     @Override
     public void create() {	
     	 try {
-    		 LBStickyPolicy result = _lbService.createLBStickyPolicy(this);
+    		 LBStickinessPolicy result = _lbService.createLBStickinessPolicy(this);
              this.setEntityId(result.getId());
          } catch (NetworkRuleConflictException e) {
              s_logger.warn("Exception: ", e);
@@ -164,7 +164,7 @@ public class CreateLBStickyPolicyCmd extends BaseAsyncCreateCmd  {
 
     @Override
     public String getEventDescription() {
-        return "creating a Load Balancer stickiness policy: " + getLBStickyPolicyName() ;
+        return "creating a Load Balancer stickiness policy: " + getLBStickinessPolicyName() ;
     }
 
     public String getXid() {
