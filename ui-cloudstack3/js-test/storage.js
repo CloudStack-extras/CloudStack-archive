@@ -2,11 +2,15 @@
   cloudStack.sections.storage = {
     title: 'Storage',
     id: 'storage',
+    sectionSelect: {
+      label: 'Select view'
+    },
     sections: {
       /**
        * Volumes
        */
       volumes: {
+        type: 'select',
         title: 'Volumes',
         listView: {
           label: 'Volumes',
@@ -276,6 +280,7 @@
        * Snapshots
        */
       snapshots: {
+        type: 'select',
         title: 'Snapshots',
         listView: {
           label: 'Snapshots',

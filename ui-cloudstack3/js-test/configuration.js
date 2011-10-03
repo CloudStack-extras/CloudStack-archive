@@ -3,7 +3,7 @@
     title: 'Configuration',
     id: 'configuration',
     sectionSelect: {
-      label: 'Select Offering'
+      label: 'Select offering'
     },
     sections: {
       serviceOfferings: {
@@ -100,30 +100,6 @@
             traffictype: { label: 'Traffic Type'}
           },
           dataProvider: testData.dataProvider.listView('networkOfferings')
-        }
-      },
-      globalSettings: {
-        type: 'button',
-        title: 'Global Settings',
-        listView: {
-          label: 'Global Settings',
-          actions: {
-            edit: {
-              label: 'Change value',
-              action: function(args) {
-                args.response.success();
-              },
-              notification: {
-                poll: testData.notifications.testPoll
-              }
-            }
-          },
-          fields: {
-            name: { label: 'Name', id: true },
-            description: { label: 'Description' },
-            value: { label: 'Value', editable: true }
-          },
-          dataProvider: testData.dataProvider.listView('globalSettings')
         }
       }
     }

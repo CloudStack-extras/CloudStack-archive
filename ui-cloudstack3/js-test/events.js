@@ -2,8 +2,12 @@
   cloudStack.sections.events = {
     title: 'Events',
     id: 'events',
+    sectionSelect: {
+      label: 'Select view'
+    },
     sections: {
       events: {
+        type: 'select',
         title: 'Events',
         listView: {
           label: 'Events',
@@ -17,6 +21,7 @@
         }
       },
       alerts: {
+        type: 'select',
         title: 'Alerts',
         listView: {
           label: 'Alerts',

@@ -2,8 +2,12 @@
   cloudStack.sections.network = {
     title: 'Network',
     id: 'network',
+    sectionSelect: {
+      label: 'Select view'
+    },
     sections: {
       ipAddresses: {
+        type: 'select',
         title: 'IP Addresses',
         listView: {
           label: 'IPs',
@@ -212,6 +216,7 @@
         }
       },
       securityGroups: {
+        type: 'select',
         title: 'Security Groups',
         listView: {
           label: 'Security Groups',

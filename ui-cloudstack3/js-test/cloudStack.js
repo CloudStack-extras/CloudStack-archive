@@ -15,6 +15,7 @@
       domains: {},
       events: {},
       system: {},
+      'global-settings': {},
       configuration: {}
     }
   });

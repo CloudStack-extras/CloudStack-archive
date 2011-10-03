@@ -2,8 +2,12 @@
   cloudStack.sections.system = {
     title: 'System',
     id: 'system',
+    sectionSelect: {
+      label: 'Select view'
+    },
     sections: {
       physicalResources: {
+        type: 'select',
         title: 'Physical Resources',
         listView: {
           label: 'Physical Resources',
@@ -50,6 +54,7 @@
               dataProvider: testData.dataProvider.detailView('zones'),
               detailView: {
                 name: 'Zone details',
+                viewAll: { path: '_zone.pods', label: 'Pods' },
                 tabs: {
                   details: {
                     title: 'Details',
@@ -150,6 +155,7 @@
             }
           },
           pods: {
+            title: 'Pods',
             listView: {
               section: 'pods',
               fields: {
@@ -163,6 +169,7 @@
                 destroy: testData.actions.destroy('pod')
               },
               detailView: {
+                viewAll: { path: '_zone.clusters', label: 'Clusters' },
                 tabs: {
                   details: {
                     title: 'Details',
@@ -183,6 +190,7 @@
             }
           },
           clusters: {
+            title: 'Clusters',
             listView: {
               section: 'clusters',
               fields: {
@@ -195,6 +203,7 @@
                 destroy: testData.actions.destroy('cluster')
               },
               detailView: {
+                viewAll: { path: '_zone.hosts', label: 'Hosts' },
                 tabs: {
                   details: {
                     title: 'Details',
@@ -217,6 +226,7 @@
             }
           },
           hosts: {
+            title: 'Hosts',
            listView: {
               section: 'hosts',
               fields: {
@@ -315,6 +325,7 @@
         }
       },
       virtualAppliances: {
+        type: 'select',
         title: 'Virtual Appliances',
         listView: {
           label: 'Virtual Appliances',
@@ -329,6 +340,7 @@
         }
       },
       systemVMs: {
+        type: 'select',
         title: 'System VMs',
         listView: {
           label: 'System VMs',
