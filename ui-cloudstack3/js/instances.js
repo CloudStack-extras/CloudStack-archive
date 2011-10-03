@@ -2,7 +2,7 @@
 
   var zoneObjs, hypervisorObjs, featuredTemplateObjs, communityTemplateObjs, myTemplateObjs, isoObjs, serviceOfferingObjs, diskOfferingObjs;
   var selectedZoneObj, selectedTemplateObj, selectedHypervisor, selectedDiskOfferingObj;
-  var containerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'	
+  var step5ContainerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'	
   	
   cloudStack.sections.instances = {
     title: 'Instances',
@@ -204,7 +204,7 @@
 				  		  
 				  if (selectedZoneObj.securitygroupsenabled == false) {  //show network container				
 					//vmWizardShowNetworkContainer($thisPopup);	 
-					containerType = 'select-network';
+					step5ContainerType = 'select-network';
 				  } 
 				  else if (selectedZoneObj.securitygroupsenabled == true) {  // if security group is enabled			    
 					var hasDedicatedDirectTaggedDefaultNetwork = false;					
@@ -232,25 +232,25 @@
                     //hasDedicatedDirectTaggedDefaultNetwork = true; //for testing only, comment it out before checking in!!!!!!!!!!!!					
 					if(hasDedicatedDirectTaggedDefaultNetwork == true) {
 					  if(confirm("Do you wish to launch your instance on your own private dedicated network?")) {
-					    containerType = 'select-network';
+					    step5ContainerType = 'select-network';
 					  }
 					  else {
 					    if(selectedHypervisor == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 	
-						  containerType = 'nothing-to-select'; 
+						  step5ContainerType = 'nothing-to-select'; 
                         else
-						  containerType = 'select-security-group';	
+						  step5ContainerType = 'select-security-group';	
 					  }					 			  
 					}					    
 					else {
 					  if(selectedHypervisor == "VMware" || g_directAttachSecurityGroupsEnabled != "true") 						  
-						containerType = 'nothing-to-select'; 
+						step5ContainerType = 'nothing-to-select'; 
                       else
-						containerType = 'select-security-group';					  
+						step5ContainerType = 'select-security-group';					  
 					}
 				  }						              
 				  
-				  //containerType = 'nothing-to-select'; //for testing only, comment it out before checking in!!!!!!!!!!!!
-				  if(containerType == 'select-network') {	
+				  //step5ContainerType = 'nothing-to-select'; //for testing only, comment it out before checking in!!!!!!!!!!!!
+				  if(step5ContainerType == 'select-network') {	
                     var defaultNetworkArray = [], optionalNetworkArray = [];											  
 					$.ajax({
 						url: createURL("listNetworks&domainid="+g_domainid+"&account="+g_account+"&zoneId="+args.currentData.zoneid),
@@ -351,7 +351,7 @@
 					});							
 				  }
 				  
-				  else if(containerType == 'select-security-group') {	                    
+				  else if(step5ContainerType == 'select-security-group') {	                    
 					var securityGroupArray = [];
 					$.ajax({					
 						url: createURL("listSecurityGroups"+"&domainid="+g_domainid+"&account="+g_account),		
@@ -377,7 +377,7 @@
 					});	
 				  }
 				  				  
-				  else if(containerType == 'nothing-to-select') {	  
+				  else if(step5ContainerType == 'nothing-to-select') {	  
 					args.response.success({
 						type: 'nothing-to-select', 
 						data: {
@@ -424,7 +424,7 @@
 				  array1.push("&size=" + args.data.size);									
 				
 				//step 5: select network			
-				if (containerType == 'select-network') {	                    		
+				if (step5ContainerType == 'select-network') {	                    		
 					var array2 = [];
 					var defaultNetwork = args.data["default-network"];
 					if(defaultNetwork != null && defaultNetwork.length > 0)
@@ -445,7 +445,7 @@
 					}					
 					array1.push("&networkIds=" + array2.join(","));				
 				} 
-				else if (containerType == 'select-security-group') {  	
+				else if (step5ContainerType == 'select-security-group') {  	
 					var securityGroupList;
                     var groups = args.data["security-groups"];	
                     if(groups != null && groups.length > 0) {
