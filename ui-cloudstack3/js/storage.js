@@ -134,10 +134,18 @@
                 }
               },
               action: function(args) {
-                args.response.success();
+				$.ajax({
+					url: createURL("createSnapshot&volumeid=" + args.data.id),
+					dataType: "json",
+					async: true,
+					success: function(json) { 			    
+					  var jid = json.createsnapshotresponse.jobid; 
+					  args.response.success({_custom:{jobId: jid}});							
+					}
+				});  							
               },
               notification: {
-                poll: testData.notifications.testPoll
+                poll: pollAsyncJobResult
               }
             },
             create: {
