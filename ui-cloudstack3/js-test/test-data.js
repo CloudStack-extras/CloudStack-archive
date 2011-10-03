@@ -78,7 +78,7 @@
           "domainid": 4,
           "domain": "TEST",
           "created": "2011-06-14T07:39:12-0700",
-          "state": "Running",
+          "state": "Error",
           "haenable": false,
           "zoneid": 1,
           "zonename": "San Jose",

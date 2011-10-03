@@ -18,7 +18,8 @@
           label: 'Status',
           indicator: {
             'Running': 'on',
-            'Stopped': 'off'
+            'Stopped': 'off',
+            'Error': 'off'
           }
         }
       },
