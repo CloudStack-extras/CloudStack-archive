@@ -867,15 +867,66 @@
               }			
             }
           },	
-		  
-		  
+		  		  
 		  edit: {
             label: 'Edit instance name',
             action: function(args) {
               args.response.success(args.data[0]);
             }
           },          
-          		  
+          
+          attachISO: {
+            label: 'Attach ISO',
+            action: function(args) {	                
+			  $.ajax({
+			    url: createURL("attachIso&virtualmachineid="+args.data.id+"&id=" + args.data.iso),			   
+			    dataType: "json",
+			    async: true,
+			    success: function(json) { 			    
+				  var jid = json.attachisoresponse.jobid;    				
+				  args.response.success({_custom:{jobId: jid}});							
+			    }
+			  });  	
+		    },
+            messages: {
+              confirm: function(args) {
+                return 'Are you sure you want to attach ISO to instance ' + args.name + '?';
+              },
+              success: function(args) {
+                return 'ISO is being attached to instance ' + args.name;                
+              },
+              notification: function(args) {
+                return 'Attaching ISO to instance ' + args.name;
+              },
+              complete: function(args) {
+                return 'ISO has been attached to instance ' + args.name;                
+              }
+            },
+            notification: {
+              poll: pollAsyncJobResult
+            },
+            createForm: {
+              title: 'Attach ISO',
+              desc: 'Attach ISO to instance',
+              fields: {  
+                iso: {
+                  label: 'ISO',
+                  select: function(args) {					  
+			        $.ajax({
+					  url: createURL("listIsos&isReady=true&isofilter=executable"),			 
+					  dataType: "json",
+					  async: true,
+					  success: function(json) { 	                        				  
+					    var items = json.listisosresponse.iso;					  
+					    args.response.success({data: items});					  
+					  }
+					});  		
+			      }				
+                }				 
+              }
+            }            
+          },         
+           		  
           migrate: {
             notification: {
               desc: 'Migrated VM',
