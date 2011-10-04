@@ -152,15 +152,15 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 	private String getsubRuleForStickinessRule(LoadBalancerTO lbTO)
 	{
 		int i=0;
-		if (lbTO.getStickinessPolacies() == null ) return null;
+		if (lbTO.getStickinessPolicies() == null ) return null;
 		
 		StringBuilder sb = new StringBuilder();
 
-		for (StickinessPolicyTO stickiness: lbTO.getStickinessPolacies()) {
+		for (StickinessPolicyTO stickiness: lbTO.getStickinessPolicies()) {
 			if (stickiness == null) continue;
 			Map <String, String> paramsList = stickiness.getParams();
 			i++;
-		    if (stickiness.getMethodName().equals("cookiebased"))
+		    if ("cookiebased".equalsIgnoreCase(stickiness.getMethodName()))
 		    {
 		    	/* Default Values */
 		    	String cookiename = null; /* required */
@@ -172,10 +172,10 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 		    	}
 		    	if (cookiename == null) /* check all mandatory feilds */
 		    	{
-		    		return null; //FIXME :  Not supposed to reach here, Something wrong,  silently ignoring entire stickiness policy
+		    		return null; //FIXME :  Not supposed to reach here, Something wrong,  silently ignoring entire stickiness policy.
 		    	}
 		    	sb.append("\t").append("cookie ").append(cookiename).append(" insert");
-		    }else if (stickiness.getMethodName().equals("sourcebased"))
+		    }else if ("sourcebased".equalsIgnoreCase(stickiness.getMethodName()))
 		    {
 		    	/* Default Values */
 		    	String tablesize = "200k" ; /* optional */
@@ -185,8 +185,8 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 		    	Iterator it = paramsList.entrySet().iterator();
 		    	while (it.hasNext()) {
 		    	    Map.Entry pairs = (Map.Entry)it.next();
-		    	    if (pairs.getKey().equals("tablesize")) tablesize = (String)pairs.getValue();
-		    	    if (pairs.getKey().equals("expire")) expire = (String)pairs.getValue();
+		    	    if ("tablesize".equalsIgnoreCase((String)pairs.getKey())) tablesize = (String)pairs.getValue(); //FIXME ; type is lost 
+		    	    if ("expire".equalsIgnoreCase((String)pairs.getKey())) expire = (String)pairs.getValue();
 		    	}
 	    	
 		    	sb.append("\t").append("stick-table type ip size ").append(tablesize).append(" expire ").append(expire);
