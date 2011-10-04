@@ -79,7 +79,7 @@ public class DeleteLBStickinessPolicyCmd extends BaseAsyncCmd {
 
     @Override
     public String getEventType() {
-        return EventTypes.EVENT_LB_STICKYPOLICY_DELETE;
+        return EventTypes.EVENT_LB_STICKINESSPOLICY_DELETE;
     }
 
     @Override

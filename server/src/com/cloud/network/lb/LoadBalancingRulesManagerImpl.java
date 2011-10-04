@@ -39,8 +39,6 @@ import com.cloud.api.commands.ListLoadBalancerRuleInstancesCmd;
 import com.cloud.api.commands.ListLoadBalancerRulesCmd;
 import com.cloud.api.commands.ListLBStickinessPoliciesCmd;
 import com.cloud.api.commands.UpdateLoadBalancerRuleCmd;
-import com.cloud.network.lb.LBStickinessPolicyImpl;
-import com.cloud.api.response.CapabilityResponse;
 import com.cloud.api.response.ServiceResponse;
 import com.cloud.dc.dao.VlanDao;
 import com.cloud.domain.Domain;
@@ -73,6 +71,8 @@ import com.cloud.network.dao.LBStickinessPolicyDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
 import com.cloud.network.lb.LoadBalancingRule.StickinessPolicy;
+import com.cloud.network.rules.LBStickinessMethod;
+import com.cloud.network.rules.LBStickinessMethod.LBStickinessMethodParam;
 import com.cloud.network.rules.FirewallManager;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.FirewallRule.Purpose;
@@ -96,14 +96,17 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.NetUtils;
+import com.cloud.vm.DomainRouterVO;
 import com.cloud.vm.Nic;
 import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.UserVmDao;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 @Local(value = { LoadBalancingRulesManager.class, LoadBalancingRulesService.class })
-public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager, LoadBalancingRulesService, Manager {
+public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesManager, LoadBalancingRulesService, Manager {
     private static final Logger s_logger = Logger.getLogger(LoadBalancingRulesManagerImpl.class);
 
     String _name;
@@ -152,10 +155,6 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
 	private String getLBStickinessCapability(long networkid) {
 		NetworkVO network = _networkDao.findById(networkid);
 
-		// populate capability
-		// Map<Service, Map<Capability, String>> serviceCapabilitiesMap =
-		// ApiDBUtils.getNetworkCapabilities(networkOffering.getId(),
-		// network.getDataCenterId());
 		Map<Service, Map<Capability, String>> serviceCapabilitiesMap = ApiDBUtils
 				.getNetworkCapabilities(network.getNetworkOfferingId(),
 						network.getDataCenterId());
@@ -163,14 +162,13 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
 			for (Service service : serviceCapabilitiesMap.keySet()) {
 				ServiceResponse serviceResponse = new ServiceResponse();
 				serviceResponse.setName(service.getName());
-				if (service.getName().equals("Lb")) {
+				if ("Lb".equals(service.getName())) {
 					Map<Capability, String> serviceCapabilities = serviceCapabilitiesMap
 							.get(service);
 					if (serviceCapabilities != null) {
 						for (Capability capability : serviceCapabilities
 								.keySet()) {
-							if (capability.getName().equals(
-									"SupportedStickinessAlgorithms")) {
+							if ("SupportedStickinessMethods".equals(capability.getName())) {	//FIXME: do not use hardcoded string
 								return serviceCapabilities.get(capability);
 							}
 						}
@@ -183,7 +181,7 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
     
     @Override
     @DB
-    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKYPOLICY_CREATE, eventDescription = "create lb stickinesspolicy to load balancer", async = true)
+    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_CREATE, eventDescription = "create lb stickinesspolicy to load balancer", async = true)
     public LBStickinessPolicyVO createLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws NetworkRuleConflictException {
     	
     	/* Validation : check corresponding load balancer rule exist */
@@ -193,45 +191,52 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
         }
 
         /* Validation : check for valid Method name and params */
-        List <LBStickinessPolicy> stickinessMethodList = getStickinessMethods(getLBStickinessCapability(loadBalancer.getNetworkId()));
+        List <LBStickinessMethod> stickinessMethodList = getStickinessMethods(getLBStickinessCapability(loadBalancer.getNetworkId()));
         boolean methodMatch = false;
-        for (LBStickinessPolicy method : stickinessMethodList) {
+        
+        for (LBStickinessMethod method : stickinessMethodList) {
             if (method.getMethodName().equals(cmd.getStickinessMethodName()))
             {
             	methodMatch = true;
             	Map<String,String> apiParamList = cmd.getparamList();
-            	Map<String,String> methodParamList = method.getParams();
-        		Map<String, String> tempParamList = new HashMap<String, String>();
-		    	/*validation-1: check for any new params that are not present in the policymethod(capabilty)  */
+            	List<LBStickinessMethodParam> methodParamList = method.getParamList();
+        		Map<String,String> tempParamList = new HashMap<String, String>(); 
+        		
+		    	/*validation-1: check for any params that are not present in the policymethod(capabilty)  */
         		if (apiParamList != null) {
 					Collection userGroupCollection = apiParamList.values();
 					Iterator iter = userGroupCollection.iterator();
 					while (iter.hasNext()) {
-						HashMap paramKVpair = (HashMap) iter.next();
-						String paramName = (String) paramKVpair.get("name");
-						String paramValue = (String) paramKVpair.get("value");
+						HashMap<String,String> paramKVpair = (HashMap) iter.next();
+						String paramName =  paramKVpair.get("name");
+						String paramValue =  paramKVpair.get("value");
 						tempParamList.put(paramName, paramValue);
-						String optionality = (String) methodParamList
-								.get(paramName);
-						if (optionality == null) {
+						Boolean found = false;
+						for (LBStickinessMethodParam param : methodParamList) {
+						    if (param.getParamName().equalsIgnoreCase(paramName)) {
+						    	found = true;
+						    	break;
+						    }
+						}
+						if (found == false)
+						{
 							throw new InvalidParameterValueException(
 									"Failed :This Stickiness policy does not support param name :"
-											+ paramName);
+											+ paramName);	
 						}
 					}
 				}
             	
             	/*validation-2: check for mandatory params */
-		    	Iterator it = methodParamList.entrySet().iterator();
-		    	while (it.hasNext()) {
-		    	    Map.Entry pairs = (Map.Entry)it.next();
-		    	    if (pairs.getValue().equals("required")) {
-		    	    	String paramName = (String)tempParamList.get(pairs.getKey());
-		    	    	if (paramName == null ) {
-		    	    		throw new InvalidParameterValueException("Failed : Missing Manadatory Param :" + pairs.getKey());
-		    	    	}
-		    	    }
-		    	}
+				for (LBStickinessMethodParam param : methodParamList) {
+					if (param.getRequired())
+					{
+						if (tempParamList.get(param.getParamName()) == null)
+						{
+		    	    		throw new InvalidParameterValueException("Failed : Missing Manadatory Param :" + param.getParamName());
+						}
+					}	
+				}
 		    	
 		    	/* Successfully completed the Validation */
             	break;
@@ -261,7 +266,7 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
         return policy;
     }
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKYPOLICY_DELETE, eventDescription = "removing from LB stickiness ", async = true)
+    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_DELETE, eventDescription = "removing from LB stickiness ", async = true)
     public boolean deleteLBStickinessPolicy(long stickinessPolicyId) {
         UserContext caller = UserContext.current();
         
@@ -864,21 +869,16 @@ public class LoadBalancingRulesManagerImpl implements LoadBalancingRulesManager,
 
         return loadBalancerInstances;
     }
-    private  List<LBStickinessPolicy> getStickinessMethods(String capabilty)
+    private  List<LBStickinessMethod> getStickinessMethods(String capabilty)
     {
-    	 List<LBStickinessPolicy> result = new ArrayList<LBStickinessPolicy>();
-    	 String[] temp;
-    	 
-    	 /* delimiter */
-    	 String delimiter = ":";
-    	 /* given string will be split by the argument delimiter provided. */
-    	 temp = capabilty.split(delimiter);
-    	 /* print substrings */
-    	 for(int i =0; i < temp.length ; i=i+3)
-    	 {
-    		 LBStickinessPolicyImpl method =new LBStickinessPolicyImpl(temp[i],temp[i+1],temp[i+2]);
-    		 result.add(method);
-    	 }
+    	// List<LBStickinessMethod> result = new ArrayList<LBStickinessMethod>();
+    	 //String[] temp;
+    	capabilty = "[{\"methodName\":\"cookiebased\",\"paramList\":[{\"paramName\":\"cookiename\",\"required\":true,\"defaultValue\":\"LBCOOKIE\",\"description\":\"cookie name passed in http header\"},{\"paramName\":\"cookielength\",\"required\":false,\"defaultValue\":\"30\",\"description\":\"max length cookiename\"}],\"description\":\"This is cookie based sticky method, it can be used only for http\"},{\"methodName\":\"sourcebased\",\"paramList\":[{\"paramName\":\"tablesize\",\"required\":false,\"defaultValue\":\"200k\",\"description\":\"table to store source ip address.\"},{\"paramName\":\"expire\",\"required\":false,\"defaultValue\":\"20m\",\"description\":\"entry in source ip table will expire after expire duration.\"}],\"description\":\"This is source based sticky method, it can be used for any type of protocol.\"}]";
+    	java.lang.reflect.Type listType = new TypeToken<List<LBStickinessMethod>>() {}.getType();
+    	
+    	
+         Gson gson = new Gson();
+         List<LBStickinessMethod> result = gson.fromJson(capabilty,listType);
     	 return result;
     }
 
