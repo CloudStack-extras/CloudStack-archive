@@ -112,8 +112,10 @@
             }
           },
           detailView: {
-            pageGenerator: cloudStack.zoneChart({
-              dataProvider: testData.dataProvider.detailView('zones'),
+            pageGenerator: cloudStack.zoneChart({              
+			  dataProvider: function(args) {                             
+                args.response.success({data:args.jsonObj});	
+		      },			  
               detailView: {
                 name: 'Zone details',
                 tabs: {
