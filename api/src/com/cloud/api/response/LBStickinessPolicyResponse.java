@@ -18,7 +18,7 @@
 package com.cloud.api.response;
 
 import com.cloud.api.ApiConstants;
-import com.cloud.network.rules.LBStickinessPolicy;
+import com.cloud.network.rules.StickinessPolicy;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
@@ -131,7 +131,7 @@ public class LBStickinessPolicyResponse extends BaseResponse {
         this.state = state;
     }
     
-	public LBStickinessPolicyResponse(LBStickinessPolicy stickinesspolicy) {
+	public LBStickinessPolicyResponse(StickinessPolicy stickinesspolicy) {
 		this.name = stickinesspolicy.getName();
 		String dbparams = stickinesspolicy.getDBParams();
 		this.methodName = stickinesspolicy.getMethodName();

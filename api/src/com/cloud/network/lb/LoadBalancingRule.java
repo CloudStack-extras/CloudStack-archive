@@ -26,14 +26,14 @@ import com.cloud.network.rules.LoadBalancer;
 public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     private LoadBalancer lb;
     private List<LbDestination> destinations;
-    private List<StickinessPolicy> stickinessPolicies;
+    private List<LbStickinessPolicy> stickinessPolicies;
     
     public LoadBalancingRule(LoadBalancer lb, List<LbDestination> destinations) { 
         this.lb = lb;
         this.destinations = destinations;
     }
     
-    public LoadBalancingRule(LoadBalancer lb, List<LbDestination> destinations,List<StickinessPolicy> stickinessPolicies) { 
+    public LoadBalancingRule(LoadBalancer lb, List<LbDestination> destinations,List<LbStickinessPolicy> stickinessPolicies) { 
         this.lb = lb;
         this.destinations = destinations;
         this.stickinessPolicies = stickinessPolicies;
@@ -126,9 +126,10 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
         return destinations;
     }
     
-    public List<StickinessPolicy> getStickinessPolicies() {
+    public List<LbStickinessPolicy> getStickinessPolicies() {
         return stickinessPolicies;
     }
+    
     
     public interface Destination {
         String getIpAddress();
@@ -136,23 +137,23 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
         int getDestinationPortEnd();
         boolean isRevoked();
     }
-    public static class StickinessPolicy {
+    public static class LbStickinessPolicy {
     	String methodName;
-    	String paramsInDB;
+    	String paramsInDb;
     	boolean revoke;
-    	public StickinessPolicy(String methodName,String params, boolean revoke)
+    	public LbStickinessPolicy(String methodName,String params, boolean revoke)
     	{
     		this.methodName = methodName;
-    		this.paramsInDB = params;
+    		this.paramsInDb = params;
     		this.revoke = revoke;
     	}
     	public String getMethodName()
     	{
     		return methodName;
     	}
-    	public String getDBParams()
+    	public String getDbParams()
     	{
-    		return paramsInDB;
+    		return paramsInDb;
     	}
     	public boolean isRevoked()
     	{

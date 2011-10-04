@@ -33,7 +33,7 @@ import com.cloud.api.response.LBStickinessResponse;
 import com.cloud.api.response.ListResponse;
 import com.cloud.api.response.LBStickinessPolicyResponse;
 import com.cloud.api.response.SecurityGroupResponse;
-import com.cloud.network.rules.LBStickinessPolicy;
+import com.cloud.network.rules.StickinessPolicy;
 import com.cloud.network.rules.LoadBalancer;
 
 
@@ -72,7 +72,7 @@ public class ListLBStickinessPoliciesCmd extends BaseListCmd {
     @Override
     public void execute() {
 
-        List<? extends LBStickinessPolicy> stickinesspolicies = _lbService.searchForLBStickinessPolicies(this);
+        List<? extends StickinessPolicy> stickinesspolicies = _lbService.searchForLBStickinessPolicies(this);
 
         LoadBalancer lb = _lbService.findById(getLbRuleId());
         

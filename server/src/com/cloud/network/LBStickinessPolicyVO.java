@@ -24,21 +24,20 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
-import com.cloud.network.rules.LBStickinessPolicy;
-import com.cloud.network.rules.FirewallRuleVO;
+import com.cloud.network.rules.StickinessPolicy;
+
 
 
 @Entity
 @Table(name=("load_balancer_stickiness_policies"))
 @PrimaryKeyJoinColumn(name="load_balancer_id", referencedColumnName = "id")
-public class LBStickinessPolicyVO  implements LBStickinessPolicy{
+public class LBStickinessPolicyVO  implements StickinessPolicy{
 	
 	
     @Id

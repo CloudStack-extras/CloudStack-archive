@@ -21,18 +21,16 @@ import java.util.List;
 import java.util.ArrayList;
 
 
-public class LBStickinessMethod {
-	public class LBStickinessMethodParam {
+public class LbStickinessMethod {
+	public class LbStickinessMethodParam {
 		private String paramName;
 		private Boolean required;
-		private String defaultValue;
 		private String description;
 		
-		public LBStickinessMethodParam(String name, Boolean required, String defaultValue, String description)
+		public LbStickinessMethodParam(String name, Boolean required, String description)
 		{
 			this.paramName = name;
 			this.required = required;
-			this.defaultValue = defaultValue;
 			this.description = description;
 		}
 
@@ -52,13 +50,6 @@ public class LBStickinessMethod {
 			this.required = required;
 		}
 
-		public String getDefaultValue() {
-			return defaultValue;
-		}
-
-		public void setDefaultValue(String defaultValue) {
-			this.defaultValue = defaultValue;
-		}
 
 		public String getDescription() {
 			return description;
@@ -72,18 +63,18 @@ public class LBStickinessMethod {
 	}
 	
 	private String methodName;
-	private List <LBStickinessMethodParam> paramList;
+	private List <LbStickinessMethodParam> paramList;
 	private String description;
 	
-	public LBStickinessMethod(String methodName,String description)
+	public LbStickinessMethod(String methodName,String description)
 	{
 		this.methodName = methodName;
 		this.description = description;
-		this.paramList = new ArrayList<LBStickinessMethodParam>(1);
+		this.paramList = new ArrayList<LbStickinessMethodParam>(1);
 	}
-	public void addParam(String name, Boolean required, String defaultValue, String description)
+	public void addParam(String name, Boolean required,  String description)
 	{
-		LBStickinessMethodParam param = new LBStickinessMethodParam(name,required, defaultValue, description);
+		LbStickinessMethodParam param = new LbStickinessMethodParam(name,required, description);
 		paramList.add(param);
 		return;
 	}
@@ -91,10 +82,10 @@ public class LBStickinessMethod {
     public String getMethodName() {
         return methodName;
     }
-	public List<LBStickinessMethodParam> getParamList() {
+	public List<LbStickinessMethodParam> getParamList() {
 		return paramList;
 	}
-	public void setParamList(List<LBStickinessMethodParam> paramList) {
+	public void setParamList(List<LbStickinessMethodParam> paramList) {
 		this.paramList = paramList;
 	}
 	public String getDescription() {

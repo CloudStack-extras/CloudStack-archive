@@ -118,7 +118,7 @@ import com.cloud.network.RemoteAccessVpn;
 import com.cloud.network.VpnUser;
 import com.cloud.network.router.VirtualRouter;
 import com.cloud.network.rules.FirewallRule;
-import com.cloud.network.rules.LBStickinessPolicy;
+import com.cloud.network.rules.StickinessPolicy;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.network.rules.PortForwardingRule;
 import com.cloud.network.rules.StaticNatRule;
@@ -722,7 +722,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         return ipResponse;
     }
     @Override
-    public LBStickinessResponse createLBStickinessMethodResponse(List<? extends LBStickinessPolicy> stickinessPolicies, LoadBalancer lb){
+    public LBStickinessResponse createLBStickinessMethodResponse(List<? extends StickinessPolicy> stickinessPolicies, LoadBalancer lb){
     	LBStickinessResponse spResponse = new LBStickinessResponse();
 
     	if (lb == null) {
@@ -739,7 +739,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
 		if (stickinessPolicies != null) {
 			List<LBStickinessPolicyResponse> responses = new ArrayList<LBStickinessPolicyResponse>();
-			for (LBStickinessPolicy stickinessmethod : stickinessPolicies) {
+			for (StickinessPolicy stickinessmethod : stickinessPolicies) {
 				LBStickinessPolicyResponse ruleResponse = new LBStickinessPolicyResponse(
 						stickinessmethod);
 				responses.add(ruleResponse);
@@ -751,7 +751,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         return spResponse;
     }
     @Override
-    public LBStickinessResponse createLBStickinessPolicyResponse( LBStickinessPolicy stickinessRule, LoadBalancer lb){
+    public LBStickinessResponse createLBStickinessPolicyResponse( StickinessPolicy stickinessRule, LoadBalancer lb){
     	LBStickinessResponse spResponse = new LBStickinessResponse();
 
     	spResponse.setlbRuleId(lb.getId());
@@ -773,7 +773,7 @@ public class ApiResponseHelper implements ResponseGenerator {
     }
     
     @Override
-    public LBStickinessResponse createLBStickinessPolicyResponse(List<? extends LBStickinessPolicy> stickinessPolicies, LoadBalancer lb){
+    public LBStickinessResponse createLBStickinessPolicyResponse(List<? extends StickinessPolicy> stickinessPolicies, LoadBalancer lb){
     	LBStickinessResponse spResponse = new LBStickinessResponse();
 
     	spResponse.setlbRuleId(lb.getId());
@@ -785,7 +785,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         }
 
         List<LBStickinessPolicyResponse> responses = new ArrayList<LBStickinessPolicyResponse>();
-        for (LBStickinessPolicy stickinessRule : stickinessPolicies) {
+        for (StickinessPolicy stickinessRule : stickinessPolicies) {
         	LBStickinessPolicyResponse ruleResponse = new LBStickinessPolicyResponse(stickinessRule);
         	responses.add(ruleResponse);
         }

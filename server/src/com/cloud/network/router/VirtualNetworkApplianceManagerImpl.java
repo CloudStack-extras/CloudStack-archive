@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import com.cloud.network.rules.LbStickinessMethod;
 
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
@@ -140,7 +141,7 @@ import com.cloud.network.dao.RemoteAccessVpnDao;
 import com.cloud.network.dao.VpnUserDao;
 import com.cloud.network.lb.LoadBalancingRule;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
-import com.cloud.network.lb.LoadBalancingRule.StickinessPolicy;
+import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
 import com.cloud.network.lb.LoadBalancingRulesManager;
 import com.cloud.network.router.VirtualRouter.RedundantState;
 import com.cloud.network.router.VirtualRouter.Role;
@@ -2196,7 +2197,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             String srcIp = _networkMgr.getIp(rule.getSourceIpAddressId()).getAddress().addr();
             int srcPort = rule.getSourcePortStart();
             List<LbDestination> destinations = rule.getDestinations();
-            List<StickinessPolicy> stickinessPolicies = rule.getStickinessPolicies();
+            List<LbStickinessPolicy> stickinessPolicies = rule.getStickinessPolicies();
             LoadBalancerTO lb = new LoadBalancerTO(srcIp, srcPort, protocol, algorithm, revoked, false, destinations, stickinessPolicies);
             lbs[i++] = lb;
         }
@@ -2469,7 +2470,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                             List<LoadBalancingRule> lbRules = new ArrayList<LoadBalancingRule>();
                             for (LoadBalancerVO lb : lbs) {
                                 List<LbDestination> dstList = _lbMgr.getExistingDestinations(lb.getId());
-                                List<StickinessPolicy> policyList = _lbMgr.getStickinesspolicies(lb.getId());
+                                List<LbStickinessPolicy> policyList = _lbMgr.getStickinessPolicies(lb.getId());
                                 LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList,policyList);
                                 lbRules.add(loadBalancing);
                             }

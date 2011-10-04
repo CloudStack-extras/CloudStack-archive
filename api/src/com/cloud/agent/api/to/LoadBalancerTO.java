@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
-import com.cloud.network.lb.LoadBalancingRule.StickinessPolicy;
+import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
 
 
 public class LoadBalancerTO {
@@ -49,7 +49,7 @@ public class LoadBalancerTO {
         }
     }
     
-    public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> arg_destinations,List<StickinessPolicy> stickinessPolicies) {
+    public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> arg_destinations,List<LbStickinessPolicy> stickinessPolicies) {
         //LoadBalancerTO(srcIp,srcPort,protocol,algorithm,revoked,alreadyAdded,destination); FIXME : to remove some of below assigments
         this.srcIp = srcIp;
         this.srcPort = srcPort;
@@ -67,9 +67,9 @@ public class LoadBalancerTO {
         {
     	    this.stickinessPolicies = new StickinessPolicyTO[stickinessPolicies.size()];
             i = 0;
-            for (StickinessPolicy stickinesspolicy : stickinessPolicies) {
+            for (LbStickinessPolicy stickinesspolicy : stickinessPolicies) {
         	    if (!stickinesspolicy.isRevoked())
-                    this.stickinessPolicies[i++] = new StickinessPolicyTO(stickinesspolicy.getMethodName(), stickinesspolicy.getDBParams());
+                    this.stickinessPolicies[i++] = new StickinessPolicyTO(stickinesspolicy.getMethodName(), stickinesspolicy.getDbParams());
             }
         }
 
@@ -115,6 +115,7 @@ public class LoadBalancerTO {
     	String methodName;
     	String paramsDB;
     	Map <String, String> paramsList;
+    	Map <String, String> paramsDefaultValues;
     	
     	public String getMethodName()
     	{
