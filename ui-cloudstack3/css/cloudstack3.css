@@ -3671,8 +3671,9 @@ input.error {
 }
 
 .multi-wizard.zone-wizard .content.input-area {
-  width: 75%;
-  margin: 47px auto auto 76px;
+  width: 505px;
+  height: 391px;
+  margin: 45px auto auto 71px;
 }
 
 .multi-wizard.zone-wizard .select-container .field {
@@ -3714,11 +3715,16 @@ input.error {
   position: absolute;
 }
 
-.multi-wizard.zone-wizard .select-container .field .value input {
+.multi-wizard.zone-wizard .select-container .field .value input,
+.multi-wizard.zone-wizard .select-container .field .value select {
   width: 316px;
   height: 12px;
   margin: 13px 18px 0;
   float: left;
+}
+
+.multi-wizard.zone-wizard .select-container .field .value select {
+  width: 139px;
 }
 
 .multi-wizard.zone-wizard .select-container .field .value input[type=checkbox] {
@@ -3729,7 +3735,7 @@ input.error {
 
 .multi-wizard.zone-wizard .select-container .field .value.multi-range input {
   float: left;
-  width: 134px;
+  width: 137px;
 }
 
 .multi-wizard.zone-wizard .select-container .field .value.multi-range span {
