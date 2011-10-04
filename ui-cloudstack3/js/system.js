@@ -1,4 +1,7 @@
 (function($, cloudStack, testData) {
+
+  var zoneObjs, podObjs, clusterObjs;
+
   cloudStack.sections.system = {
     title: 'System',
     id: 'system',
@@ -43,7 +46,19 @@
               }
             }
           },
-          dataProvider: testData.dataProvider.listView('zones'),
+          		  
+		  dataProvider: function(args) {  
+			$.ajax({
+			  url: createURL("listZones&page="+args.page+"&pagesize="+pageSize),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 
+				zoneObjs = json.listzonesresponse.zone;			    
+				args.response.success({data:zoneObjs});			                			
+			  }
+			});  	
+		  },
+		  
           actions: {
             add: {
               pod: {
