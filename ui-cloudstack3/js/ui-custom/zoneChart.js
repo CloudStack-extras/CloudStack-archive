@@ -14,6 +14,7 @@
             );
       args.dataProvider({
         id: listViewArgs.id,
+        jsonObj: listViewArgs.jsonObj,
         response: {
           success: function(dataProviderArgs) {
             var data = dataProviderArgs.data;
@@ -61,7 +62,8 @@
                         $target.attr('zone-target')
                       ], {
                         $browser: $browser,
-                        $chartView: $chartView
+                        $chartView: $chartView,
+                        ref: { zoneID: listViewArgs.id }
                       })
                     );
                   }
