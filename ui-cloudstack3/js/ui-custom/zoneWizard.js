@@ -17,7 +17,7 @@
 
       // Save and close wizard
       var completeAction = function() {
-        args.complete({
+        args.action({
           data: cloudStack.serializeForm($wizard.find('form')),
           response: {
             success: function(args) {

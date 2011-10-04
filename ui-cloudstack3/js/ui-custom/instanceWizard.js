@@ -21,7 +21,7 @@
 
         // Save instance and close wizard
         var completeAction = function() {
-          args.complete({
+          args.action({
             // Populate data
             data: cloudStack.serializeForm($form),
             response: {

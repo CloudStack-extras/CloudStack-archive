@@ -24,7 +24,7 @@
               label: 'Add zone',
               action: {
                 custom: cloudStack.zoneWizard({
-                  complete: function(args) {
+                  action: function(args) {
                     args.response.success({ _custom: { jobID: new Date() } });
                   }
                 })
