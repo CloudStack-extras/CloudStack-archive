@@ -395,7 +395,7 @@
                   return false;
                 }
               ],
-              complete: function(args) {	//Brian will rename "complete" to "action" later
+              action: function(args) {	
 				/*					
 				var isValid = true;									
 				isValid &= validateString("Name", $thisPopup.find("#wizard_vm_name"), $thisPopup.find("#wizard_vm_name_errormsg"), true);	 //optional	
