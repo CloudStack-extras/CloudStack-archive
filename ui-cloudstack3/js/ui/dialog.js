@@ -127,7 +127,7 @@
               }
 
               $('div.overlay').remove();
-              args.after({ data: data });
+              args.after({ data: data, ref: args.ref });
               $(this).dialog('destroy');
 
               return true;

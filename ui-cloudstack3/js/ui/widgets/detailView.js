@@ -169,9 +169,12 @@
       notification.desc = messages.notification(messageArgs);
       notification.section = 'instances';
 
-      var performAction = function(data) {
+      var performAction = function(data, options) {
+        if (!options) options = {};
+
         action.action({
           data: data,
+          ref: options.ref,
           response: {
             success: function(args) {
               args = args ? args : {};
@@ -202,7 +205,10 @@
         cloudStack.dialog.createForm({
           form: action.createForm,
           after: function(args) {
-            performAction(args.data);
+            performAction(args.data, { ref: args.ref });
+          },
+          ref: {
+            id: id
           }
         });
       }
