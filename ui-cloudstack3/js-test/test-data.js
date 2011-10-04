@@ -5070,7 +5070,7 @@
           "allocationstate": "Enabled"
         },
         {
-          "id": 1,
+          "id": 2,
           "name": "Pod2",
           "zoneid": 1,
           "zonename": "San Jose",
@@ -5081,8 +5081,8 @@
           "allocationstate": "Enabled"
         },
         {
-          "id": 1,
-          "name": "Pod1",
+          "id": 3,
+          "name": "Pod3",
           "zoneid": 1,
           "zonename": "San Jose",
           "gateway": "192.168.21.1",
@@ -5092,8 +5092,8 @@
           "allocationstate": "Enabled"
         },
         {
-          "id": 1,
-          "name": "Pod2",
+          "id": 4,
+          "name": "Pod4",
           "zoneid": 1,
           "zonename": "San Jose",
           "gateway": "192.168.21.2",
@@ -5103,8 +5103,8 @@
           "allocationstate": "Enabled"
         },
         {
-          "id": 1,
-          "name": "Pod1",
+          "id": 5,
+          "name": "Pod5",
           "zoneid": 1,
           "zonename": "San Jose",
           "gateway": "192.168.21.1",
@@ -5114,8 +5114,8 @@
           "allocationstate": "Enabled"
         },
         {
-          "id": 1,
-          "name": "Pod1",
+          "id": 6,
+          "name": "Pod6",
           "zoneid": 1,
           "zonename": "San Jose",
           "gateway": "192.168.21.2",
@@ -5123,7 +5123,7 @@
           "startip": "192.168.21.30",
           "endip": "192.168.21.49",
           "allocationstate": "Enabled"
-        },
+        }
       ],
 
       clusters: [
