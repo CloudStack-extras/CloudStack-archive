@@ -9,7 +9,11 @@
       var $form = $('<form>').appendTo($formContainer);
 
       $.each(args.form.fields, function(key) {
-        var $formItem = $('<div>').addClass('form-item').appendTo($form);
+        var $formItem = $('<div>')
+              .addClass('form-item')
+              .attr({ rel: key })
+              .appendTo($form);
+        if (this.hidden) $formItem.hide();
 
         // Label field
         var $name = $('<div>').addClass('name')
@@ -51,6 +55,9 @@
           selectFn = this.select;
           $input = $('<select>').attr({ name: key }).appendTo($value);
 
+          // Pass form item to provider for additional manipulation
+          $.extend(selectArgs, { $select: $input });
+
           // Call select to map data
           if (this.dependsOn) {
             $dependsOn = $form.find('select').filter(function() {
@@ -81,7 +88,6 @@
         }
 
         $input.data('validation-rules', this.validation);
-
         $('<label>').addClass('error').appendTo($value).html('*required');
       });
 
@@ -113,7 +119,12 @@
               var $form = $formContainer.find('form');
               var data = cloudStack.serializeForm($form);
 
-              if (!$formContainer.find('form').valid()) return false;
+              if (!$formContainer.find('form').valid()) {
+                // Ignore hidden field validation
+                if ($formContainer.find('input.error:visible').size()) {
+                  return false;
+                }
+              }
 
               $('div.overlay').remove();
               args.after({ data: data });
