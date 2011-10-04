@@ -159,7 +159,7 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd  {
  
     @Override
     public String getEventType() {
-        return EventTypes.EVENT_LB_STICKYPOLICY_CREATE;
+        return EventTypes.EVENT_LB_STICKINESSPOLICY_CREATE;
     }
 
     @Override

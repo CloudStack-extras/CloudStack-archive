@@ -167,8 +167,8 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 		    	
 		    	Iterator it = paramsList.entrySet().iterator();
 		    	while (it.hasNext()) {
-		    	    Map.Entry pairs = (Map.Entry)it.next();
-		    	    if (pairs.getKey().equals("cookiename")) cookiename = (String)pairs.getValue();
+		    	    Map.Entry<String,String> pairs = (Map.Entry)it.next();
+		    	    if ("cookiename".equalsIgnoreCase(pairs.getKey())) cookiename = pairs.getValue();
 		    	}
 		    	if (cookiename == null) /* check all mandatory feilds */
 		    	{
@@ -184,9 +184,9 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 		    	/* overwrite default values with the stick parameters */
 		    	Iterator it = paramsList.entrySet().iterator();
 		    	while (it.hasNext()) {
-		    	    Map.Entry pairs = (Map.Entry)it.next();
-		    	    if ("tablesize".equalsIgnoreCase((String)pairs.getKey())) tablesize = (String)pairs.getValue(); //FIXME ; type is lost 
-		    	    if ("expire".equalsIgnoreCase((String)pairs.getKey())) expire = (String)pairs.getValue();
+		    	    Map.Entry<String,String> pairs = (Map.Entry)it.next();
+		    	    if ("tablesize".equalsIgnoreCase(pairs.getKey())) tablesize = pairs.getValue(); //FIXME ; type is lost 
+		    	    if ("expire".equalsIgnoreCase(pairs.getKey())) expire = pairs.getValue();
 		    	}
 	    	
 		    	sb.append("\t").append("stick-table type ip size ").append(tablesize).append(" expire ").append(expire);
