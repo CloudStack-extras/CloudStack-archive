@@ -504,78 +504,6 @@
             poll: pollAsyncJobResult
           }
         },
-
-        edit: {
-          label: 'Edit instance name',
-          action: function(args) {
-            args.response.success(args.data[0]);
-          }
-        },
-
-        restart: {
-          label: 'Reboot instance',
-          action: function(args) {	    
-			$.ajax({
-			  url: createURL("rebootVirtualMachine&id=" + args.data.id),
-			  dataType: "json",
-			  async: true,
-			  success: function(json) { 			    
-				var jid = json.rebootvirtualmachineresponse.jobid;    				
-				args.response.success({_custom:{jobId: jid}});							
-			  }
-			});  	
-		  },
-          messages: {
-            confirm: function(args) {
-              return 'Are you sure you want to reboot ' + args.name + '?';
-            },
-            success: function(args) {
-              return args.name + ' is being rebooted.';
-            },
-            notification: function(args) {
-              return 'Rebooting VM: ' + args.name;
-            },
-            complete: function(args) {
-              return args.name + ' has been rebooted successfully.';
-            }
-          },
-          notification: {
-            poll: pollAsyncJobResult
-          }
-        },
-        stop: {
-          label: 'Stop instance',		  
-		  action: function(args) {	    
-			$.ajax({
-			  url: createURL("stopVirtualMachine&id=" + args.data.id),
-			  dataType: "json",
-			  async: true,
-			  success: function(json) { 			    
-				var jid = json.stopvirtualmachineresponse.jobid;    				
-				args.response.success({_custom:{jobId: jid}});							
-			  }
-			});  	
-		  },		  
-          messages: {
-            confirm: function(args) {
-              return 'Are you sure you want to stop ' + args.name + '?';
-            },
-            success: function(args) {
-              return args.name + ' is stopping.';
-            },
-            notification: function(args) {
-              return 'Stopping VM: ' + args.name;
-            },
-            complete: function(args) {
-              return args.name + ' has been stopped.';
-            }
-          },
-          notification: {
-            //poll: testData.notifications.testPoll
-			poll: pollAsyncJobResult
-          }
-        },
-		
         start: { 
 		  label: 'Start instance' ,
 		  action: function(args) {	    
@@ -607,7 +535,69 @@
 			poll: pollAsyncJobResult
           }		  
 		},
-		
+		stop: {
+          label: 'Stop instance',		  
+		  action: function(args) {	    
+			$.ajax({
+			  url: createURL("stopVirtualMachine&id=" + args.data.id),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 			    
+				var jid = json.stopvirtualmachineresponse.jobid;    				
+				args.response.success({_custom:{jobId: jid}});							
+			  }
+			});  	
+		  },		  
+          messages: {
+            confirm: function(args) {
+              return 'Are you sure you want to stop ' + args.name + '?';
+            },
+            success: function(args) {
+              return args.name + ' is stopping.';
+            },
+            notification: function(args) {
+              return 'Stopping VM: ' + args.name;
+            },
+            complete: function(args) {
+              return args.name + ' has been stopped.';
+            }
+          },
+          notification: {
+            //poll: testData.notifications.testPoll
+			poll: pollAsyncJobResult
+          }
+        },
+		restart: {
+          label: 'Reboot instance',
+          action: function(args) {	    
+			$.ajax({
+			  url: createURL("rebootVirtualMachine&id=" + args.data.id),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) { 			    
+				var jid = json.rebootvirtualmachineresponse.jobid;    				
+				args.response.success({_custom:{jobId: jid}});							
+			  }
+			});  	
+		  },
+          messages: {
+            confirm: function(args) {
+              return 'Are you sure you want to reboot ' + args.name + '?';
+            },
+            success: function(args) {
+              return args.name + ' is being rebooted.';
+            },
+            notification: function(args) {
+              return 'Rebooting VM: ' + args.name;
+            },
+            complete: function(args) {
+              return args.name + ' has been rebooted successfully.';
+            }
+          },
+          notification: {
+            poll: pollAsyncJobResult
+          }
+        },        			
         destroy: {
           label: 'Destroy instance',
           messages: {
@@ -638,7 +628,13 @@
           notification: {
             poll: pollAsyncJobResult	
           }
-        }
+        },
+		edit: {
+          label: 'Edit instance name',
+          action: function(args) {
+            args.response.success(args.data[0]);
+          }
+        } 		
       },
       
 	  //dataProvider: testData.dataProvider.listView('instances'),
@@ -686,76 +682,26 @@
         viewAll: { path: 'storage.volumes', label: 'Volumes' },
 
         // Detail view actions
-        actions: {          
-		  edit: {
-            label: 'Edit instance name',
-            action: function(args) {
-              args.response.success(args.data[0]);
-            }
-          },
-          restart: {
-            label: 'Reboot instance',
-            action: function(args) {	    
-			  $.ajax({
-			    url: createURL("rebootVirtualMachine&id=" + args.data.id),
-			    dataType: "json",
-			    async: true,
-			    success: function(json) { 			    
-				  var jid = json.rebootvirtualmachineresponse.jobid;    				
-				  args.response.success({_custom:{jobId: jid}});							
-			    }
-			  });  	
-		    },
-            messages: {
-              confirm: function(args) {
-                return 'Are you sure you want to reboot ' + args.name + '?';
-              },
-              success: function(args) {
-                return args.name + ' is being rebooted.';
-              },
-              notification: function(args) {
-                return 'Rebooting VM: ' + args.name;
-              },
-              complete: function(args) {
-                return args.name + ' has been rebooted successfully.';
-              }
-            },
-            notification: {
-              poll: pollAsyncJobResult
-            }
-          },
-          stop: {
-            label: 'Stop instance',		  
-		    action: function(args) {	    
-			  $.ajax({
-			    url: createURL("stopVirtualMachine&id=" + args.data.id),
-			    dataType: "json",
-			    async: true,
-			    success: function(json) { 			    
-				  var jid = json.stopvirtualmachineresponse.jobid;    				
-				  args.response.success({_custom:{jobId: jid}});							
-			    }
-			  });  	
-		    },		  
-            messages: {
-              confirm: function(args) {
-                return 'Are you sure you want to stop ' + args.name + '?';
-              },
-              success: function(args) {
-                return args.name + ' is stopping.';
-              },
-              notification: function(args) {
-                return 'Stopping VM: ' + args.name;
-              },
-              complete: function(args) {
-                return args.name + ' has been stopped.';
-              }
-            },
-            notification: {
-              //poll: testData.notifications.testPoll
-			  poll: pollAsyncJobResult
-            }
-          },		
+        actions: {     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           start: { 
 		    label: 'Start instance' ,
 		    action: function(args) {	    
@@ -787,7 +733,69 @@
 			  poll: pollAsyncJobResult
             }		  
 		  },
-		
+          stop: {
+            label: 'Stop instance',		  
+		    action: function(args) {	    
+			  $.ajax({
+			    url: createURL("stopVirtualMachine&id=" + args.data.id),
+			    dataType: "json",
+			    async: true,
+			    success: function(json) { 			    
+				  var jid = json.stopvirtualmachineresponse.jobid;    				
+				  args.response.success({_custom:{jobId: jid}});							
+			    }
+			  });  	
+		    },		  
+            messages: {
+              confirm: function(args) {
+                return 'Are you sure you want to stop ' + args.name + '?';
+              },
+              success: function(args) {
+                return args.name + ' is stopping.';
+              },
+              notification: function(args) {
+                return 'Stopping VM: ' + args.name;
+              },
+              complete: function(args) {
+                return args.name + ' has been stopped.';
+              }
+            },
+            notification: {
+              //poll: testData.notifications.testPoll
+			  poll: pollAsyncJobResult
+            }
+          },          		
+          restart: {
+            label: 'Reboot instance',
+            action: function(args) {	    
+			  $.ajax({
+			    url: createURL("rebootVirtualMachine&id=" + args.data.id),
+			    dataType: "json",
+			    async: true,
+			    success: function(json) { 			    
+				  var jid = json.rebootvirtualmachineresponse.jobid;    				
+				  args.response.success({_custom:{jobId: jid}});							
+			    }
+			  });  	
+		    },
+            messages: {
+              confirm: function(args) {
+                return 'Are you sure you want to reboot ' + args.name + '?';
+              },
+              success: function(args) {
+                return args.name + ' is being rebooted.';
+              },
+              notification: function(args) {
+                return 'Rebooting VM: ' + args.name;
+              },
+              complete: function(args) {
+                return args.name + ' has been rebooted successfully.';
+              }
+            },
+            notification: {
+              poll: pollAsyncJobResult
+            }
+          },         
           destroy: {
             label: 'Destroy instance',
             messages: {
@@ -818,8 +826,14 @@
             notification: {
               poll: pollAsyncJobResult	
             }
-          },		  
-		  
+          },			
+		  edit: {
+            label: 'Edit instance name',
+            action: function(args) {
+              args.response.success(args.data[0]);
+            }
+          },          
+          		  
           migrate: {
             notification: {
               desc: 'Migrated VM',
