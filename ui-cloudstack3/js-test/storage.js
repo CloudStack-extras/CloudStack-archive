@@ -153,6 +153,7 @@
                     label: 'OS Type',
                     select: function(args){
                       args.response.success({
+                        descriptionField: 'description',
                         data: [
                           { id: 'centos53-64', description: 'CentOS 5.3 (64-bit)' },
                           { id: 'rhel5-64', description: 'Red Hat Enterprise Linux 5.0 (64-bit)' },
