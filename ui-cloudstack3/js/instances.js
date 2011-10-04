@@ -487,7 +487,7 @@
 
           messages: {		    
             confirm: function(args) {  //never being called              		
-              return 'Are you sure you want to add ' + args.name + '?'; 
+              return 'Are you sure you want to deploy an instance?'; 
             },			
             success: function(args) {  //never being called 			 
               return args.name + ' is being created.';
@@ -522,7 +522,7 @@
               return 'Are you sure you want to start ' + args.name + '?';
             },
             success: function(args) {
-              return args.name + ' is starting.';
+              return args.name + ' is being started.';
             },
             notification: function(args) {
               return 'Starting VM: ' + args.name;
@@ -553,7 +553,7 @@
               return 'Are you sure you want to stop ' + args.name + '?';
             },
             success: function(args) {
-              return args.name + ' is stopping.';
+              return args.name + ' is being stopped.';
             },
             notification: function(args) {
               return 'Stopping VM: ' + args.name;
@@ -608,7 +608,7 @@
               return args.name + ' is being destroyed.';
             },
             notification: function(args) {
-              return 'Destroyed VM: ' + args.name;
+              return 'Destroying VM: ' + args.name;
             },
             complete: function(args) {
               return args.name + ' has been destroyed.';
@@ -629,10 +629,37 @@
             poll: pollAsyncJobResult	
           }
         },
-		edit: {
-          label: 'Edit instance name',
-          action: function(args) {
-            args.response.success(args.data[0]);
+        restore: {
+          label: 'Restore instance',
+          messages: {
+            confirm: function(args) {
+              return 'Are you sure you want to restore ' + args.name + '?';
+            },
+            success: function(args) {
+              return args.name + ' is being restored.';
+            },
+            notification: function(args) {			
+              return 'Restoring VM: ' + args.name;
+            },
+            complete: function(args) {			  
+              return args.name + ' has been restored.';
+            }
+          },         
+		  action: function(args) {	             	  
+			$.ajax({
+		      url: createURL("recoverVirtualMachine&id=" + args.data.id),
+			  dataType: "json",
+			  async: true,
+			  success: function(json) {  
+                var item = json.recovervirtualmachineresponse.virtualmachine;			    
+			    args.response.success({data:item});			  
+		      }
+			});  	
+		  },
+		  notification: {
+            poll: function(args) {			  
+              args.complete();
+            }			
           }
         } 		
       },
