@@ -97,7 +97,7 @@
                             bandwidthout: '14081 mb',
                             bandwidthin: '31000 mb'
                           }
-                        });                        
+                        });
                       }, 500);
                     }
                   }
@@ -227,7 +227,7 @@
           },
           hosts: {
             title: 'Hosts',
-           listView: {
+            listView: {
               section: 'hosts',
               fields: {
                 name: { label: 'Name' },
@@ -236,6 +236,84 @@
               },
               dataProvider: testData.dataProvider.listView('hosts'),
               actions: {
+                add: {
+                  label: 'Add host',
+
+                  createForm: {
+                    title: 'Add new host',
+                    desc: 'Please fill in the following information to add a new host fro the specified zone configuration.',
+                    fields: {
+                      zone: {
+                        label: 'Zone',
+                        select: function(args) {
+                          setTimeout(function() {
+                            args.response.success({
+                              descriptionField: 'name',
+                              data: testData.data.zones
+                            });
+                          }, 50);
+                        }
+                      },
+                      pod: {
+                        label: 'Pod',
+
+                        dependsOn: 'zone',
+
+                        select: function(args) {
+                          setTimeout(function() {
+                            args.response.success({
+                              descriptionField: 'name',
+                              data: testData.data.pods
+                            });
+                          }, 100);
+                        }
+                      },
+                      cluster: {
+                        label: 'Cluster',
+
+                        dependsOn: 'pod',
+
+                        select: function(args) {
+                          setTimeout(function() {
+                            args.response.success({
+                              descriptionField: 'name',
+                              data: testData.data.clusters
+                            });                            
+                          }, 20);
+                        }
+                      },
+
+                      hostname: {
+                        label: 'Host name',
+                        validation: { required: true }
+                      },
+
+                      username: {
+                        label: 'User name',
+                        validation: { required: true }
+                      },
+
+                      password: {
+                        label: 'Password',
+                        validation: { required: true }
+                      }
+                    }
+                  },
+
+                  action: function(args) {
+                    args.response.success();
+                  },
+
+                  notification: {
+                    poll: testData.notifications.testPoll
+                  },
+
+                  messages: {
+                    notification: function(args) {
+                      return 'Added new host';
+                    }
+                  }
+                },
                 destroy: testData.actions.destroy('host')
               },
               detailView: {
@@ -276,12 +354,12 @@
                     title: 'Details',
                     fields: [
                       {
-                      name: { label: 'Name' },
-                    },
-                    {
-                      zonename: { label: 'Zone' },
-                      hostname: { label: 'Host' }
-                    }
+                        name: { label: 'Name' },
+                      },
+                      {
+                        zonename: { label: 'Zone' },
+                        hostname: { label: 'Host' }
+                      }
                     ],
 
                     dataProvider: testData.dataProvider.detailView('clusters')
@@ -308,12 +386,12 @@
                     title: 'Details',
                     fields: [
                       {
-                      name: { label: 'Name' },
-                    },
-                    {
-                      zonename: { label: 'Zone' },
-                      hostname: { label: 'Host' }
-                    }
+                        name: { label: 'Name' },
+                      },
+                      {
+                        zonename: { label: 'Zone' },
+                        hostname: { label: 'Host' }
+                      }
                     ],
 
                     dataProvider: testData.dataProvider.detailView('clusters')

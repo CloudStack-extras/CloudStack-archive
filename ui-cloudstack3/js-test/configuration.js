@@ -52,9 +52,9 @@
                     select: function(args){
                       args.response.success({
                         data: [
-                          { id: 'small', description: 'Small Disk, 5GB' },
-                          { id: 'medium', description: 'Medium Disk, 20GB' },
-                          { id: 'large', description: 'Large Disk, 100GB' }
+                          { id: 'small', name: 'Small Disk, 5GB' },
+                          { id: 'medium', name: 'Medium Disk, 20GB' },
+                          { id: 'large', name: 'Large Disk, 100GB' }
                         ]
                       });
                     }

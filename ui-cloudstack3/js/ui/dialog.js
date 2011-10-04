@@ -21,30 +21,59 @@
         // Input area
         var $value = $('<div>').addClass('value')
               .appendTo($formItem);
-        var $input;
+        var $input, $dependsOn, selectFn, selectArgs;
+        var dependsOn = this.dependsOn;
 
         // Determine field type of input
         if (this.select) {
-          $input = $('<select>').attr({ name: key }).appendTo($value);
-
-          this.select({
+          selectArgs = {
             response: {
               success: function(args) {
                 $(args.data).each(function() {
                   var id = this.id;
                   var description = this.description;
-                  
+
                   if (args.descriptionField)
                     description = this[args.descriptionField];
+                  else
+                    description = this.name;
 
                   var $option = $('<option>')
                         .appendTo($input)
                         .val(id)
                         .html(description);
-                });   
+                });
+
+                $input.trigger('change');
               }
             }
-          });
+          };
+          selectFn = this.select;
+          $input = $('<select>').attr({ name: key }).appendTo($value);
+
+          // Call select to map data
+          if (this.dependsOn) {
+            $dependsOn = $form.find('select').filter(function() {
+              return $(this).attr('name') === dependsOn;
+            });
+
+            $dependsOn.bind('change', function(event) {
+              var $target = $(this);
+              var dependsOnArgs = {};
+              $input.find('option').remove();
+              $input.trigger('change');
+
+              if (!$target.children().size()) return true;
+              
+              dependsOnArgs[dependsOn] = $target.val();
+              selectFn($.extend(selectArgs, dependsOnArgs));
+
+              return true;
+            });
+            
+          } else {
+            selectFn(selectArgs);
+          }
         } else if (this.isBoolean) {
           $input = $('<input>').attr({ name: key, type: 'checkbox' }).appendTo($value);
         } else {
@@ -55,6 +84,8 @@
 
         $('<label>').addClass('error').appendTo($value).html('*required');
       });
+
+      $form.find('select').trigger('change');
 
       var getFormValues = function() {
         var formValues = {};
@@ -102,7 +133,7 @@
         ]
       }).closest('.ui-dialog').overlay();
     },
-    
+
     /**
      * Confirmation dialog
      */

@@ -56,8 +56,8 @@
                       setTimeout(function() {
                         args.response.success({
                           data: [
-                            { id: 'sanjose', description: 'San Jose' },
-                            { id: 'Chicago', description: 'Chicago' }
+                            { id: 'sanjose', name: 'San Jose' },
+                            { id: 'Chicago', name: 'Chicago' }
                           ]
                         });
                       }, 10);

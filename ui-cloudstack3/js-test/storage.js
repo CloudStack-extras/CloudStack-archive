@@ -75,8 +75,10 @@
                   },
                   diskOffering: {
                     label: 'Disk Offering',
+                    dependsOn: 'availabilityZone',
                     select: function(args) {
                       args.response.success({
+                        descriptionField: 'description',
                         data: [
                           { id: 'small', description: 'Small Disk, 5GB' },
                           { id: 'medium', description: 'Medium Disk, 20GB' },

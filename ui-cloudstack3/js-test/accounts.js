@@ -2,8 +2,12 @@
   cloudStack.sections.accounts = {    
     title: 'Accounts',
     id: 'accounts',
+    sectionSelect: {
+      label: 'Select view'
+    },
     sections: {
       accounts: {
+        type: 'select',
         title: 'Accounts',
         listView: {
           fields: {
@@ -43,6 +47,7 @@
         }        
       },
       users: {
+        type: 'select',
         title: 'Users',
         listView: {
           fields: {
