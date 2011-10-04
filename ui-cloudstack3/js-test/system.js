@@ -260,6 +260,30 @@
                         dependsOn: 'zone',
 
                         select: function(args) {
+                          /**
+                           * Example to show/hide fields
+                           * 
+                           * -Select Pod2 to show conditional fields
+                           * -Select any other field to hide conditional fields
+                           */
+                          args.$select.change(function() {
+                            var $input = $(this);
+                            var $form = $input.closest('form');
+
+                            // Note: need to actually select the .form-item div containing the input
+                            var $condTestA = $form.find('.form-item[rel=condTestA]');
+                            var $condTestB = $form.find('.form-item[rel=condTestB]');
+
+                            $condTestA.hide();
+                            $condTestB.hide();
+
+                            if ($input.val() == 2) {
+                              // Note: need to show by setting display=inline-block, not .show()
+                              $condTestA.css('display', 'inline-block');
+                              $condTestB.css('display', 'inline-block');
+                            }
+                          });
+
                           setTimeout(function() {
                             args.response.success({
                               descriptionField: 'name',
@@ -295,6 +319,26 @@
 
                       password: {
                         label: 'Password',
+                        validation: { required: true }
+                      },
+                      
+                      /**
+                       * Test for conditional fields
+                       * note that these are hidden by default
+                       */
+                      condTestA: {
+                        // Hidden by default
+                        hidden: true,
+
+                        label: 'Conditional A',
+                        validation: { required: true }
+                      },
+
+                      condTestB: {
+                        // Hidden by default
+                        hidden: true,
+
+                        label: 'Conditional B',
                         validation: { required: true }
                       }
                     }
