@@ -43,7 +43,7 @@ import com.cloud.api.response.LBStickinessResponse;
 import com.cloud.api.response.ListResponse;
 import com.cloud.api.response.LoadBalancerResponse;
 import com.cloud.api.response.LBStickinessPolicyResponse;
-import com.cloud.network.rules.LBStickinessPolicy;
+import com.cloud.network.rules.StickinessPolicy;
 import com.cloud.api.response.NetworkOfferingResponse;
 import com.cloud.api.response.NetworkResponse;
 import com.cloud.api.response.PodResponse;
@@ -142,11 +142,11 @@ public interface ResponseGenerator {
 
     LoadBalancerResponse createLoadBalancerResponse(LoadBalancer loadBalancer);
     
-    LBStickinessResponse createLBStickinessPolicyResponse(List<? extends LBStickinessPolicy> stickinessPolicies, LoadBalancer lb);
+    LBStickinessResponse createLBStickinessPolicyResponse(List<? extends StickinessPolicy> stickinessPolicies, LoadBalancer lb);
     
-    LBStickinessResponse createLBStickinessPolicyResponse( LBStickinessPolicy stickinessRule, LoadBalancer lb);
+    LBStickinessResponse createLBStickinessPolicyResponse( StickinessPolicy stickinessRule, LoadBalancer lb);
     
-    LBStickinessResponse createLBStickinessMethodResponse(List<? extends LBStickinessPolicy> stickinessPolicies, LoadBalancer lb);
+    LBStickinessResponse createLBStickinessMethodResponse(List<? extends StickinessPolicy> stickinessPolicies, LoadBalancer lb);
 
     PodResponse createPodResponse(Pod pod);
 

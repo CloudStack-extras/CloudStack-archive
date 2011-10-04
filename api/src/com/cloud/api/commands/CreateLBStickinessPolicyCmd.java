@@ -30,25 +30,16 @@ import com.cloud.api.BaseCmd;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
-import com.cloud.api.BaseCmd.CommandType;
-import com.cloud.api.response.LBStickinessPolicyResponse;
-import com.cloud.api.response.LoadBalancerResponse;
-import com.cloud.api.response.SuccessResponse;
 import com.cloud.event.EventTypes;
-import com.cloud.exception.InsufficientAddressCapacityException;
-import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
-import com.cloud.network.rules.LBStickinessPolicy;
+import com.cloud.network.rules.StickinessPolicy;
 import com.cloud.api.response.LBStickinessResponse;
-import com.cloud.network.IpAddress;
-import com.cloud.network.lb.LoadBalancingRule;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.user.Account;
 import com.cloud.user.UserContext;
-import com.cloud.utils.StringUtils;
-import com.cloud.utils.net.NetUtils;
+
 
 @Implementation(description="Creates a Load Balancer stickiness policy ", responseObject=LBStickinessResponse.class)
 public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd  {
@@ -124,14 +115,14 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd  {
     public void execute() throws ResourceAllocationException, ResourceUnavailableException {            	
         UserContext callerContext = UserContext.current();
         boolean success = true;
-        LBStickinessPolicy policy = null;
+        StickinessPolicy policy = null;
         try {
             UserContext.current().setEventDetails("Rule Id: " + getEntityId());
                    
             success = success && _lbService.applyLoadBalancerConfig(getLbRuleId());
             
             // State might be different after the rule is applied, so get new object here
-            policy = _entityMgr.findById(LBStickinessPolicy.class, getEntityId());
+            policy = _entityMgr.findById(StickinessPolicy.class, getEntityId());
             LoadBalancer lb = _lbService.findById(policy.getLoadBalancerId());
             LBStickinessResponse spResponse =_responseGenerator.createLBStickinessPolicyResponse(policy,lb);
             setResponseObject(spResponse);
@@ -149,7 +140,7 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd  {
     @Override
     public void create() {	
     	 try {
-    		 LBStickinessPolicy result = _lbService.createLBStickinessPolicy(this);
+    		 StickinessPolicy result = _lbService.createLBStickinessPolicy(this);
              this.setEntityId(result.getId());
          } catch (NetworkRuleConflictException e) {
              s_logger.warn("Exception: ", e);

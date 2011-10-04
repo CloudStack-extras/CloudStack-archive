@@ -33,8 +33,8 @@ import com.cloud.api.commands.UpdateLoadBalancerRuleCmd;
 import com.cloud.exception.InsufficientAddressCapacityException;
 import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceUnavailableException;
-import com.cloud.network.lb.LoadBalancingRule.StickinessPolicy;
-import com.cloud.network.rules.LBStickinessPolicy;
+import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
+import com.cloud.network.rules.StickinessPolicy;
 import com.cloud.network.rules.LoadBalancer;
 
 
@@ -57,7 +57,7 @@ public interface LoadBalancingRulesService {
     /**
      * Create a stickiness policy to a load balancer.
      */
-    public LBStickinessPolicy createLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws NetworkRuleConflictException;
+    public StickinessPolicy createLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws NetworkRuleConflictException;
     boolean deleteLBStickinessPolicy(long stickinessPolicyId);
     /**
      * Assign a virtual machine, or list of virtual machines, to a load balancer.
@@ -81,9 +81,9 @@ public interface LoadBalancingRulesService {
      * @return list of load balancers that match the criteria
      */
     List<? extends LoadBalancer> searchForLoadBalancers(ListLoadBalancerRulesCmd cmd);
-    List<? extends LBStickinessPolicy> searchForLBStickinessPolicies(ListLBStickinessPoliciesCmd cmd);
+    List<? extends StickinessPolicy> searchForLBStickinessPolicies(ListLBStickinessPoliciesCmd cmd);
   
-    List<StickinessPolicy> getStickinesspolicies(long lbId);
+ //   List<LbStickinessPolicy> getStickinesspolicies(long lbId);
     
     List<LoadBalancingRule> listByNetworkId(long networkId);
     

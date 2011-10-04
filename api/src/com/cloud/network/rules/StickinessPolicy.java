@@ -19,9 +19,9 @@ package com.cloud.network.rules;
 import java.util.Map;
 
 /**
- * Definition for a LBStickinessPolicy 
+ * Definition for a StickinessPolicy 
  */
-public interface LBStickinessPolicy   {
+public interface StickinessPolicy   {
 
 	  public long getId();
 

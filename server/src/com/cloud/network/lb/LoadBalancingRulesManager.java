@@ -23,7 +23,8 @@ import com.cloud.api.commands.CreateLoadBalancerRuleCmd;
 import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
-import com.cloud.network.lb.LoadBalancingRule.StickinessPolicy;
+import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
+import com.cloud.network.rules.LbStickinessMethod;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.user.Account;
 
@@ -34,7 +35,8 @@ public interface LoadBalancingRulesManager extends LoadBalancingRulesService {
     boolean removeAllLoadBalanacersForIp(long ipId, Account caller, long callerUserId);
     boolean removeAllLoadBalanacersForNetwork(long networkId, Account caller, long callerUserId);
     List<LbDestination> getExistingDestinations(long lbId);
-    List<StickinessPolicy> getStickinesspolicies(long lbId);
+    List<LbStickinessPolicy> getStickinessPolicies(long lbId);
+    List<LbStickinessMethod> getStickinessMethods(long networkid);
     
     /**
      * Remove vm from all load balancers

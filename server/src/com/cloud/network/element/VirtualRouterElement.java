@@ -48,7 +48,7 @@ import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.lb.LoadBalancingRulesManager;
 import com.cloud.network.router.VirtualNetworkApplianceManager;
 import com.cloud.network.router.VirtualRouter;
-import com.cloud.network.rules.LBStickinessMethod;
+import com.cloud.network.rules.LbStickinessMethod;
 import com.cloud.network.router.VirtualRouter.Role;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.RulesManager;
@@ -295,16 +295,16 @@ public class VirtualRouterElement extends DhcpElement implements NetworkElement,
         lbCapabilities.put(Capability.SupportedLBAlgorithms, "roundrobin,leastconn,source");
         lbCapabilities.put(Capability.SupportedProtocols, "tcp, udp");
         
-        LBStickinessMethod method;
-        List <LBStickinessMethod> methodList = new ArrayList<LBStickinessMethod>(1);
-        method = new LBStickinessMethod("cookiebased","This is cookie based sticky method, it can be used only for http");
-        method.addParam("cookiename", true, "LBCOOKIE", "cookie name passed in http header");
-        method.addParam("cookielength", false, "30", "max length of cookiename");       
+        LbStickinessMethod method;
+        List <LbStickinessMethod> methodList = new ArrayList<LbStickinessMethod>(1);
+        method = new LbStickinessMethod("cookiebased","This is cookie based sticky method, it can be used only for http");
+        method.addParam("cookiename", true,  "cookie name passed in http header");
+        method.addParam("cookielength", false,  "max length of cookiename");       
         methodList.add(method);
         
-        method = new LBStickinessMethod("sourcebased","This is source based sticky method, it can be used for any type of protocol.");
-        method.addParam("tablesize", false, "200k","size of table to store source ip address.");
-        method.addParam("expire", false, "20m","entry in source ip table will expire after expire duration.");
+        method = new LbStickinessMethod("sourcebased","This is source based sticky method, it can be used for any type of protocol.");
+        method.addParam("tablesize", false, "size of table to store source ip address.");
+        method.addParam("expire", false, "entry in source ip table will expire after expire duration.");
         methodList.add(method);
         
         Gson gson = new Gson();
