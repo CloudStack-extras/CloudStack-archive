@@ -44,6 +44,24 @@
         }
 
         var $targetStep = $($steps.hide()[targetIndex]).show();
+        var formState = cloudStack.serializeForm($wizard.find('form'));
+
+
+        // Hide conditional fields by default
+        var $conditional = $targetStep.find('.conditional');
+        $conditional.hide();
+
+        // Show conditional fields for advanced network models
+        if (formState['network-model'] == 'advanced') {
+          if (formState['isolation-mode'] == 'vlan') {
+            $conditional.filter('.vlan').show().find('select').trigger('change');
+            if ($conditional.find('select[name=vlan-type]').val() == 'tagged') {
+              $conditional.find('select[name=ip-scope]').trigger('change');
+            }
+          } else if (formState['isolation-mode'] == 'security-groups') {
+            $conditional.filter('.security-groups').show();
+          }
+        }
 
         // Show launch vm button if last step
         var $nextButton = $wizard.find('.button.next');
@@ -75,14 +93,56 @@
       };
 
       // Events
+      $wizard.find('select').change(function(event) {
+        // Conditional selects (on step 4 mainly)
+        var $target = $(this);
+
+        // VLAN - tagged
+        if ($target.is('[name=vlan-type]')) {
+          var $tagged = $wizard.find('.field.conditional.vlan-type-tagged');
+
+          $tagged.hide();
+          if ($target.val() == 'tagged') $tagged.show();
+
+          return true;
+        }
+
+        // IP Scope - acct. specific
+        if ($target.is('[name=ip-scope]')) {
+          var $accountSpecific = $wizard.find('.field.conditional.ip-scope-account-specific');
+
+          $accountSpecific.hide();
+          if ($target.val() == 'account-specific') $accountSpecific.show();
+        }
+
+        return true;
+      });
+
       $wizard.click(function(event) {
         var $target = $(event.target);
+
+        // Radio button
+        if ($target.is('[type=radio]')) {
+
+          if ($target.attr('name') == 'network-model') {
+            var $inputs = $wizard.find('.isolation-mode').find('input[name=isolation-mode]').attr({
+              disabled: 'disabled'
+            });
+
+            if ($target.val() == 'advanced') {
+              $inputs.attr('disabled', false);
+            }
+          }
+        }
 
         // Next button
         if ($target.closest('div.button.next').size()) {
           // Check validation first
           var $form = $steps.filter(':visible').find('form');
-          if ($form.size() && !$form.valid()) return false;
+          if ($form.size() && !$form.valid()) {
+            if ($form.find('.error:visible').size())
+              return false;
+          }
 
           showStep($steps.filter(':visible').index() + 2);
 
