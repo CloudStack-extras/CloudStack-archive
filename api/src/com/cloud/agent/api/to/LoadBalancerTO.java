@@ -103,7 +103,7 @@ public class LoadBalancerTO {
         return alreadyAdded;
     }
     
-    public StickinessPolicyTO[] getStickinessPolacies() {
+    public StickinessPolicyTO[] getStickinessPolicies() {
         return stickinessPolicies;
     }
     
