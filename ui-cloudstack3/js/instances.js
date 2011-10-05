@@ -877,9 +877,9 @@
           
           attachISO: {
             label: 'Attach ISO',
-            action: function(args) {	                
+            action: function(args) {	              	
 			  $.ajax({
-			    url: createURL("attachIso&virtualmachineid="+args.data.id+"&id=" + args.data.iso),			   
+			    url: createURL("attachIso&virtualmachineid="+args.ref.id+"&id=" + args.data.iso),			   
 			    dataType: "json",
 			    async: true,
 			    success: function(json) { 			    
@@ -926,7 +926,40 @@
               }
             }            
           },         
-           		  
+           		
+          detachISO: {
+            label: 'Detach instance',
+            messages: {
+              confirm: function(args) {
+                return 'Are you sure you want to detach ISO ?';
+              },
+              success: function(args) {
+                return 'ISO is being detached.';
+              },
+              notification: function(args) {			
+                return 'Detaching ISO';
+              },
+              complete: function(args) {			  
+                return 'ISO has been detached.';
+              }
+            },         
+		    action: function(args) {	             	  
+			  $.ajax({
+		        url: createURL("detachIso&virtualmachineid=" + args.data.id),
+			    dataType: "json",
+			    async: true,
+			    success: function(json) {                    	    
+			      var jid = json.detachisoresponse.jobid;    				
+				  args.response.success({_custom:{jobId: jid}});				  
+		        }
+			  });  	
+		    },
+		    notification: {
+              poll: pollAsyncJobResult		
+            }
+          },	
+
+				
           migrate: {
             notification: {
               desc: 'Migrated VM',
