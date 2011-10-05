@@ -305,19 +305,19 @@
               args.response.success();
             }
           },
-          attach: {
-            label: 'Attach VM', action: function(args) {
-
+          attachISO: {
+            label: 'Attach ISO', action: function(args) {
+              args.response.success();
             }
           },
-          'reset-password': {
-            label: 'Reset admin password for VM', action: function(args) {
-
+          resetPassword: {
+            label: 'Reset password', action: function(args) {
+              args.response.success();
             }
           },
-          change: {
-            label: 'Change VM', action: function(args) {
-
+          changeService: {
+            label: 'Change Service', action: function(args) {
+              args.response.success();
             }
           }
         },

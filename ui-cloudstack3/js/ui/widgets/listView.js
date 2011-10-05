@@ -303,6 +303,7 @@
         $('<div></div>')
           .addClass('action')
           .addClass(key)
+          .append($('<span>').addClass('icon'))
           .attr({
             alt: action.label,
             title: action.label
@@ -707,7 +708,7 @@
       }
 
       // Action icons
-      if ($target.hasClass('action') && ($target.parent().is('td.actions')) || $target.closest('.action.add').size()) {
+      if ($target.closest('td.actions').size() || $target.closest('.action.add').size()) {
         var actionID = $target.closest('.action').data('list-view-action-id');
         var $tr;
 

@@ -719,7 +719,7 @@ div.details div.detail-group td.value select {
   width: inherit;
 }
 
-/*Detail view actions*/
+/*** Actions*/
 div.detail-group.actions {
   padding: 0;
   margin: 0;
@@ -739,7 +739,7 @@ div.detail-group.actions td {
 }
 
 .detail-group table td.detail-actions {
-  width: 50%;
+  width: 55%;
   height: 26px;
 }
 
@@ -793,50 +793,9 @@ div.detail-group.actions td {
 }
 
 .detail-group table td.detail-actions a span.icon {
-  background: url(../images/sprites.png);
+  background-image: url(../images/sprites.png);
   padding: 10px;
   display: block;
-}
-
-/*Detail view action icons*/
-.detail-group td.detail-actions .action.edit span.icon {
-  background-position: 1px -1px;
-}
-
-.detail-group td.detail-actions .action.stop span.icon {
-  background-position: 0px -31px;
-}
-
-.detail-group td.detail-actions .action.restart span.icon {
-  background-position: 0px -62px;
-}
-
-.detail-group td.detail-actions .action.destroy span.icon {
-  background-position: 0px -92px;
-}
-
-.detail-group td.detail-actions .action.migrate span.icon {
-  background-position: -1px -125px;
-}
-
-.detail-group td.detail-actions .action.attach span.icon {
-  background-position: -36px -1px;
-}
-
-.detail-group td.detail-actions .action.reset-password span.icon {
-  background-position: -68px -30px;
-}
-
-.detail-group td.detail-actions .action.change span.icon {
-  background-position: -38px -32px;
-}
-
-.detail-group td.detail-actions .action.snapshot span.icon {
-  background-position: -36px -91px;
-}
-
-.detail-group td.detail-actions .action.create span.icon {
-  background-position: -69px -63px;
 }
 
 /*Header*/
@@ -1766,77 +1725,20 @@ table td.actions {
   max-width: 200px;
 }
 
-table td.actions div.action {
-  background: url(../images/buttons.png) no-repeat 101% -467px;
+table td.actions span {
+  margin: 0 0 0 2px !important;
+}
+
+table td.actions div.action span.icon {
+  background-image: url(../images/sprites.png);
   cursor: pointer;
-  width: 27px;
-  height: 13px;
+  width: 28px;
+  height: 21px;
   float: left;
-  margin-right: -4px;
-  margin-left: 7px;
 }
 
-table td.actions div.action.restart {
-  background-position: -544px -465px;
-}
-
-table td.actions div.action.restart:hover {
-  background-position: -544px -412px;
-}
-
-table td.actions div.action.stop {
-  background-position: -570px -465px;
-}
-
-table td.actions div.action.stop:hover {
-  background-position: -570px -412px;
-}
-
-table td.actions div.action.start {
-  background-position: -624px -465px;
-}
-
-table td.actions div.action.start:hover {
-  background-position: -624px -412px;
-}
-
-table td.actions div.action.edit {
-  background-position: -520px -465px;
-}
-
-table td.actions div.action.edit:hover {
-  background-position: -520px -412px;
-}
-
-table td.actions div.action.destroy {
-  background-position: -600px -465px;
-}
-
-table td.actions div.action.destroy:hover {
-  background-position: -600px -412px;
-}
-
-table td.actions div.action.create {
-  background-position: -500px -465px;
-}
-
-table td.actions div.action.create:hover {
-  background-position: -500px -411px;
-}
-
-table.multi-edit td.actions div.action.create {
-  background: none;
-}
-
-table td.actions div.action.snapshot {
-  background-position: -474px -465px;
-}
-
-table td.actions div.action.snapshot:hover {
-  background-position: -474px -411px;
-}
-
-/*Dialogs*/
+/*** Action icons
+Dialogs*/
 .ui-dialog {
   background: #E9E9E9 url(../images/bg-dialog-body.png) repeat-x 0px 0px;
   text-align: left;
@@ -3827,5 +3729,250 @@ input.error {
 }
 
 div.detail-group td.view-all div.view-all div.end {
+}
+
+/*Action icons*/
+.action.edit .icon {
+  background-position: 1px -1px;
+}
+
+.action.edit:hover .icon {
+  background-position: 1px -583px;
+}
+
+.start .icon {
+  background-position: -169px -1px;
+}
+
+.start:hover .icon {
+  background-position: -169px -583px;
+}
+
+.stop .icon {
+  background-position: 0px -31px;
+}
+
+.stop:hover .icon {
+  background-position: 0px -613px;
+}
+
+.restart .icon {
+  background-position: 0px -63px;
+}
+
+.restart:hover .icon {
+  background-position: 0px -645px;
+}
+
+.destroy .icon,
+.delete .icon {
+  background-position: 1px -92px;
+}
+
+.destroy:hover .icon,
+.delete:hover .icon {
+  background-position: 1px -674px;
+}
+
+.migrate .icon {
+  background-position: 0px -125px;
+}
+
+.migrate:hover .icon {
+  background-position: 0px -707px;
+}
+
+.attach .icon,
+.attachISO .icon,
+.attachDisk .icon {
+  background-position: -101px -3px;
+}
+
+.attach:hover .icon,
+.attachISO:hover .icon,
+.attachDisk:hover .icon {
+  background-position: -101px -585px;
+}
+
+.detach .icon,
+.detachISO .icon,
+.detachDisk .icon {
+  background-position: -101px -65px;
+}
+
+.detach:hover .icon,
+.detachISO:hover .icon,
+.detachDisk:hover .icon {
+  background-position: -101px -647px;
+}
+
+.resetPassword .icon,
+.changePassword .icon {
+  background-position: -68px -30px;
+}
+
+.resetPassword:hover .icon,
+.changePassword:hover .icon {
+  background-position: -68px -612px;
+}
+
+.changeService .icon {
+  background-position: -38px -33px;
+}
+
+.changeService:hover .icon {
+  background-position: -38px -615px;
+}
+
+.snapshot .icon,
+.takeSnapshot .icon {
+  background-position: -36px -91px;
+}
+
+.snapshot:hover .icon,
+.takeSnapshot:hover .icon {
+  background-position: -36px -673px;
+}
+
+.recurringSnapshot .icon {
+  background-position: -69px -95px;
+}
+
+.recurringSnapshot:hover .icon {
+  background-position: -69px -677px;
+}
+
+.downloadVolume .icon,
+.downloadTemplate .icon,
+.downloadISO .icon {
+  background-position: -35px -125px;
+}
+
+.downloadVolume:hover .icon,
+.downloadTemplate:hover .icon,
+.downloadISO:hover .icon {
+  background-position: -35px -707px;
+}
+
+.createVolume .icon {
+  background-position: -70px -124px;
+}
+
+.createVolume:hover .icon {
+  background-position: -70px -706px;
+}
+
+.enable .icon,
+.enableStaticNAT .icon {
+  background-position: -104px -94px;
+}
+
+.enable:hover .icon,
+.enableStaticNAT:hover .icon {
+  background-position: -104px -676px;
+}
+
+.disable .icon,
+.disableStaticNAT .icon {
+  background-position: -138px -96px;
+}
+
+.disable .icon:hover,
+.disableStaticNAT:hover .icon {
+  background-position: -138px -678px;
+}
+
+.add .icon,
+.addNew .icon {
+  background-position: -37px -61px;
+}
+
+.add:hover .icon,
+.addNew:hover .icon {
+  background-position: -37px -643px;
+}
+
+.create .icon,
+.createTemplate .icon {
+  background-position: -69px -63px;
+}
+
+.create:hover .icon,
+.createTemplate:hover .icon {
+  background-position: -69px -645px;
+}
+
+.copyTemplate .icon,
+.copyISO .icon {
+  background-position: -138px -2px;
+}
+
+.copyTemplate:hover .icon,
+.copyISO:hover .icon {
+  background-position: -138px -584px;
+}
+
+.createVM .icon {
+  background-position: -137px -32px;
+}
+
+.createVM:hover .icon {
+  background-position: -137px -614px;
+}
+
+.enableMaintenanceMode .icon {
+  background-position: -138px -65px;
+}
+
+.enableMaintenanceMode:hover .icon {
+  background-position: -138px -647px;
+}
+
+.cancelMaintenanceMode .icon {
+  background-position: -138px -123px;
+}
+
+.cancelMaintenanceMode:hover .icon {
+  background-position: -138px -705px;
+}
+
+.lock .icon {
+  background-position: -104px -124px;
+}
+
+.lock:hover .icon {
+  background-position: -104px -706px;
+}
+
+.updateResourceLimits .icon {
+  background-position: -100px -32px;
+}
+
+.updateResourceLimits:hover .icon {
+  background-position: -100px -614px;
+}
+
+.updateResourceCount .icon {
+  background-position: -167px -66px;
+}
+
+.updateResourceCount:hover .icon {
+  background-position: -167px -648px;
+}
+
+.generateKeys .icon {
+  background-position: -167px -95px;
+}
+
+.generateKeys:hover .icon {
+  background-position: -167px -677px;
+}
+
+.restoreVM .icon {
+  background-position: -168px -31px;
+}
+
+.restoreVM:hover .icon {
+  background-position: -168px -613px;
 }
 
