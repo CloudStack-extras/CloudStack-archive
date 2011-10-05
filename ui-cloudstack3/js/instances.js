@@ -991,13 +991,31 @@
             title: 'Details',
             fields: [
               {
-                name: {
-                  label: 'Name', isEditable: true
-                }
+                name: { label: 'Name', isEditable: false }
               },
               {
-                id: { label: 'ID', isEditable: false },
-                zonename: { label: 'Zone', isEditable: false },                
+                id: { label: 'ID', isEditable: false },				
+				displayname: { label: 'Display Name', isEditable: true },				
+				state: { label: 'State', isEditable: false },					
+                zonename: { label: 'Zone', isEditable: false },  
+                hypervisor: { label: 'Hypervisor', isEditable: false },
+                templatename: { label: 'Template', isEditable: false },	
+				templateid: {
+                  label: 'Template type',
+                  isEditable: false
+				  /*
+				  ,
+                  select: function(args) {
+                    var items = [];
+
+                    $(testData.data.templates).each(function() {
+                      items.push({ id: this.id, description: this.name });
+                    });
+                   
+                    args.response.success({ data: items });                   
+                  }
+				  */
+                },
 				guestosid: {
                   label: 'OS Type',
                   isEditable: true,
@@ -1016,25 +1034,16 @@
 					  }
 					});   
                   }				  
-                },				
-				templateid: {
-                  label: 'Template type',
-                  isEditable: false
-				  /*
-				  ,
-                  select: function(args) {
-                    var items = [];
-
-                    $(testData.data.templates).each(function() {
-                      items.push({ id: this.id, description: this.name });
-                    });
-                   
-                    args.response.success({ data: items });                   
-                  }
-				  */
-                },
+                },	
+				
                 serviceofferingname: { label: 'Service offering', isEditable: false },
-                group: { label: 'Group', isEditable: true }
+                group: { label: 'Group', isEditable: true },				
+				hostname: { label: 'Host', isEditable: false},
+				haenable: { label: 'HA Enable', isEditable: false },
+				isoid: { label: 'Attached ISO', isEditable: false },
+				domain: { label: 'Domain', isEditable: false },
+				account: { label: 'Account', isEditable: false },
+				created: { label: 'created', isEditable: false }				
               }
             ],
 			
