@@ -298,8 +298,17 @@ public class VirtualRouterElement extends DhcpElement implements NetworkElement,
         LbStickinessMethod method;
         List <LbStickinessMethod> methodList = new ArrayList<LbStickinessMethod>(1);
         method = new LbStickinessMethod("cookiebased","This is cookie based sticky method, it can be used only for http");
-        method.addParam("cookiename", true,  "cookie name passed in http header");
+        method.addParam("cookiename", true,  "cookie name passed in http header by the LB ");
         method.addParam("cookielength", false,  "max length of cookiename");       
+        methodList.add(method);
+        
+        method = new LbStickinessMethod("appsessionbased","This is app session based sticky method,Define session stickiness on an existing application cookie. it can be used only for a specific http traffic");
+        method.addParam("cookiename", true,  "this is the name of the cookie used by the application and which LB will have to learn for each new session");
+        method.addParam("length", true,  "this is the max number of characters that will be memorized and checked in each cookie value");  
+        method.addParam("holdtime", true, "this is the time after which the cookie will be removed from memory if unused. If no unit is specified, this time is in milliseconds.");
+        method.addParam("request-learn", false, "If this option is specified, then haproxy will be able to learn the cookie found in the request in case the server does not specify any in response. This is typically what happens with PHPSESSID cookies, or when haproxy's session expires before the application's session and the correct server is selected. It is recommended to specify this option to improve reliability");
+        method.addParam("prefix", false,"When this option is specified, haproxy will match on the cookie prefix (or URL parameter prefix). The appsession value is the data following this prefix. Example : appsession ASPSESSIONID len 64 timeout 3h prefix  This will match the cookie ASPSESSIONIDXXXX=XXXXX, the appsession value will be XXXX=XXXXX.");
+        method.addParam("mode", false,"This option allows to change the URL parser mode. 2 modes are currently supported : - path-parameters : The parser looks for the appsession in the path parameters part (each parameter is separated by a semi-colon), which is convenient for JSESSIONID for example.This is the default mode if the option is not set. - query-string : In this mode, the parser will look for the appsession in the query string.");
         methodList.add(method);
         
         method = new LbStickinessMethod("sourcebased","This is source based sticky method, it can be used for any type of protocol.");
