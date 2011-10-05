@@ -877,9 +877,9 @@
           
           attachISO: {
             label: 'Attach ISO',
-            action: function(args) {	                
+            action: function(args) {	              	
 			  $.ajax({
-			    url: createURL("attachIso&virtualmachineid="+args.data.id+"&id=" + args.data.iso),			   
+			    url: createURL("attachIso&virtualmachineid="+args.ref.id+"&id=" + args.data.iso),			   
 			    dataType: "json",
 			    async: true,
 			    success: function(json) { 			    
