@@ -160,8 +160,7 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 			if (stickiness == null) continue;
 			Map <String, String> paramsList = stickiness.getParams();
 			i++;
-		    if ("cookiebased".equalsIgnoreCase(stickiness.getMethodName()))
-		    {
+		    if ("cookiebased".equalsIgnoreCase(stickiness.getMethodName())){
 		    	/* Default Values */
 		    	String cookiename = null; /* required */
 		    	
@@ -175,8 +174,7 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 		    		return null; //FIXME :  Not supposed to reach here, Something wrong,  silently ignoring entire stickiness policy.
 		    	}
 		    	sb.append("\t").append("cookie ").append(cookiename).append(" insert");
-		    }else if ("sourcebased".equalsIgnoreCase(stickiness.getMethodName()))
-		    {
+		    }else if ("sourcebased".equalsIgnoreCase(stickiness.getMethodName())) {
 		    	/* Default Values */
 		    	String tablesize = "200k" ; /* optional */
 		    	String expire = "30m" ; /* optional */
@@ -185,15 +183,47 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
 		    	Iterator it = paramsList.entrySet().iterator();
 		    	while (it.hasNext()) {
 		    	    Map.Entry<String,String> pairs = (Map.Entry)it.next();
-		    	    if ("tablesize".equalsIgnoreCase(pairs.getKey())) tablesize = pairs.getValue(); //FIXME ; type is lost 
+		    	    if ("tablesize".equalsIgnoreCase(pairs.getKey())) tablesize = pairs.getValue();
 		    	    if ("expire".equalsIgnoreCase(pairs.getKey())) expire = pairs.getValue();
 		    	}
 	    	
 		    	sb.append("\t").append("stick-table type ip size ").append(tablesize).append(" expire ").append(expire);
 		    	sb.append("\n\t").append("stick on src");
-		    } else
+		    } else if ("appsessionbased".equalsIgnoreCase(stickiness.getMethodName())){
+
+		    	/* FORMAT : appsession <cookie> len <length> timeout <holdtime>
+                          [request-learn] [prefix] [mode <path-parameters|query-string>] */
+		    	/* example: appsession JSESSIONID len 52 timeout 3h */
+		    	String cookiename = null ;  /* required */
+		    	String length = null ;      /* required */
+		    	String holdtime = null ;    /* required */
+		    	String mode = null ; /* optional */
+		    	Boolean requestlearn = false ; /* optional */
+		    	Boolean prefix = false ; /* optional */
+		    	
+		    	Iterator it = paramsList.entrySet().iterator();
+		    	while (it.hasNext()) {
+		    	    Map.Entry<String,String> pairs = (Map.Entry)it.next();
+		    	    if ("cookiename".equalsIgnoreCase(pairs.getKey())) cookiename = pairs.getValue();  
+		    	    if ("length".equalsIgnoreCase(pairs.getKey())) length = pairs.getValue();
+		    	    if ("holdtime".equalsIgnoreCase(pairs.getKey())) holdtime = pairs.getValue();
+		    	    if ("mode".equalsIgnoreCase(pairs.getKey())) mode = pairs.getValue();
+		    	}
+		    	if ((cookiename == null ) || (length == null) || (holdtime == null))
+		    	{
+		    		/* FIXME: Not supposed to reach here, validation of params optionality are done at the higher layer */
+		    		return null;
+		    	}
+		    	sb.append("\t").append("appsession ").append(cookiename).append(" len ").append(length).append(" timeout ").append(holdtime);
+		    	if (prefix) 	sb.append(" prefix");
+		    	if (requestlearn) 	sb.append(" request-learn").append(mode);
+		    	if (mode != null)
+		    		sb.append(" mode ").append(mode);
+		    	
+		    }else
 		    {
-		    	/* FIXEM: Not supposed to reach here, validation of methods are done at the higher layer */
+		    	/* FIXME: Not supposed to reach here, validation of methods are done at the higher layer */
+		    	return null;
 		    }
 		}
 		if (i==0) return null;
