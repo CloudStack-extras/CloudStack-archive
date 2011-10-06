@@ -1131,14 +1131,14 @@
     		  */
 			  
 			  var array1 = [];    						           
-	          array1.push("&name=" + args.data.name);    	        			   
-			  array1.push("&displayText=" + args.data.displayText);    						    
+	          array1.push("&name=" + todb(args.data.name));    	        			   
+			  array1.push("&displayText=" + todb(args.data.displayText));    						    
 			  array1.push("&osTypeId=" + args.data.osTypeId);    					    
 			  
 			  //array1.push("&isPublic=" + args.data.isPublic);    	
               array1.push("&isPublic=" + (args.data.isPublic=="on"));  //temporary, before Brian fixes it.
   			  
-	          array1.push("&url=" + args.data.url);    				           		    
+	          array1.push("&url=" + todb(args.data.url));    				           		    
 			 			  
 			  $.ajax({			    
 			    
