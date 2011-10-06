@@ -959,6 +959,58 @@
             }
           },	
 
+		  resetPassword: {
+            label: 'Reset password',
+            messages: {
+              confirm: function(args) {
+                /*
+                if (jsonObj.passwordenabled == false) {
+		            $("#dialog_info")
+			            .text(dictionary["message.action.reset.password.off"])    
+			            .dialog('option', 'buttons', { 	
+			            "OK": function() { 
+				            $(this).dialog("close"); 
+			            }	 
+		            }).dialog("open");
+		            return;
+	            } else if (jsonObj.state != 'Stopped') {
+		            $("#dialog_info")
+			            .text(dictionary["message.action.reset.password.warning"])    
+			            .dialog('option', 'buttons', { 	
+			            "OK": function() { 
+				            $(this).dialog("close"); 
+			            }	 
+		            }).dialog("open");
+		            return;
+	            }
+                */
+                return 'Are you sure you want to reset password?';
+              },
+              success: function(args) {
+                return 'Password is being reset.';
+              },
+              notification: function(args) {			
+                return 'Resetting password';
+              },
+              complete: function(args) {			  
+                return 'Password has been reset.';
+              }
+            },         
+		    action: function(args) {	              		
+			  $.ajax({			   
+		        url: createURL("resetPasswordForVirtualMachine&id=" + args.data.id),
+			    dataType: "json",
+			    async: true,
+			    success: function(json) {  			                    	    
+			      var jid = json.resetpasswordforvirtualmachineresponse.jobid;    				
+				  args.response.success({_custom:{jobId: jid}});				  
+		        }
+			  });  	
+		    },
+		    notification: {
+              poll: pollAsyncJobResult		
+            }
+          },	
 				
           migrate: {
             notification: {
@@ -1049,7 +1101,7 @@
 				},
 				domain: { label: 'Domain', isEditable: false },
 				account: { label: 'Account', isEditable: false },
-				created: { label: 'created', isEditable: false }				
+				created: { label: 'Created', isEditable: false }				
               }
             ],
 			
