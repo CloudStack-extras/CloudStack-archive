@@ -1011,7 +1011,63 @@
               poll: pollAsyncJobResult		
             }
           },	
-				
+			
+          changeService: {
+            label: 'Change service offering',
+            messages: {     
+              confirm: function(args) {			
+                return 'Are you sure you want to change service offering?';
+              },
+              success: function(args) {
+                return 'Service offering is being changed.';
+              },
+              notification: function(args) {			
+                return 'Changing service offering';
+              },
+              complete: function(args) {			  
+                return 'Service offering has been changed.';
+              }
+            },         
+		    action: function(args) {	
+              debugger;			
+			  $.ajax({			    
+		        url: createURL("changeServiceForVirtualMachine&id=" + args.data.id + "&serviceOfferingId=" + args.serviceOffering),
+			    dataType: "json",
+			    async: true,
+			    success: function(json) {   
+			      debugger;                 	    
+			      var jsonObj = json.changeserviceforvirtualmachineresponse.virtualmachine;      		
+				  args.response.success({data: jsonObj});				  
+		        }
+			  });  	
+		    },
+		    notification: {
+              poll: pollAsyncJobResult		
+            },
+            createForm: {
+              title: 'Change Service Offering',
+              desc: '',
+              fields: {  
+                serviceOffering: {
+                  label: 'Service offering',
+                  select: function(args) {	
+                    debugger;			  
+			        $.ajax({
+					  url: createURL("listServiceOfferings&VirtualMachineId=" + args.data.id),			 
+					  dataType: "json",
+					  async: true,
+					  success: function(json) { 	                        				  
+					    var items = json.listserviceofferingsresponse.serviceoffering;				  
+					    args.response.success({data: items});					  
+					  }
+					});  		
+			      }				
+                }				 
+              }
+            }           
+          },	
+
+			
           migrate: {
             notification: {
               desc: 'Migrated VM',
