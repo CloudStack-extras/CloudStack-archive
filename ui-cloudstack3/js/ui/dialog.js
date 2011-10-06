@@ -31,6 +31,7 @@
         // Determine field type of input
         if (this.select) {
           selectArgs = {
+            context: args.context,
             response: {
               success: function(args) {
                 $(args.data).each(function() {
@@ -127,7 +128,7 @@
               }
 
               $('div.overlay').remove();
-              args.after({ data: data, ref: args.ref });
+              args.after({ data: data, ref: args.ref, context: args.context });
               $(this).dialog('destroy');
 
               return true;

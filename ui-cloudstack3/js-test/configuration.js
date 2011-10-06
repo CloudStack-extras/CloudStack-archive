@@ -10,6 +10,7 @@
         type: 'select',
         title: 'Service',
         listView: {
+          id: 'serviceOfferings',
           label: 'Service Offerings',
           fields: {
             name: { label: 'Name', editable: true },
@@ -80,6 +81,7 @@
         type: 'select',
         title: 'Disk',
         listView: {
+          id: 'diskOfferings',
           label: 'Disk Offerings',
           fields: {
             displaytext: { label: 'Name' },
@@ -93,6 +95,7 @@
         type: 'select',
         title: 'Network',
         listView: {
+          id: 'networkOfferings',
           label: 'Network Offerings',
           fields: {
             name: { label: 'Name', editable: true },

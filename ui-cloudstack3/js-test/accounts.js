@@ -10,6 +10,7 @@
         type: 'select',
         title: 'Accounts',
         listView: {
+          id: 'accounts',
           fields: {
             name: { label: 'Name', editable: true },
             domain: { label: 'Domain' },
@@ -50,6 +51,7 @@
         type: 'select',
         title: 'Users',
         listView: {
+          id: 'users',
           fields: {
             username: { label: 'Username', editable: true },
             email: { label: 'E-mail' },

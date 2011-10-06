@@ -175,6 +175,7 @@
         action.action({
           data: data,
           ref: options.ref,
+          context: $detailView.data('view-args').context,
           response: {
             success: function(args) {
               args = args ? args : {};
@@ -388,7 +389,11 @@
       id: args.id,
       type: $detailView.data('view-args').section
     };
-
+    
+    // Load context data
+    listViewArgs.context = {};
+    $.extend(listViewArgs.context, $detailView.data('view-args').context);
+    
     // Make panel
     var $panel = $browser.cloudBrowser('addPanel', {
       title: listViewArgs.title,
@@ -738,6 +743,7 @@
       tab: targetTabID,
       id: args.id,
       jsonObj: args.jsonObj,
+      context: args.context,
       response: {
         success: function(args) {
           var tabData = $tabContent.data('detail-view-tab-data');

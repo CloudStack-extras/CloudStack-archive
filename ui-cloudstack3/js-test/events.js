@@ -10,6 +10,7 @@
         type: 'select',
         title: 'Events',
         listView: {
+          id: 'events',
           label: 'Events',
           fields: {
             type: { label: 'Type' },
@@ -24,6 +25,7 @@
         type: 'select',
         title: 'Alerts',
         listView: {
+          id: 'alerts',
           label: 'Alerts',
           fields: {
             type: { label: 'Type' },

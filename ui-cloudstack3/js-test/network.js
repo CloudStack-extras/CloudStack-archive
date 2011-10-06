@@ -10,6 +10,7 @@
         type: 'select',
         title: 'IP Addresses',
         listView: {
+          id: 'ipAddresses',
           label: 'IPs',
           filters: {
             allocated: { label: 'Allocated ' },
@@ -219,6 +220,7 @@
         type: 'select',
         title: 'Security Groups',
         listView: {
+          id: 'securityGroups',
           label: 'Security Groups',
           fields: {
             name: { label: 'Name', editable: true },

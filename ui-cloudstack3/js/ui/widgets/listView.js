@@ -71,6 +71,7 @@
           action.custom({
             data: data,
             ref: options.ref,
+            context: listViewArgs.context,
             complete: function(args) {
               args = args ? args : {};
               notification.desc = messages.notification(args.messageArgs);
@@ -84,6 +85,7 @@
           action({
             data: data,
             ref: options.ref,
+            context: options.context,
             response: {
               success: function(args) {
                 args = args ? args : {};
@@ -104,12 +106,19 @@
         }
       };
 
+      var context = $.extend({}, listViewArgs.context);
+      context[
+        listViewArgs.activeSection
+      ] = $instanceRow.data('jsonObj');
+
       if (!args.action.createForm && !action.custom)
         cloudStack.dialog.confirm({
           message: messages.confirm(messageArgs),
           action: function() {
             performAction({
               id: $instanceRow.data('list-view-item-id')
+            }, {
+              context: context
             });
           }
         });
@@ -119,11 +128,10 @@
         cloudStack.dialog.createForm({
           form: args.action.createForm,
           after: function(args) {
-            performAction(args.data, { ref: args.ref });
+            performAction(args.data, { ref: args.ref, context: context });
           },
-          ref: {
-            id: data.id
-          }
+          ref: listViewArgs.ref,
+          context: listViewArgs.context
         });
     },
 
@@ -322,7 +330,12 @@
     var $panel = args.$panel;
     var title = args.title;
     var id = args.id;
-    var data = $.extend(args.data, { id: id, jsonObj: args.jsonObj, section: args.section });
+    var data = $.extend(args.data, { 
+      id: id, 
+      jsonObj: args.jsonObj,
+      section: args.section,
+      context: args.context
+    });
     var $detailView, $detailsPanel;
     var panelArgs = {
       title: title,
@@ -513,7 +526,9 @@
    * @param section If section, reset list view to specified section
    */
   var makeListView = function($container, args, section) {
-    args.activeSection = section;
+    args.activeSection = section ? section : (
+      args.listView.id ? args.listView.id : args.id
+    );
 
     // Clear out any existing list view
     var $existingListView = $container.find('div.list-view');
@@ -581,13 +596,14 @@
       false,
       {
         page: page,
-        ref: args.ref
+        ref: args.ref,
+        context: args.context
       },
       actions);
 
     // Keyboard events
     $listView.bind('keypress', function(event) {
-      var code = (event.keyCode ? event.keyCode : event.which)
+      var code = (event.keyCode ? event.keyCode : event.which);
       var $input = $listView.find('input:focus');
 
       if ($input.size() && code === 13) {
@@ -686,8 +702,15 @@
           data: listViewData.detailView,
           title: $target.closest('td').find('span').html(),
           id: id,
-		      jsonObj: jsonObj
+		      jsonObj: jsonObj,
+          ref: jsonObj,
+          context: $.extend({}, $listView.data('view-args').context)
         };
+
+        // Populate context object w/ instance data
+        detailViewArgs.context[
+          $listView.data('view-args').activeSection
+        ] = [jsonObj];
 
         // Create custom-generated detail view
         if (listViewData.detailView.pageGenerator) {

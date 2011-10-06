@@ -13,6 +13,7 @@
         type: 'select',
         title: 'Volumes',
         listView: {
+          id: 'volumes',
           label: 'Volumes',
           fields: {
             name: { label: 'Name', editable: true },
@@ -212,7 +213,7 @@
                   poll: testData.notifications.testPoll
                 }
               },
-              create: {
+              createTemplate: {
                 label: 'Create template',
                 messages: {
                   success: function(args) {
@@ -287,6 +288,7 @@
         type: 'select',
         title: 'Snapshots',
         listView: {
+          id: 'snapshots',
           label: 'Snapshots',
           fields: {
             volumename: { label: 'Volume' },

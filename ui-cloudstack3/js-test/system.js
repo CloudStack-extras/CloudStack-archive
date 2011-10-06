@@ -10,6 +10,7 @@
         type: 'select',
         title: 'Physical Resources',
         listView: {
+          id: 'physicalResources',
           label: 'Physical Resources',
           fields: {
             name: { label: 'Zone' },
@@ -110,6 +111,7 @@
           networks: {
             listView: {
               section: 'networks',
+              id: 'networks',
               fields: {
                 name: { label: 'Name' },
                 startip: { label: 'Start IP' },
@@ -157,6 +159,7 @@
           pods: {
             title: 'Pods',
             listView: {
+              id: 'pods',
               section: 'pods',
               fields: {
                 name: { label: 'Name' },
@@ -192,6 +195,7 @@
           clusters: {
             title: 'Clusters',
             listView: {
+              id: 'clusters',
               section: 'clusters',
               fields: {
                 name: { label: 'Name' },
@@ -227,6 +231,7 @@
           },
           hosts: {
             title: 'Hosts',
+            id: 'hosts',
             listView: {
               section: 'hosts',
               fields: {
@@ -243,21 +248,8 @@
                     title: 'Add new host',
                     desc: 'Please fill in the following information to add a new host fro the specified zone configuration.',
                     fields: {
-                      zone: {
-                        label: 'Zone',
-                        select: function(args) {
-                          setTimeout(function() {
-                            args.response.success({
-                              descriptionField: 'name',
-                              data: testData.data.zones
-                            });
-                          }, 50);
-                        }
-                      },
                       pod: {
                         label: 'Pod',
-
-                        dependsOn: 'zone',
 
                         select: function(args) {
                           /**
@@ -381,6 +373,7 @@
             }
           },
           'primary-storage': {
+            id: 'primaryStorage',
             listView: {
               section: 'primary-storage',
               fields: {
@@ -407,12 +400,13 @@
                     ],
 
                     dataProvider: testData.dataProvider.detailView('clusters')
-                  },
+                  }
                 }
               }
             }
           },
           'secondary-storage': {
+            id: 'secondary-storage',
             listView: {
               section: 'seconary-storage',
               fields: {
@@ -439,7 +433,7 @@
                     ],
 
                     dataProvider: testData.dataProvider.detailView('clusters')
-                  },
+                  }
                 }
               }
             }
@@ -449,6 +443,7 @@
       virtualAppliances: {
         type: 'select',
         title: 'Virtual Appliances',
+        id: 'virtualAppliances',
         listView: {
           label: 'Virtual Appliances',
           fields: {

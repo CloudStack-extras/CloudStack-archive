@@ -15,6 +15,7 @@
       args.dataProvider({
         id: listViewArgs.id,
         jsonObj: listViewArgs.jsonObj,
+        context: { zones: listViewArgs.context.physicalResources },
         response: {
           success: function(dataProviderArgs) {
             var data = dataProviderArgs.data;
@@ -39,6 +40,7 @@
                     // Create detail view
                     $.extend(args.detailView, {
                       id: listViewArgs.id,
+                      context: { zones: listViewArgs.context.physicalResources },
                       $browser: listViewArgs.$browser
                     });
 
@@ -63,7 +65,8 @@
                       ], {
                         $browser: $browser,
                         $chartView: $chartView,
-                        ref: { zoneID: listViewArgs.id }
+                        ref: { zoneID: listViewArgs.id },                        
+                        context: { zones: [listViewArgs.jsonObj] }
                       })
                     );
                   }

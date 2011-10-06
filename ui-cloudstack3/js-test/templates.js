@@ -10,6 +10,7 @@
         type: 'select',
         title: 'Templates',
         listView: {
+          id: 'templates',
           label: 'Templates',
           fields: {
             displaytext: { label: 'Name', editable: true },
