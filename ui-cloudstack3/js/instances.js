@@ -1067,6 +1067,106 @@
             }           
           },	
 
+		  //???
+		  createTemplate: {
+            label: 'Create template',
+            messages: {  
+              confirm: function(args) {                
+                /*            
+	            if (getUserPublicTemplateEnabled() == "true" || isAdmin()) {
+		            $dialogCreateTemplate.find("#create_template_public_container").show();	
+	            }	
+	            */          
+                return 'Are you sure you want to create template?';
+              },
+              success: function(args) {
+                return 'Template is being created.';
+              },
+              notification: function(args) {			
+                return 'Creating template';
+              },
+              complete: function(args) {			  
+                return 'Template has been created.';
+              }
+            },         
+		    action: function(args) {	             	  
+			  $.ajax({
+			    debugger;
+			    /*
+			    var isValid = true;					
+	            isValid &= validateString("Name", $thisDialog.find("#create_template_name"), $thisDialog.find("#create_template_name_errormsg"));
+			    isValid &= validateString("Display Text", $thisDialog.find("#create_template_desc"), $thisDialog.find("#create_template_desc_errormsg"));	
+	            isValid &= validateString("Image Directory", $thisDialog.find("#image_directory"), $thisDialog.find("#image_directory_errormsg"), false); //image directory is required when creating template from VM whose hypervisor is BareMetal
+			    if (!isValid) 
+	        	    return;		
+    	        
+			    $thisDialog.dialog("close"); 
+    			
+			    var array1 = [];
+    						
+	            var name = $thisDialog.find("#create_template_name").val();
+	            array1.push("&name="+todb(name));
+    	        
+			    var desc = $thisDialog.find("#create_template_desc").val();
+			    array1.push("&displayText="+todb(desc));
+    			
+			    var osType = $thisDialog.find("#create_template_os_type").val();	
+			    array1.push("&osTypeId="+osType);
+    			
+			    var isPublic = $thisDialog.find("#create_template_public").val();
+			    array1.push("&isPublic="+isPublic);
+    			           
+                var imageDirectory = $thisDialog.find("#image_directory").val();
+	            array1.push("&url="+todb(imageDirectory));
+    			
+	            var id = $midmenuItem1.data("jsonObj").id;		
+			    var apiCommand = "command=createTemplate&virtualmachineid="+id+array1.join("");
+			    */
+			    
+		        url: createURL("createTemplate&virtualmachineid="+id+array1.join("")),
+			    dataType: "json",
+			    async: true,
+			    success: function(json) {   
+			      debugger;                 	    
+			      var jid = json.createtemplateresponse.jobid;    				
+				  args.response.success({_custom:{jobId: jid}});				  
+		        }
+			  });  	
+		    },
+		    notification: {
+              poll: pollAsyncJobResult		
+            },
+            createForm: {
+              title: 'Create Template',
+              desc: '',
+              fields: {  
+                name: { label: 'Name', validation: { required: true }},
+                displayText: { label: 'Description', validation: { required: true }},
+                osTypeId: {
+                  label: 'OS Type',
+                  select: function(args) {	
+                    debugger;			  
+			        $.ajax({
+					  url: createURL("listOsTypes"),			 
+					  dataType: "json",
+					  async: true,
+					  success: function(json) { 				   
+						var ostypes = json.listostypesresponse.ostype;
+                        var items = [];		
+                        $(ostypes).each(function() {
+						  items.push({id: this.id, description: this.description});
+						});						
+						args.response.success({data: items});					  
+					  }
+					});   
+			      }				
+                },                
+                isPublic: { label: 'Public', isBoolean: true },
+                url: { label: 'Image directory', validation: { required: true } }             				 
+              }
+            }           
+          },	
+		  //???
 			
           migrate: {
             notification: {
