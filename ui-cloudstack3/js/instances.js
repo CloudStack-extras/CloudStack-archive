@@ -1040,7 +1040,11 @@
 					  dataType: "json",
 					  async: true,
 					  success: function(json) { 	                        				  
-					    var items = json.listserviceofferingsresponse.serviceoffering;				  
+					    var serviceofferings = json.listserviceofferingsresponse.serviceoffering;		
+						var items = [];								
+                        $(serviceofferings).each(function() {						  
+						  items.push({id: this.id, description: this.displaytext});	 
+						});	                        						
 					    args.response.success({data: items});					  
 					  }
 					});  		
@@ -1060,9 +1064,10 @@
 			  });  	
 		    },
 		    notification: {
-              poll: pollAsyncJobResult		
-            }
-               
+              poll: function(args) {			  
+                args.complete();
+              }			  
+            }               
           },	
 		
 		  createTemplate: {
@@ -1103,8 +1108,7 @@
 						var ostypes = json.listostypesresponse.ostype;
                         var items = [];								
                         $(ostypes).each(function() {						  
-						  //items.push({id: this.id, description: this.description});
-						  items.push({id: this.id, name: this.description}); //temporary, before Brian fixes it.
+						  items.push({id: this.id, description: this.description});						  
 						});		                        					
 						args.response.success({data: items});					  
 					  }
