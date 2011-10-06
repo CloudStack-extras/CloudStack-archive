@@ -78,19 +78,42 @@
                     label: 'Disk Offering',
                     dependsOn: 'availabilityZone',
                     select: function(args) {
+                      /**
+                       * Example to show/hide fields
+                       * 
+                       * -Select Pod2 to show conditional fields
+                       * -Select any other field to hide conditional fields
+                       */
+                      args.$select.change(function() {
+                        var $input = $(this);
+                        var $form = $input.closest('form');
+
+                        // Note: need to actually select the .form-item div containing the input
+                        var $diskSize = $form.find('.form-item[rel=diskSize]');
+
+                        $diskSize.hide();
+
+                        if ($input.val() == 'custom') {
+                          // Note: need to show by setting display=inline-block, not .show()
+                          $diskSize.css('display', 'inline-block');
+                        }
+                      });
+
                       args.response.success({
                         descriptionField: 'description',
                         data: [
                           { id: 'small', description: 'Small Disk, 5GB' },
                           { id: 'medium', description: 'Medium Disk, 20GB' },
-                          { id: 'large', description: 'Large Disk, 100GB' }
+                          { id: 'large', description: 'Large Disk, 100GB' },
+                          { id: 'custom', description: 'Custom Disk Size' }
                         ]
                       });
                     }
                   },
                   diskSize: {
                     label: 'Disk size (in GB)',
-                    validation: { required: true, number: true }
+                    validation: { required: true, number: true },
+                    hidden: true
                   }
                 }
               },
