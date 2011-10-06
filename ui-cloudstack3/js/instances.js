@@ -1027,33 +1027,16 @@
               complete: function(args) {			  
                 return 'Service offering has been changed.';
               }
-            },         
-		    action: function(args) {	
-              debugger;			
-			  $.ajax({			    
-		        url: createURL("changeServiceForVirtualMachine&id=" + args.data.id + "&serviceOfferingId=" + args.serviceOffering),
-			    dataType: "json",
-			    async: true,
-			    success: function(json) {   
-			      debugger;                 	    
-			      var jsonObj = json.changeserviceforvirtualmachineresponse.virtualmachine;      		
-				  args.response.success({data: jsonObj});				  
-		        }
-			  });  	
-		    },
-		    notification: {
-              poll: pollAsyncJobResult		
-            },
-            createForm: {
+            }, 
+			createForm: {
               title: 'Change Service Offering',
               desc: '',
               fields: {  
                 serviceOffering: {
                   label: 'Service offering',
-                  select: function(args) {	
-                    debugger;			  
+                  select: function(args) {	                    
 			        $.ajax({
-					  url: createURL("listServiceOfferings&VirtualMachineId=" + args.data.id),			 
+					  url: createURL("listServiceOfferings&VirtualMachineId=" + args.context.instances[0].id),			 
 					  dataType: "json",
 					  async: true,
 					  success: function(json) { 	                        				  
@@ -1064,10 +1047,24 @@
 			      }				
                 }				 
               }
-            }           
+            },        			
+		    action: function(args) {	              	
+			  $.ajax({			    
+		        url: createURL("changeServiceForVirtualMachine&id=" + args.context.instances[0].id + "&serviceOfferingId=" + args.data.serviceOffering),
+			    dataType: "json",
+			    async: true,
+			    success: function(json) {  			                   	    
+			      var jsonObj = json.changeserviceforvirtualmachineresponse.virtualmachine;      		
+				  args.response.success({data: jsonObj});				  
+		        }
+			  });  	
+		    },
+		    notification: {
+              poll: pollAsyncJobResult		
+            }
+               
           },	
-
-		  //???
+		
 		  createTemplate: {
             label: 'Create template',
             messages: {  
@@ -1088,53 +1085,6 @@
               complete: function(args) {			  
                 return 'Template has been created.';
               }
-            },         
-		    action: function(args) {	             	  
-			  $.ajax({
-			    debugger;
-			    /*
-			    var isValid = true;					
-	            isValid &= validateString("Name", $thisDialog.find("#create_template_name"), $thisDialog.find("#create_template_name_errormsg"));
-			    isValid &= validateString("Display Text", $thisDialog.find("#create_template_desc"), $thisDialog.find("#create_template_desc_errormsg"));	
-	            isValid &= validateString("Image Directory", $thisDialog.find("#image_directory"), $thisDialog.find("#image_directory_errormsg"), false); //image directory is required when creating template from VM whose hypervisor is BareMetal
-			    if (!isValid) 
-	        	    return;		
-    	        
-			    $thisDialog.dialog("close"); 
-    			
-			    var array1 = [];
-    						
-	            var name = $thisDialog.find("#create_template_name").val();
-	            array1.push("&name="+todb(name));
-    	        
-			    var desc = $thisDialog.find("#create_template_desc").val();
-			    array1.push("&displayText="+todb(desc));
-    			
-			    var osType = $thisDialog.find("#create_template_os_type").val();	
-			    array1.push("&osTypeId="+osType);
-    			
-			    var isPublic = $thisDialog.find("#create_template_public").val();
-			    array1.push("&isPublic="+isPublic);
-    			           
-                var imageDirectory = $thisDialog.find("#image_directory").val();
-	            array1.push("&url="+todb(imageDirectory));
-    			
-	            var id = $midmenuItem1.data("jsonObj").id;		
-			    var apiCommand = "command=createTemplate&virtualmachineid="+id+array1.join("");
-			    */
-			    
-		        url: createURL("createTemplate&virtualmachineid="+id+array1.join("")),
-			    dataType: "json",
-			    async: true,
-			    success: function(json) {   
-			      debugger;                 	    
-			      var jid = json.createtemplateresponse.jobid;    				
-				  args.response.success({_custom:{jobId: jid}});				  
-		        }
-			  });  	
-		    },
-		    notification: {
-              poll: pollAsyncJobResult		
             },
             createForm: {
               title: 'Create Template',
@@ -1144,18 +1094,18 @@
                 displayText: { label: 'Description', validation: { required: true }},
                 osTypeId: {
                   label: 'OS Type',
-                  select: function(args) {	
-                    debugger;			  
+                  select: function(args) {	                    	  
 			        $.ajax({
 					  url: createURL("listOsTypes"),			 
 					  dataType: "json",
 					  async: true,
 					  success: function(json) { 				   
 						var ostypes = json.listostypesresponse.ostype;
-                        var items = [];		
-                        $(ostypes).each(function() {
-						  items.push({id: this.id, description: this.description});
-						});						
+                        var items = [];								
+                        $(ostypes).each(function() {						  
+						  //items.push({id: this.id, description: this.description});
+						  items.push({id: this.id, name: this.description}); //temporary, before Brian fixes it.
+						});		                        					
 						args.response.success({data: items});					  
 					  }
 					});   
@@ -1164,10 +1114,44 @@
                 isPublic: { label: 'Public', isBoolean: true },
                 url: { label: 'Image directory', validation: { required: true } }             				 
               }
-            }           
+            },         
+		    action: function(args) {	                      
+			  /*
+			  var isValid = true;					
+	          isValid &= validateString("Name", $thisDialog.find("#create_template_name"), $thisDialog.find("#create_template_name_errormsg"));
+			  isValid &= validateString("Display Text", $thisDialog.find("#create_template_desc"), $thisDialog.find("#create_template_desc_errormsg"));	
+	          isValid &= validateString("Image Directory", $thisDialog.find("#image_directory"), $thisDialog.find("#image_directory_errormsg"), false); //image directory is required when creating template from VM whose hypervisor is BareMetal
+			  if (!isValid) 
+	        	  return;		    	        
+			  $thisDialog.dialog("close"); 
+    		  */
+			  
+			  var array1 = [];    						           
+	          array1.push("&name=" + args.data.name);    	        			   
+			  array1.push("&displayText=" + args.data.displayText);    						    
+			  array1.push("&osTypeId=" + args.data.osTypeId);    					    
+			  
+			  //array1.push("&isPublic=" + args.data.isPublic);    	
+              array1.push("&isPublic=" + (args.data.isPublic=="on"));  //temporary, before Brian fixes it.
+  			  
+	          array1.push("&url=" + args.data.url);    				           		    
+			 			  
+			  $.ajax({			    
+			    
+		        url: createURL("createTemplate&virtualmachineid=" + args.context.instances[0].id + array1.join("")),
+			    dataType: "json",
+			    async: true,
+			    success: function(json) {   			                    	    
+			      var jid = json.createtemplateresponse.jobid;    				
+				  args.response.success({_custom:{jobId: jid}});				  
+		        }
+			  });  	
+		    },
+		    notification: {
+              poll: pollAsyncJobResult		
+            }
           },	
-		  //???
-			
+		  			
           migrate: {
             notification: {
               desc: 'Migrated VM',
