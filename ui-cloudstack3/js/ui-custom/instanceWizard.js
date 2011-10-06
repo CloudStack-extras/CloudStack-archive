@@ -21,14 +21,28 @@
 
         // Save instance and close wizard
         var completeAction = function() {
+          var data = cloudStack.serializeForm($form);
+          
           args.action({
             // Populate data
-            data: cloudStack.serializeForm($form),
+            data: data,
             response: {
               success: function(args) {
                 listViewArgs.complete({
                   _custom: args._custom,
                   messageArgs: cloudStack.serializeForm($form)
+                });
+                $('.list-view').listView('prependItem', {
+                  data: [
+                    {
+                      name: data.displayname ? data.displayname : 'New VM',
+                      zonename: $wizard.find('select[name=zoneid] option').filter(function() {
+                        return $(this).val() == data.zoneid;
+                      }).html(),
+                      state: 'Creating'
+                    }
+                  ],
+                  actionFilter: function(args) { return []; }
                 });
                 close();
               }

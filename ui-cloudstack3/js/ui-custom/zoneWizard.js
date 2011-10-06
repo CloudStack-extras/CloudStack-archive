@@ -17,8 +17,9 @@
 
       // Save and close wizard
       var completeAction = function() {
+        var data = cloudStack.serializeForm($wizard.find('form'));
         args.action({
-          data: cloudStack.serializeForm($wizard.find('form')),
+          data: data,
           response: {
             success: function(args) {
               listViewArgs.complete({
@@ -26,6 +27,10 @@
                 messageArgs: {
                   name: $wizard.find('div.review div.vm-instance-name input').val()
                 }
+              });
+              $('.list-view').listView('prependItem', {
+                data: [data],
+                actionFilter: function(args) { return []; }
               });
               close();
             }

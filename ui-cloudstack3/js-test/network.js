@@ -18,10 +18,10 @@
           },
           fields: {
             ipaddress: { label: 'IP' },
-            state: { label: 'State' },
             zonename: { label: 'Zone' },
             vlanname: { label: 'VLAN' },
-            networkid: { label: 'Network Type' }
+            networkid: { label: 'Network Type' },
+            state: { label: 'State' }
           },
 
           actions: {
@@ -51,7 +51,7 @@
                 title: 'Acquire new IP',
                 desc: 'Please select a zone from which you want to acquire your new IP from.',
                 fields: {
-                  availabilityZone: {
+                  zonename: {
                     label: 'Zone',
                     select: function(args) {
                       setTimeout(function() {

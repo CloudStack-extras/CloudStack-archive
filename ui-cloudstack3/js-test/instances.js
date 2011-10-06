@@ -112,7 +112,9 @@
                 }
               ],
               action: function(args) {
-                args.response.success({ _custom: { jobID: 12345 } });
+                args.response.success({
+                  _custom: { jobID: 12345 } 
+                });
               }
             })
           },
@@ -243,6 +245,12 @@
             action: function(args) {
               args.response.success();
             }
+          },
+          start: {
+            label: 'Start VM',
+            action: function(args) {
+              args.response.success();
+            }            
           },
           restart: {
             label: 'Restart VM',

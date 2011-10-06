@@ -412,13 +412,28 @@
    *
    * @param actions {object} Actions to generate
    */
-  var makeActionButtons = function(actions) {
+  var makeActionButtons = function(actions, options) {
+    options = options ? options : {};
     var $actions = $('<td>').addClass('detail-actions').append(
       $('<div>').addClass('buttons')
     );
 
+    var allowedActions = $.map(actions, function(value, key) {
+      return key;
+    });
+
     if (actions) {
+      if (options.actionFilter)
+        allowedActions = options.actionFilter({
+          context: {
+            actions: allowedActions,
+            item: options.data
+          }
+        });
+
       $.each(actions, function(key, value) {
+        if ($.inArray(key, allowedActions) == -1) return true;
+        
         var $action = $('<div></div>')
               .addClass('action').addClass(key)
               .appendTo($actions.find('div.buttons'));
@@ -691,10 +706,14 @@
       var $firstRow = $detailGroups.filter(':first').find('div.detail-group:first table tr:first');
       var $actions;
       var actions = detailViewArgs.actions;
+      var actionFilter = args.actionFilter;
 
       // Detail view actions
       if (actions || detailViewArgs.viewAll)
-        $actions = makeActionButtons(detailViewArgs.actions).prependTo($firstRow.closest('div.detail-group'));
+        $actions = makeActionButtons(detailViewArgs.actions, {
+          actionFilter: actionFilter,
+          data: data
+        }).prependTo($firstRow.closest('div.detail-group'));
 
       // 'View all' button
       if (detailViewArgs.viewAll) {
@@ -753,16 +772,24 @@
           var tabData = $tabContent.data('detail-view-tab-data');
           var data = args.data;
           var isFirstPanel = $tabContent.index($tabContent.parent().find('div.detail-group.ui-tabs-panel')) == 0;
+          var actionFilter = args.actionFilter;
 
           if (isMultiple) {
             $(data).each(function() {
-              makeFieldContent(tabs, $tabContent.closest('div.detail-view'), this, { header: 'name', isFirstPanel: isFirstPanel }).appendTo($tabContent);
+              makeFieldContent(tabs, $tabContent.closest('div.detail-view'), this, { 
+                header: 'name', 
+                isFirstPanel: isFirstPanel,
+                actionFilter: actionFilter
+              }).appendTo($tabContent);
             });
 
             return true;
           }
 
-          makeFieldContent(tabs, $tabContent.closest('div.detail-view'), data, { isFirstPanel: isFirstPanel }).appendTo($tabContent);
+          makeFieldContent(tabs, $tabContent.closest('div.detail-view'), data, { 
+            isFirstPanel: isFirstPanel,
+            actionFilter: actionFilter
+          }).appendTo($tabContent);
 
           return true;
         },

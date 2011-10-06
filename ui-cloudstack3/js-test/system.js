@@ -26,7 +26,9 @@
               action: {
                 custom: cloudStack.zoneWizard({
                   action: function(args) {
-                    args.response.success({ _custom: { jobID: new Date() } });
+                    args.response.success({ 
+                      _custom: { jobID: new Date() }
+                    });
                   }
                 })
               },

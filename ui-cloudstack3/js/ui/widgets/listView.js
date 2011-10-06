@@ -56,6 +56,7 @@
         id: $instanceRow.data('list-view-item-id'),
 		    jsonObj: $instanceRow.data('jsonObj')
       };
+      var $listView = $instanceRow.closest('.list-view');
 
       if (args.data) $.extend(data, args.data);
       if (listViewArgs) section = listViewArgs.section;
@@ -129,6 +130,16 @@
           form: args.action.createForm,
           after: function(args) {
             performAction(args.data, { ref: args.ref, context: context });
+            $listView.listView('prependItem', {
+              data: [
+                $.extend(args.data, {
+                  state: 'Creating',
+                  status: 'Creating',
+                  allocationstate: 'Creating'
+                })
+              ],
+              actionFilter: function(args) { return []; }
+            });
           },
           ref: listViewArgs.ref,
           context: listViewArgs.context
@@ -301,11 +312,15 @@
   /**
    * Makes set of icons from data, in the for of a table cell
    */
-  var makeActionIcons = function($td, actions) {
-    $.each(actions, function(key, value) {
-      if (key == 'add') return true;
-      var actionName = key;
-      var action = value;
+  var makeActionIcons = function($td, actions, options) {
+    options = options ? options : {};
+    var allowedActions = options.allowedActions;
+    
+    $.each(actions, function(key) {
+      if (allowedActions && $.inArray(key, allowedActions) == -1) 
+        return true;
+      if (key == 'add') 
+        return true;
 
       $td.append(
         $('<div></div>')
@@ -313,8 +328,8 @@
           .addClass(key)
           .append($('<span>').addClass('icon'))
           .attr({
-            alt: action.label,
-            title: action.label
+            alt: this.label,
+            title: this.label
           })
           .data('list-view-action-id', key)
       );
@@ -357,11 +372,22 @@
     $detailsPanel = data.$browser.cloudBrowser('addPanel', panelArgs);
   };
 
-  var addTableRows = function(fields, data, $tbody, actions) {
+  var addTableRows = function(fields, data, $tbody, actions, options) {
+    if (!options) options = {};
+    var rows = [];
+
     $(data).each(function() {
       var dataItem = this;
       var id = dataItem.id;
-      var $tr = $('<tr>').appendTo($tbody);
+      
+      var $tr = $('<tr>');
+      rows.push($tr);
+
+      if (options.prepend) {
+        $tr.prependTo($tbody);
+      } else {
+        $tr.appendTo($tbody);
+      }
 
       $.each(fields, function(key) {
         var field = this;
@@ -397,15 +423,31 @@
 
       $tr.data('list-view-item-id', id);
       $tr.data('jsonObj', dataItem);
-	    
+
       if (actions) {
+        var allowedActions = $.map(actions, function(value, key) {
+          return key;
+        });
+
+        if (options.actionFilter) allowedActions = options.actionFilter({
+          context: {
+            actions: allowedActions,
+            item: dataItem
+          }
+        });
+
         makeActionIcons(
           $('<td></td>').addClass('actions reduced-hide')
             .appendTo($tr),
-          actions
+          actions,
+          {
+            allowedActions: allowedActions
+          }
         );
       }
     });
+
+    return rows;
   };
 
   var setLoading = function($table, completeFn) {
@@ -414,8 +456,7 @@
           .appendTo($table.find('tbody'))
           .append(
             $('<td>')
-              .addClass('loading')
-              .html('Loading...')
+              .addClass('loading icon')
               .attr({
                 'colspan': $table.find('th').size()
               })
@@ -456,7 +497,9 @@
               $table.find('tr:not(.loading)')
                 .filter(':last').addClass('last');
             } else {
-              addTableRows(fields, args.data, $tbody, actions);
+              addTableRows(fields, args.data, $tbody, actions, {
+                actionFilter: args.actionFilter
+              });
               $table.dataTable();
             }
           },
@@ -784,8 +827,32 @@
     return $listView.appendTo($container);
   };
 
-  $.fn.listView = function(args) {
-    if (args.sections) {
+  var prependItem = function(listView, data, actionFilter) {
+    var viewArgs = listView.data('view-args');
+    var listViewArgs = viewArgs.listView ? viewArgs.listView : viewArgs;
+    var targetArgs = listViewArgs.activeSection ? listViewArgs.sections[
+      listViewArgs.activeSection
+    ].listView : listViewArgs;
+
+    var $tr = addTableRows(
+      targetArgs.fields,
+      data,
+      listView.find('table tbody'),
+      targetArgs.actions,
+      {
+        prepend: true,
+        actionFilter: actionFilter
+      }
+    )[0];
+    listView.find('table').dataTable('refresh');
+
+    $tr.addClass('loading').find('td:last').prepend($('<div>').addClass('loading'));
+  };
+
+  $.fn.listView = function(args, options) {
+    if (args == 'prependItem') {
+      prependItem(this, options.data, options.actionFilter);
+    } else if (args.sections) {
       var targetSection;
       $.each(args.sections, function(key) {
         targetSection = key;

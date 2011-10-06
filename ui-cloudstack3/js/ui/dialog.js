@@ -41,7 +41,7 @@
                   if (args.descriptionField)
                     description = this[args.descriptionField];
                   else
-                    description = this.name;
+                    description = this.description;
 
                   var $option = $('<option>')
                         .appendTo($input)

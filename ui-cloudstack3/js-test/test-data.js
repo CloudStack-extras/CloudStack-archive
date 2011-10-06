@@ -44,6 +44,25 @@
             var data;
             if (args.page <= 5) data = testData.data[section];
             args.response.success({
+              actionFilter: function(args) {
+                var allowedActions = args.context.actions;
+                var disallowedActions = [];
+                var item = args.context.item;
+                var status = item.state;
+
+                if (status == 'Running' || status == 'Starting') {
+                  disallowedActions.push('start');
+                } else if (status == 'Stopped' || status == 'Stopping') {
+                  disallowedActions.push('stop');
+                  disallowedActions.push('restart');
+                }
+
+                allowedActions = $.grep(allowedActions, function(item) {
+                  return $.inArray(item, disallowedActions) == -1;
+                });
+                
+                return allowedActions;
+              },
               data: data
             });
           }, 300);
@@ -57,6 +76,25 @@
             });
 
             args.response.success({
+              actionFilter: function(args) {
+                var allowedActions = args.context.actions;
+                var disallowedActions = [];
+                var item = args.context.item;
+                var status = item.state;
+
+                if (status == 'Running' || status == 'Starting') {
+                  disallowedActions.push('start');
+                } else if (status == 'Stopped' || status == 'Stopping') {
+                  disallowedActions.push('stop');
+                  disallowedActions.push('restart');
+                }
+
+                allowedActions = $.grep(allowedActions, function(item) {
+                  return $.inArray(item, disallowedActions) == -1;
+                });
+                
+                return allowedActions;
+              },
               data: item[0]
             });
           }, 300);
