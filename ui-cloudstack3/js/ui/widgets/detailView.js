@@ -210,7 +210,8 @@
           },
           ref: {
             id: id
-          }
+          },
+          context: $detailView.data('view-args').context
         });
       }
     },
