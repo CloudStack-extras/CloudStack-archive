@@ -1039,8 +1039,14 @@
                 serviceofferingname: { label: 'Service offering', isEditable: false },
                 group: { label: 'Group', isEditable: true },				
 				hostname: { label: 'Host', isEditable: false},
-				haenable: { label: 'HA Enable', isEditable: false },
-				isoid: { label: 'Attached ISO', isEditable: false },
+				haenable: { label: 'HA Enable', isEditable: false, converter:cloudStack.converters.toBooleanText },
+				isoid: { 
+				    label: 'Attached ISO', 
+					isEditable: false, 
+					converter: function(isoid) {
+                        return cloudStack.converters.toBooleanText(isoid != null);
+                    }				
+				},
 				domain: { label: 'Domain', isEditable: false },
 				account: { label: 'Account', isEditable: false },
 				created: { label: 'created', isEditable: false }				
