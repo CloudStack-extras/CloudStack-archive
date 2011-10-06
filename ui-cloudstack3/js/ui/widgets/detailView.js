@@ -638,6 +638,9 @@
           var $detail = $('<tr></tr>').addClass(key).appendTo($detailTable);
           var $name = $('<td></td>').addClass('name').appendTo($detail);
           var $value = $('<td></td>').addClass('value').appendTo($detail);
+          var content = data[key];
+
+          if (this.converter) content = this.converter(content);
 
           $detail.data('detail-view-field', key);
 
@@ -650,7 +653,7 @@
           }
 
           $name.html(value.label);
-          $value.html(data[key]);
+          $value.html(content);
 
           // Set up editable metadata
           $value.data('detail-view-is-editable', value.isEditable);

@@ -379,6 +379,9 @@
         if (field.action) {
           $td.data('list-view-action', key);
         }
+        if (field.converter) {
+          content = field.converter(content);
+        }
 
         $td.html(content);
 
