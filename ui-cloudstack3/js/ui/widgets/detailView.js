@@ -418,11 +418,13 @@
       $('<div>').addClass('buttons')
     );
 
-    var allowedActions = $.map(actions, function(value, key) {
-      return key;
-    });
+    var allowedActions = [];
 
     if (actions) {
+      allowedActions = $.map(actions, function(value, key) {
+        return key;
+      });
+
       if (options.actionFilter)
         allowedActions = options.actionFilter({
           context: {
