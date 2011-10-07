@@ -159,6 +159,8 @@
       var $edit = $td.find('div.edit');
       var $editInput = $edit.find('input');
       var $label = $td.find('span');
+      var $listView = $instanceRow.closest('.list-view');
+      var listViewArgs = $listView.data('view-args');
 
       // Hide label, show edit field
       var showEditField = function() {
@@ -181,8 +183,14 @@
 
         data[$td.data('list-view-item-field')] = $editInput.val();
 
+        var context = $.extend({}, listViewArgs.context);
+        context[
+          listViewArgs.activeSection
+        ] = $instanceRow.data('jsonObj');
+
         args.callback({
           data: data,
+          context: context,
           response: {
             success: function(args) {
               $edit.hide();

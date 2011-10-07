@@ -235,6 +235,8 @@
         });
 
         args.actions[args.actionName].action({
+          data: data,
+          context: $detailView.data('view-args').context,
           response: {
             data: data,
             success: function(data) {
