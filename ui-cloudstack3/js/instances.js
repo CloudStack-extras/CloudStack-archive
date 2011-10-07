@@ -698,8 +698,102 @@
 		  dataType: "json",
 		  async: true,
 		  success: function(json) { 	
-			var items = json.listvirtualmachinesresponse.virtualmachine;			    
-			args.response.success({data:items});			                			
+			var items = json.listvirtualmachinesresponse.virtualmachine;	
+           
+            args.response.success({
+              actionFilter: function(args) {			    
+				var jsonObj = args.context.item;
+				var allowedActions = [];
+								
+				if (jsonObj.state == 'Destroyed') {
+					if(isAdmin() || isDomainAdmin()) {
+					    allowedActions.push("restore");
+						//buildActionLinkForTab("label.action.restore.instance", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);							
+					}	
+				} 
+				else if (jsonObj.state == 'Running') {	
+                    allowedActions.push("edit");				
+					//buildActionLinkForTab("label.action.edit.instance", vmActionMap, $actionMenu, $midmenuItem1, $thisTab); 	
+
+					allowedActions.push("stop");		
+					//buildActionLinkForTab("label.action.stop.instance", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);
+					
+					allowedActions.push("restart");		
+					//buildActionLinkForTab("label.action.reboot.instance", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);
+					
+					allowedActions.push("destroy");		
+					//buildActionLinkForTab("label.action.destroy.instance", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);
+					
+					if (isAdmin() 
+						&& (jsonObj.rootdevicetype == 'NetworkFilesystem' || jsonObj.rootdevicetype == 'IscsiLUN' || jsonObj.rootdevicetype == 'PreSetup')
+						&& (jsonObj.hypervisor == 'XenServer' || jsonObj.hypervisor == 'VMware')) 
+					{
+					    allowedActions.push("mgirate");	
+						//buildActionLinkForTab("label.action.migrate.instance", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);
+					}
+					
+					if (jsonObj.isoid == null)	{
+					    allowedActions.push("attachISO");	
+						//buildActionLinkForTab("label.action.attach.iso", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);
+					}
+					else {	
+                        allowedActions.push("detachISO");						
+						//buildActionLinkForTab("label.action.detach.iso", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);	
+					}
+						
+					allowedActions.push("resetPassword");		
+					//buildActionLinkForTab("label.action.reset.password", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);
+					
+					allowedActions.push("changeService");	
+					//buildActionLinkForTab("label.action.change.service", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);	
+					
+					if(jsonObj.hypervisor == "BareMetal") {
+					    allowedActions.push("createTemplate");	
+						//buildActionLinkForTab("label.action.create.template", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);
+					}											
+				} 
+				else if (jsonObj.state == 'Stopped') {	  
+                    allowedActions.push("edit");					
+					//buildActionLinkForTab("label.action.edit.instance", vmActionMap, $actionMenu, $midmenuItem1, $thisTab); 
+					
+					allowedActions.push("start");	
+					//buildActionLinkForTab("label.action.start.instance", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);	
+
+                    allowedActions.push("destroy");						
+					//buildActionLinkForTab("label.action.destroy.instance", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);
+					
+					if (jsonObj.isoid == null)	{
+					    allowedActions.push("attachISO");	
+						//buildActionLinkForTab("label.action.attach.iso", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);
+					}
+					else {	
+                        allowedActions.push("detachISO");						
+						//buildActionLinkForTab("label.action.detach.iso", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);	
+					}		    
+					
+					allowedActions.push("resetPassword");		
+					//buildActionLinkForTab("label.action.reset.password", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);
+					
+					allowedActions.push("changeService");		
+					//buildActionLinkForTab("label.action.change.service", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);
+					
+					if(jsonObj.hypervisor == "BareMetal") {
+					    allowedActions.push("createTemplate");	
+						//buildActionLinkForTab("label.action.create.template", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);
+					}	 					
+				}
+				else if (jsonObj.state == 'Starting') {	
+				    allowedActions.push("stop");	
+					//buildActionLinkForTab("label.action.stop.instance", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);					
+				}
+				else if (jsonObj.state == 'Error') {	
+				    allowedActions.push("destroy");	
+					//buildActionLinkForTab("label.action.destroy.instance", vmActionMap, $actionMenu, $midmenuItem1, $thisTab);					
+				}				
+                return allowedActions;
+              },
+              data: items
+            });					                			
 		  }
 		});  	
 	  },
