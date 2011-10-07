@@ -46,6 +46,7 @@
                   messageArgs: cloudStack.serializeForm($form),
                   $item: $loading
                 });
+
                 close();
               }
             }

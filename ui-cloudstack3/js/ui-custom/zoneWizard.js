@@ -22,16 +22,19 @@
           data: data,
           response: {
             success: function(args) {
+              var $item = $('.list-view').listView('prependItem', {
+                data: [data],
+                actionFilter: function(args) { return []; }
+              });
+
               listViewArgs.complete({
                 _custom: args._custom,
+                $item: $item,
                 messageArgs: {
                   name: $wizard.find('div.review div.vm-instance-name input').val()
                 }
               });
-              $('.list-view').listView('prependItem', {
-                data: [data],
-                actionFilter: function(args) { return []; }
-              });
+
               close();
             }
           }

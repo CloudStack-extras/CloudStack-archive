@@ -47,7 +47,7 @@
                 }
               },
               notification: {
-                poll: testData.notifications.testPoll
+                poll: testData.notifications.customPoll(testData.data.zones[0])
               }
             }
           },
@@ -343,7 +343,7 @@
                   },
 
                   notification: {
-                    poll: testData.notifications.testPoll
+                    poll: testData.notifications.customPoll(testData.data.hosts[0])
                   },
 
                   messages: {

@@ -85,12 +85,13 @@
               notification._custom = args._custom;
 
               addNotification(notification, function(args) {
-                replaceItem(
-                  $item,
-                  args.data,
-                  args.actionFilter ?
-                    args.actionFilter : $instanceRow.next().data('list-view-action-filter')
-                );
+                if ($item.is(':visible'))
+                  replaceItem(
+                    $item,
+                    args.data,
+                    args.actionFilter ?
+                      args.actionFilter : $instanceRow.next().data('list-view-action-filter')
+                  );
               });
             }
           });
