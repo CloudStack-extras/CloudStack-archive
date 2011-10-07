@@ -361,11 +361,13 @@
                 return 'Resetting VM password';
               },
               complete: function(args) {
-                return 'VM password reset. New password is: 123#fs2';
+                return 'VM password reset. New password is: ' + args.password;
               }
             },
             notification: {              
-              poll: testData.notifications.testPoll
+              poll: testData.notifications.customPoll({
+                password: '1284018jaj#'
+              })
             }
           },
           changeService: {

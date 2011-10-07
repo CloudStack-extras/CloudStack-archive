@@ -29,9 +29,9 @@
 
           notification.poll({
             _custom: args._custom,
-            complete: function() {
-              success(successArgs);
-              complete();
+            complete: function(args) {
+              success($.extend(successArgs, args));
+              complete(args);
             }
           });
         }
@@ -181,7 +181,12 @@
               args = args ? args : {};
               notification._custom = args._custom;
               if (additional && additional.success) additional.success(args);
-              addNotification(notification, function() {
+              addNotification(notification, function(args) {
+                if (messages.complete) {
+                  cloudStack.dialog.notice({
+                    message: messages.complete(args.data)
+                  });
+                }
                 if (additional && additional.complete) additional.complete(args);
               });
             },
