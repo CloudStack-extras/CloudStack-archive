@@ -934,16 +934,52 @@
 		  		  
 		  edit: {
             label: 'Edit instance name',
-            action: function(args) {
-              args.response.success(args.data[0]);
+            action: function(args) {	
+			  array1.push("&displayName=" + args.response.data.displayname);					
+			  array1.push("&group=" + args.response.data.group);								
+			  array1.push("&ostypeid=" + args.response.data.guestosid);  
+	          //array1.push("&haenable="+haenable);                   			
+				
+			  $.ajax({
+				data: createURL("command=updateVirtualMachine&id=" + args.context.instances[0].id + array1.join("")),
+				dataType: "json",
+				success: function(json) {
+				  var jsonObj = json.updatevirtualmachineresponse.virtualmachine;		
+				  args.response.success(jsonObj);         					
+				}
+			  });	
             }
           },          
           
           attachISO: {
             label: 'Attach ISO',
-            action: function(args) {	              	
+			createForm: {
+              title: 'Attach ISO',
+              desc: 'Attach ISO to instance',
+              fields: {  
+                iso: {
+                  label: 'ISO',
+                  select: function(args) {					  
+			        $.ajax({
+					  url: createURL("listIsos&isReady=true&isofilter=executable"),			 
+					  dataType: "json",
+					  async: true,
+					  success: function(json) { 	                        				  
+					    var isos = json.listisosresponse.iso;	                        	
+                        var items = [];								
+                        $(isos).each(function() {						  
+						  items.push({id: this.id, description: this.displaytext});						  
+						});						
+					    args.response.success({data: items});					  
+					  }
+					});  		
+			      }				
+                }				 
+              }
+            },       
+            action: function(args) {              		
 			  $.ajax({
-			    url: createURL("attachIso&virtualmachineid="+args.ref.id+"&id=" + args.data.iso),			   
+			    url: createURL("attachIso&virtualmachineid=" + args.context.instances[0].id + "&id=" + args.data.iso),			   
 			    dataType: "json",
 			    async: true,
 			    success: function(json) { 			    
@@ -968,27 +1004,7 @@
             },
             notification: {
               poll: pollAsyncJobResult
-            },
-            createForm: {
-              title: 'Attach ISO',
-              desc: 'Attach ISO to instance',
-              fields: {  
-                iso: {
-                  label: 'ISO',
-                  select: function(args) {					  
-			        $.ajax({
-					  url: createURL("listIsos&isReady=true&isofilter=executable"),			 
-					  dataType: "json",
-					  async: true,
-					  success: function(json) { 	                        				  
-					    var items = json.listisosresponse.iso;					  
-					    args.response.success({data: items});					  
-					  }
-					});  		
-			      }				
-                }				 
-              }
-            }            
+            }                 
           },         
            		
           detachISO: {
@@ -1007,9 +1023,9 @@
                 return 'ISO has been detached.';
               }
             },         
-		    action: function(args) {	             	  
+		    action: function(args) {	              		
 			  $.ajax({
-		        url: createURL("detachIso&virtualmachineid=" + args.data.id),
+		        url: createURL("detachIso&virtualmachineid=" + args.context.instances[0].id),
 			    dataType: "json",
 			    async: true,
 			    success: function(json) {                    	    
