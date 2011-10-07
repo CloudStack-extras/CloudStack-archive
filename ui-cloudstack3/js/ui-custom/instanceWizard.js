@@ -28,11 +28,7 @@
             data: data,
             response: {
               success: function(args) {
-                listViewArgs.complete({
-                  _custom: args._custom,
-                  messageArgs: cloudStack.serializeForm($form)
-                });
-                $('.list-view').listView('prependItem', {
+                var $loading = $('.list-view').listView('prependItem', {
                   data: [
                     {
                       name: data.displayname ? data.displayname : 'New VM',
@@ -43,6 +39,12 @@
                     }
                   ],
                   actionFilter: function(args) { return []; }
+                });
+
+                listViewArgs.complete({
+                  _custom: args._custom,
+                  messageArgs: cloudStack.serializeForm($form),
+                  $item: $loading
                 });
                 close();
               }

@@ -18,7 +18,8 @@
           label: 'Status',
           indicator: {
             'Running': 'on',
-            'Stopped': 'off'
+            'Stopped': 'off',
+            'Destroyed': 'off'
           }
         }
       },
@@ -113,7 +114,7 @@
               ],
               action: function(args) {
                 args.response.success({
-                  _custom: { jobID: 12345 } 
+                  _custom: { jobID: 12345 }
                 });
               }
             })
@@ -134,7 +135,9 @@
             }
           },
           notification: {
-            poll: testData.notifications.testPoll
+            poll: testData.notifications.customPoll(
+              testData.data.instances[1]
+            )
           }
         },
 
@@ -150,6 +153,9 @@
           action: function(args) {
             setTimeout(function() {
               args.response.success({
+                data: {
+                  state: 'Restarting'
+                }
               });
             }, 1000);
           },
@@ -168,14 +174,18 @@
             }
           },
           notification: {
-            poll: testData.notifications.testPoll
+            poll: testData.notifications.customPoll({
+              state: 'Running'
+            })
           }
         },
         stop: {
           label: 'Stop instance',
           action: function(args) {
             setTimeout(function() {
-              args.response.success();
+              args.response.success({
+                data: { state: 'Stopping' }
+              });
             }, 500);
           },
           messages: {
@@ -193,33 +203,53 @@
             }
           },
           notification: {
-            poll: testData.notifications.testPoll
+            poll: testData.notifications.customPoll({
+              state: 'Stopped'
+            })
           }
         },
-        start: { label: 'Start instance' },
+        start: {
+          label: 'Start instance',
+          action: function(args) {
+            setTimeout(function() {
+              args.response.success({
+                data: { state: 'Starting' }
+              });
+            }, 500);
+          },
+          messages: {
+            confirm: function(args) {
+              return 'Are you sure you want to start ' + args.name + '?';
+            },
+            notification: function(args) {
+              return 'Starting VM: ' + args.name;
+            }
+          },
+          notification: {
+            poll: testData.notifications.customPoll({
+              state: 'Running'
+            })
+          }
+        },
         destroy: {
           label: 'Destroy instance',
           messages: {
             confirm: function(args) {
               return 'Are you sure you want to destroy ' + args.name + '?';
             },
-            success: function(args) {
-              return args.name + ' is being destroyed.';
-            },
             notification: function(args) {
               return 'Destroyed VM: ' + args.name;
-            },
-            complete: function(args) {
-              return args.name + ' has been destroyed.';
             }
           },
           action: function(args) {
             setTimeout(function() {
-              args.response.success();
+              args.response.success({ data: { state: 'Destroying' }});
             }, 200);
           },
           notification: {
-            poll: testData.notifications.testPoll
+            poll: testData.notifications.customPoll({
+              state: 'Destroyed'
+            })
           }
         }
       },
@@ -319,8 +349,23 @@
             }
           },
           resetPassword: {
-            label: 'Reset password', action: function(args) {
-              args.response.success();
+            label: 'Reset password', 
+            action: function(args) {
+              args.response.success({});
+            },
+            messages: {
+              confirm: function(args) {
+                return 'Do you really want to reset your password?';
+              },
+              notification: function(args) {
+                return 'Resetting VM password';
+              },
+              complete: function(args) {
+                return 'VM password reset. New password is: 123#fs2';
+              }
+            },
+            notification: {              
+              poll: testData.notifications.testPoll
             }
           },
           changeService: {

@@ -32,9 +32,9 @@
 
           notification.poll({
             _custom: args._custom,
-            complete: function() {
-              success(successArgs);
-              complete();
+            complete: function(args) {
+              success($.extend(successArgs, args));
+              complete(args);
             }
           });
         }
@@ -54,7 +54,7 @@
       var section;
       var data = {
         id: $instanceRow.data('list-view-item-id'),
-		    jsonObj: $instanceRow.data('jsonObj')
+        jsonObj: $instanceRow.data('jsonObj')
       };
       var $listView = $instanceRow.closest('.list-view');
 
@@ -68,6 +68,9 @@
 
       var performAction = function(data, options) {
         if (!options) options = {};
+
+        $instanceRow = options.$item ? options.$item : $instanceRow;
+
         if (action.custom) {
           action.custom({
             data: data,
@@ -75,10 +78,19 @@
             context: listViewArgs.context,
             complete: function(args) {
               args = args ? args : {};
+
+              var $item = args.$item;
+
               notification.desc = messages.notification(args.messageArgs);
               notification._custom = args._custom;
-              addNotification(notification, function() {
-                return false;
+
+              addNotification(notification, function(args) {
+                replaceItem(
+                  $item,
+                  args.data,
+                  args.actionFilter ?
+                    args.actionFilter : $instanceRow.next().data('list-view-action-filter')
+                );
               });
             }
           });
@@ -90,11 +102,55 @@
             response: {
               success: function(args) {
                 args = args ? args : {};
+
+                var $prevRow, $newRow;
+
+                // Make copy of previous row, in case data is needed
+                $prevRow = $instanceRow.clone();
+                $prevRow.data($instanceRow.data());
+
+                // Set loading appearance
+                if (args.data) {
+                  $instanceRow = replaceItem(
+                    $instanceRow,
+                    $.extend($instanceRow.data('json-obj'), args.data),
+                    $instanceRow.data('list-view-action-filter')
+                  );
+                }
+
+                $instanceRow.find('td:last').children().remove();
+                $instanceRow.find('td:last').append($('<div>').addClass('loading'));
+                $instanceRow.addClass('loading');
+
+                // Disable any clicking/actions for row
+                $instanceRow.bind('click', function() { return false; });
+
                 notification._custom = args._custom;
+
                 if (additional && additional.success) additional.success(args);
-                addNotification(notification, function() {
+
+                addNotification(notification, function(args) {
+                  if (!args) args = {};
+
                   if ($instanceRow.is(':visible')) {
-                    if (additional && additional.complete) additional.complete(args);
+                    if (args.data) {
+                      $newRow = replaceItem(
+                        $instanceRow,
+                        $.extend($instanceRow.data('json-obj'), args.data),
+                        $instanceRow.data('list-view-action-filter')
+                      );
+                    }
+                    else {
+                      // Nothing new, so just put in existing data
+                      $newRow = replaceItem(
+                        $instanceRow,
+                        $instanceRow.data('json-obj'),
+                        $instanceRow.data('list-view-action-filter')
+                      );
+                    }
+
+                    if (additional && additional.complete)
+                      additional.complete(args, $newRow);
                   }
                 });
               },
@@ -125,30 +181,42 @@
         });
       else if (action.custom)
         performAction();
-      else
+      else {
+        var addRow = args.action.addRow == "false" ? false : true;
+
         cloudStack.dialog.createForm({
           form: args.action.createForm,
           after: function(args) {
-            performAction(args.data, { ref: args.ref, context: context });
-            $listView.listView('prependItem', {
-              data: [
-                $.extend(args.data, {
-                  state: 'Creating',
-                  status: 'Creating',
-                  allocationstate: 'Creating'
-                })
-              ],
-              actionFilter: function(args) { return []; }
+            var $newItem;
+            if (addRow != false) {
+              $newItem = $listView.listView('prependItem', {
+                data: [
+                  $.extend(args.data, {
+                    state: 'Creating',
+                    status: 'Creating',
+                    allocationstate: 'Creating'
+                  })
+                ]
+              });              
+            } else {
+              $newItem = $instanceRow;
+            }
+
+            performAction(args.data, {
+              ref: args.ref,
+              context: context,
+              $item: $newItem
             });
           },
           ref: listViewArgs.ref,
           context: listViewArgs.context
-        });
+        });        
+      }
     },
 
     destroy: function($instanceRow, args) {
       uiActions.standard($instanceRow, args, {
-        complete: function(args) {
+        complete: function(args, $instanceRow) {
           $instanceRow.animate({ opacity: 0.5 });
           $instanceRow.find('td.actions').children().remove();
         }
@@ -178,7 +246,7 @@
 
         var data = {
           id: $instanceRow.data('list-view-item-id'),
-		      jsonObj: $instanceRow.data('jsonObj')
+          jsonObj: $instanceRow.data('jsonObj')
         };
 
         data[$td.data('list-view-item-field')] = $editInput.val();
@@ -323,11 +391,11 @@
   var makeActionIcons = function($td, actions, options) {
     options = options ? options : {};
     var allowedActions = options.allowedActions;
-    
+
     $.each(actions, function(key) {
-      if (allowedActions && $.inArray(key, allowedActions) == -1) 
+      if (allowedActions && $.inArray(key, allowedActions) == -1)
         return true;
-      if (key == 'add') 
+      if (key == 'add')
         return true;
 
       $td.append(
@@ -353,8 +421,8 @@
     var $panel = args.$panel;
     var title = args.title;
     var id = args.id;
-    var data = $.extend(args.data, { 
-      id: id, 
+    var data = $.extend(args.data, {
+      id: id,
       jsonObj: args.jsonObj,
       section: args.section,
       context: args.context
@@ -387,7 +455,7 @@
     $(data).each(function() {
       var dataItem = this;
       var id = dataItem.id;
-      
+
       var $tr = $('<tr>');
       rows.push($tr);
 
@@ -431,6 +499,7 @@
 
       $tr.data('list-view-item-id', id);
       $tr.data('jsonObj', dataItem);
+      $tr.data('list-view-action-filter', options.actionFilter);
 
       if (actions) {
         var allowedActions = $.map(actions, function(value, key) {
@@ -742,7 +811,7 @@
     $listView.bind('click change', function(event) {
       var $target = $(event.target);
       var id = $target.closest('tr').data('list-view-item-id');
-	    var jsonObj = $target.closest('tr').data('jsonObj');
+      var jsonObj = $target.closest('tr').data('jsonObj');
       var detailViewArgs;
       var detailViewPresent = ($target.closest('div.data-table tr td').size() &&
                                $target.closest('div.data-table tr td').index() == 0 &&
@@ -756,7 +825,7 @@
           data: listViewData.detailView,
           title: $target.closest('td').find('span').html(),
           id: id,
-		      jsonObj: jsonObj,
+          jsonObj: jsonObj,
           ref: jsonObj,
           context: $.extend({}, $listView.data('view-args').context)
         };
@@ -835,7 +904,9 @@
     return $listView.appendTo($container);
   };
 
-  var prependItem = function(listView, data, actionFilter) {
+  var prependItem = function(listView, data, actionFilter, options) {
+    if (!options) options = {};
+
     var viewArgs = listView.data('view-args');
     var listViewArgs = viewArgs.listView ? viewArgs.listView : viewArgs;
     var targetArgs = listViewArgs.activeSection ? listViewArgs.sections[
@@ -855,11 +926,40 @@
     listView.find('table').dataTable('refresh');
 
     $tr.addClass('loading').find('td:last').prepend($('<div>').addClass('loading'));
+
+    return $tr;
+  };
+
+  var replaceItem = function($row, data, actionFilter) {
+    var $newRow;
+    var $listView = $row.closest('.list-view');
+    var viewArgs = $listView.data('view-args');
+    var listViewArgs = viewArgs.listView ? viewArgs.listView : viewArgs;
+    var targetArgs = listViewArgs.activeSection ? listViewArgs.sections[
+      listViewArgs.activeSection
+    ].listView : listViewArgs;
+
+    $newRow = addTableRows(
+      targetArgs.fields,
+      data,
+      $listView.find('table tbody'),
+      targetArgs.actions,
+      {
+        actionFilter: actionFilter
+      }
+    )[0];
+
+    $row.replaceWith($newRow);
+    $newRow.closest('table').dataTable('refresh');
+
+    return $newRow;
   };
 
   $.fn.listView = function(args, options) {
     if (args == 'prependItem') {
-      prependItem(this, options.data, options.actionFilter);
+      return prependItem(this, options.data, options.actionFilter);
+    } else if (args =='replaceItem') {
+      replaceItem(this, options.data, options.actionFilter);
     } else if (args.sections) {
       var targetSection;
       $.each(args.sections, function(key) {

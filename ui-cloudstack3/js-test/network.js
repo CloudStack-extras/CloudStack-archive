@@ -21,7 +21,7 @@
             zonename: { label: 'Zone' },
             vlanname: { label: 'VLAN' },
             networkid: { label: 'Network Type' },
-            state: { label: 'State' }
+            state: { label: 'State', indicator: { 'Allocated': 'on' } }
           },
 
           actions: {
@@ -57,8 +57,8 @@
                       setTimeout(function() {
                         args.response.success({
                           data: [
-                            { id: 'sanjose', name: 'San Jose' },
-                            { id: 'Chicago', name: 'Chicago' }
+                            { id: 'San Jose', description: 'San Jose' },
+                            { id: 'Chicago', description: 'Chicago' }
                           ]
                         });
                       }, 10);
@@ -68,14 +68,18 @@
               },
 
               notification: {
-                poll: testData.notifications.testPoll
+                poll: testData.notifications.customPoll(testData.data.network[0])
               }
             },
             stop: {
               label: 'Disable static NAT',
               action: function(args) {
                 setTimeout(function() {
-                  args.response.success();
+                  args.response.success({
+                    data: {
+                      state: 'Disabling'                      
+                    }
+                  });
                 }, 500);
               },
               messages: {
@@ -93,7 +97,9 @@
                 }
               },
               notification: {
-                poll: testData.notifications.testPoll
+                poll: testData.notifications.customPoll({
+                  state: 'Disabled'
+                }, function() { return []; })
               }
             }
           },

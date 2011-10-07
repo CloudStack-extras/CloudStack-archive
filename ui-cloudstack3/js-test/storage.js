@@ -19,8 +19,13 @@
             name: { label: 'Name', editable: true },
             type: { label: 'Type' },
             zonename: { label: 'Zone' },
-            deviceid: { label: 'Device ID' },
-            size: { label: 'Size' }
+            size: { label: 'Size' },
+            state: { 
+              label: 'Status',
+              indicator: {
+                'Ready': 'on'
+              } 
+            }
           },
 
           filters: {
@@ -36,7 +41,9 @@
               label: 'Add volume',
 
               action: function(args) {
-                args.response.success({ _custom: { jobID: new Date() } });
+                args.response.success({ 
+                  _custom: { jobID: new Date() }
+                });
               },
 
               messages: {
@@ -119,7 +126,9 @@
               },
 
               notification: {
-                poll: testData.notifications.testPoll
+                poll: testData.notifications.customPoll(
+                  testData.data.storage[0]
+                )
               }
             },
             edit: {
@@ -145,14 +154,19 @@
                 }
               },
               action: function(args) {
-                args.response.success();
+                args.response.success({
+                  data: { state: 'Shapshotting' }
+                });
               },
               notification: {
-                poll: testData.notifications.testPoll
+                poll: testData.notifications.customPoll({
+                  state: 'Ready'
+                })
               }
             },
             create: {
               label: 'Create template',
+              addRow: 'false',
               messages: {
                 success: function(args) {
                   return 'Your new snapshot ' + args.name + ' is being created.';
@@ -165,7 +179,11 @@
                 }
               },
               action: function(args) {
-                args.response.success();
+                args.response.success({
+                  data: {
+                    state: 'Templating'
+                  }
+                });
               },
               createForm: {
                 title: 'Create a template',
@@ -195,7 +213,9 @@
                 }
               },
               notification: {
-                poll: testData.notifications.testPoll
+                poll: testData.notifications.customPoll({
+                  state: 'Ready'
+                })
               }
             }
           },

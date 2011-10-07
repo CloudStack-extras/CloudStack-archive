@@ -2,10 +2,29 @@
   var testRestartPoll;
 
   window.testData = {
+    actionFilter: function(args) {
+      var allowedActions = args.context.actions;
+      var disallowedActions = [];
+      var item = args.context.item;
+      var status = item.state;
+
+      if (status == 'Running' || status == 'Starting') {
+        disallowedActions.push('start');
+      } else if (status == 'Stopped' || status == 'Stopping') {
+        disallowedActions.push('stop');
+        disallowedActions.push('restart');
+      }
+
+      allowedActions = $.grep(allowedActions, function(item) {
+        return $.inArray(item, disallowedActions) == -1;
+      });
+      
+      return allowedActions;
+    },
     notifications: {
       testPoll: function(args) {
         if (!testRestartPoll) testRestartPoll = 0;
-        if (testRestartPoll == 8) {
+        if (testRestartPoll == 1) {
           args.complete();
           testRestartPoll = 0;
           return true;
@@ -14,6 +33,23 @@
         testRestartPoll++;
 
         return true;
+      },
+      customPoll: function(data, actionFilter) {
+        return function(args) {
+          if (!testRestartPoll) testRestartPoll = 0;
+          if (testRestartPoll == 1) {
+            args.complete({
+              data: data,
+              actionFilter: actionFilter ? actionFilter : testData.actionFilter
+            });
+            testRestartPoll = 0;
+            return true;
+          }
+
+          testRestartPoll++;
+
+          return true;
+        };
       }
     },
     actions: {
@@ -44,25 +80,7 @@
             var data;
             if (args.page <= 5) data = testData.data[section];
             args.response.success({
-              actionFilter: function(args) {
-                var allowedActions = args.context.actions;
-                var disallowedActions = [];
-                var item = args.context.item;
-                var status = item.state;
-
-                if (status == 'Running' || status == 'Starting') {
-                  disallowedActions.push('start');
-                } else if (status == 'Stopped' || status == 'Stopping') {
-                  disallowedActions.push('stop');
-                  disallowedActions.push('restart');
-                }
-
-                allowedActions = $.grep(allowedActions, function(item) {
-                  return $.inArray(item, disallowedActions) == -1;
-                });
-                
-                return allowedActions;
-              },
+              actionFilter: testData.actionFilter,
               data: data
             });
           }, 300);
@@ -159,7 +177,7 @@
           "domainid": 1,
           "domain": "ROOT",
           "created": "2011-06-14T11:11:58-0700",
-          "state": "Starting",
+          "state": "Running",
           "haenable": false,
           "zoneid": 1,
           "zonename": "San Jose",
@@ -243,7 +261,7 @@
           "domainid": 1,
           "domain": "ROOT",
           "created": "2011-06-22T10:14:45-0700",
-          "state": "Stopping",
+          "state": "Stopped",
           "haenable": false,
           "zoneid": 1,
           "zonename": "San Jose",

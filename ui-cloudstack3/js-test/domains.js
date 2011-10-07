@@ -10,7 +10,7 @@
         name: 'Domain details',
         viewAll: {
           label: 'Accounts',
-          path: 'accounts'
+          path: 'accounts.accounts'
         },
 
         // Detail actions
