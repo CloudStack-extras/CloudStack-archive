@@ -3,7 +3,67 @@
   var zoneObjs, hypervisorObjs, featuredTemplateObjs, communityTemplateObjs, myTemplateObjs, isoObjs, serviceOfferingObjs, diskOfferingObjs;
   var selectedZoneObj, selectedTemplateObj, selectedHypervisor, selectedDiskOfferingObj;
   var step5ContainerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'	
-  	
+   
+  var actionfilter = function(args) {	    		  
+    var jsonObj = args.context.item;
+	var allowedActions = [];
+					
+	if (jsonObj.state == 'Destroyed') {
+		if(isAdmin() || isDomainAdmin()) {
+		    allowedActions.push("restore");												
+		}	
+	} 
+	else if (jsonObj.state == 'Running') {	
+        allowedActions.push("edit");	
+		allowedActions.push("stop");
+		allowedActions.push("restart");	
+		allowedActions.push("destroy");	
+		if (isAdmin() 
+			&& (jsonObj.rootdevicetype == 'NetworkFilesystem' || jsonObj.rootdevicetype == 'IscsiLUN' || jsonObj.rootdevicetype == 'PreSetup')
+			&& (jsonObj.hypervisor == 'XenServer' || jsonObj.hypervisor == 'VMware')) 
+		{
+		    allowedActions.push("migrate");							
+		}
+		
+		if (jsonObj.isoid == null)	{
+		    allowedActions.push("attachISO");							
+		}
+		else {	
+            allowedActions.push("detachISO");	
+		}
+			
+		allowedActions.push("resetPassword");	
+		allowedActions.push("changeService");	
+		
+		if(jsonObj.hypervisor == "BareMetal") {
+		    allowedActions.push("createTemplate");							
+		}											
+	} 
+	else if (jsonObj.state == 'Stopped') {	  
+        allowedActions.push("edit");					
+		allowedActions.push("start");
+        allowedActions.push("destroy");	
+		if (jsonObj.isoid == null)	{
+		    allowedActions.push("attachISO");							
+		}
+		else {	
+            allowedActions.push("detachISO");	
+		}	    
+		allowedActions.push("resetPassword");		
+		allowedActions.push("changeService");
+		if(jsonObj.hypervisor == "BareMetal") {
+		    allowedActions.push("createTemplate");							
+		}	 					
+	}
+	else if (jsonObj.state == 'Starting') {	
+	    allowedActions.push("stop");										
+	}
+	else if (jsonObj.state == 'Error') {	
+	    allowedActions.push("destroy");									
+	}				
+    return allowedActions;
+  }
+    
   cloudStack.sections.instances = {
     title: 'Instances',
     id: 'instances',
@@ -698,8 +758,12 @@
 		  dataType: "json",
 		  async: true,
 		  success: function(json) { 	
-			var items = json.listvirtualmachinesresponse.virtualmachine;			    
-			args.response.success({data:items});			                			
+			var items = json.listvirtualmachinesresponse.virtualmachine;	
+           
+            args.response.success({
+              actionFilter: actionfilter,
+              data: items
+            });					                			
 		  }
 		});  	
 	  },
@@ -870,16 +934,52 @@
 		  		  
 		  edit: {
             label: 'Edit instance name',
-            action: function(args) {
-              args.response.success(args.data[0]);
+            action: function(args) {	
+			  array1.push("&displayName=" + args.response.data.displayname);					
+			  array1.push("&group=" + args.response.data.group);								
+			  array1.push("&ostypeid=" + args.response.data.guestosid);  
+	          //array1.push("&haenable="+haenable);                   			
+				
+			  $.ajax({
+				data: createURL("command=updateVirtualMachine&id=" + args.context.instances[0].id + array1.join("")),
+				dataType: "json",
+				success: function(json) {
+				  var jsonObj = json.updatevirtualmachineresponse.virtualmachine;		
+				  args.response.success(jsonObj);         					
+				}
+			  });	
             }
           },          
           
           attachISO: {
             label: 'Attach ISO',
-            action: function(args) {	              	
+			createForm: {
+              title: 'Attach ISO',
+              desc: 'Attach ISO to instance',
+              fields: {  
+                iso: {
+                  label: 'ISO',
+                  select: function(args) {					  
+			        $.ajax({
+					  url: createURL("listIsos&isReady=true&isofilter=executable"),			 
+					  dataType: "json",
+					  async: true,
+					  success: function(json) { 	                        				  
+					    var isos = json.listisosresponse.iso;	                        	
+                        var items = [];								
+                        $(isos).each(function() {						  
+						  items.push({id: this.id, description: this.displaytext});						  
+						});						
+					    args.response.success({data: items});					  
+					  }
+					});  		
+			      }				
+                }				 
+              }
+            },       
+            action: function(args) {              		
 			  $.ajax({
-			    url: createURL("attachIso&virtualmachineid="+args.ref.id+"&id=" + args.data.iso),			   
+			    url: createURL("attachIso&virtualmachineid=" + args.context.instances[0].id + "&id=" + args.data.iso),			   
 			    dataType: "json",
 			    async: true,
 			    success: function(json) { 			    
@@ -904,27 +1004,7 @@
             },
             notification: {
               poll: pollAsyncJobResult
-            },
-            createForm: {
-              title: 'Attach ISO',
-              desc: 'Attach ISO to instance',
-              fields: {  
-                iso: {
-                  label: 'ISO',
-                  select: function(args) {					  
-			        $.ajax({
-					  url: createURL("listIsos&isReady=true&isofilter=executable"),			 
-					  dataType: "json",
-					  async: true,
-					  success: function(json) { 	                        				  
-					    var items = json.listisosresponse.iso;					  
-					    args.response.success({data: items});					  
-					  }
-					});  		
-			      }				
-                }				 
-              }
-            }            
+            }                 
           },         
            		
           detachISO: {
@@ -943,9 +1023,9 @@
                 return 'ISO has been detached.';
               }
             },         
-		    action: function(args) {	             	  
+		    action: function(args) {	              		
 			  $.ajax({
-		        url: createURL("detachIso&virtualmachineid=" + args.data.id),
+		        url: createURL("detachIso&virtualmachineid=" + args.context.instances[0].id),
 			    dataType: "json",
 			    async: true,
 			    success: function(json) {                    	    
@@ -1155,31 +1235,63 @@
               poll: pollAsyncJobResult		
             }
           },	
-		  			
-          migrate: {
-            notification: {
-              desc: 'Migrated VM',
-              poll: testData.notifications.testPoll
-            },
-            label: 'Migrate VM', action: function(args) {
-              args.response.success();
-            }
-          },
-          attach: {
-            label: 'Attach VM', action: function(args) {
-
-            }
-          },
-          'reset-password': {
-            label: 'Reset admin password for VM', action: function(args) {
-
-            }
-          },
-          change: {
-            label: 'Change VM', action: function(args) {
-
-            }
-          }
+		  
+		  migrate: {
+            label: 'Migrate instance',
+            messages: {     
+              confirm: function(args) {			
+                return 'Are you sure you want to migrate instance?';
+              },
+              success: function(args) {
+                return 'Instance is being migrated.';
+              },
+              notification: function(args) {			
+                return 'Migrating instance';
+              },
+              complete: function(args) {			  
+                return 'Instance has been migrated.';
+              }
+            }, 
+			createForm: {
+              title: 'Migrate instance',
+              desc: '',
+              fields: {  
+                hostId: {
+                  label: 'Host',
+				  validation: { required: true },
+                  select: function(args) {	                                     
+			        $.ajax({
+					  url: createURL("listHosts&VirtualMachineId=" + args.context.instances[0].id),			 
+					  dataType: "json",
+					  async: true,
+					  success: function(json) { 	                        				  
+					    var hosts = json.listhostsresponse.host;	
+						var items = [];								
+                        $(hosts).each(function() {						  
+						  items.push({id: this.id, description: this.name});	 
+						});	             						
+					    args.response.success({data: items});					  
+					  }
+					});  		
+			      }				
+                }				 
+              }
+            },        			
+		    action: function(args) {			                 	
+			  $.ajax({			    
+		        url: createURL("migrateVirtualMachine&hostid=" + args.data.hostId + "&virtualmachineid=" + args.context.instances[0].id),
+			    dataType: "json",
+			    async: true,
+			    success: function(json) {  
+			      var jid = json.migratevirtualmachineresponse.jobid;    				
+				  args.response.success({_custom:{jobId: jid}});			  
+		        }
+			  });  	
+		    },
+		    notification: {
+              poll: pollAsyncJobResult		  
+            }               
+          }		  
         },
         tabs: {
           // Details tab
@@ -1251,7 +1363,12 @@
 			
             //dataProvider: testData.dataProvider.detailView('instances')
 			dataProvider: function(args) {	              
-              args.response.success({data:args.jsonObj});	
+              args.response.success(
+			    {
+				  actionFilter: actionfilter,
+				  data:args.jsonObj
+				}
+			  );	
 		    }			
           },
 
