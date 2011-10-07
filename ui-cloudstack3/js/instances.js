@@ -1155,31 +1155,63 @@
               poll: pollAsyncJobResult		
             }
           },	
-		  			
-          migrate: {
-            notification: {
-              desc: 'Migrated VM',
-              poll: testData.notifications.testPoll
-            },
-            label: 'Migrate VM', action: function(args) {
-              args.response.success();
-            }
-          },
-          attach: {
-            label: 'Attach VM', action: function(args) {
-
-            }
-          },
-          'reset-password': {
-            label: 'Reset admin password for VM', action: function(args) {
-
-            }
-          },
-          change: {
-            label: 'Change VM', action: function(args) {
-
-            }
-          }
+		  
+		  migrate: {
+            label: 'Migrate instance',
+            messages: {     
+              confirm: function(args) {			
+                return 'Are you sure you want to migrate instance?';
+              },
+              success: function(args) {
+                return 'Instance is being migrated.';
+              },
+              notification: function(args) {			
+                return 'Migrating instance';
+              },
+              complete: function(args) {			  
+                return 'Instance has been migrated.';
+              }
+            }, 
+			createForm: {
+              title: 'Migrate instance',
+              desc: '',
+              fields: {  
+                hostId: {
+                  label: 'Host',
+				  validation: { required: true },
+                  select: function(args) {	                                     
+			        $.ajax({
+					  url: createURL("listHosts&VirtualMachineId=" + args.context.instances[0].id),			 
+					  dataType: "json",
+					  async: true,
+					  success: function(json) { 	                        				  
+					    var hosts = json.listhostsresponse.host;	
+						var items = [];								
+                        $(hosts).each(function() {						  
+						  items.push({id: this.id, description: this.name});	 
+						});	             						
+					    args.response.success({data: items});					  
+					  }
+					});  		
+			      }				
+                }				 
+              }
+            },        			
+		    action: function(args) {			                 	
+			  $.ajax({			    
+		        url: createURL("migrateVirtualMachine&hostid=" + args.data.hostId + "&virtualmachineid=" + args.context.instances[0].id),
+			    dataType: "json",
+			    async: true,
+			    success: function(json) {  
+			      var jid = json.migratevirtualmachineresponse.jobid;    				
+				  args.response.success({_custom:{jobId: jid}});			  
+		        }
+			  });  	
+		    },
+		    notification: {
+              poll: pollAsyncJobResult		  
+            }               
+          }		  
         },
         tabs: {
           // Details tab
