@@ -1072,8 +1072,8 @@
               notification: function(args) {			
                 return 'Resetting password';
               },
-              complete: function(args) {			  
-                return 'Password has been reset.';
+              complete: function(args) {	
+                return 'Password has been reset to ' + args.password;
               }
             },         
 		    action: function(args) {	              		
