@@ -1362,10 +1362,12 @@
 				    {_custom:
 				      {jobId: jid,
 					   getUpdatedItem: function(json) {					  
-					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					     //return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+						 return {}; //nothing in this VM needs to be updated
 					   },
 					   getActionFilter: function() {
-					     return actionfilter;
+					     //return actionfilter;
+						 return function(){}; 
 					   }					 
 					  }
 				    }
