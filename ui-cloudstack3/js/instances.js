@@ -533,8 +533,19 @@
 					url: createURL("deployVirtualMachine"+array1.join("")),
 					dataType: "json",
 					success: function(json) {
-						var jid = json.deployvirtualmachineresponse.jobid;					    
-						args.response.success({ _custom: { jobId: jid } });											    									    
+						var jid = json.deployvirtualmachineresponse.jobid;	
+                        args.response.success(
+						  {_custom:
+							{jobId: jid,
+							 getUpdatedItem: function(json) {							   
+							   return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+							 },
+							 getActionFilter: function() {
+							   return actionfilter;
+							 }					 
+							}
+						  }
+						);						
 					},
 					error: function(XMLHttpResponse) {	                        				
 						//args.response.error(); //wait for Brian to implement
@@ -573,7 +584,18 @@
 			  async: true,
 			  success: function(json) { 			    
 				var jid = json.startvirtualmachineresponse.jobid;    				
-				args.response.success({_custom:{jobId: jid}});							
+				args.response.success(
+				  {_custom:
+				    {jobId: jid,
+					 getUpdatedItem: function(json) {
+					   return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					 },
+					 getActionFilter: function() {
+					   return actionfilter;
+					 }					 
+					}
+				  }
+				);							
 			  }
 			});  	
 		  },
@@ -604,7 +626,18 @@
 			  async: true,
 			  success: function(json) { 			    
 				var jid = json.stopvirtualmachineresponse.jobid;    				
-				args.response.success({_custom:{jobId: jid}});							
+				args.response.success(
+				  {_custom:
+				    {jobId: jid,
+					 getUpdatedItem: function(json) {
+					   return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					 },
+					 getActionFilter: function() {
+					   return actionfilter;
+					 }					 
+					}
+				  }
+				);								
 			  }
 			});  	
 		  },		  
@@ -635,8 +668,19 @@
 			  dataType: "json",
 			  async: true,
 			  success: function(json) { 			    
-				var jid = json.rebootvirtualmachineresponse.jobid;    				
-				args.response.success({_custom:{jobId: jid}});							
+				var jid = json.rebootvirtualmachineresponse.jobid;   
+ 				args.response.success(
+				  {_custom:
+				    {jobId: jid,
+					 getUpdatedItem: function(json) {
+					   return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					 },
+					 getActionFilter: function() {
+					   return actionfilter;
+					 }					 
+					}
+				  }
+				);					
 			  }
 			});  	
 		  },
@@ -681,7 +725,18 @@
 			  async: true,
 			  success: function(json) { 			    
 				var jid = json.destroyvirtualmachineresponse.jobid;    				
-				args.response.success({_custom:{jobId: jid}});							
+				args.response.success(
+				  {_custom:
+				    {jobId: jid,
+					 getUpdatedItem: function(json) {
+					   return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					 },
+					 getActionFilter: function() {
+					   return actionfilter;
+					 }					 
+					}
+				  }
+				);						
 			  }
 			});  	
 		  },		  
@@ -783,7 +838,18 @@
 			    async: true,
 			    success: function(json) { 			    
 				  var jid = json.startvirtualmachineresponse.jobid;    				
-				  args.response.success({_custom:{jobId: jid}});							
+				  args.response.success(
+				    {_custom:
+				      {jobId: jid,
+					   getUpdatedItem: function(json) {
+					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					   },
+					   getActionFilter: function() {
+					     return actionfilter;
+					   }					 
+					  }
+				    }
+				  );							
 			    }
 			  });  	
 		    },
@@ -814,7 +880,18 @@
 			    async: true,
 			    success: function(json) { 			    
 				  var jid = json.stopvirtualmachineresponse.jobid;    				
-				  args.response.success({_custom:{jobId: jid}});							
+				  args.response.success(
+				    {_custom:
+				      {jobId: jid,
+					   getUpdatedItem: function(json) {
+					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					   },
+					   getActionFilter: function() {
+					     return actionfilter;
+					   }					 
+					  }
+				    }
+				  );									
 			    }
 			  });  	
 		    },		  
@@ -845,7 +922,18 @@
 			    async: true,
 			    success: function(json) { 			    
 				  var jid = json.rebootvirtualmachineresponse.jobid;    				
-				  args.response.success({_custom:{jobId: jid}});							
+				  args.response.success(
+				    {_custom:
+				      {jobId: jid,
+					   getUpdatedItem: function(json) {
+					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					   },
+					   getActionFilter: function() {
+					     return actionfilter;
+					   }					 
+					  }
+				    }
+				  );										
 			    }
 			  });  	
 		    },
@@ -890,7 +978,18 @@
 			    async: true,
 			    success: function(json) { 			    
 				  var jid = json.destroyvirtualmachineresponse.jobid;    				
-				  args.response.success({_custom:{jobId: jid}});							
+				  args.response.success(
+				    {_custom:
+				      {jobId: jid,
+					   getUpdatedItem: function(json) {
+					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					   },
+					   getActionFilter: function() {
+					     return actionfilter;
+					   }					 
+					  }
+				    }
+				  );										
 			    }
 			  });  	
 		    },		  
@@ -984,7 +1083,18 @@
 			    async: true,
 			    success: function(json) { 			    
 				  var jid = json.attachisoresponse.jobid;    				
-				  args.response.success({_custom:{jobId: jid}});							
+				  args.response.success(
+				    {_custom:
+				      {jobId: jid,
+					   getUpdatedItem: function(json) {					     
+					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					   },
+					   getActionFilter: function() {
+					     return actionfilter;
+					   }					 
+					  }
+				    }
+				  );									
 			    }
 			  });  	
 		    },
@@ -1030,7 +1140,18 @@
 			    async: true,
 			    success: function(json) {                    	    
 			      var jid = json.detachisoresponse.jobid;    				
-				  args.response.success({_custom:{jobId: jid}});				  
+				  args.response.success(
+				    {_custom:
+				      {jobId: jid,
+					   getUpdatedItem: function(json) {					     
+					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					   },
+					   getActionFilter: function() {
+					     return actionfilter;
+					   }					 
+					  }
+				    }
+				  );						  
 		        }
 			  });  	
 		    },
@@ -1072,7 +1193,7 @@
               notification: function(args) {			
                 return 'Resetting password';
               },
-              complete: function(args) {	
+              complete: function(args) {				   
                 return 'Password has been reset to ' + args.password;
               }
             },         
@@ -1083,7 +1204,18 @@
 			    async: true,
 			    success: function(json) {  			                    	    
 			      var jid = json.resetpasswordforvirtualmachineresponse.jobid;    				
-				  args.response.success({_custom:{jobId: jid}});				  
+				  args.response.success(
+				    {_custom:
+				      {jobId: jid,
+					   getUpdatedItem: function(json) {					    
+					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					   },
+					   getActionFilter: function() {
+					     return actionfilter;
+					   }					 
+					  }
+				    }
+				  );						  
 		        }
 			  });  	
 		    },
@@ -1220,14 +1352,24 @@
   			  
 	          array1.push("&url=" + todb(args.data.url));    				           		    
 			 			  
-			  $.ajax({			    
-			    
+			  $.ajax({	 
 		        url: createURL("createTemplate&virtualmachineid=" + args.context.instances[0].id + array1.join("")),
 			    dataType: "json",
 			    async: true,
 			    success: function(json) {   			                    	    
 			      var jid = json.createtemplateresponse.jobid;    				
-				  args.response.success({_custom:{jobId: jid}});				  
+				  args.response.success(
+				    {_custom:
+				      {jobId: jid,
+					   getUpdatedItem: function(json) {					  
+					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					   },
+					   getActionFilter: function() {
+					     return actionfilter;
+					   }					 
+					  }
+				    }
+				  );						  
 		        }
 			  });  	
 		    },
@@ -1284,7 +1426,18 @@
 			    async: true,
 			    success: function(json) {  
 			      var jid = json.migratevirtualmachineresponse.jobid;    				
-				  args.response.success({_custom:{jobId: jid}});			  
+				  args.response.success(
+				    {_custom:
+				      {jobId: jid,
+					   getUpdatedItem: function(json) {					     
+					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+					   },
+					   getActionFilter: function() {
+					     return actionfilter;
+					   }					 
+					  }
+				    }
+				  );						  
 		        }
 			  });  	
 		    },
