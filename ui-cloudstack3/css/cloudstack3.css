@@ -3995,11 +3995,13 @@ div.detail-group td.view-all div.view-all div.end {
   background-position: -167px -677px;
 }
 
-.restoreVM .icon {
+.restoreVM .icon,
+.restore .icon {
   background-position: -168px -31px;
 }
 
-.restoreVM:hover .icon {
+.restoreVM:hover .icon,
+.restore:hover .icon {
   background-position: -168px -613px;
 }
 
