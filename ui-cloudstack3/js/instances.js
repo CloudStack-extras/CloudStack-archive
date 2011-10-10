@@ -1403,9 +1403,10 @@
                 hostId: {
                   label: 'Host',
 				  validation: { required: true },
-                  select: function(args) {	                                     
+                  select: function(args) {	
 			        $.ajax({
-					  url: createURL("listHosts&VirtualMachineId=" + args.context.instances[0].id),			 
+					  url: createURL("listHosts&VirtualMachineId=" + args.context.instances[0].id),		
+                      //url: createURL("listHosts"),	//for testing only, comment it out before checking in.				  
 					  dataType: "json",
 					  async: true,
 					  success: function(json) { 	                        				  
@@ -1421,7 +1422,7 @@
                 }				 
               }
             },        			
-		    action: function(args) {			                 	
+		    action: function(args) {	
 			  $.ajax({			    
 		        url: createURL("migrateVirtualMachine&hostid=" + args.data.hostId + "&virtualmachineid=" + args.context.instances[0].id),
 			    dataType: "json",
@@ -1431,12 +1432,27 @@
 				  args.response.success(
 				    {_custom:
 				      {jobId: jid,
-					   getUpdatedItem: function(json) {					     
-					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
-					   },
-					   getActionFilter: function() {
-					     return actionfilter;
-					   }					 
+					    getUpdatedItem: function(json) {					     
+					      return json.queryasyncjobresultresponse.jobresult.virtualmachine;	
+                          /*						  
+						  var vmObj;						 
+						  $.ajax({
+							url: createURL("listVirtualMachines&id=" + args.context.instances[0].id),
+							dataType: "json",
+							async: false,
+							success: function(json) {  							  
+							  var items =  json.listvirtualmachinesresponse.virtualmachine;                   
+							  if(items != null && items.length > 0) {
+								vmObj = items[0];									
+							  }
+							}
+						  }); 
+                          return vmObj;	
+						  */
+					    },
+					    getActionFilter: function() {
+					      return actionfilter;
+					    }					 
 					  }
 				    }
 				  );						  
