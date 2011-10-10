@@ -48,6 +48,14 @@
                 });
 
                 close();
+              },
+              error: function(args) {
+                $wizard.remove();
+                $('div.overlay').remove();
+
+                if (args.message) {
+                  cloudStack.dialog.notice({ message: args.message });
+                }
               }
             }
           });

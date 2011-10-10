@@ -82,7 +82,12 @@
               $total.parent().removeClass('pending');
             }
           },
-          incomplete: function(args) {}
+          incomplete: function(args) {},
+          error: function(args) {
+            if (args.message) {
+              cloudStack.dialog.notice({ message: args.message });
+            }
+          }
         });
       }, args.interval);
       notifications.activeTasks.push(pollTimer);

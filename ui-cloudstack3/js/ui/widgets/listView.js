@@ -5,7 +5,7 @@
   /**
    * Add 'pending' notification
    */
-  var addNotification = function(notification, success, successArgs) {
+  var addNotification = function(notification, success, successArgs, error, errorArgs) {
     if (!notification) {
       success(successArgs);
 
@@ -34,6 +34,14 @@
             _custom: args._custom,
             complete: function(args) {
               success($.extend(successArgs, args));
+              complete(args);
+            },
+            error: function(args) {
+              if (args.message) {
+                cloudStack.dialog.notice({ message: args.message });
+              }
+              
+              error($.extend(errorArgs, args));
               complete(args);
             }
           });
@@ -70,6 +78,7 @@
         if (!options) options = {};
 
         $instanceRow = options.$item ? options.$item : $instanceRow;
+        var $item = options.$item;
 
         if (action.custom) {
           action.custom({
@@ -84,15 +93,26 @@
               notification.desc = messages.notification(args.messageArgs);
               notification._custom = args._custom;
 
-              addNotification(notification, function(args) {
-                if ($item.is(':visible'))
-                  replaceItem(
-                    $item,
-                    args.data,
-                    args.actionFilter ?
-                      args.actionFilter : $instanceRow.next().data('list-view-action-filter')
-                  );
-              });
+              addNotification(
+                notification, 
+                function(args) {
+                  if ($item.is(':visible')) {
+                    replaceItem(
+                      $item,
+                      args.data,
+                      args.actionFilter ?
+                        args.actionFilter : $instanceRow.next().data('list-view-action-filter')
+                    );                    
+                  }
+                },
+
+                {},
+
+                // Error
+                function(args) {
+                  $item.remove();
+                }
+              );
             }
           });
         } else {
@@ -123,6 +143,8 @@
                 $instanceRow.find('td:last').append($('<div>').addClass('loading'));
                 $instanceRow.addClass('loading');
 
+                if (options.$item) $instanceRow.data('list-view-new-item', true);
+
                 // Disable any clicking/actions for row
                 $instanceRow.bind('click', function() { return false; });
 
@@ -130,34 +152,58 @@
 
                 if (additional && additional.success) additional.success(args);
 
-                addNotification(notification, function(args) {
-                  if (!args) args = {};
+                addNotification(
+                  notification,
+                  
+                  // Success
+                  function(args) {
+                    if (!args) args = {};
 
-                  if ($instanceRow.is(':visible')) {
-                    if (args.data) {
-                      $newRow = replaceItem(
+                    if ($instanceRow.is(':visible')) {
+                      if (args.data) {
+                        $newRow = replaceItem(
+                          $instanceRow,
+                          $.extend($instanceRow.data('json-obj'), args.data),
+                          $instanceRow.data('list-view-action-filter')
+                        );
+                      }
+                      else {
+                        // Nothing new, so just put in existing data
+                        $newRow = replaceItem(
+                          $instanceRow,
+                          $instanceRow.data('json-obj'),
+                          $instanceRow.data('list-view-action-filter')
+                        );
+                      }
+
+                      if (additional && additional.complete)
+                        additional.complete(args, $newRow);
+                    }
+                  },
+
+                  {},
+
+                  // Error
+                  function(args) {
+                    if ($instanceRow.data('list-view-new-item')) {
+                      // For create forms
+                      $instanceRow.remove();
+                    } else {
+                      // For standard actions
+                      replaceItem(
                         $instanceRow,
                         $.extend($instanceRow.data('json-obj'), args.data),
-                        $instanceRow.data('list-view-action-filter')
-                      );
+                        args.actionFilter ? 
+                          args.actionFilter : 
+                          $instanceRow.data('list-view-action-filter')
+                      );                      
                     }
-                    else {
-                      // Nothing new, so just put in existing data
-                      $newRow = replaceItem(
-                        $instanceRow,
-                        $instanceRow.data('json-obj'),
-                        $instanceRow.data('list-view-action-filter')
-                      );
-                    }
-
-                    if (additional && additional.complete)
-                      additional.complete(args, $newRow);
                   }
-                });
+                );
               },
               error: function(data){
                 if (data.message)
-                  alert(data.message);
+                  cloudStack.dialog.notice({ message: data.message });
               }
             }
           });
@@ -234,6 +280,7 @@
 
       // Hide edit field, validate and save changes
       var showLabel = function(val) {
+        var oldVal = $label.html();
         if (val) $label.html(val);
 
         var data = {
@@ -256,6 +303,14 @@
               $edit.hide();
               $label.fadeIn();
               $instanceRow.closest('div.data-table').dataTable('refresh');
+            },
+            error: function(args) {
+              if (args.message) {
+                cloudStack.dialog.notice({ message: args.message });
+                $edit.hide(),
+                $label.html(oldVal).fadeIn();
+                $instanceRow.closest('div.data-table').dataTable('refresh');
+              }
             }
           }
         });
@@ -572,8 +627,10 @@
               $table.dataTable();
             }
           },
-          error: function() {
-            alert('error');
+          error: function(args) {
+            if (args.message) {
+              cloudStack.dialog.notice({ message: args.message });
+            }
           }
         }
       });

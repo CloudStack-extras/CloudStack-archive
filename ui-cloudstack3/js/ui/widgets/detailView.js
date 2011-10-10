@@ -81,7 +81,7 @@
 
           error: function(args) {
             if (args.message)
-              alert(data.message);
+              alert(args.message);
           }
         }
       });
@@ -190,9 +190,9 @@
                 if (additional && additional.complete) additional.complete(args);
               });
             },
-            error: function(data) {
-              if (data.message)
-                alert(data.message);
+            error: function(args) {
+              if (args.message)
+                cloudStack.dialog.notice({ message: args.message });
             }
           }
         });
@@ -272,7 +272,7 @@
                 []
               );
             },
-            error: function(data) {
+            error: function(args) {
               // Put in original values on error
               $inputs.each(function() {
                 var $input = $(this);
@@ -280,6 +280,8 @@
                 var originalValue = $input.data('original-value');
 
                 $value.html(originalValue);
+
+                if (args.message) cloudStack.dialog.notice({ message: args.message });
               });
             }
           }
