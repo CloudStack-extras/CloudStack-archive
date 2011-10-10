@@ -611,6 +611,7 @@
               }
             }
           },
+		  
           'secondary-storage': {
             id: 'secondary-storage',
             listView: {
@@ -620,7 +621,20 @@
                 zonename: { label: 'Zone' },
                 podname: { label: 'Pod' }
               },
-              dataProvider: testData.dataProvider.listView('clusters'),
+              
+			  //dataProvider: testData.dataProvider.listView('clusters'),
+			  dataProvider: function(args) {                  		  
+				$.ajax({
+				  url: createURL("listHosts&type=SecondaryStorage&zoneid=" + args.ref.zoneID + "&page=" + args.page + "&pagesize=" + pageSize),
+				  dataType: "json",
+				  async: true,
+				  success: function(json) { 				    
+					var items = json.listhostsresponse.host;  			    
+					args.response.success({data:items});			                			
+				  }
+				});  	
+			  },	
+			  
               actions: {
                 destroy: testData.actions.destroy('cluster')
               },
