@@ -50,14 +50,8 @@
                 confirm: function(args) {
                   return 'Are you sure you want to add ' + args.name + '?';
                 },
-                success: function(args) {
-                  return 'Your new volume is being created.';
-                },
                 notification: function(args) {
                   return 'Creating new volume';
-                },
-                complete: function(args) {
-                  return 'Volume has been created successfully!';
                 }
               },
 
@@ -143,14 +137,8 @@
                 confirm: function(args) {
                   return 'Please confirm that you want to take a snapshot of ' + args.name;
                 },
-                success: function(args) {
-                  return 'Your new snapshot ' + args.name + ' is being created.';
-                },
                 notification: function(args) {
                   return 'Made snapshot of volume: ' + args.name;
-                },
-                complete: function(args) {
-                  return 'Snapshot ' + args.name + ' is ready.';
                 }
               },
               action: function(args) {
@@ -173,9 +161,6 @@
                 },
                 notification: function(args) {
                   return 'Making new snapshot: ' + args.name;
-                },
-                complete: function(args) {
-                  return 'Snapshot ' + args.name + ' is ready.';
                 }
               },
               action: function(args) {
@@ -239,14 +224,8 @@
                   confirm: function(args) {
                     return 'Please confirm that you want to take a snapshot of ' + args.name;
                   },
-                  success: function(args) {
-                    return 'Your new snapshot ' + args.name + ' is being created.';
-                  },
                   notification: function(args) {
                     return 'Made snapshot of volume: ' + args.name;
-                  },
-                  complete: function(args) {
-                    return 'Snapshot ' + args.name + ' is ready.';
                   }
                 },
                 action: function(args) {
@@ -264,9 +243,6 @@
                   },
                   notification: function(args) {
                     return 'Making new template: ' + args.name;
-                  },
-                  complete: function(args) {
-                    return 'Template ' + args.name + ' is ready.';
                   }
                 },
                 action: function(args) {

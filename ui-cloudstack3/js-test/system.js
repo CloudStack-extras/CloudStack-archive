@@ -36,14 +36,8 @@
                 confirm: function(args) {
                   return 'Are you sure you want to add ' + args.name + '?';
                 },
-                success: function(args) {
-                  return args.name + ' is being created.';
-                },
                 notification: function(args) {
                   return 'Created new zone';
-                },
-                complete: function(args) {
-                  return 'Zone has been created successfully!';
                 }
               },
               notification: {

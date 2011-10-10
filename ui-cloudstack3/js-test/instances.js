@@ -124,14 +124,8 @@
             confirm: function(args) {
               return 'Are you sure you want to add ' + args.name + '?';
             },
-            success: function(args) {
-              return args.name + ' is being created.';
-            },
             notification: function(args) {
               return 'Creating new VM: ' + args.name;
-            },
-            complete: function(args) {
-              return args.name + ' has been created successfully!';
             }
           },
           notification: {
@@ -163,14 +157,8 @@
             confirm: function(args) {
               return 'Are you sure you want to restart ' + args.name + '?';
             },
-            success: function(args) {
-              return args.name + ' is being rebooted.';
-            },
             notification: function(args) {
               return 'Rebooting VM: ' + args.name;
-            },
-            complete: function(args) {
-              return args.name + ' has been rebooted successfully.';
             }
           },
           notification: {
@@ -192,14 +180,8 @@
             confirm: function(args) {
               return 'Are you sure you want to shutdown ' + args.name + '?';
             },
-            success: function(args) {
-              return args.name + ' is shutting down.';
-            },
             notification: function(args) {
               return 'Rebooting VM: ' + args.name;
-            },
-            complete: function(args) {
-              return args.name + ' has been shut down.';
             }
           },
           notification: {
@@ -271,16 +253,50 @@
             }
           },
           stop: {
-            label: 'Shut down VM',
+            label: 'Stop VM',
+            messages: {
+              confirm: function(args) {
+                return 'Are you sure you want to stop ' + args.name + '?';
+              },
+              notification: function(args) {
+                return 'Stopping VM: ' + args.name;
+              }
+            },
+            notification: {
+              poll: testData.notifications.customPoll({
+                state: 'Stopped'
+              })
+            },
             action: function(args) {
-              args.response.success();
+              setTimeout(function() {
+                args.response.success({
+                  _custom: { jobID: args.data.id }
+                });
+              }, 1000);
             }
           },
           start: {
             label: 'Start VM',
+            messages: {
+              confirm: function(args) {
+                return 'Are you sure you want to start ' + args.name + '?';
+              },
+              notification: function(args) {
+                return 'Starting VM: ' + args.name;
+              }
+            },
+            notification: {
+              poll: testData.notifications.customPoll({
+                state: 'Running'
+              })
+            },
             action: function(args) {
-              args.response.success();
-            }            
+              setTimeout(function() {
+                args.response.success({
+                  _custom: { jobID: args.data.id }
+                });
+              }, 1000);
+            }
           },
           restart: {
             label: 'Restart VM',
@@ -288,14 +304,8 @@
               confirm: function(args) {
                 return 'Are you sure you want to restart ' + args.name + '?';
               },
-              success: function(args) {
-                return args.name + ' is being rebooted.';
-              },
               notification: function(args) {
                 return 'Rebooting VM: ' + args.name;
-              },
-              complete: function(args) {
-                return args.name + ' has been rebooted successfully.';
               }
             },
             notification: {
@@ -314,9 +324,6 @@
             messages: {
               confirm: function(args) {
                 return 'Are you sure you want to destroy ' + args.name + '?';
-              },
-              success: function(args) {
-                return args.name + ' is being destroyed.';
               },
               notification: function(args) {
                 return 'Destroying VM: ' + args.name;
