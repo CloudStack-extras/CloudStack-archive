@@ -207,7 +207,54 @@
             }
           },
           clusters: {
-            
+            title: 'Clusters',
+            listView: {
+              id: 'clusters',
+              section: 'clusters',
+              fields: {
+                name: { label: 'Name' },
+                zonename: { label: 'Zone' },
+                podname: { label: 'Pod' }
+              },
+              
+			  //dataProvider: testData.dataProvider.listView('clusters'),
+			  dataProvider: function(args) {                  		  
+				$.ajax({
+				  url: createURL("listClusters&zoneid=" + args.ref.zoneID + "&page=" + args.page + "&pagesize=" + pageSize),
+				  dataType: "json",
+				  async: true,
+				  success: function(json) { 				    
+					var items = json.listclustersresponse.cluster;  			    
+					args.response.success({data:items});			                			
+				  }
+				});  	
+			  },
+			  
+              actions: {
+                destroy: testData.actions.destroy('cluster')
+              },
+              detailView: {
+                viewAll: { path: '_zone.hosts', label: 'Hosts' },
+                tabs: {
+                  details: {
+                    title: 'Details',
+                    fields: [
+                      {
+                        name: { label: 'Name' },
+                      },
+                      {
+                        allocationstate: { label: 'State' },
+                        podname: { label: 'Pod' },
+                        hypervisortype: { label: 'Hypervisor' },
+                        clustertype: { label: 'Cluster' },
+                      }
+                    ],
+
+                    dataProvider: testData.dataProvider.detailView('clusters')
+                  },
+                }
+              }
+            }
           },
           hosts: {           
 			title: 'Hosts',
@@ -222,7 +269,7 @@
               //dataProvider: testData.dataProvider.listView('hosts'), 
 			  dataProvider: function(args) {                  		  
 				$.ajax({
-				  url: createURL("listHosts&type=Routing&zoneid="+args.ref.zoneID+"&page="+args.page+"&pagesize="+pageSize),
+				  url: createURL("listHosts&type=Routing&zoneid=" + args.ref.zoneID + "&page=" + args.page + "&pagesize=" + pageSize),
 				  dataType: "json",
 				  async: true,
 				  success: function(json) { 				    
@@ -304,6 +351,7 @@
                         }
                       },
 
+					  //input_group="general" starts here
                       hostname: {
                         label: 'Host name',
                         validation: { required: true }
@@ -318,7 +366,13 @@
                         label: 'Password',
                         validation: { required: true }
                       },
-                      
+					  
+					  hosttags: {
+                        label: 'Host tags',
+                        validation: { required: false }
+                      },
+                      //input_group="general" ends here
+					  
                       /**
                        * Test for conditional fields
                        * note that these are hidden by default
