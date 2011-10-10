@@ -2,7 +2,7 @@
   /**
    * Add 'pending' notification
    */
-  var addNotification = function(notification, success, successArgs) {
+  var addNotification = function(notification, success, successArgs, error, errorArgs) {
     if (!notification) {
       success(successArgs);
 
@@ -32,6 +32,16 @@
             complete: function(args) {
               success($.extend(successArgs, args));
               complete(args);
+            },
+            error: function(args) {
+              if (args.message) {
+                if (args.message) {
+                  cloudStack.dialog.notice({ message: args.message });
+                }
+                
+                error($.extend(errorArgs, args));
+                complete(args);
+              }
             }
           });
         }
@@ -181,14 +191,24 @@
               args = args ? args : {};
               notification._custom = args._custom;
               if (additional && additional.success) additional.success(args);
-              addNotification(notification, function(args) {
-                if (messages.complete) {
-                  cloudStack.dialog.notice({
-                    message: messages.complete(args.data)
-                  });
+              addNotification(
+                notification, 
+                function(args) {
+                  if (messages.complete) {
+                    cloudStack.dialog.notice({
+                      message: messages.complete(args.data)
+                    });
+                  }
+                  if (additional && additional.complete) additional.complete(args);
+                },
+
+                {},
+
+                // Error
+                function(args) {
+                  
                 }
-                if (additional && additional.complete) additional.complete(args);
-              });
+              );
             },
             error: function(args) {
               if (args.message)
@@ -280,9 +300,9 @@
                 var originalValue = $input.data('original-value');
 
                 $value.html(originalValue);
-
-                if (args.message) cloudStack.dialog.notice({ message: args.message });
               });
+
+              if (args.message) cloudStack.dialog.notice({ message: args.message });
             }
           }
         });
