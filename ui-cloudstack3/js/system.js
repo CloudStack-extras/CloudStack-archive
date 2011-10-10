@@ -240,21 +240,8 @@
                     title: 'Add new host',
                     desc: 'Please fill in the following information to add a new host fro the specified zone configuration.',
                     fields: {
-                      zone: {
-                        label: 'Zone',
-                        select: function(args) {
-                          setTimeout(function() {
-                            args.response.success({
-                              descriptionField: 'name',
-                              data: testData.data.zones
-                            });
-                          }, 50);
-                        }
-                      },
                       pod: {
                         label: 'Pod',
-
-                        dependsOn: 'zone',
 
                         select: function(args) {
                           /**
@@ -280,27 +267,40 @@
                               $condTestB.css('display', 'inline-block');
                             }
                           });
-
-                          setTimeout(function() {
-                            args.response.success({
-                              descriptionField: 'name',
-                              data: testData.data.pods
-                            });
-                          }, 100);
+						  
+						  $.ajax({
+							url: createURL("listPods&zoneid="+args.context.zones[0].id),			 
+							dataType: "json",
+							async: true,
+							success: function(json) { 				   
+							  var pods = json.listpodsresponse.pod;	                              
+                              var items = [];
+							  $(pods).each(function() {
+							    items.push({id: this.id, description: this.name});
+							  });							  
+							  args.response.success({data: items});					  
+							}
+						  });  
                         }
                       },
+					  
                       cluster: {
                         label: 'Cluster',
-
                         dependsOn: 'pod',
-
                         select: function(args) {
-                          setTimeout(function() {
-                            args.response.success({
-                              descriptionField: 'name',
-                              data: testData.data.clusters
-                            });                            
-                          }, 20);
+                          $.ajax({
+							url: createURL("listClusters&podid=" + args.pod),			 
+							dataType: "json",
+							async: true,
+							success: function(json) { 				   
+							  var clusters = json.listclustersresponse.cluster;                        
+                              var items = [];
+							  $(clusters).each(function() {
+							    items.push({id: this.id, description: this.name});
+							  });							  
+							  args.response.success({data: items});					  
+							}
+						  });  	
                         }
                       },
 
@@ -346,7 +346,7 @@
                   },
 
                   notification: {
-                    poll: testData.notifications.testPoll
+                    poll: testData.notifications.customPoll(testData.data.hosts[0])
                   },
 
                   messages: {
@@ -354,7 +354,7 @@
                       return 'Added new host';
                     }
                   }
-                },
+                },				
                 destroy: testData.actions.destroy('host')
               },
               detailView: {
