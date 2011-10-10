@@ -566,8 +566,55 @@
             }
           },
           'primary-storage': {
+            id: 'primaryStorage',
             listView: {
               section: 'primary-storage',
+              fields: {
+                name: { label: 'Name' },
+                zonename: { label: 'Zone' },
+                podname: { label: 'Pod' }
+              },
+			  
+              //dataProvider: testData.dataProvider.listView('clusters'),
+			  dataProvider: function(args) {                  		  
+				$.ajax({
+				  url: createURL("listStoragePools&zoneid=" + args.ref.zoneID + "&page=" + args.page + "&pagesize=" + pageSize),
+				  dataType: "json",
+				  async: true,
+				  success: function(json) { 				    
+					var items = json.liststoragepoolsresponse.storagepool;  			    
+					args.response.success({data:items});			                			
+				  }
+				});  	
+			  },	
+			  
+              actions: {
+                destroy: testData.actions.destroy('cluster')
+              },
+              detailView: {
+                tabs: {
+                  details: {
+                    title: 'Details',
+                    fields: [
+                      {
+                        name: { label: 'Name' },
+                      },
+                      {
+                        zonename: { label: 'Zone' },
+                        hostname: { label: 'Host' }
+                      }
+                    ],
+
+                    dataProvider: testData.dataProvider.detailView('clusters')
+                  }
+                }
+              }
+            }
+          },
+          'secondary-storage': {
+            id: 'secondary-storage',
+            listView: {
+              section: 'seconary-storage',
               fields: {
                 name: { label: 'Name' },
                 zonename: { label: 'Zone' },
@@ -592,16 +639,10 @@
                     ],
 
                     dataProvider: testData.dataProvider.detailView('clusters')
-                  },
+                  }
                 }
               }
-            }			
-          },
-          primaryStorage: {
-            
-          },
-          secondaryStorage: {
-            
+            }
           }
         }        
       },
