@@ -195,7 +195,9 @@
             }
           },
           pods: {
+            title: 'Pods',
             listView: {
+              id: 'pods',
               section: 'pods',
               fields: {
                 name: { label: 'Name' },
@@ -203,7 +205,42 @@
                 endip: { label: 'End IP' },
                 allocationstate: { label: 'Status' }
               },
-              dataProvider: testData.dataProvider.listView('pods')
+              
+			  //dataProvider: testData.dataProvider.listView('pods'),
+			  dataProvider: function(args) {                  		  
+				$.ajax({
+				  url: createURL("listPods&zoneid=" + args.ref.zoneID + "&page=" + args.page + "&pagesize=" + pageSize),
+				  dataType: "json",
+				  async: true,
+				  success: function(json) { 				    
+					var items = json.listpodsresponse.pod;  			    
+					args.response.success({data:items});			                			
+				  }
+				});  	
+			  },	
+			  
+              actions: {
+                destroy: testData.actions.destroy('pod')
+              },
+              detailView: {
+                viewAll: { path: '_zone.clusters', label: 'Clusters' },
+                tabs: {
+                  details: {
+                    title: 'Details',
+                    fields: [
+                      {
+                        name: { label: 'Name' },
+                      },
+                      {
+                        allocationstate: { label: 'State' },
+                        startip: { label: 'Start IP' },
+                        endip: { label: 'End IP' },
+                      }
+                    ],
+                    dataProvider: testData.dataProvider.detailView('pods')
+                  },
+                }
+              }
             }
           },
           clusters: {
