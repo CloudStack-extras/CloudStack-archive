@@ -190,10 +190,28 @@
             success: function(args) {
               args = args ? args : {};
               notification._custom = args._custom;
+
+              // Set loading appearance
+              $detailView.prepend(
+                $('<div>').addClass('loading-overlay')
+              );
+
               if (additional && additional.success) additional.success(args);
+
+              // Setup notification
               addNotification(
                 notification, 
                 function(args) {
+                  if ($detailView.is(':visible')) {
+                    $detailView.find('.loading-overlay').remove();
+
+                    // Refresh actions
+                    loadTabContent(
+                      $detailView.find('.detail-group:visible'),
+                      $detailView.data('view-args')
+                    );                    
+                  }
+                  
                   if (messages.complete) {
                     cloudStack.dialog.notice({
                       message: messages.complete(args.data)
@@ -767,6 +785,10 @@
     var isMultiple = tabs.multiple;
     var viewAll = args.viewAll;
 
+    if (tabs.custom) {
+      return tabs.custom().appendTo($tabContent);
+    }
+
     $.extend(
       $tabContent.closest('div.detail-view').data('view-args'),
       { activeTab: targetTabID }
@@ -786,7 +808,7 @@
 
           if (isMultiple) {
             $(data).each(function() {
-              makeFieldContent(tabs, $tabContent.closest('div.detail-view'), this, { 
+              var $fieldContent = makeFieldContent(tabs, $tabContent.closest('div.detail-view'), this, { 
                 header: 'name', 
                 isFirstPanel: isFirstPanel,
                 actionFilter: actionFilter
