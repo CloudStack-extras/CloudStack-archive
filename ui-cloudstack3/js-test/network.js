@@ -36,14 +36,8 @@
                 confirm: function(args) {
                   return 'Are you sure you want to add this new IP?';
                 },
-                success: function(args) {
-                  return 'Your new IP is being allocated.';
-                },
                 notification: function(args) {
                   return 'Allocated IP';
-                },
-                complete: function(args) {
-                  return 'IP has been acquired successfully';
                 }
               },
 
@@ -86,14 +80,8 @@
                 confirm: function(args) {
                   return 'Are you sure you want to disable ' + args.name + '?';
                 },
-                success: function(args) {
-                  return args.name + ' is being disabled.';
-                },
                 notification: function(args) {
                   return 'Disabled NAT: ' + args.name;
-                },
-                complete: function(args) {
-                  return args.name + ' is now disabled.';
                 }
               },
               notification: {
@@ -125,6 +113,30 @@
                 dataProvider: testData.dataProvider.detailView('network')
               },
 
+              portForwarding: {
+                title: 'Port forwarding',
+                custom: cloudStack.portForwarding({
+                  dataProvider: function(args) {
+                    args.response.success({
+                      data: [
+                        {
+                          'start-port': 1,
+                          'end-port': 80,
+                          'protocol': 'TCP',
+                          'add-vm': 'Active'
+                        },
+                        {
+                          'start-port': 90,
+                          'end-port': 120,
+                          'protocol': 'TCP',
+                          'add-vm': 'Active'
+                        }
+                      ]
+                    });
+                  }
+                })
+              },
+
               portRange: {
                 title: 'Port range',
                 multiEdit: true,
@@ -152,14 +164,8 @@
                       confirm: function(args) {
                         return 'Are you sure you want to add this port range?';
                       },
-                      success: function(args) {
-                        return 'Added port range';
-                      },
                       notification: function(args) {
                         return 'Added port range';
-                      },
-                      complete: function(args) {
-                        return 'Port range has been added.';
                       }
                     },
                     notification: {
@@ -177,14 +183,8 @@
                       confirm: function(args) {
                         return 'Are you sure you want to remove this port range?';
                       },
-                      success: function(args) {
-                        return 'Removed port range';
-                      },
                       notification: function(args) {
                         return 'Removed port range: ' + args.name;
-                      },
-                      complete: function(args) {
-                        return 'Port range has been removed.';
                       }
                     },
                     notification: {
@@ -246,14 +246,8 @@
                 confirm: function(args) {
                   return 'Are you sure you want to add ' + args.name + '?';
                 },
-                success: function(args) {
-                  return 'Your new security group is being created.';
-                },
                 notification: function(args) {
                   return 'Created security group';
-                },
-                complete: function(args) {
-                  return 'Security group has been created';
                 }
               },
 
@@ -276,14 +270,8 @@
                 confirm: function(args) {
                   return 'Are you sure you want to delete ' + args.name + '?';
                 },
-                success: function(args) {
-                  return args.name + ' is being deleted.';
-                },
                 notification: function(args) {
                   return 'Deleted security group: ' + args.name;
-                },
-                complete: function(args) {
-                  return args.name + ' has been deleted.';
                 }
               },
               action: function(args) {
@@ -342,14 +330,8 @@
                       confirm: function(args) {
                         return 'Are you sure you want to add this port range?';
                       },
-                      success: function(args) {
-                        return 'Added port range';
-                      },
                       notification: function(args) {
                         return 'Added port range';
-                      },
-                      complete: function(args) {
-                        return 'Port range has been added.';
                       }
                     },
                     notification: {
@@ -367,14 +349,8 @@
                       confirm: function(args) {
                         return 'Are you sure you want to remove this ingress rule?';
                       },
-                      success: function(args) {
-                        return 'Removed ingress rule';
-                      },
                       notification: function(args) {
                         return 'Removed ingress rule: ' + args.name;
-                      },
-                      complete: function(args) {
-                        return 'Ingress rule has been removed.';
                       }
                     },
                     notification: {
