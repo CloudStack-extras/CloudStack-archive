@@ -13,6 +13,8 @@
       } else if (status == 'Stopped' || status == 'Stopping') {
         disallowedActions.push('stop');
         disallowedActions.push('restart');
+      } else if (status == 'Destroyed') {
+        disallowedActions = allowedActions;
       }
 
       allowedActions = $.grep(allowedActions, function(item) {

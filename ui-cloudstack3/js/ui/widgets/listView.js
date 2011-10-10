@@ -214,15 +214,6 @@
         });        
       }
     },
-
-    destroy: function($instanceRow, args) {
-      uiActions.standard($instanceRow, args, {
-        complete: function(args, $instanceRow) {
-          $instanceRow.animate({ opacity: 0.5 });
-          $instanceRow.find('td.actions').children().remove();
-        }
-      });
-    },
     edit: function($instanceRow, args) {
       var $td = $instanceRow.find('td.editable');
       var $edit = $td.find('div.edit');

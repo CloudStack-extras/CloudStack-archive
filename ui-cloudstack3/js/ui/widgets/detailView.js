@@ -338,27 +338,6 @@
       });
 
       return $detailView;
-    },
-
-    /**
-     * Removes detail view and instance from the list, on success
-     */
-    destroy: function($detailView, args) {
-      var detailViewItemID = $detailView.data('view-args').id;
-
-      uiActions.standard($detailView, args, {
-        complete: function(args) {
-          $(window).trigger('cloudstack.view-item-action', {
-            id: detailViewItemID,
-            actionName: 'destroy'
-          });
-          $(window).trigger('cloudstack.view.details.remove', {
-            view: $detailView
-          });
-
-          return true;
-        }
-      });
     }
   };
 

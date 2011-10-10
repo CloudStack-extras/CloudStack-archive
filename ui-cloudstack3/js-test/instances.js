@@ -320,9 +320,6 @@
               },
               notification: function(args) {
                 return 'Destroying VM: ' + args.name;
-              },
-              complete: function(args) {
-                return args.name + ' has been destroyed.';
               }
             },
             notification: {
