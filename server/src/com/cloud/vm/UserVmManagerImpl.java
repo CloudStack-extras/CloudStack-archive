@@ -616,7 +616,13 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
 
         StoragePoolVO vmRootVolumePool = _storagePoolDao.findById(rootVolumeOfVm.getPoolId());
         DiskOfferingVO volumeDiskOffering = _diskOfferingDao.findById(volume.getDiskOfferingId());
-        String[] volumeTags = volumeDiskOffering.getTagsArray();
+        
+        String[] volumeTags;
+        if (volumeDiskOffering != null) {
+            volumeTags = volumeDiskOffering.getTagsArray();
+        } else {
+            volumeTags = new String[0];
+        }
 
         StoragePoolVO sourcePool = _storagePoolDao.findById(volume.getPoolId());
         List<StoragePoolVO> sharedVMPools = _storagePoolDao.findPoolsByTags(vmRootVolumePool.getDataCenterId(), vmRootVolumePool.getPodId(), vmRootVolumePool.getClusterId(), volumeTags, true);

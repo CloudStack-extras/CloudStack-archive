@@ -60,6 +60,9 @@ public class CreateVolumeCmd extends BaseAsyncCreateCmd {
 
     @Parameter(name=ApiConstants.SNAPSHOT_ID, type=CommandType.LONG, description="the snapshot ID for the disk volume. Either diskOfferingId or snapshotId must be passed in.")
     private Long snapshotId;
+    
+    @Parameter(name=ApiConstants.TEMPLATE_ID, type=CommandType.LONG, description="the template ID for the disk volume. Either diskOfferingId or templateId must be passed in.")
+    private Long templateId;
 
     @Parameter(name=ApiConstants.ZONE_ID, type=CommandType.LONG, description="the ID of the availability zone")
     private Long zoneId;
@@ -95,6 +98,10 @@ public class CreateVolumeCmd extends BaseAsyncCreateCmd {
 
     public Long getZoneId() {
         return zoneId;
+    }
+    
+    public Long getTemplateId() {
+        return templateId;
     }
 
 
