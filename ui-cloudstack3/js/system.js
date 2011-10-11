@@ -427,7 +427,7 @@
                         label: 'Pod',
                         select: function(args) {						  
 					      $.ajax({
-							url: createURL("listPods&zoneid="+args.context.zones[0].id),			 
+							url: createURL("listPods&zoneid=" + args.context.zones[0].id),			 
 							dataType: "json",
 							async: true,
 							success: function(json) { 				   
@@ -468,18 +468,44 @@
 				  },				  			  
 				  
 				  action: function(args) {	
+					debugger;					
 					var array1 = [];
-					//array1.push("&name=" + args.data.name);
-					//array1.push("&zoneId=" + args.data.availabilityZone);
-					//array1.push("&diskOfferingId=" + args.data.diskOffering);
+					array1.push("&zoneId=" + args.context.zones[0].id);	
+					array1.push("&hypervisor=" + args.data.hypervisor);	
+					array1.push("&clustertype=CloudManaged");
+					array1.push("&podId=" + args.data.podId);
+
+					var clusterName = args.data.name;
+					if(args.data.hypervisor == "VMware") {
+						array1.push("&username=" + todb(args.data.vCenterUsername));	
+						array1.push("&password=" + todb(args.data.vCenterPassword));
+						
+						var hostname = args.data.vCenterHost;
+						var dcName = args.data.vCenterDatacenter;
+						
+						var url;					
+						if(hostname.indexOf("http://") == -1)
+							url = "http://" + hostname;
+						else
+							url = hostname;
+						url += "/" + dcName + "/" + clusterName;
+						array1.push("&url=" + todb(url));
+						
+						clusterName = hostname + "/" + dcName + "/" + clusterName; //override clusterName
+					} 					
+					array1.push("&clustername=" + todb(clusterName));
+										
 					$.ajax({
 					  url: createURL("addCluster" + array1.join("")),
 					  dataType: "json",
 					  async: true,
-					  success: function(json) { 			    
-						debugger;
+					  success: function(json) { 	
                         var item = json.addclusterresponse.cluster[0];  						
                         args.response.success({data: item});							
+					  },
+					  error: function(XMLHttpResponse) {					    
+					    var errorMsg = parseXMLHttpResponse(XMLHttpResponse);	
+					    args.response.error(errorMsg);
 					  }
 					});  	
 				  },
