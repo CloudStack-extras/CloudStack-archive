@@ -205,6 +205,7 @@ import com.cloud.utils.exception.ExecutionException;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.vm.VirtualMachine.State;
+import com.cloud.vm.VirtualMachineProfile.Param;
 import com.cloud.vm.dao.DomainRouterDao;
 import com.cloud.vm.dao.InstanceGroupDao;
 import com.cloud.vm.dao.InstanceGroupVMMapDao;
@@ -1675,9 +1676,10 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
     }
 
     // used for vm transitioning to error state
-    private void updateVmStateForFailedVmCreation(Long vmId) {
+    private void updateVmStateForFailedVmCreation(Long vmId, Map<Param, Object> params) {
         UserVmVO vm = _vmDao.findById(vmId);
-        if (vm != null) {
+        boolean startVm = (Boolean)params.get(Param.StartVm);
+        if (vm != null && startVm) {
             if (vm.getState().equals(State.Stopped)) {
                 try {
                     _itMgr.stateTransitTo(vm, VirtualMachine.Event.OperationFailedToError, null);
@@ -2661,12 +2663,15 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
 
         AccountVO owner = _accountDao.findById(vm.getAccountId());
 
+        Map<VirtualMachineProfile.Param, Object> params = new HashMap<VirtualMachineProfile.Param, Object>();
         try {
-            Map<VirtualMachineProfile.Param, Object> params = new HashMap<VirtualMachineProfile.Param, Object>();
             if (additonalParams != null) {
                 params.putAll(additonalParams);
             }
             params.put(VirtualMachineProfile.Param.VmPassword, password);
+            
+            //don't start the vm
+            params.put(VirtualMachineProfile.Param.StartVm, false);
 
             DataCenterDeployment plan = null;
             if (destinationHost != null) {
@@ -2676,7 +2681,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
 
             vm = _itMgr.start(vm, params, caller, owner, plan);
         } finally {
-            updateVmStateForFailedVmCreation(vm.getId());
+            updateVmStateForFailedVmCreation(vm.getId(), params);
         }
 
         if (template.getEnablePassword()) {

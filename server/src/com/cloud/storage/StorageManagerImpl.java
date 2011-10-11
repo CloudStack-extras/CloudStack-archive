@@ -686,8 +686,10 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
         int retry = _retry;
         while (--retry >= 0) {
             created = null;
-
-            long podId = pod.getId();
+            //long podId = pod.getId();
+            List<VolumeVO> volumes = _volumeDao.findByInstance(vm.getId());
+            long podId = volumes.get(0).getPodId().longValue();
+            
             pod = _podDao.findById(podId);
             if (pod == null) {
                 s_logger.warn("Unable to find pod " + podId + " when create volume " + volume.getName());
