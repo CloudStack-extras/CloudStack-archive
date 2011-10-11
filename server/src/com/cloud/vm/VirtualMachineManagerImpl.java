@@ -487,7 +487,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
     }
 
     @DB
-    protected <T extends VMInstanceVO> Ternary<T, ReservationContext, ItWorkVO> changeToStartState(VirtualMachineGuru<T> vmGuru, T vm, User caller, Account account)
+    protected <T extends VMInstanceVO> Ternary<T, ReservationContext, ItWorkVO> changeToStartState(VirtualMachineGuru<T> vmGuru, T vm, User caller, Account account, boolean transitState)
             throws ConcurrentOperationException {
         long vmId = vm.getId();
 
@@ -502,14 +502,17 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                 work = _workDao.persist(work);
                 ReservationContextImpl context = new ReservationContextImpl(work.getId(), journal, caller, account);
 
-                if (stateTransitTo(vm, Event.StartRequested, null, work.getId())) {
-                    if (s_logger.isDebugEnabled()) {
-                        s_logger.debug("Successfully transitioned to start state for " + vm + " reservation id = " + work.getId());
+                if (transitState) {
+                    if (stateTransitTo(vm, Event.StartRequested, null, work.getId())) {
+                        if (s_logger.isDebugEnabled()) {
+                            s_logger.debug("Successfully transitioned to start state for " + vm + " reservation id = " + work.getId());
+                        }
+                        txn.commit();
                     }
-                    result = new Ternary<T, ReservationContext, ItWorkVO>(vmGuru.findById(vmId), context, work);
-                    txn.commit();
-                    return result;
                 }
+                
+                result = new Ternary<T, ReservationContext, ItWorkVO>(vmGuru.findById(vmId), context, work);
+                return result;
             } catch (NoTransitionException e) {
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Unable to transition into Starting state due to " + e.getMessage());
@@ -587,7 +590,14 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         }
 
         vm = vmGuru.findById(vm.getId());
-        Ternary<T, ReservationContext, ItWorkVO> start = changeToStartState(vmGuru, vm, caller, account);
+        
+        //figure out if we should start the vm
+        boolean startVm = true;
+        if (params != null && !params.isEmpty() && params.get(VirtualMachineProfile.Param.StartVm) != null) {
+            startVm = (Boolean)params.get(VirtualMachineProfile.Param.StartVm);
+        }
+        
+        Ternary<T, ReservationContext, ItWorkVO> start = changeToStartState(vmGuru, vm, caller, account, startVm);
         if (start == null) {
             return vmGuru.findById(vmId);
         }
@@ -696,15 +706,17 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
 
                 long destHostId = dest.getHost().getId();
                 vm.setPodId(dest.getPod().getId());
-
-                try {
-                    if (!changeState(vm, Event.OperationRetry, destHostId, work, Step.Prepare)) {
-                        throw new ConcurrentOperationException("Unable to update the state of the Virtual Machine");
+                
+                if (startVm) {
+                    try {
+                        if (!changeState(vm, Event.OperationRetry, destHostId, work, Step.Prepare)) {
+                            throw new ConcurrentOperationException("Unable to update the state of the Virtual Machine");
+                        }
+                    } catch (NoTransitionException e1) {
+                        throw new ConcurrentOperationException(e1.getMessage());
                     }
-                } catch (NoTransitionException e1) {
-                    throw new ConcurrentOperationException(e1.getMessage());
                 }
-
+                
                 try {
                     if (s_logger.isDebugEnabled()) {
                         s_logger.debug("VM is being started in podId: "+vm.getPodIdToDeployIn());
@@ -713,7 +725,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                     if (vm.getHypervisorType() != HypervisorType.BareMetal) {
                         _storageMgr.prepare(vmProfile, dest);
                     }
-
+                    
                     vmGuru.finalizeVirtualMachineProfile(vmProfile, dest, ctx);
 
                     VirtualMachineTO vmTO = hvGuru.implement(vmProfile);
@@ -723,48 +735,57 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
 
                     vmGuru.finalizeDeployment(cmds, vmProfile, dest, ctx);
 
-                    work = _workDao.findById(work.getId());
-                    if (work == null || work.getStep() != Step.Prepare) {
-                        throw new ConcurrentOperationException("Work steps have been changed: " + work);
-                    }
-                    _workDao.updateStep(work, Step.Starting);
-
-                    _agentMgr.send(destHostId, cmds);
-                    _workDao.updateStep(work, Step.Started);
-                    StartAnswer startAnswer = cmds.getAnswer(StartAnswer.class);
-                    if (startAnswer != null && startAnswer.getResult()) {
-                        String host_guid = startAnswer.getHost_guid();
-                        if( host_guid != null ) {
-                            HostVO finalHost = _hostDao.findByGuid(host_guid);
-                            if ( finalHost == null ) {
-                                throw new CloudRuntimeException("Host Guid " + host_guid + " doesn't exist in DB, something wrong here");
+                    if (startVm) {
+                        work = _workDao.findById(work.getId());
+                        if (work == null || work.getStep() != Step.Prepare) {
+                            throw new ConcurrentOperationException("Work steps have been changed: " + work);
+                        }   
+                        _workDao.updateStep(work, Step.Starting);
+                        _agentMgr.send(destHostId, cmds);
+                        _workDao.updateStep(work, Step.Started);
+                        
+                        StartAnswer startAnswer = cmds.getAnswer(StartAnswer.class);
+                        if (startAnswer != null && startAnswer.getResult()) {
+                            String host_guid = startAnswer.getHost_guid();
+                            if( host_guid != null ) {
+                                HostVO finalHost = _hostDao.findByGuid(host_guid);
+                                if ( finalHost == null ) {
+                                    throw new CloudRuntimeException("Host Guid " + host_guid + " doesn't exist in DB, something wrong here");
+                                }
+                                destHostId = finalHost.getId();
                             }
-                            destHostId = finalHost.getId();
+                            if (vmGuru.finalizeStart(vmProfile, destHostId, cmds, ctx)) {
+                                if (!changeState(vm, Event.OperationSucceeded, destHostId, work, Step.Done)) {
+                                    throw new ConcurrentOperationException("Unable to transition to a new state.");
+                                }
+                                startedVm = vm;
+                                if (s_logger.isDebugEnabled()) {
+                                    s_logger.debug("Start completed for VM " + vm);
+                                }
+                                return startedVm;
+                            } else {
+                                if (s_logger.isDebugEnabled()) {
+                                    s_logger.info("The guru did not like the answers so stopping " + vm);
+                                }
+                                StopCommand cmd = new StopCommand(vm.getInstanceName());
+                                StopAnswer answer = (StopAnswer)_agentMgr.easySend(destHostId, cmd);
+                                if (answer == null || !answer.getResult()) {
+                                    s_logger.warn("Unable to stop " + vm + " due to " + (answer != null ? answer.getDetails() : "no answers"));
+                                    canRetry = false;
+                                    _haMgr.scheduleStop(vm, destHostId, WorkType.ForceStop);
+                                    throw new ExecutionException("Unable to stop " + vm + " so we are unable to retry the start operation");
+                                }
+                            }
                         }
-                        if (vmGuru.finalizeStart(vmProfile, destHostId, cmds, ctx)) {
-                            if (!changeState(vm, Event.OperationSucceeded, destHostId, work, Step.Done)) {
-                                throw new ConcurrentOperationException("Unable to transition to a new state.");
-                            }
-                            startedVm = vm;
-                            if (s_logger.isDebugEnabled()) {
-                                s_logger.debug("Start completed for VM " + vm);
-                            }
-                            return startedVm;
-                        } else {
-                            if (s_logger.isDebugEnabled()) {
-                                s_logger.info("The guru did not like the answers so stopping " + vm);
-                            }
-                            StopCommand cmd = new StopCommand(vm.getInstanceName());
-                            StopAnswer answer = (StopAnswer)_agentMgr.easySend(destHostId, cmd);
-                            if (answer == null || !answer.getResult()) {
-                                s_logger.warn("Unable to stop " + vm + " due to " + (answer != null ? answer.getDetails() : "no answers"));
-                                canRetry = false;
-                                _haMgr.scheduleStop(vm, destHostId, WorkType.ForceStop);
-                                throw new ExecutionException("Unable to stop " + vm + " so we are unable to retry the start operation");
-                            }
+                        s_logger.info("Unable to start VM on " + dest.getHost() + " due to " + (startAnswer == null ? " no start answer" : startAnswer.getDetails()));
+                    } else {
+                        if (s_logger.isDebugEnabled()) {
+                            s_logger.debug("Create completed for VM " + vm + "; not starting it");
                         }
+                        startedVm = vm;
+                        return startedVm;
                     }
-                    s_logger.info("Unable to start VM on " + dest.getHost() + " due to " + (startAnswer == null ? " no start answer" : startAnswer.getDetails()));
+                    
                 } catch (OperationTimedoutException e) {
                     s_logger.debug("Unable to send the start command to host " + dest.getHost());
                     if (e.isActive()) {

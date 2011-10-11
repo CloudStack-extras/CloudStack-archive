@@ -48,6 +48,7 @@ public interface VirtualMachineProfile<T extends VirtualMachine> {
         public static final Param ControlNic = new Param("ControlNic");
         public static final Param RestartNetwork = new Param("RestartNetwork");
         public static final Param PxeSeverType = new Param("PxeSeverType");
+        public static final Param StartVm = new Param("StartVm");
         
         private String name;
         
