@@ -400,6 +400,24 @@
 							}
 						  });  		
 						}				
+					  },
+					  podId: {
+                        label: 'Pod',
+                        select: function(args) {						  
+					      $.ajax({
+							url: createURL("listPods&zoneid="+args.context.zones[0].id),			 
+							dataType: "json",
+							async: true,
+							success: function(json) { 				   
+							  var pods = json.listpodsresponse.pod;	                              
+                              var items = [];
+							  $(pods).each(function() {
+							    items.push({id: this.id, description: this.name});
+							  });							  
+							  args.response.success({data: items});					  
+							}
+						  });  
+						}
 					  }
 					  /*
 					  name: {
@@ -518,7 +536,7 @@
                     title: 'Add new host',
                     desc: 'Please fill in the following information to add a new host fro the specified zone configuration.',
                     fields: {
-                      pod: {
+                      podId: {
                         label: 'Pod',
 
                         select: function(args) {
@@ -567,7 +585,7 @@
                         dependsOn: 'pod',
                         select: function(args) {
                           $.ajax({
-							url: createURL("listClusters&podid=" + args.pod),			 
+							url: createURL("listClusters&podid=" + args.podId),			 
 							dataType: "json",
 							async: true,
 							success: function(json) { 				   
