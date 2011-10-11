@@ -389,16 +389,38 @@
 						  $.ajax({
 							url: createURL("listHypervisors"),			 
 							dataType: "json",
-							async: true,
+							async: false,
 							success: function(json) { 				   
 							  var hypervisors = json.listhypervisorsresponse.hypervisor;	
 							  var items = [];
                               $(hypervisors).each(function() {							      
-							      items.push({id: this.id, description: this.name})
+							      items.push({id: this.name, description: this.name})
 							  });				  
 							  args.response.success({data: items});					  
 							}
-						  });  		
+						  });     
+						  
+						  args.$select.bind("change", function(event) {						    
+							var $form = $(this).closest('form');
+							if($(this).val() == "VMware") {							  
+							  //$('li[input_sub_group="external"]', $dialogAddCluster).show();
+							  $form.find('.form-item[rel=vCenterHost]').css('display', 'inline-block'); 
+							  $form.find('.form-item[rel=vCenterUsername]').css('display', 'inline-block'); 
+							  $form.find('.form-item[rel=vCenterPassword]').css('display', 'inline-block'); 
+							  $form.find('.form-item[rel=vCenterDatacenter]').css('display', 'inline-block'); 
+							  
+							  //$("#cluster_name_label", $dialogAddCluster).text("vCenter Cluster:");							  
+							} 
+							else {
+							  //$('li[input_group="vmware"]', $dialogAddCluster).hide();
+							  $form.find('.form-item[rel=vCenterHost]').css('display', 'none'); 
+							  $form.find('.form-item[rel=vCenterUsername]').css('display', 'none'); 
+							  $form.find('.form-item[rel=vCenterPassword]').css('display', 'none'); 
+							  $form.find('.form-item[rel=vCenterDatacenter]').css('display', 'none'); 
+							  
+							  //$("#cluster_name_label", $dialogAddCluster).text("Cluster:");							 
+							}					    
+						  });                        				  
 						}				
 					  },
 					  podId: {
@@ -418,41 +440,30 @@
 							}
 						  });  
 						}
-					  }
-					  /*
+					  },
 					  name: {
-						label: 'Name',
+						label: 'Cluster Name',
 						validation: { required: true }
 					  },
-					  availabilityZone: {
-						label: 'Availability Zone',
-						select: function(args) {	
-						  $.ajax({
-							url: createURL("listZones&available=true"),			 
-							dataType: "json",
-							async: true,
-							success: function(json) { 				   
-							  var items = json.listzonesresponse.zone;								  
-							  args.response.success({descriptionField: 'name', data: items});					  
-							}
-						  });  						 
-						}		
+					  					  
+					  //hypervisor==VMWare begins here
+					  vCenterHost: {
+						label: 'vCenter Host',
+						validation: { required: true }
 					  },
-					  diskOffering: {
-						label: 'Disk Offering',
-						select: function(args) {					  
-						  $.ajax({
-							url: createURL("listDiskOfferings"),			 
-							dataType: "json",
-							async: true,
-							success: function(json) { 				   
-							  var items = json.listdiskofferingsresponse.diskoffering;						  
-							  args.response.success({descriptionField: 'displaytext', data: items});					  
-							}
-						  });  		
-						}				
+					  vCenterUsername: {
+						label: 'vCenter Username',
+						validation: { required: true }
+					  },
+					  vCenterPassword: {
+						label: 'vCenter Password',
+						validation: { required: true }
+					  },
+					  vCenterDatacenter: {
+						label: 'vCenter Datacenter',
+						validation: { required: true }
 					  }
-					  */
+					  //hypervisor==VMWare ends here			  
 					}
 				  },				  			  
 				  
