@@ -360,7 +360,108 @@
 				});  	
 			  },
 			  
-              actions: {
+              actions: {			    
+				add: {
+				  label: 'Add cluster',
+
+				  messages: {
+					confirm: function(args) {
+					  return 'Are you sure you want to add a cluster?';
+					},
+					success: function(args) {
+					  return 'Your new cluster is being created.';
+					},
+					notification: function(args) {
+					  return 'Creating new cluster';
+					},
+					complete: function(args) {
+					  return 'Cluster has been created successfully!';
+					}
+				  },
+
+				  createForm: {
+					title: 'Add cluster',
+					desc: 'Please fill in the following data to add a new cluster.',
+					fields: {
+					  hypervisor: {
+						label: 'Hypervisor',
+						select: function(args) {					  
+						  $.ajax({
+							url: createURL("listHypervisors"),			 
+							dataType: "json",
+							async: true,
+							success: function(json) { 				   
+							  var hypervisors = json.listhypervisorsresponse.hypervisor;	
+							  var items = [];
+                              $(hypervisors).each(function() {							      
+							      items.push({id: this.id, description: this.name})
+							  });				  
+							  args.response.success({data: items});					  
+							}
+						  });  		
+						}				
+					  }
+					  /*
+					  name: {
+						label: 'Name',
+						validation: { required: true }
+					  },
+					  availabilityZone: {
+						label: 'Availability Zone',
+						select: function(args) {	
+						  $.ajax({
+							url: createURL("listZones&available=true"),			 
+							dataType: "json",
+							async: true,
+							success: function(json) { 				   
+							  var items = json.listzonesresponse.zone;								  
+							  args.response.success({descriptionField: 'name', data: items});					  
+							}
+						  });  						 
+						}		
+					  },
+					  diskOffering: {
+						label: 'Disk Offering',
+						select: function(args) {					  
+						  $.ajax({
+							url: createURL("listDiskOfferings"),			 
+							dataType: "json",
+							async: true,
+							success: function(json) { 				   
+							  var items = json.listdiskofferingsresponse.diskoffering;						  
+							  args.response.success({descriptionField: 'displaytext', data: items});					  
+							}
+						  });  		
+						}				
+					  }
+					  */
+					}
+				  },				  			  
+				  
+				  action: function(args) {	
+					var array1 = [];
+					//array1.push("&name=" + args.data.name);
+					//array1.push("&zoneId=" + args.data.availabilityZone);
+					//array1.push("&diskOfferingId=" + args.data.diskOffering);
+					$.ajax({
+					  url: createURL("addCluster" + array1.join("")),
+					  dataType: "json",
+					  async: true,
+					  success: function(json) { 			    
+						debugger;
+                        var item = json.addclusterresponse.cluster[0];  						
+                        args.response.success({data: item});							
+					  }
+					});  	
+				  },
+				  
+				  notification: {
+					poll: function(args) {			  
+					  args.complete();
+					}			  
+				  }				  
+				},
+							  
                 destroy: testData.actions.destroy('cluster')
               },
               detailView: {
