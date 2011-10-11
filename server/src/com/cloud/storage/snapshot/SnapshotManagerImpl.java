@@ -775,8 +775,7 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
     @Override
     public String getSecondaryStorageURL(SnapshotVO snapshot) {
         HostVO secHost = _hostDao.findById(snapshot.getSecHostId());
-        return secHost.getStorageUrl();
-        
+        return secHost.getStorageUrl(); 
     }
     
     @Override

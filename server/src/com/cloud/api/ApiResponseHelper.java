@@ -879,8 +879,10 @@ public class ApiResponseHelper implements ResponseGenerator {
             volResponse.setServiceOfferingName(diskOffering.getName());
             volResponse.setServiceOfferingDisplayText(diskOffering.getDisplayText());
         } else {
-            volResponse.setDiskOfferingName(diskOffering.getName());
-            volResponse.setDiskOfferingDisplayText(diskOffering.getDisplayText());
+            if (diskOffering != null) {
+                volResponse.setDiskOfferingName(diskOffering.getName());
+                volResponse.setDiskOfferingDisplayText(diskOffering.getDisplayText());
+            }
         }
 
         Long poolId = volume.getPoolId();

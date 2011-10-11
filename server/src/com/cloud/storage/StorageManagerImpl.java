@@ -50,6 +50,8 @@ import com.cloud.agent.api.Command;
 import com.cloud.agent.api.CreateStoragePoolCommand;
 import com.cloud.agent.api.CreateVolumeFromSnapshotAnswer;
 import com.cloud.agent.api.CreateVolumeFromSnapshotCommand;
+import com.cloud.agent.api.CreateVolumeFromTemplateAnswer;
+import com.cloud.agent.api.CreateVolumeFromTemplateCommand;
 import com.cloud.agent.api.DeleteStoragePoolCommand;
 import com.cloud.agent.api.ManageSnapshotCommand;
 import com.cloud.agent.api.ModifyStoragePoolAnswer;
@@ -489,7 +491,7 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
     }
 
     @DB
-    protected Pair<VolumeVO, String> createVolumeFromSnapshot(VolumeVO volume, SnapshotVO snapshot) {
+    protected Pair<VolumeVO, String> createVolumeFromSnapshotOrTemplate(VolumeVO volume, SnapshotVO snapshot, VMTemplateVO template) {
         VolumeVO createdVolume = null;
         Long volumeId = volume.getId();
 
@@ -508,7 +510,26 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
 
         DiskOfferingVO diskOffering = _diskOfferingDao.findByIdIncludingRemoved(volume.getDiskOfferingId());
         DataCenterVO dc = _dcDao.findById(volume.getDataCenterId());
-        DiskProfile dskCh = new DiskProfile(volume, diskOffering, snapshot.getHypervisorType());
+        
+        HypervisorType hpType;
+        if (snapshot != null) {
+            hpType = snapshot.getHypervisorType();
+        } else {
+            hpType = template.getHypervisorType();
+        }
+        
+        DiskProfile dskCh;
+        if (diskOffering != null) {
+            dskCh = new DiskProfile(volume, diskOffering, hpType);
+        } else {
+            String[] templateTags = new String[1];
+            templateTags[0] = template.getTemplateTag();
+            if (templateTags[0] != null) {
+                dskCh = new DiskProfile(volume, hpType, templateTags);
+            } else {
+                dskCh = new DiskProfile(volume, hpType, null); 
+            }
+        }
 
         int retry = 0;
         // Determine what pod to store the volume in
@@ -519,12 +540,22 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
                 poolsToAvoid.add(pool);
                 volumeFolder = pool.getPath();
                 if (s_logger.isDebugEnabled()) {
-                    s_logger.debug("Attempting to create volume from snapshotId: " + snapshot.getId() + " on storage pool " + pool.getName());
+                    if (snapshot != null) {
+                        s_logger.debug("Attempting to create volume from snapshotId: " + snapshot.getId() + " on storage pool " + pool.getName());
+                    } else {
+                        s_logger.debug("Attempting to create volume from templateId: " + template.getId() + " on storage pool " + pool.getName());
+                    }
                 }
 
                 // Get the newly created VDI from the snapshot.
                 // This will return a null volumePath if it could not be created
-                Pair<String, String> volumeDetails = createVDIFromSnapshot(UserContext.current().getCallerUserId(), snapshot, pool);
+                Pair<String, String> volumeDetails;
+                
+                if (snapshot != null) {
+                    volumeDetails = createVDIFromSnapshot(UserContext.current().getCallerUserId(), snapshot, pool);
+                } else {
+                    volumeDetails = createVDIFromTemplate(UserContext.current().getCallerUserId(), template, pool, dc.getId());
+                }
 
                 volumeUUID = volumeDetails.first();
                 details = volumeDetails.second();
@@ -539,7 +570,13 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
                     retry++;
                     if (retry >= 3) {
                         _volsDao.expunge(volumeId);
-                        String msg = "Unable to create volume from snapshot " + snapshot.getId() + " after retrying 3 times, due to " + details;
+                        String msg;
+                        if (snapshot != null) {
+                            msg = "Unable to create volume from snapshot " + snapshot.getId() + " after retrying 3 times, due to " + details;
+                        } else {
+                            msg = "Unable to create volume from template " + template.getId() + " after retrying 3 times, due to " + details;
+                        }
+                        
                         s_logger.debug(msg);
                         throw new CloudRuntimeException(msg);
 
@@ -555,7 +592,13 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
 
         if (!success) {
             _volsDao.expunge(volumeId);
-            String msg = "Unable to create volume from snapshot " + snapshot.getId() + " due to " + details;
+            String msg;
+            if (snapshot != null) {
+                msg = "Unable to create volume from snapshot " + snapshot.getId() + " due to " + details;
+            } else {
+                msg =  "Unable to create volume from template " + template.getId() + " due to " + details;
+            }
+           
             s_logger.debug(msg);
             throw new CloudRuntimeException(msg);
 
@@ -588,7 +631,17 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
         VolumeVO createdVolume = null;
         SnapshotVO snapshot = _snapshotDao.findById(snapshotId); // Precondition: snapshot is not null and not removed.
 
-        Pair<VolumeVO, String> volumeDetails = createVolumeFromSnapshot(volume, snapshot);
+        Pair<VolumeVO, String> volumeDetails = createVolumeFromSnapshotOrTemplate(volume, snapshot, null);
+        createdVolume = volumeDetails.first();
+        return createdVolume;
+    }
+    
+    protected VolumeVO createVolumeFromTemplate(VolumeVO volume, long templateId) {
+        // By default, assume failure.
+        VolumeVO createdVolume = null;
+        VMTemplateVO template = _templateDao.findById(templateId); // Precondition: snapshot is not null and not removed.
+
+        Pair<VolumeVO, String> volumeDetails = createVolumeFromSnapshotOrTemplate(volume, null, template);
         createdVolume = volumeDetails.first();
         return createdVolume;
     }
@@ -658,6 +711,41 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
             s_logger.error(basicErrMsg);
         } finally {
             _snapshotDao.unlockFromLockTable(snapshotId.toString());
+        }
+
+        return new Pair<String, String>(vdiUUID, basicErrMsg);
+    }
+    
+    protected Pair<String, String> createVDIFromTemplate(long userId, VMTemplateVO template, StoragePoolVO pool, long zoneId) {
+        String vdiUUID = null;
+        Long templateId = template.getId();
+        String primaryStoragePoolNameLabel = pool.getUuid(); // pool's uuid is actually the namelabel.
+        
+        List<HostVO> storageHosts = _hostDao.listAllBy(Host.Type.SecondaryStorage, zoneId);
+        //Assume that there is only one secondary storage
+        HostVO secStorage = storageHosts.get(0);
+        String secondaryStoragePoolUrl = secStorage.getStorageUrl();
+        String absolutePath =  _vmTemplateHostDao.findByHostTemplate(secStorage.getId(), templateId).getInstallPath();
+
+        CreateVolumeFromTemplateCommand createVolumeFromTemplateCommand = new CreateVolumeFromTemplateCommand(primaryStoragePoolNameLabel, secondaryStoragePoolUrl, zoneId, absolutePath, _createVolumeFromSnapshotWait);
+
+        CreateVolumeFromTemplateAnswer answer;
+        if (!_vmTemplateDao.lockInLockTable(templateId.toString(), 10)) {
+            throw new CloudRuntimeException("failed to create volume from " + templateId + " due to this template is being used, try it later ");
+        }
+        String basicErrMsg = "Failed to create volume from template " + template.getName() + " on pool " + pool;
+        try {
+            answer = (CreateVolumeFromTemplateAnswer) sendToPool(pool, createVolumeFromTemplateCommand);
+            if (answer != null && answer.getResult()) {
+                vdiUUID = answer.getVdi();
+            } else {
+                s_logger.error(basicErrMsg + " due to " + ((answer == null)?"null":answer.getDetails()));
+                throw new CloudRuntimeException(basicErrMsg);
+            }
+        } catch (StorageUnavailableException e) {
+            s_logger.error(basicErrMsg);
+        } finally {
+            _vmTemplateDao.unlockFromLockTable(templateId.toString());
         }
 
         return new Pair<String, String>(vdiUUID, basicErrMsg);
@@ -1642,11 +1730,11 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
         Long size = null;
 
         // validate input parameters before creating the volume
-        if ((cmd.getSnapshotId() == null && cmd.getDiskOfferingId() == null) || (cmd.getSnapshotId() != null && cmd.getDiskOfferingId() != null)) {
-            throw new InvalidParameterValueException("Either disk Offering Id or snapshot Id must be passed whilst creating volume");
+        if ((cmd.getSnapshotId() == null && cmd.getDiskOfferingId() == null && cmd.getTemplateId() == null) || (cmd.getSnapshotId() != null && cmd.getDiskOfferingId() != null && cmd.getTemplateId() != null)) {
+            throw new InvalidParameterValueException("Either disk Offering Id or snapshot Id or templateId must be passed whilst creating volume");
         }
 
-        if (cmd.getSnapshotId() == null) {// create a new volume
+        if (cmd.getDiskOfferingId() != null) {// create a new volume
             zoneId = cmd.getZoneId();
             if ((zoneId == null)) {
                 throw new InvalidParameterValueException("Missing parameter, zoneid must be specified.");
@@ -1691,7 +1779,7 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
             if (!validateVolumeSizeRange(size)) {// convert size from mb to gb for validation
                 throw new InvalidParameterValueException("Invalid size for custom volume creation: " + size + " ,max volume size is:" + _maxVolumeSizeInGb);
             }
-        } else { // create volume from snapshot
+        } else if (cmd.getSnapshotId() != null){ // create volume from snapshot
             Long snapshotId = cmd.getSnapshotId();
             SnapshotVO snapshotCheck = _snapshotDao.findById(snapshotId);
             if (snapshotCheck == null) {
@@ -1714,6 +1802,26 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
                     throw new InvalidParameterValueException("unable to find a snapshot with id " + snapshotId + " for this account");
                 }
             }
+        } else {
+            // templateId and zoneId should be passed in
+            Long templateId = cmd.getTemplateId();
+            VMTemplateVO template = _templateDao.findById(templateId);
+            if (template == null) {
+                throw new InvalidParameterValueException("unable to find a template with id " + templateId);
+            }
+            
+            _accountMgr.checkAccess(account, null,template);
+            
+            zoneId = cmd.getZoneId();
+            if ((zoneId == null)) {
+                throw new InvalidParameterValueException("Missing parameter, zoneid must be specified.");
+            }
+            
+            //TODO - check that the template is ready on the secondary storage in the zone
+            List<HostVO> storageHosts = _hostDao.listAllBy(Host.Type.SecondaryStorage, zoneId);
+            //Assume that there is only one secondary storage
+            HostVO secStorage = storageHosts.get(0);
+            size =  _vmTemplateHostDao.findByHostTemplate(secStorage.getId(), templateId).getSize();
         }
 
         // Verify that zone exists
@@ -1760,7 +1868,10 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
         volume.setPodId(null);
         volume.setAccountId(targetAccount.getId());
         volume.setDomainId(((account == null) ? Domain.ROOT_DOMAIN : account.getDomainId()));
-        volume.setDiskOfferingId(diskOfferingId);
+        if (diskOfferingId != null) {
+            volume.setDiskOfferingId(diskOfferingId);
+        }
+        
         volume.setSize(size);
         volume.setInstanceId(null);
         volume.setUpdated(new Date());
@@ -1771,7 +1882,7 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
             volume.setState(Volume.State.Creating);
         }
         volume = _volsDao.persist(volume);
-        UsageEventVO usageEvent = new UsageEventVO(EventTypes.EVENT_VOLUME_CREATE, volume.getAccountId(), volume.getDataCenterId(), volume.getId(), volume.getName(), diskOfferingId, null, size);
+        UsageEventVO usageEvent = new UsageEventVO(EventTypes.EVENT_VOLUME_CREATE, volume.getAccountId(), volume.getDataCenterId(), volume.getId(), volume.getName(), diskOfferingId, cmd.getTemplateId(), size);
         _usageEventDao.persist(usageEvent);
         txn.commit();
         
@@ -1793,6 +1904,12 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
         try {
             if (cmd.getSnapshotId() != null) {
                 volume = createVolumeFromSnapshot(volume, cmd.getSnapshotId());
+                if (volume.getState() == Volume.State.Ready) {
+                    created = true;
+                }
+                return volume;
+            } else if (cmd.getTemplateId() != null) {
+                volume = createVolumeFromTemplate(volume, cmd.getTemplateId());
                 if (volume.getState() == Volume.State.Ready) {
                     created = true;
                 }
