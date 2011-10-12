@@ -499,6 +499,16 @@
     if (!options) options = {};
     var rows = [];
 
+    if (!data || ($.isArray(data) && !data.length)) {
+      return [
+        $('<tr>').addClass('empty').append(
+          $('<td>').html('No data to show')
+        ).appendTo($tbody)
+      ];
+    }
+
+    $tbody.find('tr.empty').remove();
+
     $(data).each(function() {
       var dataItem = this;
       var id = dataItem.id;
@@ -617,15 +627,10 @@
           success: function(args) {
             setLoadingArgs.loadingCompleted();
 
-            if (!args.data) {
-              $table.find('tr:not(.loading)')
-                .filter(':last').addClass('last');
-            } else {
-              addTableRows(fields, args.data, $tbody, actions, {
-                actionFilter: args.actionFilter
-              });
-              $table.dataTable();
-            }
+            addTableRows(fields, args.data, $tbody, actions, {
+              actionFilter: args.actionFilter
+            });
+            $table.dataTable();
           },
           error: function(args) {
             if (args.message) {
@@ -867,7 +872,7 @@
                                listViewData.detailView && !$target.closest('div.edit').size());
 
       // Click on first item will trigger detail view (if present)
-      if (detailViewPresent) {
+      if (detailViewPresent && !$target.closest('.empty, .loading').size()) {
         listViewData.detailView.$browser = args.$browser;
         detailViewArgs = {
           $panel: $target.closest('div.panel'),
