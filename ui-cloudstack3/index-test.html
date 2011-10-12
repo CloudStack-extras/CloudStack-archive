@@ -477,7 +477,19 @@
                       <span>Public</span>
                     </div>
                     <div class="value">
-                      <input type="checkbox" />
+                      <input name="public" type="checkbox" />
+                    </div>
+                  </div>
+
+                  <div class="conditional public">
+                    <!-- Domain -->
+                    <div class="field">
+                      <div class="name">
+                        <span>Domain</span>
+                      </div>
+                      <div class="value">
+                        <input name="zone-domain" class="required" type="text" />
+                      </div>
                     </div>
                   </div>
                 </form>
@@ -544,7 +556,7 @@
               <div class="content input-area">
                 <div class="select-container">
                   <!-- VLAN Type -->
-                  <div class="field conditional vlan odd">
+                  <div class="field conditional vlan">
                     <div class="name">
                       <span>VLAN</span>
                     </div>
@@ -567,7 +579,19 @@
                   </div>
 
                   <!-- Scope -->
-                  <div class="field odd conditional vlan-type-tagged">
+                  <div class="field conditional vlan-type-untagged">
+                    <div class="name">
+                      <span>Scope</span>
+                    </div>
+                    <div class="value">
+                      <select name="ip-scope">
+                        <option value="zone-wide">Zone-wide</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Scope (tagged) -->
+                  <div class="field conditional vlan-type-tagged">
                     <div class="name">
                       <span>Scope</span>
                     </div>
@@ -590,7 +614,7 @@
                   </div>
 
                   <!-- Account -->
-                  <div class="field odd conditional ip-scope-account-specific">
+                  <div class="field conditional ip-scope-account-specific">
                     <div class="name">
                       <span>Account</span>
                     </div>
@@ -610,7 +634,7 @@
                   </div>
 
                   <!-- Netmask -->
-                  <div class="field odd">
+                  <div class="field">
                     <div class="name">
                       <span>Guest Netmask</span>
                     </div>
@@ -620,7 +644,7 @@
                   </div>
 
                   <!-- IP Range -->
-                  <div class="field odd">
+                  <div class="field">
                     <div class="name">
                       <span>Guest IP Range</span>
                     </div>

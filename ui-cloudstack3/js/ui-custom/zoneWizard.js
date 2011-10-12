@@ -79,6 +79,10 @@
           }
         }
 
+        if (formState['public']) {
+          $conditional.filter('.public').show();
+        }
+
         // Show launch vm button if last step
         var $nextButton = $wizard.find('.button.next');
         $nextButton.find('span').html('Next');
@@ -112,23 +116,44 @@
       $wizard.find('select').change(function(event) {
         // Conditional selects (on step 4 mainly)
         var $target = $(this);
+        var $tagged = $wizard.find('.conditional.vlan-type-tagged');
+        var $untagged = $wizard.find('.conditional.vlan-type-untagged');
+        var $accountSpecific = $wizard.find('.field.conditional.ip-scope-account-specific');
 
         // VLAN - tagged
         if ($target.is('[name=vlan-type]')) {
-          var $tagged = $wizard.find('.field.conditional.vlan-type-tagged');
-
           $tagged.hide();
-          if ($target.val() == 'tagged') $tagged.show();
+          $untagged.hide();
+          $accountSpecific.hide();
+
+          if ($target.val() == 'tagged') {
+            $untagged.hide();
+            $tagged.show();
+          }
+          else if ($target.val() == 'untagged') {
+            $tagged.hide();
+            $untagged.show();
+          }
+
+          $.merge($tagged, $untagged).find('select:visible').trigger('change');
+
+          cloudStack.evenOdd($wizard, '.field:visible', {
+            even: function($elem) { $elem.removeClass('odd'); $elem.addClass('even'); },
+            odd: function($elem) { $elem.removeClass('even'); $elem.addClass('odd'); }
+          });
 
           return true;
         }
 
         // IP Scope - acct. specific
         if ($target.is('[name=ip-scope]')) {
-          var $accountSpecific = $wizard.find('.field.conditional.ip-scope-account-specific');
-
           $accountSpecific.hide();
           if ($target.val() == 'account-specific') $accountSpecific.show();
+
+          cloudStack.evenOdd($wizard, '.field:visible', {
+            even: function($elem) { $elem.removeClass('odd'); $elem.addClass('even'); },
+            odd: function($elem) { $elem.removeClass('even'); $elem.addClass('odd'); }
+          });
         }
 
         return true;
@@ -149,6 +174,19 @@
               $inputs.attr('disabled', false);
             }
           }
+
+          return true;
+        }
+
+        // Checkbox
+        if ($target.is('[type=checkbox]:checked')) {
+          $('div.conditional.' + $target.attr('name')).show();
+
+          return true;
+        } else if ($target.is('[type=checkbox]:unchecked')) {
+          $('div.conditional.' + $target.attr('name')).hide();
+
+          return true;
         }
 
         // Next button
@@ -175,7 +213,7 @@
         // Close button
         if ($target.closest('div.button.cancel').size()) {
           close();
-          
+
           return false;
         }
 

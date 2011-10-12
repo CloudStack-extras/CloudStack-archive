@@ -735,6 +735,21 @@ div.details div.detail-group td.value select {
   margin: 0 9px 0 0;
 }
 
+.detail-view .loading-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0px;
+  top: 0px;
+  background: #E2E9F0 url(../images/ajax-loader.gif) no-repeat center;
+  z-index: 500;
+  /*+opacity:70%;*/
+  filter: alpha(opacity=70);
+  -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+  -moz-opacity: 0.7;
+  opacity: 0.7;
+}
+
 /*** Multi-edit*/
 .detail-view .multi-edit input {
   width: 85%;
@@ -3607,7 +3622,7 @@ input.error {
 
 .multi-wizard.zone-wizard .select-container .field {
   width: 100%;
-  height: 45px;
+  height: 40px;
   float: left;
 }
 
@@ -3756,6 +3771,49 @@ input.error {
 }
 
 div.detail-group td.view-all div.view-all div.end {
+}
+
+/*Port forwarding*/
+.port-forwarding {
+}
+
+.port-forwarding .button.add-vm {
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #FFFFFF;
+  /*+text-shadow:0px 1px 1px #000000;*/
+  -moz-text-shadow: 0px 1px 1px #000000;
+  -webkit-text-shadow: 0px 1px 1px #000000;
+  -o-text-shadow: 0px 1px 1px #000000;
+  text-shadow: 0px 1px 1px #000000;
+  /*+box-shadow:0px 1px 1px #FFFFFF;*/
+  -moz-box-shadow: 0px 1px 1px #FFFFFF;
+  -webkit-box-shadow: 0px 1px 1px #FFFFFF;
+  -o-box-shadow: 0px 1px 1px #FFFFFF;
+  box-shadow: 0px 1px 1px #FFFFFF;
+  border: 1px solid #858585;
+  border-top: none;
+  /*+border-radius:5px;*/
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px 5px 5px 5px;
+  padding: 6px 9px 4px 0px;
+  background: url(../images/bg-gradients.png) repeat-x 0px -220px;
+  /*+placement:shift 4px 0px;*/
+  position: relative;
+  left: 4px;
+  top: 0px;
+}
+
+.port-forwarding .button.add-vm:hover {
+  background-position: 0px -241px;
+  /*+box-shadow:inset 0px 1px 1px #000000;*/
+  -moz-box-shadow: inset 0px 1px 1px #000000;
+  -webkit-box-shadow: inset 0px 1px 1px #000000;
+  -o-box-shadow: inset 0px 1px 1px #000000;
+  box-shadow: inset 0px 1px 1px #000000;
 }
 
 /*Action icons*/
