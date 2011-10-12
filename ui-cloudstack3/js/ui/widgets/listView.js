@@ -500,11 +500,15 @@
     var rows = [];
 
     if (!data || ($.isArray(data) && !data.length)) {
-      return [
-        $('<tr>').addClass('empty').append(
-          $('<td>').html('No data to show')
-        ).appendTo($tbody)
-      ];
+      if (!$tbody.find('tr').size()) {
+        return [
+          $('<tr>').addClass('empty').append(
+            $('<td>').html('No data to show')
+          ).appendTo($tbody)
+        ];        
+      }
+
+      return $tbody.find('tr:last').addClass('last');
     }
 
     $tbody.find('tr.empty').remove();
