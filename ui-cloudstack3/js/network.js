@@ -2,10 +2,15 @@
   cloudStack.sections.network = {
     title: 'Network',
     id: 'network',
+    sectionSelect: {
+      label: 'Select view'
+    },
     sections: {
       ipAddresses: {
+        type: 'select',
         title: 'IP Addresses',
         listView: {
+          id: 'ipAddresses',
           label: 'IPs',
           filters: {
             allocated: { label: 'Allocated ' },
@@ -228,8 +233,10 @@
         }
       },
       securityGroups: {
+        type: 'select',
         title: 'Security Groups',
         listView: {
+          id: 'securityGroups',
           label: 'Security Groups',
           fields: {
             name: { label: 'Name', editable: true },

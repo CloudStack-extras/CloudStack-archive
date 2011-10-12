@@ -2,13 +2,18 @@
   cloudStack.sections.storage = {
     title: 'Storage',
     id: 'storage',
+    sectionSelect: {
+      label: 'Select view'
+    },
     sections: {
       /**
        * Volumes
        */
       volumes: {
+        type: 'select',
         title: 'Volumes',
         listView: {
+          id: 'volumes',
           label: 'Volumes',
           fields: {
             name: { label: 'Name', editable: true },
@@ -150,6 +155,7 @@
             },
             create: {
               label: 'Create template',
+              addRow: 'false',
               messages: {
                 success: function(args) {
                   return 'Your new snapshot ' + args.name + ' is being created.';
@@ -321,8 +327,10 @@
        * Snapshots
        */
       snapshots: {
+        type: 'select',
         title: 'Snapshots',
         listView: {
+          id: 'snapshots',
           label: 'Snapshots',
           fields: {
             volumename: { label: 'Volume' },

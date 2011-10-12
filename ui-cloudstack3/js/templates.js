@@ -2,10 +2,15 @@
   cloudStack.sections.templates = {
     title: 'Templates',
     id: 'templates',
+    sectionSelect: {
+      label: 'Select view'
+    },
     sections: {
       templates: {
+        type: 'select',
         title: 'Templates',
         listView: {
+          id: 'templates',
           label: 'Templates',
           fields: {
             name: { label: 'Name', editable: true },
@@ -37,6 +42,7 @@
         }
       },
       isos: {
+        type: 'select',
         title: 'ISOs',
         listView: {
           label: 'ISOs',
