@@ -817,7 +817,7 @@
                   },
 
                   notification: {
-                    poll: testData.notifications.customPoll(testData.data.hosts[0])
+                    poll: pollAsyncJobResult
                   },
 
                   messages: {
@@ -875,9 +875,230 @@
                 });   
               },  
               
-              actions: {
+			  //??? to replace
+                            actions: {
+                add: {
+                  label: 'Add primary storage',
+
+                  createForm: {
+                    title: 'Add new primary storage',
+                    desc: 'Please fill in the following information to add a new primary storage',
+                    fields: {
+                      podId: {
+                        label: 'Pod',
+                        validation: { required: true },
+                        select: function(args) {                          
+                          $.ajax({
+                            url: createURL("listPods&zoneid=" + args.context.zones[0].id),       
+                            dataType: "json",
+                            async: true,
+                            success: function(json) {            
+                              var pods = json.listpodsresponse.pod;                               
+                              var items = [];
+                              $(pods).each(function() {
+                                items.push({id: this.id, description: this.name});
+                              });               
+                              args.response.success({data: items});           
+                            }
+                          });  
+                        }
+                      },
+                      
+                      clusterId: {
+                        label: 'Cluster',
+                        validation: { required: true },
+                        dependsOn: 'podId',
+                        select: function(args) {   
+                          $.ajax({
+                            url: createURL("listClusters&podid=" + args.podId),      
+                            dataType: "json",
+                            async: false,
+                            success: function(json) {            
+                              clusterObjs = json.listclustersresponse.cluster;                        
+                              var items = [];
+                              $(clusterObjs).each(function() {
+                                items.push({id: this.id, description: this.name});
+                              });               
+                              args.response.success({data: items});           
+                            }
+                          });                            
+                        }
+                      },
+
+                      primaryStorageName: {
+                        label: 'Name',
+                        validation: { required: true }
+                      },
+                      
+                      protocol: {
+                        label: 'Cluster',
+                        validation: { required: true },
+                        dependsOn: 'clusterId',
+                        select: function(args) {                            					  
+						  var clusterId = args.clusterId;
+                          if(clusterId == null)
+                            return;   
+                          var items = [];             
+                          $(clusterObjs).each(function(){                 
+                            if(this.id == clusterId){
+                              selectedClusterObj = this;
+                              return false; //break the $.each() loop 
+                            }                   
+                          }); 
+                          if(selectedClusterObj == null)
+                            return;   
+						  
+                          if(selectedClusterObj.hypervisortype == "KVM") {						    						                            
+                            var items = [];
+							items.push({id: "nfs", description: "nfs"});
+							items.push({id: "SharedMountPoint", description: "SharedMountPoint"});							
+                            args.response.success({data: items}); 
+						  } 
+						  else if(selectedClusterObj.hypervisortype == "XenServer") {
+						    var items = [];
+							items.push({id: "nfs", description: "nfs"});
+							items.push({id: "PreSetup", description: "PreSetup"});
+							items.push({id: "iscsi", description: "iscsi"});							
+                            args.response.success({data: items}); 						  
+						  } 
+						  else if(selectedClusterObj.hypervisortype == "VMware") {
+						    var items = [];
+							items.push({id: "nfs", description: "nfs"});
+							items.push({id: "vmfs", description: "vmfs"});							
+                            args.response.success({data: items}); 							
+						  } 
+						  else if(selectedClusterObj.hypervisortype == "Ovm") {
+						    var items = [];
+							items.push({id: "nfs", description: "nfs"});
+							items.push({id: "ocfs2", description: "ocfs2"});														
+                            args.response.success({data: items}); 							
+						  } 
+						  else {
+							args.response.success({data:[]});
+						  }
+                                                    
+                          /*
+                          args.$select.change(function() {                            
+                            var $form = $(this).closest('form');
+                            
+                            var clusterId = $(this).val();
+                            if(clusterId == null)
+                              return;    
+                            
+                            var items = [];             
+                            $(clusterObjs).each(function(){                 
+                              if(this.id == clusterId){
+                                selectedClusterObj = this;
+                                return false; //break the $.each() loop 
+                              }                   
+                            }); 
+                            if(selectedClusterObj == null)
+                              return;   
+                            
+                            if(selectedClusterObj.hypervisortype == "VMware") {               
+                              //$('li[input_group="general"]', $dialogAddHost).hide();
+                              $form.find('.form-item[rel=hostname]').hide();
+                              $form.find('.form-item[rel=username]').hide();
+                              $form.find('.form-item[rel=password]').hide();
+                              
+                              //$('li[input_group="vmware"]', $dialogAddHost).show();
+                              $form.find('.form-item[rel=vcenterHost]').css('display', 'inline-block'); 
+                              
+                              //$('li[input_group="baremetal"]', $dialogAddHost).hide();
+                              $form.find('.form-item[rel=baremetalCpuCores]').hide();
+                              $form.find('.form-item[rel=baremetalCpu]').hide();
+                              $form.find('.form-item[rel=baremetalMemory]').hide();
+                              $form.find('.form-item[rel=baremetalMAC]').hide();
+                              
+                              //$('li[input_group="Ovm"]', $dialogAddHost).hide();
+                              $form.find('.form-item[rel=agentUsername]').hide();
+                              $form.find('.form-item[rel=agentPassword]').hide();
+                            } 
+                            else if (selectedClusterObj.hypervisortype == "BareMetal") {
+                              //$('li[input_group="general"]', $dialogAddHost).show();
+                              $form.find('.form-item[rel=hostname]').css('display', 'inline-block'); 
+                              $form.find('.form-item[rel=username]').css('display', 'inline-block'); 
+                              $form.find('.form-item[rel=password]').css('display', 'inline-block'); 
+                              
+                              //$('li[input_group="baremetal"]', $dialogAddHost).show();
+                              $form.find('.form-item[rel=baremetalCpuCores]').css('display', 'inline-block'); 
+                              $form.find('.form-item[rel=baremetalCpu]').css('display', 'inline-block'); 
+                              $form.find('.form-item[rel=baremetalMemory]').css('display', 'inline-block'); 
+                              $form.find('.form-item[rel=baremetalMAC]').css('display', 'inline-block'); 
+                              
+                              //$('li[input_group="vmware"]', $dialogAddHost).hide();
+                              $form.find('.form-item[rel=vcenterHost]').hide();               
+                              
+                              //$('li[input_group="Ovm"]', $dialogAddHost).hide();
+                              $form.find('.form-item[rel=agentUsername]').hide();
+                              $form.find('.form-item[rel=agentPassword]').hide();               
+                            } 
+                            else if (selectedClusterObj.hypervisortype == "Ovm") {                
+                              //$('li[input_group="general"]', $dialogAddHost).show();   
+                              $form.find('.form-item[rel=hostname]').css('display', 'inline-block'); 
+                              $form.find('.form-item[rel=username]').css('display', 'inline-block'); 
+                              $form.find('.form-item[rel=password]').css('display', 'inline-block'); 
+                              
+                              //$('li[input_group="vmware"]', $dialogAddHost).hide();     
+                              $form.find('.form-item[rel=vcenterHost]').hide();   
+                              
+                              //$('li[input_group="baremetal"]', $dialogAddHost).hide();
+                              $form.find('.form-item[rel=baremetalCpuCores]').hide();
+                              $form.find('.form-item[rel=baremetalCpu]').hide();
+                              $form.find('.form-item[rel=baremetalMemory]').hide();
+                              $form.find('.form-item[rel=baremetalMAC]').hide();
+                              
+                              //$('li[input_group="Ovm"]', $dialogAddHost).show();  
+                              $form.find('.form-item[rel=agentUsername]').css('display', 'inline-block'); 
+                              $form.find('.form-item[rel=agentUsername]').find('input').val("oracle");
+                              $form.find('.form-item[rel=agentPassword]').css('display', 'inline-block');               
+                            } 
+                            else {        
+                              //$('li[input_group="general"]', $dialogAddHost).show();
+                              $form.find('.form-item[rel=hostname]').css('display', 'inline-block'); 
+                              $form.find('.form-item[rel=username]').css('display', 'inline-block'); 
+                              $form.find('.form-item[rel=password]').css('display', 'inline-block'); 
+                              
+                              //$('li[input_group="vmware"]', $dialogAddHost).hide();
+                              $form.find('.form-item[rel=vcenterHost]').hide(); 
+                              
+                              //$('li[input_group="baremetal"]', $dialogAddHost).hide();
+                              $form.find('.form-item[rel=baremetalCpuCores]').hide();
+                              $form.find('.form-item[rel=baremetalCpu]').hide();
+                              $form.find('.form-item[rel=baremetalMemory]').hide();
+                              $form.find('.form-item[rel=baremetalMAC]').hide();
+                              
+                              //$('li[input_group="Ovm"]', $dialogAddHost).hide();
+                              $form.find('.form-item[rel=agentUsername]').hide();
+                              $form.find('.form-item[rel=agentPassword]').hide();         
+                            }                   
+                          });   
+                          */
+                          
+                          //args.$select.trigger("change");
+                        }
+                      }                      
+                    }
+                  },
+
+                  action: function(args) {            
+                    
+                  },
+
+                  notification: {
+                    poll: pollAsyncJobResult
+                  },
+
+                  messages: {
+                    notification: function(args) {
+                      return 'Added new primary storage';
+                    }
+                  }
+                },        
                 destroy: testData.actions.destroy('cluster')
               },
+			  //??? to replace
+			  
               detailView: {
                 tabs: {
                   details: {
