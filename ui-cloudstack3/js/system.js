@@ -1,6 +1,7 @@
 (function($, cloudStack, testData) {
 
   var zoneObjs, podObjs, clusterObjs;
+  var selectedClusterObj;
 
   cloudStack.sections.system = {
     title: 'System',
@@ -467,8 +468,7 @@
 					}
 				  },				  			  
 				  
-				  action: function(args) {	
-					debugger;					
+				  action: function(args) {								
 					var array1 = [];
 					array1.push("&zoneId=" + args.context.zones[0].id);	
 					array1.push("&hypervisor=" + args.data.hypervisor);	
@@ -575,9 +575,10 @@
                     fields: {
                       podId: {
                         label: 'Pod',
+						validation: { required: true },
                         select: function(args) {                          
 						  $.ajax({
-							url: createURL("listPods&zoneid="+args.context.zones[0].id),			 
+							url: createURL("listPods&zoneid=" + args.context.zones[0].id),			 
 							dataType: "json",
 							async: true,
 							success: function(json) { 				   
@@ -594,9 +595,10 @@
 					  
                       clusterId: {
                         label: 'Cluster',
+						validation: { required: true },
                         dependsOn: 'podId',
                         select: function(args) {
-						  var clusterObjs;
+						  
 						  
                           $.ajax({
 							url: createURL("listClusters&podid=" + args.podId),			 
@@ -618,19 +620,18 @@
                             var clusterId = $(this).val();
 							if(clusterId == null)
 								return;    
-                            
-                            var clusterObj;							
+                                                       					
 							var items = [];							
                             $(clusterObjs).each(function(){							    
 							    if(this.id == clusterId){
-								    clusterObj = this;
+								    selectedClusterObj = this;
 									return false; //break the $.each() loop 
 								}								    
 							});	
-							if(clusterObj == null)
+							if(selectedClusterObj == null)
 								return;   
 								
-							if(clusterObj.hypervisortype == "VMware") {								
+							if(selectedClusterObj.hypervisortype == "VMware") {								
 								//$('li[input_group="general"]', $dialogAddHost).hide();
 								$form.find('.form-item[rel=hostname]').hide();
 								$form.find('.form-item[rel=username]').hide();
@@ -649,7 +650,7 @@
 								$form.find('.form-item[rel=agentUsername]').hide();
 								$form.find('.form-item[rel=agentPassword]').hide();
 							} 
-							else if (clusterObj.hypervisortype == "BareMetal") {
+							else if (selectedClusterObj.hypervisortype == "BareMetal") {
 							    //$('li[input_group="general"]', $dialogAddHost).show();
 								$form.find('.form-item[rel=hostname]').css('display', 'inline-block'); 
 								$form.find('.form-item[rel=username]').css('display', 'inline-block'); 
@@ -668,7 +669,7 @@
 								$form.find('.form-item[rel=agentUsername]').hide();
 								$form.find('.form-item[rel=agentPassword]').hide();								
 							} 
-							else if (clusterObj.hypervisortype == "Ovm") {								
+							else if (selectedClusterObj.hypervisortype == "Ovm") {								
 								//$('li[input_group="general"]', $dialogAddHost).show();   
                                 $form.find('.form-item[rel=hostname]').css('display', 'inline-block'); 
 								$form.find('.form-item[rel=username]').css('display', 'inline-block'); 
@@ -685,6 +686,7 @@
 								
                                 //$('li[input_group="Ovm"]', $dialogAddHost).show();	
                                 $form.find('.form-item[rel=agentUsername]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=agentUsername]').find('input').val("oracle");
 								$form.find('.form-item[rel=agentPassword]').css('display', 'inline-block'); 							
 							} 
 							else {    		
@@ -783,8 +785,64 @@
                     }
                   },
 
-                  action: function(args) {
-                    args.response.success();
+                  action: function(args) {				    
+					var array1 = [];				    
+					array1.push("&zoneid=" + args.context.zones[0].id);										
+					array1.push("&podid=" + args.data.podId);	
+					array1.push("&clusterid=" + args.data.clusterId);	
+					array1.push("&hypervisor=" + todb(selectedClusterObj.hypervisortype));			    
+					var clustertype = selectedClusterObj.clustertype;
+					array1.push("&clustertype=" + todb(clustertype));
+					array1.push("&hosttags=" + todb(args.data.hosttags));			    
+					
+					if(selectedClusterObj.hypervisortype == "VMware") {
+						array1.push("&username=");
+						array1.push("&password=");
+						var hostname = args.data.vcenterHost;						
+						var url;					
+						if(hostname.indexOf("http://")==-1)
+							url = "http://" + hostname;
+						else
+							url = hostname;
+						array1.push("&url=" + todb(url));						
+					} 
+					else {						
+						array1.push("&username=" + todb(args.data.username));		
+						array1.push("&password=" + todb(args.data.password));
+						
+						var hostname = args.data.hostname;
+						
+						var url;					
+						if(hostname.indexOf("http://")==-1)
+							url = "http://" + hostname;
+						else
+							url = hostname;
+						array1.push("&url="+todb(url));
+											
+						if (selectedClusterObj.hypervisortype == "BareMetal") {							
+							array1.push("&cpunumber=" + todb(args.data.baremetalCpuCores));
+							array1.push("&cpuspeed=" + todb(args.data.baremetalCpu));
+							array1.push("&memory=" + todb(args.data.baremetalMemory));							
+							array1.push("&hostmac=" + todb(args.data.baremetalMAC));
+						}
+						else if(selectedClusterObj.hypervisortype == "Ovm") {							
+							array1.push("&agentusername=" + todb(args.data.agentUsername)); 
+							array1.push("&agentpassword=" + todb(args.data.agentPassword));			        	
+						}
+					}
+									
+					$.ajax({
+					    url: createURL("addHost" + array1.join("")),
+						dataType: "json",
+						success: function(json) { 							    
+						    var item = json.addhostresponse.host[0];  						
+							args.response.success({data: item});							
+						},
+						error: function(XMLHttpResponse) {	
+							var errorMsg = parseXMLHttpResponse(XMLHttpResponse);	
+							args.response.error(errorMsg);
+						}		
+					});								  
                   },
 
                   notification: {
