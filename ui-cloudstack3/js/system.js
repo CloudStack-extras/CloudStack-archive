@@ -575,32 +575,7 @@
                     fields: {
                       podId: {
                         label: 'Pod',
-
-                        select: function(args) {
-                          /**
-                           * Example to show/hide fields
-                           * 
-                           * -Select Pod2 to show conditional fields
-                           * -Select any other field to hide conditional fields
-                           */
-                          args.$select.change(function() {
-                            var $input = $(this);
-                            var $form = $input.closest('form');
-
-                            // Note: need to actually select the .form-item div containing the input
-                            var $condTestA = $form.find('.form-item[rel=condTestA]');
-                            var $condTestB = $form.find('.form-item[rel=condTestB]');
-
-                            $condTestA.hide();
-                            $condTestB.hide();
-
-                            if ($input.val() == 2) {
-                              // Note: need to show by setting display=inline-block, not .show()
-                              $condTestA.css('display', 'inline-block');
-                              $condTestB.css('display', 'inline-block');
-                            }
-                          });
-						  
+                        select: function(args) {                          
 						  $.ajax({
 							url: createURL("listPods&zoneid="+args.context.zones[0].id),			 
 							dataType: "json",
@@ -617,67 +592,194 @@
                         }
                       },
 					  
-                      cluster: {
+                      clusterId: {
                         label: 'Cluster',
-                        dependsOn: 'pod',
+                        dependsOn: 'podId',
                         select: function(args) {
+						  var clusterObjs;
+						  
                           $.ajax({
 							url: createURL("listClusters&podid=" + args.podId),			 
 							dataType: "json",
-							async: true,
+							async: false,
 							success: function(json) { 				   
-							  var clusters = json.listclustersresponse.cluster;                        
+							  clusterObjs = json.listclustersresponse.cluster;                        
                               var items = [];
-							  $(clusters).each(function() {
+							  $(clusterObjs).each(function() {
 							    items.push({id: this.id, description: this.name});
 							  });							  
 							  args.response.success({data: items});					  
 							}
-						  });  	
+						  });  
+                     					      
+                          args.$select.change(function() {                            
+                            var $form = $(this).closest('form');
+                            
+                            var clusterId = $(this).val();
+							if(clusterId == null)
+								return;    
+                            
+                            var clusterObj;							
+							var items = [];							
+                            $(clusterObjs).each(function(){							    
+							    if(this.id == clusterId){
+								    clusterObj = this;
+									return false; //break the $.each() loop 
+								}								    
+							});	
+							if(clusterObj == null)
+								return;   
+								
+							if(clusterObj.hypervisortype == "VMware") {								
+								//$('li[input_group="general"]', $dialogAddHost).hide();
+								$form.find('.form-item[rel=hostname]').hide();
+								$form.find('.form-item[rel=username]').hide();
+								$form.find('.form-item[rel=password]').hide();
+								
+								//$('li[input_group="vmware"]', $dialogAddHost).show();
+								$form.find('.form-item[rel=vcenterHost]').css('display', 'inline-block'); 
+								
+								//$('li[input_group="baremetal"]', $dialogAddHost).hide();
+								$form.find('.form-item[rel=baremetalCpuCores]').hide();
+								$form.find('.form-item[rel=baremetalCpu]').hide();
+								$form.find('.form-item[rel=baremetalMemory]').hide();
+								$form.find('.form-item[rel=baremetalMAC]').hide();
+								
+								//$('li[input_group="Ovm"]', $dialogAddHost).hide();
+								$form.find('.form-item[rel=agentUsername]').hide();
+								$form.find('.form-item[rel=agentPassword]').hide();
+							} 
+							else if (clusterObj.hypervisortype == "BareMetal") {
+							    //$('li[input_group="general"]', $dialogAddHost).show();
+								$form.find('.form-item[rel=hostname]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=username]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=password]').css('display', 'inline-block'); 
+							
+								//$('li[input_group="baremetal"]', $dialogAddHost).show();
+								$form.find('.form-item[rel=baremetalCpuCores]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=baremetalCpu]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=baremetalMemory]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=baremetalMAC]').css('display', 'inline-block'); 
+																
+								//$('li[input_group="vmware"]', $dialogAddHost).hide();
+								$form.find('.form-item[rel=vcenterHost]').hide();								
+								
+								//$('li[input_group="Ovm"]', $dialogAddHost).hide();
+								$form.find('.form-item[rel=agentUsername]').hide();
+								$form.find('.form-item[rel=agentPassword]').hide();								
+							} 
+							else if (clusterObj.hypervisortype == "Ovm") {								
+								//$('li[input_group="general"]', $dialogAddHost).show();   
+                                $form.find('.form-item[rel=hostname]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=username]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=password]').css('display', 'inline-block'); 
+								
+								//$('li[input_group="vmware"]', $dialogAddHost).hide();    	
+                                $form.find('.form-item[rel=vcenterHost]').hide();		
+								
+								//$('li[input_group="baremetal"]', $dialogAddHost).hide();
+								$form.find('.form-item[rel=baremetalCpuCores]').hide();
+								$form.find('.form-item[rel=baremetalCpu]').hide();
+								$form.find('.form-item[rel=baremetalMemory]').hide();
+								$form.find('.form-item[rel=baremetalMAC]').hide();
+								
+                                //$('li[input_group="Ovm"]', $dialogAddHost).show();	
+                                $form.find('.form-item[rel=agentUsername]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=agentPassword]').css('display', 'inline-block'); 							
+							} 
+							else {    		
+								//$('li[input_group="general"]', $dialogAddHost).show();
+								$form.find('.form-item[rel=hostname]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=username]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=password]').css('display', 'inline-block'); 
+								
+								//$('li[input_group="vmware"]', $dialogAddHost).hide();
+								$form.find('.form-item[rel=vcenterHost]').hide();	
+								
+								//$('li[input_group="baremetal"]', $dialogAddHost).hide();
+								$form.find('.form-item[rel=baremetalCpuCores]').hide();
+								$form.find('.form-item[rel=baremetalCpu]').hide();
+								$form.find('.form-item[rel=baremetalMemory]').hide();
+								$form.find('.form-item[rel=baremetalMAC]').hide();
+								
+								//$('li[input_group="Ovm"]', $dialogAddHost).hide();
+								$form.find('.form-item[rel=agentUsername]').hide();
+								$form.find('.form-item[rel=agentPassword]').hide();					
+							}     							
+                          });		
+						  
+						  args.$select.trigger("change");
                         }
                       },
 
-					  //input_group="general" starts here
-                      hostname: {
-                        label: 'Host name',
-                        validation: { required: true }
-                      },
-
-                      username: {
-                        label: 'User name',
-                        validation: { required: true }
-                      },
-
-                      password: {
-                        label: 'Password',
-                        validation: { required: true }
-                      },
-					  
 					  hosttags: {
                         label: 'Host tags',
                         validation: { required: false }
                       },
-                      //input_group="general" ends here
 					  
-                      /**
-                       * Test for conditional fields
-                       * note that these are hidden by default
-                       */
-                      condTestA: {
-                        // Hidden by default
-                        hidden: true,
-
-                        label: 'Conditional A',
-                        validation: { required: true }
+					  //input_group="general" starts here
+                      hostname: {
+                        label: 'Host name',
+                        validation: { required: true },
+                        hidden: true
                       },
 
-                      condTestB: {
-                        // Hidden by default
-                        hidden: true,
+                      username: {
+                        label: 'User name',
+                        validation: { required: true },
+                        hidden: true
+                      },
 
-                        label: 'Conditional B',
-                        validation: { required: true }
+                      password: {
+                        label: 'Password',
+                        validation: { required: true },
+                        hidden: true
+                      },						  
+                      //input_group="general" ends here
+					  
+					  //input_group="VMWare" starts here
+					  vcenterHost: {
+                        label: 'ESX/ESXi Host',
+                        validation: { required: true },
+                        hidden: true
+                      },
+                      //input_group="VMWare" ends here
+					  
+					  //input_group="BareMetal" starts here
+					  baremetalCpuCores: {
+                        label: '# of CPU Cores',
+                        validation: { required: true },
+                        hidden: true
+                      },
+					  baremetalCpu: {
+                        label: 'CPU (in MHz)',
+                        validation: { required: true },
+                        hidden: true
+                      },
+					  baremetalMemory: {
+                        label: 'Memory (in MB)',
+                        validation: { required: true },
+                        hidden: true
+                      },
+					  baremetalMAC: {
+                        label: 'Host MAC',
+                        validation: { required: true },
+                        hidden: true
+                      },
+                      //input_group="BareMetal" ends here
+					  
+					  //input_group="OVM" starts here
+					  agentUsername: {
+                        label: 'Agent Username',
+                        validation: { required: false },
+                        hidden: true
+                      },
+					  agentPassword: {
+                        label: 'Agent Password',
+                        validation: { required: true },
+                        hidden: true
                       }
+					  //input_group="OVM" ends here
                     }
                   },
 
