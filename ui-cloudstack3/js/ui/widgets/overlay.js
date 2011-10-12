@@ -10,7 +10,7 @@
       opacity: 0.5,
       width: '100%',
       height: '100%',
-      top: 0,
+      top: $(window).scrollTop(),
       left: 0,
       zIndex: $topElem.css('z-index') - 1
     }).show();
