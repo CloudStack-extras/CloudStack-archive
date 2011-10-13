@@ -1290,10 +1290,61 @@
                   }
                 });   
               },  
-              
+              			  
               actions: {
-                destroy: testData.actions.destroy('cluster')
-              },
+                add: {
+                  label: 'Add secondary storage',
+
+                  createForm: {
+                    title: 'Add new secondary storage',
+                    desc: 'Please fill in the following information to add a new secondary storage',
+                    fields: {                      
+                      nfsServer: {
+                        label: 'NFS Server',
+                        validation: { required: true }
+                      },
+                      path: {
+                        label: 'Path',
+                        validation: { required: true }
+                      }			  
+                    }
+                  },
+
+                  action: function(args) {  					
+					var zoneId = args.context.zones[0].id;		
+					var nfs_server = args.data.nfsServer;		
+					var path = args.data.path;    					    				    					   					
+					var url = nfsURL(nfs_server, path);  
+									  
+					$.ajax({
+						url: createURL("addSecondaryStorage&zoneId=" + zoneId + "&url=" + todb(url)),
+						dataType: "json",
+						success: function(json) {						    
+						    var item = json.addsecondarystorageresponse.secondarystorage;		    
+							args.response.success({data:item});									        					    
+						},			
+					    error: function(XMLHttpResponse) {								
+                            var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
+						    args.response.error(errorMsg);							
+						}					    			    
+					}); 					
+                  },
+
+                  notification: {
+                    poll: function(args) {			  
+					    args.complete();
+					}	
+                  },
+
+                  messages: {
+                    notification: function(args) {
+                      return 'Added new secondary storage';
+                    }
+                  }
+                },        
+                destroy: testData.actions.destroy('secondary storage')
+              },			  
+			  
               detailView: {
                 tabs: {
                   details: {
