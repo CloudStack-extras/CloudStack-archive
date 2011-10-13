@@ -874,9 +874,8 @@
                   }
                 });   
               },  
-              
-			  //??? to replace
-                            actions: {
+              			  
+              actions: {
                 add: {
                   label: 'Add primary storage',
 
@@ -931,7 +930,7 @@
                       },
                       
                       protocol: {
-                        label: 'Cluster',
+                        label: 'Protocol',
                         validation: { required: true },
                         dependsOn: 'clusterId',
                         select: function(args) {                            					  
@@ -977,107 +976,184 @@
 							args.response.success({data:[]});
 						  }
                                                     
-                          /*
-                          args.$select.change(function() {                            
+                          //???
+                          args.$select.change(function() {   
                             var $form = $(this).closest('form');
                             
-                            var clusterId = $(this).val();
-                            if(clusterId == null)
-                              return;    
-                            
-                            var items = [];             
-                            $(clusterObjs).each(function(){                 
-                              if(this.id == clusterId){
-                                selectedClusterObj = this;
-                                return false; //break the $.each() loop 
-                              }                   
-                            }); 
-                            if(selectedClusterObj == null)
-                              return;   
-                            
-                            if(selectedClusterObj.hypervisortype == "VMware") {               
-                              //$('li[input_group="general"]', $dialogAddHost).hide();
-                              $form.find('.form-item[rel=hostname]').hide();
-                              $form.find('.form-item[rel=username]').hide();
-                              $form.find('.form-item[rel=password]').hide();
-                              
-                              //$('li[input_group="vmware"]', $dialogAddHost).show();
-                              $form.find('.form-item[rel=vcenterHost]').css('display', 'inline-block'); 
-                              
-                              //$('li[input_group="baremetal"]', $dialogAddHost).hide();
-                              $form.find('.form-item[rel=baremetalCpuCores]').hide();
-                              $form.find('.form-item[rel=baremetalCpu]').hide();
-                              $form.find('.form-item[rel=baremetalMemory]').hide();
-                              $form.find('.form-item[rel=baremetalMAC]').hide();
-                              
-                              //$('li[input_group="Ovm"]', $dialogAddHost).hide();
-                              $form.find('.form-item[rel=agentUsername]').hide();
-                              $form.find('.form-item[rel=agentPassword]').hide();
-                            } 
-                            else if (selectedClusterObj.hypervisortype == "BareMetal") {
-                              //$('li[input_group="general"]', $dialogAddHost).show();
-                              $form.find('.form-item[rel=hostname]').css('display', 'inline-block'); 
-                              $form.find('.form-item[rel=username]').css('display', 'inline-block'); 
-                              $form.find('.form-item[rel=password]').css('display', 'inline-block'); 
-                              
-                              //$('li[input_group="baremetal"]', $dialogAddHost).show();
-                              $form.find('.form-item[rel=baremetalCpuCores]').css('display', 'inline-block'); 
-                              $form.find('.form-item[rel=baremetalCpu]').css('display', 'inline-block'); 
-                              $form.find('.form-item[rel=baremetalMemory]').css('display', 'inline-block'); 
-                              $form.find('.form-item[rel=baremetalMAC]').css('display', 'inline-block'); 
-                              
-                              //$('li[input_group="vmware"]', $dialogAddHost).hide();
-                              $form.find('.form-item[rel=vcenterHost]').hide();               
-                              
-                              //$('li[input_group="Ovm"]', $dialogAddHost).hide();
-                              $form.find('.form-item[rel=agentUsername]').hide();
-                              $form.find('.form-item[rel=agentPassword]').hide();               
-                            } 
-                            else if (selectedClusterObj.hypervisortype == "Ovm") {                
-                              //$('li[input_group="general"]', $dialogAddHost).show();   
-                              $form.find('.form-item[rel=hostname]').css('display', 'inline-block'); 
-                              $form.find('.form-item[rel=username]').css('display', 'inline-block'); 
-                              $form.find('.form-item[rel=password]').css('display', 'inline-block'); 
-                              
-                              //$('li[input_group="vmware"]', $dialogAddHost).hide();     
-                              $form.find('.form-item[rel=vcenterHost]').hide();   
-                              
-                              //$('li[input_group="baremetal"]', $dialogAddHost).hide();
-                              $form.find('.form-item[rel=baremetalCpuCores]').hide();
-                              $form.find('.form-item[rel=baremetalCpu]').hide();
-                              $form.find('.form-item[rel=baremetalMemory]').hide();
-                              $form.find('.form-item[rel=baremetalMAC]').hide();
-                              
-                              //$('li[input_group="Ovm"]', $dialogAddHost).show();  
-                              $form.find('.form-item[rel=agentUsername]').css('display', 'inline-block'); 
-                              $form.find('.form-item[rel=agentUsername]').find('input').val("oracle");
-                              $form.find('.form-item[rel=agentPassword]').css('display', 'inline-block');               
-                            } 
-                            else {        
-                              //$('li[input_group="general"]', $dialogAddHost).show();
-                              $form.find('.form-item[rel=hostname]').css('display', 'inline-block'); 
-                              $form.find('.form-item[rel=username]').css('display', 'inline-block'); 
-                              $form.find('.form-item[rel=password]').css('display', 'inline-block'); 
-                              
-                              //$('li[input_group="vmware"]', $dialogAddHost).hide();
-                              $form.find('.form-item[rel=vcenterHost]').hide(); 
-                              
-                              //$('li[input_group="baremetal"]', $dialogAddHost).hide();
-                              $form.find('.form-item[rel=baremetalCpuCores]').hide();
-                              $form.find('.form-item[rel=baremetalCpu]').hide();
-                              $form.find('.form-item[rel=baremetalMemory]').hide();
-                              $form.find('.form-item[rel=baremetalMAC]').hide();
-                              
-                              //$('li[input_group="Ovm"]', $dialogAddHost).hide();
-                              $form.find('.form-item[rel=agentUsername]').hide();
-                              $form.find('.form-item[rel=agentPassword]').hide();         
-                            }                   
+                            var protocol = $(this).val();							
+                            if(protocol == null)
+                              return;  
+                           	
+							if(protocol == "nfs") {
+								//$("#add_pool_server_container", $dialogAddPool).show();
+								$form.find('.form-item[rel=server]').css('display', 'inline-block'); 
+								//$dialogAddPool.find("#add_pool_nfs_server").val("");
+								//to implement later
+								
+								//$('li[input_group="nfs"]', $dialogAddPool).show();
+								$form.find('.form-item[rel=path]').css('display', 'inline-block'); 								
+								//$dialogAddPool.find("#add_pool_path_container").find("label").text(g_dictionary["label.path"]+":");
+								//to implement later								
+								
+								//$('li[input_group="iscsi"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=iqn]').hide();
+								$form.find('.form-item[rel=lun]').hide();
+								
+								//$('li[input_group="vmfs"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=vCenterDataCenter]').hide();
+								$form.find('.form-item[rel=vCenterDataStore]').hide();	
+							}   
+							else if(protocol == "ocfs2") {//ocfs2 is the same as nfs, except no server field.  
+                                //$dialogAddPool.find("#add_pool_server_container").hide();   
+								$form.find('.form-item[rel=server]').hide();	
+								//$dialogAddPool.find("#add_pool_nfs_server").val("");
+								//to implement later								
+							
+								//$('li[input_group="nfs"]', $dialogAddPool).show();
+								$form.find('.form-item[rel=path]').css('display', 'inline-block'); 
+								//$dialogAddPool.find("#add_pool_path_container").find("label").text(g_dictionary["label.path"]+":");
+								//to implement later	
+								
+								//$('li[input_group="iscsi"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=iqn]').hide();
+								$form.find('.form-item[rel=lun]').hide();
+								
+								//$('li[input_group="vmfs"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=vCenterDataCenter]').hide();
+								$form.find('.form-item[rel=vCenterDataStore]').hide();
+							}     	
+							else if(protocol == "PreSetup") {
+								//$dialogAddPool.find("#add_pool_server_container").hide(); 
+								$form.find('.form-item[rel=server]').hide();								
+								//$dialogAddPool.find("#add_pool_nfs_server").val("localhost");  
+								//to implement later
+								
+								//$('li[input_group="nfs"]', $dialogAddPool).show();
+								$form.find('.form-item[rel=path]').css('display', 'inline-block'); 
+								//$dialogAddPool.find("#add_pool_path_container").find("label").text(g_dictionary["label.SR.name"]+":");
+								//to implement later
+								
+								//$('li[input_group="iscsi"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=iqn]').hide();
+								$form.find('.form-item[rel=lun]').hide();
+								
+								//$('li[input_group="vmfs"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=vCenterDataCenter]').hide();
+								$form.find('.form-item[rel=vCenterDataStore]').hide();
+							} 
+							else if(protocol == "iscsi") {
+								//$dialogAddPool.find("#add_pool_server_container").show();
+								$form.find('.form-item[rel=server]').css('display', 'inline-block'); 
+								//$dialogAddPool.find("#add_pool_nfs_server").val("");	
+								//to implement later
+								
+								//$('li[input_group="nfs"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=path]').hide();
+								
+								//$('li[input_group="iscsi"]', $dialogAddPool).show();
+								$form.find('.form-item[rel=iqn]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=lun]').css('display', 'inline-block'); 
+								
+								//$('li[input_group="vmfs"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=vCenterDataCenter]').hide();
+								$form.find('.form-item[rel=vCenterDataStore]').hide();	
+							} 
+							else if(protocol == "vmfs") {
+								//$dialogAddPool.find("#add_pool_server_container").show();
+								$form.find('.form-item[rel=server]').css('display', 'inline-block'); 
+								//$dialogAddPool.find("#add_pool_nfs_server").val(""); 	
+								//to implement later
+								
+								//$('li[input_group="nfs"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=path]').hide();
+								
+								//$('li[input_group="iscsi"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=iqn]').hide();
+								$form.find('.form-item[rel=lun]').hide();
+								
+								//$('li[input_group="vmfs"]', $dialogAddPool).show();   
+								$form.find('.form-item[rel=vCenterDataCenter]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=vCenterDataStore]').css('display', 'inline-block'); 									
+							}
+							else if(protocol == "SharedMountPoint") {  //"SharedMountPoint" show the same fields as "nfs" does.
+								//$dialogAddPool.find("#add_pool_server_container").hide();
+								$form.find('.form-item[rel=server]').hide();
+								//$dialogAddPool.find("#add_pool_nfs_server").val("localhost");	
+								//to implement later								
+								
+								//$('li[input_group="nfs"]', $dialogAddPool).show();
+								$form.find('.form-item[rel=path]').css('display', 'inline-block'); 
+								
+								//$('li[input_group="iscsi"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=iqn]').hide();
+								$form.find('.form-item[rel=lun]').hide();
+								
+								//$('li[input_group="vmfs"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=vCenterDataCenter]').hide();
+								$form.find('.form-item[rel=vCenterDataStore]').hide();	
+							} 
+							else {    
+                                //$dialogAddPool.find("#add_pool_server_container").show();
+								$form.find('.form-item[rel=server]').css('display', 'inline-block'); 							    
+								//$dialogAddPool.find("#add_pool_nfs_server").val(""); 	
+								//to implement later
+							
+								//$('li[input_group="iscsi"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=iqn]').hide();
+								$form.find('.form-item[rel=lun]').hide();
+								
+								//$('li[input_group="vmfs"]', $dialogAddPool).hide();
+								$form.find('.form-item[rel=vCenterDataCenter]').hide();
+								$form.find('.form-item[rel=vCenterDataStore]').hide();								
+							}   
                           });   
-                          */
+                          //???
                           
-                          //args.$select.trigger("change");
+                          args.$select.trigger("change");
                         }
-                      }                      
+                      },   
+                         
+					  storageTags: {
+                        label: 'Storage Tags',
+                        validation: { required: false }
+                      },	 
+					  
+					  server: {
+                        label: 'Server',
+                        validation: { required: true },
+						hidden: true
+                      },	
+					  					  
+					  //nfs
+					  path: {
+                        label: 'Path',
+                        validation: { required: true },
+						hidden: true
+                      },	
+					  
+					  //iscsi
+					  iqn: {
+                        label: 'Target IQN',
+                        validation: { required: true },
+						hidden: true
+                      },					  
+					  lun: {
+                        label: 'LUN #',
+                        validation: { required: true },
+						hidden: true
+                      },	
+					  
+					  //vmfs
+					  vCenterDataCenter: {
+                        label: 'vCenter Datacenter',
+                        validation: { required: true },
+						hidden: true
+                      },				  
+					  vCenterDataStore: {
+                        label: 'vCenter Datastore',
+                        validation: { required: true },
+						hidden: true
+                      }
                     }
                   },
 
