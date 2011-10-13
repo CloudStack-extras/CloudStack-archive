@@ -29,7 +29,281 @@
               action: {
                 custom: cloudStack.zoneWizard({
                   action: function(args) {
-                    args.response.success({});
+				    debugger;
+					//???
+					var array1 = [];	
+	
+					//var networktype = $thisWizard.find("#step1").find("input:radio[name=basic_advanced]:checked").val();  //"Basic", "Advanced"
+					var networktype = args.data["network-model"];					
+					if(networktype == "basic")  //temporary
+					    networktype = "Basic";						
+					array1.push("&networktype=" + todb(networktype));
+					
+					//if(networktype == "Advanced")
+					//	array1.push("&securitygroupenabled="+$thisWizard.find("#step1").find("input[name=isolation_mode]:checked").val());    
+										
+					array1.push("&name=" + todb(args.data.name));	
+					
+					array1.push("&dns1=" + todb(args.data.dns1));	
+					
+					var dns2 = args.data.dns2;
+					if (dns2 != null && dns2.length > 0) 
+						array1.push("&dns2=" + todb(dns2));		
+						
+					array1.push("&internaldns1="+todb(args.data.internaldns1));
+					
+					var internaldns2 = args.data.internaldns2;
+					if (internaldns2 != null && internaldns2.length > 0) 
+						array1.push("&internaldns2=" + todb(internaldns2));						
+						
+                    /*						
+					if($thisWizard.find("#step2").find("#add_zone_vlan_container").css("display") != "none") {
+						var vlanStart = $thisWizard.find("#add_zone_startvlan").val();
+						if(vlanStart != null && vlanStart.length > 0) {	
+							var vlanEnd = $thisWizard.find("#add_zone_endvlan").val();						
+							if (vlanEnd != null && vlanEnd.length > 0) 
+								array1.push("&vlan=" + todb(vlanStart + "-" + vlanEnd));									
+							else 							
+								array1.push("&vlan=" + todb(vlanStart));		
+						}
+					}	
+					*/
+					
+					/*
+					if($thisWizard.find("#add_zone_guestcidraddress_container").css("display") != "none") {
+						var guestcidraddress = trim($thisWizard.find("#add_zone_guestcidraddress").val());
+						array1.push("&guestcidraddress="+todb(guestcidraddress));	
+					}
+					*/
+					
+					/*
+                    var zoneDomainName = args.data["zone-domain"];
+                    if(zoneDomainName != null && zoneDomainName.length > 0) {
+                        var zoneDomainId;
+						//match zoneDomainId;						
+						array1.push("&domainid=" + zoneDomainId);		
+                    }	
+                    */					
+						
+					var zoneId, podId, vlanId, gateway;	
+					//var zoneNode, $podNode;	
+					//var afterActionMsg = "";						
+					$.ajax({
+						url: createURL("createZone" + array1.join("")),
+						dataType: "json",
+						async: false,
+						success: function(json) {	
+						    debugger;
+							//$thisWizard.find("#after_submit_screen").find("#add_zone_tick_cross").removeClass().addClass("zonepopup_reviewtick");
+							//$thisWizard.find("#after_submit_screen").find("#add_zone_message").removeClass().text("Zone was created successfully");	         
+																	
+							//$zoneNode = $("#leftmenu_zone_node_template").clone(true); 			            			   
+							//var $zoneTree = $("#leftmenu_zone_tree").find("#tree_container");		     			
+							//$zoneTree.prepend($zoneNode);	
+							//$zoneNode.fadeIn("slow");				        
+						
+							var item = json.createzoneresponse.zone;	
+                            args.response.success({data:item});									
+							//zoneJSONToTreeNode(item, $zoneNode);	                          					
+							
+							zoneId = item.id;	
+							
+							//listZonesUpdate();	
+							//g_directAttachSecurityGroupsEnabled = true;
+							//$("#leftmenu_security_group_container").show();
+							
+                            /*							
+							$.ajax({
+								data: createURL("command=listCapabilities"),
+								dataType: "json",
+								async: false,
+								success: function(json) {										
+									g_supportELB = json.listcapabilitiesresponse.capability.supportELB;					    
+									$.cookie('supportELB', g_supportELB, { expires: 1}); 
+														
+									if(g_supportELB == "guest")  //ips are allocated on guest network
+										bindAndListMidMenuItems($("#leftmenu_ip"), "listPublicIpAddresses&forvirtualnetwork=false&forloadbalancing=true", ipGetSearchParams, "listpublicipaddressesresponse", "publicipaddress", "jsp/ipaddress.jsp", afterLoadIpJSP, ipToMidmenu, ipToRightPanel, ipGetMidmenuId, false);
+									else if(g_supportELB == "public")  //ips are allocated on public network
+										bindAndListMidMenuItems($("#leftmenu_ip"), "listPublicIpAddresses&forvirtualnetwork=true&forloadbalancing=true", ipGetSearchParams, "listpublicipaddressesresponse", "publicipaddress", "jsp/ipaddress.jsp", afterLoadIpJSP, ipToMidmenu, ipToRightPanel, ipGetMidmenuId, false);
+									else			
+										bindAndListMidMenuItems($("#leftmenu_ip"), "listPublicIpAddresses", ipGetSearchParams, "listpublicipaddressesresponse", "publicipaddress", "jsp/ipaddress.jsp", afterLoadIpJSP, ipToMidmenu, ipToRightPanel, ipGetMidmenuId, false); //remove "&forvirtualnetwork=true" for advanced zone whose security group is enabled
+								}		
+							});  
+							*/
+							
+						},
+						error: function(XMLHttpResponse) {     
+							var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
+						    args.response.error(errorMsg);		
+						}
+					});
+					debugger;
+					if(zoneId != null) {   
+						// create pod (begin) 
+						var array1 = [];
+						array1.push("&zoneId=" + zoneId);
+						
+						//var name = trim($thisWizard.find("#add_pod_name").val());						
+						array1.push("&name=" + todb(args.data["pod-name"]));
+						
+						//var netmask = trim($thisWizard.find("#add_pod_netmask").val());						
+						array1.push("&netmask=" + todb(args.data["pod-netmask"]));
+						
+						//var startip = trim($thisWizard.find("#add_pod_startip").val());						
+						array1.push("&startIp=" + todb(args.data["pod-ip-range-start"]));
+						
+						//var endip = trim($thisWizard.find("#add_pod_endip").val());	    //optional
+						var endip = args.data["pod-ip-range-end"];
+						if (endip != null && endip.length > 0)
+							array1.push("&endIp=" + todb(endip));
+							
+						//gateway = trim($thisWizard.find("#add_pod_gateway").val());		
+                        gateway = args.data["pod-gateway"];							
+						array1.push("&gateway=" + todb(gateway));			
+										
+						$.ajax({
+							url: createURL("createPod"+array1.join("")), 
+							dataType: "json",
+							async: false,
+							success: function(json) {	  
+                                debugger;							
+								//$thisWizard.find("#after_submit_screen").find("#add_pod_tick_cross").removeClass().addClass("zonepopup_reviewtick");
+								//$thisWizard.find("#after_submit_screen").find("#add_pod_message").removeClass().text("Pod was created successfully");	    
+										  
+								var item = json.createpodresponse.pod; 	
+								args.response.success({data:item});	
+								
+								podId = item.id;	
+								
+								/*
+								$podNode = $("#leftmenu_pod_node_template").clone(true);
+								podJSONToTreeNode(item, $podNode);                                				
+								$zoneNode.find("#zone_content").show();	
+								$zoneNode.find("#pods_container").prepend($podNode.show());						
+								$zoneNode.find("#zone_arrow").removeClass("white_nonexpanded_close").addClass("expanded_open");	
+								$podNode.fadeIn("slow");
+								 
+								var podTotal = parseInt($("#pod_total").text());
+								podTotal++;
+								$("#pod_total").text(podTotal.toString()); 	   
+                                */								
+							},
+							error: function(XMLHttpResponse) {	
+								var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
+						        args.response.error(errorMsg);		
+							}
+						});	
+						// create pod (end) 
+						
+						debugger;
+						// create direct VLAN (basic zone, advanced zone + security group)
+						//var $createDirectVlan = $thisWizard.find("#step4").find("#create_direct_vlan");
+						//if ($createDirectVlan.css("display") != "none") {
+						if(networktype == "Basic" || (networktype == "Advanced" && args.data["isolation-mode"] == "security-groups")) {
+						    var array1 = [];
+													    
+							array1.push("&gateway=" + todb(args.data["guest-gateway"]));
+							array1.push("&netmask=" + todb(args.data["guest-netmask"]));								
+							array1.push("&startip=" + todb(args.data["guest-ip-range-start"]));
+							
+							var endip = args.data["guest-ip-range-end"];	
+							if(endip != null && endip.length > 0)
+								array1.push("&endip=" + todb(endip));														
+							
+							array1.push("&forVirtualNetwork=false"); //direct VLAN	
+							array1.push("&zoneid=" + zoneId);
+							
+							var isValid = true;							
+							if(networktype == "Basic") { //Basic zone (default VLAN is at pod-level)
+								array1.push("&vlan=untagged");	
+								array1.push("&podId=" + podId);	
+								if(podId == null)
+									isValid = false;		        
+							}	
+							else { //Advanced zone + security group  (default VLAN is at zone-level)	      
+								//array1.push("&vlan=" + $createDirectVlan.find("#vlan_id").val());
+							}							
+							  							
+							if(isValid) {
+								$.ajax({
+									url: createURL("createVlanIpRange" + array1.join("")),
+									dataType: "json",
+									async: false,
+									success: function(json) { 
+                                        debugger;									
+										//$thisWizard.find("#after_submit_screen").find("#add_iprange_tick_cross").removeClass().addClass("zonepopup_reviewtick");
+										//$thisWizard.find("#after_submit_screen").find("#add_iprange_message").removeClass().text("Guest IP range was created successfully");	    
+										
+										var item = json.createvlaniprangeresponse.vlan;
+										args.response.success({data:item});	
+										
+										vlanId = item.id;				
+									},		   
+									error: function(XMLHttpResponse) {	
+										var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
+						                args.response.error(errorMsg);	
+									}
+								});	
+							}	            
+						}
+						
+						
+						// create virtual VLAN (advanced zone + virtual)
+						//var $createVirtualVlan = $thisWizard.find("#step4").find("#create_virtual_vlan");
+						//if ($createVirtualVlan.css("display") != "none") {  
+						else if (networktype == "Advanced" && args.data["isolation-mode"] == "vlan") {
+							var array1 = [];	
+								
+                            /*								
+							if ($createVirtualVlan.find("#add_publicip_vlan_tagged").val() == "tagged") 
+								array1.push("&vlan="+$createVirtualVlan.find("#add_publicip_vlan_vlan").val());			 
+							else 
+								array1.push("&vlan=untagged");						
+										
+							if($createVirtualVlan.find("#vlan_domain_container").css("display") != "none") {			   
+								array1.push("&domainId="+$createVirtualVlan.find("#vlan_domain").data("domainId"));
+								array1.push("&account="+$createVirtualVlan.find("#add_publicip_vlan_account").val());  
+							} 		
+															
+							var gateway = $createVirtualVlan.find("#add_publicip_vlan_gateway").val();
+							array1.push("&gateway="+todb(gateway));
+							
+							var netmask = $createVirtualVlan.find("#add_publicip_vlan_netmask").val();
+							array1.push("&netmask="+todb(netmask));
+							
+							var startip = $createVirtualVlan.find("#add_publicip_vlan_startip").val();
+							array1.push("&startip="+todb(startip));
+							
+							var endip = $createVirtualVlan.find("#add_publicip_vlan_endip").val();	//optional field (might be empty)
+							if(endip != null && endip.length > 0)
+								array1.push("&endip="+todb(endip));										
+							
+							$.ajax({
+								url: createURL("createVlanIpRange&forVirtualNetwork=true&zoneId="+zoneId+array1.join("")),
+								dataType: "json",
+								success: function(json) {			    
+									$thisWizard.find("#after_submit_screen").find("#add_iprange_tick_cross").removeClass().addClass("zonepopup_reviewtick");
+									$thisWizard.find("#after_submit_screen").find("#add_iprange_message").removeClass().text("Public IP range was created successfully");	
+									
+									var item = json.createvlaniprangeresponse.vlan;						    
+									vlanId = item.id;					    	    				   
+								},
+								error: function(XMLHttpResponse) {				    
+									handleError(XMLHttpResponse, function() {
+										$thisWizard.find("#after_submit_screen").find("#add_iprange_tick_cross").removeClass().addClass("zonepopup_reviewcross");
+										$thisWizard.find("#after_submit_screen").find("#add_iprange_message").removeClass().addClass("error").text(("Failed to create public IP range: " + parseXMLHttpResponse(XMLHttpResponse)));			
+									});
+								}
+							});       
+                            */							
+						}
+						// add public IP range to basic zone (end)  
+					} 
+						
+					//$thisWizard.find("#after_submit_screen").find("#spinning_wheel").hide();   
+					
+				  
+                    //args.response.success({});
                   }
                 })
               },
