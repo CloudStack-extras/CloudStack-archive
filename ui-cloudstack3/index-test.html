@@ -362,12 +362,12 @@
                   <p>Please select a network model for your zone.</p>
                   <div class="select-area">
                     <div class="desc">Choose this network model if you do <em>not</em> want to enable any VLAN support. All virtual instances created under this network model will be assigned an IP directly from the network and security groups are used to provide security and segregation.</div>
-                    <input type="radio" name="network-model" value="basic" checked="checked" />
+                    <input type="radio" name="network-model" value="Basic" checked="checked" />
                     <label>Basic</label>
                   </div>
                   <div class="select-area">
                     <div class="desc">Choose this network model if you wish to enable VLAN support. This network model provides the most flexibility in allowing administrators to provide custom network offerings such as providing firewall, vpn, or load balancer support as well as enabling direct vs virtual networking.</div>
-                    <input type="radio" name="network-model" value="advanced" />
+                    <input type="radio" name="network-model" value="Advanced" />
                     <label>Advanced</label>
 
                     <div class="isolation-mode">
@@ -423,7 +423,7 @@
                       <span>DNS 2</span>
                     </div>
                     <div class="value">
-                      <input type="text" />
+                      <input type="text" name="dns2" />
                     </div>
                   </div>
 
@@ -443,7 +443,7 @@
                       <span>Internal DNS 2</span>
                     </div>
                     <div class="value">
-                      <input type="text" />
+                      <input type="text" name="internaldns2" />
                     </div>
                   </div>
 
@@ -575,7 +575,7 @@
                       <span>VLAN ID</span>
                     </div>
                     <div class="value">
-                      <input type="text" class="required"/>
+                      <input type="text" name="vlan-id" class="required"/>
                     </div>
                   </div>
 

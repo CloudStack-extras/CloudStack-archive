@@ -68,7 +68,7 @@
         $conditional.hide();
 
         // Show conditional fields for advanced network models
-        if (formState['network-model'] == 'advanced') {
+        if (formState['network-model'] == 'Advanced') {
           if (formState['isolation-mode'] == 'vlan') {
             $conditional.filter('.vlan').show().find('select').trigger('change');
             if ($conditional.find('select[name=vlan-type]').val() == 'tagged') {
@@ -170,7 +170,7 @@
               disabled: 'disabled'
             });
 
-            if ($target.val() == 'advanced') {
+            if ($target.val() == 'Advanced') {
               $inputs.attr('disabled', false);
             }
           }
