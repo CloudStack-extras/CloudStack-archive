@@ -72,7 +72,7 @@
           if (formState['isolation-mode'] == 'vlan') {
             $conditional.filter('.vlan').show().find('select').trigger('change');
             if ($conditional.find('select[name=vlan-type]').val() == 'tagged') {
-              $conditional.find('select[name=ip-scope]').trigger('change');
+              $conditional.find('select.ip-scope]').trigger('change');
             }
           } else if (formState['isolation-mode'] == 'security-groups') {
             $conditional.filter('.security-groups').show();
@@ -146,7 +146,7 @@
         }
 
         // IP Scope - acct. specific
-        if ($target.is('[name=ip-scope]')) {
+        if ($target.is('select.ip-scope')) {
           $accountSpecific.hide();
           if ($target.val() == 'account-specific') $accountSpecific.show();
 
