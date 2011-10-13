@@ -1,4 +1,4 @@
-(function(cloudStack, testData) { 
+(function(cloudStack, testData) {
   cloudStack.sections.configuration = {
     title: 'Configuration',
     id: 'configuration',
@@ -68,21 +68,21 @@
               }
             }
           },
-          dataProvider: function(args) {          
-			$.ajax({
-			  url: createURL("listServiceOfferings&issystem=false&page="+args.page+"&pagesize="+pageSize),
-			  dataType: "json",
-			  async: true,
-			  success: function(json) { 	
-				var items = json.listserviceofferingsresponse.serviceoffering;			    
-				args.response.success({data:items});			                			
-			  }
-			});  	
-		  }
+          dataProvider: function(args) {
+            $.ajax({
+              url: createURL("listServiceOfferings&issystem=false&page="+args.page+"&pagesize="+pageSize),
+              dataType: "json",
+              async: true,
+              success: function(json) {
+                var items = json.listserviceofferingsresponse.serviceoffering;
+                args.response.success({data:items});
+              }
+            });
+          }
         }
       },
-	  
-	  systemServiceOfferings: {
+
+      systemServiceOfferings: {
         type: 'select',
         title: 'System Service',
         listView: {
@@ -144,20 +144,20 @@
               }
             }
           },
-          dataProvider: function(args) {          
-			$.ajax({
-			  url: createURL("listServiceOfferings&issystem=true&page="+args.page+"&pagesize="+pageSize),
-			  dataType: "json",
-			  async: true,
-			  success: function(json) { 	
-				var items = json.listserviceofferingsresponse.serviceoffering;			    
-				args.response.success({data:items});			                			
-			  }
-			});  	
-		  }
+          dataProvider: function(args) {
+            $.ajax({
+              url: createURL("listServiceOfferings&issystem=true&page="+args.page+"&pagesize="+pageSize),
+              dataType: "json",
+              async: true,
+              success: function(json) {
+                var items = json.listserviceofferingsresponse.serviceoffering;
+                args.response.success({data:items});
+              }
+            });
+          }
         }
       },
-	  
+
       diskOfferings: {
         type: 'select',
         title: 'Disk',
@@ -168,17 +168,17 @@
             disksize: { label: 'Disk Size' },
             domain: { label: 'Domain'}
           },
-          dataProvider: function(args) {          
-			$.ajax({
-			  url: createURL("listDiskOfferings&page="+args.page+"&pagesize="+pageSize),
-			  dataType: "json",
-			  async: true,
-			  success: function(json) { 	
-				var items = json.listdiskofferingsresponse.diskoffering;			    
-				args.response.success({data:items});			                			
-			  }
-			});  	
-		  }
+          dataProvider: function(args) {
+            $.ajax({
+              url: createURL("listDiskOfferings&page="+args.page+"&pagesize="+pageSize),
+              dataType: "json",
+              async: true,
+              success: function(json) {
+                var items = json.listdiskofferingsresponse.diskoffering;
+                args.response.success({data:items});
+              }
+            });
+          }
         }
       },
       networkOfferings: {
@@ -191,53 +191,19 @@
             networkrate: { label: 'Network Rate' },
             traffictype: { label: 'Traffic Type'}
           },
-          dataProvider: function(args) {          
-			$.ajax({
-			  url: createURL("listNetworkOfferings&guestiptype=Virtual&page="+args.page+"&pagesize="+pageSize),
-			  dataType: "json",
-			  async: true,
-			  success: function(json) { 	
-				var items = json.listnetworkofferingsresponse.networkoffering;			    
-				args.response.success({data:items});			                			
-			  }
-			});  	
-		  }
-        }
-      },
-      globalSettings: {
-        type: 'button',
-        title: 'Global Settings',
-        listView: {
-          label: 'Global Settings',
-          actions: {
-            edit: {
-              label: 'Change value',
-              action: function(args) {
-                args.response.success();
-              },
-              notification: {
-                poll: testData.notifications.testPoll
+          dataProvider: function(args) {
+            $.ajax({
+              url: createURL("listNetworkOfferings&guestiptype=Virtual&page="+args.page+"&pagesize="+pageSize),
+              dataType: "json",
+              async: true,
+              success: function(json) {
+                var items = json.listnetworkofferingsresponse.networkoffering;
+                args.response.success({data:items});
               }
-            }
-          },
-          fields: {
-            name: { label: 'Name', id: true },
-            description: { label: 'Description' },
-            value: { label: 'Value', editable: true }
-          },
-          dataProvider: function(args) {          
-			$.ajax({
-			  url: createURL("listConfigurations&page="+args.page+"&pagesize="+pageSize),
-			  dataType: "json",
-			  async: true,
-			  success: function(json) { 	
-				var items = json.listconfigurationsresponse.configuration;			    
-				args.response.success({data:items});			                			
-			  }
-			});  	
-		  }
+            });
+          }
         }
       }
     }
-  };  
+  };
 })(cloudStack, testData);
