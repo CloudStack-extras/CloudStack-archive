@@ -34,14 +34,15 @@
 					var array1 = [];	
 	
 					//var networktype = $thisWizard.find("#step1").find("input:radio[name=basic_advanced]:checked").val();  //"Basic", "Advanced"
-					var networktype = args.data["network-model"];					
-					if(networktype == "basic")  //temporary
-					    networktype = "Basic";						
+					var networktype = args.data["network-model"];	
 					array1.push("&networktype=" + todb(networktype));
 					
-					//if(networktype == "Advanced")
-					//	array1.push("&securitygroupenabled="+$thisWizard.find("#step1").find("input[name=isolation_mode]:checked").val());    
-										
+					if(networktype == "Advanced") {
+					    if(args.data["isolation-mode"] == "security-groups")
+						    array1.push("&securitygroupenabled=true");    
+						else //args.data["isolation-mode"] == "vlan"
+						    array1.push("&securitygroupenabled=false");  
+					}					
 					array1.push("&name=" + todb(args.data.name));	
 					
 					array1.push("&dns1=" + todb(args.data.dns1));	
@@ -221,7 +222,7 @@
 									isValid = false;		        
 							}	
 							else { //Advanced zone + security group  (default VLAN is at zone-level)	      
-								//array1.push("&vlan=" + $createDirectVlan.find("#vlan_id").val());
+								array1.push("&vlan=" + args.data["vlan-id"]);
 							}							
 							  							
 							if(isValid) {
