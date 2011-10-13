@@ -8,7 +8,24 @@
         edit: {
           label: 'Change value',
           action: function(args) {
-            args.response.success();
+            var name = args.data.jsonObj.name;
+            var value = args.data.value;
+            
+            $.ajax({
+              url: createURL(
+                'updateConfiguration&name=' + name + '&value=' + value
+              ),
+              dataType: 'json',
+              async: true,
+              success: function(json) {
+                args.response.success();
+              },
+              error: function(json) {
+                args.response.error({
+                  message: $.parseJSON(json.responseText).updateconfigurationresponse.errortext
+                });
+              }
+            });
           }
         }
       },
