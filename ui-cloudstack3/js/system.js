@@ -924,7 +924,7 @@
                         }
                       },
 
-                      primaryStorageName: {
+                      name: {
                         label: 'Name',
                         validation: { required: true }
                       },
@@ -1156,8 +1156,82 @@
                     }
                   },
 
-                  action: function(args) {            
-                    
+                  action: function(args) {  
+					var array1 = [];
+					array1.push("&zoneid=" + args.context.zones[0].id);					
+					array1.push("&podId=" + args.data.podId);		
+					array1.push("&clusterid=" + args.data.clusterId);	
+					array1.push("&name=" + todb(args.data.name));
+			
+					var server = args.data.server;	
+					var url = null;
+					if (args.data.protocol == "nfs") {
+						//var path = trim($thisDialog.find("#add_pool_path").val());
+						var path = args.data.path;
+						
+						if(path.substring(0,1) != "/")
+							path = "/" + path; 
+						url = nfsURL(server, path);
+					} 
+					else if (args.data.protocol == "PreSetup") {
+						//var path = trim($thisDialog.find("#add_pool_path").val());
+						var path = args.data.path;
+						
+						if(path.substring(0,1) != "/")
+							path = "/" + path; 
+						url = presetupURL(server, path);
+					} 
+					else if (args.data.protocol == "ocfs2") {
+						//var path = trim($thisDialog.find("#add_pool_path").val());
+						var path = args.data.path;
+					
+						if(path.substring(0,1) != "/")
+							path = "/" + path; 
+						url = ocfs2URL(server, path);						
+					} 
+					else if (args.data.protocol == "SharedMountPoint") {
+						//var path = trim($thisDialog.find("#add_pool_path").val());
+						var path = args.data.path;
+						
+						if(path.substring(0,1) != "/")
+							path = "/" + path; 
+						url = SharedMountPointURL(server, path);
+					} 
+					else if (args.data.protocol == "vmfs") {
+						//var path = trim($thisDialog.find("#add_pool_vmfs_dc").val());
+						var path = args.data.vCenterDataCenter;
+						
+						if(path.substring(0,1) != "/")
+							path = "/" + path; 
+						path += "/" + args.data.vCenterDataStore;
+						url = vmfsURL("dummy", path);
+					} 
+					else {
+						//var iqn = trim($thisDialog.find("#add_pool_iqn").val());
+						var iqn = args.data.iqn;
+						
+						if(iqn.substring(0,1) != "/")
+							iqn = "/" + iqn; 
+						var lun = args.data.lun;
+						url = iscsiURL(server, iqn, lun);
+					}
+					array1.push("&url=" + todb(url));
+										
+					if(args.data.storageTags != null && args.data.storageTags.length > 0)
+						array1.push("&tags=" + todb(args.data.storageTags));				    
+					
+					$.ajax({
+						url: createURL("createStoragePool" + array1.join("")),
+						dataType: "json",
+						success: function(json) {  
+						    var item = json.createstoragepoolresponse.storagepool[0];              
+						    args.response.success({data: item});              
+						},
+						error: function(XMLHttpResponse) {  						    
+						    var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
+						    args.response.error(errorMsg);
+						}   						    
+					});					
                   },
 
                   notification: {
@@ -1172,8 +1246,7 @@
                 },        
                 destroy: testData.actions.destroy('cluster')
               },
-			  //??? to replace
-			  
+			  			  
               detailView: {
                 tabs: {
                   details: {
@@ -1277,4 +1350,59 @@
       }
     }
   };
+   
+  function nfsURL(server, path) {
+    var url;
+    if(server.indexOf("://")==-1)
+	    url = "nfs://" + server + path;
+	else
+	    url = server + path;
+	return url;
+  }
+  
+  function presetupURL(server, path) {
+    var url;
+    if(server.indexOf("://")==-1)
+	    url = "presetup://" + server + path;
+	else
+	    url = server + path;
+	return url;
+  }
+
+  function ocfs2URL(server, path) { 
+    var url;
+    if(server.indexOf("://")==-1)
+	    url = "ocfs2://" + server + path;
+	else
+	    url = server + path;
+	return url;
+  }
+
+  function SharedMountPointURL(server, path) {
+    var url;
+    if(server.indexOf("://")==-1)
+	    url = "SharedMountPoint://" + server + path;
+	else
+	    url = server + path;
+	return url;
+  }
+
+  function vmfsURL(server, path) {
+    var url;
+    if(server.indexOf("://")==-1)
+	    url = "vmfs://" + server + path;
+	else
+	    url = server + path;
+	return url;
+  }
+
+  function iscsiURL(server, iqn, lun) {
+    var url;
+    if(server.indexOf("://")==-1)
+	    url = "iscsi://" + server + iqn + "/" + lun;
+	else
+	    url = server + iqn + "/" + lun;
+	return url;
+  }  
+  
 })($, cloudStack, testData);
