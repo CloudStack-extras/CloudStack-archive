@@ -117,106 +117,53 @@
                 title: 'Port forwarding',
                 custom: cloudStack.portForwarding({
                   dataProvider: function(args) {
-                    args.response.success({
-                      data: [
-                        {
-                          'start-port': 1,
-                          'end-port': 80,
-                          'protocol': 'TCP',
-                          'add-vm': 'Active'
-                        },
-                        {
-                          'start-port': 90,
-                          'end-port': 120,
-                          'protocol': 'TCP',
-                          'add-vm': 'Active'
-                        }
-                      ]
-                    });
+                    setTimeout(function() {
+                      args.response.success({
+                        data: [
+                          {
+                            'start-port': 1,
+                            'end-port': 80,
+                            'protocol': 'TCP',
+                            'add-vm': 'vm1232'
+                          },
+                          {
+                            'start-port': 90,
+                            'end-port': 120,
+                            'protocol': 'TCP',
+                            'add-vm': 'brianvm121'
+                          }
+                        ]
+                      });                      
+                    }, 100);
                   }
                 })
               },
 
-              portRange: {
-                title: 'Port range',
-                multiEdit: true,
-                fields: {
-                  start: { label: 'Start Port', editable: true },
-                  end: { label: 'End Port', editable: true },
-                  protocol: {
-                    label: 'Protocol',
-                    editable: true,
-                    select: function(args) {
+              loadBalancing: {
+                title: 'Load Balancing',
+                custom: cloudStack.portForwarding({
+                  type: 'multiple',
+                  dataProvider: function(args) {
+                    setTimeout(function() {
                       args.response.success({
                         data: [
-                          { id: 'tcp', label: 'TCP' },
-                          { id: 'udp', label: 'UDP' }
+                          {
+                            'start-port': 1,
+                            'end-port': 80,
+                            'protocol': 'TCP',
+                            'add-vm': '4 VMs'
+                          },
+                          {
+                            'start-port': 90,
+                            'end-port': 120,
+                            'protocol': 'TCP',
+                            'add-vm': '2 VMs'
+                          }
                         ]
-                      });
-                    }
-                  },
-                  state: { label: 'State' }
-                },
-                actions: {
-                  create: {
-                    label: 'Add port range',
-                    messages: {
-                      confirm: function(args) {
-                        return 'Are you sure you want to add this port range?';
-                      },
-                      notification: function(args) {
-                        return 'Added port range';
-                      }
-                    },
-                    notification: {
-                      poll: testData.notifications.testPoll
-                    },
-                    action: function(args) {
-                      setTimeout(function() {
-                        args.response.success({ _custom: { jobID: args.data.id } });
-                      }, 500);
-                    }
-                  },
-                  destroy: {
-                    label: 'Remove',
-                    messages: {
-                      confirm: function(args) {
-                        return 'Are you sure you want to remove this port range?';
-                      },
-                      notification: function(args) {
-                        return 'Removed port range: ' + args.name;
-                      }
-                    },
-                    notification: {
-                      poll: testData.notifications.testPoll
-                    },
-                    action: function(args) {
-                      setTimeout(function() {
-                        args.response.success({ _custom: { jobID: args.data.id } });
-                      }, 400);
-                    }
+                      });                      
+                    }, 100);
                   }
-                },
-                dataProvider: function(args) {
-                  setTimeout(function() {
-                    args.response.success({
-                      data: [
-                        {
-                          start: '1',
-                          end: '100',
-                          protocol: 'TCP',
-                          state: 'Active'
-                        },
-                        {
-                          start: '50',
-                          end: '90',
-                          protocol: 'UDP',
-                          state: 'Active'
-                        }
-                      ]
-                    });
-                  });
-                }
+                })
               }
             }
           }

@@ -1,7 +1,7 @@
 /*[fmt]1C20-1C0D-E*/
 /*Base*/
 /*+clearfix {*/
-#browser div.toolbar:after,
+div.toolbar:after,
 .multi-wizard .progress ul li:after {
   content: ".";
   display: block;
@@ -11,12 +11,12 @@
   font-size: 0;
 }
 
-#browser div.toolbar,
+div.toolbar,
 .multi-wizard .progress ul li {
   display: inline-block;
 }
 
-#browser div.toolbar,
+div.toolbar,
 .multi-wizard .progress ul li {
 /*\*/
   display: block;
@@ -114,7 +114,7 @@ table tbody td.loading {
   border-top: 1px solid #FBFBFB;
 }
 
-#browser table tbody td.actions {
+table tbody td.actions {
   width: 155px;
   max-width: 155px !important;
   min-width: 155px !important;
@@ -720,7 +720,7 @@ div.details div.detail-group td.value select {
   width: 594px;
 }
 
-#browser div.panel div.list-view table tbody td span {
+div.list-view table tbody td span {
   display: block;
   float: left;
   max-width: 210px;
@@ -731,7 +731,7 @@ div.details div.detail-group td.value select {
   overflow: auto;
 }
 
-#browser div.panel div.list-view div.toolbar div.section-switcher div.section-select label {
+div.list-view div.toolbar div.section-switcher div.section-select label {
   margin: 0 9px 0 0;
 }
 
@@ -748,6 +748,10 @@ div.details div.detail-group td.value select {
   -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
   -moz-opacity: 0.7;
   opacity: 0.7;
+}
+
+.detail-view .ui-tabs-panel .loading-overlay {
+  background-position: 50% 250px;
 }
 
 /*** Multi-edit*/
@@ -1194,6 +1198,7 @@ div.detail-group.actions td {
 
 .ui-tabs div.ui-tabs-panel {
   background: #FFFFFF;
+  position: relative;
 }
 
 #browser div.panel .shadow {
@@ -1206,7 +1211,7 @@ div.detail-group.actions td {
 }
 
 /*Toolbar*/
-/*[clearfix]*/#browser div.toolbar {
+/*[clearfix]*/div.toolbar {
   width: 793px;
   height: 32px;
   background: #A8AFB6;
@@ -1227,11 +1232,11 @@ div.detail-group.actions td {
   position: absolute;
 }
 
-#browser div.toolbar div.filters {
+div.toolbar div.filters {
   margin: 5px 0px 0 12px;
 }
 
-#browser div.toolbar div.filters label {
+div.toolbar div.filters label {
   color: #4E5C6B;
   font-size: 12px;
   font-weight: bold;
@@ -1245,16 +1250,16 @@ div.detail-group.actions td {
   padding: 5px 11px 0 0;
 }
 
-#browser div.toolbar div.filters select {
+div.toolbar div.filters select {
   width: 142px;
   border: 1px solid #808080;
 }
 
-#browser div.toolbar div.text-search {
+div.toolbar div.text-search {
   float: right;
 }
 
-#browser div.toolbar div.text-search div.search-bar {
+div.toolbar div.text-search div.search-bar {
   float: left;
   width: 145px;
   height: 20px;
@@ -1271,7 +1276,7 @@ div.detail-group.actions td {
   border-radius: 3px 0 0 3px;
 }
 
-#browser div.toolbar div.text-search div.search-bar input {
+div.toolbar div.text-search div.search-bar input {
   float: left;
   border: none;
   margin: 3px;
@@ -1279,7 +1284,7 @@ div.detail-group.actions td {
   height: 70%;
 }
 
-#browser div.toolbar div.text-search div.search-bar div.filter {
+div.toolbar div.text-search div.search-bar div.filter {
   background: #FFFFFF;
   width: 74px;
   height: 15px;
@@ -1291,7 +1296,7 @@ div.detail-group.actions td {
   padding: 1px;
 }
 
-#browser div.toolbar div.button.search {
+div.toolbar div.button.search {
   background: url(../images/sprites.png) no-repeat -592px -328px;
   width: 33px;
   height: 22px;
@@ -1303,12 +1308,12 @@ div.detail-group.actions td {
   cursor: pointer;
 }
 
-#browser div.toolbar div.button.search:hover {
+div.toolbar div.button.search:hover {
   background-position: -592px -359px;
 }
 
-#browser div.toolbar div.button.add,
-#browser div.toolbar div.button.refresh {
+div.toolbar div.button.add,
+div.toolbar div.button.refresh {
   /*+placement:shift 0px 5px;*/
   position: relative;
   left: 0px;
@@ -1335,22 +1340,22 @@ div.detail-group.actions td {
   border-radius: 4px 4px 4px 4px;
 }
 
-#browser div.toolbar div.button.add:hover,
-#browser div.toolbar div.button.refresh:hover {
+div.toolbar div.button.add:hover,
+div.toolbar div.button.refresh:hover {
   background-position: 0 -132px;
   border-left: 1px solid #585D60;
 }
 
-#browser div.toolbar div.button.refresh {
+div.toolbar div.button.refresh {
   float: right;
   margin: 0 15px 0 0;
 }
 
-#browser div.toolbar div.button.refresh span {
+div.toolbar div.button.refresh span {
   background-position: -628px -234px;
 }
 
-#browser div.toolbar div.button span {
+div.toolbar div.button span {
   padding: 0px 0 0px 18px;
   background: url(../images/icons.png) no-repeat -626px -209px;
   /*+placement:shift 0px 1px;*/
@@ -1407,7 +1412,7 @@ div.detail-group.actions td {
 }
 
 /*** Section switcher*/
-#browser div.panel div.list-view div.toolbar div.section-switcher {
+div.list-view div.toolbar div.section-switcher {
   margin-top: 6px;
   margin-left: 10px;
   float: left;
@@ -1417,12 +1422,12 @@ div.detail-group.actions td {
   display: none;
 }
 
-#browser div.panel div.list-view div.toolbar div.section-switcher div.section-select {
+div.list-view div.toolbar div.section-switcher div.section-select {
   float: right;
   background: #A8AFB6;
 }
 
-#browser div.panel div.list-view div.toolbar div.section-switcher div.section {
+div.list-view div.toolbar div.section-switcher div.section {
   float: left;
   font-size: 11px;
   font-weight: bold;
@@ -1438,7 +1443,7 @@ div.detail-group.actions td {
   text-shadow: 0px 1px 1px #EDEDED;
 }
 
-#browser div.panel div.list-view div.toolbar div.section-switcher div.section a {
+div.list-view div.toolbar div.section-switcher div.section a {
   background: url(../images/bg-section-switcher.png) repeat-x 0px -22px;
   text-decoration: none;
   display: block;
@@ -1447,7 +1452,7 @@ div.detail-group.actions td {
   border: 1px solid #979FA4;
 }
 
-#browser div.panel div.list-view div.toolbar div.section-switcher div.section a.active {
+div.list-view div.toolbar div.section-switcher div.section a.active {
   background: url(../images/bg-section-switcher.png) repeat-x 0px -21px;
   background-position: 0px 0px;
   border: none;
@@ -1461,7 +1466,7 @@ div.detail-group.actions td {
   box-shadow: inset 0px 1px 5px #546874;
 }
 
-#browser div.panel div.list-view div.toolbar div.section-switcher div.section.first a {
+div.list-view div.toolbar div.section-switcher div.section.first a {
   /*+border-radius:4px 0 0 5px;*/
   -moz-border-radius: 4px 0 0 5px;
   -webkit-border-radius: 4px 0 0 5px;
@@ -1469,7 +1474,7 @@ div.detail-group.actions td {
   border-radius: 4px 0 0 5px;
 }
 
-#browser div.panel div.list-view div.toolbar div.section-switcher div.section.last a {
+div.list-view div.toolbar div.section-switcher div.section.last a {
   /*+border-radius:0 5px 5px 0px;*/
   -moz-border-radius: 0 5px 5px 0px;
   -webkit-border-radius: 0 5px 5px 0px;
@@ -1477,7 +1482,7 @@ div.detail-group.actions td {
   border-radius: 0 5px 5px 0px;
 }
 
-#browser div.panel div.list-view div.toolbar div.section-switcher div.section.first.last a {
+div.list-view div.toolbar div.section-switcher div.section.first.last a {
   /*+border-radius:5px;*/
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
@@ -1485,29 +1490,29 @@ div.detail-group.actions td {
   border-radius: 5px 5px 5px 5px;
 }
 
-#browser div.panel div.list-view div.toolbar div.section-switcher div.section-select {
+div.list-view div.toolbar div.section-switcher div.section-select {
   float: left;
   background: #A8AFB6 none;
   height: 26px;
 }
 
-#browser div.panel div.list-view div.toolbar div.section-switcher div.section-select select {
+div.list-view div.toolbar div.section-switcher div.section-select select {
   width: 146px;
   margin-right: 13px;
 }
 
-#browser div.panel div.list-view div.toolbar div.section-switcher div.section-select label {
+div.list-view div.toolbar div.section-switcher div.section-select label {
   margin: 0 9px 0 0;
 }
 
 /*Breadcrumbs*/
-#browser div.toolbar div.filters {
+div.toolbar div.filters {
   margin: 5px 0px 0 12px;
   width: 211px;
   float: left;
 }
 
-#browser div.toolbar label {
+div.toolbar label {
   color: #4E5C6B;
   font-size: 12px;
   font-weight: bold;
@@ -1518,7 +1523,7 @@ div.detail-group.actions td {
   text-shadow: 0px 1px 1px #CDCDCD;
 }
 
-#browser div.toolbar div.filters select {
+div.toolbar div.filters select {
   width: 136px;
   height: 21px;
   font-size: 12px;
@@ -3773,8 +3778,157 @@ input.error {
 div.detail-group td.view-all div.view-all div.end {
 }
 
+/*Dialog-based list view*/
+.ui-dialog .list-view {
+  height: 515px !important;
+  overflow: auto;
+}
+
+.ui-dialog .list-view .toolbar {
+  top: 33px;
+  width: 798px;
+}
+
+div.panel.ui-dialog div.list-view div.fixed-header {
+  top: 33px;
+  left: 22px;
+  width: 759px;
+  height: 49px;
+  background-color: #EAECEF;
+  margin: 0;
+  z-index: 1;
+}
+
+.ui-dialog .list-view table {
+  top: 9px !important;
+}
+
+.ui-dialog.panel div.list-view div.data-table table {
+  width: 778px;
+  margin-top: 39px;
+}
+
+.ui-dialog.panel div.list-view div.data-table table tbody tr.port-forwarding-selected {
+  background: #FCD7C3;
+}
+
 /*Port forwarding*/
 .port-forwarding {
+}
+
+.port-forwarding .data-table {
+  width: 551px;
+  max-height: 500px;
+  overflow: auto;
+}
+
+.port-forwarding .data-table table {
+  background: #FFFFFF;
+  border: none;
+  display: block;
+  margin: 0 0 0 12px;
+}
+
+.port-forwarding .data-table table tbody {
+  border: none;
+  width: 538px;
+  display: block;
+}
+
+.port-forwarding .data-table table.data tr {
+  /*+placement:shift 0px 0px;*/
+  position: relative;
+  left: 0px;
+  top: 0px;
+  display: block;
+  width: 538px;
+}
+
+.port-forwarding .data-table td {
+  border-left: 1px solid #CFC9C9;
+  border-right: 1px solid #C1BDBD;
+}
+
+.port-forwarding .vm-box {
+  width: 537px;
+  height: 190px;
+  border: 1px solid #C1BDBD;
+  background: #FFFFFF;
+}
+
+.port-forwarding .vm-box .content {
+  background: #D7D7D7;
+  width: 100%;
+  height: 100%;
+  margin: 0px auto;
+  overflow: auto;
+}
+
+.port-forwarding .vm-box .data-table {
+  width: 100%;
+}
+
+.port-forwarding .vm-box .data-table table {
+  display: table;
+  width: 100%;
+  margin: 0;
+}
+
+.port-forwarding .vm-box .data-table tr {
+  display: table !important;
+}
+
+.port-forwarding .vm-box .data-table tr td {
+  width: 36px;
+  max-width: 40px !important;
+  min-width: 20px;
+}
+
+.port-forwarding .vm-box .data-table tr td.actions {
+  min-width: 26px !important;
+  max-width: 25px !important;
+  width: 25px !important;
+}
+
+.port-forwarding .vm-box .data-table .fixed-header {
+  display: block;
+}
+
+.port-forwarding .data-table td span {
+  float: left;
+}
+
+.port-forwarding .data-table td .expand {
+  width: 14px;
+  height: 15px;
+  cursor: pointer;
+  background: #FFFFFF url(../images/sprites.png) -541px -499px;
+  border: 1px solid #D0D0D0;
+  /*+border-radius:9px;*/
+  -moz-border-radius: 9px;
+  -webkit-border-radius: 9px;
+  -khtml-border-radius: 9px;
+  border-radius: 9px 9px 9px 9px;
+  float: left;
+  margin: 0 0 0 7px;
+}
+
+.port-forwarding .data-table td.actions {
+  width: 156px;
+  max-width: 156px !important;
+  min-width: 156px !important;
+}
+
+.port-forwarding .data-table td.add-vm {
+  cursor: pointer;
+}
+
+.port-forwarding .data-table td.add-vm:hover {
+  color: #5FAAF7;
+}
+
+.port-forwarding .data-table .fixed-header {
+  display: none;
 }
 
 .port-forwarding .button.add-vm {
@@ -3814,6 +3968,27 @@ div.detail-group td.view-all div.view-all div.end {
   -webkit-box-shadow: inset 0px 1px 1px #000000;
   -o-box-shadow: inset 0px 1px 1px #000000;
   box-shadow: inset 0px 1px 1px #000000;
+}
+
+.add-vm-list .ui-button.ok,
+.add-vm-list .ui-button.cancel {
+  float: right;
+  /*+placement:shift 506px -18px;*/
+  position: relative;
+  left: 506px;
+  top: -18px;
+  height: 23px;
+}
+
+.add-vm-list .ui-button.cancel {
+  /*+placement:shift 492px -18px;*/
+  position: relative;
+  left: 492px;
+  top: -18px;
+  border: none;
+  background: none;
+  color: #808B95;
+  font-weight: bold;
 }
 
 /*Action icons*/

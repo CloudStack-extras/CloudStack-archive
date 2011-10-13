@@ -4,7 +4,7 @@
    *
    * @author Brian Federle
    */
-  $.fn.dataTable = function(method) {
+  $.fn.dataTable = function(method, options) {
     var $table = this;
 
     /**
@@ -213,6 +213,7 @@
     };
 
     var init = function() {
+      var noSelect = options && options.noSelect == true ? true : false;
       if (!$table.closest('div.data-table').size() && !$table.hasClass('no-split')) splitTable();
 
       $table.find('th').bind('mousemove mouseout', hoverResizableEvent);
@@ -228,9 +229,12 @@
       });
 
       $table.find('tbody tr').bind('click', function(event) {
+        if (noSelect == true) return true;
         var rowIndex = $(this).index();
 
         toggleSelectRow(rowIndex);
+
+        return true;
       });
 
       computeEvenOddRows();

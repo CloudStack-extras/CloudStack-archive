@@ -2,7 +2,8 @@
   window.cloudStack = {
     ui: {
       widgets: {} // Defines API methods for UI widgets
-    }
+    },
+    uiCustom: {}
   };
 
   /**

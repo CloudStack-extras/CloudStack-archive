@@ -40,7 +40,7 @@
               if (args.message) {
                 cloudStack.dialog.notice({ message: args.message });
               }
-              
+
               error($.extend(errorArgs, args));
               complete(args);
             }
@@ -55,10 +55,10 @@
   var uiActions = {
     standard: function($instanceRow, args, additional) {
       var listViewArgs = $instanceRow.closest('div.list-view').data('view-args');
-      var notification = args.action.notification;
-      var messages = args.action.messages;
+      var notification = args.action.notification ? args.action.notification : {};
+      var messages = args.action ? args.action.messages : {};
       var messageArgs = { name: $instanceRow.find('td.name span').html() };
-      var action = args.action.action;
+      var action = args.action ? args.action.action : {};
       var section;
       var data = {
         id: $instanceRow.data('list-view-item-id'),
@@ -66,10 +66,11 @@
       };
       var $listView = $instanceRow.closest('.list-view');
 
-      if (args.data) $.extend(data, args.data);
+      if (args.data) $.extend(true, data, args.data);
       if (listViewArgs) section = listViewArgs.section;
 
-      notification.desc = messages.notification(messageArgs);
+      notification.desc = messages ? 
+        messages.notification(messageArgs) : null;
 
       if (listViewArgs)
         notification.section = listViewArgs.id;
@@ -94,7 +95,7 @@
               notification._custom = args._custom;
 
               addNotification(
-                notification, 
+                notification,
                 function(args) {
                   if ($item.is(':visible')) {
                     replaceItem(
@@ -102,7 +103,7 @@
                       args.data,
                       args.actionFilter ?
                         args.actionFilter : $instanceRow.next().data('list-view-action-filter')
-                    );                    
+                    );
                   }
                 },
 
@@ -114,6 +115,10 @@
                 }
               );
             }
+          });
+        } else if (action.uiCustom) {
+          action.uiCustom({
+            $item: $instanceRow
           });
         } else {
           action({
@@ -154,7 +159,7 @@
 
                 addNotification(
                   notification,
-                  
+
                   // Success
                   function(args) {
                     if (!args) args = {};
@@ -193,10 +198,10 @@
                       replaceItem(
                         $instanceRow,
                         $.extend($instanceRow.data('json-obj'), args.data),
-                        args.actionFilter ? 
-                          args.actionFilter : 
+                        args.actionFilter ?
+                          args.actionFilter :
                           $instanceRow.data('list-view-action-filter')
-                      );                      
+                      );
                     }
                   }
                 );
@@ -215,7 +220,7 @@
         listViewArgs.activeSection
       ] = $instanceRow.data('jsonObj');
 
-      if (!args.action.createForm && !action.custom)
+      if (!args.action.createForm && !action.custom && !action.uiCustom)
         cloudStack.dialog.confirm({
           message: messages.confirm(messageArgs),
           action: function() {
@@ -226,7 +231,7 @@
             });
           }
         });
-      else if (action.custom)
+      else if (action.custom || action.uiCustom)
         performAction();
       else {
         var addRow = args.action.addRow == "false" ? false : true;
@@ -244,7 +249,7 @@
                     allocationstate: 'Creating'
                   })
                 ]
-              });              
+              });
             } else {
               $newItem = $instanceRow;
             }
@@ -257,7 +262,7 @@
           },
           ref: listViewArgs.ref,
           context: listViewArgs.context
-        });        
+        });
       }
     },
     edit: function($instanceRow, args) {
@@ -439,22 +444,61 @@
     options = options ? options : {};
     var allowedActions = options.allowedActions;
 
-    $.each(actions, function(key) {
-      if (allowedActions && $.inArray(key, allowedActions) == -1)
+    $.each(actions, function(actionName, action) {
+      if (allowedActions && $.inArray(actionName, allowedActions) == -1)
         return true;
-      if (key == 'add')
+      if (actionName == 'add')
         return true;
-
+      if (action.type == 'radio') {
+        $td.append(
+          $('<div></div>')
+            .addClass('action')
+            .addClass(actionName)
+            .append(
+              $('<input>').attr({
+                type: 'radio',
+                name: actionName
+              })
+            )
+            .attr({
+              alt: action.label,
+              title: action.label
+            })
+            .data('list-view-action-id', actionName)
+        );
+        
+        return true;
+      } else if (action.type == 'checkbox') {
+        $td.append(
+          $('<div></div>')
+            .addClass('action')
+            .addClass(actionName)
+            .append(
+              $('<input>').attr({
+                type: 'checkbox',
+                name: actionName
+              })
+            )
+            .attr({
+              alt: action.label,
+              title: action.label
+            })
+            .data('list-view-action-id', actionName)
+        );
+        
+        return true;
+      }
+      
       $td.append(
         $('<div></div>')
           .addClass('action')
-          .addClass(key)
+          .addClass(actionName)
           .append($('<span>').addClass('icon'))
           .attr({
-            alt: this.label,
-            title: this.label
+            alt: action.label,
+            title: action.label
           })
-          .data('list-view-action-id', key)
+          .data('list-view-action-id', actionName)
       );
 
       return true;
@@ -609,7 +653,8 @@
     });
   };
 
-  var loadBody = function($table, dataProvider, fields, append, loadArgs, actions) {
+  var loadBody = function($table, dataProvider, fields, append, loadArgs, actions, options) {
+    if (!options) options = {};
     var $tbody = $table.find('tbody');
     if (!loadArgs) loadArgs = {
       page: 1,
@@ -624,6 +669,9 @@
       if (!append) $table.find('tbody tr').remove();
     }
 
+    var viewArgs = $table.closest('.list-view').data('view-args');
+    var uiCustom = viewArgs.listView ? viewArgs.listView.uiCustom : false;
+
     setLoading($table, function(setLoadingArgs) {
       $table.dataTable();
       $.extend(loadArgs, {
@@ -634,7 +682,7 @@
             addTableRows(fields, args.data, $tbody, actions, {
               actionFilter: args.actionFilter
             });
-            $table.dataTable();
+            $table.dataTable(null, { noSelect: uiCustom });
           },
           error: function(args) {
             if (args.message) {
@@ -874,9 +922,10 @@
       var detailViewPresent = ($target.closest('div.data-table tr td').size() &&
                                $target.closest('div.data-table tr td').index() == 0 &&
                                listViewData.detailView && !$target.closest('div.edit').size());
+      var uiCustom = args.listView ? args.listView.uiCustom == true : false;
 
       // Click on first item will trigger detail view (if present)
-      if (detailViewPresent && !$target.closest('.empty, .loading').size()) {
+      if (detailViewPresent && !uiCustom && !$target.closest('.empty, .loading').size()) {
         listViewData.detailView.$browser = args.$browser;
         detailViewArgs = {
           $panel: $target.closest('div.panel'),
@@ -931,7 +980,7 @@
           action: listViewData.actions[actionID]
         });
 
-        return false;
+        return true;
       }
 
       // Edit field action icons
