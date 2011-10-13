@@ -784,14 +784,19 @@
     var dataProvider = tabs.dataProvider;
     var isMultiple = tabs.multiple;
     var viewAll = args.viewAll;
+    var $detailView = $tabContent.closest('.detail-view');
 
     if (tabs.custom) {
       return tabs.custom().appendTo($tabContent);
     }
 
     $.extend(
-      $tabContent.closest('div.detail-view').data('view-args'),
+      $detailView.data('view-args'),
       { activeTab: targetTabID }
+    );
+
+    $tabContent.append(
+      $('<div>').addClass('loading-overlay')
     );
 
     return dataProvider({
@@ -803,8 +808,10 @@
         success: function(args) {
           var tabData = $tabContent.data('detail-view-tab-data');
           var data = args.data;
-          var isFirstPanel = $tabContent.index($tabContent.parent().find('div.detail-group.ui-tabs-panel')) == 0;
+          var isFirstPanel = $tabContent.index($detailView.find('div.detail-group.ui-tabs-panel')) == 0;
           var actionFilter = args.actionFilter;
+
+          $tabContent.find('.loading-overlay').remove();
 
           if (isMultiple) {
             $(data).each(function() {
