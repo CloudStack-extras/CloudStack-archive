@@ -974,9 +974,8 @@
 						  } 
 						  else {
 							args.response.success({data:[]});
-						  }
-                                                    
-                          //???
+						  }                                                  
+                         
                           args.$select.change(function() {   
                             var $form = $(this).closest('form');
                             
@@ -988,12 +987,12 @@
 								//$("#add_pool_server_container", $dialogAddPool).show();
 								$form.find('.form-item[rel=server]').css('display', 'inline-block'); 
 								//$dialogAddPool.find("#add_pool_nfs_server").val("");
-								//to implement later
+								$form.find('.form-item[rel=server]').find(".value").find("input").val("");
 								
 								//$('li[input_group="nfs"]', $dialogAddPool).show();
 								$form.find('.form-item[rel=path]').css('display', 'inline-block'); 								
 								//$dialogAddPool.find("#add_pool_path_container").find("label").text(g_dictionary["label.path"]+":");
-								//to implement later								
+								$form.find('.form-item[rel=path]').find(".name").find("label").text("Path:");				
 								
 								//$('li[input_group="iscsi"]', $dialogAddPool).hide();
 								$form.find('.form-item[rel=iqn]').hide();
@@ -1007,12 +1006,12 @@
                                 //$dialogAddPool.find("#add_pool_server_container").hide();   
 								$form.find('.form-item[rel=server]').hide();	
 								//$dialogAddPool.find("#add_pool_nfs_server").val("");
-								//to implement later								
+								$form.find('.form-item[rel=server]').find(".value").find("input").val("");								
 							
 								//$('li[input_group="nfs"]', $dialogAddPool).show();
 								$form.find('.form-item[rel=path]').css('display', 'inline-block'); 
 								//$dialogAddPool.find("#add_pool_path_container").find("label").text(g_dictionary["label.path"]+":");
-								//to implement later	
+								$form.find('.form-item[rel=path]').find(".name").find("label").text("Path:");
 								
 								//$('li[input_group="iscsi"]', $dialogAddPool).hide();
 								$form.find('.form-item[rel=iqn]').hide();
@@ -1026,12 +1025,12 @@
 								//$dialogAddPool.find("#add_pool_server_container").hide(); 
 								$form.find('.form-item[rel=server]').hide();								
 								//$dialogAddPool.find("#add_pool_nfs_server").val("localhost");  
-								//to implement later
+								$form.find('.form-item[rel=server]').find(".value").find("input").val("localhost");
 								
 								//$('li[input_group="nfs"]', $dialogAddPool).show();
 								$form.find('.form-item[rel=path]').css('display', 'inline-block'); 
 								//$dialogAddPool.find("#add_pool_path_container").find("label").text(g_dictionary["label.SR.name"]+":");
-								//to implement later
+								$form.find('.form-item[rel=path]').find(".name").find("label").text("SR Name-Label:");
 								
 								//$('li[input_group="iscsi"]', $dialogAddPool).hide();
 								$form.find('.form-item[rel=iqn]').hide();
@@ -1045,7 +1044,7 @@
 								//$dialogAddPool.find("#add_pool_server_container").show();
 								$form.find('.form-item[rel=server]').css('display', 'inline-block'); 
 								//$dialogAddPool.find("#add_pool_nfs_server").val("");	
-								//to implement later
+								$form.find('.form-item[rel=server]').find(".value").find("input").val("");
 								
 								//$('li[input_group="nfs"]', $dialogAddPool).hide();
 								$form.find('.form-item[rel=path]').hide();
@@ -1062,7 +1061,7 @@
 								//$dialogAddPool.find("#add_pool_server_container").show();
 								$form.find('.form-item[rel=server]').css('display', 'inline-block'); 
 								//$dialogAddPool.find("#add_pool_nfs_server").val(""); 	
-								//to implement later
+								$form.find('.form-item[rel=server]').find(".value").find("input").val("");
 								
 								//$('li[input_group="nfs"]', $dialogAddPool).hide();
 								$form.find('.form-item[rel=path]').hide();
@@ -1079,10 +1078,11 @@
 								//$dialogAddPool.find("#add_pool_server_container").hide();
 								$form.find('.form-item[rel=server]').hide();
 								//$dialogAddPool.find("#add_pool_nfs_server").val("localhost");	
-								//to implement later								
+								$form.find('.form-item[rel=server]').find(".value").find("input").val("localhost");								
 								
 								//$('li[input_group="nfs"]', $dialogAddPool).show();
 								$form.find('.form-item[rel=path]').css('display', 'inline-block'); 
+								$form.find('.form-item[rel=path]').find(".name").find("label").text("Path:");
 								
 								//$('li[input_group="iscsi"]', $dialogAddPool).hide();
 								$form.find('.form-item[rel=iqn]').hide();
@@ -1096,7 +1096,7 @@
                                 //$dialogAddPool.find("#add_pool_server_container").show();
 								$form.find('.form-item[rel=server]').css('display', 'inline-block'); 							    
 								//$dialogAddPool.find("#add_pool_nfs_server").val(""); 	
-								//to implement later
+								$form.find('.form-item[rel=server]').find(".value").find("input").val("");
 							
 								//$('li[input_group="iscsi"]', $dialogAddPool).hide();
 								$form.find('.form-item[rel=iqn]').hide();
@@ -1106,8 +1106,7 @@
 								$form.find('.form-item[rel=vCenterDataCenter]').hide();
 								$form.find('.form-item[rel=vCenterDataStore]').hide();								
 							}   
-                          });   
-                          //???
+                          });                            
                           
                           args.$select.trigger("change");
                         }
