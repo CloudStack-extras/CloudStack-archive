@@ -505,9 +505,146 @@
                 });   
               },  
               
-              actions: {
+			  //???
+             actions: {
+                add: {
+                  label: 'Add pod',
+
+                  createForm: {
+                    title: 'Add new pod',
+                    desc: 'Please fill in the following information to add a new pod',
+                    
+                    /*
+                    if(zoneObj.networktype == "Basic") { //basic-mode network (pod-wide VLAN)
+                        $dialogAddPod.find("#guestip_container, #guestnetmask_container, #guestgateway_container").show();
+                    }
+                    else if(zoneObj.networktype == "Advanced") { //advanced-mode network (zone-wide VLAN)
+                        $dialogAddPod.find("#guestip_container, #guestnetmask_container, #guestgateway_container").hide();     
+                    }
+                    */       
+                    
+                    fields: {                      
+                      name: {
+                        label: 'Name',
+                        validation: { required: true }
+                      },
+                      gateway: {
+                        label: 'Gateway',
+                        validation: { required: true }
+                      },
+                      netmask: {
+                        label: 'Netmask',
+                        validation: { required: true }
+                      },
+                      startip: {
+                        label: 'Start IP',
+                        validation: { required: true }
+                      },
+                      endip: {
+                        label: 'End IP',
+                        validation: { required: false }
+                      },
+                           
+						   
+                      guestGateway: {
+                        label: 'Guest Gateway',
+                        validation: { required: true },
+                        hidden: true
+                      },
+                      guestNetmask: {
+                        label: 'Guest Netmask',
+                        validation: { required: true },
+                        hidden: true
+                      },
+                      startGuestIp: {
+                        label: 'Start Guest IP',
+                        validation: { required: true },
+                        hidden: true
+                      },
+                      endGuestIp: {
+                        label: 'End Guest IP',
+                        validation: { required: false },
+                        hidden: true
+                      }	  
+                    }
+                  },
+
+                  action: function(args) {                     				                  
+                    var array1 = [];
+                    array1.push("&zoneId=" + args.context.zones[0].id);
+                    array1.push("&name=" + todb(args.data.name));
+                    array1.push("&netmask=" + todb(args.data.netmask));
+                    array1.push("&startIp=" + todb(args.data.startip));
+					
+					var endip = args.data.endip;	    //optional
+                    if (endip != null && endip.length > 0)
+                        array1.push("&endIp=" + todb(endip));
+						
+                    array1.push("&gateway=" + todb(args.data.gateway));			
+    								
+		            $.ajax({
+		                url: createURL("createPod" + array1.join("")), 
+			            dataType: "json",
+			            success: function(json) {						    		              
+			                var item = json.createpodresponse.pod; 	
+							args.response.success({data:item});		
+                            var podId = item.id;							
+    		                   				        	            
+				            //Create IP Range 
+                            //if($thisDialog.find("#guestip_container").css("display") != "none") { 
+							if(args.context.zones[0].networktype == "Basic") {
+		                        var array1 = [];
+		                        array1.push("&vlan=untagged");	
+		                        array1.push("&zoneid=" + args.context.zones[0].id);
+		                        array1.push("&podId=" + podId);	
+		                        array1.push("&forVirtualNetwork=false"); //direct VLAN	
+		                        array1.push("&gateway=" + todb(args.data.guestGateway));
+		                        array1.push("&netmask=" + todb(args.data.guestNetmask));	
+		                        array1.push("&startip=" + todb(args.data.startGuestIp));
+								
+								var endip = args.data.endGuestIp;	
+		                        if(endip != null && endip.length > 0)
+		                            array1.push("&endip=" + todb(endip));
+                                
+                                $.ajax({
+		                            url: createURL("createVlanIpRange" + array1.join("")),
+			                        dataType: "json",
+			                        async: false,
+			                        success: function(json) { 	                    			                			    
+				                        //var item = json.createvlaniprangeresponse.vlan;	                                       	                    			
+			                        },		   
+		                            error: function(XMLHttpResponse) {					                    
+				                        //var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
+										//args.response.error(errorMsg);				                    			
+                                    }
+		                        });		
+                            }				        
+    				          
+			            },
+		                error: function(XMLHttpResponse) {	
+						    var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
+						    args.response.error(errorMsg);	
+		                }
+		            });	
+                    //???                   
+                  },
+
+                  notification: {
+                    poll: function(args) {			  
+					    args.complete();
+					}	
+                  },
+
+                  messages: {
+                    notification: function(args) {
+                      return 'Added new pod';
+                    }
+                  }
+                },  
+				
                 destroy: testData.actions.destroy('pod')
-              },
+              },	
+			  //???
               detailView: {
                 viewAll: { path: '_zone.clusters', label: 'Clusters' },
                 tabs: {
