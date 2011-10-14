@@ -1,6 +1,6 @@
 (function($, cloudStack, testData) {
 
-  var zoneObjs, podObjs, clusterObjs;
+  var zoneObjs, podObjs, clusterObjs, domainObjs;
   var selectedClusterObj;
 
   cloudStack.sections.system = {
@@ -28,6 +28,32 @@
               label: 'Add zone',
               action: {
                 custom: cloudStack.zoneWizard({
+				  steps: [
+                    // Step 1: Setup
+                    null,
+
+                    // Step 2: Setup Zone
+                    function(args) {					  				  
+					  $.ajax({
+						url: createURL("listDomains"),				
+						dataType: "json",
+						async: false,
+						success: function(json) {					   
+						  domainObjs = json.listdomainsresponse.domain;						
+						}
+					  });						
+                      args.response.success({domains: domainObjs});
+                    },
+
+                    // Step 3: Setup Pod
+                    null,
+
+                    // Step 4: Setup IP Range
+                    function(args) {
+                      args.response.success({domains: domainObjs});
+                    }
+                  ],				
+				
                   action: function(args) {				   
 					var array1 = [];	
 	
