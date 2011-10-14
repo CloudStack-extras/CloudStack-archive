@@ -509,15 +509,16 @@
                   createForm: {
                     title: 'Add new pod',
                     desc: 'Please fill in the following information to add a new pod',
-                    
-                    /*
-                    if(zoneObj.networktype == "Basic") { //basic-mode network (pod-wide VLAN)
-                        $dialogAddPod.find("#guestip_container, #guestnetmask_container, #guestgateway_container").show();
-                    }
-                    else if(zoneObj.networktype == "Advanced") { //advanced-mode network (zone-wide VLAN)
-                        $dialogAddPod.find("#guestip_container, #guestnetmask_container, #guestgateway_container").hide();     
-                    }
-                    */       
+                   
+                    preFilter: function(args) {                      				  
+                      var $guestFields = args.$form.find('.form-item[rel=guestGateway], .form-item[rel=guestNetmask], .form-item[rel=startGuestIp], .form-item[rel=endGuestIp]');                      					  
+                      if (args.context.zones[0].networktype == "Basic") {
+                        $guestFields.css('display', 'inline-block');                        
+                      }
+					  else if(args.context.zones[0].networktype == "Advanced") { //advanced-mode network (zone-wide VLAN)
+					    $guestFields.hide();
+					  }					  
+                    },					
                     
                     fields: {                      
                       name: {
