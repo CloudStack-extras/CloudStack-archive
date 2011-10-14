@@ -147,14 +147,30 @@
         }
       },
       labelField: 'name',
-      dataProvider: function(args) {
-        args.response.success({
-          data: [
-            { id: 'domainA', name: 'Domain A' },
-            { id: 'domainB', name: 'Domain B' },
-			{ id: 'domainC', name: 'Domain C' }
-          ]
-        });
+      dataProvider: function(args) {	    
+		var parentDomain = args.context.parentDomain;		
+		if(parentDomain == null) { //draw root node
+		  $.ajax({
+		    url: createURL("listDomains&id=" + g_domainid), 
+		    dataType: "json",
+		    async: false,
+		    success: function(json) {           	
+			  var domainObjs = json.listdomainsresponse.domain;	
+			  args.response.success({data: domainObjs});		
+		    }
+		  });			  
+		}
+		else {		 
+		  $.ajax({
+		    url: createURL("listDomainChildren&id=" + parentDomain.id), 
+		    dataType: "json",
+		    async: false,
+		    success: function(json) {           	
+			  var domainObjs = json.listdomainchildrenresponse.domain;	
+			  args.response.success({data: domainObjs});		
+		    }
+		  });			
+		}	
       }
     }
   };
