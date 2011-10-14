@@ -1810,12 +1810,22 @@
           fields: {
             name: { label: 'Name' },
             zonename: { label: 'Zone' },
-            hostname: { label: 'Hostname' },
-            privateip: { label: 'Private IP' },
-            publicip: { label: 'Public IP' },
             state: { label: 'Status' }
           },
-          dataProvider: testData.dataProvider.listView('systemVMs')
+          dataProvider: function(args) {
+		        $.ajax({
+		          url: createURL("listSystemVms&page=" + args.page + "&pagesize=" + pageSize),
+		          dataType: "json",
+		          async: true,
+		          success: function(json) { 	
+			          var items = json.listsystemvmsresponse.systemvm;
+                
+                args.response.success({
+                  data: items
+                });					                			
+		          }
+		        });
+          }
         }
       }
     }
