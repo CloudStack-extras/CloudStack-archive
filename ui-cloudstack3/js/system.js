@@ -1760,9 +1760,54 @@
             hostname: { label: 'Hostname' },
             publicip: { label: 'Public IP' },
             publicmacaddress: { label: 'Public MAC' },
-            state: { label: 'Status' }
+            state: { label: 'Status', indicator: { 'Stopped': 'off', 'Running': 'on' } }
           },
-          dataProvider: testData.dataProvider.listView('virtualAppliances')
+          actions: {
+            start: {
+              label: 'Start router',
+              action: function(args) {
+                $.ajax({
+                  url: createURL('startRouter&id=' + args.data.id),
+                  dataType: 'json',
+                  async: true,
+                  success: function(json) {
+                    var jid = json.startrouterresponse.jobid;
+                    args.response.success({
+                      _custom: { 
+                        jobId: jid
+                      }
+                    });
+                  },
+                  error: function(json) {
+                    args.response.error({ message: 'Cannot start router' });
+                  }
+                });
+              },
+              messages: {
+                confirm: function(args) {
+                  return 'Are you sure you want to start router ' + args.name + '?';
+                },
+                notification: function(args) {
+                  return 'Starting router: ' + args.name;
+                }
+              },
+              notification: {
+                poll: pollAsyncJobResult
+              }
+
+            }
+          },
+          dataProvider: function(args) {
+            $.ajax({
+              url: createURL('listRouters&page=' + args.page + '&pagesize=' + pageSize),
+              dataType: 'json',
+              async: true,
+              success: function(json) {
+                var items = json.listroutersresponse.router;
+                args.response.success({ data: items });
+              }
+            });
+          }
         }
       },
       systemVMs: {
