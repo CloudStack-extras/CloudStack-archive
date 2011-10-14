@@ -835,7 +835,7 @@
       var code = (event.keyCode ? event.keyCode : event.which);
       var $input = $listView.find('input:focus');
 
-      if ($input.size() && code === 13) {
+      if ($input.size() && $input.hasClass('edit') && code === 13) {
         uiActions.edit($input.closest('tr'), {
           callback: listViewData.actions.edit.action
         });
