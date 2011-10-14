@@ -25,8 +25,55 @@
               label: 'Add zone',
               action: {
                 custom: cloudStack.zoneWizard({
+                  steps: [
+                    // Step 1: Setup
+                    null,
+
+                    // Step 2: Setup Zone
+                    function(args) {
+                      args.response.success({
+                        domains: [
+                          {
+                            id: '1',
+                            name: 'Domain A'
+                          },
+                          {
+                            id: '2',
+                            name: 'Domain B'
+                          },
+                          {
+                            id: '3',
+                            name: 'Domain C'
+                          }
+                        ]
+                      });
+                    },
+
+                    // Step 3: Setup Pod
+                    null,
+
+                    // Step 4: Setup IP Range
+                    function(args) {
+                      args.response.success({
+                        domains: [
+                          {
+                            id: '1',
+                            name: 'Domain A'
+                          },
+                          {
+                            id: '2',
+                            name: 'Domain B'
+                          },
+                          {
+                            id: '3',
+                            name: 'Domain C'
+                          }
+                        ]
+                      });
+                    }
+                  ],
                   action: function(args) {
-                    args.response.success({ 
+                    args.response.success({
                       _custom: { jobID: new Date() }
                     });
                   }
@@ -174,16 +221,16 @@
                     title: 'Details',
                     fields: [
                       {
-                        name: { label: 'Name' },
+                        name: { label: 'Name' }
                       },
                       {
                         allocationstate: { label: 'State' },
                         startip: { label: 'Start IP' },
-                        endip: { label: 'End IP' },
+                        endip: { label: 'End IP' }
                       }
                     ],
                     dataProvider: testData.dataProvider.detailView('pods')
-                  },
+                  }
                 }
               }
             }
@@ -209,18 +256,18 @@
                     title: 'Details',
                     fields: [
                       {
-                        name: { label: 'Name' },
+                        name: { label: 'Name' }
                       },
                       {
                         allocationstate: { label: 'State' },
                         podname: { label: 'Pod' },
                         hypervisortype: { label: 'Hypervisor' },
-                        clustertype: { label: 'Cluster' },
+                        clustertype: { label: 'Cluster' }
                       }
                     ],
 
                     dataProvider: testData.dataProvider.detailView('clusters')
-                  },
+                  }
                 }
               }
             }
@@ -243,6 +290,16 @@
                   createForm: {
                     title: 'Add new host',
                     desc: 'Please fill in the following information to add a new host fro the specified zone configuration.',
+                    preFilter: function(args) {
+                      var $form = args.$form;
+                      var $guestFields = $form.find('.form-item[rel=guestGateway], '
+                                                    + '.form-item[rel=guestNetmask], '
+                                                    + '.form-item[rel=guestIPRange]');
+
+                      if (args.context.zones[0].name == 'Chicago') {
+                        $guestFields.css('display', 'inline-block');                        
+                      }
+                    },
                     fields: {
                       pod: {
                         label: 'Pod',
@@ -328,6 +385,24 @@
 
                         label: 'Conditional B',
                         validation: { required: true }
+                      },
+
+                      guestGateway: {
+                        hidden: true,
+                        label: 'Guest Gateway',
+                        validation: { required: true }
+                      },
+
+                      guestNetmask: {
+                        hidden: true,
+                        label: 'Guest Netmask',
+                        validation: { required: true }
+                      },
+
+                      guestIPRange: {
+                        hidden: true,
+                        label: 'Guest IP Range',
+                        validation: { required: true }
                       }
                     }
                   },
@@ -387,7 +462,7 @@
                     title: 'Details',
                     fields: [
                       {
-                        name: { label: 'Name' },
+                        name: { label: 'Name' }
                       },
                       {
                         zonename: { label: 'Zone' },
@@ -420,7 +495,7 @@
                     title: 'Details',
                     fields: [
                       {
-                        name: { label: 'Name' },
+                        name: { label: 'Name' }
                       },
                       {
                         zonename: { label: 'Zone' },

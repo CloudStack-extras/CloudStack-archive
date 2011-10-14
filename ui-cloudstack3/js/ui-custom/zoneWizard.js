@@ -62,7 +62,6 @@
         var $targetStep = $($steps.hide()[targetIndex]).show();
         var formState = cloudStack.serializeForm($wizard.find('form'));
 
-
         // Hide conditional fields by default
         var $conditional = $targetStep.find('.conditional');
         $conditional.hide();
@@ -79,11 +78,11 @@
           }
         }
 
-        if (formState['public']) {
+        if (!formState['public']) {
           $conditional.filter('.public').show();
         }
 
-        // Show launch vm button if last step
+        // Show launch button if last step
         var $nextButton = $wizard.find('.button.next');
         $nextButton.find('span').html('Next');
         $nextButton.removeClass('final');
@@ -102,6 +101,20 @@
         var $targetProgress = $progress.removeClass('active').filter(function() {
           return $(this).index() <= targetIndex;
         }).toggleClass('active');
+
+        // Load data provider for domain dropdowns
+        if (index == 2 || index == 4) {
+          args.steps[targetIndex]({
+            response: {
+              success: function(args) {
+                $(args.domains).each(function() {
+                  $('<option>').val(this.id).html(this.name)
+                    .appendTo($targetStep.find('select.domain'));
+                });
+              }
+            }
+          });
+        }
 
         setTimeout(function() {
           if (!$targetStep.find('input[type=radio]:checked').size()) {
@@ -180,11 +193,11 @@
 
         // Checkbox
         if ($target.is('[type=checkbox]:checked')) {
-          $('div.conditional.' + $target.attr('name')).show();
+          $('div.conditional.' + $target.attr('name')).hide();
 
           return true;
         } else if ($target.is('[type=checkbox]:unchecked')) {
-          $('div.conditional.' + $target.attr('name')).hide();
+          $('div.conditional.' + $target.attr('name')).show();
 
           return true;
         }
