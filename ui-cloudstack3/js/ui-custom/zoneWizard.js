@@ -71,7 +71,7 @@
           if (formState['isolation-mode'] == 'vlan') {
             $conditional.filter('.vlan').show().find('select').trigger('change');
             if ($conditional.find('select[name=vlan-type]').val() == 'tagged') {
-              $conditional.find('select.ip-scope]').trigger('change');
+              $conditional.find('select.ip-scope').trigger('change');
             }
           } else if (formState['isolation-mode'] == 'security-groups') {
             $conditional.filter('.security-groups').show();
@@ -103,7 +103,7 @@
         }).toggleClass('active');
 
         // Load data provider for domain dropdowns
-        if (index == 2 || index == 4) {
+        if (!$targetStep.hasClass('loaded') && (index == 2 || index == 4)) {
           args.steps[targetIndex]({
             response: {
               success: function(args) {
@@ -111,6 +111,8 @@
                   $('<option>').val(this.id).html(this.name)
                     .appendTo($targetStep.find('select.domain'));
                 });
+
+                $targetStep.addClass('loaded');
               }
             }
           });
