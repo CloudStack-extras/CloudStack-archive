@@ -38,7 +38,7 @@
                 if (args.message) {
                   cloudStack.dialog.notice({ message: args.message });
                 }
-                
+
                 error($.extend(errorArgs, args));
                 complete(args);
               }
@@ -52,110 +52,6 @@
   };
 
   /**
-   * Actions to perform on multi-edit rows
-   */
-  var uiActionsMulti = {
-    standard: function($detailView, args, additional) {
-      var listViewArgs = $detailView.data('list-view').data('view-args');
-      var action = args.tabs[args.activeTab].actions[args.actionName];
-      var notification = action.notification;
-      var messages = action.messages;
-      var messageArgs = {};
-      var section;
-      var data = {
-        id: $detailView.data('view-args').id
-      };
-
-      if (args.data) $.extend(data, args.data);
-
-      if (listViewArgs)
-        section = listViewArgs.id;
-
-      notification.desc = messages.notification(messageArgs);
-      notification.section = listViewArgs.id;
-
-      if (additional && additional.before) additional.before(args);
-
-      action.action({
-        data: data,
-        response: {
-          success: function(args) {
-            args = args ? args : {};
-            notification._custom = args._custom;
-            if (additional && additional.success) additional.success(args);
-
-            addNotification(notification, function() {
-              if (additional && additional.complete) additional.complete(args);
-            });
-          },
-
-          error: function(args) {
-            if (args.message)
-              alert(args.message);
-          }
-        }
-      });
-    },
-
-    create: function($detailView, args, additional) {
-      (function($tr) {
-        uiActionsMulti.standard($detailView, $.extend(args, {
-          data: cloudStack.serializeForm($detailView.find('form'))
-        }), {
-          before: function(args) {
-            $tr.find('td .action').remove();
-            $tr.css({ opacity: 0.5 });
-            $tr.removeClass('new').find('td').each(function() {
-              $(this).html(
-                function() {
-                  if ($(this).find('select').size()) {
-                    return $(this).find('option:selected').html();
-                  }
-
-                  return $(this).find('input').val();
-                }
-              );
-            });
-
-            makeEditableRow($tr.data('detail-view-tab-data'))
-              .addClass(function() {
-                if (!$tr.hasClass('odd'))
-                  return 'odd';
-
-                return null;
-              })
-              .prependTo($tr.parent());
-          },
-          complete: function(args) {
-            $tr.css({ opacity: 1 })
-              .siblings()
-              .filter(function() {
-                return !$(this).hasClass('new') &&
-                  $(this).find('td.actions .action').size();
-              })
-              .filter(':first')
-              .find('td.actions .action').clone()
-              .appendTo(
-                $tr.find('td.actions')
-              );
-          }
-        });
-      })($detailView.find('.multi-edit tbody tr:first'));
-    },
-
-    destroy: function($detailView, args, additional) {
-      uiActionsMulti.standard($detailView, args, {
-        success: function(args) {
-          additional.$multiEditRow.animate({
-            opacity: 0.5
-          })
-            .find('td.actions .action').remove();
-        }
-      });
-    }
-  };
-
-  /**
    * Available UI actions to perform for buttons
    */
   var uiActions = {
@@ -165,7 +61,7 @@
     standard: function($detailView, args, additional) {
       var action;
 
-      if (additional && additional.multiEdit) {
+      if (additional && !$.isEmptyObject(additional)) {
         action = args.tabs[args.activeTab].actions[args.actionName];
       } else {
         action = args.actions[args.actionName];
@@ -200,7 +96,7 @@
 
               // Setup notification
               addNotification(
-                notification, 
+                notification,
                 function(args) {
                   if ($detailView.is(':visible')) {
                     $detailView.find('.loading-overlay').remove();
@@ -209,9 +105,9 @@
                     loadTabContent(
                       $detailView.find('.detail-group:visible'),
                       $detailView.data('view-args')
-                    );                    
+                    );
                   }
-                  
+
                   if (messages.complete) {
                     cloudStack.dialog.notice({
                       message: messages.complete(args.data)
@@ -224,7 +120,7 @@
 
                 // Error
                 function(args) {
-                  
+
                 }
               );
             },
@@ -416,11 +312,11 @@
       id: args.id,
       type: $detailView.data('view-args').section
     };
-    
+
     // Load context data
     listViewArgs.context = {};
     $.extend(listViewArgs.context, $detailView.data('view-args').context);
-    
+
     // Make panel
     var $panel = $browser.cloudBrowser('addPanel', {
       title: listViewArgs.title,
@@ -461,7 +357,7 @@
 
       $.each(actions, function(key, value) {
         if ($.inArray(key, allowedActions) == -1) return true;
-        
+
         var $action = $('<div></div>')
               .addClass('action').addClass(key)
               .appendTo($actions.find('div.buttons'));
@@ -500,149 +396,6 @@
   };
 
   /**
-   * Create editable row for multi-edit detail tabs
-   */
-  var makeEditableRow = function(tabData) {
-    var $blankRow = $('<tr>')
-          .addClass('new')
-          .data('detail-view-tab-data', tabData);
-
-    $.each(tabData.fields, function(key, value) {
-      $('<td>')
-        .append(function() {
-          if (!value.editable) return false;
-
-          var $input = $('<input>')
-                .attr({
-                  type: 'text',
-                  name: key
-                });
-
-          if (value.select) {
-            $input = $('<select>')
-              .attr({
-                name: key
-              })
-              .append();
-
-            value.select({
-              response: {
-                success: function(args) {
-                  $(args.data).each(function() {
-                    $('<option>')
-                      .val(this.id)
-                      .html(this.label)
-                      .appendTo($input);
-                  });
-                }
-              }
-            });
-          }
-
-          $input.addClass('required');
-
-          return $input;
-        })
-        .appendTo($blankRow);
-
-      return true;
-    });
-
-    // Action column
-    $blankRow.append(
-      $('<td>')
-        .addClass('actions')
-        .append(
-          $('<div>')
-            .addClass('action create')
-            .append(
-              $('<a>').attr({ href: '#' }).html('Create')
-            )
-            .attr('detail-action', 'create')
-        )
-    );
-
-    return $blankRow;
-  };
-
-  var makeMultiEdit = function(tabData, $detailView, data, args) {
-    if (!args) args = {};
-
-    var $multiTable = $('<table>')
-          .addClass('multi-edit')
-          .append(
-            $('<thead>')
-              .append(
-                $('<tr>')
-              )
-          )
-          .append(
-            $('<tbody>')
-          );
-
-    // Header
-    $.each(tabData.fields, function(key, value) {
-      $('<th>')
-        .html(value.label)
-        .appendTo($multiTable.find('thead tr'));
-    });
-
-    // Header actions column
-    $('<th>')
-      .addClass('actions')
-      .html('Actions')
-      .appendTo($multiTable.find('thead tr'));
-
-    // Content
-    var isOdd = true;
-    $(data).each(function() {
-      var item = this;
-      var $tr = $('<tr>')
-            .appendTo($multiTable.find('tbody'));
-
-      if (isOdd) {
-        isOdd = false;
-        $tr.addClass('odd');
-      } else {
-        isOdd = true;
-      }
-
-      $.each(tabData.fields, function(key, value) {
-        $('<td>')
-          .html(item[key])
-          .appendTo($tr);
-      });
-
-      // Actions column
-      var $actions = $('<td>')
-            .addClass('actions')
-            .appendTo($tr);
-
-      $.each(tabData.actions, function(key, value) {
-        // Don't render create button for existing entries
-        if (key == 'create') return true;
-
-        $('<div>')
-          .appendTo($tr.find('td.actions'))
-          .addClass('action')
-          .attr('detail-action', key)
-          .data('detail-view-action-callback', value.action)
-          .addClass(key);
-
-        return true;
-      });
-    });
-
-    // New editable field
-    var $blankRow = makeEditableRow(tabData).prependTo($multiTable.find('tbody'));
-
-    $multiTable = $('<form>').append($multiTable);
-    $multiTable.validate();
-
-    return $multiTable;
-  };
-
-  /**
    * Generate attribute field rows in tab
    */
   var makeFieldContent = function(tabData, $detailView, data, args) {
@@ -662,73 +415,69 @@
     }
 
 
-    if (tabData.multiEdit) {
-      makeMultiEdit(tabData, $detailView, data, args).appendTo($detailGroups);
-    } else {
-      $(tabData.fields).each(function() {
-        var fieldGroup = this;
+    $(tabData.fields).each(function() {
+      var fieldGroup = this;
 
-        var $detailTable = $('<tbody></tbody>').appendTo(
-          $('<table></table>').appendTo(
-            $('<div></div>').addClass('detail-group').appendTo($detailGroups)
-          ));
+      var $detailTable = $('<tbody></tbody>').appendTo(
+        $('<table></table>').appendTo(
+          $('<div></div>').addClass('detail-group').appendTo($detailGroups)
+        ));
 
-        $.each(fieldGroup, function(key, value) {
-          if ($header && key == args.header) {
-            $header.find('th').html(data[key]);
-            return true;
-          }
-
-          var $detail = $('<tr></tr>').addClass(key).appendTo($detailTable);
-          var $name = $('<td></td>').addClass('name').appendTo($detail);
-          var $value = $('<td></td>').addClass('value').appendTo($detail);
-          var content = data[key];
-
-          if (this.converter) content = this.converter(content);
-
-          $detail.data('detail-view-field', key);
-
-          // Even/odd row coloring
-          if (isOddRow && key != 'name') {
-            $detail.addClass('odd');
-            isOddRow = false;
-          } else if (key != 'name') {
-            isOddRow = true;
-          }
-
-          $name.html(value.label);
-          $value.html(content);
-
-          // Set up editable metadata
-          $value.data('detail-view-is-editable', value.isEditable);
-          if (value.select) {
-            value.selected = $value.html();
-
-            value.select({
-              response: {
-                success: function(args) {
-                  // Get matching select data
-                  var matchedSelectValue = $.grep(args.data, function(option, index) {
-                    return option.id == value.selected;
-                  })[0];
-
-                  if(matchedSelectValue != null) {
-                    $value.html(matchedSelectValue.description);
-                    $value.data('detail-view-selected-option', matchedSelectValue.id);
-                  }
-
-                  $value.data('detail-view-editable-select', args.data);
-
-                  return true;
-                }
-              }
-            });
-          }
-
+      $.each(fieldGroup, function(key, value) {
+        if ($header && key == args.header) {
+          $header.find('th').html(data[key]);
           return true;
-        });
+        }
+
+        var $detail = $('<tr></tr>').addClass(key).appendTo($detailTable);
+        var $name = $('<td></td>').addClass('name').appendTo($detail);
+        var $value = $('<td></td>').addClass('value').appendTo($detail);
+        var content = data[key];
+
+        if (this.converter) content = this.converter(content);
+
+        $detail.data('detail-view-field', key);
+
+        // Even/odd row coloring
+        if (isOddRow && key != 'name') {
+          $detail.addClass('odd');
+          isOddRow = false;
+        } else if (key != 'name') {
+          isOddRow = true;
+        }
+
+        $name.html(value.label);
+        $value.html(content);
+
+        // Set up editable metadata
+        $value.data('detail-view-is-editable', value.isEditable);
+        if (value.select) {
+          value.selected = $value.html();
+
+          value.select({
+            response: {
+              success: function(args) {
+                // Get matching select data
+                var matchedSelectValue = $.grep(args.data, function(option, index) {
+                  return option.id == value.selected;
+                })[0];
+
+                if(matchedSelectValue != null) {
+                  $value.html(matchedSelectValue.description);
+                  $value.data('detail-view-selected-option', matchedSelectValue.id);
+                }
+
+                $value.data('detail-view-editable-select', args.data);
+
+                return true;
+              }
+            }
+          });
+        }
+
+        return true;
       });
-    }
+    });
 
     if (args.isFirstPanel) {
       var $firstRow = $detailGroups.filter(':first').find('div.detail-group:first table tr:first');
@@ -815,8 +564,8 @@
 
           if (isMultiple) {
             $(data).each(function() {
-              var $fieldContent = makeFieldContent(tabs, $tabContent.closest('div.detail-view'), this, { 
-                header: 'name', 
+              var $fieldContent = makeFieldContent(tabs, $tabContent.closest('div.detail-view'), this, {
+                header: 'name',
                 isFirstPanel: isFirstPanel,
                 actionFilter: actionFilter
               }).appendTo($tabContent);
@@ -825,7 +574,7 @@
             return true;
           }
 
-          makeFieldContent(tabs, $tabContent.closest('div.detail-view'), data, { 
+          makeFieldContent(tabs, $tabContent.closest('div.detail-view'), data, {
             isFirstPanel: isFirstPanel,
             actionFilter: actionFilter
           }).appendTo($tabContent);
@@ -939,14 +688,6 @@
       var detailViewArgs = $action.closest('div.detail-view').data('view-args');
       var additionalArgs = {};
       var actionSet = uiActions;
-
-      // Multi-edit
-      if ($target.closest('table.multi-edit').size()) {
-        if (actionName == 'create' && !$target.closest('form').valid()) return false;
-
-        actionSet = uiActionsMulti;
-        additionalArgs.$multiEditRow = $target.closest('tr');
-      }
 
       var uiCallback = actionSet[actionName];
       if (!uiCallback)
