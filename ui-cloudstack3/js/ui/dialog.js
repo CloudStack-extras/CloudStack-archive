@@ -11,9 +11,11 @@
       $.each(args.form.fields, function(key) {
         var $formItem = $('<div>')
               .addClass('form-item')
-              .attr({ rel: key })
-              .appendTo($form);
+              .attr({ rel: key });
+        
         if (this.hidden) $formItem.hide();
+
+        $formItem.appendTo($form);
 
         // Label field
         var $name = $('<div>').addClass('name')
@@ -108,10 +110,15 @@
         }
       });
 
-      return $formContainer.dialog({
+      $formContainer.dialog({
         dialogClass: 'create-form',
         width: 400,
         title: args.form.title,
+        open: function() {
+          if (args.form.preFilter) {
+            args.form.preFilter({ $form: $form, context: args.context });
+          }
+        },
         buttons: [
           {
             text: 'Create',
