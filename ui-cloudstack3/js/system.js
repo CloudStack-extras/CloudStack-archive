@@ -47,10 +47,7 @@
 					
 					var internaldns2 = args.data.internaldns2;
 					if (internaldns2 != null && internaldns2.length > 0) 
-						array1.push("&internaldns2=" + todb(internaldns2));						
-					
-
-
+						array1.push("&internaldns2=" + todb(internaldns2));		
 
 					if(networktype == "Advanced") {
 					    if(args.data["isolation-mode"] == "security-groups") {
@@ -75,6 +72,7 @@
 						}
 					}						
 					
+					//wait until Brian changes domain field from textbox to dropdown
 					/*
                     var zoneDomainName = args.data["zone-domain"];
                     if(zoneDomainName != null && zoneDomainName.length > 0) {
@@ -84,9 +82,7 @@
                     }	
                     */					
 						
-					var zoneId, podId;	
-					//var zoneNode, $podNode;	
-					//var afterActionMsg = "";						
+					var zoneId, podId;										
 					$.ajax({
 						url: createURL("createZone" + array1.join("")),
 						dataType: "json",
@@ -218,17 +214,17 @@
 						else if (networktype == "Advanced" && args.data["isolation-mode"] == "vlan") {
 							var array1 = [];	
 							
-							//if ($createVirtualVlan.find("#add_publicip_vlan_tagged").val() == "tagged") 
-							if(args.data["vlan-type"] == "tagged") 
-								array1.push("&vlan=" + args.data["vlan-id"]);			 
-							else  //args.data["vlan-type"] == "untagged"
+							//if ($createVirtualVlan.find("#add_publicip_vlan_tagged").val() == "tagged") 							
+							if(args.data["vlan-type"] == "tagged") {
+								array1.push("&vlan=" + args.data["vlan-id"]);									
+								if(args.data["ip-scope-tagged"] == "account-specific") {
+									//array1.push("&domainId=" + args.data.domain);	//wait until Brian changes domain field from textbox to dropdown							
+									array1.push("&account=" + args.data.account);
+								}								
+                            }								
+							else { //args.data["vlan-type"] == "untagged"
 								array1.push("&vlan=untagged");						
-														
-							//if($createVirtualVlan.find("#vlan_domain_container").css("display") != "none") {	
-                            if(args.data["ip-scope"] == "account-specific") {	//wait for Brian to fix. It returns args.data["ip-scope"] == [{"zone-wide"}, {"account-specific"}] which is wrong					
-								array1.push("&domainId=" + args.data.domain); //wait for Brian to make it a dropdown and return args.data.domainid
-								array1.push("&account=" + args.data.account);  
-							} 								
+							}																				
 							
 							array1.push("&gateway=" + todb(args.data["guest-gateway"]));	
 							array1.push("&netmask=" + todb(args.data["guest-netmask"]));					
