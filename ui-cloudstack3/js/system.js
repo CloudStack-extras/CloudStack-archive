@@ -97,17 +97,10 @@
 							}				
 						}
 					}						
-					
-					//wait until Brian changes domain field from textbox to dropdown
-					/*
-                    var zoneDomainName = args.data["zone-domain"];
-                    if(zoneDomainName != null && zoneDomainName.length > 0) {
-                        var zoneDomainId;
-						//match zoneDomainId;						
-						array1.push("&domainid=" + zoneDomainId);		
-                    }	
-                    */					
-						
+					                    				
+					if(args.data["public"] == null) //public checkbox is unchecked
+					  array1.push("&domainid=" + args.data["zone-domain"]);		
+													
 					var zoneId, podId;										
 					$.ajax({
 						url: createURL("createZone" + array1.join("")),
@@ -238,13 +231,12 @@
 						//var $createVirtualVlan = $thisWizard.find("#step4").find("#create_virtual_vlan");
 						//if ($createVirtualVlan.css("display") != "none") {  
 						else if (networktype == "Advanced" && args.data["isolation-mode"] == "vlan") {
-							var array1 = [];	
-							
+							var array1 = [];								
 							//if ($createVirtualVlan.find("#add_publicip_vlan_tagged").val() == "tagged") 							
 							if(args.data["vlan-type"] == "tagged") {
 								array1.push("&vlan=" + args.data["vlan-id"]);									
 								if(args.data["ip-scope-tagged"] == "account-specific") {
-									//array1.push("&domainId=" + args.data.domain);	//wait until Brian changes domain field from textbox to dropdown							
+									array1.push("&domainId=" + args.data["ip-domain"]);							
 									array1.push("&account=" + args.data.account);
 								}								
                             }								
