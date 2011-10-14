@@ -1,4 +1,7 @@
 (function(cloudStack, testData) {  
+
+  var diskofferingObjs, selectedDiskOfferingObj;
+
   cloudStack.sections.storage = {
     title: 'Storage',
     id: 'storage',
@@ -93,21 +96,47 @@
 					  $.ajax({
 						url: createURL("listDiskOfferings"),			 
 						dataType: "json",
-						async: true,
+						async: false,
 						success: function(json) { 				   
-						  var items = json.listdiskofferingsresponse.diskoffering;						  
-						  args.response.success({descriptionField: 'displaytext', data: items});					  
+						  diskofferingObjs = json.listdiskofferingsresponse.diskoffering;	                          
+						  var items = [];
+						  $(diskofferingObjs).each(function(){						   
+						    items.push({id: this.id, description: this.displaytext});
+						  });						  
+						  args.response.success({data: items});					  
 						}
-					  });  		
+					  });  	
+					  
+					  args.$select.change(function() {                           
+						var diskOfferingId = $(this).val();
+						$(diskofferingObjs).each(function(){						  
+						  if(this.id == diskOfferingId) {
+						    selectedDiskOfferingObj = this;
+						    return false; //break the $.each() loop 
+						  }
+						});
+						if(selectedDiskOfferingObj == null)
+						  return;						
+						
+						var $form = $(this).closest('form');
+                        var $diskSize = $form.find('.form-item[rel=diskSize]');
+                        if (selectedDiskOfferingObj.iscustomized == true) {                          
+                          $diskSize.css('display', 'inline-block');  
+                        }
+						else {
+						  $diskSize.hide();
+						}
+                      });
 					}				
                   }
-				  /*
+				  
 				  ,
                   diskSize: {
                     label: 'Disk size (in GB)',
-                    validation: { required: true, number: true }
+                    validation: { required: true, number: true },
+					hidden: true
                   }
-				  */
+				  
                 }
               },
 
