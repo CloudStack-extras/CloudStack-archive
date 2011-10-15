@@ -42,36 +42,35 @@
                 title: 'Create template',
                 desc: 'Please fill in the following data to create a new template.',
                 
-                preFilter: function(args) {    
-                  //???                  
-                  	if(isAdmin()) {
-		                //$readonlyFields = $detailsTab.find("#name, #displaytext, #passwordenabled, #ispublic, #isfeatured, #ostypename");
-		                //$editFields = $detailsTab.find("#name_edit, #displaytext_edit, #passwordenabled_edit, #ispublic_edit, #isfeatured_edit, #ostypename_edit");    
+                preFilter: function(args) {  
+                  if(isAdmin()) {
+		            //$readonlyFields = $detailsTab.find("#name, #displaytext, #passwordenabled, #ispublic, #isfeatured, #ostypename");
+		            //$editFields = $detailsTab.find("#name_edit, #displaytext_edit, #passwordenabled_edit, #ispublic_edit, #isfeatured_edit, #ostypename_edit");    
                         
-                        //$("#dialog_add_template").find("#add_template_public_container").show();
-                        args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');   
+                    //$("#dialog_add_template").find("#add_template_public_container").show();
+                    args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');   
                         
-                        //$("#dialog_add_template").find("#add_template_featured_container").show();
-                        args.$form.find('.form-item[rel=isFeatured]').css('display', 'inline-block');  
-                    }
-                    else {  
-		                if (getUserPublicTemplateEnabled() == "true") {
-			                //$readonlyFields = $detailsTab.find("#name, #displaytext, #passwordenabled, #ispublic, #ostypename");
-			                //$editFields = $detailsTab.find("#name_edit, #displaytext_edit, #passwordenabled_edit, #ispublic_edit, #ostypename_edit"); 	
+                    //$("#dialog_add_template").find("#add_template_featured_container").show();
+                    args.$form.find('.form-item[rel=isFeatured]').css('display', 'inline-block');  
+                  }
+                  else {  
+		            if (getUserPublicTemplateEnabled() == "true") {
+			          //$readonlyFields = $detailsTab.find("#name, #displaytext, #passwordenabled, #ispublic, #ostypename");
+			          //$editFields = $detailsTab.find("#name_edit, #displaytext_edit, #passwordenabled_edit, #ispublic_edit, #ostypename_edit"); 	
 			                		
-			                //$("#dialog_add_template").find("#add_template_public_container").show();
-			                args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');   
-		                } 
-		                else {
-			                //$readonlyFields = $detailsTab.find("#name, #displaytext, #passwordenabled, #ostypename");
-			                //$editFields = $detailsTab.find("#name_edit, #displaytext_edit, #passwordenabled_edit, #ostypename_edit");		
+			          //$("#dialog_add_template").find("#add_template_public_container").show();
+			          args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');   
+		            } 
+		            else {
+			          //$readonlyFields = $detailsTab.find("#name, #displaytext, #passwordenabled, #ostypename");
+			          //$editFields = $detailsTab.find("#name_edit, #displaytext_edit, #passwordenabled_edit, #ostypename_edit");		
 			                	
-			                //$("#dialog_add_template").find("#add_template_public_container").hide();
-			                args.$form.find('.form-item[rel=isPublic]').hide();
-		                }		
-		                //$("#dialog_add_template #add_template_featured_container").hide();	
-		                args.$form.find('.form-item[rel=isFeatured]').hide();	
-                    }                  	  
+			          //$("#dialog_add_template").find("#add_template_public_container").hide();
+			          args.$form.find('.form-item[rel=isPublic]').hide();
+		            }		
+		            //$("#dialog_add_template #add_template_featured_container").hide();	
+		            args.$form.find('.form-item[rel=isFeatured]').hide();	
+                  }                  	  
                 },			
                 
                 fields: {
@@ -110,59 +109,56 @@
                     label: 'Hypervisor',
                     dependsOn: 'zone',
                     select: function(args) {     
-                        if(args.zone == null)                           
-	                        return; 	                    
+                      if(args.zone == null)                           
+	                    return; 	                    
                 	    
-	                    var apiCmd;
-	                    if(args.zone == -1) 	
-	                        apiCmd = "listHypervisors&zoneid=-1";	 
-	                    else	  
-	                        apiCmd = "listHypervisors&zoneid=" + args.zone;	  	    
+	                  var apiCmd;
+	                  if(args.zone == -1) 	
+	                    apiCmd = "listHypervisors&zoneid=-1";	 
+	                  else	  
+	                    apiCmd = "listHypervisors&zoneid=" + args.zone;	  	    
                 	    
-	                    $.ajax({
-                            url: createURL(apiCmd),
-                            dataType: "json",
-							async: false,
-                            success: function(json) {            
-                                var hypervisorObjs = json.listhypervisorsresponse.hypervisor;
-								var items = [];
-								$(hypervisorObjs).each(function(){
-								    items.push({id: this.name, description: this.name});
-								});								
-                                args.response.success({data: items});	
-                            }    
-                        });   
+	                  $.ajax({
+                        url: createURL(apiCmd),
+                        dataType: "json",
+						async: false,
+                        success: function(json) {            
+                          var hypervisorObjs = json.listhypervisorsresponse.hypervisor;
+						  var items = [];
+						  $(hypervisorObjs).each(function(){
+							items.push({id: this.name, description: this.name});
+						  });								
+                          args.response.success({data: items});	
+                        }    
+                      });   
 					}		
                   },        
                   format: {
                     label: 'Format',
                     dependsOn: 'hypervisor',
                     select: function(args) {     
-                      var items = [];
-                      
-                        if(args.hypervisor == "XenServer") {
-	                        //formatSelect.append("<option value='VHD'>VHD</option>");	  
-	                        items.push({id:'VHD', description: 'VHD'});
-	                    }  
-	                    else if(args.hypervisor == "VMware") {
-	                        //formatSelect.append("<option value='OVA'>OVA</option>");
-	                        items.push({id:'OVA', description: 'OVA'});
-	                    }
-	                    else if(args.hypervisor == "KVM") {
-	                        //formatSelect.append("<option value='QCOW2'>QCOW2</option>");
-	                        items.push({id:'QCOW2', description: 'QCOW2'});
-	                    }
-		                else if(args.hypervisor == "BareMetal") {
-	                        //formatSelect.append("<option value='BareMetal'>BareMetal</option>");
-	                        items.push({id:'BareMetal', description: 'BareMetal'});
-	                    }
-		                else if(args.hypervisor == "Ovm") {
-	                        //formatSelect.append("<option value='RAW'>RAW</option>");  
-	                        items.push({id:'RAW', description: 'RAW'});  
-	                    }
-	                    
-	                    args.response.success({data: items});	
-                	        
+                      var items = [];                      
+                      if(args.hypervisor == "XenServer") {
+	                    //formatSelect.append("<option value='VHD'>VHD</option>");	  
+	                    items.push({id:'VHD', description: 'VHD'});
+	                  }  
+	                  else if(args.hypervisor == "VMware") {
+	                    //formatSelect.append("<option value='OVA'>OVA</option>");
+	                    items.push({id:'OVA', description: 'OVA'});
+	                  }
+	                  else if(args.hypervisor == "KVM") {
+	                    //formatSelect.append("<option value='QCOW2'>QCOW2</option>");
+	                    items.push({id:'QCOW2', description: 'QCOW2'});
+	                  }
+		              else if(args.hypervisor == "BareMetal") {
+	                    //formatSelect.append("<option value='BareMetal'>BareMetal</option>");
+	                    items.push({id:'BareMetal', description: 'BareMetal'});
+	                  }
+		              else if(args.hypervisor == "Ovm") {
+	                    //formatSelect.append("<option value='RAW'>RAW</option>");  
+	                    items.push({id:'RAW', description: 'RAW'});  
+	                  }	                    
+	                  args.response.success({data: items});	                	        
 					}		
                   },        
                                     
@@ -205,22 +201,45 @@
                 }
               },
               
-              action: function(args) {	
-                /*
-                var array1 = [];
-				array1.push("&name=" + args.data.name);
-				array1.push("&zoneId=" + args.data.availabilityZone);
-				array1.push("&diskOfferingId=" + args.data.diskOffering);
+              action: function(args) {					
+				var array1 = [];				
+				array1.push("&name=" + todb(args.data.name));				
+				array1.push("&displayText=" + todb(args.data.description));				
+				array1.push("&url=" + todb(args.data.url));				
+				array1.push("&zoneid=" + args.data.zone);					
+				array1.push("&format=" + args.data.format);		
+				array1.push("&isextractable=" + (args.data.isExtractable=="on"));					
+				array1.push("&passwordEnabled=" + (args.data.isPasswordEnabled=="on"));					
+				array1.push("&osTypeId=" + args.data.osTypeId);			
+				array1.push("&hypervisor=" + args.data.hypervisor);
+					
+				//to condition later ***************	
+                array1.push("&ispublic=" + (args.data.isPublic=="on"));		//to condition later			
+                array1.push("&isfeatured=" + (args.data.isFeatured=="on")); //to condition later		
+               																	
 				$.ajax({
-				  url: createURL("createVolume" + array1.join("")),
+				  url: createURL("registerTemplate" + array1.join("")),
 				  dataType: "json",
-				  async: true,
-				  success: function(json) { 			    
-					var jid = json.createvolumeresponse.jobid;	  				
-					args.response.success({_custom:{jobId: jid}});							
-				  }
-				});  	
-				*/
+				  success: function(json) {					    
+					var items = json.registertemplateresponse.template;	 //items might have more than one array element if it's create templates for all zones.			       
+				    args.response.success({data:item[0]});	
+					/*                        
+                    if(items.length > 1) {                               
+                      for(var i=1; i<items.length; i++) {   
+                        var $midmenuItem2 = $("#midmenu_item").clone();
+                        templateToMidmenu(items[i], $midmenuItem2);
+                        bindClickToMidMenu($midmenuItem2, templateToRightPanel, templateGetMidmenuId); 
+                        $("#midmenu_container").append($midmenuItem2.show());
+                      }                                    
+                    }  
+                    */						
+				  }, 
+				  error: function(XMLHttpResponse) {	
+					var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
+					args.response.error(errorMsg);		
+				  }						
+				});
+				//???				
 			  },			
 
               notification: {                
@@ -229,7 +248,7 @@
                 }		
               }
             },			
-			//???		    
+			    
             edit: {
               label: 'Edit template name',
               action: function(args) {
