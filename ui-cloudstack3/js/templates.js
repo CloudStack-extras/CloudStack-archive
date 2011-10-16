@@ -605,7 +605,125 @@
 				args.response.success({data:items});		                			
 			  }
 			});  	
-		  }		  
+		  },
+
+          //???
+          detailView: {
+            name: 'ISO details',            
+            actions: {
+			  /*
+              edit: {
+                label: 'Edit ISO details',
+                action: function(args) {
+                  args.response.success();
+                },
+                notification: {
+                  poll: testData.notifications.testPoll
+                }
+              },
+			  */              
+            },
+            tabs: {
+              details: {
+                title: 'Details',
+                
+                /*				
+				preFilter: function(args) {   		  
+                  if(isAdmin()) {
+                    args.$form.find('.form-item[rel=storage]').css('display', 'inline-block');                        
+                  }
+				  else {
+					args.$form.find('.form-item[rel=storage]').hide();
+				  }					  
+                },	
+			    */
+				
+                fields: [
+                  {
+                    name: { label: 'Name', isEditable: true }
+                  },
+                  {
+                    id: { label: 'ID' },                    
+					zonename: { label: 'Zone name' },
+                    zoneid: { label: 'Zone ID' },					
+					displaytext: { label: 'Description', isEditable: true },	
+					isready: { label: 'Ready', converter:cloudStack.converters.toBooleanText },
+					status: { label: 'Status' },
+					size : { 
+					  label: 'Size', 
+					  converter: function(args) {					    
+						if (args == null || args == 0)
+						  return "";
+						else
+						  return cloudStack.converters.convertBytes(args);                       
+                      }				
+					},
+					isextractable: { 
+					  label: 'Extractable', 
+					  converter:cloudStack.converters.toBooleanText 
+					},
+					bootable: { 
+					  label: 'Bootable', 
+					  isEditable: true,
+					  converter:cloudStack.converters.toBooleanText
+					},
+					ispublic: { 
+					  label: 'Public', 
+					  isEditable: true,
+					  converter:cloudStack.converters.toBooleanText 
+					},
+					isfeatured: { 
+					  label: 'Featured', 
+					  isEditable: true,
+					  converter:cloudStack.converters.toBooleanText 
+					},
+					crossZones: { 
+					  label: 'Cross Zones', 
+					  converter:cloudStack.converters.toBooleanText 
+					},
+					
+					ostypeid: {
+					  label: 'OS Type',
+					  isEditable: true,
+					  select: function(args) {	
+						$.ajax({
+						  url: createURL("listOsTypes"),			 
+						  dataType: "json",
+						  async: true,
+						  success: function(json) { 				   
+							var ostypes = json.listostypesresponse.ostype;
+							var items = [];		
+							$(ostypes).each(function() {
+							  items.push({id: this.id, description: this.description});
+							});						
+							args.response.success({data: items});					  
+						  }
+						});   
+					  }				  
+					},						
+					
+					domain: { label: 'Domain' },
+					account: { label: 'Account' },
+					created: { label: 'Created' }								
+                  }
+                ],
+                
+				dataProvider: function(args) {	                  	
+				  args.response.success(
+					{
+					  actionFilter: actionfilter,
+					  data:args.jsonObj
+					}
+				  );	
+				}			
+              }		  
+            }
+          }		  
+          //???		  
+
+
+
+		  
         }
       }
     }
