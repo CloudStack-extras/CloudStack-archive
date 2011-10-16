@@ -212,7 +212,14 @@
 				array1.push("&passwordEnabled=" + (args.data.isPasswordEnabled=="on"));					
 				array1.push("&osTypeId=" + args.data.osTypeId);			
 				array1.push("&hypervisor=" + args.data.hypervisor);
-											
+				
+				/*               
+				if(args.$form.find('.form-item[rel=isPublic]').css("style") != "none")
+				  array1.push("&ispublic=" + (args.data.isPublic=="on"));	
+				if(args.$form.find('.form-item[rel=isFeatured]') != "none")
+				  array1.push("&isfeatured=" + (args.data.isFeatured=="on")); 
+				*/
+				
 				if(isAdmin()) {		            
                   array1.push("&ispublic=" + (args.data.isPublic=="on"));					
                   array1.push("&isfeatured=" + (args.data.isFeatured=="on")); 
@@ -222,7 +229,8 @@
 			        array1.push("&ispublic=" + (args.data.isPublic=="on"));	
 		          }         
                 }                  	  
-				               																	
+				
+				
 				$.ajax({
 				  url: createURL("registerTemplate" + array1.join("")),
 				  dataType: "json",

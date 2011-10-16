@@ -2,6 +2,19 @@
 
   var diskofferingObjs, selectedDiskOfferingObj;
 
+  var actionfilter = function(args) {	    		  
+    var jsonObj = args.context.item;
+	var allowedActions = [];	
+    /*	
+	if (jsonObj.state == 'Destroyed') {
+		if(isAdmin() || isDomainAdmin()) {
+		    allowedActions.push("restore");												
+		}	
+	} 
+	*/	
+    return allowedActions;
+  }
+  
   cloudStack.sections.storage = {
     title: 'Storage',
     id: 'storage',
@@ -31,28 +44,7 @@
             // Add volume
             add: {
               label: 'Add volume',
-
-			  /*
-              action: function(args) {
-                args.response.success();
-              },
-			  */
-			  action: function(args) {	
-                var array1 = [];
-				array1.push("&name=" + args.data.name);
-				array1.push("&zoneId=" + args.data.availabilityZone);
-				array1.push("&diskOfferingId=" + args.data.diskOffering);
-				$.ajax({
-				  url: createURL("createVolume" + array1.join("")),
-				  dataType: "json",
-				  async: true,
-				  success: function(json) { 			    
-					var jid = json.createvolumeresponse.jobid;	  				
-					args.response.success({_custom:{jobId: jid}});							
-				  }
-				});  	
-			  },			  		  
-
+			  
               messages: {
                 confirm: function(args) {
                   return 'Are you sure you want to add ' + args.name + '?';
@@ -140,8 +132,39 @@
                 }
               },
 
-              notification: {
-                //poll: testData.notifications.testPoll
+			  action: function(args) {	
+                var array1 = [];
+				array1.push("&name=" + args.data.name);
+				array1.push("&zoneId=" + args.data.availabilityZone);
+				array1.push("&diskOfferingId=" + args.data.diskOffering);
+				
+				// if(thisDialog.find("#size_container").css("display") != "none") { //wait for Brian to include $form in args
+			      array1.push("&size=" + args.data.diskSize);
+			    //}
+				
+				$.ajax({
+				  url: createURL("createVolume" + array1.join("")),
+				  dataType: "json",
+				  async: true,
+				  success: function(json) { 			    
+					var jid = json.createvolumeresponse.jobid;	 
+					args.response.success(
+					  {_custom:
+						{jobId: jid,
+						  getUpdatedItem: function(json) {							   
+							return json.queryasyncjobresultresponse.jobresult.volume;
+						  },
+						  getActionFilter: function() {
+							return actionfilter;
+						  }					 
+						}
+					  }
+					);					
+				  }
+				});  	
+			  },			  		  
+			  
+              notification: {                
 				poll: pollAsyncJobResult
               }
             },
