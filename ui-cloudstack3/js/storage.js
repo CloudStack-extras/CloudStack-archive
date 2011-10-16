@@ -453,11 +453,13 @@
                   },
                   {
                     id: { label: 'ID' },
-                    volume: { label: 'Volume' },
-                    state: { label: 'State' },
-                    intervalType: { label: 'Interval Type' },
-                    account: { label: 'Account' },
-                    domain: { label: 'Domain' }
+                    name: { label: 'Name' },
+					volumename: { label: 'Volume Name' },
+					state: { label: 'State' },
+					intervaltype: { label: 'Interval Type' },					
+					domain: { label: 'Domain' },
+					account: { label: 'Account' },
+					created: { label: 'Created' }
                   }
                 ],
                 //dataProvider: testData.dataProvider.detailView('snapshots')
