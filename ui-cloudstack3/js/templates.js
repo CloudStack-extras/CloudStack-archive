@@ -18,8 +18,7 @@
             zonename: { label: 'Zone' },
             hypervisor: { label: 'Hypervisor' }
           },
-          actions: {
-		    //???
+          actions: {		    
 			add: {
               label: 'Create template',			   		  
 
@@ -96,7 +95,8 @@
 						success: function(json) { 				   
 						  var zoneObjs = json.listzonesresponse.zone;							  
 						  var items = [];
-						  items.push({id: -1, description: "All Zones"});
+						  if (isAdmin()) 
+						    items.push({id: -1, description: "All Zones"});
 						  $(zoneObjs).each(function() {
 						    items.push({id: this.id, description: this.name});						  
 						  });			  
@@ -244,8 +244,7 @@
 					var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
 					args.response.error(errorMsg);		
 				  }						
-				});
-				//???				
+				});						
 			  },			
 
               notification: {                
@@ -286,9 +285,178 @@
             id: { label: 'ID' },
             size: { label: 'Size' },
             zonename: { label: 'Zone' }
-          },
-          
-		  //dataProvider: testData.dataProvider.listView('isos')
+          },		  
+          actions: {	
+			add: {
+              label: 'Create ISO',			   		  
+
+              messages: {
+                confirm: function(args) {
+                  return 'Are you sure you want to create a ISO?';
+                },
+                success: function(args) {
+                  return 'Your new ISO is being created.';
+                },
+                notification: function(args) {
+                  return 'Creating new ISO';
+                },
+                complete: function(args) {
+                  return 'ISO has been created successfully!';
+                }
+              },
+
+              createForm: {
+                title: 'Create ISO',
+                desc: 'Please fill in the following data to create a new ISO.',
+                
+                preFilter: function(args) {  
+                  if(isAdmin()) {		           
+                    args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');                 
+                    args.$form.find('.form-item[rel=isFeatured]').css('display', 'inline-block');  
+                  }
+                  else {  
+		            if (getUserPublicTemplateEnabled() == "true") {
+			          args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');   
+		            } 
+		            else {
+			          args.$form.find('.form-item[rel=isPublic]').hide();
+		            }			            
+		            args.$form.find('.form-item[rel=isFeatured]').hide();	
+                  }                  	  
+                },			
+                
+                fields: {
+                  name: {
+                    label: 'Name',
+                    validation: { required: true }
+                  },
+                  description: {
+                    label: 'Description',
+                    validation: { required: true }
+                  },
+                  url: {
+                    label: 'URL',
+                    validation: { required: true }
+                  },
+                  zone: {
+                    label: 'Zone',
+                    select: function(args) {	
+                      $.ajax({
+						url: createURL("listZones&available=true"),			 
+						dataType: "json",
+						async: true,
+						success: function(json) { 				   
+						  var zoneObjs = json.listzonesresponse.zone;							  
+						  var items = [];
+						  if (isAdmin()) 
+						    items.push({id: -1, description: "All Zones"});
+						  $(zoneObjs).each(function() {
+						    items.push({id: this.id, description: this.name});						  
+						  });			  
+						  args.response.success({data: items});					  
+						}
+					  });  						 
+					}		
+                  },                                    
+                                      
+                  isBootable: {
+                    label: "Bootable",
+                    isBoolean: true
+                  },
+                                                       
+                  osTypeId: {
+                    label: 'OS Type',                    
+                    select: function(args) {                                   
+                      $.ajax({
+						url: createURL("listOsTypes"),			 
+						dataType: "json",
+						async: true,
+						success: function(json) { 				   
+						  var osTypeObjs = json.listostypesresponse.ostype;		
+						  var items = [];
+						  items.push({id: "", description: "None"});
+						  $(osTypeObjs).each(function(){
+						    items.push({id: this.id, description: this.description});						  
+						  });						  				  
+						  args.response.success({data: items});					  
+						}
+					  });	  						  		 
+					}		
+                  },
+                  
+                  isExtractable: {
+                    label: "Extractable",
+                    isBoolean: true
+                  },
+                 
+                  isPublic: {
+                    label: "Public",
+                    isBoolean: true,
+					hidden: true
+                  },
+                  
+                  isFeatured: {
+                    label: "Featured",
+                    isBoolean: true,
+					hidden: true
+                  }                  				  
+                }
+              },
+              
+              action: function(args) {	
+                /*				
+				var array1 = [];				
+				array1.push("&name=" + todb(args.data.name));				
+				array1.push("&displayText=" + todb(args.data.description));				
+				array1.push("&url=" + todb(args.data.url));				
+				array1.push("&zoneid=" + args.data.zone);	
+				array1.push("&isextractable=" + (args.data.isExtractable=="on"));					
+				array1.push("&bootable=" + (args.data.isBootable=="on"));					
+				array1.push("&osTypeId=" + args.data.osTypeId);			
+															
+				if(isAdmin()) {		            
+                  array1.push("&ispublic=" + (args.data.isPublic=="on"));					
+                  array1.push("&isfeatured=" + (args.data.isFeatured=="on")); 
+                }
+                else {  
+		          if (getUserPublicTemplateEnabled() == "true") {			         
+			        array1.push("&ispublic=" + (args.data.isPublic=="on"));	
+		          }         
+                }                  	  
+				               																	
+				$.ajax({
+				  url: createURL("registerISO" + array1.join("")),
+				  dataType: "json",
+				  success: function(json) {					    
+					var items = json.registerISOresponse.ISO;	 //items might have more than one array element if it's create ISOs for all zones.			       
+				    args.response.success({data:items[0]});	
+					                       
+                    if(items.length > 1) {                               
+                      for(var i=1; i<items.length; i++) {   
+                        var $midmenuItem2 = $("#midmenu_item").clone();
+                        ISOToMidmenu(items[i], $midmenuItem2);
+                        bindClickToMidMenu($midmenuItem2, templateToRightPanel, ISOGetMidmenuId); 
+                        $("#midmenu_container").append($midmenuItem2.show());
+                      }                                    
+                    }  
+                    					
+				  }, 
+				  error: function(XMLHttpResponse) {	
+					var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
+					args.response.error(errorMsg);		
+				  }						
+				});
+				*/						
+			  },			
+
+              notification: {                
+				poll: function(args) {			  
+                  args.complete();
+                }		
+              }
+            }				
+          },	
+		  
 		  dataProvider: function(args) {        
 			$.ajax({
 			  url: createURL("listIsos&isofilter=self&page="+args.page+"&pagesize="+pageSize),
