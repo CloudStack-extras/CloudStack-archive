@@ -1,4 +1,18 @@
 (function(cloudStack, testData) { 
+
+  var actionfilter = function(args) {	    		  
+    var jsonObj = args.context.item;
+	var allowedActions = [];	
+    /*	
+	if (jsonObj.state == 'Destroyed') {
+		if(isAdmin() || isDomainAdmin()) {
+		    allowedActions.push("restore");												
+		}	
+	} 
+	*/	
+    return allowedActions;
+  }
+
   cloudStack.sections.templates = {
     title: 'Templates',
     id: 'templates',
@@ -280,7 +294,85 @@
 				args.response.success({data:items});			                			
 			  }
 		    });  	
-		  }		  
+		  }	,
+
+          //???
+          detailView: {
+            name: 'Template details',            
+            actions: {
+			  /*
+              edit: {
+                label: 'Edit template details',
+                action: function(args) {
+                  args.response.success();
+                },
+                notification: {
+                  poll: testData.notifications.testPoll
+                }
+              },
+			  */              
+            },
+            tabs: {
+              details: {
+                title: 'Details',
+                
+                /*				
+				preFilter: function(args) {   		  
+                  if(isAdmin()) {
+                    args.$form.find('.form-item[rel=storage]').css('display', 'inline-block');                        
+                  }
+				  else {
+					args.$form.find('.form-item[rel=storage]').hide();
+				  }					  
+                },	
+			    */
+				
+                fields: [
+                  {
+                    name: { label: 'Name', isEditable: true }
+                  },
+                  {
+                    id: { label: 'ID' },                    
+					zonename: { label: 'Zone name' },
+                    zoneid: { label: 'Zone ID' },
+					
+					displaytext: { label: 'Description' },
+					hypervisor: { label: 'Hypervisor' },
+					templatetype: { label: 'Template Type' },
+					isready: { label: 'Ready', converter:cloudStack.converters.toBooleanText },
+					status: { label: 'Status' },
+					size : { 
+					  label: 'Size', 
+					  converter: function(args) {					    
+						if (args == null || args == 0)
+						  return "";
+						else
+						  return cloudStack.converters.convertBytes(args);                       
+                      }				
+					},
+					isextractable: { label: 'Extractable', converter:cloudStack.converters.toBooleanText },
+					passwordenabled: { label: 'Password Enabled', converter:cloudStack.converters.toBooleanText },
+					ispublic: { label: 'Public', converter:cloudStack.converters.toBooleanText },
+					isfeatured: { label: 'Featured', converter:cloudStack.converters.toBooleanText },
+					crossZones: { label: 'Cross Zones', converter:cloudStack.converters.toBooleanText },
+					//ostypeid: { label: 'OS Type' }, //???
+					domain: { label: 'Domain' },
+					account: { label: 'Account' },
+					created: { label: 'Created' }								
+                  }
+                ],
+                
+				dataProvider: function(args) {	                  	
+				  args.response.success(
+					{
+					  actionFilter: actionfilter,
+					  data:args.jsonObj
+					}
+				  );	
+				}			
+              }		  
+            }
+          }		  
         }
       },
       isos: {
