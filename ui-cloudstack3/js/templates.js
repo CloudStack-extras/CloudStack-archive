@@ -365,7 +365,8 @@
                   },
                                                        
                   osTypeId: {
-                    label: 'OS Type',                    
+                    label: 'OS Type',  
+                    validation: { required: true },					
                     select: function(args) {                                   
                       $.ajax({
 						url: createURL("listOsTypes"),			 
@@ -404,16 +405,17 @@
               },
               
               action: function(args) {	
-                /*				
-				var array1 = [];				
-				array1.push("&name=" + todb(args.data.name));				
-				array1.push("&displayText=" + todb(args.data.description));				
-				array1.push("&url=" + todb(args.data.url));				
-				array1.push("&zoneid=" + args.data.zone);	
-				array1.push("&isextractable=" + (args.data.isExtractable=="on"));					
-				array1.push("&bootable=" + (args.data.isBootable=="on"));					
-				array1.push("&osTypeId=" + args.data.osTypeId);			
-															
+				var array1 = [];			   
+			    array1.push("&name=" + todb(args.data.name));			    			    
+			    array1.push("&displayText=" + todb(args.data.description));					   
+			    array1.push("&url=" + todb(args.data.url));					    								   
+			    array1.push("&zoneid=" + args.data.zone);				    			   
+				array1.push("&isextractable=" + (args.data.isExtractable=="on"));				    					 	   
+			    array1.push("&bootable=" + (args.data.isBootable=="on"));	
+			    			    	   
+			    //if isBootable == true //to do....
+			        array1.push("&osTypeId=" + args.data.osTypeId);		
+			    			    
 				if(isAdmin()) {		            
                   array1.push("&ispublic=" + (args.data.isPublic=="on"));					
                   array1.push("&isfeatured=" + (args.data.isFeatured=="on")); 
@@ -422,31 +424,30 @@
 		          if (getUserPublicTemplateEnabled() == "true") {			         
 			        array1.push("&ispublic=" + (args.data.isPublic=="on"));	
 		          }         
-                }                  	  
-				               																	
-				$.ajax({
-				  url: createURL("registerISO" + array1.join("")),
+                }      
+    		       		    				
+			    $.ajax({
+			      url: createURL("registerIso" + array1.join("")),
 				  dataType: "json",
-				  success: function(json) {					    
-					var items = json.registerISOresponse.ISO;	 //items might have more than one array element if it's create ISOs for all zones.			       
+				  success: function(json) {					
+				    var items = json.registerisoresponse.iso;	//items might have more than one array element if it's create ISOs for all zones.			       
 				    args.response.success({data:items[0]});	
-					                       
-                    if(items.length > 1) {                               
-                      for(var i=1; i<items.length; i++) {   
-                        var $midmenuItem2 = $("#midmenu_item").clone();
-                        ISOToMidmenu(items[i], $midmenuItem2);
-                        bindClickToMidMenu($midmenuItem2, templateToRightPanel, ISOGetMidmenuId); 
-                        $("#midmenu_container").append($midmenuItem2.show());
-                      }                                    
-                    }  
-                    					
+						
+                    /*						
+					if(items.length > 1) {                               
+					  for(var i=1; i<items.length; i++) {   
+						var $midmenuItem2 = $("#midmenu_item").clone();
+						ISOToMidmenu(items[i], $midmenuItem2);
+						bindClickToMidMenu($midmenuItem2, templateToRightPanel, ISOGetMidmenuId); 
+						$("#midmenu_container").append($midmenuItem2.show());						  }                                    
+					  }  	
+                    */						
 				  }, 
-				  error: function(XMLHttpResponse) {	
+			      error: function(XMLHttpResponse) {
 					var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
 					args.response.error(errorMsg);		
-				  }						
-				});
-				*/						
+				  }				
+			    });				
 			  },			
 
               notification: {                
