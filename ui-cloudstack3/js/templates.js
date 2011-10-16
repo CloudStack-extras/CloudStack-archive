@@ -295,8 +295,7 @@
 			  }
 		    });  	
 		  }	,
-
-          //???
+          
           detailView: {
             name: 'Template details',            
             actions: {
@@ -336,7 +335,7 @@
 					zonename: { label: 'Zone name' },
                     zoneid: { label: 'Zone ID' },
 					
-					displaytext: { label: 'Description' },
+					displaytext: { label: 'Description', isEditable: true },
 					hypervisor: { label: 'Hypervisor' },
 					templatetype: { label: 'Template Type' },
 					isready: { label: 'Ready', converter:cloudStack.converters.toBooleanText },
@@ -350,12 +349,50 @@
 						  return cloudStack.converters.convertBytes(args);                       
                       }				
 					},
-					isextractable: { label: 'Extractable', converter:cloudStack.converters.toBooleanText },
-					passwordenabled: { label: 'Password Enabled', converter:cloudStack.converters.toBooleanText },
-					ispublic: { label: 'Public', converter:cloudStack.converters.toBooleanText },
-					isfeatured: { label: 'Featured', converter:cloudStack.converters.toBooleanText },
-					crossZones: { label: 'Cross Zones', converter:cloudStack.converters.toBooleanText },
-					//ostypeid: { label: 'OS Type' }, //???
+					isextractable: { 
+					  label: 'Extractable', 
+					  converter:cloudStack.converters.toBooleanText 
+					},
+					passwordenabled: { 
+					  label: 'Password Enabled', 
+					  isEditable: true,
+					  converter:cloudStack.converters.toBooleanText
+					},
+					ispublic: { 
+					  label: 'Public', 
+					  isEditable: true,
+					  converter:cloudStack.converters.toBooleanText 
+					},
+					isfeatured: { 
+					  label: 'Featured', 
+					  isEditable: true,
+					  converter:cloudStack.converters.toBooleanText 
+					},
+					crossZones: { 
+					  label: 'Cross Zones', 
+					  converter:cloudStack.converters.toBooleanText 
+					},
+					
+					ostypeid: {
+					  label: 'OS Type',
+					  isEditable: true,
+					  select: function(args) {	
+						$.ajax({
+						  url: createURL("listOsTypes"),			 
+						  dataType: "json",
+						  async: true,
+						  success: function(json) { 				   
+							var ostypes = json.listostypesresponse.ostype;
+							var items = [];		
+							$(ostypes).each(function() {
+							  items.push({id: this.id, description: this.description});
+							});						
+							args.response.success({data: items});					  
+						  }
+						});   
+					  }				  
+					},						
+					
 					domain: { label: 'Domain' },
 					account: { label: 'Account' },
 					created: { label: 'Created' }								
