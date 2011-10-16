@@ -345,7 +345,7 @@
             tabs: {
               details: {
                 title: 'Details',
-                /*				
+                		
 				preFilter: function(args) {   		  
                   if(isAdmin()) {
                     args.$form.find('.form-item[rel=storage]').css('display', 'inline-block');                        
@@ -354,7 +354,7 @@
 					args.$form.find('.form-item[rel=storage]').hide();
 				  }					  
                 },	
-			    */
+			    
                 fields: [
                   {
                     name: { label: 'Name', isEditable: true }
@@ -368,8 +368,26 @@
 					type: { label: 'Type' },
 					storagetype: { label: 'Storage Type' },
 					storage: { label: 'Storage' },
-					size : { label: 'Size ' },
+					size : { 
+					  label: 'Size ', 
+					  converter: function(args) {					    
+						if (args == null || args == 0)
+						  return "";
+						else
+						  return cloudStack.converters.convertBytes(args);                       
+                      }				
+					},
+					virtualmachineid: { 
+					  label: 'VM ID',
+					  converter: function(args) {					    
+						if (args == null)
+						  return "detached";
+						else
+						  return args;                       
+                      }		
+					},
 					vmname: { label: 'VM Name' },
+					vmdisplayname: { label: 'VM Display Name' },
 					created: { label: 'Created' },
 					domain: { label: 'Domain' },
 					account: { label: 'Account' }				
