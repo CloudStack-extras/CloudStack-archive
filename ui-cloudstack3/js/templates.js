@@ -212,17 +212,23 @@
 				array1.push("&passwordEnabled=" + (args.data.isPasswordEnabled=="on"));					
 				array1.push("&osTypeId=" + args.data.osTypeId);			
 				array1.push("&hypervisor=" + args.data.hypervisor);
-					
-				//to condition later ***************	
-                array1.push("&ispublic=" + (args.data.isPublic=="on"));		//to condition later			
-                array1.push("&isfeatured=" + (args.data.isFeatured=="on")); //to condition later		
-               																	
+											
+				if(isAdmin()) {		            
+                  array1.push("&ispublic=" + (args.data.isPublic=="on"));					
+                  array1.push("&isfeatured=" + (args.data.isFeatured=="on")); 
+                }
+                else {  
+		          if (getUserPublicTemplateEnabled() == "true") {			         
+			        array1.push("&ispublic=" + (args.data.isPublic=="on"));	
+		          }         
+                }                  	  
+				               																	
 				$.ajax({
 				  url: createURL("registerTemplate" + array1.join("")),
 				  dataType: "json",
 				  success: function(json) {					    
 					var items = json.registertemplateresponse.template;	 //items might have more than one array element if it's create templates for all zones.			       
-				    args.response.success({data:item[0]});	
+				    args.response.success({data:items[0]});	
 					/*                        
                     if(items.length > 1) {                               
                       for(var i=1; i<items.length; i++) {   
