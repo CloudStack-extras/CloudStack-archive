@@ -345,17 +345,37 @@
             tabs: {
               details: {
                 title: 'Details',
+                /*				
+				preFilter: function(args) {   		  
+                  if(isAdmin()) {
+                    args.$form.find('.form-item[rel=storage]').css('display', 'inline-block');                        
+                  }
+				  else {
+					args.$form.find('.form-item[rel=storage]').hide();
+				  }					  
+                },	
+			    */
                 fields: [
                   {
                     name: { label: 'Name', isEditable: true }
                   },
                   {
                     id: { label: 'ID' },
-                    type: { label: 'Type' },
-                    zone: { label: 'Zone' }
+                    name: { label: 'Name' },
+                    zonename: { label: 'Zone' },
+					deviceid: { label: 'Device ID' },
+					state: { label: 'State' },
+					type: { label: 'Type' },
+					storagetype: { label: 'Storage Type' },
+					storage: { label: 'Storage' },
+					size : { label: 'Size ' },
+					vmname: { label: 'VM Name' },
+					created: { label: 'Created' },
+					domain: { label: 'Domain' },
+					account: { label: 'Account' }				
                   }
                 ],
-                //dataProvider: testData.dataProvider.detailView('storage')
+                
 				dataProvider: function(args) {        
 				  $.ajax({
 					url: createURL("listVolumes&id="+args.id),
