@@ -39,4 +39,6 @@ public interface SecurityGroupRules {
     Long getAllowedNetworkId();
 
     String getAllowedSourceIpCidr();
+    
+    SecurityRule.Type getRuleType();
 }
