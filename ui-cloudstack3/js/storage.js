@@ -168,13 +168,8 @@
 				poll: pollAsyncJobResult
               }
             },
-            edit: {
-              label: 'Edit volume name',
-              action: function(args) {
-                args.response.success(args.data[0]);
-              }
-            },
-            snapshot: {
+           
+            takeSnapshot: {
               label: 'Take snapshot',
               messages: {
                 confirm: function(args) {
@@ -204,53 +199,10 @@
               notification: {
                 poll: pollAsyncJobResult
               }
-            },
-            create: {
-              label: 'Create template',
-              addRow: 'false',
-              messages: {
-                success: function(args) {
-                  return 'Your new snapshot ' + args.name + ' is being created.';
-                },
-                notification: function(args) {
-                  return 'Making new snapshot: ' + args.name;
-                },
-                complete: function(args) {
-                  return 'Snapshot ' + args.name + ' is ready.';
-                }
-              },
-              action: function(args) {
-                args.response.success();
-              },
-              createForm: {
-                title: 'Create a template',
-                desc: 'To create a template from the selected volume, please complete the fields below.',
-                fields: {
-                  name: { label: 'Name' },
-                  displayText: { label: 'Display text' },
-                  osType: {
-                    label: 'OS Type',
-                    select: [
-                      { id: 'centos53-64', description: 'CentOS 5.3 (64-bit)' },
-                      { id: 'rhel5-64', description: 'Red Hat Enterprise Linux 5.0 (64-bit)' },
-                      { id: 'deb6-32', description: 'Debian GNU/Linux 6.0 (32-bit)' }
-                    ]
-                  },
-                  'public': {
-                    label: 'Public', isBoolean: true
-                  },
-                  usePassword: {
-                    label: 'Use password?', isBoolean: true
-                  }
-                }
-              },
-              notification: {
-                poll: testData.notifications.testPoll
-              }
-            }
+            }			
+            
           },
-          
-		  //dataProvider: testData.dataProvider.listView('storage'),
+          		  
 		  dataProvider: function(args) {        
 			$.ajax({
 			  url: createURL("listVolumes&page="+args.page+"&pagesize="+pageSize),
@@ -266,17 +218,8 @@
           detailView: {
             name: 'Volume details',
             viewAll: { path: 'storage.snapshots', label: 'Snapshots' },
-            actions: {
-              edit: {
-                label: 'Edit volume details',
-                action: function(args) {
-                  args.response.success();
-                },
-                notification: {
-                  poll: testData.notifications.testPoll
-                }
-              },
-              snapshot: {
+            actions: {          
+			  takeSnapshot: {
                 label: 'Take snapshot',
                 messages: {
                   confirm: function(args) {
@@ -293,54 +236,20 @@
                   }
                 },
                 action: function(args) {
-                  args.response.success();
+				  $.ajax({
+					url: createURL("createSnapshot&volumeid=" + args.data.id),
+					dataType: "json",
+					async: true,
+					success: function(json) { 			    
+					  var jid = json.createsnapshotresponse.jobid; 
+					  args.response.success({_custom:{jobId: jid}});							
+					}
+				  });  							
                 },
                 notification: {
-                  poll: testData.notifications.testPoll
+                  poll: pollAsyncJobResult
                 }
-              },
-              create: {
-                label: 'Create template',
-                messages: {
-                  success: function(args) {
-                    return 'Your new template ' + args.name + ' is being created.';
-                  },
-                  notification: function(args) {
-                    return 'Making new template: ' + args.name;
-                  },
-                  complete: function(args) {
-                    return 'Template ' + args.name + ' is ready.';
-                  }
-                },
-                action: function(args) {
-                  args.response.success();
-                },
-                createForm: {
-                  title: 'Create a template',
-                  desc: 'To create a template from the selected volume, please complete the fields below.',
-                  fields: {
-                    name: { label: 'Name' },
-                    displayText: { label: 'Display text' },
-                    osType: {
-                      label: 'OS Type',
-                      select: [
-                        { id: 'centos53-64', description: 'CentOS 5.3 (64-bit)' },
-                        { id: 'rhel5-64', description: 'Red Hat Enterprise Linux 5.0 (64-bit)' },
-                        { id: 'deb6-32', description: 'Debian GNU/Linux 6.0 (32-bit)' }
-                      ]
-                    },
-                    'public': {
-                      label: 'Public', isBoolean: true
-                    },
-                    usePassword: {
-                      label: 'Use password?', isBoolean: true
-                    }
-                  }
-                },
-                notification: {
-                  poll: testData.notifications.testPoll
-                }
-              }
+              }		              
             },
             tabs: {
               details: {
