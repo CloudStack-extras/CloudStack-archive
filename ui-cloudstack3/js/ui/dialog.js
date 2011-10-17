@@ -101,6 +101,8 @@
 
               return true;
             });
+
+            if (!$dependsOn.is('select')) selectFn(selectArgs);
           } else {
             selectFn(selectArgs);
           }

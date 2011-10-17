@@ -178,6 +178,8 @@
                   displayText: { label: 'Display text' },
                   osType: {
                     label: 'OS Type',
+                    dependsOn: 'public',
+                    hidden: true,
                     select: function(args){
                       args.response.success({
                         descriptionField: 'description',
