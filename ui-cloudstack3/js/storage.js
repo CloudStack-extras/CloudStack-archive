@@ -387,8 +387,7 @@
 					return 'Disk has been detached.';
 				  }
 				},         
-				action: function(args) {	 
-                  debugger;				
+				action: function(args) {	               			
 				  $.ajax({
 					url: createURL("detachVolume&id=" + args.context.volumes[0].id),
 					dataType: "json",
@@ -427,8 +426,7 @@
 				  notification: function(args) {			
 					return 'Downloading volume';
 				  },
-				  complete: function(args) {
-                    debugger;				  
+				  complete: function(args) {                			  
                     var url = decodeURIComponent(args.url);		                          
                     var htmlMsg = 'Please click <a href="#">00000</a> to download volume';		                            
                     var htmlMsg2 = htmlMsg.replace(/#/, url).replace(/00000/, url);                        

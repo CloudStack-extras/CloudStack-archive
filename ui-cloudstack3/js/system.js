@@ -1191,7 +1191,9 @@
                   },
 
                   notification: {
-                    poll: pollAsyncJobResult
+                    poll: function(args){ 
+					  args.complete(); 
+					}
                   },
 
                   messages: {
@@ -1609,7 +1611,9 @@
                   },
 
                   notification: {
-                    poll: pollAsyncJobResult
+                    poll: function(args){ 
+					  args.complete(); 
+					}
                   },
 
                   messages: {
