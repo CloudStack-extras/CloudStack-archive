@@ -414,7 +414,7 @@
     var $header;
     var detailViewArgs = $detailView.data('view-args');
     var fields = tabData.fields;
-    var allowedFields;
+    var hiddenFields;
 
     // Make header
     if (args.header) {
@@ -425,7 +425,7 @@
     }
 
     if (tabData.preFilter) {
-      allowedFields = tabData.preFilter({
+      hiddenFields = tabData.preFilter({
         fields: $.map(fields, function(fieldGroup) { 
           return $.map(fieldGroup, function(value, key) { return key; }); 
         })
@@ -441,7 +441,7 @@
         ));
 
       $.each(fieldGroup, function(key, value) {
-        if (allowedFields && $.inArray(key, allowedFields) < 0) return true;
+        if (hiddenFields && $.inArray(key, hiddenFields) >= 0) return true;
         if ($header && key == args.header) {
           $header.find('th').html(data[key]);
           return true;
