@@ -139,8 +139,9 @@
 				array1.push("&diskOfferingId=" + args.data.diskOffering);
 				
 				// if(thisDialog.find("#size_container").css("display") != "none") { //wait for Brian to include $form in args
+				if (selectedDiskOfferingObj.iscustomized == true) { 
 			      array1.push("&size=" + args.data.diskSize);
-			    //}
+			    }
 				
 				$.ajax({
 				  url: createURL("createVolume" + array1.join("")),
@@ -372,8 +373,45 @@
 				notification: {
 				  poll: pollAsyncJobResult		
 				}
+			  },
+                              
+              'delete': {
+				label: 'Delete volume',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to delete volume ?';
+				  },
+				  success: function(args) {
+					return 'Volume is being deleted.';
+				  },
+				  notification: function(args) {			
+					return 'Deleting volume';
+				  },
+				  complete: function(args) {			  
+					return 'Volume has been deleted.';
+				  }
+				},         
+				action: function(args) {	                 			
+				  $.ajax({
+					url: createURL("deleteVolume&id=" + args.context.volumes[0].id),
+					dataType: "json",
+					async: true,
+					success: function(json) {                       			
+					  var jid = json.deletevolumeresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid	 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: function(args) {args.complete();}		
+				}
 			  }	
-                            
+             	  
             },
             tabs: {
               details: {
