@@ -5,13 +5,47 @@
   var actionfilter = function(args) {	    		  
     var jsonObj = args.context.item;
 	var allowedActions = [];	
-    /*	
-	if (jsonObj.state == 'Destroyed') {
-		if(isAdmin() || isDomainAdmin()) {
-		    allowedActions.push("restore");												
-		}	
-	} 
-	*/	
+   
+	if(jsonObj.hypervisor != "Ovm") {   
+      //buildActionLinkForTab("label.action.take.snapshot", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab);	//show take snapshot
+      allowedActions.push("takeSnapshot");		  
+	}
+    
+    if(jsonObj.state != "Allocated") {
+	  if(jsonObj.hypervisor != "Ovm") { 
+        //buildActionLinkForTab("label.action.download.volume", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab);
+	    //allowedActions.push("recurringSnapshot");	
+	  }
+    }
+	
+    if(jsonObj.state != "Creating" && jsonObj.state != "Corrupted" && jsonObj.name != "attaching") {
+        if(jsonObj.type == "ROOT") {
+            if (jsonObj.vmstate == "Stopped") { 
+                //buildActionLinkForTab("label.action.create.template", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab);
+				allowedActions.push("createTemplate");	
+            }
+        } 
+        else { 
+	        if (jsonObj.virtualmachineid != null) {
+		        if (jsonObj.storagetype == "shared" && (jsonObj.vmstate == "Running" || jsonObj.vmstate == "Stopped" || jsonObj.vmstate == "Destroyed")) {
+			        //buildActionLinkForTab("label.action.detach.disk", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab); 
+					allowedActions.push("detachDisk");	
+		        }
+	        } else {
+		        // Disk not attached
+		        if (jsonObj.storagetype == "shared") {
+			        //buildActionLinkForTab("label.action.attach.disk", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab); 
+                    allowedActions.push("attachDisk");						
+    			    			  		    
+			        if(jsonObj.vmname == null || jsonObj.vmname == "none") {
+			            //buildActionLinkForTab("label.action.delete.volume", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab); 
+						allowedActions.push("delete");	
+					}
+		        }
+	        }
+        }
+    }
+	
     return allowedActions;
   }
   
@@ -211,7 +245,10 @@
 			  async: true,
 			  success: function(json) { 				    
 				var items = json.listvolumesresponse.volume;			    
-				args.response.success({data:items});			                			
+				args.response.success({
+				  actionFilter: actionfilter,
+				  data: items
+				});				
 			  }
 			});  	
 		  },
@@ -465,13 +502,15 @@
               details: {
                 title: 'Details',
                 		
-				preFilter: function(args) {   		  
+				preFilter: function(args) {   	
+                  /*				
                   if(isAdmin()) {
                     args.$form.find('.form-item[rel=storage]').css('display', 'inline-block');                        
                   }
 				  else {
 					args.$form.find('.form-item[rel=storage]').hide();
-				  }					  
+				  }		
+                  */				  
                 },	
 			    
                 fields: [
@@ -513,19 +552,15 @@
                   }
                 ],
                 
-				dataProvider: function(args) {        
-				  $.ajax({
-					url: createURL("listVolumes&id="+args.id),
-					dataType: "json",
-					async: true,
-					success: function(json) { 				    
-					  var items = json.listvolumesresponse.volume;
-					  if(items != null && items.length > 0) {
-						args.response.success({data:items[0]});		
-					  }    			
+				dataProvider: function(args) {	              
+				  args.response.success(
+					{
+					  actionFilter: actionfilter,
+					  data:args.jsonObj
 					}
-				  });  	
-				}			
+				  );	
+				}	
+				
               }
             }
           }
@@ -582,19 +617,14 @@
                   }
                 ],
                 //dataProvider: testData.dataProvider.detailView('snapshots')
-				dataProvider: function(args) {        
-				  $.ajax({
-					url: createURL("listSnapshots&id="+args.id),
-					dataType: "json",
-					async: true,
-					success: function(json) { 				    
-					  var items = json.listsnapshotsresponse.snapshot;
-					  if(items != null && items.length > 0) {
-						args.response.success({data:items[0]});		
-					  }    			
+				dataProvider: function(args) {	              
+				  args.response.success(
+					{
+					  actionFilter: actionfilter,
+					  data:args.jsonObj
 					}
-				  });  	
-				}				
+				  );	
+				}					
               }
             }
           }
