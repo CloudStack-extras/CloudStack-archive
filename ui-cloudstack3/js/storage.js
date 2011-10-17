@@ -525,15 +525,15 @@
               details: {
                 title: 'Details',
                 		
-				preFilter: function(args) {   	
-                  /*				
-                  if(isAdmin()) {
-                    args.$form.find('.form-item[rel=storage]').css('display', 'inline-block');                        
+				preFilter: function(args) {   
+                  var hiddenFields;
+				  if(isAdmin()) {
+                    hiddenFields = [];               
                   }
 				  else {
-					args.$form.find('.form-item[rel=storage]').hide();
-				  }		
-                  */				  
+					hiddenFields = ["storage"]; 
+				  }	 
+                  return hiddenFields;				  
                 },	
 			    
                 fields: [
@@ -541,8 +541,7 @@
                     name: { label: 'Name', isEditable: true }
                   },
                   {
-                    id: { label: 'ID' },
-                    name: { label: 'Name' },
+                    id: { label: 'ID' },                   
                     zonename: { label: 'Zone' },
 					deviceid: { label: 'Device ID' },
 					state: { label: 'State' },
