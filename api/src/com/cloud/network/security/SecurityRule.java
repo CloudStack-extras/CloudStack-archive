@@ -23,7 +23,11 @@ import com.cloud.async.AsyncInstanceCreateStatus;
  * @author ahuang
  * 
  */
-public interface IngressRule {
+public interface SecurityRule {
+    public enum Type {
+        IngressRule,
+        EgressRule
+    }
     long getId();
 
     long getSecurityGroupId();
@@ -31,7 +35,11 @@ public interface IngressRule {
     int getStartPort();
 
     int getEndPort();
-
+    
+    String getType();
+    
+    SecurityRule.Type getRuleType();
+    
     String getProtocol();
 
     AsyncInstanceCreateStatus getCreateStatus();

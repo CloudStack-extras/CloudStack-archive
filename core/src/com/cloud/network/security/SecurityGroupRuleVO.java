@@ -31,8 +31,8 @@ import com.cloud.async.AsyncInstanceCreateStatus;
 import com.google.gson.annotations.Expose;
 
 @Entity
-@Table(name = ("security_ingress_rule"))
-public class IngressRuleVO implements IngressRule {
+@Table(name = ("security_group_rule"))
+public class SecurityGroupRuleVO implements SecurityRule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -46,6 +46,9 @@ public class IngressRuleVO implements IngressRule {
 
     @Column(name = "end_port")
     private int endPort;
+
+    @Column(name = "type")
+    private String type;
 
     @Column(name = "protocol")
     private String protocol;
@@ -61,28 +64,45 @@ public class IngressRuleVO implements IngressRule {
     @Enumerated(value = EnumType.STRING)
     private AsyncInstanceCreateStatus createStatus;
 
-    public IngressRuleVO() {
+    public SecurityGroupRuleVO() {
     }
 
-    public IngressRuleVO(long securityGroupId, int fromPort, int toPort, String protocol, long allowedNetworkId) {
+    public SecurityGroupRuleVO(SecurityRule.Type type,long securityGroupId, int fromPort, int toPort, String protocol, long allowedNetworkId ) {
         this.securityGroupId = securityGroupId;
         this.startPort = fromPort;
         this.endPort = toPort;
         this.protocol = protocol;
         this.allowedNetworkId = allowedNetworkId;
+        if (type == SecurityRule.Type.IngressRule)
+        {
+        	this.type = "I";
+        }else{
+        	this.type = "E";
+        }
     }
 
-    public IngressRuleVO(long securityGroupId, int fromPort, int toPort, String protocol, String allowedIpCidr) {
+    public SecurityGroupRuleVO(SecurityRule.Type type,long securityGroupId, int fromPort, int toPort, String protocol, String allowedIpCidr) {
         this.securityGroupId = securityGroupId;
         this.startPort = fromPort;
         this.endPort = toPort;
         this.protocol = protocol;
         this.allowedSourceIpCidr = allowedIpCidr;
+        if (type == SecurityRule.Type.IngressRule)
+        {
+        	this.type = "I";
+        }else{
+        	this.type = "E";
+        }
     }
 
     @Override
     public long getId() {
         return id;
+    }
+    
+    @Override
+    public String getType() {
+        return type;
     }
 
     @Override
@@ -90,6 +110,14 @@ public class IngressRuleVO implements IngressRule {
         return securityGroupId;
     }
 
+    
+    public SecurityRule.Type getRuleType() {
+    	if ("I".equalsIgnoreCase(this.type))
+            return SecurityRule.Type.IngressRule;
+    	else
+    		return SecurityRule.Type.EgressRule;
+    }
+    
     @Override
     public int getStartPort() {
         return startPort;

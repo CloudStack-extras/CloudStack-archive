@@ -24,31 +24,38 @@ import java.util.Map;
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
-import com.cloud.network.security.IngressRuleVO;
+import com.cloud.network.security.SecurityGroupRuleVO;
 import com.cloud.network.security.SecurityGroupVO;
+import com.cloud.network.security.SecurityRule;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.JoinBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 
-@Local(value={IngressRuleDao.class})
-public class IngressRuleDaoImpl extends GenericDaoBase<IngressRuleVO, Long> implements IngressRuleDao {
+@Local(value={SecurityGroupRuleDao.class})
+public class SecurityGroupRuleDaoImpl extends GenericDaoBase<SecurityGroupRuleVO, Long> implements SecurityGroupRuleDao {
 	
 	@Inject SecurityGroupDao _securityGroupDao;
 	
-    protected SearchBuilder<IngressRuleVO> securityGroupIdSearch;
-    protected SearchBuilder<IngressRuleVO> allowedSecurityGroupIdSearch;
-    protected SearchBuilder<IngressRuleVO> protoPortsAndCidrSearch;
-    protected SearchBuilder<IngressRuleVO> protoPortsAndSecurityGroupNameSearch;
-    protected SearchBuilder<IngressRuleVO> protoPortsAndSecurityGroupIdSearch;
+    protected SearchBuilder<SecurityGroupRuleVO> securityGroupIdSearch;
+    protected SearchBuilder<SecurityGroupRuleVO> securityGroupIdAndTypeSearch;
+    protected SearchBuilder<SecurityGroupRuleVO> allowedSecurityGroupIdSearch;
+    protected SearchBuilder<SecurityGroupRuleVO> protoPortsAndCidrSearch;
+    protected SearchBuilder<SecurityGroupRuleVO> protoPortsAndSecurityGroupNameSearch;
+    protected SearchBuilder<SecurityGroupRuleVO> protoPortsAndSecurityGroupIdSearch;
 
 
 
-    protected IngressRuleDaoImpl() {
+    protected SecurityGroupRuleDaoImpl() {
         securityGroupIdSearch  = createSearchBuilder();
         securityGroupIdSearch.and("securityGroupId", securityGroupIdSearch.entity().getSecurityGroupId(), SearchCriteria.Op.EQ);
         securityGroupIdSearch.done();
+        
+        securityGroupIdAndTypeSearch  = createSearchBuilder();
+        securityGroupIdAndTypeSearch.and("securityGroupId", securityGroupIdAndTypeSearch.entity().getSecurityGroupId(), SearchCriteria.Op.EQ);
+        securityGroupIdAndTypeSearch.and("type", securityGroupIdAndTypeSearch.entity().getType(), SearchCriteria.Op.EQ);
+        securityGroupIdAndTypeSearch.done();
         
         allowedSecurityGroupIdSearch  = createSearchBuilder();
         allowedSecurityGroupIdSearch.and("allowedNetworkId", allowedSecurityGroupIdSearch.entity().getAllowedNetworkId(), SearchCriteria.Op.EQ);
@@ -71,29 +78,33 @@ public class IngressRuleDaoImpl extends GenericDaoBase<IngressRuleVO, Long> impl
 
     }
 
-    public List<IngressRuleVO> listBySecurityGroupId(long securityGroupId) {
-        SearchCriteria<IngressRuleVO> sc = securityGroupIdSearch.create();
+    public List<SecurityGroupRuleVO> listBySecurityGroupId(long securityGroupId, SecurityRule.Type type) {
+        SearchCriteria<SecurityGroupRuleVO> sc = securityGroupIdAndTypeSearch.create();
         sc.setParameters("securityGroupId", securityGroupId);
+        String dbType = "I" ; // FIXME: better way of converting from enum to string 
+        if (type == SecurityRule.Type.EgressRule)
+        	dbType = "E" ;
+        sc.setParameters("type", dbType);
         return listBy(sc);
     }
 
     public int deleteBySecurityGroup(long securityGroupId) {
-        SearchCriteria<IngressRuleVO> sc = securityGroupIdSearch.create();
+        SearchCriteria<SecurityGroupRuleVO> sc = securityGroupIdSearch.create();
         sc.setParameters("securityGroupId", securityGroupId);
         return expunge(sc);
     }
 
 	@Override
-	public List<IngressRuleVO> listByAllowedSecurityGroupId(long securityGroupId) {
-		 SearchCriteria<IngressRuleVO> sc = allowedSecurityGroupIdSearch.create();
+	public List<SecurityGroupRuleVO> listByAllowedSecurityGroupId(long securityGroupId) {
+		 SearchCriteria<SecurityGroupRuleVO> sc = allowedSecurityGroupIdSearch.create();
 		 sc.setParameters("allowedNetworkId", securityGroupId);
 		 return listBy(sc);
 	}
 
 	@Override
-	public IngressRuleVO findByProtoPortsAndCidr(long securityGroupId, String proto, int startPort,
+	public SecurityGroupRuleVO findByProtoPortsAndCidr(long securityGroupId, String proto, int startPort,
 			int endPort, String cidr) {
-		SearchCriteria<IngressRuleVO> sc = protoPortsAndCidrSearch.create();
+		SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndCidrSearch.create();
 		sc.setParameters("securityGroupId", securityGroupId);
 		sc.setParameters("proto", proto);
 		sc.setParameters("startPort", startPort);
@@ -103,9 +114,9 @@ public class IngressRuleDaoImpl extends GenericDaoBase<IngressRuleVO, Long> impl
 	}
 
 	@Override
-	public IngressRuleVO findByProtoPortsAndGroup(String proto, int startPort,
+	public SecurityGroupRuleVO findByProtoPortsAndGroup(String proto, int startPort,
 			int endPort, String securityGroup) {
-		SearchCriteria<IngressRuleVO> sc = protoPortsAndSecurityGroupNameSearch.create();
+		SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndSecurityGroupNameSearch.create();
 		sc.setParameters("proto", proto);
 		sc.setParameters("startPort", startPort);
 		sc.setParameters("endPort", endPort);
@@ -129,7 +140,7 @@ public class IngressRuleDaoImpl extends GenericDaoBase<IngressRuleVO, Long> impl
 
 	@Override
 	public int deleteByPortProtoAndGroup(long securityGroupId, String protocol, int startPort, int endPort, Long allowedGroupId) {
-		SearchCriteria<IngressRuleVO> sc = protoPortsAndSecurityGroupIdSearch.create();
+		SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndSecurityGroupIdSearch.create();
 		sc.setParameters("securityGroupId", securityGroupId);
 		sc.setParameters("proto", protocol);
 		sc.setParameters("startPort", startPort);
@@ -142,7 +153,7 @@ public class IngressRuleDaoImpl extends GenericDaoBase<IngressRuleVO, Long> impl
 
 	@Override
 	public int deleteByPortProtoAndCidr(long securityGroupId, String protocol, int startPort, int endPort, String cidr) {
-		SearchCriteria<IngressRuleVO> sc = protoPortsAndCidrSearch.create();
+		SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndCidrSearch.create();
 		sc.setParameters("securityGroupId", securityGroupId);
 		sc.setParameters("proto", protocol);
 		sc.setParameters("startPort", startPort);
@@ -153,9 +164,9 @@ public class IngressRuleDaoImpl extends GenericDaoBase<IngressRuleVO, Long> impl
 	}
 
 	@Override
-	public IngressRuleVO findByProtoPortsAndAllowedGroupId(long securityGroupId, String proto,
+	public SecurityGroupRuleVO findByProtoPortsAndAllowedGroupId(long securityGroupId, String proto,
 			int startPort, int endPort, Long allowedGroupId) {
-		SearchCriteria<IngressRuleVO> sc = protoPortsAndSecurityGroupIdSearch.create();
+		SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndSecurityGroupIdSearch.create();
 		sc.addAnd("securityGroupId", SearchCriteria.Op.EQ, securityGroupId);
 		sc.setParameters("proto", proto);
 		sc.setParameters("startPort", startPort);
