@@ -12,7 +12,7 @@
         var $formItem = $('<div>')
               .addClass('form-item')
               .attr({ rel: key });
-        
+
         if (this.hidden) $formItem.hide();
 
         $formItem.appendTo($form);
@@ -29,6 +29,29 @@
               .appendTo($formItem);
         var $input, $dependsOn, selectFn, selectArgs;
         var dependsOn = this.dependsOn;
+
+        // Depends on fields
+        if (this.dependsOn) {
+          $formItem.attr('depends-on', dependsOn);
+          $dependsOn = $form.find('input, select').filter(function() {
+            return $(this).attr('name') === dependsOn;
+          });
+
+          if ($dependsOn.is('[type=checkbox]')) {
+            $dependsOn.bind('click', function(event) {
+              var $target = $(this);
+              var $dependent = $form.find('[depends-on=' + dependsOn + ']');
+
+              if ($target.is(':checked')) {
+                $dependent.css('display', 'inline-block');
+              } else {
+                $dependent.hide();
+              }
+
+              return true;
+            });
+          }
+        }
 
         // Determine field type of input
         if (this.select) {
@@ -61,12 +84,10 @@
           // Pass form item to provider for additional manipulation
           $.extend(selectArgs, { $select: $input });
 
-          // Call select to map data
-          if (this.dependsOn) {
-            $dependsOn = $form.find('select').filter(function() {
+          if (dependsOn) {
+            $dependsOn = $form.find('input, select').filter(function() {
               return $(this).attr('name') === dependsOn;
             });
-
             $dependsOn.bind('change', function(event) {
               var $target = $(this);
               var dependsOnArgs = {};
@@ -74,13 +95,12 @@
               $input.trigger('change');
 
               if (!$target.children().size()) return true;
-              
+
               dependsOnArgs[dependsOn] = $target.val();
               selectFn($.extend(selectArgs, dependsOnArgs));
 
               return true;
             });
-            
           } else {
             selectFn(selectArgs);
           }
@@ -135,7 +155,12 @@
               }
 
               $('div.overlay').remove();
-              args.after({ data: data, ref: args.ref, context: args.context });
+              args.after({
+                data: data,
+                ref: args.ref, // For backwards compatibility; use context
+                context: args.context,
+                $form: $form
+              });
               $(this).dialog('destroy');
 
               return true;

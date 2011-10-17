@@ -258,7 +258,7 @@
       
       // Append panel
       $panel.appendTo($container);
-      _breadcrumb.filter($panel.siblings()).removeClass('active')
+      _breadcrumb.filter($panel.siblings()).removeClass('active');
       _breadcrumb.create($panel, args.title)
         .addClass('active')
         .appendTo('#breadcrumbs ul');

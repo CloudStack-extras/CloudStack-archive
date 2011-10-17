@@ -78,6 +78,8 @@
       var performAction = function(data, options) {
         if (!options) options = {};
 
+        var $form = options.$form;
+
         $instanceRow = options.$item ? options.$item : $instanceRow;
         var $item = options.$item;
 
@@ -125,6 +127,7 @@
             data: data,
             ref: options.ref,
             context: options.context,
+            $form: $form,
             response: {
               success: function(args) {
                 args = args ? args : {};
@@ -257,7 +260,8 @@
             performAction(args.data, {
               ref: args.ref,
               context: context,
-              $item: $newItem
+              $item: $newItem,
+              $form: args.$form
             });
           },
           ref: listViewArgs.ref,

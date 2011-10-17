@@ -59,14 +59,7 @@
      * Default behavior for actions -- just show a confirmation popup and add notification
      */
     standard: function($detailView, args, additional) {
-      var action;
-
-      if (additional && !$.isEmptyObject(additional)) {
-        action = args.tabs[args.activeTab].actions[args.actionName];
-      } else {
-        action = args.actions[args.actionName];
-      }
-
+      var action = args.actions[args.actionName];
       var notification = action.notification;
       var messages = action.messages;
       var messageArgs = { name: $detailView.find('tr.name td.value').html() };
@@ -113,7 +106,9 @@
                       message: messages.complete(args.data)
                     });
                   }
-                  if (additional && additional.complete) additional.complete(args);
+                  if (additional && additional.complete) additional.complete($.extend(true, args, {
+                    $detailView: $detailView
+                  }));
                 },
 
                 {},
@@ -153,6 +148,19 @@
           context: $detailView.data('view-args').context
         });
       }
+    },
+
+    destroy: function($detailView, args) {
+      uiActions.standard($detailView, args, {
+        complete: function(args) {
+          var $browser = $detailView.data('view-args').$browser;
+          var $panel = $detailView.closest('.panel');
+
+          $browser.cloudBrowser('selectPanel', {
+            panel: $panel.prev()
+          });
+        }
+      });
     },
 
     /**
@@ -405,6 +413,8 @@
     var isOddRow = false; // Even/odd row coloring
     var $header;
     var detailViewArgs = $detailView.data('view-args');
+    var fields = tabData.fields;
+    var allowedFields;
 
     // Make header
     if (args.header) {
@@ -414,8 +424,15 @@
       $header.find('tr').append($('<th>'));
     }
 
+    if (tabData.preFilter) {
+      allowedFields = tabData.preFilter({
+        fields: $.map(fields, function(fieldGroup) { 
+          return $.map(fieldGroup, function(value, key) { return key; }); 
+        })
+      });
+    }
 
-    $(tabData.fields).each(function() {
+    $(fields).each(function() {
       var fieldGroup = this;
 
       var $detailTable = $('<tbody></tbody>').appendTo(
@@ -424,6 +441,7 @@
         ));
 
       $.each(fieldGroup, function(key, value) {
+        if (allowedFields && $.inArray(key, allowedFields) < 0) return true;
         if ($header && key == args.header) {
           $header.find('th').html(data[key]);
           return true;

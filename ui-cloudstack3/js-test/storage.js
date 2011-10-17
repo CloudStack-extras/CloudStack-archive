@@ -193,7 +193,7 @@
                     label: 'Public', isBoolean: true
                   },
                   usePassword: {
-                    label: 'Use password?', isBoolean: true
+                    label: 'Use password?', dependsOn: 'public', isBoolean: true, hidden: true
                   }
                 }
               },
@@ -283,6 +283,11 @@
             tabs: {
               details: {
                 title: 'Details',
+                preFilter: function(args) {
+                  var fields = args.fields;
+
+                  return ['name', 'type', 'zone'];
+                },
                 fields: [
                   {
                     name: { label: 'Name', isEditable: true }
