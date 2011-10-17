@@ -66,6 +66,11 @@ untar() {
 
 }
 
+is_raw() {
+  file $1| grep "x86 boot sector"
+  return $?
+}
+
 is_compressed() {
   local ft=$(file $1| awk -F" " '{print $2}')
   local tmpfile=${1}.tmp
@@ -205,6 +210,17 @@ then
     vhd-util set -n ${tmpltimg2} -f "hidden" -v "0" > /dev/null
     rollback_if_needed $tmpltfs $? "vhd remove $tmpltimg2 hidden failed\n"
   fi
+fi
+
+#FIXME: check for errors. Also vhd-util convert leaves backup files
+#Do not use in production as is
+if is_raw $tmpltimg2
+then
+  #raw to fixed vhd
+  vhd-util convert -s 0 -t 1 -i $tmpltimg2 -o ${tmpltimg2}.tmp &> /dev/null
+  #fixed to dynamic vhd
+  vhd-util convert -s 1 -t 2 -i ${tmpltimg2}.tmp -o ${tmpltimg2}.tmp2 &> /dev/null
+  mv ${tmpltimg2}.tmp2 ${tmpltimg}
 fi
 
 imgsize=$(ls -l $tmpltimg2| awk -F" " '{print $5}')
