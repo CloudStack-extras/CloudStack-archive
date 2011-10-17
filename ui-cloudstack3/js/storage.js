@@ -8,13 +8,16 @@
    
 	if(jsonObj.hypervisor != "Ovm") {   
       //buildActionLinkForTab("label.action.take.snapshot", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab);	//show take snapshot
-      allowedActions.push("takeSnapshot");		  
+      allowedActions.push("takeSnapshot");	
+
+      //buildActionLinkForTab("label.action.recurring.snapshot", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab);	//show Recurring Snapshot	  
+	  allowedActions.push("recurringSnapshot");	
 	}
     
     if(jsonObj.state != "Allocated") {
 	  if(jsonObj.hypervisor != "Ovm") { 
         //buildActionLinkForTab("label.action.download.volume", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab);
-	    //allowedActions.push("recurringSnapshot");	
+	    allowedActions.push("downloadVolume");	
 	  }
     }
 	
