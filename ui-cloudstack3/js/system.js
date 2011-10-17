@@ -802,7 +802,8 @@
                       },
                       vCenterPassword: {
                         label: 'vCenter Password',
-                        validation: { required: true }
+                        validation: { required: true }, 
+						isPassword: true
                       },
                       vCenterDatacenter: {
                         label: 'vCenter Datacenter',
@@ -1080,7 +1081,8 @@
                       password: {
                         label: 'Password',
                         validation: { required: true },
-                        hidden: true
+                        hidden: true, 
+						isPassword: true
                       },              
                       //input_group="general" ends here
                       
@@ -1124,7 +1126,8 @@
                       agentPassword: {
                         label: 'Agent Password',
                         validation: { required: true },
-                        hidden: true
+                        hidden: true, 
+						isPassword: true
                       }
                       //input_group="OVM" ends here
                     }
