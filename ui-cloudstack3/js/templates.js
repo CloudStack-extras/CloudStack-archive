@@ -67,7 +67,7 @@
                     args.$form.find('.form-item[rel=isFeatured]').css('display', 'inline-block');  
                   }
                   else {  
-		            if (getUserPublicTemplateEnabled() == "true") {
+		            if (g_userPublicTemplateEnabled == "true") {
 			          //$readonlyFields = $detailsTab.find("#name, #displaytext, #passwordenabled, #ispublic, #ostypename");
 			          //$editFields = $detailsTab.find("#name_edit, #displaytext_edit, #passwordenabled_edit, #ispublic_edit, #ostypename_edit"); 	
 			                		
@@ -226,24 +226,11 @@
 				array1.push("&passwordEnabled=" + (args.data.isPasswordEnabled=="on"));					
 				array1.push("&osTypeId=" + args.data.osTypeId);			
 				array1.push("&hypervisor=" + args.data.hypervisor);
-				
-				/*               
-				if(args.$form.find('.form-item[rel=isPublic]').css("style") != "none")
-				  array1.push("&ispublic=" + (args.data.isPublic=="on"));	
-				if(args.$form.find('.form-item[rel=isFeatured]') != "none")
-				  array1.push("&isfeatured=" + (args.data.isFeatured=="on")); 
-				*/
-				
-				if(isAdmin()) {		            
-                  array1.push("&ispublic=" + (args.data.isPublic=="on"));					
-                  array1.push("&isfeatured=" + (args.data.isFeatured=="on")); 
-                }
-                else {  
-		          if (getUserPublicTemplateEnabled() == "true") {			         
-			        array1.push("&ispublic=" + (args.data.isPublic=="on"));	
-		          }         
-                }                  	  
-				
+								        
+				if(args.$form.find('.form-item[rel=isPublic]').css("display") != "none")
+				  array1.push("&ispublic=" + (args.data.isPublic == "on"));	
+				if(args.$form.find('.form-item[rel=isFeatured]').css("display") != "none")
+				  array1.push("&isfeatured=" + (args.data.isFeatured == "on")); 			
 				
 				$.ajax({
 				  url: createURL("registerTemplate" + array1.join("")),
@@ -452,7 +439,7 @@
                     args.$form.find('.form-item[rel=isFeatured]').css('display', 'inline-block');  
                   }
                   else {  
-		            if (getUserPublicTemplateEnabled() == "true") {
+		            if (g_userPublicTemplateEnabled == "true") {
 			          args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');   
 		            } 
 		            else {
@@ -550,18 +537,13 @@
 				array1.push("&isextractable=" + (args.data.isExtractable=="on"));				    					 	   
 			    array1.push("&bootable=" + (args.data.isBootable=="on"));	
 			    			    	   
-			    //if isBootable == true //to do....
+			    //if isBootable == true //to do - after Brian fix checkbox widget
 			        array1.push("&osTypeId=" + args.data.osTypeId);		
-			    			    
-				if(isAdmin()) {		            
-                  array1.push("&ispublic=" + (args.data.isPublic=="on"));					
-                  array1.push("&isfeatured=" + (args.data.isFeatured=="on")); 
-                }
-                else {  
-		          if (getUserPublicTemplateEnabled() == "true") {			         
-			        array1.push("&ispublic=" + (args.data.isPublic=="on"));	
-		          }         
-                }      
+			              		        
+				if(args.$form.find('.form-item[rel=isPublic]').css("display") != "none")
+				  array1.push("&ispublic=" + (args.data.isPublic == "on"));	
+				if(args.$form.find('.form-item[rel=isFeatured]').css("display") != "none")
+				  array1.push("&isfeatured=" + (args.data.isFeatured == "on")); 
     		       		    				
 			    $.ajax({
 			      url: createURL("registerIso" + array1.join("")),
