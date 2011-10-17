@@ -374,7 +374,55 @@
 				  poll: pollAsyncJobResult		
 				}
 			  },
-                              
+                               		  
+              downloadVolume: {
+				label: 'Download volume',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to download volume ?';
+				  },
+				  success: function(args) {
+					return 'Volume is being downloaded.';
+				  },
+				  notification: function(args) {			
+					return 'Downloading volume';
+				  },
+				  complete: function(args) {
+                    debugger;				  
+                    var url = decodeURIComponent(args.url);		                          
+                    var htmlMsg = 'Please click <a href="#">00000</a> to download volume';		                            
+                    var htmlMsg2 = htmlMsg.replace(/#/, url).replace(/00000/, url);                        
+                    //$infoContainer.find("#info").html(htmlMsg2);  
+					return htmlMsg2;
+				  }
+				},         
+				action: function(args) {	                   		
+				  $.ajax({
+					url: createURL("extractVolume&id=" + args.context.volumes[0].id + "&zoneid=" + args.context.volumes[0].zoneid + "&mode=HTTP_DOWNLOAD"),
+					dataType: "json",
+					async: true,
+					success: function(json) {                       			
+					  var jid = json.extractvolumeresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					     
+							 return json.queryasyncjobresultresponse.jobresult.volume;
+						   },
+						   getActionFilter: function() {
+							 return actionfilter;
+						   }				 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: pollAsyncJobResult	
+				}
+			  }	,
+			 				  
               'delete': {
 				label: 'Delete volume',
 				messages: {
