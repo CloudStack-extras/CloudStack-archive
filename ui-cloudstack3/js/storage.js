@@ -323,43 +323,42 @@
 					  );									
 					}
 				  });                   	  
-				},
-				
+				},				
 				notification: {
 				  poll: pollAsyncJobResult
 				}                 
 			  }       
-              
-              /*
+                          
 			  ,
-              detachISO: {
-				label: 'Detach instance',
+              detachDisk: {
+				label: 'Detach disk',
 				messages: {
 				  confirm: function(args) {
-					return 'Are you sure you want to detach ISO ?';
+					return 'Are you sure you want to detach disk ?';
 				  },
 				  success: function(args) {
-					return 'ISO is being detached.';
+					return 'Disk is being detached.';
 				  },
 				  notification: function(args) {			
-					return 'Detaching ISO';
+					return 'Detaching disk';
 				  },
 				  complete: function(args) {			  
-					return 'ISO has been detached.';
+					return 'Disk has been detached.';
 				  }
 				},         
-				action: function(args) {	              		
+				action: function(args) {	 
+                  debugger;				
 				  $.ajax({
-					url: createURL("detachIso&virtualmachineid=" + args.context.instances[0].id),
+					url: createURL("detachVolume&id=" + args.context.volumes[0].id),
 					dataType: "json",
 					async: true,
-					success: function(json) {                    	    
-					  var jid = json.detachisoresponse.jobid;    				
+					success: function(json) {                       			
+					  var jid = json.detachvolumeresponse.jobid;    				
 					  args.response.success(
 						{_custom:
 						  {jobId: jid,
 						   getUpdatedItem: function(json) {					     
-							 return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+							 return json.queryasyncjobresultresponse.jobresult.volume;
 						   },
 						   getActionFilter: function() {
 							 return actionfilter;
@@ -374,8 +373,7 @@
 				  poll: pollAsyncJobResult		
 				}
 			  }	
-              */
-              
+                            
             },
             tabs: {
               details: {
