@@ -230,7 +230,18 @@
 					async: true,
 					success: function(json) { 			    
 					  var jid = json.createsnapshotresponse.jobid; 
-					  args.response.success({_custom:{jobId: jid}});							
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					     
+							 return json.queryasyncjobresultresponse.jobresult.snapshot;
+						   },
+						   getActionFilter: function() {
+							 return actionfilter;
+						   }					 
+						  }
+						}
+					  );					  
 					}
 				});  							
               },
@@ -283,7 +294,18 @@
 					async: true,
 					success: function(json) { 			    
 					  var jid = json.createsnapshotresponse.jobid; 
-					  args.response.success({_custom:{jobId: jid}});							
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					     
+							 return json.queryasyncjobresultresponse.jobresult.snapshot;
+						   },
+						   getActionFilter: function() {
+							 return actionfilter;
+						   }					 
+						  }
+						}
+					  );						  
 					}
 				  });  							
                 },
