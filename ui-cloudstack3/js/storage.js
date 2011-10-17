@@ -249,7 +249,133 @@
                 notification: {
                   poll: pollAsyncJobResult
                 }
-              }		              
+              },
+			               
+              attachDisk: {
+				label: 'Attach Disk',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to attach disk?';
+				  },
+				  success: function(args) {
+					return 'Disk is being attached to instance';                
+				  },
+				  notification: function(args) {
+					return 'Attaching disk to instance';
+				  },
+				  complete: function(args) {
+					return 'Disk has been attached to instance';                
+				  }
+				},
+				createForm: {
+				  title: 'Attach Disk',
+				  desc: 'Attach Disk to Instance',
+				  fields: {  
+					virtualMachineId: {
+					  label: 'Instance',
+					  select: function(args) {						    
+						var items = [];						   
+						$.ajax({							
+						  url: createURL("listVirtualMachines&state=Running&zoneid=" + args.context.volumes[0].zoneid + "&domainid=" + args.context.volumes[0].domainid + "&account=" + args.context.volumes[0].account),
+						  dataType: "json",
+						  async: false,
+						  success: function(json) {	                                						
+							var instanceObjs= json.listvirtualmachinesresponse.virtualmachine;	
+                            $(instanceObjs).each(function() {
+							  items.push({id: this.id, description: this.displayname});		
+							});                                								
+						  }
+						});												
+						$.ajax({							
+						  url: createURL("listVirtualMachines&state=Stopped&zoneid=" + args.context.volumes[0].zoneid + "&domainid=" + args.context.volumes[0].domainid + "&account=" + args.context.volumes[0].account),
+						  dataType: "json",
+						  async: false,
+						  success: function(json) {	                                						
+							var instanceObjs= json.listvirtualmachinesresponse.virtualmachine;	
+                            $(instanceObjs).each(function() {
+							  items.push({id: this.id, description: this.displayname});		
+							});                              
+						  }
+						});							
+						args.response.success({data: items});									
+					  }				
+					}				 
+				  }
+				},       
+				action: function(args) {                       			  
+				  $.ajax({
+					url: createURL("attachVolume&id=" + args.context.volumes[0].id + '&virtualMachineId=' + args.data.virtualMachineId),			   
+					dataType: "json",
+					async: true,
+					success: function(json) { 			    
+					  var jid = json.attachvolumeresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					     
+							 return json.queryasyncjobresultresponse.jobresult.volume;
+						   },
+						   getActionFilter: function() {
+							 return actionfilter;
+						   }					 
+						  }
+						}
+					  );									
+					}
+				  });                   	  
+				},
+				
+				notification: {
+				  poll: pollAsyncJobResult
+				}                 
+			  }       
+              
+              /*
+			  ,
+              detachISO: {
+				label: 'Detach instance',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to detach ISO ?';
+				  },
+				  success: function(args) {
+					return 'ISO is being detached.';
+				  },
+				  notification: function(args) {			
+					return 'Detaching ISO';
+				  },
+				  complete: function(args) {			  
+					return 'ISO has been detached.';
+				  }
+				},         
+				action: function(args) {	              		
+				  $.ajax({
+					url: createURL("detachIso&virtualmachineid=" + args.context.instances[0].id),
+					dataType: "json",
+					async: true,
+					success: function(json) {                    	    
+					  var jid = json.detachisoresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					     
+							 return json.queryasyncjobresultresponse.jobresult.virtualmachine;
+						   },
+						   getActionFilter: function() {
+							 return actionfilter;
+						   }					 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: pollAsyncJobResult		
+				}
+			  }	
+              */
+              
             },
             tabs: {
               details: {
