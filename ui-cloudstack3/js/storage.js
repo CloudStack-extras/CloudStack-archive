@@ -482,7 +482,101 @@
 				  poll: pollAsyncJobResult	
 				}
 			  }	,
-			 				  
+			 	              
+			  createTemplate: {
+				label: 'Create template',
+				messages: {  
+				  confirm: function(args) {                
+					/*            
+					if (getUserPublicTemplateEnabled() == "true" || isAdmin()) {
+						$dialogCreateTemplate.find("#create_template_public_container").show();	
+					}	
+					*/          
+					return 'Are you sure you want to create template?';
+				  },
+				  success: function(args) {
+					return 'Template is being created.';
+				  },
+				  notification: function(args) {			
+					return 'Creating template';
+				  },
+				  complete: function(args) {			  
+					return 'Template has been created.';
+				  }
+				},
+				createForm: {
+				  title: 'Create Template',
+				  desc: '',
+				  fields: {  
+					name: { label: 'Name', validation: { required: true }},
+					displayText: { label: 'Description', validation: { required: true }},
+					osTypeId: {
+					  label: 'OS Type',
+					  select: function(args) {	                    	  
+						$.ajax({
+						  url: createURL("listOsTypes"),			 
+						  dataType: "json",
+						  async: true,
+						  success: function(json) { 				   
+							var ostypes = json.listostypesresponse.ostype;
+							var items = [];								
+							$(ostypes).each(function() {						  
+							  items.push({id: this.id, description: this.description});						  
+							});		                        					
+							args.response.success({data: items});					  
+						  }
+						});   
+					  }				
+					},                
+					isPublic: { label: 'Public', isBoolean: true },
+					isPasswordEnabled: { label: 'Password enabled', isBoolean: true }             				 
+				  }
+				},         
+				action: function(args) {	                      
+				  /*
+				  var isValid = true;					
+				  isValid &= validateString("Name", $thisDialog.find("#create_template_name"), $thisDialog.find("#create_template_name_errormsg"));
+				  isValid &= validateString("Display Text", $thisDialog.find("#create_template_desc"), $thisDialog.find("#create_template_desc_errormsg"));		          
+				  if (!isValid) 
+					  return;		    	        
+				  $thisDialog.dialog("close"); 
+				  */
+				  
+				  var array1 = [];    						           
+				  array1.push("&name=" + todb(args.data.name));    	        			   
+				  array1.push("&displayText=" + todb(args.data.displayText));    						    
+				  array1.push("&osTypeId=" + args.data.osTypeId);    			   	
+				  array1.push("&isPublic=" + (args.data.isPublic=="on"));    
+				  array1.push("&passwordEnabled=" + (args.data.isPasswordEnabled=="on"));     				           		    
+									  	  
+				  $.ajax({	 
+					url: createURL("createTemplate&volumeId=" + args.context.volumes[0].id + array1.join("")),
+					dataType: "json",
+					async: true,
+					success: function(json) {   			                    	    
+					  var jid = json.createtemplateresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					  
+							 //return json.queryasyncjobresultresponse.jobresult.volume;
+							 return {}; //nothing in this volume needs to be updated
+						   },
+						   getActionFilter: function() {
+							 //return actionfilter;
+							 return function(){}; 
+						   }					 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: pollAsyncJobResult		
+				}
+			  },				  
+				
               'delete': {
 				label: 'Delete volume',
 				messages: {
