@@ -44,6 +44,7 @@
 	var allowedActions = [];
     allowedActions.push("createTemplate");	
 	allowedActions.push("createVolume");	
+	allowedActions.push("delete");
 	return allowedActions;
   }
   
@@ -340,8 +341,7 @@
 					return 'Disk has been detached.';
 				  }
 				},         
-				action: function(args) {	
-                  debugger;				
+				action: function(args) {	                 		
 				  $.ajax({
 					url: createURL("detachVolume&id=" + args.context.volumes[0].id),
 					dataType: "json",
@@ -1156,8 +1156,44 @@
 				notification: {
 				  poll: pollAsyncJobResult		
 				}
-			  }			
-			  
+			  },
+              
+              'delete': {
+				label: 'Delete snapshot',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to delete snapshot ?';
+				  },
+				  success: function(args) {
+					return 'Snapshot is being deleted.';
+				  },
+				  notification: function(args) {			
+					return 'Deleting snapshot';
+				  },
+				  complete: function(args) {			  
+					return 'Snapshot has been deleted.';
+				  }
+				},         
+				action: function(args) {					               			
+				  $.ajax({
+					url: createURL("deleteSnapshot&id=" + args.context.snapshots[0].id),
+					dataType: "json",
+					async: true,
+					success: function(json) {                       			
+					  var jid = json.deletesnapshotresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid	 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: function(args) {args.complete();}		
+				}
+			  }	   
 			},
             tabs: {
               details: {
