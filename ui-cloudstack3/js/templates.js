@@ -490,6 +490,8 @@
                                                        
                   osTypeId: {
                     label: 'OS Type',  
+					dependsOn: 'isBootable',
+					hidden: true,
                     validation: { required: true },					
                     select: function(args) {                                   
                       $.ajax({
@@ -536,8 +538,8 @@
 			    array1.push("&zoneid=" + args.data.zone);				    			   
 				array1.push("&isextractable=" + (args.data.isExtractable=="on"));				    					 	   
 			    array1.push("&bootable=" + (args.data.isBootable=="on"));	
-			    			    	   
-			    //if isBootable == true //to do - after Brian fix checkbox widget
+			                   		   
+				if(args.$form.find('.form-item[rel=osTypeId]').css("display") != "none")
 			        array1.push("&osTypeId=" + args.data.osTypeId);		
 			              		        
 				if(args.$form.find('.form-item[rel=isPublic]').css("display") != "none")
