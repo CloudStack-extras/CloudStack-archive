@@ -42,8 +42,10 @@
   var snapshotActionfilter = function(args) {
     var jsonObj = args.context.item;
 	var allowedActions = [];
-    allowedActions.push("createTemplate");	
-	allowedActions.push("createVolume");	
+	if(jsonObj.state == "BackedUp") {
+      allowedActions.push("createTemplate");	
+	  allowedActions.push("createVolume");	
+	}
 	allowedActions.push("delete");
 	return allowedActions;
   }
