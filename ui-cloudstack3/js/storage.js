@@ -6,42 +6,33 @@
     var jsonObj = args.context.item;
 	var allowedActions = [];	
    
-	if(jsonObj.hypervisor != "Ovm") {   
-      //buildActionLinkForTab("label.action.take.snapshot", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab);	//show take snapshot
+	if(jsonObj.hypervisor != "Ovm") {         
       allowedActions.push("takeSnapshot");	
-
-      //buildActionLinkForTab("label.action.recurring.snapshot", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab);	//show Recurring Snapshot	  
 	  allowedActions.push("recurringSnapshot");	
 	}
     
     if(jsonObj.state != "Allocated") {
-	  if(jsonObj.hypervisor != "Ovm") { 
-        //buildActionLinkForTab("label.action.download.volume", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab);
+	  if(jsonObj.hypervisor != "Ovm") {         
 	    allowedActions.push("downloadVolume");	
 	  }
     }
 	
     if(jsonObj.state != "Creating" && jsonObj.state != "Corrupted" && jsonObj.name != "attaching") {
         if(jsonObj.type == "ROOT") {
-            if (jsonObj.vmstate == "Stopped") { 
-                //buildActionLinkForTab("label.action.create.template", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab);
+            if (jsonObj.vmstate == "Stopped") {                 
 				allowedActions.push("createTemplate");	
             }
         } 
         else { 
 	        if (jsonObj.virtualmachineid != null) {
-		        if (jsonObj.storagetype == "shared" && (jsonObj.vmstate == "Running" || jsonObj.vmstate == "Stopped" || jsonObj.vmstate == "Destroyed")) {
-			        //buildActionLinkForTab("label.action.detach.disk", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab); 
+		        if (jsonObj.storagetype == "shared" && (jsonObj.vmstate == "Running" || jsonObj.vmstate == "Stopped" || jsonObj.vmstate == "Destroyed")) {			        
 					allowedActions.push("detachDisk");	
 		        }
-	        } else {
-		        // Disk not attached
-		        if (jsonObj.storagetype == "shared") {
-			        //buildActionLinkForTab("label.action.attach.disk", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab); 
-                    allowedActions.push("attachDisk");						
-    			    			  		    
-			        if(jsonObj.vmname == null || jsonObj.vmname == "none") {
-			            //buildActionLinkForTab("label.action.delete.volume", volumeActionMap, $actionMenu, $midmenuItem1, $thisTab); 
+	        } 
+			else { // Disk not attached		        
+		        if (jsonObj.storagetype == "shared") {			        
+                    allowedActions.push("attachDisk");	    			    			  		    
+			        if(jsonObj.vmname == null || jsonObj.vmname == "none") {			            
 						allowedActions.push("delete");	
 					}
 		        }
@@ -248,7 +239,308 @@
               notification: {
                 poll: pollAsyncJobResult
               }
-            }			
+            },
+            			
+            attachDisk: {
+				label: 'Attach Disk',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to attach disk?';
+				  },
+				  success: function(args) {
+					return 'Disk is being attached to instance';                
+				  },
+				  notification: function(args) {
+					return 'Attaching disk to instance';
+				  },
+				  complete: function(args) {
+					return 'Disk has been attached to instance';                
+				  }
+				},
+				createForm: {
+				  title: 'Attach Disk',
+				  desc: 'Attach Disk to Instance',
+				  fields: {  
+					virtualMachineId: {
+					  label: 'Instance',
+					  select: function(args) {						    
+						var items = [];						   
+						$.ajax({							
+						  url: createURL("listVirtualMachines&state=Running&zoneid=" + args.context.volumes[0].zoneid + "&domainid=" + args.context.volumes[0].domainid + "&account=" + args.context.volumes[0].account),
+						  dataType: "json",
+						  async: false,
+						  success: function(json) {	                                						
+							var instanceObjs= json.listvirtualmachinesresponse.virtualmachine;	
+                            $(instanceObjs).each(function() {
+							  items.push({id: this.id, description: this.displayname});		
+							});                                								
+						  }
+						});												
+						$.ajax({							
+						  url: createURL("listVirtualMachines&state=Stopped&zoneid=" + args.context.volumes[0].zoneid + "&domainid=" + args.context.volumes[0].domainid + "&account=" + args.context.volumes[0].account),
+						  dataType: "json",
+						  async: false,
+						  success: function(json) {	                                						
+							var instanceObjs= json.listvirtualmachinesresponse.virtualmachine;	
+                            $(instanceObjs).each(function() {
+							  items.push({id: this.id, description: this.displayname});		
+							});                              
+						  }
+						});							
+						args.response.success({data: items});									
+					  }				
+					}				 
+				  }
+				},       
+				action: function(args) {                       			  
+				  $.ajax({
+					url: createURL("attachVolume&id=" + args.context.volumes[0].id + '&virtualMachineId=' + args.data.virtualMachineId),			   
+					dataType: "json",
+					async: true,
+					success: function(json) { 			    
+					  var jid = json.attachvolumeresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					     
+							 return json.queryasyncjobresultresponse.jobresult.volume;
+						   },
+						   getActionFilter: function() {
+							 return actionfilter;
+						   }					 
+						  }
+						}
+					  );									
+					}
+				  });                   	  
+				},				
+				notification: {
+				  poll: pollAsyncJobResult
+				}                 
+			  }       
+                          
+			  ,
+              detachDisk: {
+				label: 'Detach disk',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to detach disk ?';
+				  },
+				  success: function(args) {
+					return 'Disk is being detached.';
+				  },
+				  notification: function(args) {			
+					return 'Detaching disk';
+				  },
+				  complete: function(args) {			  
+					return 'Disk has been detached.';
+				  }
+				},         
+				action: function(args) {	
+                  debugger;				
+				  $.ajax({
+					url: createURL("detachVolume&id=" + args.context.volumes[0].id),
+					dataType: "json",
+					async: true,
+					success: function(json) {                       			
+					  var jid = json.detachvolumeresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					     
+							 return json.queryasyncjobresultresponse.jobresult.volume;
+						   },
+						   getActionFilter: function() {
+							 return actionfilter;
+						   }					 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: pollAsyncJobResult		
+				}
+			  },
+                               		  
+              downloadVolume: {
+				label: 'Download volume',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to download volume ?';
+				  },
+				  success: function(args) {
+					return 'Volume is being downloaded.';
+				  },
+				  notification: function(args) {			
+					return 'Downloading volume';
+				  },
+				  complete: function(args) {                			  
+                    var url = decodeURIComponent(args.url);		                          
+                    var htmlMsg = 'Please click <a href="#">00000</a> to download volume';		                            
+                    var htmlMsg2 = htmlMsg.replace(/#/, url).replace(/00000/, url);                        
+                    //$infoContainer.find("#info").html(htmlMsg2);  
+					return htmlMsg2;
+				  }
+				},         
+				action: function(args) {	                   		
+				  $.ajax({
+					url: createURL("extractVolume&id=" + args.context.volumes[0].id + "&zoneid=" + args.context.volumes[0].zoneid + "&mode=HTTP_DOWNLOAD"),
+					dataType: "json",
+					async: true,
+					success: function(json) {                       			
+					  var jid = json.extractvolumeresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					     
+							 return json.queryasyncjobresultresponse.jobresult.volume;
+						   },
+						   getActionFilter: function() {
+							 return actionfilter;
+						   }				 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: pollAsyncJobResult	
+				}
+			  }	,
+			 	              
+			  createTemplate: {
+				label: 'Create template',
+				messages: {  
+				  confirm: function(args) {                
+					/*            
+					if (getUserPublicTemplateEnabled() == "true" || isAdmin()) {
+						$dialogCreateTemplate.find("#create_template_public_container").show();	
+					}	
+					*/          
+					return 'Are you sure you want to create template?';
+				  },
+				  success: function(args) {
+					return 'Template is being created.';
+				  },
+				  notification: function(args) {			
+					return 'Creating template';
+				  },
+				  complete: function(args) {			  
+					return 'Template has been created.';
+				  }
+				},
+				createForm: {
+				  title: 'Create Template',
+				  desc: '',
+				  fields: {  
+					name: { label: 'Name', validation: { required: true }},
+					displayText: { label: 'Description', validation: { required: true }},
+					osTypeId: {
+					  label: 'OS Type',
+					  select: function(args) {	                    	  
+						$.ajax({
+						  url: createURL("listOsTypes"),			 
+						  dataType: "json",
+						  async: true,
+						  success: function(json) { 				   
+							var ostypes = json.listostypesresponse.ostype;
+							var items = [];								
+							$(ostypes).each(function() {						  
+							  items.push({id: this.id, description: this.description});						  
+							});		                        					
+							args.response.success({data: items});					  
+						  }
+						});   
+					  }				
+					},                
+					isPublic: { label: 'Public', isBoolean: true },
+					isPasswordEnabled: { label: 'Password enabled', isBoolean: true }             				 
+				  }
+				},         
+				action: function(args) {	                      
+				  /*
+				  var isValid = true;					
+				  isValid &= validateString("Name", $thisDialog.find("#create_template_name"), $thisDialog.find("#create_template_name_errormsg"));
+				  isValid &= validateString("Display Text", $thisDialog.find("#create_template_desc"), $thisDialog.find("#create_template_desc_errormsg"));		          
+				  if (!isValid) 
+					  return;		    	        
+				  $thisDialog.dialog("close"); 
+				  */
+				  
+				  var array1 = [];    						           
+				  array1.push("&name=" + todb(args.data.name));    	        			   
+				  array1.push("&displayText=" + todb(args.data.displayText));    						    
+				  array1.push("&osTypeId=" + args.data.osTypeId);    			   	
+				  array1.push("&isPublic=" + (args.data.isPublic=="on"));    
+				  array1.push("&passwordEnabled=" + (args.data.isPasswordEnabled=="on"));     				           		    
+									  	  
+				  $.ajax({	 
+					url: createURL("createTemplate&volumeId=" + args.context.volumes[0].id + array1.join("")),
+					dataType: "json",
+					async: true,
+					success: function(json) {   			                    	    
+					  var jid = json.createtemplateresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					  
+							 //return json.queryasyncjobresultresponse.jobresult.volume;
+							 return {}; //nothing in this volume needs to be updated
+						   },
+						   getActionFilter: function() {
+							 //return actionfilter;
+							 return function(){}; 
+						   }					 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: pollAsyncJobResult		
+				}
+			  },				  
+				
+              'delete': {
+				label: 'Delete volume',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to delete volume ?';
+				  },
+				  success: function(args) {
+					return 'Volume is being deleted.';
+				  },
+				  notification: function(args) {			
+					return 'Deleting volume';
+				  },
+				  complete: function(args) {			  
+					return 'Volume has been deleted.';
+				  }
+				},         
+				action: function(args) {	                 			
+				  $.ajax({
+					url: createURL("deleteVolume&id=" + args.context.volumes[0].id),
+					dataType: "json",
+					async: true,
+					success: function(json) {                       			
+					  var jid = json.deletevolumeresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid	 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: function(args) {args.complete();}		
+				}
+			  }	            	
             
           },
           		  
