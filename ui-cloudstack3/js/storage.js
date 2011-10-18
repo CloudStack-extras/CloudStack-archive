@@ -163,7 +163,7 @@
                   diskSize: {
                     label: 'Disk size (in GB)',
                     validation: { required: true, number: true },
-					hidden: true
+					isHidden: true
                   }
 				  
                 }

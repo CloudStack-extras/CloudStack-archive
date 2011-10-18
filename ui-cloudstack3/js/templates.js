@@ -204,13 +204,13 @@
                   isPublic: {
                     label: "Public",
                     isBoolean: true,
-					hidden: true
+					isHidden: true
                   },
                   
                   isFeatured: {
                     label: "Featured",
                     isBoolean: true,
-					hidden: true
+					isHidden: true
                   }                  				  
                 }
               },
@@ -491,7 +491,7 @@
                   osTypeId: {
                     label: 'OS Type',  
 					dependsOn: 'isBootable',
-					hidden: true,
+					isHidden: true,
                     validation: { required: true },					
                     select: function(args) {                                   
                       $.ajax({
@@ -519,13 +519,13 @@
                   isPublic: {
                     label: "Public",
                     isBoolean: true,
-					hidden: true
+					isHidden: true
                   },
                   
                   isFeatured: {
                     label: "Featured",
                     isBoolean: true,
-					hidden: true
+					isHidden: true
                   }                  				  
                 }
               },

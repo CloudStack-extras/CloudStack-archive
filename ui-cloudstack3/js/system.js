@@ -564,22 +564,22 @@
                       guestGateway: {
                         label: 'Guest Gateway',
                         validation: { required: true },
-                        hidden: true
+                        isHidden: true
                       },
                       guestNetmask: {
                         label: 'Guest Netmask',
                         validation: { required: true },
-                        hidden: true
+                        isHidden: true
                       },
                       startGuestIp: {
                         label: 'Start Guest IP',
                         validation: { required: true },
-                        hidden: true
+                        isHidden: true
                       },
                       endGuestIp: {
                         label: 'End Guest IP',
                         validation: { required: false },
-                        hidden: true
+                        isHidden: true
                       }	  
                     }
                   },
@@ -1069,20 +1069,20 @@
                       hostname: {
                         label: 'Host name',
                         validation: { required: true },
-                        hidden: true
+                        isHidden: true
                       },
 
                       username: {
                         label: 'User name',
                         validation: { required: true },
-                        hidden: true
+                        isHidden: true
                       },
 
                       password: {
                         label: 'Password',
                         validation: { required: true },
-                        hidden: true, 
-                        password: true
+                        isHidden: true, 
+                        isPassword: true
                       },              
                       //input_group="general" ends here
                       
@@ -1090,7 +1090,7 @@
                       vcenterHost: {
                         label: 'ESX/ESXi Host',
                         validation: { required: true },
-                        hidden: true
+                        isHidden: true
                       },
                       //input_group="VMWare" ends here
                       
@@ -1098,22 +1098,22 @@
                       baremetalCpuCores: {
                         label: '# of CPU Cores',
                         validation: { required: true },
-                        hidden: true
+                        isHidden: true
                       },
                       baremetalCpu: {
                         label: 'CPU (in MHz)',
                         validation: { required: true },
-                        hidden: true
+                        isHidden: true
                       },
                       baremetalMemory: {
                         label: 'Memory (in MB)',
                         validation: { required: true },
-                        hidden: true
+                        isHidden: true
                       },
                       baremetalMAC: {
                         label: 'Host MAC',
                         validation: { required: true },
-                        hidden: true
+                        isHidden: true
                       },
                       //input_group="BareMetal" ends here
                       
@@ -1121,12 +1121,12 @@
                       agentUsername: {
                         label: 'Agent Username',
                         validation: { required: false },
-                        hidden: true
+                        isHidden: true
                       },
                       agentPassword: {
                         label: 'Agent Password',
                         validation: { required: true },
-                        hidden: true, 
+                        isHidden: true, 
 						isPassword: true
                       }
                       //input_group="OVM" ends here
@@ -1499,38 +1499,38 @@
 					  server: {
                         label: 'Server',
                         validation: { required: true },
-						hidden: true
+						isHidden: true
                       },	
 					  					  
 					  //nfs
 					  path: {
                         label: 'Path',
                         validation: { required: true },
-						hidden: true
+						isHidden: true
                       },	
 					  
 					  //iscsi
 					  iqn: {
                         label: 'Target IQN',
                         validation: { required: true },
-						hidden: true
+						isHidden: true
                       },					  
 					  lun: {
                         label: 'LUN #',
                         validation: { required: true },
-						hidden: true
+						isHidden: true
                       },	
 					  
 					  //vmfs
 					  vCenterDataCenter: {
                         label: 'vCenter Datacenter',
                         validation: { required: true },
-						hidden: true
+						isHidden: true
                       },				  
 					  vCenterDataStore: {
                         label: 'vCenter Datastore',
                         validation: { required: true },
-						hidden: true
+						isHidden: true
                       }
                     }
                   },
