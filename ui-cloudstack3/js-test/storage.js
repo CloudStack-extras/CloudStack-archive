@@ -176,11 +176,14 @@
                 fields: {
                   name: { label: 'Name' },
                   displayText: { label: 'Display text' },
+                  'public': {
+                    label: 'Public', isBoolean: true
+                  },
                   osType: {
                     label: 'OS Type',
                     dependsOn: 'public',
                     hidden: true,
-                    select: function(args){
+                    select: function(args) {
                       args.response.success({
                         descriptionField: 'description',
                         data: [
@@ -191,11 +194,17 @@
                       });
                     }
                   },
-                  'public': {
-                    label: 'Public', isBoolean: true
-                  },
                   usePassword: {
-                    label: 'Use password?', dependsOn: 'public', isBoolean: true, hidden: true
+                    label: 'Use Password?',
+                    isBoolean: true,
+                    hidden: true,
+                    dependsOn: 'public'
+                  },
+                  password: {
+                    label: 'Password',
+                    hidden: true,
+                    dependsOn: 'usePassword',
+                    password: true
                   }
                 }
               },

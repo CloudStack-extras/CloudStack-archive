@@ -44,9 +44,17 @@
 
               if ($target.is(':checked')) {
                 $dependent.css('display', 'inline-block');
+                $dependent.each(function() {
+                  if ($(this).data('dialog-select-fn')) {
+                    $(this).data('dialog-select-fn')();
+                  }
+                });
               } else {
                 $dependent.hide();
+                $dependent.find('input[type=checkbox]').trigger('click');
               }
+
+              $dependent.find('input[type=checkbox]').attr('checked', false);
 
               return true;
             });
@@ -79,7 +87,12 @@
             }
           };
           selectFn = this.select;
-          $input = $('<select>').attr({ name: key }).appendTo($value);
+          $input = $('<select>')
+            .attr({ name: key })
+            .data('dialog-select-fn', function() {
+              selectFn(selectArgs);
+            })
+            .appendTo($value);
 
           // Pass form item to provider for additional manipulation
           $.extend(selectArgs, { $select: $input });
@@ -90,7 +103,11 @@
             });
             $dependsOn.bind('change', function(event) {
               var $target = $(this);
+
+              if (!$dependsOn.is('select')) return true;
+              
               var dependsOnArgs = {};
+
               $input.find('option').remove();
               $input.trigger('change');
 
@@ -102,14 +119,19 @@
               return true;
             });
 
-            if (!$dependsOn.is('select')) selectFn(selectArgs);
+            if (!$dependsOn.is('select')) {
+              selectFn(selectArgs);
+            }
           } else {
             selectFn(selectArgs);
           }
         } else if (this.isBoolean) {
           $input = $('<input>').attr({ name: key, type: 'checkbox' }).appendTo($value);
         } else {
-          $input = $('<input>').attr({ name: key, type: 'text' }).appendTo($value);
+          $input = $('<input>').attr({ 
+            name: key, 
+            type: this.password ? 'password' : 'text'
+          }).appendTo($value);
         }
 
         $input.data('validation-rules', this.validation);
