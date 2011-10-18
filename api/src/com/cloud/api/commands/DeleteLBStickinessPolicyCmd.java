@@ -1,8 +1,8 @@
 /**
- *  Copyright (C) 2010 Cloud.com, Inc.  All rights reserved.
- * 
+ * Copyright (C) 2011 Citrix Systems, Inc.  All rights reserved
+ *
  * This software is licensed under the GNU General Public License v3 or later.
- * 
+ *
  * It is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or any later version.
@@ -10,10 +10,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 package com.cloud.api.commands;
 
@@ -33,29 +33,29 @@ import com.cloud.network.rules.LoadBalancer;
 import com.cloud.user.Account;
 import com.cloud.user.UserContext;
 
-@Implementation(description="Deletes a LB stickiness rule.", responseObject=SuccessResponse.class)
+@Implementation(description = "Deletes a LB stickiness policy.", responseObject = SuccessResponse.class)
 public class DeleteLBStickinessPolicyCmd extends BaseAsyncCmd {
-    public static final Logger s_logger = Logger.getLogger(DeleteLBStickinessPolicyCmd.class.getName());
+    public static final Logger s_logger = Logger
+            .getLogger(DeleteLBStickinessPolicyCmd.class.getName());
     private static final String s_name = "deleteLBstickinessrruleresponse";
-    /////////////////////////////////////////////////////
-    //////////////// API parameters /////////////////////
-    /////////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
+    // ////////////// API parameters /////////////////////
+    // ///////////////////////////////////////////////////
 
-    @Parameter(name=ApiConstants.ID, type=CommandType.LONG, required=true, description="the ID of the LB stickiness rule")
+    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = true, description = "the ID of the LB stickiness policy")
     private Long id;
 
-
-    /////////////////////////////////////////////////////
-    /////////////////// Accessors ///////////////////////
-    /////////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
+    // ///////////////// Accessors ///////////////////////
+    // ///////////////////////////////////////////////////
 
     public Long getId() {
         return id;
     }
 
-    /////////////////////////////////////////////////////
-    /////////////// API Implementation///////////////////
-    /////////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
+    // ///////////// API Implementation///////////////////
+    // ///////////////////////////////////////////////////
 
     @Override
     public String getCommandName() {
@@ -64,17 +64,20 @@ public class DeleteLBStickinessPolicyCmd extends BaseAsyncCmd {
 
     @Override
     public long getEntityOwnerId() {
-    	StickinessPolicy policy = _entityMgr.findById(StickinessPolicy.class, getId());
-    	
-		if (policy != null) {
-			LoadBalancer lb = _entityMgr.findById(LoadBalancer.class,
-					policy.getLoadBalancerId());
-			if (lb != null) {
-				return lb.getAccountId();
-			}
-		}
+        StickinessPolicy policy = _entityMgr.findById(StickinessPolicy.class,
+                getId());
 
-        return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are tracked
+        if (policy != null) {
+            LoadBalancer lb = _entityMgr.findById(LoadBalancer.class,
+                    policy.getLoadBalancerId());
+            if (lb != null) {
+                return lb.getAccountId();
+            }
+        }
+
+        return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this
+                                          // command to SYSTEM so ERROR events
+                                          // are tracked
     }
 
     @Override
@@ -84,22 +87,24 @@ public class DeleteLBStickinessPolicyCmd extends BaseAsyncCmd {
 
     @Override
     public String getEventDescription() {
-        return  "deleting load balancer stickiness policy: " + getId();
+        return "deleting load balancer stickiness policy: " + getId();
     }
-	
+
     @Override
-    public void execute(){
-        UserContext.current().setEventDetails("Load balancer stickiness policy Id: "+getId());
+    public void execute() {
+        UserContext.current().setEventDetails(
+                "Load balancer stickiness policy Id: " + getId());
         boolean result = _lbService.deleteLBStickinessPolicy(getId());
-        
+
         if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
         } else {
-            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to delete load balancer stickiness policy");
+            throw new ServerApiException(BaseCmd.INTERNAL_ERROR,
+                    "Failed to delete load balancer stickiness policy");
         }
     }
-    
+
     @Override
     public String getSyncObjType() {
         return BaseAsyncCmd.networkSyncObject;
@@ -107,14 +112,18 @@ public class DeleteLBStickinessPolicyCmd extends BaseAsyncCmd {
 
     @Override
     public Long getSyncObjId() {
-    	StickinessPolicy policy = _entityMgr.findById(StickinessPolicy.class, getId());
-    	if (policy == null) {
-    		throw new InvalidParameterValueException("Unable to find LB stickiness rule: " + id);
-    	}
-    	LoadBalancer lb = _lbService.findById(policy.getLoadBalancerId());
-    	if(lb == null){
-    		throw new InvalidParameterValueException("Unable to find load balancer rule for stickiness rule: " + id);
-    	}
+        StickinessPolicy policy = _entityMgr.findById(StickinessPolicy.class,
+                getId());
+        if (policy == null) {
+            throw new InvalidParameterValueException(
+                    "Unable to find LB stickiness rule: " + id);
+        }
+        LoadBalancer lb = _lbService.findById(policy.getLoadBalancerId());
+        if (lb == null) {
+            throw new InvalidParameterValueException(
+                    "Unable to find load balancer rule for stickiness rule: "
+                            + id);
+        }
         return lb.getNetworkId();
     }
 }

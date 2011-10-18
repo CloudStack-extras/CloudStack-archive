@@ -112,35 +112,33 @@ public class LoadBalancerTO {
     }
     
     public static class StickinessPolicyTO {
-    	String methodName;
-    	String paramsDB;
-    	Map <String, String> paramsList;
-    	Map <String, String> paramsDefaultValues;
-    	
-    	public String getMethodName()
-    	{
-    		return methodName;
-    	}
-    	public Map<String, String> getParams()
-    	{
-    		return paramsList;
-    	}
-    	public String getParamsDB()
-    	{
-    		return paramsDB;
-    	}
-    	public StickinessPolicyTO(String methodName,String paramsDB )
-    	{
-    		this.methodName = methodName;
-    		this.paramsDB = paramsDB;
-    		String[] temp;
-    		temp = paramsDB.split("[,]");
-    		Map<String, String> paramList = new HashMap<String, String>();
-    		for (int i = 0; i < (temp.length - 1); i = i + 2) {
-    			paramList.put(temp[i], temp[i + 1]);
-    		}
-    		this.paramsList = paramList;
-    	}
+        private String _methodName;
+        private String _paramsDB;
+        private Map<String, String> _paramsList;
+
+        public String getMethodName() {
+            return _methodName;
+        }
+
+        public Map<String, String> getParams() {
+            return _paramsList;
+        }
+
+        public String getParamsDB() {
+            return _paramsDB;
+        }
+
+        public StickinessPolicyTO(String methodName, String paramsDB) {
+            this._methodName = methodName;
+            this._paramsDB = paramsDB;
+            String[] temp;
+            temp = paramsDB.split("[,]");
+            Map<String, String> paramList = new HashMap<String, String>();
+            for (int i = 0; i < (temp.length - 1); i = i + 2) {
+                paramList.put(temp[i], temp[i + 1]);
+            }
+            this._paramsList = paramList;
+        }
     }
     
     public static class DestinationTO {

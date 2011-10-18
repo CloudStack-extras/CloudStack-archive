@@ -180,7 +180,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     
     @Override
     @DB
-    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_CREATE, eventDescription = "create lb stickinesspolicy to load balancer", async = true)
+    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_CREATE, eventDescription = "create lb stickinesspolicy to load balancer", async = false)
     public StickinessPolicy createLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws NetworkRuleConflictException {
     	
     	/* Validation : check corresponding load balancer rule exist */
@@ -265,7 +265,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         return policy;
     }
     @Override
-    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_DELETE, eventDescription = "removing from LB stickiness ", async = true)
+    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_DELETE, eventDescription = "revoking LB Stickiness policy ", async = true)
     public boolean deleteLBStickinessPolicy(long stickinessPolicyId) {
         UserContext caller = UserContext.current();
         
