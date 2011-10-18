@@ -4,7 +4,7 @@
   var selectedZoneObj, selectedTemplateObj, selectedHypervisor, selectedDiskOfferingObj;
   var step5ContainerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'	
    
-  var actionfilter = function(args) {	    		  
+  var vmActionfilter = function(args) {	    		  
     var jsonObj = args.context.item;
 	var allowedActions = [];
 					
@@ -541,7 +541,7 @@
 							   return json.queryasyncjobresultresponse.jobresult.virtualmachine;
 							 },
 							 getActionFilter: function() {
-							   return actionfilter;
+							   return vmActionfilter;
 							 }					 
 							}
 						  }
@@ -591,7 +591,7 @@
 					   return json.queryasyncjobresultresponse.jobresult.virtualmachine;
 					 },
 					 getActionFilter: function() {
-					   return actionfilter;
+					   return vmActionfilter;
 					 }					 
 					}
 				  }
@@ -633,7 +633,7 @@
 					   return json.queryasyncjobresultresponse.jobresult.virtualmachine;
 					 },
 					 getActionFilter: function() {
-					   return actionfilter;
+					   return vmActionfilter;
 					 }					 
 					}
 				  }
@@ -676,7 +676,7 @@
 					   return json.queryasyncjobresultresponse.jobresult.virtualmachine;
 					 },
 					 getActionFilter: function() {
-					   return actionfilter;
+					   return vmActionfilter;
 					 }					 
 					}
 				  }
@@ -732,7 +732,7 @@
 					   return json.queryasyncjobresultresponse.jobresult.virtualmachine;
 					 },
 					 getActionFilter: function() {
-					   return actionfilter;
+					   return vmActionfilter;
 					 }					 
 					}
 				  }
@@ -816,7 +816,7 @@
 			var items = json.listvirtualmachinesresponse.virtualmachine;	
            
             args.response.success({
-              actionFilter: actionfilter,
+              actionFilter: vmActionfilter,
               data: items
             });					                			
 		  }
@@ -845,7 +845,7 @@
 					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
 					   },
 					   getActionFilter: function() {
-					     return actionfilter;
+					     return vmActionfilter;
 					   }					 
 					  }
 				    }
@@ -887,7 +887,7 @@
 					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
 					   },
 					   getActionFilter: function() {
-					     return actionfilter;
+					     return vmActionfilter;
 					   }					 
 					  }
 				    }
@@ -929,7 +929,7 @@
 					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
 					   },
 					   getActionFilter: function() {
-					     return actionfilter;
+					     return vmActionfilter;
 					   }					 
 					  }
 				    }
@@ -985,7 +985,7 @@
 					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
 					   },
 					   getActionFilter: function() {
-					     return actionfilter;
+					     return vmActionfilter;
 					   }					 
 					  }
 				    }
@@ -1090,7 +1090,7 @@
 					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
 					   },
 					   getActionFilter: function() {
-					     return actionfilter;
+					     return vmActionfilter;
 					   }					 
 					  }
 				    }
@@ -1147,7 +1147,7 @@
 					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
 					   },
 					   getActionFilter: function() {
-					     return actionfilter;
+					     return vmActionfilter;
 					   }					 
 					  }
 				    }
@@ -1211,7 +1211,7 @@
 					     return json.queryasyncjobresultresponse.jobresult.virtualmachine;
 					   },
 					   getActionFilter: function() {
-					     return actionfilter;
+					     return vmActionfilter;
 					   }					 
 					  }
 				    }
@@ -1367,7 +1367,7 @@
 						 return {}; //nothing in this VM needs to be updated
 					   },
 					   getActionFilter: function() {
-					     //return actionfilter;
+					     //return vmActionfilter;
 						 return function(){}; 
 					   }					 
 					  }
@@ -1452,7 +1452,7 @@
 						  */
 					    },
 					    getActionFilter: function() {
-					      return actionfilter;
+					      return vmActionfilter;
 					    }					 
 					  }
 				    }
@@ -1537,7 +1537,7 @@
 			dataProvider: function(args) {	              
               args.response.success(
 			    {
-				  actionFilter: actionfilter,
+				  actionFilter: vmActionfilter,
 				  data:args.jsonObj
 				}
 			  );	

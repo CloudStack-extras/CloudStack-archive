@@ -1,6 +1,6 @@
 (function(cloudStack, testData) { 
 
-  var actionfilter = function(args) {	    		  
+  var templateActionfilter = function(args) {	    		  
     var jsonObj = args.context.item;
 	var allowedActions = [];	
     /*	
@@ -13,6 +13,19 @@
     return allowedActions;
   }
 
+  var isoActionfilter = function(args) {	    		  
+    var jsonObj = args.context.item;
+	var allowedActions = [];	
+    /*	
+	if (jsonObj.state == 'Destroyed') {
+		if(isAdmin() || isDomainAdmin()) {
+		    allowedActions.push("restore");												
+		}	
+	} 
+	*/	
+    return allowedActions;
+  }
+  
   cloudStack.sections.templates = {
     title: 'Templates',
     id: 'templates',
@@ -358,7 +371,7 @@
 				dataProvider: function(args) {	                  	
 				  args.response.success(
 					{
-					  actionFilter: actionfilter,
+					  actionFilter: templateActionfilter,
 					  data:args.jsonObj
 					}
 				  );	
@@ -648,19 +661,14 @@
 				dataProvider: function(args) {	                  	
 				  args.response.success(
 					{
-					  actionFilter: actionfilter,
+					  actionFilter: isoActionfilter,
 					  data:args.jsonObj
 					}
 				  );	
 				}			
               }		  
             }
-          }		  
-          //???		  
-
-
-
-		  
+          }		         
         }
       }
     }
