@@ -435,6 +435,7 @@
 				createForm: {
 				  title: 'Create Template',
 				  desc: '',
+				  preFilter: cloudStack.preFilter.createTemplate,	     
 				  fields: {  
 					name: { label: 'Name', validation: { required: true }},
 					displayText: { label: 'Description', validation: { required: true }},

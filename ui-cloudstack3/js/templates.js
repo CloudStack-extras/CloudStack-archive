@@ -53,39 +53,8 @@
 
               createForm: {
                 title: 'Create template',
-                desc: 'Please fill in the following data to create a new template.',
-                
-                preFilter: function(args) {  
-                  if(isAdmin()) {
-		            //$readonlyFields = $detailsTab.find("#name, #displaytext, #passwordenabled, #ispublic, #isfeatured, #ostypename");
-		            //$editFields = $detailsTab.find("#name_edit, #displaytext_edit, #passwordenabled_edit, #ispublic_edit, #isfeatured_edit, #ostypename_edit");    
-                        
-                    //$("#dialog_add_template").find("#add_template_public_container").show();
-                    args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');   
-                        
-                    //$("#dialog_add_template").find("#add_template_featured_container").show();
-                    args.$form.find('.form-item[rel=isFeatured]').css('display', 'inline-block');  
-                  }
-                  else {  
-		            if (g_userPublicTemplateEnabled == "true") {
-			          //$readonlyFields = $detailsTab.find("#name, #displaytext, #passwordenabled, #ispublic, #ostypename");
-			          //$editFields = $detailsTab.find("#name_edit, #displaytext_edit, #passwordenabled_edit, #ispublic_edit, #ostypename_edit"); 	
-			                		
-			          //$("#dialog_add_template").find("#add_template_public_container").show();
-			          args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');   
-		            } 
-		            else {
-			          //$readonlyFields = $detailsTab.find("#name, #displaytext, #passwordenabled, #ostypename");
-			          //$editFields = $detailsTab.find("#name_edit, #displaytext_edit, #passwordenabled_edit, #ostypename_edit");		
-			                	
-			          //$("#dialog_add_template").find("#add_template_public_container").hide();
-			          args.$form.find('.form-item[rel=isPublic]').hide();
-		            }		
-		            //$("#dialog_add_template #add_template_featured_container").hide();	
-		            args.$form.find('.form-item[rel=isFeatured]').hide();	
-                  }                  	  
-                },			
-                
+                desc: 'Please fill in the following data to create a new template.',                
+                preFilter: cloudStack.preFilter.createTemplate,	               
                 fields: {
                   name: {
                     label: 'Name',
@@ -431,24 +400,8 @@
 
               createForm: {
                 title: 'Create ISO',
-                desc: 'Please fill in the following data to create a new ISO.',
-                
-                preFilter: function(args) {  
-                  if(isAdmin()) {		           
-                    args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');                 
-                    args.$form.find('.form-item[rel=isFeatured]').css('display', 'inline-block');  
-                  }
-                  else {  
-		            if (g_userPublicTemplateEnabled == "true") {
-			          args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');   
-		            } 
-		            else {
-			          args.$form.find('.form-item[rel=isPublic]').hide();
-		            }			            
-		            args.$form.find('.form-item[rel=isFeatured]').hide();	
-                  }                  	  
-                },			
-                
+                desc: 'Please fill in the following data to create a new ISO.',                
+                preFilter: cloudStack.preFilter.createTemplate,	             
                 fields: {
                   name: {
                     label: 'Name',
