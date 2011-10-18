@@ -144,9 +144,7 @@ public interface ResponseGenerator {
     
     LBStickinessResponse createLBStickinessPolicyResponse(List<? extends StickinessPolicy> stickinessPolicies, LoadBalancer lb);
     
-    LBStickinessResponse createLBStickinessPolicyResponse( StickinessPolicy stickinessRule, LoadBalancer lb);
-    
-    LBStickinessResponse createLBStickinessMethodResponse(List<? extends StickinessPolicy> stickinessPolicies, LoadBalancer lb);
+    LBStickinessResponse createLBStickinessPolicyResponse( StickinessPolicy stickinessPolicy, LoadBalancer lb);
 
     PodResponse createPodResponse(Pod pod);
 

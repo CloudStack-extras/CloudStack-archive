@@ -22,80 +22,82 @@ import java.util.ArrayList;
 
 
 public class LbStickinessMethod {
-	public class LbStickinessMethodParam {
-		private String paramName;
-		private Boolean required;
-		private String description;
-		
-		public LbStickinessMethodParam(String name, Boolean required, String description)
-		{
-			this.paramName = name;
-			this.required = required;
-			this.description = description;
-		}
+    public class LbStickinessMethodParam {
+        private String _paramName;
+        private Boolean _required;
+        private String _description;
 
-		public String getParamName() {
-			return paramName;
-		}
+        public LbStickinessMethodParam(String name, Boolean required,
+                String description) {
+            this._paramName = name;
+            this._required = required;
+            this._description = description;
+        }
 
-		public void setParamName(String paramName) {
-			this.paramName = paramName;
-		}
+        public String getParamName() {
+            return _paramName;
+        }
 
-		public Boolean getRequired() {
-			return required;
-		}
+        public void setParamName(String paramName) {
+            this._paramName = paramName;
+        }
 
-		public void setRequired(Boolean required) {
-			this.required = required;
-		}
+        public Boolean getRequired() {
+            return _required;
+        }
 
+        public void setRequired(Boolean required) {
+            this._required = required;
+        }
 
-		public String getDescription() {
-			return description;
-		}
+        public String getDescription() {
+            return _description;
+        }
 
-		public void setDescription(String description) {
-			this.description = description;
-		}
-		
-		
-	}
-	
-	private String methodName;
-	private List <LbStickinessMethodParam> paramList;
-	private String description;
-	
-	public LbStickinessMethod(String methodName,String description)
-	{
-		this.methodName = methodName;
-		this.description = description;
-		this.paramList = new ArrayList<LbStickinessMethodParam>(1);
-	}
-	public void addParam(String name, Boolean required,  String description)
-	{
-		LbStickinessMethodParam param = new LbStickinessMethodParam(name,required, description);
-		paramList.add(param);
-		return;
-	}
-	
-    public String getMethodName() {
-        return methodName;
+        public void setDescription(String description) {
+            this._description = description;
+        }
+
     }
-	public List<LbStickinessMethodParam> getParamList() {
-		return paramList;
-	}
-	public void setParamList(List<LbStickinessMethodParam> paramList) {
-		this.paramList = paramList;
-	}
-	public String getDescription() {
-		return description;
-	}
-	public void setDescription(String description) {
-		this.description = description;
-	}
-	public void setMethodName(String methodName) {
-		this.methodName = methodName;
-	}
-	
+
+    private String _methodName;
+    private List<LbStickinessMethodParam> _paramList;
+    private String _description;
+
+    public LbStickinessMethod(String methodName, String description) {
+        this._methodName = methodName;
+        this._description = description;
+        this._paramList = new ArrayList<LbStickinessMethodParam>(1);
+    }
+
+    public void addParam(String name, Boolean required, String description) {
+        LbStickinessMethodParam param = new LbStickinessMethodParam(name,
+                required, description);
+        _paramList.add(param);
+        return;
+    }
+
+    public String getMethodName() {
+        return _methodName;
+    }
+
+    public List<LbStickinessMethodParam> getParamList() {
+        return _paramList;
+    }
+
+    public void setParamList(List<LbStickinessMethodParam> paramList) {
+        this._paramList = paramList;
+    }
+
+    public String getDescription() {
+        return _description;
+    }
+
+    public void setDescription(String description) {
+        this._description = description;
+    }
+
+    public void setMethodName(String methodName) {
+        this._methodName = methodName;
+    }
 }

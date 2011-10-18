@@ -1,8 +1,8 @@
 /**
- *  Copyright (C) 2010 Cloud.com, Inc.  All rights reserved.
- * 
+ * Copyright (C) 2011 Citrix Systems, Inc.  All rights reserved
+ *
  * This software is licensed under the GNU General Public License v3 or later.
- * 
+ *
  * It is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or any later version.
@@ -10,10 +10,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 package com.cloud.network.dao;
@@ -26,8 +26,12 @@ import com.cloud.network.LBStickinessPolicyVO;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchCriteria;
 
-@Local(value={LBStickinessPolicyDao.class})
-public class LBStickinessPolicyDaoImpl extends GenericDaoBase<LBStickinessPolicyVO, Long> implements LBStickinessPolicyDao {
+
+
+@Local(value = { LBStickinessPolicyDao.class })
+public class LBStickinessPolicyDaoImpl extends
+        GenericDaoBase<LBStickinessPolicyVO, Long> implements
+        LBStickinessPolicyDao {
 
     @Override
     public void remove(long loadBalancerId) {
@@ -36,9 +40,9 @@ public class LBStickinessPolicyDaoImpl extends GenericDaoBase<LBStickinessPolicy
 
         expunge(sc);
     }
-    
+
     @Override
-    public void remove(long loadBalancerId,  Boolean revoke) {
+    public void remove(long loadBalancerId, Boolean revoke) {
         SearchCriteria<LBStickinessPolicyVO> sc = createSearchCriteria();
         sc.addAnd("loadBalancerId", SearchCriteria.Op.EQ, loadBalancerId);
         if (revoke != null) {
@@ -47,7 +51,6 @@ public class LBStickinessPolicyDaoImpl extends GenericDaoBase<LBStickinessPolicy
 
         expunge(sc);
     }
-
 
     @Override
     public List<LBStickinessPolicyVO> listByLoadBalancerId(long loadBalancerId) {
@@ -58,15 +61,13 @@ public class LBStickinessPolicyDaoImpl extends GenericDaoBase<LBStickinessPolicy
     }
 
     @Override
-    public List<LBStickinessPolicyVO> listByLoadBalancerId(long loadBalancerId, boolean pending) {
+    public List<LBStickinessPolicyVO> listByLoadBalancerId(long loadBalancerId,
+            boolean pending) {
         SearchCriteria<LBStickinessPolicyVO> sc = createSearchCriteria();
         sc.addAnd("loadBalancerId", SearchCriteria.Op.EQ, loadBalancerId);
         sc.addAnd("revoke", SearchCriteria.Op.EQ, pending);
 
         return listBy(sc);
     }
-    
 
-
-    
 }

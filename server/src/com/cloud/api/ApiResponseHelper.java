@@ -721,76 +721,54 @@ public class ApiResponseHelper implements ResponseGenerator {
         ipResponse.setObjectName("ipaddress");
         return ipResponse;
     }
+   
     @Override
-    public LBStickinessResponse createLBStickinessMethodResponse(List<? extends StickinessPolicy> stickinessPolicies, LoadBalancer lb){
-    	LBStickinessResponse spResponse = new LBStickinessResponse();
+    public LBStickinessResponse createLBStickinessPolicyResponse(
+            StickinessPolicy stickinessPolicy, LoadBalancer lb) {
+        LBStickinessResponse spResponse = new LBStickinessResponse();
 
-    	if (lb == null) {
-            spResponse.setObjectName("stickinessmethod");
-    		return spResponse;
-    	}
-    	spResponse.setlbRuleId(lb.getId());
+        spResponse.setlbRuleId(lb.getId());
         Account accountTemp = ApiDBUtils.findAccountById(lb.getAccountId());
         if (accountTemp != null) {
-        	spResponse.setAccountName(accountTemp.getAccountName());
-        	spResponse.setDomainId(accountTemp.getDomainId());
-        	spResponse.setDomainName(ApiDBUtils.findDomainById(accountTemp.getDomainId()).getName());
-        }
-
-		if (stickinessPolicies != null) {
-			List<LBStickinessPolicyResponse> responses = new ArrayList<LBStickinessPolicyResponse>();
-			for (StickinessPolicy stickinessmethod : stickinessPolicies) {
-				LBStickinessPolicyResponse ruleResponse = new LBStickinessPolicyResponse(
-						stickinessmethod);
-				responses.add(ruleResponse);
-			}
-			spResponse.setRules(responses);
-		}
-        
-        spResponse.setObjectName("stickinessmethod");
-        return spResponse;
-    }
-    @Override
-    public LBStickinessResponse createLBStickinessPolicyResponse( StickinessPolicy stickinessRule, LoadBalancer lb){
-    	LBStickinessResponse spResponse = new LBStickinessResponse();
-
-    	spResponse.setlbRuleId(lb.getId());
-        Account accountTemp = ApiDBUtils.findAccountById(lb.getAccountId());
-        if (accountTemp != null) {
-        	spResponse.setAccountName(accountTemp.getAccountName());
-        	spResponse.setDomainId(accountTemp.getDomainId());
-        	spResponse.setDomainName(ApiDBUtils.findDomainById(accountTemp.getDomainId()).getName());
+            spResponse.setAccountName(accountTemp.getAccountName());
+            spResponse.setDomainId(accountTemp.getDomainId());
+            spResponse.setDomainName(ApiDBUtils.findDomainById(
+                    accountTemp.getDomainId()).getName());
         }
 
         List<LBStickinessPolicyResponse> responses = new ArrayList<LBStickinessPolicyResponse>();
-        LBStickinessPolicyResponse ruleResponse = new LBStickinessPolicyResponse(stickinessRule);
+        LBStickinessPolicyResponse ruleResponse = new LBStickinessPolicyResponse(
+                stickinessPolicy);
         responses.add(ruleResponse);
-       
+
         spResponse.setRules(responses);
-        
+
         spResponse.setObjectName("stickinesspolicy");
         return spResponse;
     }
     
     @Override
-    public LBStickinessResponse createLBStickinessPolicyResponse(List<? extends StickinessPolicy> stickinessPolicies, LoadBalancer lb){
-    	LBStickinessResponse spResponse = new LBStickinessResponse();
+    public LBStickinessResponse createLBStickinessPolicyResponse(
+            List<? extends StickinessPolicy> stickinessPolicies, LoadBalancer lb) {
+        LBStickinessResponse spResponse = new LBStickinessResponse();
 
-    	spResponse.setlbRuleId(lb.getId());
+        spResponse.setlbRuleId(lb.getId());
         Account accountTemp = ApiDBUtils.findAccountById(lb.getAccountId());
         if (accountTemp != null) {
-        	spResponse.setAccountName(accountTemp.getAccountName());
-        	spResponse.setDomainId(accountTemp.getDomainId());
-        	spResponse.setDomainName(ApiDBUtils.findDomainById(accountTemp.getDomainId()).getName());
+            spResponse.setAccountName(accountTemp.getAccountName());
+            spResponse.setDomainId(accountTemp.getDomainId());
+            spResponse.setDomainName(ApiDBUtils.findDomainById(
+                    accountTemp.getDomainId()).getName());
         }
 
         List<LBStickinessPolicyResponse> responses = new ArrayList<LBStickinessPolicyResponse>();
-        for (StickinessPolicy stickinessRule : stickinessPolicies) {
-        	LBStickinessPolicyResponse ruleResponse = new LBStickinessPolicyResponse(stickinessRule);
-        	responses.add(ruleResponse);
+        for (StickinessPolicy stickinessPolicy : stickinessPolicies) {
+            LBStickinessPolicyResponse ruleResponse = new LBStickinessPolicyResponse(
+                    stickinessPolicy);
+            responses.add(ruleResponse);
         }
         spResponse.setRules(responses);
-        
+
         spResponse.setObjectName("stickinesspolicy");
         return spResponse;
     }

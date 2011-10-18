@@ -137,28 +137,30 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
         int getDestinationPortEnd();
         boolean isRevoked();
     }
+
     public static class LbStickinessPolicy {
-    	String methodName;
-    	String paramsInDb;
-    	boolean revoke;
-    	public LbStickinessPolicy(String methodName,String params, boolean revoke)
-    	{
-    		this.methodName = methodName;
-    		this.paramsInDb = params;
-    		this.revoke = revoke;
-    	}
-    	public String getMethodName()
-    	{
-    		return methodName;
-    	}
-    	public String getDbParams()
-    	{
-    		return paramsInDb;
-    	}
-    	public boolean isRevoked()
-    	{
-    		return revoke;
-    	}
+        private String _methodName;
+        private String _paramsInDb;
+        private boolean _revoke;
+
+        public LbStickinessPolicy(String methodName, String params,
+                boolean revoke) {
+            this._methodName = methodName;
+            this._paramsInDb = params;
+            this._revoke = revoke;
+        }
+
+        public String getMethodName() {
+            return _methodName;
+        }
+
+        public String getDbParams() {
+            return _paramsInDb;
+        }
+
+        public boolean isRevoked() {
+            return _revoke;
+        }
     }
     public static class LbDestination implements Destination {
         private int portStart;
