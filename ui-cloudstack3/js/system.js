@@ -1082,7 +1082,7 @@
                         label: 'Password',
                         validation: { required: true },
                         hidden: true, 
-						isPassword: true
+                        password: true
                       },              
                       //input_group="general" ends here
                       
