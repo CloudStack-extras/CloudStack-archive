@@ -43,6 +43,7 @@
     var jsonObj = args.context.item;
 	var allowedActions = [];
     allowedActions.push("createTemplate");	
+	allowedActions.push("createVolume");	
 	return allowedActions;
   }
   
@@ -1093,8 +1094,70 @@
 				notification: {
 				  poll: pollAsyncJobResult		
 				}
-			  }				
-			  //???
+			  },				
+			  
+			  createVolume: {
+				label: 'Create volume',
+				messages: {  
+				  confirm: function(args) {   	   
+					return 'Are you sure you want to create volume?';
+				  },
+				  success: function(args) {
+					return 'Volume is being created.';
+				  },
+				  notification: function(args) {			
+					return 'Creating volume';
+				  },
+				  complete: function(args) {			  
+					return 'Volume has been created.';
+				  }
+				},
+				createForm: {
+				  title: 'Create volume',
+				  desc: '',
+				  fields: {  
+					name: { label: 'Name', validation: { required: true }}				        				 
+				  }
+				},         
+				action: function(args) {	                      
+				  /*
+				  var isValid = true;					
+				  isValid &= validateString("Name", $thisDialog.find("#create_volume_name"), $thisDialog.find("#create_volume_name_errormsg"));
+				  if (!isValid) 
+					  return;	
+				  */
+				  
+				  var array1 = [];    						           
+				  array1.push("&name=" + todb(args.data.name));    
+				  			  	  
+				  $.ajax({	 
+					url: createURL("createVolume&snapshotid=" + args.context.snapshots[0].id + array1.join("")),
+					dataType: "json",
+					async: true,
+					success: function(json) {   			                    	    
+					  var jid = json.createvolumeresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					  
+							 //return json.queryasyncjobresultresponse.jobresult.volume;
+							 return {}; //nothing in this snapshot needs to be updated
+						   },
+						   getActionFilter: function() {
+							 //return actionfilter;
+							 return function(){}; 
+						   }					 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: pollAsyncJobResult		
+				}
+			  }			
+			  
 			},
             tabs: {
               details: {
