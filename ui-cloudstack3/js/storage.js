@@ -992,16 +992,208 @@
             intervaltype: { label: 'Interval Type' },
             created: { label: 'Date' }
           },
-          
-		  //dataProvider: testData.dataProvider.listView('snapshots'),
+          		  
+		  actions: {  			  
+			  createTemplate: {
+			 	label: 'Create template',
+				messages: {  
+				  confirm: function(args) {   	   
+					return 'Are you sure you want to create template?';
+				  },
+				  success: function(args) {
+					return 'Template is being created.';
+				  },
+				  notification: function(args) {			
+					return 'Creating template';
+				  },
+				  complete: function(args) {			  
+					return 'Template has been created.';
+				  }
+				},
+				createForm: {
+				  title: 'Create Template',
+				  desc: '',
+				  fields: {  
+					name: { label: 'Name', validation: { required: true }},
+					displayText: { label: 'Description', validation: { required: true }},
+					osTypeId: {
+					  label: 'OS Type',
+					  select: function(args) {	                    	  
+						$.ajax({
+						  url: createURL("listOsTypes"),			 
+						  dataType: "json",
+						  async: true,
+						  success: function(json) { 				   
+							var ostypes = json.listostypesresponse.ostype;
+							var items = [];								
+							$(ostypes).each(function() {						  
+							  items.push({id: this.id, description: this.description});						  
+							});		                        					
+							args.response.success({data: items});					  
+						  }
+						});   
+					  }				
+					},                
+					isPublic: { label: 'Public', isBoolean: true },
+					isPasswordEnabled: { label: 'Password enabled', isBoolean: true }             				 
+				  }
+				},         
+				action: function(args) {	                      
+				  /*
+				  var isValid = true;					
+				  isValid &= validateString("Name", $thisDialog.find("#create_template_name"), $thisDialog.find("#create_template_name_errormsg"));
+				  isValid &= validateString("Display Text", $thisDialog.find("#create_template_desc"), $thisDialog.find("#create_template_desc_errormsg"));		          
+				  if (!isValid) 
+					  return;		    	        
+				  $thisDialog.dialog("close"); 
+				  */
+				  
+				  var array1 = [];    						           
+				  array1.push("&name=" + todb(args.data.name));    	        			   
+				  array1.push("&displayText=" + todb(args.data.displayText));    						    
+				  array1.push("&osTypeId=" + args.data.osTypeId);    			   	
+				  array1.push("&isPublic=" + (args.data.isPublic=="on"));    
+				  array1.push("&passwordEnabled=" + (args.data.isPasswordEnabled=="on"));     				           		    
+								  	  
+				  $.ajax({	 
+					url: createURL("createTemplate&snapshotid=" + args.context.snapshots[0].id + array1.join("")),
+					dataType: "json",
+					async: true,
+					success: function(json) {   			                    	    
+					  var jid = json.createtemplateresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					  
+							 //return json.queryasyncjobresultresponse.jobresult.template;
+							 return {}; //nothing in this snapshot needs to be updated
+						   },
+						   getActionFilter: function() {
+							 //return snapshotActionfilter;
+							 return function(){}; 
+						   }					 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: pollAsyncJobResult		
+				}
+			  },				
+			  
+			  createVolume: {
+				label: 'Create volume',
+				messages: {  
+				  confirm: function(args) {   	   
+					return 'Are you sure you want to create volume?';
+				  },
+				  success: function(args) {
+					return 'Volume is being created.';
+				  },
+				  notification: function(args) {			
+					return 'Creating volume';
+				  },
+				  complete: function(args) {			  
+					return 'Volume has been created.';
+				  }
+				},
+				createForm: {
+				  title: 'Create volume',
+				  desc: '',
+				  fields: {  
+					name: { label: 'Name', validation: { required: true }}				        				 
+				  }
+				},         
+				action: function(args) {	                      
+				  /*
+				  var isValid = true;					
+				  isValid &= validateString("Name", $thisDialog.find("#create_volume_name"), $thisDialog.find("#create_volume_name_errormsg"));
+				  if (!isValid) 
+					  return;	
+				  */
+				  
+				  var array1 = [];    						           
+				  array1.push("&name=" + todb(args.data.name));    
+				  			  	  
+				  $.ajax({	 
+					url: createURL("createVolume&snapshotid=" + args.context.snapshots[0].id + array1.join("")),
+					dataType: "json",
+					async: true,
+					success: function(json) {   			                    	    
+					  var jid = json.createvolumeresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					  
+							 //return json.queryasyncjobresultresponse.jobresult.volume;
+							 return {}; //nothing in this snapshot needs to be updated
+						   },
+						   getActionFilter: function() {
+							 //return actionfilter;
+							 return function(){}; 
+						   }					 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: pollAsyncJobResult		
+				}
+			  },
+              
+              'delete': {
+				label: 'Delete snapshot',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to delete snapshot ?';
+				  },
+				  success: function(args) {
+					return 'Snapshot is being deleted.';
+				  },
+				  notification: function(args) {			
+					return 'Deleting snapshot';
+				  },
+				  complete: function(args) {			  
+					return 'Snapshot has been deleted.';
+				  }
+				},         
+				action: function(args) {					               			
+				  $.ajax({
+					url: createURL("deleteSnapshot&id=" + args.context.snapshots[0].id),
+					dataType: "json",
+					async: true,
+					success: function(json) {                       			
+					  var jid = json.deletesnapshotresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid	 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: function(args) {args.complete();}		
+				}
+			  }	   
+		  },            
+		  		  		  
 		  dataProvider: function(args) {        
 			$.ajax({
-			  url: createURL("listSnapshots&page="+args.page+"&pagesize="+pageSize),
+			  url: createURL("listSnapshots&page=" + args.page + "&pagesize=" + pageSize),
 			  dataType: "json",
 			  async: true,
 			  success: function(json) { 				    
 				var items = json.listsnapshotsresponse.snapshot;			   
-				args.response.success({data:items});			                			
+				args.response.success({
+				  actionFilter: snapshotActionfilter,
+				  data: items
+				});			                			
 			  }
 			});  	
 		  },
