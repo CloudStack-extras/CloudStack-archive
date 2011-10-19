@@ -719,7 +719,6 @@
         } 		
       },
       
-	  //dataProvider: testData.dataProvider.listView('instances'),
 	  dataProvider: function(args) {           
 		var array1 = [];	
 		if(args.filterBy != null) {
@@ -1471,13 +1470,12 @@
 				created: { label: 'Created', isEditable: false }				
               }
             ],
-			
-            //dataProvider: testData.dataProvider.detailView('instances')
+			           
 			dataProvider: function(args) {	              
               args.response.success(
 			    {
 				  actionFilter: vmActionfilter,
-				  data:args.jsonObj
+				  data: args.context.instances[0]
 				}
 			  );	
 		    }			

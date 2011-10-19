@@ -675,7 +675,7 @@
 				  args.response.success(
 					{
 					  actionFilter: templateActionfilter,
-					  data:args.jsonObj
+					  data:args.context.templates[0]
 					}
 				  );	
 				}			
@@ -1301,7 +1301,7 @@
 				  args.response.success(
 					{
 					  actionFilter: isoActionfilter,
-					  data:args.jsonObj
+					  data:args.context.isos[0]
 					}
 				  );	
 				}			
