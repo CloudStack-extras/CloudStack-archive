@@ -503,7 +503,7 @@
           		  
 		  dataProvider: function(args) {        
 			$.ajax({
-			  url: createURL("listVolumes&page="+args.page+"&pagesize="+pageSize),
+			  url: createURL("listVolumes&page=" + args.page + "&pagesize=" + pageSize),
 			  dataType: "json",
 			  async: true,
 			  success: function(json) { 				    
@@ -914,7 +914,7 @@
 				  args.response.success(
 					{
 					  actionFilter: volumeActionfilter,
-					  data:args.jsonObj
+					  data: args.context.volumes[0]
 					}
 				  );	
 				}	
@@ -1352,7 +1352,7 @@
 				  args.response.success(
 					{
 					  actionFilter: snapshotActionfilter,
-					  data:args.jsonObj
+					  data: args.context.snapshots[0]
 					}
 				  );	
 				}					

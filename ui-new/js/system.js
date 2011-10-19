@@ -1208,6 +1208,54 @@
                 destroy: testData.actions.destroy('host')
               },
               detailView: {
+			    name: "Host details",
+				actions: {
+				  //???
+				  enableMaintenaceMode: { 
+					label: 'Enable Maintenace' ,
+					action: function(args) {	    
+					  debugger;
+					  $.ajax({
+						url: createURL("prepareHostForMaintenance&id=" + args.context.hosts[0].id),
+						dataType: "json",
+						async: true,
+						success: function(json) { 			    
+						  var jid = json.preparehostformaintenanceresponse.jobid;    				
+						  args.response.success(
+							{_custom:
+							  {jobId: jid,
+							   getUpdatedItem: function(json) {
+								 return json.queryasyncjobresultresponse.jobresult.host;
+							   },
+							   getActionFilter: function() {
+								 return hostActionfilter;
+							   }					 
+							  }
+							}
+						  );							
+						}
+					  });  	
+					},
+					messages: {
+					  confirm: function(args) {
+						return 'Enabling maintenance mode will cause a live migration of all running instances on this host to any available host.';
+					  },
+					  success: function(args) {
+						return 'Maintenance is being enabled.';
+					  },
+					  notification: function(args) {
+						return 'Enabling maintenance';
+					  },
+					  complete: function(args) {
+						return 'Maintenance has been enabled.';
+					  }
+					},		  
+					notification: {           
+					  poll: pollAsyncJobResult
+					}		  
+				  }
+				  //???
+				},			  
                 tabs: {
                   details: {
                     title: 'Details',
@@ -1891,5 +1939,14 @@
 	    url = server + iqn + "/" + lun;
 	return url;
   }  
+  
+  //action filters (begin)
+  var hostActionfilter = function(args) {	    		  
+    var jsonObj = args.context.item;
+	var allowedActions = [];	
+	allowedActions.push("enableMaintenanceMode");	
+    return allowedActions;
+  }  
+  //action filters (end)
   
 })($, cloudStack, testData);
