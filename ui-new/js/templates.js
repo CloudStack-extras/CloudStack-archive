@@ -1028,26 +1028,23 @@
           detailView: {
             name: 'ISO details',       
 			actions: {		
-               edit: {
+              edit: {
 				label: 'Edit',
 				action: function(args) {	
-				  var array1 = [];		
-                  debugger;				  
-				  array1.push("&displayName=" + args.response.data.displayname);					
-				  array1.push("&group=" + args.response.data.display);								
-				  array1.push("&ostypeid=" + args.response.data.guestosid);  
-				  //array1.push("&haenable=" + haenable);                   			
-					
+				  var array1 = [];	                  		  
+                  array1.push("&name=" + todb(args.data.name));
+				  array1.push("&displaytext=" + todb(args.data.displaytext));				 	
+				  array1.push("&ostypeid=" + args.data.ostypeid);												
 				  $.ajax({
-					url: createURL("updateVirtualMachine&id=" + args.context.instances[0].id + array1.join("")),
+					url: createURL("updateIso&id=" + args.context.isos[0].id + "&zoneid=" + args.context.isos[0].zoneid + array1.join("")),
 					dataType: "json",
-					success: function(json) {				 
-					  var item = json.updatevirtualmachineresponse.virtualmachine;		
+					success: function(json) {	                      				
+					  var item = json.updateisoresponse.iso;		
 					  args.response.success({data:item});	   					
 					}
 				  });	
 				}
-			  },          
+			  },           
 		  
 			  copyISO: {
 				label: 'Copy ISO',
