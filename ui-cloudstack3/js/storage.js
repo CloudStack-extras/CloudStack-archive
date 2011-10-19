@@ -2,54 +2,6 @@
 
   var diskofferingObjs, selectedDiskOfferingObj;
 
-  var volumeActionfilter = function(args) {	    		  
-    var jsonObj = args.context.item;
-	var allowedActions = [];	   
-	if(jsonObj.hypervisor != "Ovm") {         
-      allowedActions.push("takeSnapshot");	
-	  allowedActions.push("recurringSnapshot");	
-	}    
-    if(jsonObj.state != "Allocated") {
-	  if(jsonObj.hypervisor != "Ovm") {         
-	    allowedActions.push("downloadVolume");	
-	  }
-    }	
-    if(jsonObj.state != "Creating" && jsonObj.state != "Corrupted" && jsonObj.name != "attaching") {
-        if(jsonObj.type == "ROOT") {
-            if (jsonObj.vmstate == "Stopped") {                 
-				allowedActions.push("createTemplate");	
-            }
-        } 
-        else { 
-	        if (jsonObj.virtualmachineid != null) {
-		        if (jsonObj.storagetype == "shared" && (jsonObj.vmstate == "Running" || jsonObj.vmstate == "Stopped" || jsonObj.vmstate == "Destroyed")) {			        
-					allowedActions.push("detachDisk");	
-		        }
-	        } 
-			else { // Disk not attached		        
-		        if (jsonObj.storagetype == "shared") {			        
-                    allowedActions.push("attachDisk");	    			    			  		    
-			        if(jsonObj.vmname == null || jsonObj.vmname == "none") {			            
-						allowedActions.push("delete");	
-					}
-		        }
-	        }
-        }
-    }	
-    return allowedActions;
-  }
-  
-  var snapshotActionfilter = function(args) {
-    var jsonObj = args.context.item;
-	var allowedActions = [];
-	if(jsonObj.state == "BackedUp") {
-      allowedActions.push("createTemplate");	
-	  allowedActions.push("createVolume");	
-	}
-	allowedActions.push("delete");
-	return allowedActions;
-  }
-  
   cloudStack.sections.storage = {
     title: 'Storage',
     id: 'storage',
@@ -223,7 +175,7 @@
               },
               action: function(args) {
 				$.ajax({
-					url: createURL("createSnapshot&volumeid=" + args.data.id),
+					url: createURL("createSnapshot&volumeid=" + args.context.volumes[0].id),
 					dataType: "json",
 					async: true,
 					success: function(json) { 			    
@@ -232,7 +184,7 @@
 						{_custom:
 						  {jobId: jid,
 						   getUpdatedItem: function(json) {					     
-							 return json.queryasyncjobresultresponse.jobresult.snapshot;
+							 return {}; //no properties in this volume needs to be updated
 						   },
 						   getActionFilter: function() {
 							 return volumeActionfilter;
@@ -494,12 +446,10 @@
 						{_custom:
 						  {jobId: jid,
 						   getUpdatedItem: function(json) {					  
-							 //return json.queryasyncjobresultresponse.jobresult.volume;
-							 return {}; //nothing in this volume needs to be updated
+							 return {}; //no properties in this volume needs to be updated
 						   },
-						   getActionFilter: function() {
-							 //return volumeActionfilter;
-							 return function(){}; 
+						   getActionFilter: function() {							 
+							 return volumeActionfilter;
 						   }					 
 						  }
 						}
@@ -852,17 +802,15 @@
 					  args.response.success(
 						{_custom:
 						  {jobId: jid,
-						   getUpdatedItem: function(json) {					  
-							 //return json.queryasyncjobresultresponse.jobresult.volume;
-							 return {}; //nothing in this volume needs to be updated
+						   getUpdatedItem: function(json) {					     
+							 return {}; //no properties in this volume needs to be updated
 						   },
 						   getActionFilter: function() {
-							 //return volumeActionfilter;
-							 return function(){}; 
+							 return volumeActionfilter;
 						   }					 
 						  }
 						}
-					  );						  
+					  );			  
 					}
 				  });  	
 				},
@@ -1064,13 +1012,11 @@
 					  args.response.success(
 						{_custom:
 						  {jobId: jid,
-						   getUpdatedItem: function(json) {					  
-							 //return json.queryasyncjobresultresponse.jobresult.template;
+						   getUpdatedItem: function(json) {									 
 							 return {}; //nothing in this snapshot needs to be updated
 						   },
 						   getActionFilter: function() {
-							 //return snapshotActionfilter;
-							 return function(){}; 
+							 return snapshotActionfilter;							 
 						   }					 
 						  }
 						}
@@ -1126,17 +1072,15 @@
 					  args.response.success(
 						{_custom:
 						  {jobId: jid,
-						   getUpdatedItem: function(json) {					  
-							 //return json.queryasyncjobresultresponse.jobresult.volume;
+						   getUpdatedItem: function(json) {									 
 							 return {}; //nothing in this snapshot needs to be updated
 						   },
 						   getActionFilter: function() {
-							 //return actionfilter;
-							 return function(){}; 
+							 return snapshotActionfilter;							 
 						   }					 
 						  }
 						}
-					  );						  
+					  );				  
 					}
 				  });  	
 				},
@@ -1271,17 +1215,15 @@
 					  args.response.success(
 						{_custom:
 						  {jobId: jid,
-						   getUpdatedItem: function(json) {					  
-							 //return json.queryasyncjobresultresponse.jobresult.template;
+						   getUpdatedItem: function(json) {									 
 							 return {}; //nothing in this snapshot needs to be updated
 						   },
 						   getActionFilter: function() {
-							 //return snapshotActionfilter;
-							 return function(){}; 
+							 return snapshotActionfilter;							 
 						   }					 
 						  }
 						}
-					  );						  
+					  );					  
 					}
 				  });  	
 				},
@@ -1333,17 +1275,15 @@
 					  args.response.success(
 						{_custom:
 						  {jobId: jid,
-						   getUpdatedItem: function(json) {					  
-							 //return json.queryasyncjobresultresponse.jobresult.volume;
+						   getUpdatedItem: function(json) {									 
 							 return {}; //nothing in this snapshot needs to be updated
 						   },
 						   getActionFilter: function() {
-							 //return actionfilter;
-							 return function(){}; 
+							 return snapshotActionfilter;							 
 						   }					 
 						  }
 						}
-					  );						  
+					  );					  
 					}
 				  });  	
 				},
@@ -1423,4 +1363,54 @@
       }
     }
   };
+  
+  
+  var volumeActionfilter = function(args) {	    		  
+    var jsonObj = args.context.item;
+	var allowedActions = [];	   
+	if(jsonObj.hypervisor != "Ovm") {         
+      allowedActions.push("takeSnapshot");	
+	  allowedActions.push("recurringSnapshot");	
+	}    
+    if(jsonObj.state != "Allocated") {
+	  if(jsonObj.hypervisor != "Ovm") {         
+	    allowedActions.push("downloadVolume");	
+	  }
+    }	
+    if(jsonObj.state != "Creating" && jsonObj.state != "Corrupted" && jsonObj.name != "attaching") {
+        if(jsonObj.type == "ROOT") {
+            if (jsonObj.vmstate == "Stopped") {                 
+				allowedActions.push("createTemplate");	
+            }
+        } 
+        else { 
+	        if (jsonObj.virtualmachineid != null) {
+		        if (jsonObj.storagetype == "shared" && (jsonObj.vmstate == "Running" || jsonObj.vmstate == "Stopped" || jsonObj.vmstate == "Destroyed")) {			        
+					allowedActions.push("detachDisk");	
+		        }
+	        } 
+			else { // Disk not attached		        
+		        if (jsonObj.storagetype == "shared") {			        
+                    allowedActions.push("attachDisk");	    			    			  		    
+			        if(jsonObj.vmname == null || jsonObj.vmname == "none") {			            
+						allowedActions.push("delete");	
+					}
+		        }
+	        }
+        }
+    }	
+    return allowedActions;
+  }
+  
+  var snapshotActionfilter = function(args) {
+    var jsonObj = args.context.item;
+	var allowedActions = [];
+	if(jsonObj.state == "BackedUp") {
+      allowedActions.push("createTemplate");	
+	  allowedActions.push("createVolume");	
+	}
+	allowedActions.push("delete");
+	return allowedActions;
+  }  
+  
 })(cloudStack, testData);

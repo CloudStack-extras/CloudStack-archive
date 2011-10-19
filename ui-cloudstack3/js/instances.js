@@ -3,67 +3,7 @@
   var zoneObjs, hypervisorObjs, featuredTemplateObjs, communityTemplateObjs, myTemplateObjs, isoObjs, serviceOfferingObjs, diskOfferingObjs;
   var selectedZoneObj, selectedTemplateObj, selectedHypervisor, selectedDiskOfferingObj;
   var step5ContainerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'	
-   
-  var vmActionfilter = function(args) {	    		  
-    var jsonObj = args.context.item;
-	var allowedActions = [];
-					
-	if (jsonObj.state == 'Destroyed') {
-		if(isAdmin() || isDomainAdmin()) {
-		    allowedActions.push("restore");												
-		}	
-	} 
-	else if (jsonObj.state == 'Running') {	
-        allowedActions.push("edit");	
-		allowedActions.push("stop");
-		allowedActions.push("restart");	
-		allowedActions.push("destroy");	
-		if (isAdmin() 
-			&& (jsonObj.rootdevicetype == 'NetworkFilesystem' || jsonObj.rootdevicetype == 'IscsiLUN' || jsonObj.rootdevicetype == 'PreSetup')
-			&& (jsonObj.hypervisor == 'XenServer' || jsonObj.hypervisor == 'VMware')) 
-		{
-		    allowedActions.push("migrate");							
-		}
-		
-		if (jsonObj.isoid == null)	{
-		    allowedActions.push("attachISO");							
-		}
-		else {	
-            allowedActions.push("detachISO");	
-		}
-			
-		allowedActions.push("resetPassword");	
-		allowedActions.push("changeService");	
-		
-		if(jsonObj.hypervisor == "BareMetal") {
-		    allowedActions.push("createTemplate");							
-		}											
-	} 
-	else if (jsonObj.state == 'Stopped') {	  
-        allowedActions.push("edit");					
-		allowedActions.push("start");
-        allowedActions.push("destroy");	
-		if (jsonObj.isoid == null)	{
-		    allowedActions.push("attachISO");							
-		}
-		else {	
-            allowedActions.push("detachISO");	
-		}	    
-		allowedActions.push("resetPassword");		
-		allowedActions.push("changeService");
-		if(jsonObj.hypervisor == "BareMetal") {
-		    allowedActions.push("createTemplate");							
-		}	 					
-	}
-	else if (jsonObj.state == 'Starting') {	
-	    allowedActions.push("stop");										
-	}
-	else if (jsonObj.state == 'Error') {	
-	    allowedActions.push("destroy");									
-	}				
-    return allowedActions;
-  }
-    
+     
   cloudStack.sections.instances = {
     title: 'Instances',
     id: 'instances',
@@ -1363,13 +1303,11 @@
 				  args.response.success(
 				    {_custom:
 				      {jobId: jid,
-					   getUpdatedItem: function(json) {					  
-					     //return json.queryasyncjobresultresponse.jobresult.virtualmachine;
-						 return {}; //nothing in this VM needs to be updated
+					   getUpdatedItem: function(json) {	 
+						 return {}; //no properties in this VM needs to be updated
 					   },
 					   getActionFilter: function() {
-					     //return vmActionfilter;
-						 return function(){}; 
+					     return vmActionfilter;						 
 					   }					 
 					  }
 				    }
@@ -1592,4 +1530,65 @@
       }
     }
   };
+  
+  var vmActionfilter = function(args) {	    		  
+    var jsonObj = args.context.item;
+	var allowedActions = [];
+					
+	if (jsonObj.state == 'Destroyed') {
+		if(isAdmin() || isDomainAdmin()) {
+		    allowedActions.push("restore");												
+		}	
+	} 
+	else if (jsonObj.state == 'Running') {	
+        allowedActions.push("edit");	
+		allowedActions.push("stop");
+		allowedActions.push("restart");	
+		allowedActions.push("destroy");	
+		if (isAdmin() 
+			&& (jsonObj.rootdevicetype == 'NetworkFilesystem' || jsonObj.rootdevicetype == 'IscsiLUN' || jsonObj.rootdevicetype == 'PreSetup')
+			&& (jsonObj.hypervisor == 'XenServer' || jsonObj.hypervisor == 'VMware')) 
+		{
+		    allowedActions.push("migrate");							
+		}
+		
+		if (jsonObj.isoid == null)	{
+		    allowedActions.push("attachISO");							
+		}
+		else {	
+            allowedActions.push("detachISO");	
+		}
+			
+		allowedActions.push("resetPassword");	
+		allowedActions.push("changeService");	
+		
+		if(jsonObj.hypervisor == "BareMetal") {
+		    allowedActions.push("createTemplate");							
+		}											
+	} 
+	else if (jsonObj.state == 'Stopped') {	  
+        allowedActions.push("edit");					
+		allowedActions.push("start");
+        allowedActions.push("destroy");	
+		if (jsonObj.isoid == null)	{
+		    allowedActions.push("attachISO");							
+		}
+		else {	
+            allowedActions.push("detachISO");	
+		}	    
+		allowedActions.push("resetPassword");		
+		allowedActions.push("changeService");
+		if(jsonObj.hypervisor == "BareMetal") {
+		    allowedActions.push("createTemplate");							
+		}	 					
+	}
+	else if (jsonObj.state == 'Starting') {	
+	    allowedActions.push("stop");										
+	}
+	else if (jsonObj.state == 'Error') {	
+	    allowedActions.push("destroy");									
+	}				
+    return allowedActions;
+  }    
+  
 })(jQuery, cloudStack, testData);
