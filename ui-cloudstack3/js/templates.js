@@ -1,25 +1,5 @@
 (function(cloudStack, testData) { 
 
-  var templateActionfilter = function(args) {	    
-    var jsonObj = args.context.item;
-	var allowedActions = [];	
-    allowedActions.push("copyTemplate");			
-    return allowedActions;
-  }
-
-  var isoActionfilter = function(args) {	    		  
-    var jsonObj = args.context.item;
-	var allowedActions = [];	
-    /*	
-	if (jsonObj.state == 'Destroyed') {
-		if(isAdmin() || isDomainAdmin()) {
-		    allowedActions.push("restore");												
-		}	
-	} 
-	*/	
-    return allowedActions;
-  }
-  
   cloudStack.sections.templates = {
     title: 'Templates',
     id: 'templates',
@@ -264,8 +244,7 @@
           
           detailView: {
             name: 'Template details',            
-            actions: {
-			  //???
+            actions: {			  
 			  copyTemplate: {
 				label: 'Copy template',
 				messages: {     
@@ -318,7 +297,7 @@
 						{_custom:
 						  {jobId: jid,
 						   getUpdatedItem: function(json) {								 
-							 return {}; //nothing needs to be updated
+							 return {}; //nothing in this template needs to be updated
 						   },
 						   getActionFilter: function() {
 							 return templateActionfilter;							 
@@ -332,8 +311,54 @@
 				notification: {
 				  poll: pollAsyncJobResult	  
 				}               
-			  }
-			  //???			      
+			  },
+			  	
+              downloadTemplate: {
+				label: 'Download template',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to download template ?';
+				  },
+				  success: function(args) {
+					return 'Template is being downloaded.';
+				  },
+				  notification: function(args) {			
+					return 'Downloading template';
+				  },
+				  complete: function(args) {                			  
+                    var url = decodeURIComponent(args.url);		                          
+                    var htmlMsg = 'Please click <a href="#">00000</a> to download template';		                            
+                    var htmlMsg2 = htmlMsg.replace(/#/, url).replace(/00000/, url);   
+					return htmlMsg2;
+				  }
+				},         
+				action: function(args) {	                   		
+				  $.ajax({
+					url: createURL("extractTemplate&id=" + args.context.templates[0].id + "&zoneid=" + args.context.templates[0].zoneid + "&mode=HTTP_DOWNLOAD"),
+					dataType: "json",
+					async: true,
+					success: function(json) {                       			
+					  var jid = json.extracttemplateresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					     
+							 return {}; //nothing in this template needs to be updated
+						   },
+						   getActionFilter: function() {
+							 return templateActionfilter;
+						   }				 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: pollAsyncJobResult	
+				}
+			  }	
+              		  
             },
             tabs: {
               details: {
@@ -728,4 +753,26 @@
       }
     }
   };  
+    
+  var templateActionfilter = function(args) {	    
+    var jsonObj = args.context.item;
+	var allowedActions = [];	
+    allowedActions.push("copyTemplate");	
+    allowedActions.push("downloadTemplate");		
+    return allowedActions;
+  }
+
+  var isoActionfilter = function(args) {	    		  
+    var jsonObj = args.context.item;
+	var allowedActions = [];	
+    /*	
+	if (jsonObj.state == 'Destroyed') {
+		if(isAdmin() || isDomainAdmin()) {
+		    allowedActions.push("restore");												
+		}	
+	} 
+	*/	
+    return allowedActions;
+  }  
+  
 })(cloudStack, testData);
