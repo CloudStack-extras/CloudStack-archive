@@ -843,20 +843,171 @@
 		  },
           
           detailView: {
-            name: 'ISO details',            
-            actions: {
-			  /*
-              edit: {
-                label: 'Edit ISO details',
-                action: function(args) {
-                  args.response.success();
-                },
-                notification: {
-                  poll: testData.notifications.testPoll
-                }
-              },
-			  */              
+            name: 'ISO details',       
+			actions: {			  
+			  copyISO: {
+				label: 'Copy ISO',
+				messages: {     
+				  confirm: function(args) {			
+					return 'Are you sure you want to copy ISO?';
+				  },
+				  success: function(args) {
+					return 'ISO is being copied.';
+				  },
+				  notification: function(args) {			
+					return 'Copying ISO';
+				  },
+				  complete: function(args) {			  
+					return 'ISO has been copied.';
+				  }
+				}, 
+				createForm: {
+				  title: 'Copy ISO',
+				  desc: '',
+				  fields: {  
+					destinationZoneId: {
+					  label: 'Destination zone',
+					  select: function(args) {	                        					  
+						$.ajax({
+						  url: createURL("listZones&available=true"),			 
+						  dataType: "json",
+						  async: true,
+						  success: function(json) {                             				  
+							var zoneObjs = json.listzonesresponse.zone;		
+							var items = [];								
+							$(zoneObjs).each(function() {	
+                              if(this.id != args.context.isos[0].zoneid)						  
+							      items.push({id: this.id, description: this.name});	 
+							});	                        						
+							args.response.success({data: items});					  
+						  }
+						});  		
+					  }				
+					}				 
+				  }
+				},        			
+				action: function(args) {                  			
+				  $.ajax({		
+					url: createURL("copyIso&id=" + args.context.isos[0].id + "&sourcezoneid=" + args.context.isos[0].zoneid + "&destzoneid=" + args.data.destinationZoneId),
+					dataType: "json",
+					async: true,
+					success: function(json) {  	                                    
+					  var jid = json.copytemplateresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {								 
+							 return {}; //nothing in this ISO needs to be updated
+						   },
+						   getActionFilter: function() {
+							 return isoActionfilter;							 
+						   }					 
+						  }
+						}
+					  );		  			  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: pollAsyncJobResult	  
+				}               
+			  },
+			  	
+              downloadISO: {
+				label: 'Download ISO',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to download ISO ?';
+				  },
+				  success: function(args) {
+					return 'ISO is being downloaded.';
+				  },
+				  notification: function(args) {			
+					return 'Downloading ISO';
+				  },
+				  complete: function(args) {                			  
+                    var url = decodeURIComponent(args.url);		                          
+                    var htmlMsg = 'Please click <a href="#">00000</a> to download ISO';		                            
+                    var htmlMsg2 = htmlMsg.replace(/#/, url).replace(/00000/, url);   
+					return htmlMsg2;
+				  }
+				},         
+				action: function(args) {	                   		
+				  $.ajax({
+					url: createURL("extractIso&id=" + args.context.isos[0].id + "&zoneid=" + args.context.isos[0].zoneid + "&mode=HTTP_DOWNLOAD"),
+					dataType: "json",
+					async: true,
+					success: function(json) {                       			
+					  var jid = json.extractisoresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {					     
+							 return {}; //nothing in this ISO needs to be updated
+						   },
+						   getActionFilter: function() {
+							 return isoActionfilter;
+						   }				 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: pollAsyncJobResult	
+				}
+			  },
+             
+              'delete': {
+				label: 'Delete ISO',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to delete ISO ?';
+				  },
+				  success: function(args) {
+					return 'ISO is being deleted.';
+				  },
+				  notification: function(args) {			
+					return 'Deleting ISO';
+				  },
+				  complete: function(args) {			  
+					return 'ISO has been deleted.';
+				  }
+				},         
+				action: function(args) {					  			  
+                  var array1 = [];						
+	              if (args.context.isos[0].zoneid != null) 
+		            array1.push("&zoneid=" + args.context.isos[0].zoneid);		  
+				  				               			
+				  $.ajax({
+					url: createURL("deleteIso&id=" + args.context.isos[0].id + array1.join("")),
+					dataType: "json",
+					async: true,
+					success: function(json) {                       			
+					  var jid = json.deleteisoresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {								 
+							 return {}; //nothing in this ISO needs to be updated, in fact, this whole ISO has being deleted
+						   },
+						   getActionFilter: function() {
+							 return isoActionfilter;							 
+						   }					 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {				  
+				  poll: pollAsyncJobResult	
+				}
+			  }	                	  
+              		  
             },
+			
             tabs: {
               details: {
                 title: 'Details',
@@ -1010,13 +1161,66 @@
   var isoActionfilter = function(args) {	    		  
     var jsonObj = args.context.item;
 	var allowedActions = [];	
-    /*	
-	if (jsonObj.state == 'Destroyed') {
-		if(isAdmin() || isDomainAdmin()) {
-		    allowedActions.push("restore");												
-		}	
-	} 
-	*/	
+    	
+	if ((isAdmin() == false && !(jsonObj.domainid == g_domainid && jsonObj.account == g_account))  //if neither root-admin, nor item owner 
+	    || (jsonObj.isready == false)
+	    || (jsonObj.domainid ==	1 && jsonObj.account ==	"system")
+	    ) {		
+		//do nothing
+    }
+    else {        
+        //buildActionLinkForTab("label.action.edit.ISO", isoActionMap, $actionMenu, $midmenuItem1, $thisTab);	
+		allowedActions.push("edit");	
+                
+        if(jsonObj.id != 200) { //200 is ID of xsTools ISO
+            //buildActionLinkForTab("label.action.copy.ISO", isoActionMap, $actionMenu, $midmenuItem1, $thisTab);	
+			allowedActions.push("copyISO");	       
+        }			
+    }
+		
+	// "Create VM"
+	// Commenting this out for Beta2 as it does not support the new network.
+	/*
+	//if (((isUser() && jsonObj.ispublic == true && !(jsonObj.domainid == g_domainid && jsonObj.account == g_account)) 
+	if (((isAdmin() == false && !(jsonObj.domainid == g_domainid && jsonObj.account == g_account))  //if neither root-admin, nor item owner 
+	    || jsonObj.isready == false) 
+	    || (jsonObj.bootable == false)
+	    || (jsonObj.domainid ==	1 && jsonObj.account ==	"system")
+	    ) {
+	    //do nothing
+	}
+    else {        
+        //buildActionLinkForTab("label.action.create.vm", isoActionMap, $actionMenu, $midmenuItem1, $thisTab);	
+		allowedActions.push("createVm");	        
+    }
+	*/
+    
+	// "Download ISO"
+	//if (((isUser() && jsonObj.ispublic == true && !(jsonObj.domainid == g_domainid && jsonObj.account == g_account))) 
+	if (((isAdmin() == false && !(jsonObj.domainid == g_domainid && jsonObj.account == g_account)))  //if neither root-admin, nor item owner 
+	    || (jsonObj.isready == false)
+	    || (jsonObj.domainid ==	1 && jsonObj.account ==	"system")
+	    ) {
+	    //do nothing
+	}
+	else {	    
+	    //buildActionLinkForTab("label.action.download.ISO", isoActionMap, $actionMenu, $midmenuItem1, $thisTab);		    
+	    allowedActions.push("downloadISO");	       
+	}    		   
+	
+	// "Delete ISO"
+	//if (((isUser() && jsonObj.ispublic == true && !(jsonObj.domainid == g_domainid && jsonObj.account == g_account))) 
+	if (((isAdmin() == false && !(jsonObj.domainid == g_domainid && jsonObj.account == g_account)))  //if neither root-admin, nor item owner 
+	    || (jsonObj.isready == false && jsonObj.status != null && jsonObj.status.indexOf("Downloaded") != -1)
+	    || (jsonObj.domainid ==	1 && jsonObj.account ==	"system")
+	    ) {
+	    //do nothing
+	}
+	else {	   	    
+	    //buildActionLinkForTab("label.action.delete.ISO", isoActionMap, $actionMenu, $midmenuItem1, $thisTab);	
+	    allowedActions.push("delete");	       
+	}    	
+		
     return allowedActions;
   }  
   
