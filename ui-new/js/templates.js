@@ -317,7 +317,7 @@
 						{_custom:
 						  {jobId: jid,
 						   getUpdatedItem: function(json) {					     
-							 return {}; //nothing in this template needs to be updated
+							 return json.queryasyncjobresultresponse.jobresult.iso;
 						   },
 						   getActionFilter: function() {
 							 return templateActionfilter;
@@ -498,7 +498,7 @@
 						{_custom:
 						  {jobId: jid,
 						   getUpdatedItem: function(json) {					     
-							 return {}; //nothing in this template needs to be updated
+							 return json.queryasyncjobresultresponse.jobresult.template;
 						   },
 						   getActionFilter: function() {
 							 return templateActionfilter;
@@ -925,7 +925,7 @@
 				  notification: function(args) {			
 					return 'Downloading ISO';
 				  },
-				  complete: function(args) {                			  
+				  complete: function(args) {   
                     var url = decodeURIComponent(args.url);		                          
                     var htmlMsg = 'Please click <a href="#">00000</a> to download ISO';		                            
                     var htmlMsg2 = htmlMsg.replace(/#/, url).replace(/00000/, url);   
@@ -942,8 +942,8 @@
 					  args.response.success(
 						{_custom:
 						  {jobId: jid,
-						   getUpdatedItem: function(json) {					     
-							 return {}; //nothing in this ISO needs to be updated
+						   getUpdatedItem: function(json) {	                           				   
+							 return json.queryasyncjobresultresponse.jobresult.iso;
 						   },
 						   getActionFilter: function() {
 							 return isoActionfilter;
