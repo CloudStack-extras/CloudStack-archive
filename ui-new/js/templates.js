@@ -357,7 +357,54 @@
 				notification: {
 				  poll: pollAsyncJobResult	
 				}
-			  }	
+			  },
+             
+              'delete': {
+				label: 'Delete template',
+				messages: {
+				  confirm: function(args) {
+					return 'Are you sure you want to delete template ?';
+				  },
+				  success: function(args) {
+					return 'template is being deleted.';
+				  },
+				  notification: function(args) {			
+					return 'Deleting template';
+				  },
+				  complete: function(args) {			  
+					return 'template has been deleted.';
+				  }
+				},         
+				action: function(args) {					  			  
+                  var array1 = [];						
+	              if (args.context.templates[0].zoneid != null) 
+		            array1.push("&zoneid=" + args.context.templates[0].zoneid);		  
+				  				               			
+				  $.ajax({
+					url: createURL("deleteTemplate&id=" + args.context.templates[0].id + array1.join("")),
+					dataType: "json",
+					async: true,
+					success: function(json) {                       			
+					  var jid = json.deletetemplateresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {								 
+							 return {}; //nothing in this template needs to be updated, in fact, this whole template has being deleted
+						   },
+						   getActionFilter: function() {
+							 return templateActionfilter;							 
+						   }					 
+						  }
+						}
+					  );						  
+					}
+				  });  	
+				},
+				notification: {				  
+				  poll: pollAsyncJobResult	
+				}
+			  }	                	  
               		  
             },
             tabs: {
@@ -759,6 +806,7 @@
 	var allowedActions = [];	
     allowedActions.push("copyTemplate");	
     allowedActions.push("downloadTemplate");		
+	allowedActions.push("delete");		
     return allowedActions;
   }
 
