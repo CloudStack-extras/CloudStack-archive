@@ -1,15 +1,9 @@
 (function(cloudStack, testData) { 
 
-  var templateActionfilter = function(args) {	    		  
+  var templateActionfilter = function(args) {	    
     var jsonObj = args.context.item;
 	var allowedActions = [];	
-    /*	
-	if (jsonObj.state == 'Destroyed') {
-		if(isAdmin() || isDomainAdmin()) {
-		    allowedActions.push("restore");												
-		}	
-	} 
-	*/	
+    allowedActions.push("copyTemplate");			
     return allowedActions;
   }
 
@@ -260,7 +254,10 @@
 			  async: true,
 			  success: function(json) { 	
 				var items = json.listtemplatesresponse.template;			    
-				args.response.success({data:items});			                			
+				args.response.success({
+				  actionFilter: templateActionfilter,
+				  data: items
+				});				                			
 			  }
 		    });  	
 		  }	,
@@ -268,17 +265,75 @@
           detailView: {
             name: 'Template details',            
             actions: {
-			  /*
-              edit: {
-                label: 'Edit template details',
-                action: function(args) {
-                  args.response.success();
-                },
-                notification: {
-                  poll: testData.notifications.testPoll
-                }
-              },
-			  */              
+			  //???
+			  copyTemplate: {
+				label: 'Copy template',
+				messages: {     
+				  confirm: function(args) {			
+					return 'Are you sure you want to copy template?';
+				  },
+				  success: function(args) {
+					return 'Template is being copied.';
+				  },
+				  notification: function(args) {			
+					return 'Copying template';
+				  },
+				  complete: function(args) {			  
+					return 'Template has been copied.';
+				  }
+				}, 
+				createForm: {
+				  title: 'Copy template',
+				  desc: '',
+				  fields: {  
+					destinationZoneId: {
+					  label: 'Destination zone',
+					  select: function(args) {	                        					  
+						$.ajax({
+						  url: createURL("listZones&available=true"),			 
+						  dataType: "json",
+						  async: true,
+						  success: function(json) {                        					  
+							var zoneObjs = json.listzonesresponse.zone;		
+							var items = [];								
+							$(zoneObjs).each(function() {	
+                              if(this.id != args.context.templates[0].zoneid)						  
+							      items.push({id: this.id, description: this.name});	 
+							});	                        						
+							args.response.success({data: items});					  
+						  }
+						});  		
+					  }				
+					}				 
+				  }
+				},        			
+				action: function(args) {                  			
+				  $.ajax({		
+					url: createURL("copyTemplate&id=" + args.context.templates[0].id + "&sourcezoneid=" + args.context.templates[0].zoneid + "&destzoneid=" + args.data.destinationZoneId),
+					dataType: "json",
+					async: true,
+					success: function(json) {  	                                    
+					  var jid = json.copytemplateresponse.jobid;    				
+					  args.response.success(
+						{_custom:
+						  {jobId: jid,
+						   getUpdatedItem: function(json) {								 
+							 return {}; //nothing needs to be updated
+						   },
+						   getActionFilter: function() {
+							 return templateActionfilter;							 
+						   }					 
+						  }
+						}
+					  );		  			  
+					}
+				  });  	
+				},
+				notification: {
+				  poll: pollAsyncJobResult	  
+				}               
+			  }
+			  //???			      
             },
             tabs: {
               details: {
