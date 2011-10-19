@@ -285,7 +285,7 @@
           
           dataProvider: function(args) {  
             $.ajax({
-              url: createURL("listZones&page="+args.page+"&pagesize="+pageSize),
+              url: createURL("listZones&page=" + args.page + "&pagesize=" + pageSize),
               dataType: "json",
               async: true,
               success: function(json) { 
@@ -906,7 +906,10 @@
                   async: true,
                   success: function(json) {             
                     var items = json.listhostsresponse.host;          
-                    args.response.success({data:items});                            
+                    args.response.success({
+					  actionFilter: hostActionfilter,
+					  data: items
+					});                            
                   }
                 });   
               },
@@ -1209,12 +1212,10 @@
               },
               detailView: {
 			    name: "Host details",
-				actions: {
-				  //???
+				actions: {				  
 				  enableMaintenaceMode: { 
 					label: 'Enable Maintenace' ,
-					action: function(args) {	    
-					  debugger;
+					action: function(args) {	
 					  $.ajax({
 						url: createURL("prepareHostForMaintenance&id=" + args.context.hosts[0].id),
 						dataType: "json",
@@ -1268,10 +1269,12 @@
                         zonename: { label: 'Zone' },
                       }
                     ],
-
-                    //dataProvider: testData.dataProvider.detailView('hosts')
-                    dataProvider: function(args) {                
-                      args.response.success({data:args.jsonObj}); 
+                    
+                    dataProvider: function(args) {                        			
+                      args.response.success({
+					    actionFilter: hostActionfilter,
+					    data: args.context.hosts[0]
+				      }); 
                     }   
                     
                   },
@@ -1944,7 +1947,7 @@
   var hostActionfilter = function(args) {	    		  
     var jsonObj = args.context.item;
 	var allowedActions = [];	
-	allowedActions.push("enableMaintenanceMode");	
+	allowedActions.push("enableMaintenaceMode");	
     return allowedActions;
   }  
   //action filters (end)
