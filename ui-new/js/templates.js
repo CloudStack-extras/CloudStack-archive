@@ -679,12 +679,14 @@
 			  async: true,
 			  success: function(json) { 	
 				var items = json.listisosresponse.iso;			    
-				args.response.success({data:items});		                			
+				args.response.success({
+				  actionFilter: isoActionfilter,
+				  data: items
+				});		                			
 			  }
 			});  	
 		  },
-
-          //???
+          
           detailView: {
             name: 'ISO details',            
             actions: {
@@ -806,7 +808,47 @@
 	var allowedActions = [];	
     allowedActions.push("copyTemplate");	
     allowedActions.push("downloadTemplate");		
-	allowedActions.push("delete");		
+	allowedActions.push("delete");
+    
+    // "Edit Template", "Copy Template", "Create VM"	
+	if ((isAdmin() == false && !(jsonObj.domainid == g_domainid && jsonObj.account == g_account))  //if neither root-admin, nor item owner
+	    || jsonObj.templatetype == "SYSTEM" || jsonObj.isready == false) {
+	    //do nothing	
+    }
+    else {
+        //buildActionLinkForTab("label.action.edit.template", templateActionMap, $actionMenu, $midmenuItem1, $thisTab);  
+        allowedActions.push("edit");
+		
+        //buildActionLinkForTab("label.action.copy.template", templateActionMap, $actionMenu, $midmenuItem1, $thisTab);	
+		allowedActions.push("copyTemplate");
+		
+        // For Beta2, this simply doesn't work without a network.
+		//buildActionLinkForTab("label.action.create.vm", templateActionMap, $actionMenu, $midmenuItem1, $thisTab);	 
+		//allowedActions.push("createVm");
+    }
+	
+	// "Download Template"		
+	if (((isAdmin() == false && !(jsonObj.domainid == g_domainid && jsonObj.account == g_account)))  //if neither root-admin, nor item owner
+		|| (jsonObj.isready == false) || jsonObj.templatetype == "SYSTEM") {
+	    //do nothing	
+    }
+    else {
+        //buildActionLinkForTab("label.action.download.template", templateActionMap, $actionMenu, $midmenuItem1, $thisTab);          
+        allowedActions.push("downloadTemplate");		
+    }
+     
+    // "Delete Template"	
+	//if (((isUser() && jsonObj.ispublic == true && !(jsonObj.domainid == g_domainid && jsonObj.account == g_account))) 
+	if (((isAdmin() == false && !(jsonObj.domainid == g_domainid && jsonObj.account == g_account)))  //if neither root-admin, nor item owner
+		|| (jsonObj.isready == false && jsonObj.status != null && jsonObj.status.indexOf("Downloaded") != -1) 
+		|| jsonObj.templatetype == "SYSTEM") {
+	    //do nothing	
+    }
+    else {        
+        //buildActionLinkForTab("label.action.delete.template", templateActionMap, $actionMenu, $midmenuItem1, $thisTab);    
+        allowedActions.push("delete");		
+    } 
+		
     return allowedActions;
   }
 
