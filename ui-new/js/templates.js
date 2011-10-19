@@ -14,7 +14,7 @@
           id: 'templates',
           label: 'Templates',
           fields: {
-            name: { label: 'Name', editable: true },
+            name: { label: 'Name' },
             id: { label: 'ID' },
             zonename: { label: 'Zone' },
             hypervisor: { label: 'Hypervisor' }
@@ -45,7 +45,7 @@
                 fields: {
                   name: {
                     label: 'Name',
-                    validation: { required: true }
+                    validation: { required: true }					
                   },
                   description: {
                     label: 'Description',
@@ -133,7 +133,7 @@
                   },        
                                     
                   osTypeId: {
-                    label: 'OS Type',
+                    label: 'OS Type',					
                     select: function(args) {	
                       $.ajax({
 						url: createURL("listOsTypes"),			 
@@ -154,7 +154,7 @@
                   
                   isPasswordEnabled: {
                     label: "Password Enabled",
-                    isBoolean: true
+                    isBoolean: true					
                   },
                   
                   isPublic: {
@@ -399,7 +399,28 @@
           
           detailView: {
             name: 'Template details',            
-            actions: {			  
+            actions: {		
+               edit: {
+				label: 'Edit',
+				action: function(args) {	
+				  var array1 = [];			
+				  debugger;
+				  array1.push("&displayName=" + args.response.data.displayname);					
+				  array1.push("&group=" + args.response.data.group);								
+				  array1.push("&ostypeid=" + args.response.data.guestosid);  
+				  //array1.push("&haenable=" + haenable);                   			
+					
+				  $.ajax({
+					url: createURL("updateVirtualMachine&id=" + args.context.instances[0].id + array1.join("")),
+					dataType: "json",
+					success: function(json) {				 
+					  var item = json.updatevirtualmachineresponse.virtualmachine;		
+					  args.response.success({data:item});	   					
+					}
+				  });	
+				}
+			  },          
+			
 			  copyTemplate: {
 				label: 'Copy template',
 				messages: {     
@@ -564,7 +585,7 @@
             },
             tabs: {
               details: {
-                title: 'Details',
+                title: 'Template Details',
                 
                 /*				
 				preFilter: function(args) {   		  
@@ -579,14 +600,19 @@
 				
                 fields: [
                   {
-                    name: { label: 'Name', isEditable: true }
+                    name: { 
+					  label: 'Name', 
+					  isEditable: true 
+					}
                   },
                   {
                     id: { label: 'ID' },                    
 					zonename: { label: 'Zone name' },
-                    zoneid: { label: 'Zone ID' },
-					
-					displaytext: { label: 'Description', isEditable: true },
+                    zoneid: { label: 'Zone ID' },					
+					displaytext: { 
+					  label: 'Description', 
+					  isEditable: true 
+					},
 					hypervisor: { label: 'Hypervisor' },
 					templatetype: { label: 'Template Type' },
 					isready: { label: 'Ready', converter:cloudStack.converters.toBooleanText },
@@ -606,17 +632,15 @@
 					},
 					passwordenabled: { 
 					  label: 'Password Enabled', 
-					  isEditable: true,
+					  //isEditable: true,  //uncomment after Brian fix it to be checkbox instead of textfield
 					  converter:cloudStack.converters.toBooleanText
 					},
 					ispublic: { 
-					  label: 'Public', 
-					  isEditable: true,
+					  label: 'Public', 					  
 					  converter:cloudStack.converters.toBooleanText 
 					},
 					isfeatured: { 
-					  label: 'Featured', 
-					  isEditable: true,
+					  label: 'Featured', 					 
 					  converter:cloudStack.converters.toBooleanText 
 					},
 					crossZones: { 
@@ -700,7 +724,7 @@
                 fields: {
                   name: {
                     label: 'Name',
-                    validation: { required: true }
+                    validation: { required: true }					
                   },
                   description: {
                     label: 'Description',
@@ -740,7 +764,7 @@
                     label: 'OS Type',  
 					dependsOn: 'isBootable',
 					isHidden: true,
-                    validation: { required: true },					
+                    validation: { required: true },	                   			
                     select: function(args) {                                   
                       $.ajax({
 						url: createURL("listOsTypes"),			 
@@ -1006,7 +1030,28 @@
           
           detailView: {
             name: 'ISO details',       
-			actions: {			  
+			actions: {		
+               edit: {
+				label: 'Edit',
+				action: function(args) {	
+				  var array1 = [];		
+                  debugger;				  
+				  array1.push("&displayName=" + args.response.data.displayname);					
+				  array1.push("&group=" + args.response.data.display);								
+				  array1.push("&ostypeid=" + args.response.data.guestosid);  
+				  //array1.push("&haenable=" + haenable);                   			
+					
+				  $.ajax({
+					url: createURL("updateVirtualMachine&id=" + args.context.instances[0].id + array1.join("")),
+					dataType: "json",
+					success: function(json) {				 
+					  var item = json.updatevirtualmachineresponse.virtualmachine;		
+					  args.response.success({data:item});	   					
+					}
+				  });	
+				}
+			  },          
+		  
 			  copyISO: {
 				label: 'Copy ISO',
 				messages: {     
@@ -1172,7 +1217,7 @@
 			
             tabs: {
               details: {
-                title: 'Details',
+                title: 'ISO Details',
                 
                 /*				
 				preFilter: function(args) {   		  
@@ -1187,13 +1232,19 @@
 				
                 fields: [
                   {
-                    name: { label: 'Name', isEditable: true }
+                    name: { 
+					  label: 'Name', 
+					  isEditable: true 
+					}
                   },
                   {
                     id: { label: 'ID' },                    
 					zonename: { label: 'Zone name' },
                     zoneid: { label: 'Zone ID' },					
-					displaytext: { label: 'Description', isEditable: true },	
+					displaytext: { 
+					  label: 'Description', 
+					  isEditable: true 
+					},	
 					isready: { label: 'Ready', converter:cloudStack.converters.toBooleanText },
 					status: { label: 'Status' },
 					size : { 
@@ -1210,18 +1261,15 @@
 					  converter:cloudStack.converters.toBooleanText 
 					},
 					bootable: { 
-					  label: 'Bootable', 
-					  isEditable: true,
+					  label: 'Bootable', 					  
 					  converter:cloudStack.converters.toBooleanText
 					},
 					ispublic: { 
-					  label: 'Public', 
-					  isEditable: true,
+					  label: 'Public', 					 
 					  converter:cloudStack.converters.toBooleanText 
 					},
 					isfeatured: { 
-					  label: 'Featured', 
-					  isEditable: true,
+					  label: 'Featured', 					  
 					  converter:cloudStack.converters.toBooleanText 
 					},
 					crossZones: { 
