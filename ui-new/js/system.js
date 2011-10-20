@@ -1619,7 +1619,10 @@
                   async: true,
                   success: function(json) {             
                     var items = json.liststoragepoolsresponse.storagepool;            
-                    args.response.success({data:items});                            
+                    args.response.success({
+					  actionFilter: primarystorageActionfilter,
+					  data:items
+					});                            
                   }
                 });   
               },  
@@ -2439,18 +2442,17 @@
             state: { label: 'Status' }
           },
           dataProvider: function(args) {
-		        $.ajax({
-		          url: createURL("listSystemVms&page=" + args.page + "&pagesize=" + pageSize),
-		          dataType: "json",
-		          async: true,
-		          success: function(json) { 	
-			          var items = json.listsystemvmsresponse.systemvm;
-                
+		    $.ajax({
+		      url: createURL("listSystemVms&page=" + args.page + "&pagesize=" + pageSize),
+		      dataType: "json",
+		      async: true,
+		      success: function(json) { 	
+			    var items = json.listsystemvmsresponse.systemvm;                
                 args.response.success({
                   data: items
                 });					                			
-		          }
-		        });
+		      }
+		    });
           }
         }
       }
@@ -2554,9 +2556,31 @@
   var primarystorageActionfilter = function(args) {	    		  
     var jsonObj = args.context.item;
 	var allowedActions = [];
-    allowedActions.push("enableMaintenaceMode");	
-    allowedActions.push("cancelMaintenaceMode");		
-    allowedActions.push("delete");
+		
+	if (jsonObj.state == 'Up' || jsonObj.state == "Connecting") {		
+	  allowedActions.push("enableMaintenaceMode");
+	} 
+	else if(jsonObj.state == 'Down') {	    
+	  allowedActions.push("enableMaintenaceMode");	         
+      allowedActions.push("delete");	        
+    }	
+	else if(jsonObj.state == "Alert") {	    	    
+	  allowedActions.push("delete");	
+	}	
+	else if (jsonObj.state == "ErrorInMaintenance") {	   
+	  allowedActions.push("enableMaintenaceMode");       
+      allowedActions.push("cancelMaintenaceMode");	
+    }
+	else if (jsonObj.state == "PrepareForMaintenance") {	    
+	  allowedActions.push("cancelMaintenaceMode");	
+    }
+	else if (jsonObj.state == "Maintenance") {	    
+	  allowedActions.push("cancelMaintenaceMode");	       
+      allowedActions.push("delete");	   
+    }
+	else if (jsonObj.state == "Disconnected"){	 
+      allowedActions.push("delete");	       
+    }	
 	return allowedActions;
   }
   //action filters (end)
