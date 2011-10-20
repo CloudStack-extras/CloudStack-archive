@@ -604,23 +604,6 @@ div.list-view td.state.off {
   cursor: default;
 }
 
-.detail-group table.multi-edit td {
-  border-left: 1px solid #C6C3C3;
-  position: relative;
-}
-
-.detail-group table.multi-edit td label.error {
-  color: #FF0000;
-  width: 126px;
-  font-size: 9px;
-  /*+placement:shift 9px 0px;*/
-  position: relative;
-  left: 9px;
-  top: 0px;
-  position: relative;
-  text-indent: 0;
-}
-
 .details.group-multiple table {
   border: none;
   border-top: none;
@@ -757,12 +740,6 @@ div.list-view div.toolbar div.section-switcher div.section-select label {
 /*** Multi-edit*/
 .detail-view .multi-edit input {
   width: 85%;
-}
-
-.detail-view .multi-edit .actions {
-  min-width: inherit;
-  max-width: inherit;
-  width: inherit;
 }
 
 /*** Actions*/
@@ -2707,6 +2684,10 @@ input.error {
   background: #FFEAEA;
 }
 
+label.error {
+  color: #FF0000;
+}
+
 /*Multi-step wizard*/
 .multi-wizard {
   width: 500px;
@@ -3716,14 +3697,14 @@ input.error {
   width: 100%;
 }
 
-.tree-view>ul {
+.tree-view > ul {
   /*+placement:shift 3px 40px;*/
   position: relative;
   left: 3px;
   top: 40px;
 }
 
-.tree-view>ul>li {
+.tree-view > ul > li {
   left: 5px;
 }
 
@@ -3758,7 +3739,7 @@ input.error {
   position: absolute;
 }
 
-.tree-view ul li.expanded>.expand {
+.tree-view ul li.expanded > .expand {
   background-position: -631px -228px;
 }
 
@@ -3786,7 +3767,7 @@ div.detail-group td.view-all div.view-all div.end {
 
 .ui-dialog .list-view .toolbar {
   top: 33px;
-  width: 798px;
+  width: 824px;
 }
 
 div.panel.ui-dialog div.list-view div.fixed-header {
@@ -3808,130 +3789,48 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   margin-top: 39px;
 }
 
-.ui-dialog.panel div.list-view div.data-table table tbody tr.port-forwarding-selected {
-  background: #FCD7C3;
+.ui-dialog.panel div.list-view div.data-table table tbody tr.multi-edit-selected {
+  background: #C3E0FC;
 }
 
-/*Port forwarding*/
-.port-forwarding {
+/*Multi-edit*/
+.multi-edit {
 }
 
-.port-forwarding .data-table {
-  width: 551px;
-  max-height: 500px;
-  overflow: auto;
+.multi-edit table.multi-edit {
+  border-top: none;
 }
 
-.port-forwarding .data-table table {
-  background: #FFFFFF;
-  border: none;
-  display: block;
-  margin: 0 0 0 12px;
+.detail-group .multi-edit table td {
+  border-left: 1px solid #CDCCCC;
 }
 
-.port-forwarding .data-table table tbody {
-  border: none;
-  width: 538px;
-  display: block;
+.multi-edit input {
+  width: 85%;
 }
 
-.port-forwarding .data-table table.data tr {
-  /*+placement:shift 0px 0px;*/
-  position: relative;
-  left: 0px;
-  top: 0px;
-  display: block;
-  width: 538px;
+.multi-edit label.error {
+  font-size: 10px;
+  margin: 0 0 0 10px;
 }
 
-.port-forwarding .data-table td {
-  border-left: 1px solid #CFC9C9;
-  border-right: 1px solid #C1BDBD;
-}
-
-.port-forwarding .vm-box {
-  width: 537px;
-  height: 190px;
-  border: 1px solid #C1BDBD;
-  background: #FFFFFF;
-}
-
-.port-forwarding .vm-box .content {
-  background: #D7D7D7;
-  width: 100%;
-  height: 100%;
-  margin: 0px auto;
-  overflow: auto;
-}
-
-.port-forwarding .vm-box .data-table {
-  width: 100%;
-}
-
-.port-forwarding .vm-box .data-table table {
-  display: table;
-  width: 100%;
-  margin: 0;
-}
-
-.port-forwarding .vm-box .data-table tr {
-  display: table !important;
-}
-
-.port-forwarding .vm-box .data-table tr td {
-  width: 36px;
-  max-width: 40px !important;
-  min-width: 20px;
-}
-
-.port-forwarding .vm-box .data-table tr td.actions {
-  min-width: 26px !important;
-  max-width: 25px !important;
-  width: 25px !important;
-}
-
-.port-forwarding .vm-box .data-table .fixed-header {
-  display: block;
-}
-
-.port-forwarding .data-table td span {
+.multi-edit .data-table td span {
   float: left;
 }
 
-.port-forwarding .data-table td .expand {
-  width: 14px;
-  height: 15px;
-  cursor: pointer;
-  background: #FFFFFF url(../images/sprites.png) -541px -499px;
-  border: 1px solid #D0D0D0;
-  /*+border-radius:9px;*/
-  -moz-border-radius: 9px;
-  -webkit-border-radius: 9px;
-  -khtml-border-radius: 9px;
-  border-radius: 9px 9px 9px 9px;
-  float: left;
-  margin: 0 0 0 7px;
-}
-
-.port-forwarding .data-table td.actions {
-  width: 156px;
-  max-width: 156px !important;
-  min-width: 156px !important;
-}
-
-.port-forwarding .data-table td.add-vm {
+.multi-edit .data-table td.add-vm {
   cursor: pointer;
 }
 
-.port-forwarding .data-table td.add-vm:hover {
+.multi-edit .data-table td.add-vm:hover {
   color: #5FAAF7;
 }
 
-.port-forwarding .data-table .fixed-header {
+.multi-edit .data-table .fixed-header {
   display: none;
 }
 
-.port-forwarding .button.add-vm {
+.multi-edit .button.add-vm {
   font-size: 10px;
   font-weight: bold;
   cursor: pointer;
@@ -3961,7 +3860,7 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   top: 0px;
 }
 
-.port-forwarding .button.add-vm:hover {
+.multi-edit .button.add-vm:hover {
   background-position: 0px -241px;
   /*+box-shadow:inset 0px 1px 1px #000000;*/
   -moz-box-shadow: inset 0px 1px 1px #000000;
@@ -3970,8 +3869,8 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   box-shadow: inset 0px 1px 1px #000000;
 }
 
-.add-vm-list .ui-button.ok,
-.add-vm-list .ui-button.cancel {
+.multi-edit-add-list .ui-button.ok,
+.multi-edit-add-list .ui-button.cancel {
   float: right;
   /*+placement:shift 506px -18px;*/
   position: relative;
@@ -3980,7 +3879,7 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   height: 23px;
 }
 
-.add-vm-list .ui-button.cancel {
+.multi-edit-add-list .ui-button.cancel {
   /*+placement:shift 492px -18px;*/
   position: relative;
   left: 492px;
@@ -3989,6 +3888,195 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   background: none;
   color: #808B95;
   font-weight: bold;
+}
+
+.multi-edit .data .data-body {
+  width: 96%;
+  margin: auto;
+  overflow: hidden;
+  border-top: 1px solid #CFC9C9;
+}
+
+.multi-edit .data .data-body .data-item {
+}
+
+.multi-edit .data .data-body .data-item table {
+  margin: 0;
+  border: none;
+  width: 100%;
+}
+
+.multi-edit .data .data-body .data-item tr {
+  background: #EFEFEF;
+  border: none;
+  display: block;
+  width: 100%;
+}
+
+.multi-edit .data .data-body .data-item table tbody tr td {
+  background: #F0F1F2;
+  border-left: none;
+  border-right: 1px solid #CFC9C9;
+  height: 15px;
+  float: left;
+  overflow: hidden;
+  min-width: inherit;
+  padding-right: 0;
+  padding-bottom: 4px;
+}
+
+.multi-edit .data .data-body .data-item table tbody tr td.multi-actions {
+  border-right: none;
+}
+
+.multi-edit .data .data-body .data-item table tbody tr td.multi-actions .action {
+  cursor: pointer;
+  width: 28px;
+  height: 21px;
+  float: left;
+}
+
+.multi-edit .data .data-body .data-item table tbody tr td.multi-actions .action span.icon {
+  background-image: url(../images/sprites.png);
+  cursor: pointer;
+  width: 28px;
+  height: 21px;
+  float: left;
+}
+
+.multi-edit .data .data-body .data-item tr td .expand {
+  width: 14px;
+  height: 15px;
+  cursor: pointer;
+  background: #FFFFFF url(../images/sprites.png) -541px -499px;
+  border: 1px solid #D0D0D0;
+  /*+border-radius:9px;*/
+  -moz-border-radius: 9px;
+  -webkit-border-radius: 9px;
+  -khtml-border-radius: 9px;
+  border-radius: 9px 9px 9px 9px;
+  float: left;
+  margin: -3px 0 0 11px;
+}
+
+.multi-edit .data .data-body .data-item tr td.add-vm,
+.multi-edit tr th.add-vm {
+  cursor: pointer;
+}
+
+.multi-edit .data .data-body .data-item tr td.add-vm:hover {
+  color: #0060FF;
+  font-weight: bold;
+}
+
+.multi-edit .data .data-body .data-item tr td.multi-actions .icon {
+  /*+placement:shift -3px -8px;*/
+  position: relative;
+  left: -3px;
+  top: -8px;
+}
+
+.multi-edit .data .data-body .data-item .expandable-listing {
+  width: 99.8%;
+  border: 1px solid #CFC9C9;
+  max-height: 161px;
+  overflow: auto;
+}
+
+.multi-edit .data .data-body .data-item .expandable-listing tr {
+  width: 100%;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.multi-edit .data .data-body .data-item .expandable-listing tr td {
+  background: #DDE0E2;
+  border: none;
+  width: 100%;
+  margin: 0;
+}
+
+.multi-edit .data .data-body .data-item .expandable-listing tr.odd td {
+  background: #F2F0F0;
+}
+
+/*Network detail chat*/
+.network-chart {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: url(../images/bg-network.png) no-repeat 38% 70px;
+}
+
+.network-chart ul {
+  width: 536px;
+  height: 421px;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+
+.network-chart li {
+  display: block;
+  width: 147px;
+  height: 86px;
+  background: url(../images/buttons.png) no-repeat 0px -399px;
+}
+
+.network-chart li.firewall {
+  /*+placement:shift 209px 174px;*/
+  position: relative;
+  left: 209px;
+  top: 174px;
+  position: absolute;
+}
+
+.network-chart li.loadBalancing {
+  /*+placement:shift 92px 308px;*/
+  position: relative;
+  left: 92px;
+  top: 308px;
+  position: absolute;
+}
+
+.network-chart li.portForwarding {
+  /*+placement:shift 332px 308px;*/
+  position: relative;
+  left: 332px;
+  top: 308px;
+  position: absolute;
+}
+
+.network-chart li .name {
+  color: #4E5F6F;
+  width: 130px;
+  /*+text-shadow:0px 1px 1px #FCFCFC;*/
+  -moz-text-shadow: 0px 1px 1px #FCFCFC;
+  -webkit-text-shadow: 0px 1px 1px #FCFCFC;
+  -o-text-shadow: 0px 1px 1px #FCFCFC;
+  text-shadow: 0px 1px 1px #FCFCFC;
+  /*+placement:shift 10px 11px;*/
+  position: relative;
+  left: 10px;
+  top: 11px;
+}
+
+.network-chart li .view-details {
+  /*+placement:anchor-bottom-right 11px 11px;*/
+  position: absolute;
+  right: 11px;
+  bottom: 11px;
+  cursor: pointer;
+  color: #FFFFFF;
+  background: url(../images/buttons.png) no-repeat -457px -503px;
+  font-size: 11px;
+  padding: 6px 24px 6px 9px;
+  /*+text-shadow:0px 1px 1px #395065;*/
+  -moz-text-shadow: 0px 1px 1px #395065;
+  -webkit-text-shadow: 0px 1px 1px #395065;
+  -o-text-shadow: 0px 1px 1px #395065;
+  text-shadow: 0px 1px 1px #395065;
 }
 
 /*Action icons*/
