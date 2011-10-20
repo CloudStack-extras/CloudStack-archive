@@ -1343,18 +1343,7 @@
 				  },
 				  
 				  'delete': { 
-					label: 'Remove host' ,
-					action: function(args) {	
-					  $.ajax({
-						url: createURL("deleteHost&id=" + args.context.hosts[0].id),
-						dataType: "json",
-						async: true,
-						success: function(json) { 
-						  //var item = json.deletehostresponse.host;			    
-			              args.response.success({data:{}});							
-						}
-					  });  	
-					},
+					label: 'Remove host' ,					
 					messages: {
 					  confirm: function(args) {
 						return 'Please confirm that you want to remove this host.';
@@ -1368,7 +1357,31 @@
 					  complete: function(args) {
 						return 'Host has been removed.';
 					  }
-					},		  
+					},	
+					createForm: {
+					  title: 'Remove host',					  
+					  fields: {  
+						isForced: {
+						  label: 'Force Remove',
+						  isBoolean: true
+						}				 
+					  }
+					},        								
+                    action: function(args) {                                         
+                      var array1 = [];
+					  //if(args.$form.find('.form-item[rel=isForced]').css("display") != "none") //uncomment after Brian fix it to include $form in args
+					    array1.push("&forced=" + (args.data.isForced == "on"));
+					  
+					  $.ajax({
+						url: createURL("deleteHost&id=" + args.context.hosts[0].id + array1.join("")),
+						dataType: "json",
+						async: true,
+						success: function(json) { 						  
+                          //{ "deletehostresponse" : { "success" : "true"}  }						  
+			              args.response.success({data:{}});							
+						}
+					  });  	
+					},					
 					notification: {           
 					  poll: function(args) { args.complete(); }
 					}		  
