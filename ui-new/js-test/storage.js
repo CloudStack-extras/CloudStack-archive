@@ -156,11 +156,8 @@
               label: 'Create template',
               addRow: 'false',
               messages: {
-                success: function(args) {
-                  return 'Your new snapshot ' + args.name + ' is being created.';
-                },
                 notification: function(args) {
-                  return 'Making new snapshot: ' + args.name;
+                  return 'Making new template: ' + args.name;
                 }
               },
               action: function(args) {
