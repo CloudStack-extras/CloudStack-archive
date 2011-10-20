@@ -1657,7 +1657,7 @@
             }
           },
           'primary-storage': {
-            id: 'primaryStorage',
+            id: 'primarystorages',
             listView: {
               section: 'primary-storage',
               fields: {
@@ -2062,7 +2062,7 @@
 					label: 'Enable Maintenace' ,
 					action: function(args) {					  
 					  $.ajax({
-						url: createURL("enableStorageMaintenance&id=" + args.context.primaryStorage[0].id),
+						url: createURL("enableStorageMaintenance&id=" + args.context.primarystorages[0].id),
 						dataType: "json",
 						async: true,
 						success: function(json) { 							     
@@ -2105,7 +2105,7 @@
 					label: 'Cancel Maintenace' ,
 					action: function(args) {	
 					  $.ajax({
-						url: createURL("cancelStorageMaintenance&id=" + args.context.primaryStorage[0].id),
+						url: createURL("cancelStorageMaintenance&id=" + args.context.primarystorages[0].id),
 						dataType: "json",
 						async: true,
 						success: function(json) { 			    
@@ -2162,7 +2162,7 @@
 					},						  								
                     action: function(args) {     
 					  $.ajax({
-						url: createURL("deleteStoragePool&id=" + args.context.primaryStorage[0].id),
+						url: createURL("deleteStoragePool&id=" + args.context.primarystorages[0].id),
 						dataType: "json",
 						async: true,
 						success: function(json) { 	
@@ -2184,7 +2184,7 @@
 					label: 'Enable Maintenace' ,
 					action: function(args) {					  
 					  $.ajax({
-						url: createURL("enableStorageMaintenance&id=" + args.context.primaryStorage[0].id),
+						url: createURL("enableStorageMaintenance&id=" + args.context.primarystorages[0].id),
 						dataType: "json",
 						async: true,
 						success: function(json) { 							     
@@ -2227,7 +2227,7 @@
 					label: 'Cancel Maintenace' ,
 					action: function(args) {	
 					  $.ajax({
-						url: createURL("cancelStorageMaintenance&id=" + args.context.primaryStorage[0].id),
+						url: createURL("cancelStorageMaintenance&id=" + args.context.primarystorages[0].id),
 						dataType: "json",
 						async: true,
 						success: function(json) { 			    
@@ -2284,7 +2284,7 @@
 					},						  								
                     action: function(args) {     
 					  $.ajax({
-						url: createURL("deleteStoragePool&id=" + args.context.primaryStorage[0].id),
+						url: createURL("deleteStoragePool&id=" + args.context.primarystorages[0].id),
 						dataType: "json",
 						async: true,
 						success: function(json) { 	
@@ -2341,7 +2341,7 @@
 					dataProvider: function(args) {
 					  args.response.success({
 					    actionFilter: primarystorageActionfilter,
-						data: args.context.primaryStorage[0]
+						data: args.context.primarystorages[0]
 					  });
 					}
 					
@@ -2352,13 +2352,12 @@
           },
           
           'secondary-storage': {
-            id: 'secondary-storage',
+            id: 'secondarystorages',
             listView: {
               section: 'seconary-storage',
               fields: {
-                name: { label: 'Name' },
-                zonename: { label: 'Zone' },
-                podname: { label: 'Pod' }
+                name: { label: 'Name' },				
+                zonename: { label: 'Zone' }                		
               },
               
               //dataProvider: testData.dataProvider.listView('clusters'),
@@ -2369,7 +2368,10 @@
                   async: true,
                   success: function(json) {             
                     var items = json.listhostsresponse.host;            
-                    args.response.success({data:items});                            
+                    args.response.success({
+					  actionFilter: secondarystorageActionfilter,
+					  data:items
+					});                            
                   }
                 });   
               },  
@@ -2437,12 +2439,20 @@
                         name: { label: 'Name' },
                       },
                       {
-                        zonename: { label: 'Zone' },
-                        hostname: { label: 'Host' }
+                        id: { label: 'ID' },						
+						zonename: { label: 'Zone' },
+						type: { label: 'Type' },
+                        ipaddress: { label: 'IP Address' }
                       }
                     ],
 
-                    dataProvider: testData.dataProvider.detailView('secondaryStorage')
+                    //dataProvider: testData.dataProvider.detailView('secondaryStorage')
+					dataProvider: function(args) {	                      			
+					  args.response.success({
+					    actionFilter: secondarystorageActionfilter,
+						data: args.context.secondarystorages[0]
+					  }); 
+					}
                   }
                 }
               }
@@ -2661,6 +2671,13 @@
 	else if (jsonObj.state == "Disconnected"){	 
       allowedActions.push("delete");	       
     }	
+	return allowedActions;
+  }
+  
+  var secondarystorageActionfilter = function(args) {	    		  
+    var jsonObj = args.context.item;
+	var allowedActions = [];
+    allowedActions.push("delete");	  
 	return allowedActions;
   }
   //action filters (end)
