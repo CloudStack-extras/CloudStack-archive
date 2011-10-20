@@ -69,12 +69,14 @@
       notification.section = 'instances';
 
       var performAction = function(data, options) {
+        var $form = options.$form;
         if (!options) options = {};
 
         action.action({
           data: data,
           ref: options.ref,
           context: $detailView.data('view-args').context,
+          $form: $form,
           response: {
             success: function(args) {
               args = args ? args : {};
@@ -140,7 +142,11 @@
         cloudStack.dialog.createForm({
           form: action.createForm,
           after: function(args) {
-            performAction(args.data, { ref: args.ref });
+            performAction(args.data, { 
+              ref: args.ref, 
+              context: $detailView.data('view-args').context,
+              $form: args.$form
+            });
           },
           ref: {
             id: id
