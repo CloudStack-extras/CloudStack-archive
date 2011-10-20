@@ -1297,6 +1297,49 @@
 					notification: {           
 					  poll: pollAsyncJobResult
 					}		  
+				  },
+				  
+				  forceReconnect: { 
+					label: 'Force Reconnect' ,
+					action: function(args) {	
+					  $.ajax({
+						url: createURL("reconnectHost&id=" + args.context.hosts[0].id),
+						dataType: "json",
+						async: true,
+						success: function(json) { 			    
+						  var jid = json.reconnecthostresponse.jobid;    				
+						  args.response.success(
+							{_custom:
+							  {jobId: jid,
+							   getUpdatedItem: function(json) {
+								 return json.queryasyncjobresultresponse.jobresult.host;
+							   },
+							   getActionFilter: function() {
+								 return hostActionfilter;
+							   }					 
+							  }
+							}
+						  );							
+						}
+					  });  	
+					},
+					messages: {
+					  confirm: function(args) {
+						return 'Please confirm that you want to force reconnect this host.';
+					  },
+					  success: function(args) {
+						return 'Host is being force reconnected.';
+					  },
+					  notification: function(args) {
+						return 'Force reconnecting host';
+					  },
+					  complete: function(args) {
+						return 'Host has been force reconnected.';
+					  }
+					},		  
+					notification: {           
+					  poll: pollAsyncJobResult
+					}		  
 				  }
 				  
 				},			  
@@ -1992,6 +2035,7 @@
 	var allowedActions = [];	
 	allowedActions.push("enableMaintenaceMode");	
 	allowedActions.push("cancelMaintenaceMode");
+	allowedActions.push("forceReconnect");
     return allowedActions;
   }  
   //action filters (end)
