@@ -71,7 +71,7 @@
                 setTimeout(function() {
                   args.response.success({
                     data: {
-                      state: 'Disabling'                      
+                      state: 'Disabling'
                     }
                   });
                 }, 500);
@@ -113,55 +113,116 @@
                 dataProvider: testData.dataProvider.detailView('network')
               },
 
-              portForwarding: {
-                title: 'Port forwarding',
-                custom: cloudStack.portForwarding({
-                  dataProvider: function(args) {
-                    setTimeout(function() {
-                      args.response.success({
-                        data: [
-                          {
-                            'start-port': 1,
-                            'end-port': 80,
-                            'protocol': 'TCP',
-                            'add-vm': 'vm1232'
-                          },
-                          {
-                            'start-port': 90,
-                            'end-port': 120,
-                            'protocol': 'TCP',
-                            'add-vm': 'brianvm121'
-                          }
-                        ]
-                      });                      
-                    }, 100);
-                  }
-                })
-              },
+              ipRules: {
+                title: 'Configuration',
+                custom: cloudStack.ipRules({
+                  firewall: {
+                    noSelect: true,
+                    addTitle: 'Add',
+                    fields: {
+                      'start-port': { edit: true, label: 'Start Port' },
+                      'end-port': { edit: true, label: 'End Port' },
+                      'protocol': {
+                        label: 'Protocol',
+                        select: function(args) {
+                          args.response.success({
+                            data: [
+                              { name: 'tcp', description: 'TCP' },
+                              { name: 'udp', description: 'UDP' }
+                            ]
+                          });
+                        }
+                      },
+                      'add-vm': { 
+                        label: 'Add Rule',
+                        addButton: true
+                      }
+                    },
+                    actions: {
+                      destroy: function(args) {
+                        args.response.success();
+                      }
+                    },
+                    dataProvider: function(args) {
+                      setTimeout(function() {
+                        args.response.success({
+                          data: []
+                        });
+                      }, 100);
+                    }
+                  },
 
-              loadBalancing: {
-                title: 'Load Balancing',
-                custom: cloudStack.portForwarding({
-                  type: 'multiple',
-                  dataProvider: function(args) {
-                    setTimeout(function() {
-                      args.response.success({
-                        data: [
-                          {
-                            'start-port': 1,
-                            'end-port': 80,
-                            'protocol': 'TCP',
-                            'add-vm': '4 VMs'
-                          },
-                          {
-                            'start-port': 90,
-                            'end-port': 120,
-                            'protocol': 'TCP',
-                            'add-vm': '2 VMs'
-                          }
-                        ]
-                      });                      
-                    }, 100);
+                  loadBalancing: {
+                    listView: cloudStack.sections.instances,
+                    addTitle: 'Add VMs',
+                    multipleAdd: true,
+                    fields: {
+                      'start-port': { edit: true, label: 'Start Port' },
+                      'end-port': { edit: true, label: 'End Port' },
+                      'protocol': {
+                        label: 'Algorithm',
+                        select: function(args) {
+                          args.response.success({
+                            data: [
+                              { name: 'roundrobin', description: 'Round-robin' },
+                              { name: 'leastconn', description: 'Least connections' },
+                              { name: 'source', description: 'Source' }
+                            ]
+                          });
+                        }
+                      },
+                      'add-vm': { 
+                        label: 'Add VMs',
+                        addButton: true
+                      }
+                    },
+                    actions: {
+                      destroy: function(args) {
+                        args.response.success();
+                      }
+                    },
+                    dataProvider: function(args) {
+                      setTimeout(function() {
+                        args.response.success({
+                          data: []
+                        });
+                      }, 100);
+                    }
+                  },
+                  portForwarding: {
+                    listView: cloudStack.sections.instances,
+                    addTitle: 'Add VM',
+                    fields: {
+                      'start-port': { edit: true, label: 'Start Port' },
+                      'end-port': { edit: true, label: 'End Port' },
+                      'protocol': {
+                        label: 'Protocol',
+                        select: function(args) {
+                          args.response.success({
+                            data: [
+                              { name: 'tcp', description: 'TCP' },
+                              { name: 'udp', description: 'UDP' }
+                            ]
+                          });
+                        }
+                      },
+                      'add-vm': { 
+                        label: 'Add VM',
+                        addButton: true
+                      }
+                    },
+                    actions: {
+                      destroy: function(args) {
+                        args.response.success();
+                      }
+                    },
+                    dataProvider: function(args) {
+                      setTimeout(function() {
+                        args.response.success({
+                          data: []
+                        });
+                      }, 100);
+                    }
                   }
                 })
               }
