@@ -294,11 +294,6 @@
             tabs: {
               details: {
                 title: 'Details',
-                preFilter: function(args) {
-                  var fields = args.fields;
-
-                  return ['name', 'type', 'zone'];
-                },
                 fields: [
                   {
                     name: { label: 'Name', isEditable: true }
