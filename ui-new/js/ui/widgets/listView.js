@@ -221,7 +221,7 @@
       var context = $.extend({}, listViewArgs.context);
       context[
         listViewArgs.activeSection
-      ] = $instanceRow.data('jsonObj');
+      ] = [$instanceRow.data('jsonObj')];
 
       if (!args.action.createForm && !action.custom && !action.uiCustom)
         cloudStack.dialog.confirm({
