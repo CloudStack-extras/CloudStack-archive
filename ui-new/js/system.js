@@ -1610,16 +1610,17 @@
                       },
                       {
 					    id: { label: 'ID' },
-						hosttags: { 
-						  label: 'Host tags',
-                          isEditable: true
-					    },		
+						state: { label: 'State' },						
                         type: { label: 'Type' },
                         zonename: { label: 'Zone' },
 						podname: { label: 'Pod' },
 						clustername: { label: 'Cluster' },
 						ipaddress: { label: 'IP Address' },
 						version: { label: 'Version' },
+						hosttags: { 
+						  label: 'Host tags',
+                          isEditable: true
+					    },		
 						oscategoryid: { 
 						  label: 'OS Preference',
 						  isEditable: true,						  
@@ -2306,8 +2307,33 @@
                         name: { label: 'Name' },
                       },
                       {
-                        zonename: { label: 'Zone' },
-                        hostname: { label: 'Host' }
+                        id: { label: 'ID' },                       
+						state: { label: 'State' },						
+						zonename: { label: 'Zone' },
+						podname: { label: 'Pod' },
+						clustername: { label: 'Cluster' },
+						type: { label: 'Type' },
+						ipaddress: { label: 'IP Address' },
+						path: { label: 'Path' },
+						disksizetotal: { 
+						  label: 'Disk total',
+                          converter: function(args) {					    
+							if (args == null || args == 0)
+							  return "";
+							else
+							  return cloudStack.converters.convertBytes(args);                       
+						  }		
+					    },
+						disksizeallocated: { 
+						  label: 'Disk Allocated',
+                          converter: function(args) {					    
+							if (args == null || args == 0)
+							  return "";
+							else
+							  return cloudStack.converters.convertBytes(args);                       
+						  }		
+  					    },
+						tags: { label: 'Primary tags' }
                       }
                     ],
 
