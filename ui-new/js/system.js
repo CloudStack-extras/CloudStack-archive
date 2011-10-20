@@ -2092,36 +2092,21 @@
 				  },
 				  				  
 				  'delete': { 
-					label: 'Remove host' ,                    					
+					label: 'Delete' ,                    					
 					messages: {
 					  confirm: function(args) {
-						return 'Please confirm that you want to remove this host.';
+						return 'Please confirm that you want to delete this primary storage.';
 					  },
 					  success: function(args) {
-						return 'Host is being removed.';
+						return 'Primary storage is being deleted.';
 					  },
 					  notification: function(args) {
-						return 'Removing host';
+						return 'Deleting primary storage';
 					  },
 					  complete: function(args) {
-						return 'Host has been removed.';
+						return 'Primary storage has been deleted.';
 					  }
-					},	
-					preFilter: function(args) {
-					  if(isAdmin()) {		
-						args.$form.find('.form-item[rel=isForced]').css('display', 'inline-block');  	   
-					  }  
-					},	
-					createForm: {
-					  title: 'Remove host',					  
-					  fields: {  
-						isForced: {
-						  label: 'Force Remove',
-						  isBoolean: true,
-						  isHidden: true
-						}				 
-					  }
-					},        								
+					},						  								
                     action: function(args) {     
 					  $.ajax({
 						url: createURL("deleteStoragePool&id=" + args.context.primaryStorage[0].id),
@@ -2154,7 +2139,6 @@
 
                     //dataProvider: testData.dataProvider.detailView('primaryStorage') 
 					dataProvider: function(args) {
-					  debugger;
 					  args.response.success({
 					    actionFilter: primarystorageActionfilter,
 						data: args.context.primaryStorage[0]
