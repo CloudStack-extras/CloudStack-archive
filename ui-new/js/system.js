@@ -1340,6 +1340,38 @@
 					notification: {           
 					  poll: pollAsyncJobResult
 					}		  
+				  },
+				  
+				  'delete': { 
+					label: 'Remove host' ,
+					action: function(args) {	
+					  $.ajax({
+						url: createURL("deleteHost&id=" + args.context.hosts[0].id),
+						dataType: "json",
+						async: true,
+						success: function(json) { 
+						  //var item = json.deletehostresponse.host;			    
+			              args.response.success({data:{}});							
+						}
+					  });  	
+					},
+					messages: {
+					  confirm: function(args) {
+						return 'Please confirm that you want to remove this host.';
+					  },
+					  success: function(args) {
+						return 'Host is being removed.';
+					  },
+					  notification: function(args) {
+						return 'Removing host';
+					  },
+					  complete: function(args) {
+						return 'Host has been removed.';
+					  }
+					},		  
+					notification: {           
+					  poll: function(args) { args.complete(); }
+					}		  
 				  }
 				  
 				},			  
@@ -2036,6 +2068,7 @@
 	allowedActions.push("enableMaintenaceMode");	
 	allowedActions.push("cancelMaintenaceMode");
 	allowedActions.push("forceReconnect");
+	allowedActions.push("delete");
     return allowedActions;
   }  
   //action filters (end)
