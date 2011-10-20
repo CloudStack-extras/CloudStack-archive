@@ -2264,10 +2264,39 @@
   var hostActionfilter = function(args) {	    		  
     var jsonObj = args.context.item;
 	var allowedActions = [];	
-	allowedActions.push("enableMaintenaceMode");	
-	allowedActions.push("cancelMaintenaceMode");
-	allowedActions.push("forceReconnect");
-	allowedActions.push("delete");
+	
+	if (jsonObj.state == 'Up' || jsonObj.state == "Connecting") {    	
+	  allowedActions.push("edit");		
+	  allowedActions.push("enableMaintenaceMode");		    
+	  allowedActions.push("forceReconnect");
+	} 
+	else if(jsonObj.state == 'Down') {		
+	  allowedActions.push("edit");		
+      allowedActions.push("enableMaintenaceMode");      
+      allowedActions.push("delete");
+    }	
+	else if(jsonObj.state == "Alert") {	    
+	  allowedActions.push("edit");	    
+	  allowedActions.push("delete");     
+	}	
+	else if (jsonObj.state == "ErrorInMaintenance") {		
+	  allowedActions.push("edit");	   
+	  allowedActions.push("enableMaintenaceMode");	       
+      allowedActions.push("cancelMaintenaceMode");        
+    }
+	else if (jsonObj.state == "PrepareForMaintenance") {		
+	  allowedActions.push("edit");	       
+      allowedActions.push("cancelMaintenaceMode");
+    }
+	else if (jsonObj.state == "Maintenance") {		
+	  allowedActions.push("edit");		   
+      allowedActions.push("cancelMaintenaceMode");		  
+      allowedActions.push("delete");
+    }
+	else if (jsonObj.state == "Disconnected"){	    
+ 	  allowedActions.push("edit");	
+      allowedActions.push("delete");
+    }		
     return allowedActions;
   }  
   //action filters (end)
