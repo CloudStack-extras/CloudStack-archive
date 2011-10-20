@@ -1254,8 +1254,51 @@
 					notification: {           
 					  poll: pollAsyncJobResult
 					}		  
+				  },
+				  
+				  cancelMaintenaceMode: { 
+					label: 'Cancel Maintenace' ,
+					action: function(args) {	
+					  $.ajax({
+						url: createURL("cancelHostMaintenance&id=" + args.context.hosts[0].id),
+						dataType: "json",
+						async: true,
+						success: function(json) { 			    
+						  var jid = json.cancelhostmaintenanceresponse.jobid;    				
+						  args.response.success(
+							{_custom:
+							  {jobId: jid,
+							   getUpdatedItem: function(json) {
+								 return json.queryasyncjobresultresponse.jobresult.host;
+							   },
+							   getActionFilter: function() {
+								 return hostActionfilter;
+							   }					 
+							  }
+							}
+						  );							
+						}
+					  });  	
+					},
+					messages: {
+					  confirm: function(args) {
+						return 'Please confirm that you want to cancel this maintenance.';
+					  },
+					  success: function(args) {
+						return 'Maintenance is being cancelled.';
+					  },
+					  notification: function(args) {
+						return 'Cancelling maintenance';
+					  },
+					  complete: function(args) {
+						return 'Maintenance has been cancelled.';
+					  }
+					},		  
+					notification: {           
+					  poll: pollAsyncJobResult
+					}		  
 				  }
-				  //???
+				  
 				},			  
                 tabs: {
                   details: {
@@ -1948,6 +1991,7 @@
     var jsonObj = args.context.item;
 	var allowedActions = [];	
 	allowedActions.push("enableMaintenaceMode");	
+	allowedActions.push("cancelMaintenaceMode");
     return allowedActions;
   }  
   //action filters (end)
