@@ -922,6 +922,7 @@
                     title: 'Add new host',
                     desc: 'Please fill in the following information to add a new host fro the specified zone configuration.',
                     fields: {
+					  //always appear (begin)
                       podId: {
                         label: 'Pod',
                         validation: { required: true },
@@ -1061,13 +1062,9 @@
                           
                           args.$select.trigger("change");
                         }
-                      },
-
-                      hosttags: {
-                        label: 'Host tags',
-                        validation: { required: false }
-                      },
-                      
+                      },                     
+                      //always appear (end)
+					  
                       //input_group="general" starts here
                       hostname: {
                         label: 'Host name',
@@ -1131,8 +1128,15 @@
                         validation: { required: true },
                         isHidden: true, 
 						isPassword: true
-                      }
+                      },
                       //input_group="OVM" ends here
+					  
+					  //always appear (begin)
+					  hosttags: {
+                        label: 'Host tags',
+                        validation: { required: false }
+                      }
+					  //always appear (end)
                     }
                   },
 
@@ -1630,6 +1634,7 @@
                     title: 'Add new primary storage',
                     desc: 'Please fill in the following information to add a new primary storage',
                     fields: {
+					  //always appear (begin)
                       podId: {
                         label: 'Pod',
                         validation: { required: true },
@@ -1858,11 +1863,7 @@
                           args.$select.trigger("change");
                         }
                       },   
-                         
-					  storageTags: {
-                        label: 'Storage Tags',
-                        validation: { required: false }
-                      },	 
+                      //always appear (end) 
 					  
 					  server: {
                         label: 'Server',
@@ -1899,7 +1900,14 @@
                         label: 'vCenter Datastore',
                         validation: { required: true },
 						isHidden: true
+                      },					  
+					   
+                      //always appear (begin)					   
+					  storageTags: {
+                        label: 'Storage Tags',
+                        validation: { required: false }
                       }
+					  //always appear (end) 					  
                     }
                   },
 
