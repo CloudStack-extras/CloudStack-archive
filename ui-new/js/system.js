@@ -1395,7 +1395,31 @@
               },
               detailView: {
 			    name: "Host details",
-				actions: {				  
+ 				actions: {	                  
+				  edit: {
+					label: 'Edit',
+					action: function(args) {	
+					  var array1 = [];	                                		  
+					  array1.push("&hosttags=" + todb(args.data.hosttags));					 		
+					  
+					  if (args.data.oscategoryid != null)
+						array1.push("&osCategoryId=" + args.data.oscategoryid);
+					  else //OS is none
+						array1.push("&osCategoryId=0");							 			
+														
+					  $.ajax({
+						url: createURL("updateHost&id=" + args.context.hosts[0].id + array1.join("")),
+						dataType: "json",
+						success: function(json) {	                          				
+						  var item = json.updatehostresponse.host;		
+						  args.response.success({
+						    actionFilter: hostActionfilter,
+						    data:item});	   					
+						}
+					  });	
+					}
+				  },          
+                   
 				  enableMaintenaceMode: { 
 					label: 'Enable Maintenace' ,
 					action: function(args) {	
@@ -1596,7 +1620,25 @@
 						clustername: { label: 'Cluster' },
 						ipaddress: { label: 'IP Address' },
 						version: { label: 'Version' },
-						oscategoryname: { label: 'OS Preference' },
+						oscategoryid: { 
+						  label: 'OS Preference',
+						  isEditable: true,						  
+						  select: function(args) {	
+							$.ajax({
+							  url: createURL("listOsCategories"),			 
+							  dataType: "json",
+							  async: true,
+							  success: function(json) { 				   
+								var oscategoryObjs = json.listoscategoriesresponse.oscategory;
+								var items = [];		
+								$(oscategoryObjs).each(function() {
+								  items.push({id: this.id, description: this.name});
+								});						
+								args.response.success({data: items});					  
+							  }
+							});   
+						  }								  
+						},
 						disconnected: { label: 'Last disconnected' }						
                       }
                     ],
@@ -2374,7 +2416,7 @@
                       }
                     ],
 
-                    dataProvider: testData.dataProvider.detailView('clusters')
+                    dataProvider: testData.dataProvider.detailView('secondaryStorage')
                   }
                 }
               }
