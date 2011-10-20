@@ -120,20 +120,49 @@
                     noSelect: true,
                     addTitle: 'Add',
                     fields: {
-                      'start-port': { edit: true, label: 'Start Port' },
-                      'end-port': { edit: true, label: 'End Port' },
+                      'source-cidr': { edit: true, label: 'Source CIDR' },
                       'protocol': {
                         label: 'Protocol',
                         select: function(args) {
+                          args.$select.change(function() {
+                            var $inputs = args.$form.find('input');
+                            var $icmpFields = $inputs.filter(function() {
+                              var name = $(this).attr('name');
+
+                              return $.inArray(name, [
+                                'icmp-type',
+                                'icmp-code'
+                              ]) > -1;
+                            });
+                            var $otherFields = $inputs.filter(function() {
+                              var name = $(this).attr('name');
+
+                              return name != 'icmp-type' && name != 'icmp-code' && name != 'source-cidr';
+                            });
+
+                            if ($(this).val() == 'icmp') {
+                              $icmpFields.attr('disabled', false);
+                              $otherFields.attr('disabled', 'disabled');
+                            } else {
+                              $otherFields.attr('disabled', false);
+                              $icmpFields.attr('disabled', 'disabled');
+                            }
+                          });
+
                           args.response.success({
                             data: [
                               { name: 'tcp', description: 'TCP' },
-                              { name: 'udp', description: 'UDP' }
+                              { name: 'udp', description: 'UDP' },
+                              { name: 'icmp', description: 'ICMP' }
                             ]
                           });
                         }
                       },
-                      'add-vm': { 
+                      'start-port': { edit: true, label: 'Start Port' },
+                      'end-port': { edit: true, label: 'End Port' },
+                      'icmp-type': { edit: true, label: 'ICMP Type', isDisabled: true },
+                      'icmp-code': { edit: true, label: 'ICMP Code', isDisabled: true },
+                      'add-vm': {
                         label: 'Add Rule',
                         addButton: true
                       }
@@ -171,7 +200,7 @@
                           });
                         }
                       },
-                      'add-vm': { 
+                      'add-vm': {
                         label: 'Add VMs',
                         addButton: true
                       }
@@ -206,7 +235,7 @@
                           });
                         }
                       },
-                      'add-vm': { 
+                      'add-vm': {
                         label: 'Add VM',
                         addButton: true
                       }

@@ -16,6 +16,7 @@
 
           $browser.cloudBrowser('addPanel', {
             title: targetName,
+            maximizeIfSelected: targetId == 'firewall',
             complete: function($newPanel) {
               $newPanel.detailView({
                 $browser: $browser,

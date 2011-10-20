@@ -175,6 +175,8 @@
           .appendTo($td);
 
         field.select({
+          $select: $select,
+          $form: $multi,
           response: {
             success: function(args) {
               $(args.data).each(function() {
@@ -191,6 +193,7 @@
             type: 'text'
           })
           .addClass('required')
+          .attr('disabled', field.isDisabled ? 'disabled' : false)
           .appendTo($td);
       } else if (field.addButton) {
         $addVM = $('<div>').addClass('button add-vm').html(
