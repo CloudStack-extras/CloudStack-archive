@@ -518,9 +518,8 @@
                   }
                 });   
               },  
-              
-			  //???
-             actions: {
+              			  
+              actions: {
                 add: {
                   label: 'Add pod',
 
@@ -640,8 +639,7 @@
 						    var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
 						    args.response.error(errorMsg);	
 		                }
-		            });	
-                    //???                   
+		            });	                                   
                   },
 
                   notification: {
@@ -659,7 +657,7 @@
 				
                 destroy: testData.actions.destroy('pod')
               },	
-			  //???
+			 
               detailView: {
                 viewAll: { path: '_zone.clusters', label: 'Clusters' },
                 tabs: {
@@ -1613,7 +1611,7 @@
                 podname: { label: 'Pod' }
               },
               
-              //dataProvider: testData.dataProvider.listView('clusters'),
+              //dataProvider: testData.dataProvider.listView('primaryStorage'),
               dataProvider: function(args) {                        
                 $.ajax({
                   url: createURL("listStoragePools&zoneid=" + args.ref.zoneID + "&page=" + args.page + "&pagesize=" + pageSize),
@@ -2004,7 +2002,143 @@
                 destroy: testData.actions.destroy('cluster')
               },
 			  			  
-              detailView: {
+              detailView: {			    
+				name: "Primary storage details",				
+                actions: {				  
+				  enableMaintenaceMode: { 
+					label: 'Enable Maintenace' ,
+					action: function(args) {					  
+					  $.ajax({
+						url: createURL("enableStorageMaintenance&id=" + args.context.primaryStorage[0].id),
+						dataType: "json",
+						async: true,
+						success: function(json) { 							     
+						  var jid = json.prepareprimarystorageformaintenanceresponse.jobid;    				
+						  args.response.success(
+							{_custom:
+							  {jobId: jid,
+							   getUpdatedItem: function(json) {
+								 return json.queryasyncjobresultresponse.jobresult.storagepool;
+							   },
+							   getActionFilter: function() {
+								 return primarystorageActionfilter;
+							   }					 
+							  }
+							}
+						  );							
+						}
+					  });  	
+					},
+					messages: {
+					  confirm: function(args) {
+						return 'Warning: placing the primary storage into maintenance mode will cause all VMs using volumes from it to be stopped.  Do you want to continue?';
+					  },
+					  success: function(args) {
+						return 'Maintenance is being enabled.';
+					  },
+					  notification: function(args) {
+						return 'Enabling maintenance';
+					  },
+					  complete: function(args) {
+						return 'Maintenance has been enabled.';
+					  }
+					},		  
+					notification: {           
+					  poll: pollAsyncJobResult
+					}		  
+				  },
+				  
+				  cancelMaintenaceMode: { 
+					label: 'Cancel Maintenace' ,
+					action: function(args) {	
+					  $.ajax({
+						url: createURL("cancelStorageMaintenance&id=" + args.context.primaryStorage[0].id),
+						dataType: "json",
+						async: true,
+						success: function(json) { 			    
+						  var jid = json.cancelprimarystoragemaintenanceresponse.jobid;    				
+						  args.response.success(
+							{_custom:
+							  {jobId: jid,
+							   getUpdatedItem: function(json) {
+								 return json.queryasyncjobresultresponse.jobresult.storagepool;
+							   },
+							   getActionFilter: function() {
+								 return primarystorageActionfilter;
+							   }					 
+							  }
+							}
+						  );							
+						}
+					  });  	
+					},
+					messages: {
+					  confirm: function(args) {
+						return 'Please confirm that you want to cancel this maintenance.';
+					  },
+					  success: function(args) {
+						return 'Maintenance is being cancelled.';
+					  },
+					  notification: function(args) {
+						return 'Cancelling maintenance';
+					  },
+					  complete: function(args) {
+						return 'Maintenance has been cancelled.';
+					  }
+					},		  
+					notification: {           
+					  poll: pollAsyncJobResult
+					}		  
+				  },
+				  				  
+				  'delete': { 
+					label: 'Remove host' ,                    					
+					messages: {
+					  confirm: function(args) {
+						return 'Please confirm that you want to remove this host.';
+					  },
+					  success: function(args) {
+						return 'Host is being removed.';
+					  },
+					  notification: function(args) {
+						return 'Removing host';
+					  },
+					  complete: function(args) {
+						return 'Host has been removed.';
+					  }
+					},	
+					preFilter: function(args) {
+					  if(isAdmin()) {		
+						args.$form.find('.form-item[rel=isForced]').css('display', 'inline-block');  	   
+					  }  
+					},	
+					createForm: {
+					  title: 'Remove host',					  
+					  fields: {  
+						isForced: {
+						  label: 'Force Remove',
+						  isBoolean: true,
+						  isHidden: true
+						}				 
+					  }
+					},        								
+                    action: function(args) {     
+					  $.ajax({
+						url: createURL("deleteStoragePool&id=" + args.context.primaryStorage[0].id),
+						dataType: "json",
+						async: true,
+						success: function(json) { 	
+			              args.response.success({data:{}});							
+						}
+					  });  	
+					},					
+					notification: {           
+					  poll: function(args) { args.complete(); }
+					}		  
+				  }
+				  
+				},			  
+                		
                 tabs: {
                   details: {
                     title: 'Details',
@@ -2018,7 +2152,15 @@
                       }
                     ],
 
-                    dataProvider: testData.dataProvider.detailView('clusters')
+                    //dataProvider: testData.dataProvider.detailView('primaryStorage') 
+					dataProvider: function(args) {
+					  debugger;
+					  args.response.success({
+					    actionFilter: primarystorageActionfilter,
+						data: args.context.primaryStorage[0]
+					  });
+					}
+					
                   }
                 }
               }
@@ -2307,6 +2449,15 @@
     }		
     return allowedActions;
   }  
+  
+  var primarystorageActionfilter = function(args) {	    		  
+    var jsonObj = args.context.item;
+	var allowedActions = [];
+    allowedActions.push("enableMaintenaceMode");	
+    allowedActions.push("cancelMaintenaceMode");		
+    allowedActions.push("delete");
+	return allowedActions;
+  }
   //action filters (end)
   
 })($, cloudStack, testData);
