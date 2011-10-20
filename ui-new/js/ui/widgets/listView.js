@@ -238,6 +238,7 @@
         performAction();
       else {
         var addRow = args.action.addRow == "false" ? false : true;
+        var createFormContext = $.extend({}, context);
 
         cloudStack.dialog.createForm({
           form: args.action.createForm,
@@ -259,13 +260,13 @@
 
             performAction(args.data, {
               ref: args.ref,
-              context: context,
+              context: createFormContext,
               $item: $newItem,
               $form: args.$form
             });
           },
           ref: listViewArgs.ref,
-          context: listViewArgs.context
+          context: createFormContext
         });
       }
     },
