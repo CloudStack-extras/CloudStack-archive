@@ -1343,7 +1343,7 @@
 				  },
 				  
 				  'delete': { 
-					label: 'Remove host' ,					
+					label: 'Remove host' ,                    					
 					messages: {
 					  confirm: function(args) {
 						return 'Please confirm that you want to remove this host.';
@@ -1358,12 +1358,18 @@
 						return 'Host has been removed.';
 					  }
 					},	
+					preFilter: function(args) {
+					  if(isAdmin()) {		
+						args.$form.find('.form-item[rel=isForced]').css('display', 'inline-block');  	   
+					  }  
+					},	
 					createForm: {
 					  title: 'Remove host',					  
 					  fields: {  
 						isForced: {
 						  label: 'Force Remove',
-						  isBoolean: true
+						  isBoolean: true,
+						  isHidden: true
 						}				 
 					  }
 					},        								
