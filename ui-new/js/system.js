@@ -893,7 +893,8 @@
               fields: {
                 name: { label: 'Name' },
                 zonename: { label: 'Zone' },
-                podname: { label: 'Pod' }
+                podname: { label: 'Pod' },
+				clustername: { label: 'Cluster' }
               },
               
               //dataProvider: testData.dataProvider.listView('hosts'), 
@@ -1584,8 +1585,19 @@
                         name: { label: 'Name' },
                       },
                       {
+					    id: { label: 'ID' },
+						hosttags: { 
+						  label: 'Host tags',
+                          isEditable: true
+					    },		
                         type: { label: 'Type' },
                         zonename: { label: 'Zone' },
+						podname: { label: 'Pod' },
+						clustername: { label: 'Cluster' },
+						ipaddress: { label: 'IP Address' },
+						version: { label: 'Version' },
+						oscategoryname: { label: 'OS Preference' },
+						disconnected: { label: 'Last disconnected' }						
                       }
                     ],
                     
