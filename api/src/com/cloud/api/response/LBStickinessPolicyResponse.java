@@ -30,7 +30,7 @@ public class LBStickinessPolicyResponse extends BaseResponse {
     @Param(description = "the LB Stickiness policy ID")
     private Long id;
 
-    @SerializedName("lbRuleId")
+    @SerializedName("lbruleid")
     @Param(description = "the LB rule ID")
     private Long lbRuleId;
 
@@ -38,7 +38,7 @@ public class LBStickinessPolicyResponse extends BaseResponse {
     @Param(description = "the name of the Stickiness policy")
     private String name;
 
-    @SerializedName("methodName")
+    @SerializedName("methodname")
     @Param(description = "the method name of the Stickiness policy")
     private String methodName;
 
@@ -151,7 +151,7 @@ public class LBStickinessPolicyResponse extends BaseResponse {
             paramList.put(temp[i], temp[i + 1]);
         }
         this.params = paramList;
-        setObjectName("StickinessPolicy");
+        setObjectName("Stickinesspolicy");
     }
 
 }

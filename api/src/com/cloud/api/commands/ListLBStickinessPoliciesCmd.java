@@ -42,7 +42,7 @@ public class ListLBStickinessPoliciesCmd extends BaseListCmd {
     public static final Logger s_logger = Logger
             .getLogger(ListLBStickinessPoliciesCmd.class.getName());
 
-    private static final String s_name = "listLBStickinessPoliciesresponse";
+    private static final String s_name = "listlbstickinesspoliciesresponse";
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////
@@ -70,20 +70,21 @@ public class ListLBStickinessPoliciesCmd extends BaseListCmd {
 
     @Override
     public void execute() {
-
-        List<? extends StickinessPolicy> stickinesspolicies = _lbService
-                .searchForLBStickinessPolicies(this);
-
-        LoadBalancer lb = _lbService.findById(getLbRuleId());
-
-        LBStickinessResponse spResponse = _responseGenerator
-                .createLBStickinessPolicyResponse(stickinesspolicies, lb);
         List<LBStickinessResponse> spResponses = new ArrayList<LBStickinessResponse>();
+        LoadBalancer lb = _lbService.findById(getLbRuleId());
         ListResponse<LBStickinessResponse> response = new ListResponse<LBStickinessResponse>();
-        spResponses.add(spResponse);
+        
+        if (lb != null) {
+            List<? extends StickinessPolicy> stickinessPolicies = _lbService
+                    .searchForLBStickinessPolicies(this);
 
-        response.setResponses(spResponses);
-        spResponse.setResponseName(getCommandName());
+            LBStickinessResponse spResponse = _responseGenerator
+                    .createLBStickinessPolicyResponse(stickinessPolicies, lb);
+            spResponses.add(spResponse);
+            response.setResponses(spResponses);
+        }
+        
+        response.setResponseName(getCommandName());
         this.setResponseObject(response);
     }
 

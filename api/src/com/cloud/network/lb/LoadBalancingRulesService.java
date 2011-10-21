@@ -58,6 +58,8 @@ public interface LoadBalancingRulesService {
      * Create a stickiness policy to a load balancer.
      */
     public StickinessPolicy createLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws NetworkRuleConflictException;
+    public boolean applyLBStickinessPolicy(long lbRuleId) throws NetworkRuleConflictException;
+    
     boolean deleteLBStickinessPolicy(long stickinessPolicyId);
     /**
      * Assign a virtual machine, or list of virtual machines, to a load balancer.

@@ -61,7 +61,7 @@ public class LBStickinessResponse extends BaseResponse {
     @Param(description = "the id of the zone the policy belongs to")
     private Long zoneId;
 
-    @SerializedName("stickinessPolicies")
+    @SerializedName("stickinesspolicy")
     @Param(description = "the list of stickinesspolicies", responseObject = LBStickinessPolicyResponse.class)
     private List<LBStickinessPolicyResponse> stickinessPolicies;
 

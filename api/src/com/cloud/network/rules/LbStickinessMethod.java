@@ -20,84 +20,100 @@ package com.cloud.network.rules;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.google.gson.annotations.SerializedName;
+
 
 public class LbStickinessMethod {
+    public static class StickinessMethodType {
+        private String _name;
+        
+        public static final StickinessMethodType LBCookieBased = new StickinessMethodType("LbCookie");
+        public static final StickinessMethodType AppCookieBased = new StickinessMethodType("AppCookie");
+        public static final StickinessMethodType SourceBased = new StickinessMethodType("SourceBased");
+        public StickinessMethodType(String name) {
+            _name = name;
+        }
+        
+        public String getName() {
+            return _name;
+        }
+    }
+    /* FIXME: Here variable names appear in the jason object inserted into capability, so the names of variable are important */
     public class LbStickinessMethodParam {
-        private String _paramName;
-        private Boolean _required;
-        private String _description;
+        private String paramname;
+        private Boolean required;
+        private String description;
 
         public LbStickinessMethodParam(String name, Boolean required,
                 String description) {
-            this._paramName = name;
-            this._required = required;
-            this._description = description;
+            this.paramname = name;
+            this.required = required;
+            this.description = description;
         }
 
         public String getParamName() {
-            return _paramName;
+            return paramname;
         }
 
         public void setParamName(String paramName) {
-            this._paramName = paramName;
+            this.paramname = paramName;
         }
 
         public Boolean getRequired() {
-            return _required;
+            return required;
         }
 
         public void setRequired(Boolean required) {
-            this._required = required;
+            this.required = required;
         }
 
         public String getDescription() {
-            return _description;
+            return description;
         }
 
         public void setDescription(String description) {
-            this._description = description;
+            this.description = description;
         }
 
     }
 
-    private String _methodName;
-    private List<LbStickinessMethodParam> _paramList;
-    private String _description;
+    private String methodname;
+    private List<LbStickinessMethodParam> paramlist;
+    private String description;
 
-    public LbStickinessMethod(String methodName, String description) {
-        this._methodName = methodName;
-        this._description = description;
-        this._paramList = new ArrayList<LbStickinessMethodParam>(1);
+    public LbStickinessMethod(StickinessMethodType methodType, String description) {
+        this.methodname = methodType.getName();
+        this.description = description;
+        this.paramlist = new ArrayList<LbStickinessMethodParam>(1);
     }
 
     public void addParam(String name, Boolean required, String description) {
-        LbStickinessMethodParam param = new LbStickinessMethodParam(name,
-                required, description);
-        _paramList.add(param);
+        /* FIXME : UI is breaking if the capability string length is larger , temporarily description is commented out */
+       // LbStickinessMethodParam param = new LbStickinessMethodParam(name, required, description);
+        LbStickinessMethodParam param = new LbStickinessMethodParam(name,required, " ");
+        paramlist.add(param);
         return;
     }
 
     public String getMethodName() {
-        return _methodName;
+        return methodname;
     }
 
     public List<LbStickinessMethodParam> getParamList() {
-        return _paramList;
+        return paramlist;
     }
 
     public void setParamList(List<LbStickinessMethodParam> paramList) {
-        this._paramList = paramList;
+        this.paramlist = paramList;
     }
 
     public String getDescription() {
-        return _description;
+        return description;
     }
 
     public void setDescription(String description) {
-        this._description = description;
-    }
-
-    public void setMethodName(String methodName) {
-        this._methodName = methodName;
+        /* FIXME : UI is breaking if the capability string length is larger , temporarily description is commented out */
+        //this.description = description;
+        this.description = " ";
     }
 }

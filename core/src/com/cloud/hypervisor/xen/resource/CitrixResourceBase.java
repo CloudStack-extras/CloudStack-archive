@@ -1354,7 +1354,13 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         }
               
         LoadBalancerConfigurator cfgtr = new HAProxyConfigurator();
-        String[] config = cfgtr.generateConfiguration(cmd);
+        String[] config;
+        try {
+            config = cfgtr.generateConfiguration(cmd);   
+        }catch ( Exception e) {
+            return new Answer(cmd, false, e.getMessage());
+        }
+
         String[][] rules = cfgtr.generateFwRules(cmd);
         String tmpCfgFilePath = "/tmp/" + routerIp.replace('.', '_') + ".cfg";
         String tmpCfgFileContents = "";
