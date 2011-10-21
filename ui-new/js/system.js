@@ -687,7 +687,8 @@
               fields: {
                 name: { label: 'Name' },
                 zonename: { label: 'Zone' },
-                podname: { label: 'Pod' }
+                podname: { label: 'Pod' },
+				hypervisortype: { label: 'Hypervisor' }
               },
               
               //dataProvider: testData.dataProvider.listView('clusters'),
@@ -872,14 +873,24 @@
                         name: { label: 'Name' },
                       },
                       {
-                        allocationstate: { label: 'State' },
-                        podname: { label: 'Pod' },
-                        hypervisortype: { label: 'Hypervisor' },
-                        clustertype: { label: 'Cluster' },
+					    id: { label: 'ID' },
+						zonename: { label: 'Zone' },
+						podname: { label: 'Pod' },
+						hypervisortype: { label: 'Hypervisor' },
+						clustertype: { label: 'Clulster type' },
+						allocationstate: { label: 'Allocation State' },
+						managedstate: { label: 'Managed State' }                        
                       }
                     ],
 
-                    dataProvider: testData.dataProvider.detailView('clusters')
+                    //dataProvider: testData.dataProvider.detailView('clusters')
+					dataProvider: function(args) {					 
+					  args.response.success({
+					    actionFilter: clusterActionfilter,
+						data: args.context.clusters[0]
+					  });
+					}
+					
                   },
                 }
               }
@@ -2743,6 +2754,13 @@
     var jsonObj = args.context.item;
 	var allowedActions = [];
     allowedActions.push("delete");	  
+	return allowedActions;
+  }
+  
+   var clusterActionfilter = function(args) {	    		  
+    var jsonObj = args.context.item;
+	var allowedActions = [];
+    //allowedActions.push("delete");	  
 	return allowedActions;
   }
   //action filters (end)
