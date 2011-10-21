@@ -1,4 +1,4 @@
-(function(cloudStack, testData) {  
+(function(cloudStack, testData) {
   cloudStack.sections.network = {
     title: 'Network',
     id: 'network',
@@ -91,19 +91,19 @@
               }
             }
           },
-          
-		  //dataProvider: testData.dataProvider.listView('network'),
-		  dataProvider: function(args) {        
-			$.ajax({
-			  url: createURL("listPublicIpAddresses&page="+args.page+"&pagesize="+pageSize),
-			  dataType: "json",
-			  async: true,
-			  success: function(json) { 	
-				var items = json.listpublicipaddressesresponse.publicipaddress;			    
-				args.response.success({data:items});			                			
-			  }
-			});  	
-		  },
+
+          //dataProvider: testData.dataProvider.listView('network'),
+          dataProvider: function(args) {
+            $.ajax({
+              url: createURL("listPublicIpAddresses&page="+args.page+"&pagesize="+pageSize),
+              dataType: "json",
+              async: true,
+              success: function(json) {
+                var items = json.listpublicipaddressesresponse.publicipaddress;
+                args.response.success({data:items});
+              }
+            });
+          },
 
           // Detail view
           detailView: {
@@ -122,21 +122,21 @@
                     issourcenat: { label: 'Source NAT' }
                   }
                 ],
-                
-				//dataProvider: testData.dataProvider.detailView('network')
-				dataProvider: function(args) {        
-				  $.ajax({
-					url: createURL("listPublicIpAddresses&id="+args.id),
-					dataType: "json",
-					async: true,
-					success: function(json) { 	
-					  var items = json.listpublicipaddressesresponse.publicipaddress;		
-					  if(items != null && items.length > 0) {				
-						args.response.success({data:items[0]});	
-					  }					
-					}
-				  });  	
-				}				
+
+                //dataProvider: testData.dataProvider.detailView('network')
+                dataProvider: function(args) {
+                  $.ajax({
+                    url: createURL("listPublicIpAddresses&id="+args.id),
+                    dataType: "json",
+                    async: true,
+                    success: function(json) {
+                      var items = json.listpublicipaddressesresponse.publicipaddress;
+                      if(items != null && items.length > 0) {
+                        args.response.success({data:items[0]});
+                      }
+                    }
+                  });
+                }
               },
 
               portRange: {
@@ -177,7 +177,7 @@
                     },
                     action: function(args) {
                       setTimeout(function() {
-                        args.response.success();                        
+                        args.response.success();
                       }, 500);
                     }
                   },
@@ -306,20 +306,20 @@
               }
             }
           },
-		  
+
           //dataProvider: testData.dataProvider.listView('securityGroups'),
-		  dataProvider: function(args) {        
-			$.ajax({
-		  	  url: createURL("listSecurityGroups&page="+args.page+"&pagesize="+pageSize),
-			  dataType: "json",
-			  async: true,
-			  success: function(json) { 	
-				var items = json.listsecuritygroupsresponse.securitygroup;			    
-				args.response.success({data:items});			                			
-			  }
-			});  	
-		  },
-		  
+          dataProvider: function(args) {
+            $.ajax({
+              url: createURL("listSecurityGroups&page="+args.page+"&pagesize="+pageSize),
+              dataType: "json",
+              async: true,
+              success: function(json) {
+                var items = json.listsecuritygroupsresponse.securitygroup;
+                args.response.success({data:items});
+              }
+            });
+          },
+
           detailView: {
             name: 'Security group details',
             tabs: {
@@ -332,29 +332,29 @@
                   {
                     domain: { label: 'Domain' },
                     account: { label: 'Account' }
-                  } 
+                  }
                 ],
-				
+
                 //dataProvider: testData.dataProvider.detailView('securityGroups')
-				dataProvider: function(args) {        
-				  $.ajax({
-					url: createURL("listSecurityGroups&id="+args.id),
-					dataType: "json",
-					async: true,
-					success: function(json) { 	
-					  var items = json.listsecuritygroupsresponse.securitygroup;		
-					  if(items != null && items.length > 0) {						
-						args.response.success({data:items[0]});		
-					  }					
-					}
-				  });  	
-				}			
+                dataProvider: function(args) {
+                  $.ajax({
+                    url: createURL("listSecurityGroups&id="+args.id),
+                    dataType: "json",
+                    async: true,
+                    success: function(json) {
+                      var items = json.listsecuritygroupsresponse.securitygroup;
+                      if(items != null && items.length > 0) {
+                        args.response.success({data:items[0]});
+                      }
+                    }
+                  });
+                }
               },
               ingressRules: {
                 title: 'Ingress Rules',
                 multiEdit: true,
                 fields: {
-                  protocol: { 
+                  protocol: {
                     label: 'Protocol',
                     editable: true,
                     select: [
@@ -383,14 +383,14 @@
                         return 'Port range has been added.';
                       }
                     },
-                    notification: { 
+                    notification: {
                       poll: testData.notifications.testPoll
                     },
                     action: function(args) {
                       setTimeout(function() {
                         args.response.success();
                       }, 500);
-                    } 
+                    }
                   },
                   destroy: {
                     label: 'Remove rule',
