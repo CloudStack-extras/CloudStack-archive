@@ -18,11 +18,6 @@
 package com.cloud.network.lb;
 
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
-
-
 import com.cloud.api.commands.CreateLBStickinessPolicyCmd;
 import com.cloud.api.commands.CreateLoadBalancerRuleCmd;
 import com.cloud.api.commands.ListLBStickinessPoliciesCmd;
@@ -33,7 +28,6 @@ import com.cloud.api.commands.UpdateLoadBalancerRuleCmd;
 import com.cloud.exception.InsufficientAddressCapacityException;
 import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceUnavailableException;
-import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
 import com.cloud.network.rules.StickinessPolicy;
 import com.cloud.network.rules.LoadBalancer;
 

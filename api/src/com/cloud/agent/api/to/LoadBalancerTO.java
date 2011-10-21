@@ -33,7 +33,7 @@ public class LoadBalancerTO {
     boolean revoked;
     boolean alreadyAdded;
     DestinationTO[] destinations;
-    StickinessPolicyTO[] stickinessPolicies;
+    private StickinessPolicyTO[] stickinessPolicies;
    
     public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> destinations) {
         this.srcIp = srcIp;
@@ -43,6 +43,7 @@ public class LoadBalancerTO {
         this.revoked = revoked;
         this.alreadyAdded = alreadyAdded;
         this.destinations = new DestinationTO[destinations.size()];
+        this.stickinessPolicies = null;
         int i = 0;
         for (LbDestination destination : destinations) {
             this.destinations[i++] = new DestinationTO(destination.getIpAddress(), destination.getDestinationPortStart(), destination.isRevoked(), false);
@@ -62,7 +63,7 @@ public class LoadBalancerTO {
         for (LbDestination destination : arg_destinations) {
             this.destinations[i++] = new DestinationTO(destination.getIpAddress(), destination.getDestinationPortStart(), destination.isRevoked(), false);
         }
-        
+        this.stickinessPolicies = null;
         if (stickinessPolicies != null && stickinessPolicies.size()>0)
         {
     	    this.stickinessPolicies = new StickinessPolicyTO[stickinessPolicies.size()];

@@ -185,9 +185,12 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     	/* Validation : check corresponding load balancer rule exist */
         LoadBalancerVO loadBalancer = _lbDao.findById(cmd.getLbRuleId());
         if (loadBalancer == null) {
-            throw new InvalidParameterValueException("Failed to assign to load balancer " + cmd.getLbRuleId() + ", the load balancer was not found.");
+            throw new InvalidParameterValueException("Failed: tLB rule not present " + cmd.getLbRuleId());
         }
 
+        if (loadBalancer.getState() == FirewallRule.State.Revoke) {
+            throw new InvalidParameterValueException("Failed:  LB rule is in deleting state:" + cmd.getLbRuleId() ); 
+        }
         /* Validation : check for valid Method name and params */
         List <LbStickinessMethod> stickinessMethodList = getStickinessMethods(loadBalancer.getNetworkId());
         boolean methodMatch = false;
@@ -200,35 +203,47 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             {
             	methodMatch = true;
             	Map<String,String> apiParamList = cmd.getparamList();
+            	
             	List<LbStickinessMethodParam> methodParamList = method.getParamList();
         		Map<String,String> tempParamList = new HashMap<String, String>(); 
         		
-		    	/*validation-1: check for any params that are not present in the policymethod(capabilty)  */
-        		if (apiParamList != null) {
-					Collection userGroupCollection = apiParamList.values();
-					Iterator iter = userGroupCollection.iterator();
-					while (iter.hasNext()) {
-						HashMap<String,String> paramKVpair = (HashMap) iter.next();
-						String paramName =  paramKVpair.get("name");
-						String paramValue =  paramKVpair.get("value");
-						tempParamList.put(paramName, paramValue);
-						Boolean found = false;
-						for (LbStickinessMethodParam param : methodParamList) {
-						    if (param.getParamName().equalsIgnoreCase(paramName)) {
-						    	found = true;
-						    	break;
-						    }
-						}
-						if (found == false)
-						{
-							throw new InvalidParameterValueException(
-									"Failed :This Stickiness policy does not support param name :"
-											+ paramName);	
-						}
-					}
-				}
+        		/* validation-1 : check for http based or not */
+        		if (method.getHttpbased()) {
+        		    String publicPort = Integer.toString(loadBalancer.getDefaultPortStart());
+        		    if (!publicPort.equals(NetUtils.HTTP_PORT))
+        		    {
+        		        throw new InvalidParameterValueException("Failed:  Stickiness method is not HTTP based :" + cmd.getLbRuleId() );   
+        		    }
+        		}
+        		    
+        		
+		    	/*validation-2: check for any extra params that are not required by the policymethod(capability)  */
+                if (apiParamList != null) {
+                    Collection userGroupCollection = apiParamList.values();
+                    Iterator iter = userGroupCollection.iterator();
+                    while (iter.hasNext()) {
+                        HashMap<String, String> paramKVpair = (HashMap) iter.next();
+                        String paramName = paramKVpair.get("name");
+                        String paramValue = paramKVpair.get("value");
+
+                        tempParamList.put(paramName, paramValue);
+                        Boolean found = false;
+                        for (LbStickinessMethodParam param : methodParamList) {
+                            if (param.getParamName()
+                                    .equalsIgnoreCase(paramName)) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (found == false) {
+                            throw new InvalidParameterValueException(
+                                    "Failed :This Stickiness policy does not support param name :"
+                                            + paramName);
+                        }
+                    }
+                }
             	
-            	/*validation-2: check for mandatory params */
+            	/*validation-3: check for mandatory params */
 				for (LbStickinessMethodParam param : methodParamList) {
 					if (param.getRequired())
 					{
@@ -248,11 +263,10 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         	throw new InvalidParameterValueException("Failed to match Stickiness method name :" + cmd.getLbRuleId() );
         }
         
-    	/* Validation : check for the multiple policies */
+    	/* Validation : check for the multiple policies to the rule id */
         List<LBStickinessPolicyVO> stickinessPolicies = _lb2stickinesspoliciesDao.listByLoadBalancerId(cmd.getLbRuleId(), false);
-        for (LBStickinessPolicyVO policy : stickinessPolicies) {
-        	if (policy.getMethodName().equals(cmd.getStickinessMethodName()))
-        	    throw new InvalidParameterValueException("Failed to create to load balancer stickipolcy " + cmd.getLbRuleId() );
+        if  (stickinessPolicies.size() > 0) {
+            throw new InvalidParameterValueException("Failed to create to load balancer stickipolcy: Already policy attached " + cmd.getLbRuleId() );
         }
 
         /*Finally Insert into DB */
