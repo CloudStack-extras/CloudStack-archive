@@ -616,7 +616,9 @@
           return key;
         });
 
-        if (options.actionFilter) allowedActions = options.actionFilter({
+        var isUICustom = $tr.closest('.list-view').data().viewArgs.uiCustom;
+
+        if (options.actionFilter && !isUICustom) allowedActions = options.actionFilter({
           context: {
             actions: allowedActions,
             item: dataItem
@@ -927,7 +929,7 @@
       var detailViewPresent = ($target.closest('div.data-table tr td').size() &&
                                $target.closest('div.data-table tr td').index() == 0 &&
                                listViewData.detailView && !$target.closest('div.edit').size());
-      var uiCustom = args.listView ? args.listView.uiCustom == true : false;
+      var uiCustom = args.uiCustom == true ? true : false;
 
       // Click on first item will trigger detail view (if present)
       if (detailViewPresent && !uiCustom && !$target.closest('.empty, .loading').size()) {

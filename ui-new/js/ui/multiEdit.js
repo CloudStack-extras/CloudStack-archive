@@ -362,9 +362,7 @@
       // from main instances list view
       var $listView;
       var instances = $.extend(true, {}, args.listView, {
-        listView: {
-          uiCustom: true
-        }
+        uiCustom: true
       });
 
       instances.listView.actions = {
