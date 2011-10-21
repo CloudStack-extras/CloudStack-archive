@@ -138,95 +138,299 @@
                   });
                 }
               },
+              ipRules: {
+                title: 'Configuration',
+                custom: cloudStack.ipRules({
 
-              portRange: {
-                title: 'Port range',
-                multiEdit: true,
-                fields: {
-                  start: { label: 'Start Port', editable: true },
-                  end: { label: 'End Port', editable: true },
-                  protocol: {
-                    label: 'Protocol',
-                    editable: true,
-                    select: [
-                      { id: 'tcp', label: 'TCP' },
-                      { id: 'udp', label: 'UDP' }
-                    ]
-                  },
-                  state: { label: 'State' }
-                },
-                actions: {
-                  create: {
-                    label: 'Add port range',
-                    messages: {
-                      confirm: function(args) {
-                        return 'Are you sure you want to add this port range?';
+                  // Firewall rules
+                  firewall: {
+                    noSelect: true,
+                    fields: {
+                      'cidrlist': { edit: true, label: 'Source CIDR' },
+                      'protocol': {
+                        label: 'Protocol',
+                        select: function(args) {
+                          args.$select.change(function() {
+                            var $inputs = args.$form.find('input');
+                            var $icmpFields = $inputs.filter(function() {
+                              var name = $(this).attr('name');
+
+                              return $.inArray(name, [
+                                'icmptype',
+                                'icmpcode'
+                              ]) > -1;
+                            });
+                            var $otherFields = $inputs.filter(function() {
+                              var name = $(this).attr('name');
+
+                              return name != 'icmptype' && name != 'icmpcode' && name != 'cidrlist';
+                            });
+
+                            if ($(this).val() == 'icmp') {
+                              $icmpFields.attr('disabled', false);
+                              $otherFields.attr('disabled', 'disabled');
+                            } else {
+                              $otherFields.attr('disabled', false);
+                              $icmpFields.attr('disabled', 'disabled');
+                            }
+                          });
+
+                          args.response.success({
+                            data: [
+                              { name: 'tcp', description: 'TCP' },
+                              { name: 'udp', description: 'UDP' },
+                              { name: 'icmp', description: 'ICMP' }
+                            ]
+                          });
+                        }
                       },
-                      success: function(args) {
-                        return 'Added port range';
-                      },
-                      notification: function(args) {
-                        return 'Added port range';
-                      },
-                      complete: function(args) {
-                        return 'Port range has been added.';
+                      'startport': { edit: true, label: 'Start Port' },
+                      'endport': { edit: true, label: 'End Port' },
+                      'icmptype': { edit: true, label: 'ICMP Type', isDisabled: true },
+                      'icmpcode': { edit: true, label: 'ICMP Code', isDisabled: true },
+                      'add-rule': {
+                        label: 'Add Rule',
+                        addButton: true
                       }
                     },
-                    notification: {
-                      poll: testData.notifications.testPoll
+                    add: {
+                      label: 'Add',
+                      action: function(args) {
+                        setTimeout(function() {
+                          args.response.success({
+                            notification: {
+                              label: 'Add firewall rule',
+                              poll: testData.notifications.testPoll
+                            }
+                          });
+                        }, 500);
+                      }
                     },
-                    action: function(args) {
+                    actions: {
+                      destroy: {
+                        label: 'Remove Rule',
+                        action: function(args) {
+                          setTimeout(function() {
+                            args.response.success({
+                              notification: {
+                                label: 'Remove firewall rule',
+                                poll: testData.notifications.testPoll
+                              }
+                            });
+                          }, 500);
+                        }
+                      }
+                    },
+                    dataProvider: function(args) {
                       setTimeout(function() {
-                        args.response.success();
-                      }, 500);
+                        args.response.success({
+                          data: [
+                            {
+                              "id": 11,
+                              "protocol": "icmp",
+                              "ipaddressid": 4,
+                              "ipaddress": "10.223.71.23",
+                              "state": "Active",
+                              "cidrlist": "0.0.0.0/0",
+                              "icmptype": 2,
+                              "icmpcode": 22
+                            },
+                            {
+                              "id": 10,
+                              "protocol": "udp",
+                              "startport": "500",
+                              "endport": "10000",
+                              "ipaddressid": 4,
+                              "ipaddress": "10.223.71.23",
+                              "state": "Active",
+                              "cidrlist": "0.0.0.0/24"
+                            },
+                            {
+                              "id": 9,
+                              "protocol": "tcp",
+                              "startport": "20",
+                              "endport": "200",
+                              "ipaddressid": 4,
+                              "ipaddress": "10.223.71.23",
+                              "state": "Active",
+                              "cidrlist": "0.0.0.0/24"
+                            }
+                          ]
+                        });
+                      }, 100);
                     }
                   },
-                  destroy: {
-                    label: 'Remove',
-                    messages: {
-                      confirm: function(args) {
-                        return 'Are you sure you want to remove this port range?';
+
+                  // Load balancing rules
+                  loadBalancing: {
+                    listView: cloudStack.sections.instances,
+                    multipleAdd: true,
+                    fields: {
+                      'name': { edit: true, label: 'Name' },
+                      'publicport': { edit: true, label: 'Public Port' },
+                      'privateport': { edit: true, label: 'Private Port' },
+                      'algorithm': {
+                        label: 'Algorithm',
+                        select: function(args) {
+                          args.response.success({
+                            data: [
+                              { name: 'roundrobin', description: 'Round-robin' },
+                              { name: 'leastconn', description: 'Least connections' },
+                              { name: 'source', description: 'Source' }
+                            ]
+                          });
+                        }
                       },
-                      success: function(args) {
-                        return 'Removed port range';
-                      },
-                      notification: function(args) {
-                        return 'Removed port range: ' + args.name;
-                      },
-                      complete: function(args) {
-                        return 'Port range has been removed.';
+                      'add-vm': {
+                        label: 'Add VMs',
+                        addButton: true
                       }
                     },
-                    notification: {
-                      poll: testData.notifications.testPoll
+                    add: {
+                      label: 'Add VMs',
+                      action: function(args) {
+                        setTimeout(function() {
+                          args.response.success({
+                            notification: {
+                              label: 'Add load balancing rule',
+                              poll: testData.notifications.testPoll
+                            }
+                          });
+                        }, 500);
+                      }
                     },
-                    action: function(args) {
+                    actions: {
+                      destroy:  {
+                        label: 'Remove load balancing rule',
+                        action: function(args) {
+                          setTimeout(function() {
+                            args.response.success({
+                              notification: {
+                                label: 'Remove load balancing rule',
+                                poll: testData.notifications.testPoll
+                              }
+                            });
+                          }, 500);
+                        }
+                      }
+                    },
+                    dataProvider: function(args) {
                       setTimeout(function() {
-                        args.response.success();
-                      }, 400);
+                        args.response.success({
+                          data: [
+                            {
+                              "id": 13,
+                              "name": "HTTP",
+                              "publicipid": 4,
+                              "publicip": "10.223.71.23",
+                              "publicport": "80",
+                              "privateport": "80",
+                              "algorithm": "roundrobin",
+                              "cidrlist": "",
+                              "account": "admin",
+                              "domainid": 1,
+                              "domain": "ROOT",
+                              "state": "Active",
+                              "zoneid": 1,
+                              _itemData: [
+                                testData.data.instances[0],
+                                testData.data.instances[1],
+                                testData.data.instances[2],
+                                testData.data.instances[3]
+                              ]
+                            }
+                          ]
+                        });
+                      }, 100);
+                    }
+                  },
+
+                  // Port forwarding rules
+                  portForwarding: {
+                    listView: cloudStack.sections.instances,
+                    fields: {
+                      'private-ports': {
+                        edit: true,
+                        label: 'Private Ports',
+                        range: ['privateport', 'privateendport']
+                      },
+                      'public-ports': {
+                        edit: true,
+                        label: 'Public Ports',
+                        range: ['publicport', 'publicendport']
+                      },
+                      'protocol': {
+                        label: 'Protocol',
+                        select: function(args) {
+                          args.response.success({
+                            data: [
+                              { name: 'tcp', description: 'TCP' },
+                              { name: 'udp', description: 'UDP' }
+                            ]
+                          });
+                        }
+                      },
+                      'add-vm': {
+                        label: 'Add VM',
+                        addButton: true
+                      }
+                    },
+                    add: {
+                      label: 'Add VM',
+                      action: function(args) {
+                        setTimeout(function() {
+                          args.response.success({
+                            notification: {
+                              label: 'Add port forwarding rule',
+                              poll: testData.notifications.testPoll
+                            }
+                          });
+                        }, 500);
+                      }
+                    },
+                    actions: {
+                      destroy: {
+                        label: 'Remove port forwarding rule',
+                        action: function(args) {
+                          setTimeout(function() {
+                            args.response.success({
+                              notification: {
+                                label: 'Remove port forwarding rule',
+                                poll: testData.notifications.testPoll
+                              }
+                            });
+                          }, 500);
+                        }
+                      }
+                    },
+                    dataProvider: function(args) {
+                      setTimeout(function() {
+                        args.response.success({
+                          data: [
+                            {
+                              "id": 12,
+                              "privateport": "22",
+                              "privateendport": "22",
+                              "protocol": "tcp",
+                              "publicport": "22",
+                              "publicendport": "22",
+                              "virtualmachineid": 10,
+                              "virtualmachinename": "i-2-10-TEST",
+                              "virtualmachinedisplayname": "i-2-10-TEST",
+                              "ipaddressid": 4,
+                              "ipaddress": "10.223.71.23",
+                              "state": "Active",
+                              "cidrlist": "",
+                              _itemData: [
+                                testData.data.instances[5]
+                              ]
+                            }
+                          ]
+                        });
+                      }, 100);
                     }
                   }
-                },
-                dataProvider: function(args) {
-                  setTimeout(function() {
-                    args.response.success({
-                      data: [
-                        {
-                          start: '1',
-                          end: '100',
-                          protocol: 'TCP',
-                          state: 'Active'
-                        },
-                        {
-                          start: '50',
-                          end: '90',
-                          protocol: 'UDP',
-                          state: 'Active'
-                        }
-                      ]
-                    });
-                  });
-                }
+                })
               }
             }
           }
