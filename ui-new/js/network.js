@@ -18,10 +18,10 @@
           },
           fields: {
             ipaddress: { label: 'IP' },
-            state: { label: 'State' },
             zonename: { label: 'Zone' },
             vlanname: { label: 'VLAN' },
-            networkid: { label: 'Network Type' }
+            networkid: { label: 'Network Type' },
+            state: { label: 'State', indicator: { 'Allocated': 'on' } }
           },
 
           actions: {
@@ -222,42 +222,20 @@
                       }
                     },
                     dataProvider: function(args) {
-                      setTimeout(function() {
-                        args.response.success({
-                          data: [
-                            {
-                              "id": 11,
-                              "protocol": "icmp",
-                              "ipaddressid": 4,
-                              "ipaddress": "10.223.71.23",
-                              "state": "Active",
-                              "cidrlist": "0.0.0.0/0",
-                              "icmptype": 2,
-                              "icmpcode": 22
-                            },
-                            {
-                              "id": 10,
-                              "protocol": "udp",
-                              "startport": "500",
-                              "endport": "10000",
-                              "ipaddressid": 4,
-                              "ipaddress": "10.223.71.23",
-                              "state": "Active",
-                              "cidrlist": "0.0.0.0/24"
-                            },
-                            {
-                              "id": 9,
-                              "protocol": "tcp",
-                              "startport": "20",
-                              "endport": "200",
-                              "ipaddressid": 4,
-                              "ipaddress": "10.223.71.23",
-                              "state": "Active",
-                              "cidrlist": "0.0.0.0/24"
-                            }
-                          ]
-                        });
-                      }, 100);
+                      $.ajax({
+                        url: createURL(),
+                        data: {
+                          command: 'listFirewallRules',
+                          ipaddressid: args.context.ipAddresses[0].id
+                        },
+                        dataType: 'json',
+                        async: true,
+                        success: function(data) {
+                          args.response.success({
+                            data: data.listfirewallrulesresponse.firewallrule
+                          });
+                        }
+                      });
                     }
                   },
 
@@ -315,33 +293,48 @@
                       }
                     },
                     dataProvider: function(args) {
-                      setTimeout(function() {
-                        args.response.success({
-                          data: [
-                            {
-                              "id": 13,
-                              "name": "HTTP",
-                              "publicipid": 4,
-                              "publicip": "10.223.71.23",
-                              "publicport": "80",
-                              "privateport": "80",
-                              "algorithm": "roundrobin",
-                              "cidrlist": "",
-                              "account": "admin",
-                              "domainid": 1,
-                              "domain": "ROOT",
-                              "state": "Active",
-                              "zoneid": 1,
-                              _itemData: [
-                                testData.data.instances[0],
-                                testData.data.instances[1],
-                                testData.data.instances[2],
-                                testData.data.instances[3]
-                              ]
-                            }
-                          ]
-                        });
-                      }, 100);
+                      $.ajax({
+                        url: createURL(),
+                        data: {
+                          command: 'listLoadBalancerRules',
+                          publicipid: args.context.ipAddresses[0].id
+                        },
+                        dataType: 'json',
+                        async: true,
+                        success: function(data) {
+                          var loadBalancerData = data.listloadbalancerrulesresponse.loadbalancerrule;
+                          var loadVMTotal = loadBalancerData.length;
+                          var loadVMCurrent = 0;
+
+                          $(loadBalancerData).each(function() {
+                            var item = this;
+                            
+                            // Get instances
+                            $.ajax({
+                              url: createURL(),
+                              dataType: 'json',
+                              async: true,
+                              data: {
+                                command: 'listLoadBalancerRuleInstances',
+                                id: item.id
+                              },
+                              success: function(data) {
+                                loadVMCurrent++;
+                                $.extend(item, {
+                                  _itemData: data
+                                    .listloadbalancerruleinstancesresponse.loadbalancerruleinstance
+                                });
+
+                                if (loadVMCurrent == loadVMTotal) {
+                                  args.response.success({
+                                    data: loadBalancerData
+                                  });
+                                }
+                              }
+                            });
+                          });
+                        }
+                      });
                     }
                   },
 
@@ -404,30 +397,35 @@
                       }
                     },
                     dataProvider: function(args) {
-                      setTimeout(function() {
-                        args.response.success({
-                          data: [
-                            {
-                              "id": 12,
-                              "privateport": "22",
-                              "privateendport": "22",
-                              "protocol": "tcp",
-                              "publicport": "22",
-                              "publicendport": "22",
-                              "virtualmachineid": 10,
-                              "virtualmachinename": "i-2-10-TEST",
-                              "virtualmachinedisplayname": "i-2-10-TEST",
-                              "ipaddressid": 4,
-                              "ipaddress": "10.223.71.23",
-                              "state": "Active",
-                              "cidrlist": "",
-                              _itemData: [
-                                testData.data.instances[5]
-                              ]
+                      $.ajax({
+                        url: createURL(),
+                        data: {
+                          command: 'listPortForwardingRules',
+                          ipaddressid: args.context.ipAddresses[0].id
+                        },
+                        dataType: 'json',
+                        async: true,
+                        success: function(data) {
+                          var mappedData = $.map(
+                            data.listportforwardingrulesresponse.portforwardingrule,
+                            function(elem) {
+                              return $.extend(true, {}, elem, {
+                                _itemData: [
+                                  {
+                                    id: elem.virtualmachineid,
+                                    name: elem.virtualmachinename,
+                                    displayname: elem.virtualmachinedisplayname
+                                  }
+                                ]
+                              });
                             }
-                          ]
-                        });
-                      }, 100);
+                          );
+
+                          args.response.success({
+                            data: mappedData
+                          });
+                        }
+                      });
                     }
                   }
                 })
