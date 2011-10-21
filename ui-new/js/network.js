@@ -292,28 +292,56 @@
                     add: {
                       label: 'Add VMs',
                       action: function(args) {
-                        setTimeout(function() {
-                          args.response.success({
-                            notification: {
-                              label: 'Add load balancing rule',
-                              poll: testData.notifications.testPoll
-                            }
-                          });
-                        }, 500);
+                        $.ajax({
+                          url: createURL(),
+                          data: $.extend(args.data, {
+                            command: 'createLoadBalancerRule',
+                            publicipid: args.context.ipAddresses[0].id,
+                            virtualmachineids: $.map(args.itemData, function(elem) {
+                              return elem.id;
+                            }).join(',')
+                          }),
+                          dataType: 'json',
+                          success: function(data) {
+                            args.response.success({
+                              _custom: { 
+                                jobId: data.createloadbalancerruleresponse.jobid
+                              },
+                              notification: {
+                                label: 'Add load balancer rule',
+                                poll: pollAsyncJobResult
+                              }
+                            });
+                          }
+                        });
                       }
                     },
                     actions: {
                       destroy:  {
-                        label: 'Remove load balancing rule',
+                        label: 'Remove load balancer rule',
                         action: function(args) {
-                          setTimeout(function() {
-                            args.response.success({
-                              notification: {
-                                label: 'Remove load balancing rule',
-                                poll: testData.notifications.testPoll
-                              }
-                            });
-                          }, 500);
+                          $.ajax({
+                            url: createURL(),
+                            data: {
+                              command: 'deleteLoadBalancerRule',
+                              id: args.context.multiRule[0].id
+                            },
+                            dataType: 'json',
+                            async: true,
+                            success: function(data) {
+                              var jobID = data.deleteloadbalancerruleresponse.jobid;
+
+                              args.response.success({
+                                _custom: {
+                                  jobId: jobID
+                                },
+                                notification: {
+                                  label: 'Remove load balancer rule ' + args.context.multiRule[0].id,
+                                  poll: pollAsyncJobResult
+                                }
+                              });
+                            }
+                          });
                         }
                       }
                     },
@@ -396,28 +424,55 @@
                     add: {
                       label: 'Add VM',
                       action: function(args) {
-                        setTimeout(function() {
-                          args.response.success({
-                            notification: {
-                              label: 'Add port forwarding rule',
-                              poll: testData.notifications.testPoll
-                            }
-                          });
-                        }, 500);
+                        $.ajax({
+                          url: createURL(),
+                          data: $.extend(args.data, {
+                            command: 'createPortForwardingRule',
+                            ipaddressid: args.context.ipAddresses[0].id,
+                            virtualmachineid: args.itemData[0].id
+                          }),
+                          dataType: 'json',
+                          async: true,
+                          success: function(data) {
+                            args.response.success({
+                              _custom: { 
+                                jobId: data.createportforwardingruleresponse.jobid
+                              },
+                              notification: {
+                                label: 'Add port forwarding rule',
+                                poll: pollAsyncJobResult
+                              }
+                            });
+                          }
+                        });
                       }
                     },
                     actions: {
                       destroy: {
                         label: 'Remove port forwarding rule',
                         action: function(args) {
-                          setTimeout(function() {
-                            args.response.success({
-                              notification: {
-                                label: 'Remove port forwarding rule',
-                                poll: testData.notifications.testPoll
-                              }
-                            });
-                          }, 500);
+                          $.ajax({
+                            url: createURL(),
+                            data: {
+                              command: 'deletePortForwardingRule',
+                              id: args.context.multiRule[0].id
+                            },
+                            dataType: 'json',
+                            async: true,
+                            success: function(data) {
+                              var jobID = data.deleteportforwardingruleresponse.jobid;
+
+                              args.response.success({
+                                _custom: {
+                                  jobId: jobID
+                                },
+                                notification: {
+                                  label: 'Remove port forwarding rule ' + args.context.multiRule[0].id,
+                                  poll: pollAsyncJobResult
+                                }
+                              });
+                            }
+                          });
                         }
                       }
                     },
