@@ -504,6 +504,7 @@
 
     // Get existing data
     dataProvider({
+      context: context,
       response: {
         success: function(args) {
           $(args.data).each(function() {
