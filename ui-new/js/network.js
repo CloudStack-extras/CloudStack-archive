@@ -196,28 +196,57 @@
                     add: {
                       label: 'Add',
                       action: function(args) {
-                        setTimeout(function() {
-                          args.response.success({
-                            notification: {
-                              label: 'Add firewall rule',
-                              poll: testData.notifications.testPoll
-                            }
-                          });
-                        }, 500);
+                        $.ajax({
+                          url: createURL(),
+                          data: $.extend(args.data, {
+                            command: 'createFirewallRule',
+                            ipaddressid: args.context.ipAddresses[0].id
+                          }),
+                          dataType: 'json',
+                          success: function(data) {
+                            args.response.success({
+                              _custom: { 
+                                jobId: data.createfirewallruleresponse.jobid,
+                                getUpdatedItem: function(args) {},
+                                getActionFilter: function(args) {}
+                              },
+                              notification: {
+                                label: 'Add firewall rule',
+                                poll: pollAsyncJobResult
+                              }
+                            });
+                          }
+                        });
                       }
                     },
                     actions: {
                       destroy: {
                         label: 'Remove Rule',
                         action: function(args) {
-                          setTimeout(function() {
-                            args.response.success({
-                              notification: {
-                                label: 'Remove firewall rule',
-                                poll: testData.notifications.testPoll
-                              }
-                            });
-                          }, 500);
+                          $.ajax({
+                            url: createURL(),
+                            data: {
+                              command: 'deleteFirewallRule',
+                              id: args.context.multiRule[0].id
+                            },
+                            dataType: 'json',
+                            async: true,
+                            success: function(data) {
+                              var jobID = data.deletefirewallruleresponse.jobid;
+
+                              args.response.success({
+                                _custom: {
+                                  jobId: jobID,
+                                  getUpdatedItem: function(args) {},
+                                  getActionFilter: function(args) {}
+                                },
+                                notification: {
+                                  label: 'Remove firewall rule ' + args.context.multiRule[0].id,
+                                  poll: pollAsyncJobResult
+                                }
+                              });
+                            }
+                          });
                         }
                       }
                     },
@@ -308,7 +337,7 @@
 
                           $(loadBalancerData).each(function() {
                             var item = this;
-                            
+
                             // Get instances
                             $.ajax({
                               url: createURL(),
