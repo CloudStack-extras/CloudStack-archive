@@ -18,10 +18,8 @@
           label: 'Physical Resources',
           fields: {
             name: { label: 'Zone' },
-            dns1: { label: 'DNS' },
-            internaldns1: { label: 'Internal DNS' },
-            networktype: { label: 'Network Type' },
-            allocationstate: { label: 'State' }
+			networktype: { label: 'Network Type' },
+            allocationstate: { label: 'Allocation State' }		
           },
           actions: {
             add: {
@@ -302,7 +300,81 @@
               detailView: {
                 name: 'Zone details',
                 viewAll: { path: '_zone.pods', label: 'Pods' },
-				actions: {				 
+				actions: {	                  
+                  enable: {
+					label: 'Enable zone',
+					messages: {
+					  confirm: function(args) {
+						return 'Are you sure you want to enable this zone?';
+					  },
+					  success: function(args) {
+						return 'This zone is being enabled.';
+					  },
+					  notification: function(args) {			
+						return 'Enabling zone';
+					  },
+					  complete: function(args) {			  
+						return 'Zone has been enabled.';
+					  }
+					},         
+					action: function(args) {	             	  
+					  $.ajax({
+						url: createURL("updateZone&id=" + args.context.zones[0].id + "&allocationstate=Enabled"),
+						dataType: "json",
+						async: true,
+						success: function(json) {  
+						  var item = json.updatezoneresponse.zone;    
+						  args.response.success({
+							actionFilter: zoneActionfilter,
+							data:item
+						  });			  
+						}
+					  });  	
+					},
+					notification: {
+					  poll: function(args) {			  
+						args.complete();
+					  }			
+					}
+				  },	
+				  
+                  disable: {
+					label: 'Disable zone',
+					messages: {
+					  confirm: function(args) {
+						return 'Are you sure you want to disable this zone?';
+					  },
+					  success: function(args) {
+						return 'This zone is being disabled.';
+					  },
+					  notification: function(args) {			
+						return 'Disabling zone';
+					  },
+					  complete: function(args) {			  
+						return 'Zone has been disabled.';
+					  }
+					},         
+					action: function(args) {	             	  
+					  $.ajax({
+						url: createURL("updateZone&id=" + args.context.zones[0].id + "&allocationstate=Disabled"),
+						dataType: "json",
+						async: true,
+						success: function(json) {  
+						  var item = json.updatezoneresponse.zone;	    
+						  args.response.success({
+							actionFilter: zoneActionfilter,
+							data:item
+						  });			  
+						}
+					  });  	
+					},
+					notification: {
+					  poll: function(args) {			  
+						args.complete();
+					  }			
+					}
+				  },	
+                  		  
 				  'delete': { 
 					label: 'Delete' ,                    					
 					messages: {
@@ -3070,6 +3142,8 @@
   var zoneActionfilter = function(args) {	    		  
     var jsonObj = args.context.item;
 	var allowedActions = [];
+	allowedActions.push("enable"); 
+	allowedActions.push("disable");	
     allowedActions.push("delete");	  
 	return allowedActions;
   }
