@@ -2427,7 +2427,38 @@
                     }
                   }
                 },        
-                destroy: testData.actions.destroy('secondary storage')
+                
+				'delete': { 
+					label: 'Delete' ,                    					
+					messages: {
+					  confirm: function(args) {
+						return 'Please confirm that you want to delete this secondary storage.';
+					  },
+					  success: function(args) {
+						return 'Secondary storage is being deleted.';
+					  },
+					  notification: function(args) {
+						return 'Deleting secondary storage';
+					  },
+					  complete: function(args) {
+						return 'Secondary storage has been deleted.';
+					  }
+					},						  								
+                    action: function(args) {     
+					  $.ajax({
+						url: createURL("deleteHost&id=" + args.context.secondarystorages[0].id),
+						dataType: "json",
+						async: true,
+						success: function(json) { 	
+			              args.response.success({data:{}});							
+						}
+					  });  	
+					},					
+					notification: {           
+					  poll: function(args) { args.complete(); }
+					}		  
+				}
+				
               },			  
 			  
               detailView: {
