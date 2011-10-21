@@ -116,11 +116,12 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
     public void execute() throws ResourceAllocationException,
             ResourceUnavailableException {
         boolean success = true;
+        Exception error = null;
         StickinessPolicy policy = null;
         try {
             UserContext.current().setEventDetails("Rule Id: " + getEntityId());
 
-            success = _lbService.applyLoadBalancerConfig(getLbRuleId());
+            success = _lbService.applyLBStickinessPolicy(getLbRuleId());
 
             // State might be different after the rule is applied, so get new
             // object here
@@ -130,14 +131,20 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
                     .createLBStickinessPolicyResponse(policy, lb);
             setResponseObject(spResponse);
             spResponse.setResponseName(getCommandName());
+        } catch (Exception e) {
+            error = e;
         } finally {
             if (!success || policy == null) {
                 // no need to apply the rule on the backend as it exists in the
                 // db only
                 _lbService.deleteLBStickinessPolicy(getEntityId());
-
-                throw new ServerApiException(BaseCmd.INTERNAL_ERROR,
-                        "Failed to create stickiness policy rule");
+                if (error == null) {
+                    throw new ServerApiException(BaseCmd.INTERNAL_ERROR,
+                            "Failed to create stickiness policy");
+                } else {
+                    throw new ServerApiException(BaseCmd.INTERNAL_ERROR,
+                            "Failed to create stickiness policy due to:"+ error);
+                }
             }
         }
     }

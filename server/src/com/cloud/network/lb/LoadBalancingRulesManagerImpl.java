@@ -180,7 +180,6 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     
     @Override
     @DB
-    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_CREATE, eventDescription = "create lb stickinesspolicy to load balancer", async = false)
     public StickinessPolicy createLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws NetworkRuleConflictException {
     	
     	/* Validation : check corresponding load balancer rule exist */
@@ -193,8 +192,11 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         List <LbStickinessMethod> stickinessMethodList = getStickinessMethods(loadBalancer.getNetworkId());
         boolean methodMatch = false;
         
+        if (stickinessMethodList == null) {
+            throw new InvalidParameterValueException("Failed:  No Stickiness method available for :" + cmd.getLbRuleId() );   
+        }
         for (LbStickinessMethod method : stickinessMethodList) {
-            if (method.getMethodName().equals(cmd.getStickinessMethodName()))
+            if (method.getMethodName().equalsIgnoreCase(cmd.getStickinessMethodName()))
             {
             	methodMatch = true;
             	Map<String,String> apiParamList = cmd.getparamList();
@@ -243,17 +245,17 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         }
         if (methodMatch == false)
         {
-        	throw new InvalidParameterValueException("Failed to match method name :" + cmd.getLbRuleId() );
+        	throw new InvalidParameterValueException("Failed to match Stickiness method name :" + cmd.getLbRuleId() );
         }
         
-    	/* Validation : check for the multiple stickiness policies */
+    	/* Validation : check for the multiple policies */
         List<LBStickinessPolicyVO> stickinessPolicies = _lb2stickinesspoliciesDao.listByLoadBalancerId(cmd.getLbRuleId(), false);
         for (LBStickinessPolicyVO policy : stickinessPolicies) {
         	if (policy.getMethodName().equals(cmd.getStickinessMethodName()))
         	    throw new InvalidParameterValueException("Failed to create to load balancer stickipolcy " + cmd.getLbRuleId() );
         }
 
-        /* Insert into DB */
+        /*Finally Insert into DB */
         Transaction txn = Transaction.currentTxn();
         txn.start();
         LBStickinessPolicyVO policy = new LBStickinessPolicyVO(loadBalancer.getId(), cmd.getLBStickinessPolicyName(),cmd.getStickinessMethodName(), cmd.getparamList());
@@ -264,6 +266,19 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
        _lbDao.persist(loadBalancer);
         return policy;
     }
+    
+    @Override
+    @DB
+    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_CREATE, eventDescription = "create lb stickinesspolicy to load balancer", async = true)
+    public boolean applyLBStickinessPolicy(long lbRuleId) throws NetworkRuleConflictException {
+        try {
+            applyLoadBalancerConfig(lbRuleId);
+        } catch (ResourceUnavailableException e) {
+            s_logger.warn("Unable to apply the load balancer config because resource is unavaliable.", e);
+        }
+        return true;
+    }
+    
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_DELETE, eventDescription = "revoking LB Stickiness policy ", async = true)
     public boolean deleteLBStickinessPolicy(long stickinessPolicyId) {

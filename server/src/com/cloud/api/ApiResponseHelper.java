@@ -743,7 +743,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         spResponse.setRules(responses);
 
-        spResponse.setObjectName("stickinesspolicy");
+        spResponse.setObjectName("stickinesspolicies");
         return spResponse;
     }
     
@@ -752,6 +752,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             List<? extends StickinessPolicy> stickinessPolicies, LoadBalancer lb) {
         LBStickinessResponse spResponse = new LBStickinessResponse();
 
+        if (lb == null) return spResponse ;
         spResponse.setlbRuleId(lb.getId());
         Account accountTemp = ApiDBUtils.findAccountById(lb.getAccountId());
         if (accountTemp != null) {
@@ -769,7 +770,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         }
         spResponse.setRules(responses);
 
-        spResponse.setObjectName("stickinesspolicy");
+        spResponse.setObjectName("stickinesspolicies");
         return spResponse;
     }
     
