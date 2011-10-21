@@ -685,10 +685,11 @@
               id: 'clusters',
               section: 'clusters',
               fields: {
-                name: { label: 'Name' },
-                zonename: { label: 'Zone' },
+                name: { label: 'Name' },                
                 podname: { label: 'Pod' },
-				hypervisortype: { label: 'Hypervisor' }
+				hypervisortype: { label: 'Hypervisor' },
+				allocationstate: { label: 'Allocation State' },
+				managedstate: { label: 'Managed State' }       
               },
               
               //dataProvider: testData.dataProvider.listView('clusters'),
@@ -698,8 +699,11 @@
                   dataType: "json",
                   async: true,
                   success: function(json) {             
-                    var items = json.listclustersresponse.cluster;            
-                    args.response.success({data:items});                            
+                    var items = json.listclustersresponse.cluster;                           			
+                    args.response.success({
+					  actionFilter: clusterActionfilter,
+					  data:items
+					});                            
                   }
                 });   
               },
@@ -2096,7 +2100,10 @@
                               $(clusterObjs).each(function() {
                                 items.push({id: this.id, description: this.name});
                               });               
-                              args.response.success({data: items});           
+                              args.response.success({
+							    actionFilter: clusterActionfilter,
+							    data: items
+						      });           
                             }
                           });                            
                         }
@@ -3039,7 +3046,7 @@
   }  
   
   //action filters (begin)
-  var hostActionfilter = function(args) {	    		  
+  var hostActionfilter = function(args) {	
     var jsonObj = args.context.item;
 	var allowedActions = [];	
 	
@@ -3116,14 +3123,22 @@
 	return allowedActions;
   }
   
-   var clusterActionfilter = function(args) {	    		  
+  var clusterActionfilter = function(args) {	   
     var jsonObj = args.context.item;
 	var allowedActions = [];
-	allowedActions.push("enable");	  
-	allowedActions.push("disable");	  
-	allowedActions.push("manage");	  
-	allowedActions.push("unmanage");	  
-    allowedActions.push("delete");	  
+	
+	if(jsonObj.allocationstate == "Disabled")
+      allowedActions.push("enable"); 
+    else if(jsonObj.allocationstate == "Enabled")  
+      allowedActions.push("disable");	  
+        
+    if(jsonObj.managedstate == "Managed")
+	  allowedActions.push("unmanage");    	
+    else //PrepareUnmanaged , PrepareUnmanagedError, Unmanaged 
+      allowedActions.push("manage");		       
+    
+	allowedActions.push("delete");	  	
+    
 	return allowedActions;
   }
   //action filters (end)
