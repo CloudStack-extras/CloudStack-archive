@@ -1,4 +1,4 @@
-(function(cloudStack, testData) {
+(function(cloudStack, $, testData) {
   cloudStack.sections.network = {
     title: 'Network',
     id: 'network',
@@ -406,23 +406,39 @@
                         dataType: 'json',
                         async: true,
                         success: function(data) {
-                          var mappedData = $.map(
-                            data.listportforwardingrulesresponse.portforwardingrule,
-                            function(elem) {
-                              return $.extend(true, {}, elem, {
-                                _itemData: [
-                                  {
-                                    id: elem.virtualmachineid,
-                                    name: elem.virtualmachinename,
-                                    displayname: elem.virtualmachinedisplayname
-                                  }
-                                ]
-                              });
-                            }
-                          );
+                          // Get instance
+                          var portForwardingData = data
+                                .listportforwardingrulesresponse.portforwardingrule;
+                          var loadTotal = portForwardingData.length;
+                          var loadCurrent = 0;
 
-                          args.response.success({
-                            data: mappedData
+                          $(portForwardingData).each(function() {
+                            var item = this;
+
+                            $.ajax({
+                              url: createURL(),
+                              dataType: 'json',
+                              async: true,
+                              data: {
+                                command: 'listVirtualMachines',
+                                id: item.virtualmachineid
+                              },
+                              success: function(data) {
+                                loadCurrent++;
+                                $.extend(item, {
+                                  _itemData: data.listvirtualmachinesresponse.virtualmachine,
+                                  _context: {
+                                    instances: data.listvirtualmachinesresponse.virtualmachine
+                                  }
+                                });
+
+                                if (loadCurrent == loadTotal) {
+                                  args.response.success({
+                                    data: portForwardingData
+                                  });
+                                }
+                              }
+                            });
                           });
                         }
                       });
@@ -649,4 +665,4 @@
       }
     }
   };
-})(cloudStack, testData);
+})(cloudStack, jQuery, testData);
