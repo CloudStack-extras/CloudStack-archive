@@ -417,6 +417,7 @@
         args.add.action({
           context: context,
           data: data,
+          itemData: itemData,
           response: {
             success: function(successArgs) {
               var notification = successArgs.notification;
