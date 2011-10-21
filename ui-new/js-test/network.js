@@ -116,11 +116,12 @@
               ipRules: {
                 title: 'Configuration',
                 custom: cloudStack.ipRules({
+
+                  // Firewall rules
                   firewall: {
                     noSelect: true,
-                    addTitle: 'Add',
                     fields: {
-                      'source-cidr': { edit: true, label: 'Source CIDR' },
+                      'cidrlist': { edit: true, label: 'Source CIDR' },
                       'protocol': {
                         label: 'Protocol',
                         select: function(args) {
@@ -130,14 +131,14 @@
                               var name = $(this).attr('name');
 
                               return $.inArray(name, [
-                                'icmp-type',
-                                'icmp-code'
+                                'icmptype',
+                                'icmpcode'
                               ]) > -1;
                             });
                             var $otherFields = $inputs.filter(function() {
                               var name = $(this).attr('name');
 
-                              return name != 'icmp-type' && name != 'icmp-code' && name != 'source-cidr';
+                              return name != 'icmptype' && name != 'icmpcode' && name != 'cidrlist';
                             });
 
                             if ($(this).val() == 'icmp') {
@@ -158,37 +159,92 @@
                           });
                         }
                       },
-                      'start-port': { edit: true, label: 'Start Port' },
-                      'end-port': { edit: true, label: 'End Port' },
-                      'icmp-type': { edit: true, label: 'ICMP Type', isDisabled: true },
-                      'icmp-code': { edit: true, label: 'ICMP Code', isDisabled: true },
-                      'add-vm': {
+                      'startport': { edit: true, label: 'Start Port' },
+                      'endport': { edit: true, label: 'End Port' },
+                      'icmptype': { edit: true, label: 'ICMP Type', isDisabled: true },
+                      'icmpcode': { edit: true, label: 'ICMP Code', isDisabled: true },
+                      'add-rule': {
                         label: 'Add Rule',
                         addButton: true
                       }
                     },
+                    add: {
+                      label: 'Add',
+                      action: function(args) {
+                        setTimeout(function() {
+                          args.response.success({
+                            notification: {
+                              label: 'Add firewall rule',
+                              poll: testData.notifications.testPoll
+                            }
+                          });
+                        }, 500);
+                      }
+                    },
                     actions: {
-                      destroy: function(args) {
-                        args.response.success();
+                      destroy: {
+                        label: 'Remove Rule',
+                        action: function(args) {
+                          setTimeout(function() {
+                            args.response.success({
+                              notification: {
+                                label: 'Remove firewall rule',
+                                poll: testData.notifications.testPoll
+                              }
+                            });
+                          }, 500);
+                        }
                       }
                     },
                     dataProvider: function(args) {
                       setTimeout(function() {
                         args.response.success({
-                          data: []
+                          data: [
+                            {
+                              "id": 11,
+                              "protocol": "icmp",
+                              "ipaddressid": 4,
+                              "ipaddress": "10.223.71.23",
+                              "state": "Active",
+                              "cidrlist": "0.0.0.0/0",
+                              "icmptype": 2,
+                              "icmpcode": 22
+                            },
+                            {
+                              "id": 10,
+                              "protocol": "udp",
+                              "startport": "500",
+                              "endport": "10000",
+                              "ipaddressid": 4,
+                              "ipaddress": "10.223.71.23",
+                              "state": "Active",
+                              "cidrlist": "0.0.0.0/24"
+                            },
+                            {
+                              "id": 9,
+                              "protocol": "tcp",
+                              "startport": "20",
+                              "endport": "200",
+                              "ipaddressid": 4,
+                              "ipaddress": "10.223.71.23",
+                              "state": "Active",
+                              "cidrlist": "0.0.0.0/24"
+                            }
+                          ]
                         });
                       }, 100);
                     }
                   },
 
+                  // Load balancing rules
                   loadBalancing: {
                     listView: cloudStack.sections.instances,
-                    addTitle: 'Add VMs',
                     multipleAdd: true,
                     fields: {
-                      'start-port': { edit: true, label: 'Start Port' },
-                      'end-port': { edit: true, label: 'End Port' },
-                      'protocol': {
+                      'name': { edit: true, label: 'Name' },
+                      'publicport': { edit: true, label: 'Public Port' },
+                      'privateport': { edit: true, label: 'Private Port' },
+                      'algorithm': {
                         label: 'Algorithm',
                         select: function(args) {
                           args.response.success({
@@ -205,25 +261,79 @@
                         addButton: true
                       }
                     },
+                    add: {
+                      label: 'Add VMs',
+                      action: function(args) {
+                        setTimeout(function() {
+                          args.response.success({
+                            notification: {
+                              label: 'Add load balancing rule',
+                              poll: testData.notifications.testPoll
+                            }
+                          });
+                        }, 500);
+                      }
+                    },
                     actions: {
-                      destroy: function(args) {
-                        args.response.success();
+                      destroy:  {
+                        label: 'Remove load balancing rule',
+                        action: function(args) {
+                          setTimeout(function() {
+                            args.response.success({
+                              notification: {
+                                label: 'Remove load balancing rule',
+                                poll: testData.notifications.testPoll
+                              }
+                            });
+                          }, 500);
+                        }
                       }
                     },
                     dataProvider: function(args) {
                       setTimeout(function() {
                         args.response.success({
-                          data: []
+                          data: [
+                            {
+                              "id": 13,
+                              "name": "HTTP",
+                              "publicipid": 4,
+                              "publicip": "10.223.71.23",
+                              "publicport": "80",
+                              "privateport": "80",
+                              "algorithm": "roundrobin",
+                              "cidrlist": "",
+                              "account": "admin",
+                              "domainid": 1,
+                              "domain": "ROOT",
+                              "state": "Active",
+                              "zoneid": 1,
+                              _itemData: [
+                                testData.data.instances[0],
+                                testData.data.instances[1],
+                                testData.data.instances[2],
+                                testData.data.instances[3]
+                              ]
+                            }
+                          ]
                         });
                       }, 100);
                     }
                   },
+
+                  // Port forwarding rules
                   portForwarding: {
                     listView: cloudStack.sections.instances,
-                    addTitle: 'Add VM',
                     fields: {
-                      'start-port': { edit: true, label: 'Start Port' },
-                      'end-port': { edit: true, label: 'End Port' },
+                      'private-ports': {
+                        edit: true,
+                        label: 'Private Ports',
+                        range: ['privateport', 'privateendport']
+                      },
+                      'public-ports': {
+                        edit: true,
+                        label: 'Public Ports',
+                        range: ['publicport', 'publicendport']
+                      },
                       'protocol': {
                         label: 'Protocol',
                         select: function(args) {
@@ -240,15 +350,57 @@
                         addButton: true
                       }
                     },
+                    add: {
+                      label: 'Add VM',
+                      action: function(args) {
+                        setTimeout(function() {
+                          args.response.success({
+                            notification: {
+                              label: 'Add port forwarding rule',
+                              poll: testData.notifications.testPoll
+                            }
+                          });
+                        }, 500);
+                      }
+                    },
                     actions: {
-                      destroy: function(args) {
-                        args.response.success();
+                      destroy: {
+                        label: 'Remove port forwarding rule',
+                        action: function(args) {
+                          setTimeout(function() {
+                            args.response.success({
+                              notification: {
+                                label: 'Remove port forwarding rule',
+                                poll: testData.notifications.testPoll
+                              }
+                            });
+                          }, 500);
+                        }
                       }
                     },
                     dataProvider: function(args) {
                       setTimeout(function() {
                         args.response.success({
-                          data: []
+                          data: [
+                            {
+                              "id": 12,
+                              "privateport": "22",
+                              "privateendport": "22",
+                              "protocol": "tcp",
+                              "publicport": "22",
+                              "publicendport": "22",
+                              "virtualmachineid": 10,
+                              "virtualmachinename": "i-2-10-TEST",
+                              "virtualmachinedisplayname": "i-2-10-TEST",
+                              "ipaddressid": 4,
+                              "ipaddress": "10.223.71.23",
+                              "state": "Active",
+                              "cidrlist": "",
+                              _itemData: [
+                                testData.data.instances[5]
+                              ]
+                            }
+                          ]
                         });
                       }, 100);
                     }
