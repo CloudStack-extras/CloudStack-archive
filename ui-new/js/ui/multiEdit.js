@@ -119,15 +119,18 @@
                 response: {
                   success: function(args) {
                     var notification = args.notification;
+                    var _custom = args._custom;
                     if (notification) {
                       $('.notifications').notifications('add', {
                         section: 'network',
                         desc: notification.label,
                         interval: 1000,
+                        _custom: _custom,
                         poll: function(args) {
                           var complete = args.complete;
                           
                           notification.poll({
+                            _custom: args._custom,
                             complete: function(args) {
                               if (isDestroy) {
                                 $loading.remove();
@@ -423,12 +426,15 @@
                 $('.notifications').notifications('add', {
                   section: 'network',
                   desc: notification.label,
-                  interval: 1000,
+                  interval: 3000,
+                  _custom: successArgs._custom,
                   poll: function(pollArgs) {
                     var complete = pollArgs.complete;
                     
                     notification.poll({
+                      _custom: pollArgs._custom,
                       complete: function(completeArgs) {
+                        complete(args);
                         $loading.remove();
 
                         _medit.addItem(
@@ -443,7 +449,6 @@
                             context: context
                           }
                         ).appendTo($dataBody);
-                        complete();
                       }
                     });
                   }
