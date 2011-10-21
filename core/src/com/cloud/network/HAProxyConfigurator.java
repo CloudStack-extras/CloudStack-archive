@@ -319,15 +319,17 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
                 String maxidle = null; /* optional*/
                 String maxlife = null; /* optional*/
                 
-
-                Iterator it = paramsList.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry<String, String> pairs = (Map.Entry) it.next();
-                    if ("name".equalsIgnoreCase(pairs.getKey())) name = pairs.getValue();
-                    if ("mode".equalsIgnoreCase(pairs.getKey())) mode = pairs.getValue();
-                    if ("domain".equalsIgnoreCase(pairs.getKey())) domain = pairs.getValue();
-                    if ("maxidle".equalsIgnoreCase(pairs.getKey())) maxidle = pairs.getValue();
-                    if ("maxlife".equalsIgnoreCase(pairs.getKey())) maxlife = pairs.getValue();
+                Set<String>  keys = paramsList.keySet();
+                for(String key : keys){
+                    if ("name".equalsIgnoreCase(key)) name = paramsList.get(key);
+                    if ("mode".equalsIgnoreCase(key)) mode = paramsList.get(key);
+                    if ("domain".equalsIgnoreCase(key)) domain = paramsList.get(key);
+                    if ("maxidle".equalsIgnoreCase(key)) maxidle = paramsList.get(key);
+                    if ("maxlife".equalsIgnoreCase(key)) maxlife = paramsList.get(key);
+                    if ("indirect".equalsIgnoreCase(key)) indirect = true;
+                    if ("nocache".equalsIgnoreCase(key)) nocache = true;
+                    if ("postonly".equalsIgnoreCase(key)) postonly = true;
+                    if ("preserve".equalsIgnoreCase(key)) preserve = true;
                         
                 }
                 if (name == null)  {/* re-check all mandatory params */
@@ -353,13 +355,10 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
                 String expire = "30m"; /* optional */
 
                 /* overwrite default values with the stick parameters */
-                Iterator it = paramsList.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry<String, String> pairs = (Map.Entry) it.next();
-                    if ("tablesize".equalsIgnoreCase(pairs.getKey()))
-                        tablesize = pairs.getValue();
-                    if ("expire".equalsIgnoreCase(pairs.getKey()))
-                        expire = pairs.getValue();
+                Set<String>  keys = paramsList.keySet();
+                for(String key : keys){
+                    if ("tablesize".equalsIgnoreCase(key)) tablesize = paramsList.get(key);
+                    if ("expire".equalsIgnoreCase(key)) expire = paramsList.get(key);             
                 }
 
                 sb.append("\t").append("stick-table type ip size ")
@@ -372,29 +371,30 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
                  * <path-parameters|query-string>]
                  */
                 /* example: appsession JSESSIONID len 52 timeout 3h */
-                String cookiename = null; /* required */
+                String name = null; /* required */
                 String length = null; /* required */
                 String holdtime = null; /* required */
                 String mode = null; /* optional */
                 Boolean requestlearn = false; /* optional */
                 Boolean prefix = false; /* optional */
 
-                Iterator it = paramsList.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry<String, String> pairs = (Map.Entry) it.next();
-                    if ("cookiename".equalsIgnoreCase(pairs.getKey()))   cookiename = pairs.getValue();
-                    if ("length".equalsIgnoreCase(pairs.getKey()))    length = pairs.getValue();                   
-                    if ("holdtime".equalsIgnoreCase(pairs.getKey())) holdtime = pairs.getValue();       
-                    if ("mode".equalsIgnoreCase(pairs.getKey()))      mode = pairs.getValue();
+                Set<String>  keys = paramsList.keySet();
+                for(String key : keys){
+                    if ("name".equalsIgnoreCase(key))   name = paramsList.get(key);
+                    if ("length".equalsIgnoreCase(key)) length = paramsList.get(key);                   
+                    if ("holdtime".equalsIgnoreCase(key))  holdtime = paramsList.get(key);       
+                    if ("mode".equalsIgnoreCase(key))  mode = paramsList.get(key);
+                    if ("requestlearn".equalsIgnoreCase(key)) requestlearn = true;
+                    if ("prefix".equalsIgnoreCase(key)) prefix = true;
                 }
-                if ((cookiename == null) || (length == null) || (holdtime == null)) {
+                if ((name == null) || (length == null) || (holdtime == null)) {
                     /*
                      * Not supposed to reach here, validation of params are
                      * done at the higher layer
                      */
-                    throw new Exception("Haproxy: cookiename/length/holdtime are mandatory params\n");
+                    throw new Exception("Haproxy: Appcookie - name/length/holdtime are mandatory params\n");
                 }
-                sb.append("\t").append("appsession ").append(cookiename)
+                sb.append("\t").append("appsession ").append(name)
                         .append(" len ").append(length).append(" timeout ")
                         .append(holdtime).append(" ");
                 if (prefix) sb.append("prefix ");
@@ -431,10 +431,6 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
         sb.append("\t").append("balance ").append(algorithm);
         result.add(sb.toString());
 
-        String stickinessSubRule = getLbSubRuleForStickiness(lbTO);
-        if (stickinessSubRule != null)
-            result.add(stickinessSubRule);
-
         if (publicPort.equals(NetUtils.HTTP_PORT)) {
             sb = new StringBuilder();
             sb.append("\t").append("mode http");
@@ -444,6 +440,7 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
             result.add(sb.toString());
         }
         int i = 0;
+        Boolean destsAvailable=false;
         for (DestinationTO dest : lbTO.getDestinations()) {
             // add line like this: "server  65_37_141_30-80_3 10.1.1.4:80 check"
             if (dest.isRevoked()) {
@@ -455,7 +452,13 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
                     .append(dest.getDestIp()).append(":")
                     .append(dest.getDestPort()).append(" check");
             result.add(sb.toString());
+            destsAvailable = true;
         }
+        
+        String stickinessSubRule = getLbSubRuleForStickiness(lbTO);
+        if ((stickinessSubRule != null) && (destsAvailable == true))
+            result.add(stickinessSubRule);
+        
         result.add(getBlankLine());
         return result;
     }

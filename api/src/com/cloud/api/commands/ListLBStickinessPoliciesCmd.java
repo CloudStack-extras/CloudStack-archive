@@ -19,7 +19,6 @@
 package com.cloud.api.commands;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -28,11 +27,8 @@ import com.cloud.api.ApiConstants;
 import com.cloud.api.BaseListCmd;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
-import com.cloud.api.BaseCmd.CommandType;
 import com.cloud.api.response.LBStickinessResponse;
 import com.cloud.api.response.ListResponse;
-import com.cloud.api.response.LBStickinessPolicyResponse;
-import com.cloud.api.response.SecurityGroupResponse;
 import com.cloud.network.rules.StickinessPolicy;
 import com.cloud.network.rules.LoadBalancer;
 

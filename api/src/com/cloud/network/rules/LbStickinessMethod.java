@@ -20,7 +20,6 @@ package com.cloud.network.rules;
 import java.util.List;
 import java.util.ArrayList;
 
-import com.google.gson.annotations.SerializedName;
 
 
 public class LbStickinessMethod {
@@ -78,12 +77,14 @@ public class LbStickinessMethod {
     }
 
     private String methodname;
+    private Boolean httpbased;
     private List<LbStickinessMethodParam> paramlist;
     private String description;
 
-    public LbStickinessMethod(StickinessMethodType methodType, String description) {
+    public LbStickinessMethod(StickinessMethodType methodType, String description, Boolean httpbased) {
         this.methodname = methodType.getName();
         this.description = description;
+        this.httpbased = httpbased;
         this.paramlist = new ArrayList<LbStickinessMethodParam>(1);
     }
 
@@ -98,7 +99,14 @@ public class LbStickinessMethod {
     public String getMethodName() {
         return methodname;
     }
+    
+    public Boolean getHttpbased() {
+        return httpbased;
+    }
 
+    public void setHttpbased(Boolean httpbased) {
+        this.httpbased = httpbased;
+    }
     public List<LbStickinessMethodParam> getParamList() {
         return paramlist;
     }
