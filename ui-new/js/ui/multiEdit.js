@@ -58,7 +58,7 @@
               if (options.multipleAdd) {
                 _medit.multiItem.details(itemData, $browser);
               } else {
-                _medit.details(itemData[0], $browser);
+                _medit.details(itemData[0], $browser, { context: options.context });
               }
             });
         }
@@ -186,14 +186,17 @@
 
       return $loading;
     },
-    details: function(data, $browser) {
+    details: function(data, $browser, options) {
+      if (!options) options = {};
+      
       var detailViewArgs, $detailView;
 
       detailViewArgs = $.extend(true, {}, cloudStack.sections.instances.listView.detailView);
       detailViewArgs.actions = null;
       detailViewArgs.$browser = $browser;
       detailViewArgs.id = data.id;
-      detailViewArgs.jsonObj = data;
+      detailViewArgs.jsonObj = data[0];
+      detailViewArgs.context = options.context;
 
       $browser.cloudBrowser('addPanel', {
         title: data.name,
@@ -519,7 +522,7 @@
               {
                 multipleAdd: multipleAdd,
                 noSelect: noSelect,
-                context: context
+                context: $.extend(true, {}, context, this._context)
               }
             ).appendTo($dataBody);
           });
