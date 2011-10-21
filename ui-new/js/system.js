@@ -866,7 +866,85 @@
               detailView: {
                 viewAll: { path: '_zone.hosts', label: 'Hosts' },
 								
-				actions: {					  
+				actions: {	                  
+				  enable: {
+					label: 'Enable cluster',
+					messages: {
+					  confirm: function(args) {
+						return 'Are you sure you want to enable this cluster?';
+					  },
+					  success: function(args) {
+						return 'This cluster is being enabled.';
+					  },
+					  notification: function(args) {			
+						return 'Enabling cluster';
+					  },
+					  complete: function(args) {			  
+						return 'Cluster has been enabled.';
+					  }
+					},         
+					action: function(args) {	             	  
+					  $.ajax({
+						url: createURL("updateCluster&id=" + args.context.clusters[0].id + "&allocationstate=Enabled"),
+						dataType: "json",
+						async: true,
+						success: function(json) {  
+						  var item = json.updateclusterresponse.cluster;		    
+						  args.response.success({
+							actionFilter: clusterActionfilter,
+							data:item
+						  });			  
+						}
+					  });  	
+					},
+					notification: {
+					  poll: function(args) {			  
+						args.complete();
+					  }			
+					}
+				  },	
+				  
+                  disable: {
+					label: 'Disable cluster',
+					messages: {
+					  confirm: function(args) {
+						return 'Are you sure you want to disable this cluster?';
+					  },
+					  success: function(args) {
+						return 'This cluster is being disabled.';
+					  },
+					  notification: function(args) {			
+						return 'Disabling cluster';
+					  },
+					  complete: function(args) {			  
+						return 'Cluster has been disabled.';
+					  }
+					},         
+					action: function(args) {	             	  
+					  $.ajax({
+						url: createURL("updateCluster&id=" + args.context.clusters[0].id + "&allocationstate=Disabled"),
+						dataType: "json",
+						async: true,
+						success: function(json) {  
+						  var item = json.updateclusterresponse.cluster;		    
+						  args.response.success({
+							actionFilter: clusterActionfilter,
+							data:item
+						  });			  
+						}
+					  });  	
+					},
+					notification: {
+					  poll: function(args) {			  
+						args.complete();
+					  }			
+					}
+				  },	
+				  
+				  //???
+				  
+				  //???
+				  
 				  'delete': { 
 					label: 'Delete' ,                    					
 					messages: {
@@ -2793,6 +2871,10 @@
    var clusterActionfilter = function(args) {	    		  
     var jsonObj = args.context.item;
 	var allowedActions = [];
+	allowedActions.push("enable");	  
+	allowedActions.push("disable");	  
+	allowedActions.push("manage");	  
+	allowedActions.push("unmanage");	  
     allowedActions.push("delete");	  
 	return allowedActions;
   }
