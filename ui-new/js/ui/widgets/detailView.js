@@ -561,7 +561,9 @@
     var $detailView = $tabContent.closest('.detail-view');
 
     if (tabs.custom) {
-      return tabs.custom().appendTo($tabContent);
+      return tabs.custom({
+        context: args.context
+      }).appendTo($tabContent);
     }
 
     $.extend(

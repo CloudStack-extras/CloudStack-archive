@@ -3,53 +3,69 @@
     /**
      * Append item to list
      */
-    addItem: function(data, fields, $multi, options) {
+    addItem: function(data, fields, $multi, itemData, actions, options) {
       if (!options) options = {};
 
-      var $tr = $('<tr>').data('multi-edit-data', data);
+      var $item = $('<div>').addClass('data-item').append(
+        $('<table>').append($('<tbody>'))
+      );
+      var $tr = $('<tr>').appendTo($item.find('tbody'));
 
+      if (itemData) {
+        $tr.data('multi-edit-data', itemData);
+      }
+
+      // Setup columns
       $.each(fields, function(fieldName, field) {
-        var $td = $('<td></td>').addClass(fieldName).appendTo($tr);
+        var $td = $('<td>').addClass(fieldName).appendTo($tr);
+        var $input, val;
 
-        // Get edit textfield value
         if (field.edit) {
-          $td
-            .append(
-              $('<span></span>').html(
-                $multi.find('input').filter(function() {
-                  return $(this).attr('name') == fieldName;
-                }).val()
-              )
+          // Edit fields append value of data
+          if (field.range) {
+            var start = data[field.range[0]];
+            var end = data[field.range[1]];
+
+            $td.append(
+              $('<span>').html(start + ' - ' + end)
             );
+          } else {
+            $td.append(
+              $('<span>').html(data[fieldName])
+            );
+          }
         } else if (field.select) {
-          $td
-            .append(
-              $('<span></span>').html(
-                $multi.find('select').filter(
-                  function() {
-                    return $(this).attr('name') == fieldName;
-                  }).find('option:selected').html()
-              )
-            );
-        } else if (field.addButton && data.length) {
+          $td.append(
+            $('<span>').html(
+              // Get matching option text
+              $multi.find('select').filter(function() {
+                return $(this).attr('name') == fieldName;
+              }).find('option').filter(function() {
+                return $(this).val() == data[fieldName];
+              }).html()
+            )
+          );
+        } else if (field.addButton && $.isArray(itemData) && !options.noSelect) {
+          // Show VM data
           $td
             .html(
               options.multipleAdd ?
-                data.length + ' VMs' : data[0].name
+                itemData.length + ' VMs' : itemData[0].name
             )
             .click(function() {
               var $browser = $(this).closest('.detail-view').data('view-args').$browser;
 
               if (options.multipleAdd) {
-                _medit.multiItem.details(data, $browser);
+                _medit.multiItem.details(itemData, $browser);
               } else {
-                _medit.details(data[0], $browser);
+                _medit.details(itemData[0], $browser);
               }
             });
-        } else {
-          $td.html(
-            $('<span></span>').html(field)
-          );
+        }
+
+        // Add blank styling for empty fields
+        if ($td.html() == '') {
+          $td.addClass('blank');
         }
 
         // Align width to main header
@@ -59,7 +75,116 @@
         return true;
       });
 
-      return $tr;
+      // Actions column
+      var $actions = $('<td>').addClass('multi-actions').appendTo(
+        $item.find('tr')
+      );
+
+      // Align action column width
+      $actions.width(
+        $multi.find('th.multi-actions').width() + 4
+      );
+
+      // Append actions
+      $.each(actions, function(actionID, action) {
+        $actions.append(
+          $('<div>')
+            .addClass('action')
+            .addClass(actionID)
+            .append($('<span>').addClass('icon'))
+            .attr({ title: action.label })
+            .click(function() {
+              var $target = $(this);
+              var $dataItem = $target.closest('.data-item');
+              var $expandable = $dataItem.find('.expandable-listing');
+              var isDestroy = $target.hasClass('destroy');
+
+              if (isDestroy) {
+                var $loading = _medit.loadingItem($multi, 'Removing rule...');
+
+                if ($expandable.is(':visible')) {
+                  $expandable.slideToggle(function() {
+                    $dataItem.replaceWith($loading);
+                  });
+                } else {
+                  // Loading appearance
+                  $dataItem.replaceWith($loading);
+                }
+              }
+
+              action.action({
+                context: $.extend(true, {}, options.context, {
+                  multiRule: [data]
+                }),
+                response: {
+                  success: function(args) {
+                    var notification = args.notification;
+                    if (notification) {
+                      $('.notifications').notifications('add', {
+                        section: 'network',
+                        desc: notification.label,
+                        interval: 1000,
+                        poll: function(args) {
+                          var complete = args.complete;
+                          
+                          notification.poll({
+                            complete: function(args) {
+                              if (isDestroy) {
+                                $loading.remove();
+                              }
+
+                              complete();
+                            }
+                          });
+                        }
+                      });
+                    }
+                  }
+                }
+              });
+            })
+        );
+      });
+
+      // Add expandable listing, for multiple-item
+      if (options.multipleAdd) {
+        // Create expandable box
+        _medit.multiItem.expandable(
+          $item.find('tr').data('multi-edit-data')
+        ).appendTo($item);
+
+        // Expandable icon/action
+        $item.find('td:first').prepend(
+          $('<div>')
+            .addClass('expand')
+            .click(function() {
+              $item.closest('.data-item').find('.expandable-listing').slideToggle();
+            })
+        );
+      }
+
+      return $item;
+    },
+
+    /**
+     * Create a fake 'loading' item box
+     */
+    loadingItem: function($multi, label) {
+      var $loading = $('<div>').addClass('data-item loading');
+
+      // Align height with existing items
+      var $row = $multi.find('.data-item:first');
+
+      // Set label
+      if (label) {
+        $loading.append(
+          $('<div>').addClass('label').append(
+            $('<span>').html(label)
+          )
+        );
+      }
+
+      return $loading;
     },
     details: function(data, $browser) {
       var detailViewArgs, $detailView;
@@ -143,13 +268,15 @@
   $.fn.multiEdit = function(args) {
     var dataProvider = args.dataProvider;
     var multipleAdd = args.multipleAdd;
-    var $multiForm = $('<form>').appendTo(this);
-    var $multi = $('<div>').addClass('multi-edit').appendTo(
-      $multiForm
-    );
-    var $inputTable = $('<table>').addClass('multi-edit').appendTo($multi);
+    var $multi = $('<div>').addClass('multi-edit').appendTo(this);
+    var $multiForm = $('<form>').appendTo($multi);
+    var $inputTable = $('<table>').addClass('multi-edit').appendTo($multiForm);
     var $dataTable = $('<div>').addClass('data').appendTo($multi);
     var $addVM;
+    var fields = args.fields;
+    var actions = args.actions;
+    var noSelect = args.noSelect;
+    var context = args.context;
 
     var $thead = $('<tr>').appendTo(
       $('<thead>').appendTo($inputTable)
@@ -169,14 +296,14 @@
 
       if (field.select) {
         var $select = $('<select>')
-          .attr({
-            name: fieldName
-          })
-          .appendTo($td);
+              .attr({
+                name: fieldName
+              })
+              .appendTo($td);
 
         field.select({
           $select: $select,
-          $form: $multi,
+          $form: $multiForm,
           response: {
             success: function(args) {
               $(args.data).each(function() {
@@ -187,19 +314,35 @@
           }
         });
       } else if (field.edit) {
-        $('<input>')
-          .attr({
-            name: fieldName,
-            type: 'text'
-          })
-          .addClass('required')
-          .attr('disabled', field.isDisabled ? 'disabled' : false)
-          .appendTo($td);
+        if (field.range) {
+          var $range = $('<div>').addClass('range').appendTo($td);
+
+          $(field.range).each(function() {
+            $('<input>')
+              .attr({
+                name: this,
+                type: 'text'
+              })
+              .addClass('required')
+              .attr('disabled', field.isDisabled ? 'disabled' : false)
+              .appendTo(
+                $('<div>').addClass('range-item').appendTo($range)
+              );
+          });
+        } else {
+          $('<input>')
+            .attr({
+              name: fieldName,
+              type: 'text'
+            })
+            .addClass('required')
+            .attr('disabled', field.isDisabled ? 'disabled' : false)
+            .appendTo($td);
+        }
       } else if (field.addButton) {
         $addVM = $('<div>').addClass('button add-vm').html(
-          args.addTitle
-        )
-          .appendTo($td);
+          args.add.label
+        ).appendTo($td);
       }
     });
 
@@ -250,68 +393,66 @@
     };
 
     $addVM.bind('click', function() {
-      var $item = $('<tbody>').appendTo(
-        $('<table>').appendTo(
-          $('<div>').addClass('data-item').appendTo($dataBody)
-        )
-      );
+      // Validate form first
+      if (!$multiForm.valid()) {
+        return true;
+      }
+
       var $dataList;
-      var addItem = function(data) {
-        _medit.addItem(
-          data,
-          args.fields,
-          $multi,
-          {
-            multipleAdd: multipleAdd
-          }
-        ).appendTo($item);
+      var addItem = function(itemData) {
+        var data = cloudStack.serializeForm($multiForm);
 
-        $multi.find('input').val(''); // Clear out fields
+        // Loading appearance
+        var $loading = _medit.loadingItem($multi, 'Adding rule...');
+        $dataBody.append($loading);
 
-        // Append actions
-        $actions = $('<td>').addClass('multi-actions').appendTo(
-          $item.find('tr')
-        );
+        // Clear out fields
+        $multi.find('input').val('');
 
-        $actions.width(
-          $multi.find('th.multi-actions').width() + 4
-        );
+        // Apply action
+        args.add.action({
+          context: context,
+          data: data,
+          response: {
+            success: function(successArgs) {
+              var notification = successArgs.notification;
+              if (notification) {
+                $('.notifications').notifications('add', {
+                  section: 'network',
+                  desc: notification.label,
+                  interval: 1000,
+                  poll: function(pollArgs) {
+                    var complete = pollArgs.complete;
+                    
+                    notification.poll({
+                      complete: function(completeArgs) {
+                        $loading.remove();
 
-        $.each(args.actions, function(actionID, action) {
-          $actions.append(
-            $('<div>')
-              .addClass('action')
-              .addClass(actionID)
-              .append($('<span>').addClass('icon'))
-              .attr({ title: action.label })
-              .click(function() {
-                if ($(this).hasClass('destroy')) {
-                  $(this).closest('.data-item').remove();
-                }
-              })
-          );
-        });
-
-        // Add expandable listing, for multiple-item
-        if (multipleAdd) {
-          $item.find('td:first').prepend(
-            $('<div></div>').addClass('expand')
-              .click(function() {
-                $item.closest('.data-item')
-                  .find('.expandable-listing').slideToggle();
+                        _medit.addItem(
+                          data,
+                          args.fields,
+                          $multi,
+                          itemData,
+                          args.actions,
+                          {
+                            multipleAdd: multipleAdd,
+                            noSelect: noSelect,
+                            context: context
+                          }
+                        ).appendTo($dataBody);
+                        complete();
+                      }
+                    });
+                  }
+                });
               }
-            )
-          );
-
-          _medit.multiItem.expandable(
-            $item.find('tr').data('multi-edit-data')
-          )
-            .appendTo($item.closest('.data-item'));
-        }
+            }
+          }
+        });
       };
 
-      if (!$multiForm.valid()) return true;
       if (args.noSelect) {
+        // Don't append instance data
         addItem([]);
 
         return true;
@@ -320,7 +461,7 @@
       $dataList = vmList($multi).dialog({
         dialogClass: 'multi-edit-add-list panel',
         width: 825,
-        title: args.addTitle,
+        title: args.add.label,
         buttons: [
           {
             text: 'Done',
@@ -361,8 +502,33 @@
       return true;
     });
 
+    // Get existing data
+    dataProvider({
+      response: {
+        success: function(args) {
+          $(args.data).each(function() {
+            var data = this;
+            var itemData = this._itemData;
+            _medit.addItem(
+              data,
+              fields,
+              $multi,
+              itemData,
+              actions,
+              {
+                multipleAdd: multipleAdd,
+                noSelect: noSelect,
+                context: context
+              }
+            ).appendTo($dataBody);
+          });
+        }
+      }
+    });
+
     $multiForm.validate();
 
     return this;
   };
+
 })(jQuery, cloudStack);

@@ -1,6 +1,8 @@
 (function($, cloudStack) {
   cloudStack.ipRules = function(args) {
-    return function() {
+    return function(detailArgs) {
+      var context = detailArgs.context;
+      
       var portMultiEdit = function(args) {
         return $('<div>').multiEdit(args);
       };
@@ -16,16 +18,19 @@
 
           $browser.cloudBrowser('addPanel', {
             title: targetName,
-            maximizeIfSelected: targetId == 'firewall',
+            maximizeIfSelected: true,
             complete: function($newPanel) {
               $newPanel.detailView({
                 $browser: $browser,
                 name: targetId,
+                context: context,
                 tabs: {
                   network: {
                     title: targetName,
                     custom: function(args) {
-                      return portMultiEdit(target);
+                      return portMultiEdit($.extend(target, {
+                        context: context
+                      }));
                     }
                   }
                 }

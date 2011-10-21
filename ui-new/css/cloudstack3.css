@@ -737,11 +737,6 @@ div.list-view div.toolbar div.section-switcher div.section-select label {
   background-position: 50% 250px;
 }
 
-/*** Multi-edit*/
-.detail-view .multi-edit input {
-  width: 85%;
-}
-
 /*** Actions*/
 div.detail-group.actions {
   padding: 0;
@@ -3752,8 +3747,7 @@ label.error {
 }
 
 .detail-group table tbody {
-  border: 1px solid #CFC9C9;
-  border-top: none;
+  border: none;
 }
 
 div.detail-group td.view-all div.view-all div.end {
@@ -3805,8 +3799,35 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   border-left: 1px solid #CDCCCC;
 }
 
+.detail-view .multi-edit input {
+  width: 70%;
+}
+
 .multi-edit input {
   width: 85%;
+}
+
+.multi-edit .range {
+  position: relative;
+}
+
+.multi-edit .range .range-item {
+  float: left;
+}
+
+.multi-edit .range input {
+  width: 70px;
+  margin-left: 13px;
+  position: relative;
+}
+
+.multi-edit .range label {
+  display: block;
+  clear: both;
+  /*+placement:shift 3px 2px;*/
+  position: relative;
+  left: 3px;
+  top: 2px;
 }
 
 .multi-edit label.error {
@@ -3892,25 +3913,47 @@ div.panel.ui-dialog div.list-view div.fixed-header {
 
 .multi-edit .data .data-body {
   width: 96%;
-  margin: auto;
+  margin: auto auto auto 11px;
   overflow: hidden;
-  border-top: 1px solid #CFC9C9;
+}
+
+.panel.always-maximized .multi-edit .data .data-body {
+  width: 96%;
+  margin: 0 0 0 12px;
 }
 
 .multi-edit .data .data-body .data-item {
+  margin-bottom: 14px;
+  border: 1px solid #CDCCCC;
+}
+
+.multi-edit .data .data-body .data-item.loading {
+  height: 28px;
+  background: #FFFFFF url(../images/ajax-loader.gif) no-repeat center;
+  border: 1px solid #DDDDDD;
+}
+
+.multi-edit .data .data-body .data-item.loading .label {
+  color: #808080;
+  font-size: 12px;
+  text-align: center;
+  text-indent: 19%;
+  margin: 12px 0 0;
 }
 
 .multi-edit .data .data-body .data-item table {
   margin: 0;
   border: none;
   width: 100%;
+  overflow: hidden;
+  background: #F0F1F2;
 }
 
 .multi-edit .data .data-body .data-item tr {
   background: #EFEFEF;
   border: none;
   display: block;
-  width: 100%;
+  width: 115%;
 }
 
 .multi-edit .data .data-body .data-item table tbody tr td {
@@ -3920,9 +3963,21 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   height: 15px;
   float: left;
   overflow: hidden;
-  min-width: inherit;
   padding-right: 0;
   padding-bottom: 4px;
+}
+
+.multi-edit .data .data-body .data-item table tbody tr td.blank {
+  background: #FCFCFD;
+}
+
+.multi-edit .data .data-body .data-item table tbody tr td.name {
+  padding-top: 9px;
+}
+
+.multi-edit .data .data-body .data-item table tbody tr td.name span {
+  color: #4C5D78;
+  font-weight: bold;
 }
 
 .multi-edit .data .data-body .data-item table tbody tr td.multi-actions {
