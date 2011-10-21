@@ -69,8 +69,9 @@
       notification.section = 'instances';
 
       var performAction = function(data, options) {
-        var $form = options.$form;
         if (!options) options = {};
+
+        var $form = options.$form;
 
         action.action({
           data: data,
