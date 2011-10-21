@@ -10,7 +10,7 @@
       label: 'Select view'
     },
     sections: {
-      zones: {
+      physicalResources: {
         type: 'select',
         title: 'Physical Resources',
         listView: {
@@ -298,7 +298,7 @@
 				},         
 				action: function(args) {	             	  
 				  $.ajax({
-					url: createURL("updateZone&id=" + args.context.zones[0].id + "&allocationstate=Enabled"),
+					url: createURL("updateZone&id=" + args.context.physicalResources[0].id + "&allocationstate=Enabled"),  //embedded objects in listView is called physicalResources while embedded objects in detailView is called zones
 					dataType: "json",
 					async: true,
 					success: function(json) {  
@@ -335,7 +335,7 @@
 				},         
 				action: function(args) {	                 	
 				  $.ajax({
-					url: createURL("updateZone&id=" + args.context.zones[0].id + "&allocationstate=Disabled"),
+					url: createURL("updateZone&id=" + args.context.physicalResources[0].id + "&allocationstate=Disabled"),  //embedded objects in listView is called physicalResources while embedded objects in detailView is called zones
 					dataType: "json",
 					async: true,
 					success: function(json) {  
@@ -372,7 +372,7 @@
 				},						  								
 				action: function(args) {     
 				  $.ajax({
-					url: createURL("deleteZone&id=" + args.context.zones[0].id),
+					url: createURL("deleteZone&id=" + args.context.physicalResources[0].id),  //embedded objects in listView is called physicalResources while embedded objects in detailView is called zones
 					dataType: "json",
 					async: true,
 					success: function(json) { 	
