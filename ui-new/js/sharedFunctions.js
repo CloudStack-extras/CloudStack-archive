@@ -138,10 +138,15 @@ var pollAsyncJobResult = function(args) {
             } else {				                        			                          			                                             
                 if (result.jobstatus == 1) { // Succeeded 
 					//debugger;
-					args.complete({					  
-					  data: args._custom.getUpdatedItem(json),
-					  actionFilter: args._custom.getActionFilter()
-					});						
+					if(args._custom.getUpdatedItem != null && args._custom.getActionFilter != null) {					
+						args.complete({					  
+						  data: args._custom.getUpdatedItem(json),
+						  actionFilter: args._custom.getActionFilter()
+						});		
+                    }	
+                    else {
+                        args.complete();
+                    }					
                 } 
 				else if (result.jobstatus == 2) { // Failed	                        
 					args.error({message:result.jobresult.errortext});						
