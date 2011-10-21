@@ -859,12 +859,46 @@
                       args.complete();
                     }       
                   }         
-                },
+                }//,
                 
-                destroy: testData.actions.destroy('cluster')
+                //destroy: testData.actions.destroy('cluster')
               },
               detailView: {
                 viewAll: { path: '_zone.hosts', label: 'Hosts' },
+								
+				actions: {					  
+				  'delete': { 
+					label: 'Delete' ,                    					
+					messages: {
+					  confirm: function(args) {
+						return 'Please confirm that you want to delete this cluster.';
+					  },
+					  success: function(args) {
+						return 'Cluster is being deleted.';
+					  },
+					  notification: function(args) {
+						return 'Deleting cluster';
+					  },
+					  complete: function(args) {
+						return 'Cluster has been deleted.';
+					  }
+					},						  								
+					action: function(args) {     
+					  $.ajax({
+						url: createURL("deleteCluster&id=" + args.context.clusters[0].id),
+						dataType: "json",
+						async: true,
+						success: function(json) { 	
+						  args.response.success({data:{}});							
+						}
+					  });  	
+					},					
+					notification: {           
+					  poll: function(args) { args.complete(); }
+					}		  
+				  }					 
+				},
+								
                 tabs: {
                   details: {
                     title: 'Details',
@@ -889,9 +923,8 @@
 					    actionFilter: clusterActionfilter,
 						data: args.context.clusters[0]
 					  });
-					}
-					
-                  },
+					}	
+                  }
                 }
               }
             }
@@ -2760,7 +2793,7 @@
    var clusterActionfilter = function(args) {	    		  
     var jsonObj = args.context.item;
 	var allowedActions = [];
-    //allowedActions.push("delete");	  
+    allowedActions.push("delete");	  
 	return allowedActions;
   }
   //action filters (end)
