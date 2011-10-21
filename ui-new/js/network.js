@@ -206,9 +206,7 @@
                           success: function(data) {
                             args.response.success({
                               _custom: { 
-                                jobId: data.createfirewallruleresponse.jobid,
-                                getUpdatedItem: function(args) {},
-                                getActionFilter: function(args) {}
+                                jobId: data.createfirewallruleresponse.jobid
                               },
                               notification: {
                                 label: 'Add firewall rule',
@@ -236,9 +234,7 @@
 
                               args.response.success({
                                 _custom: {
-                                  jobId: jobID,
-                                  getUpdatedItem: function(args) {},
-                                  getActionFilter: function(args) {}
+                                  jobId: jobID
                                 },
                                 notification: {
                                   label: 'Remove firewall rule ' + args.context.multiRule[0].id,
