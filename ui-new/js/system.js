@@ -10,7 +10,7 @@
       label: 'Select view'
     },
     sections: {
-      physicalResources: {
+      zones: {
         type: 'select',
         title: 'Physical Resources',
         listView: {
@@ -333,7 +333,7 @@
 					return 'Zone has been disabled.';
 				  }
 				},         
-				action: function(args) {	             	  
+				action: function(args) {	                 	
 				  $.ajax({
 					url: createURL("updateZone&id=" + args.context.zones[0].id + "&allocationstate=Disabled"),
 					dataType: "json",
@@ -394,7 +394,10 @@
               async: true,
               success: function(json) { 
                 zoneObjs = json.listzonesresponse.zone;         
-                args.response.success({data:zoneObjs});                           
+                args.response.success({
+				  actionFilter: zoneActionfilter,
+				  data:zoneObjs
+				});                           
               }
             });   
           },
@@ -3248,9 +3251,12 @@
   var zoneActionfilter = function(args) {	    		  
     var jsonObj = args.context.item;
 	var allowedActions = [];
-	allowedActions.push("enable"); 
-	allowedActions.push("disable");	
-    allowedActions.push("delete");	  
+    allowedActions.push("edit"); 	
+    if(jsonObj.allocationstate == "Disabled")
+        allowedActions.push("enable"); 
+    else if(jsonObj.allocationstate == "Enabled")  
+        allowedActions.push("disable");	    
+    allowedActions.push("delete");	 
 	return allowedActions;
   }
   
