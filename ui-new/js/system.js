@@ -271,7 +271,7 @@
               },
               messages: {
                 confirm: function(args) {
-                  return 'Are you sure you want to add ' + args.name + '?';
+                  return 'Are you sure you want to add a zone?';
                 },
                 notification: function(args) {
                   return 'Created new zone';
@@ -302,6 +302,38 @@
               detailView: {
                 name: 'Zone details',
                 viewAll: { path: '_zone.pods', label: 'Pods' },
+				actions: {				 
+				  'delete': { 
+					label: 'Delete' ,                    					
+					messages: {
+					  confirm: function(args) {
+						return 'Please confirm that you want to delete this zone.';
+					  },
+					  success: function(args) {
+						return 'Zone is being deleted.';
+					  },
+					  notification: function(args) {
+						return 'Deleting zone';
+					  },
+					  complete: function(args) {
+						return 'Zone has been deleted.';
+					  }
+					},						  								
+					action: function(args) {     
+					  $.ajax({
+						url: createURL("deleteZone&id=" + args.context.zones[0].id),
+						dataType: "json",
+						async: true,
+						success: function(json) { 	
+						  args.response.success({data:{}});							
+						}
+					  });  	
+					},					
+					notification: {           
+					  poll: function(args) { args.complete(); }
+					}		  
+				  }			 
+				},
                 tabs: {
                   details: {
                     title: 'Details',
