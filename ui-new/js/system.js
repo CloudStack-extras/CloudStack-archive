@@ -940,11 +940,81 @@
 					  }			
 					}
 				  },	
+				  				 
+				  manage: {
+					label: 'Manage cluster',
+					messages: {
+					  confirm: function(args) {
+						return 'Are you sure you want to manage this cluster?';
+					  },
+					  success: function(args) {
+						return 'This cluster is being managed.';
+					  },
+					  notification: function(args) {			
+						return 'Managing cluster';
+					  },
+					  complete: function(args) {			  
+						return 'Cluster has been managed.';
+					  }
+					},         
+					action: function(args) {	             	  
+					  $.ajax({
+						url: createURL("updateCluster&id=" + args.context.clusters[0].id + "&managedstate=Managed"),
+						dataType: "json",
+						async: true,
+						success: function(json) {  
+						  var item = json.updateclusterresponse.cluster;		    
+						  args.response.success({
+							actionFilter: clusterActionfilter,
+							data:item
+						  });			  
+						}
+					  });  	
+					},
+					notification: {
+					  poll: function(args) {			  
+						args.complete();
+					  }			
+					}
+				  },	
 				  
-				  //???
-				  
-				  //???
-				  
+				  unmanage: {
+					label: 'Unmanage cluster',
+					messages: {
+					  confirm: function(args) {
+						return 'Are you sure you want to unmanage this cluster?';
+					  },
+					  success: function(args) {
+						return 'This cluster is being unmanaged.';
+					  },
+					  notification: function(args) {			
+						return 'Unmanaging cluster';
+					  },
+					  complete: function(args) {			  
+						return 'Cluster has been unmanaged.';
+					  }
+					},         
+					action: function(args) {	             	  
+					  $.ajax({
+						url: createURL("updateCluster&id=" + args.context.clusters[0].id + "&managedstate=Unmanaged"),
+						dataType: "json",
+						async: true,
+						success: function(json) {  
+						  var item = json.updateclusterresponse.cluster;		    
+						  args.response.success({
+							actionFilter: clusterActionfilter,
+							data:item
+						  });			  
+						}
+					  });  	
+					},
+					notification: {
+					  poll: function(args) {			  
+						args.complete();
+					  }			
+					}
+				  },	
+				 				  
 				  'delete': { 
 					label: 'Delete' ,                    					
 					messages: {
