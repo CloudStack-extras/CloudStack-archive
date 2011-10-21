@@ -14,7 +14,7 @@
         type: 'select',
         title: 'Physical Resources',
         listView: {
-          id: 'physicalResources',
+          id: 'zones',
           label: 'Physical Resources',
           fields: {
             name: { label: 'Zone' },
@@ -271,7 +271,7 @@
               },
               messages: {
                 confirm: function(args) {
-                  return 'Are you sure you want to add ' + args.name + '?';
+                  return 'Are you sure you want to add a zone?';
                 },
                 notification: function(args) {
                   return 'Created new zone';
@@ -302,6 +302,38 @@
               detailView: {
                 name: 'Zone details',
                 viewAll: { path: '_zone.pods', label: 'Pods' },
+				actions: {				 
+				  'delete': { 
+					label: 'Delete' ,                    					
+					messages: {
+					  confirm: function(args) {
+						return 'Please confirm that you want to delete this zone.';
+					  },
+					  success: function(args) {
+						return 'Zone is being deleted.';
+					  },
+					  notification: function(args) {
+						return 'Deleting zone';
+					  },
+					  complete: function(args) {
+						return 'Zone has been deleted.';
+					  }
+					},						  								
+					action: function(args) {     
+					  $.ajax({
+						url: createURL("deleteZone&id=" + args.context.zones[0].id),
+						dataType: "json",
+						async: true,
+						success: function(json) { 	
+						  args.response.success({data:{}});							
+						}
+					  });  	
+					},					
+					notification: {           
+					  poll: function(args) { args.complete(); }
+					}		  
+				  }			 
+				},
                 tabs: {
                   details: {
                     title: 'Details',
@@ -310,44 +342,33 @@
                         name: { label: 'Zone' }
                       },
                       {
-                        dns1: { label: 'DNS 1' },
-                        dns2: { label: 'DNS 2' },
-                        internaldns1: { label: 'Internal DNS 1' },
-                        internaldns2: { label: 'Internal DNS 2' }
-                      },
-                      {
-                        networktype: { label: 'Network Type' },
-                        allocationstate: { label: 'State' },
-                        vlan: { label: 'VLAN' },
-                        networktype: { label: 'Network Type' },
-                        securitygroupenabled: { label: 'Security Group?' }
+                        id: { label: 'ID' },
+						allocationstate: { label: 'Allocation State' },
+						dns1: { label: 'DNS 1' },
+						dns2: { label: 'DNS 2' },
+						internaldns1: { label: 'Internal DNS 1' },
+						internaldns2: { label: 'Internal DNS 2' },
+						networktype: { label: 'Network Type' },
+						securitygroupsenabled: { 
+						  label: 'Security Groups Enabled', 
+						  converter:cloudStack.converters.toBooleanText 
+						},
+						domain: { label: 'Domain' },
+						
+						//only advanced zones have VLAN and CIDR Address
+						guestcidraddress: { label: 'Guest CIDR Address' },						
+						startVlan: { label: 'Start Vlan' },
+						endVlan: { label: 'End Vlan' }						
                       }
                     ],
-                    dataProvider: testData.dataProvider.detailView('zones')
-                  },
-                  resources: {
-                    title: 'Resources',
-                    fields: [
-                      {
-                        iptotal: { label: 'Total IPs' },
-                        cputotal: { label: 'Total CPU' },
-                        bandwidthout: { label: 'Bandwidth (Out)'},
-                        bandwidthin: { label: 'Bandwidth (In)'}
-                      }
-                    ],
-                    dataProvider: function(args) {
-                      setTimeout(function() {
-                        args.response.success({
-                          data: {
-                            iptotal: 1000,
-                            cputotal: '500 Ghz',
-                            bandwidthout: '14081 mb',
-                            bandwidthin: '31000 mb'
-                          }
-                        });
-                      }, 500);
-                    }
-                  }
+                    
+					dataProvider: function(args) {					  
+					  args.response.success({
+					    actionFilter: zoneActionfilter,
+					    data: args.context.zones[0]
+					  });
+					}
+                  }                
                 }
               }
             })
@@ -3045,7 +3066,33 @@
 	return url;
   }  
   
-  //action filters (begin)
+  //action filters (begin)   
+  var zoneActionfilter = function(args) {	    		  
+    var jsonObj = args.context.item;
+	var allowedActions = [];
+    allowedActions.push("delete");	  
+	return allowedActions;
+  }
+  
+  var clusterActionfilter = function(args) {	   
+    var jsonObj = args.context.item;
+	var allowedActions = [];
+	
+	if(jsonObj.allocationstate == "Disabled")
+      allowedActions.push("enable"); 
+    else if(jsonObj.allocationstate == "Enabled")  
+      allowedActions.push("disable");	  
+        
+    if(jsonObj.managedstate == "Managed")
+	  allowedActions.push("unmanage");    	
+    else //PrepareUnmanaged , PrepareUnmanagedError, Unmanaged 
+      allowedActions.push("manage");		       
+    
+	allowedActions.push("delete");	  	
+    
+	return allowedActions;
+  }
+  
   var hostActionfilter = function(args) {	
     var jsonObj = args.context.item;
 	var allowedActions = [];	
@@ -3120,25 +3167,6 @@
     var jsonObj = args.context.item;
 	var allowedActions = [];
     allowedActions.push("delete");	  
-	return allowedActions;
-  }
-  
-  var clusterActionfilter = function(args) {	   
-    var jsonObj = args.context.item;
-	var allowedActions = [];
-	
-	if(jsonObj.allocationstate == "Disabled")
-      allowedActions.push("enable"); 
-    else if(jsonObj.allocationstate == "Enabled")  
-      allowedActions.push("disable");	  
-        
-    if(jsonObj.managedstate == "Managed")
-	  allowedActions.push("unmanage");    	
-    else //PrepareUnmanaged , PrepareUnmanagedError, Unmanaged 
-      allowedActions.push("manage");		       
-    
-	allowedActions.push("delete");	  	
-    
 	return allowedActions;
   }
   //action filters (end)
