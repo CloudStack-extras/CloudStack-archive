@@ -518,6 +518,20 @@
                 tabs: {
                   details: {
                     title: 'Details',
+										
+					preFilter: function(args) {   					  
+                      /*					
+					  var hiddenFields;						  
+					  if(args.context.zones[0].networktype == "Basic") 						
+                        hiddenFields = ["guestcidraddress", "startVlan", "endVlan"];  						
+					  else if(args.context.zones[0].networktype == "Advanced") 
+						hiddenFields = [];   
+					  return hiddenFields;	
+                      */	
+					  //comment out the above section until Brian fix it to include context in args
+                      return [];					  
+					},	
+										
                     fields: [
                       {
                         name: { label: 'Zone' }
