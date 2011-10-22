@@ -409,7 +409,50 @@
               detailView: {
                 name: 'Zone details',
                 viewAll: { path: '_zone.pods', label: 'Pods' },
-				actions: {	                  
+				actions: {	                   
+				  edit: {
+					label: 'Edit',
+					action: function(args) {	                     				
+					  var array1 = [];	
+					  array1.push("&name="  +todb(args.data.name));	
+					  array1.push("&dns1=" + todb(args.data.dns1));		
+					  array1.push("&dns2=" + todb(args.data.dns2));	 //dns2 can be empty ("") when passed to API
+					  array1.push("&internaldns1=" + todb(args.data.internaldns1));	
+					  array1.push("&internaldns2=" + todb(args.data.internaldns2));	 //internaldns2 can be empty ("") when passed to API			
+					
+					  if(args.context.zones[0].networktype == "Advanced") {  //remove this after Brian fixes it to include $form in args
+						  var vlan;		                      			  
+						  //if(args.$form.find('.form-item[rel=startVlan]').css("display") != "none") {  //comment out until Brian fixes it to include $form in args
+							var vlanStart = args.data.startVlan;
+							if(vlanStart != null && vlanStart.length > 0) {
+							  var vlanEnd = args.data.endVlan;
+							  if (vlanEnd != null && vlanEnd.length > 0) 
+								vlan = vlanStart + "-" + vlanEnd;						    							
+							  else 	
+								vlan = vlanStart;							  
+							  array1.push("&vlan=" + todb(vlan));
+							}						  
+						  //}					  				
+							
+						  //if(args.$form.find('.form-item[rel=guestcidraddress]').css("display") != "none") {  //comment out until Brian fixes it to include $form in args
+							array1.push("&guestcidraddress=" + todb(args.data.guestcidraddress));				    		 
+						  //}								
+					  }  //remove this after Brian fixes it to include $form in args
+					  
+					  $.ajax({
+						url: createURL("updateZone&id=" + args.context.zones[0].id + array1.join("")),
+						dataType: "json",
+						success: function(json) {                          					
+						  var item = json.updatezoneresponse.zone;	
+						  args.response.success({
+						    actionFilter: zoneActionfilter,
+						    data:item
+						  });	   					
+						}
+					  });	
+					}
+				  },         
+                 		  
                   enable: {
 					label: 'Enable zone',
 					messages: {
@@ -534,15 +577,15 @@
 										
                     fields: [
                       {
-                        name: { label: 'Zone' }
+                        name: { label: 'Zone', isEditable: true }
                       },
                       {
                         id: { label: 'ID' },
 						allocationstate: { label: 'Allocation State' },
-						dns1: { label: 'DNS 1' },
-						dns2: { label: 'DNS 2' },
-						internaldns1: { label: 'Internal DNS 1' },
-						internaldns2: { label: 'Internal DNS 2' },
+						dns1: { label: 'DNS 1', isEditable: true },
+						dns2: { label: 'DNS 2', isEditable: true },
+						internaldns1: { label: 'Internal DNS 1', isEditable: true },
+						internaldns2: { label: 'Internal DNS 2', isEditable: true },
 						networktype: { label: 'Network Type' },
 						securitygroupsenabled: { 
 						  label: 'Security Groups Enabled', 
@@ -551,9 +594,10 @@
 						domain: { label: 'Domain' },
 						
 						//only advanced zones have VLAN and CIDR Address
-						guestcidraddress: { label: 'Guest CIDR Address' },						
-						startVlan: { label: 'Start Vlan' },
-						endVlan: { label: 'End Vlan' }						
+						guestcidraddress: { label: 'Guest CIDR Address', isEditable: true },	
+                        vlan: { label: 'Vlan' },						
+						startVlan: { label: 'Start Vlan', isEditable: true },
+						endVlan: { label: 'End Vlan', isEditable: true }						
                       }
                     ],
                     
