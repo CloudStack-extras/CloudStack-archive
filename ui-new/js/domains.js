@@ -93,6 +93,7 @@
                 name: { label: 'Name', isEditable: true }
               },
               {
+			    id: { label: 'ID' },
                 accounts: { label: 'Accounts' },
                 instances: { label: 'Instances' },
                 volumes: { label: 'Volumes' }
