@@ -14,25 +14,34 @@
         },
 
         // Detail actions
-        actions: {
-          // Destroy
-          destroy: {
-            label: 'Remove domain',
+        actions: {          
+          'delete': {
+            label: 'Delete domain',
             messages: {
               confirm: function(args) {
-                return 'Are you sure you want to destroy this domain?'
+                return 'Are you sure you want to delete this domain?'
               },
-              notification: function(args) {
-                return 'Removed domain: ' + args.name;
+              notification: function(args) {			    
+                return 'Domain is deleted';
               }
             },
-            action: function(args) {
-              setTimeout(function() {
-                args.response.success();
-              }, 200);
+            action: function(args) {		              	
+			  $.ajax({
+				url: createURL("deleteDomain&id=" + args.context.domains[0].id),
+				dataType: "json",
+				async: false,
+				success: function(json) {	   
+				  var jid = json.deletedomainresponse.jobid;    				
+			      args.response.success(
+				    {_custom:
+					  {jobId: jid}
+					}
+				  );		 
+				}							
+			  });  			  
             },
             notification: {
-              poll: testData.notifications.testPoll
+              poll: pollAsyncJobResult
             }
           },
           
