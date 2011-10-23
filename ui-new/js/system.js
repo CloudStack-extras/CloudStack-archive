@@ -923,6 +923,112 @@
 			 
               detailView: {
                 viewAll: { path: '_zone.clusters', label: 'Clusters' },
+				actions: {				 
+				  enable: {
+					label: 'Enable pod',
+					messages: {
+					  confirm: function(args) {
+						return 'Are you sure you want to enable this pod?';
+					  },
+					  success: function(args) {
+						return 'This pod is being enabled.';
+					  },
+					  notification: function(args) {			
+						return 'Enabling pod';
+					  },
+					  complete: function(args) {			  
+						return 'Pod has been enabled.';
+					  }
+					},         
+					action: function(args) {	             	  
+					  $.ajax({
+						url: createURL("updatePod&id=" + args.context.pods[0].id + "&allocationstate=Enabled"),
+						dataType: "json",
+						async: true,
+						success: function(json) {  
+						  var item = json.updatepodresponse.pod;    
+						  args.response.success({
+							actionFilter: podActionfilter,
+							data:item
+						  });			  
+						}
+					  });  	
+					},
+					notification: {
+					  poll: function(args) {			  
+						args.complete();
+					  }			
+					}
+				  },	
+				  
+                  disable: {
+					label: 'Disable pod',
+					messages: {
+					  confirm: function(args) {
+						return 'Are you sure you want to disable this pod?';
+					  },
+					  success: function(args) {
+						return 'This pod is being disabled.';
+					  },
+					  notification: function(args) {			
+						return 'Disabling pod';
+					  },
+					  complete: function(args) {			  
+						return 'Pod has been disabled.';
+					  }
+					},         
+					action: function(args) {	             	  
+					  $.ajax({
+						url: createURL("updatePod&id=" + args.context.pods[0].id + "&allocationstate=Disabled"),
+						dataType: "json",
+						async: true,
+						success: function(json) {  
+						  var item = json.updatepodresponse.pod;	    
+						  args.response.success({
+							actionFilter: podActionfilter,
+							data:item
+						  });			  
+						}
+					  });  	
+					},
+					notification: {
+					  poll: function(args) {			  
+						args.complete();
+					  }			
+					}
+				  },	
+                  		  
+				  'delete': { 
+					label: 'Delete' ,                    					
+					messages: {
+					  confirm: function(args) {
+						return 'Please confirm that you want to delete this pod.';
+					  },
+					  success: function(args) {
+						return 'pod is being deleted.';
+					  },
+					  notification: function(args) {
+						return 'Deleting pod';
+					  },
+					  complete: function(args) {
+						return 'Pod has been deleted.';
+					  }
+					},						  								
+					action: function(args) {     
+					  $.ajax({
+						url: createURL("deletePod&id=" + args.context.pods[0].id),
+						dataType: "json",
+						async: true,
+						success: function(json) { 	
+						  args.response.success({data:{}});							
+						}
+					  });  	
+					},					
+					notification: {           
+					  poll: function(args) { args.complete(); }
+					}		  
+				  }					  
+				},
                 tabs: {
                   details: {
                     title: 'Details',
@@ -940,7 +1046,7 @@
                       }
                     ],
 					
-                    dataProvider: function(args) {					  
+                    dataProvider: function(args) {	                      			
 					  args.response.success({
 					    actionFilter: podActionfilter,
 					    data: args.context.pods[0]
@@ -3330,7 +3436,7 @@
 	return allowedActions;
   }
   
-  var podActionfilter = function(args) {	    		  
+  var podActionfilter = function(args) {	 
     var jsonObj = args.context.item;
 	var allowedActions = [];
     allowedActions.push("edit"); 	
