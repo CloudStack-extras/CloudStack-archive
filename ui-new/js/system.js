@@ -1026,7 +1026,33 @@
 			 
               detailView: {
                 viewAll: { path: '_zone.clusters', label: 'Clusters' },
-				actions: {				 
+				actions: {	                 
+                  edit: {
+					label: 'Edit',
+					action: function(args) {	                     				
+					  var array1 = [];	
+					  array1.push("&name="  +todb(args.data.name));	
+					  array1.push("&netmask=" + todb(args.data.netmask));
+					  array1.push("&startIp=" + todb(args.data.startip));  
+					  if(args.data.endip != null && args.data.endip.length > 0)                       
+		                array1.push("&endIp=" + todb(args.data.endip));	
+                      if(args.data.gateway != null && args.data.gateway.length > 0)				             
+	                    array1.push("&gateway=" + todb(args.data.gateway)); 					  		
+					 				 
+					  $.ajax({
+						url: createURL("updatePod&id=" + args.context.pods[0].id + array1.join("")),
+						dataType: "json",
+						success: function(json) {                          					
+						  var item = json.updatepodresponse.pod;	
+						  args.response.success({
+						    actionFilter: podActionfilter,
+						    data:item
+						  });	   					
+						}
+					  });	
+					}
+				  },                    		  
+                 		  
 				  enable: {
 					label: 'Enable pod',
 					messages: {
