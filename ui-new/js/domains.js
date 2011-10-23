@@ -55,8 +55,19 @@
           create: {
             label: 'Add domain',
 
-            action: function(args) {
-              args.response.success();
+            action: function(args) {			  
+			  var array1 = [];						
+			  array1.push("&name=" + todb(args.data.name));								
+			  array1.push("&parentdomainid=" + args.context.domains[0].id);	
+			  $.ajax({
+				url: createURL("createDomain" + array1.join("")),
+				dataType: "json",
+				async: false,
+				success: function(json) {	   
+				  var item = json.createdomainresponse.domain;						
+				  args.response.success({data: item});
+				}							
+			  });              
             },
 
             messages: {
@@ -67,14 +78,10 @@
 
             createForm: {
               title: 'Add subdomain',
-              desc: 'Please specify the domain you want to create.',
+              desc: 'Please specify the subdomain you want to create under this domain',
               fields: {
                 name: {
                   label: 'Name',
-                  validation: { required: true }
-                },
-                parent: {
-                  label: 'Parent Domain',
                   validation: { required: true }
                 }
               }
