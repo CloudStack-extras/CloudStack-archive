@@ -25,9 +25,31 @@
                 return 'Domain is deleted';
               }
             },
-            action: function(args) {		              	
+						
+			preFilter: function(args) {
+			  if(isAdmin()) {		
+				args.$form.find('.form-item[rel=isForced]').css('display', 'inline-block');  	   
+			  }  
+			},	
+			
+			createForm: {
+			  title: 'Delete domain',					  
+			  fields: {  
+				isForced: {
+			      label: 'Force delete',
+				  isBoolean: true,
+				  isHidden: true
+				}				 
+			  }
+			},        	
+						
+            action: function(args) {	
+              var array1 = [];
+			  //if(args.$form.find('.form-item[rel=isForced]').css("display") != "none") //uncomment after Brian fix it to include $form in args
+				array1.push("&cleanup=" + (args.data.isForced == "on"));
+			
 			  $.ajax({
-				url: createURL("deleteDomain&id=" + args.context.domains[0].id),
+				url: createURL("deleteDomain&id=" + args.context.domains[0].id + array1.join("")),
 				dataType: "json",
 				async: false,
 				success: function(json) {	   
