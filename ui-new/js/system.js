@@ -761,12 +761,11 @@
               section: 'pods',
               fields: {
                 name: { label: 'Name' },
-                startip: { label: 'Start IP' },
-                endip: { label: 'End IP' },
-                allocationstate: { label: 'Status' }
+                gateway: { label: 'Gateway' },
+                netmask: { label: 'Netmask' },
+                allocationstate: { label: 'Allocation Status' }
               },
-              
-              //dataProvider: testData.dataProvider.listView('pods'),
+                            
               dataProvider: function(args) {                        
                 $.ajax({
                   url: createURL("listPods&zoneid=" + args.ref.zoneID + "&page=" + args.page + "&pagesize=" + pageSize),
@@ -774,7 +773,10 @@
                   async: true,
                   success: function(json) {             
                     var items = json.listpodsresponse.pod;            
-                    args.response.success({data:items});                            
+                    args.response.success({
+					  actionFilter: podActionfilter,
+					  data:items
+					});                            
                   }
                 });   
               },  
@@ -818,8 +820,8 @@
                         label: 'End IP',
                         validation: { required: false }
                       },
-                           
-						   
+                         
+					  //only basic zones show guest fields (begin) 
                       guestGateway: {
                         label: 'Guest Gateway',
                         validation: { required: true },
@@ -840,6 +842,7 @@
                         validation: { required: false },
                         isHidden: true
                       }	  
+					  //only basic zones show guest fields (end) 
                     }
                   },
 
@@ -925,15 +928,24 @@
                     title: 'Details',
                     fields: [
                       {
-                        name: { label: 'Name' },
+                        name: { label: 'Name', isEditable: true },
                       },
                       {
-                        allocationstate: { label: 'State' },
-                        startip: { label: 'Start IP' },
-                        endip: { label: 'End IP' },
+                        id: { label: 'ID' },						
+						netmask: { label: 'Netmask', isEditable: true },
+						startip: { label: 'Start IP Range', isEditable: true },
+						endip: { label: 'End IP Range', isEditable: true },					
+						gateway: { label: 'Gateway', isEditable: true },				
+						allocationstate: { label: 'Allocation Status' }
                       }
                     ],
-                    dataProvider: testData.dataProvider.detailView('pods')
+					
+                    dataProvider: function(args) {					  
+					  args.response.success({
+					    actionFilter: podActionfilter,
+					    data: args.context.pods[0]
+					  });
+					}
                   },
                 }
               }
@@ -3311,9 +3323,21 @@
 	var allowedActions = [];
     allowedActions.push("edit"); 	
     if(jsonObj.allocationstate == "Disabled")
-        allowedActions.push("enable"); 
+      allowedActions.push("enable"); 
     else if(jsonObj.allocationstate == "Enabled")  
-        allowedActions.push("disable");	    
+      allowedActions.push("disable");	    
+    allowedActions.push("delete");	 
+	return allowedActions;
+  }
+  
+  var podActionfilter = function(args) {	    		  
+    var jsonObj = args.context.item;
+	var allowedActions = [];
+    allowedActions.push("edit"); 	
+    if(jsonObj.allocationstate == "Disabled")
+      allowedActions.push("enable"); 
+    else if(jsonObj.allocationstate == "Enabled")  
+      allowedActions.push("disable");	    
     allowedActions.push("delete");	 
 	return allowedActions;
   }
