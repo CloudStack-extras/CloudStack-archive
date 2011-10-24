@@ -633,8 +633,19 @@
           .appendTo($detailView);
     var $tabs = $('<ul></ul>').appendTo($detailView);
 
+    // Get tab filter, if present
+    var removedTabs = [];
+    if (args.tabFilter) {
+      removedTabs = args.tabFilter({
+        context: args.context
+      });
+    }
+
     // Make tabs
     $.each(args.tabs, function(key, value) {
+      // Don't render tab, if filtered out
+      if ($.inArray(key, removedTabs) > -1) return true;
+
       var propGroup = key;
       var prop = value;
       var title = prop.title;
