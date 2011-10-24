@@ -1,4 +1,4 @@
-(function(cloudStack, testData) {
+(function(cloudStack, testData, $) {
   cloudStack.sections.network = {
     title: 'Network',
     id: 'network',
@@ -65,29 +65,27 @@
                 poll: testData.notifications.customPoll(testData.data.network[0])
               }
             },
-            stop: {
-              label: 'Disable static NAT',
-              action: function(args) {
-                setTimeout(function() {
-                  args.response.success({
-                    data: {
-                      state: 'Disabling'
-                    }
-                  });
-                }, 500);
-              },
+            enableStaticNAT: {
+              label: 'Enable static NAT',
+              action: {
+                noAdd: true,
+                custom: cloudStack.uiCustom.enableStaticNAT({
+                  listView: cloudStack.sections.instances,
+                  action: function(args) {
+                    args.response.success();
+                  }
+                })
+              }, 
               messages: {
                 confirm: function(args) {
-                  return 'Are you sure you want to disable ' + args.name + '?';
+                  return 'Are you sure you want to enable static NAT?';
                 },
                 notification: function(args) {
-                  return 'Disabled NAT: ' + args.name;
+                  return 'Enabled Static NAT';
                 }
               },
               notification: {
-                poll: testData.notifications.customPoll({
-                  state: 'Disabled'
-                }, function() { return []; })
+                poll: testData.notifications.testPoll
               }
             }
           },
@@ -549,4 +547,4 @@
       }
     }
   };
-})(cloudStack, testData);
+})(cloudStack, testData, jQuery);

@@ -23,7 +23,6 @@
             networkid: { label: 'Network Type' },
             state: { label: 'State', indicator: { 'Allocated': 'on' } }
           },
-
           actions: {
             add: {
               label: 'Acquire new IP',
@@ -65,29 +64,74 @@
                 poll: testData.notifications.testPoll
               }
             },
-            stop: {
-              label: 'Disable static NAT',
-              action: function(args) {
-                setTimeout(function() {
-                  args.response.success();
-                }, 500);
-              },
+            enableStaticNAT: {
+              label: 'Enable static NAT',
+              action: {
+                noAdd: true,
+                custom: cloudStack.uiCustom.enableStaticNAT({
+                  listView: cloudStack.sections.instances,
+                  action: function(args) {
+                    $.ajax({
+                      url: createURL('enableStaticNat'),
+                      data: {
+                        ipaddressid: args.context.ipAddresses[0].id,
+                        virtualmachineid: args.context.instances[0].id
+                      },
+                      dataType: 'json',
+                      async: true,
+                      success: function(data) {
+                        args.response.success();
+                      }
+                    });
+                  }
+                })
+              }, 
               messages: {
                 confirm: function(args) {
-                  return 'Are you sure you want to disable ' + args.name + '?';
-                },
-                success: function(args) {
-                  return args.name + ' is being disabled.';
+                  return 'Are you sure you want to enable static NAT?';
                 },
                 notification: function(args) {
-                  return 'Disabled NAT: ' + args.name;
-                },
-                complete: function(args) {
-                  return args.name + ' is now disabled.';
+                  return 'Enabled Static NAT';
                 }
               },
               notification: {
-                poll: testData.notifications.testPoll
+                poll: function(args) {
+                  args.complete();
+                }
+              }
+            },
+            disableStaticNAT: {
+              label: 'Disable static NAT',
+              action: function(args) {
+                $.ajax({
+                  url: createURL('disableStaticNat'),
+                  data: {
+                    ipaddressid: args.context.ipAddresses[0].id
+                  },
+                  dataType: 'json',
+                  async: true,
+                  success: function(data) {
+                    args.response.success({
+                      _custom: { 
+                        jobId: data.disablestaticnatresponse.jobid,
+                        getActionFilter: function() {
+                          return function() { return ['enableStaticNAT']; };
+                        }
+                      }
+                    });
+                  }
+                });
+              },
+              messages: {
+                confirm: function(args) {
+                  return 'Are you sure you want to disable static NAT?';
+                },
+                notification: function(args) {
+                  return 'Disable Static NAT';
+                }
+              },
+              notification: {
+                poll: pollAsyncJobResult
               }
             }
           },
@@ -100,7 +144,26 @@
               async: true,
               success: function(json) {
                 var items = json.listpublicipaddressesresponse.publicipaddress;
-                args.response.success({data:items});
+                args.response.success({
+                  actionFilter: function(args) {
+                    var actions = args.context.actions;
+                    var item = args.context.item;
+                    var allowedActions = [];
+
+                    $(actions).each(function() {
+                      var action = this.toString();
+                      
+                      if ((action == 'enableStaticNAT' && !item.isstaticnat) ||
+                          (action == 'disableStaticNAT' && item.isstaticnat) ||
+                          (action != 'enableStaticNAT' && action != 'disableStaticNAT')) {
+                        allowedActions.push(action);
+                      }
+                    });
+
+                    return allowedActions;
+                  },
+                  data:items
+                });
               }
             });
           },
