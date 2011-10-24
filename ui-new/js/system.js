@@ -108,31 +108,35 @@
 							var item = json.createzoneresponse.zone;	
                             args.response.success({data:item});	
 							
-							zoneId = item.id;	
-							
-							//listZonesUpdate();	
-							//g_directAttachSecurityGroupsEnabled = true;
+							zoneId = item.id;																					
 							//$("#leftmenu_security_group_container").show();
 							
-                            /*							
 							$.ajax({
-								data: createURL("command=listCapabilities"),
+								url: createURL("listCapabilities"),				
 								dataType: "json",
 								async: false,
-								success: function(json) {										
-									g_supportELB = json.listcapabilitiesresponse.capability.supportELB;					    
+								success: function(json) {					   
+									/* g_supportELB: "guest"   — ips are allocated on guest network (so use 'forvirtualnetwork' = false)
+									 * g_supportELB: "public"  - ips are allocated on public network (so use 'forvirtualnetwork' = true)
+									 * g_supportELB: "false"   – no ELB support
+									 */
+									g_supportELB = json.listcapabilitiesresponse.capability.supportELB.toString(); //convert boolean to string if it's boolean				    
 									$.cookie('supportELB', g_supportELB, { expires: 1}); 
-														
-									if(g_supportELB == "guest")  //ips are allocated on guest network
-										bindAndListMidMenuItems($("#leftmenu_ip"), "listPublicIpAddresses&forvirtualnetwork=false&forloadbalancing=true", ipGetSearchParams, "listpublicipaddressesresponse", "publicipaddress", "jsp/ipaddress.jsp", afterLoadIpJSP, ipToMidmenu, ipToRightPanel, ipGetMidmenuId, false);
-									else if(g_supportELB == "public")  //ips are allocated on public network
-										bindAndListMidMenuItems($("#leftmenu_ip"), "listPublicIpAddresses&forvirtualnetwork=true&forloadbalancing=true", ipGetSearchParams, "listpublicipaddressesresponse", "publicipaddress", "jsp/ipaddress.jsp", afterLoadIpJSP, ipToMidmenu, ipToRightPanel, ipGetMidmenuId, false);
-									else			
-										bindAndListMidMenuItems($("#leftmenu_ip"), "listPublicIpAddresses", ipGetSearchParams, "listpublicipaddressesresponse", "publicipaddress", "jsp/ipaddress.jsp", afterLoadIpJSP, ipToMidmenu, ipToRightPanel, ipGetMidmenuId, false); //remove "&forvirtualnetwork=true" for advanced zone whose security group is enabled
-								}		
-							});  
-							*/
-							
+															
+									g_firewallRuleUiEnabled = json.listcapabilitiesresponse.capability.firewallRuleUiEnabled.toString(); //convert boolean to string if it's boolean						    
+									$.cookie('firewallRuleUiEnabled', g_firewallRuleUiEnabled, { expires: 1}); 
+													
+									if (json.listcapabilitiesresponse.capability.userpublictemplateenabled != null) {
+										g_userPublicTemplateEnabled = json.listcapabilitiesresponse.capability.userpublictemplateenabled.toString(); //convert boolean to string if it's boolean
+										$.cookie('userpublictemplateenabled', g_userPublicTemplateEnabled, { expires: 1});
+									}
+									
+									if (json.listcapabilitiesresponse.capability.securitygroupsenabled != null) {
+										g_directAttachSecurityGroupsEnabled = json.listcapabilitiesresponse.capability.securitygroupsenabled.toString(); //convert boolean to string if it's boolean
+										$.cookie('directattachsecuritygroupsenabled', g_directAttachSecurityGroupsEnabled, { expires: 1});
+									}			
+								}
+							});							
 						},
 						error: function(XMLHttpResponse) {     
 							var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
@@ -144,22 +148,14 @@
 						// create pod (begin) 
 						var array1 = [];
 						array1.push("&zoneId=" + zoneId);
-						
-						//var name = trim($thisWizard.find("#add_pod_name").val());						
 						array1.push("&name=" + todb(args.data["pod-name"]));
-						
-						//var netmask = trim($thisWizard.find("#add_pod_netmask").val());						
 						array1.push("&netmask=" + todb(args.data["pod-netmask"]));
-						
-						//var startip = trim($thisWizard.find("#add_pod_startip").val());						
 						array1.push("&startIp=" + todb(args.data["pod-ip-range-start"]));
-						
-						//var endip = trim($thisWizard.find("#add_pod_endip").val());	    //optional
-						var endip = args.data["pod-ip-range-end"];
+												 
+						var endip = args.data["pod-ip-range-end"];   //optional
 						if (endip != null && endip.length > 0)
 							array1.push("&endIp=" + todb(endip));
-							
-						//var gateway = trim($thisWizard.find("#add_pod_gateway").val());	                       					
+													                       					
 						array1.push("&gateway=" + todb(args.data["pod-gateway"]));			
 										
 						$.ajax({
@@ -168,12 +164,12 @@
 							async: false,
 							success: function(json) {	
 								var item = json.createpodresponse.pod; 	
-								args.response.success({data:item});									
+								//args.response.success({data:item});  //do nothing until Brian extends zoneWizard to support 3 API call 								
 								podId = item.id;	
 							},
 							error: function(XMLHttpResponse) {	
 								var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
-						        args.response.error(errorMsg);		
+						        //args.response.error(errorMsg);	   //do nothing until Brian extends zoneWizard to support 3 API call 				
 							}
 						});	
 						// create pod (end) 
@@ -214,11 +210,11 @@
 									async: false,
 									success: function(json) {                                         								
 										var item = json.createvlaniprangeresponse.vlan;
-										args.response.success({data:item});													
+										//args.response.success({data:item});  //do nothing until Brian extends zoneWizard to support 3 API call 																
 									},		   
 									error: function(XMLHttpResponse) {	
 										var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
-						                args.response.error(errorMsg);			
+						                //args.response.error(errorMsg);       //do nothing until Brian extends zoneWizard to support 3 API call 						
 									}
 								});	
 							}	            
@@ -255,11 +251,11 @@
 								dataType: "json",
 								success: function(json) {	
 									var item = json.createvlaniprangeresponse.vlan;	
-                                    args.response.success({data:item});
+                                    //args.response.success({data:item});  //do nothing until Brian extends zoneWizard to support 3 API call 			
 								},
 								error: function(XMLHttpResponse) {				    
 									var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
-						            args.response.error(errorMsg);		
+						            //args.response.error(errorMsg);	   //do nothing until Brian extends zoneWizard to support 3 API call 				
 								}
 							});   
 						}						
