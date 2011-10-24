@@ -433,6 +433,7 @@
 
     if (tabData.preFilter) {
       hiddenFields = tabData.preFilter({
+        context: detailViewArgs.context,
         fields: $.map(fields, function(fieldGroup) { 
           return $.map(fieldGroup, function(value, key) { return key; }); 
         })
