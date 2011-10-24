@@ -96,6 +96,10 @@
           // Detail view
           detailView: {
             name: 'IP address detail',
+            // Example tab filter
+            tabFilter: function(args) {
+              return [];
+            },
             tabs: {
               details: {
                 title: 'Details',
@@ -406,6 +410,55 @@
                     }
                   }
                 })
+              },
+              vpn: {
+                title: 'VPN',
+                custom: function(args) {
+                  return $('<div>').multiEdit({
+                    noSelect: true,
+                    fields: {
+                      'username': { edit: true, label: 'Username' },
+                      'password': { edit: true, label: 'Password' },
+                      'add-user': { addButton: true, label: 'Add user' }
+                    },
+                    add: {
+                      label: 'Add user',
+                      action: function(args) {
+                        setTimeout(function() {
+                          args.response.success({
+                            notification: {
+                              label: 'Add user to VPN',
+                              poll: testData.notifications.testPoll
+                            }
+                          });
+                        }, 500);
+                      }
+                    },
+                    actions: {
+                      destroy: {
+                        label: 'Remove user',
+                        action: function(args) {
+                          setTimeout(function() {
+                            args.response.success({
+                              notification: {
+                                label: 'Remove user from VPN',
+                                poll: testData.notifications.testPoll
+                              }
+                            });
+                          }, 500);
+                        }
+                      }
+                    },
+                    dataProvider: function(args) {
+                      setTimeout(function() {
+                        args.response.success({
+                          data: [
+                          ]
+                        });
+                      }, 100);
+                    }
+                  })
+                }
               }
             }
           }
@@ -489,91 +542,6 @@
                   }
                 ],
                 dataProvider: testData.dataProvider.detailView('securityGroups')
-              },
-              ingressRules: {
-                title: 'Ingress Rules',
-                multiEdit: true,
-                fields: {
-                  protocol: {
-                    label: 'Protocol',
-                    editable: true,
-                    select: function(args) {
-                      setTimeout(function() {
-                        args.response.success({
-                          data: [
-                            { id: 'tcp', label: 'TCP' },
-                            { id: 'udp', label: 'UDP' }
-                          ]
-                        });
-                      }, 100);
-                    }
-                  },
-                  startport: { label: 'Start Port', editable: true },
-                  endport: { label: 'End Port', editable: true },
-                  cidr: { label: 'CIDR', editable: true }
-                },
-                actions: {
-                  create: {
-                    label: 'Add ingress rule',
-                    messages: {
-                      confirm: function(args) {
-                        return 'Are you sure you want to add this port range?';
-                      },
-                      notification: function(args) {
-                        return 'Added port range';
-                      }
-                    },
-                    notification: {
-                      poll: testData.notifications.testPoll
-                    },
-                    action: function(args) {
-                      setTimeout(function() {
-                        args.response.success();
-                      }, 500);
-                    }
-                  },
-                  destroy: {
-                    label: 'Remove rule',
-                    messages: {
-                      confirm: function(args) {
-                        return 'Are you sure you want to remove this ingress rule?';
-                      },
-                      notification: function(args) {
-                        return 'Removed ingress rule: ' + args.name;
-                      }
-                    },
-                    notification: {
-                      poll: testData.notifications.testPoll
-                    },
-                    action: function(args) {
-                      setTimeout(function() {
-                        args.response.success();
-                      }, 500);
-                    }
-                  }
-                },
-                dataProvider: function(args) {
-                  setTimeout(function() {
-                    args.response.success({
-                      data: [
-                        {
-                          "ruleid": 2,
-                          "protocol": "tcp",
-                          "startport": 22,
-                          "endport": 22,
-                          "cidr": "0.0.0.0/0"
-                        },
-                        {
-                          "ruleid": 3,
-                          "protocol": "icmp",
-                          "startport": 80,
-                          "endport": 90,
-                          "cidr": "0.0.0.0/0"
-                        }
-                      ]
-                    });
-                  });
-                }
               }
             }
           }
