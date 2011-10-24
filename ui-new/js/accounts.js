@@ -1,4 +1,7 @@
 (function(cloudStack, testData) {  
+
+  var rootDomainId = 1;
+
   cloudStack.sections.accounts = {
     title: 'Accounts',
     id: 'accounts',
@@ -83,57 +86,61 @@
 				label: 'Account'				
 			  },
 			  accounttype: {
-				label: 'Role',
+				label: 'Account type',
 				validation: { required: true },
                 select: function(args) {
                   var items = [];
-				  items.push({id:0, description: "User"});
-				  items.push({id:1, description: "Admin"});
+				  items.push({id:0, description: "User"});  //regular-user
+				  items.push({id:1, description: "Admin"}); //root-admin
 				  args.response.success({data: items});
                 }				
 			  }	  
 			}
 		  },
 		  
-		  action: function(args) {					
-			var array1 = [];				
-			array1.push("&name=" + todb(args.data.name));				
-			array1.push("&displayText=" + todb(args.data.description));				
-			array1.push("&url=" + todb(args.data.url));				
-			array1.push("&zoneid=" + args.data.zone);					
-			array1.push("&format=" + args.data.format);		
-			array1.push("&isextractable=" + (args.data.isExtractable=="on"));					
-			array1.push("&passwordEnabled=" + (args.data.isPasswordEnabled=="on"));					
-			array1.push("&osTypeId=" + args.data.osTypeId);			
-			array1.push("&hypervisor=" + args.data.hypervisor);
-									
-			if(args.$form.find('.form-item[rel=isPublic]').css("display") != "none")
-			  array1.push("&ispublic=" + (args.data.isPublic == "on"));	
-			if(args.$form.find('.form-item[rel=isFeatured]').css("display") != "none")
-			  array1.push("&isfeatured=" + (args.data.isFeatured == "on")); 			
+		  action: function(args) {	
+		    var array1 = [];	
+		    array1.push("&username=" + todb(args.data.username));
 			
+			var password = args.data.password;
+			if (md5Hashed) 
+			  password = $.md5(password);			 				
+			array1.push("&password=" + password);	
+			
+			array1.push("&email=" + todb(args.data.email));						
+			array1.push("&firstname=" + todb(args.data.firstname));
+			array1.push("&lastname=" + todb(args.data.lastname));
+			
+            array1.push("&domainid=" + args.data.domainid);
+			
+			var account = args.data.account;					
+			if(account == null || account.length == 0)
+				account = args.data.username;
+			array1.push("&account=" + todb(account));
+				
+			var accountType = args.data.accounttype;																
+			if (args.data.accounttype == "1" && parseInt(args.data.domainid) != rootDomainId) //if account type is admin, but domain is not Root domain
+				accountType = "2"; // Change accounttype from root-domain("1") to domain-admin("2")		
+			array1.push("&accounttype=" + accountType);	
+			
+            /*			
+			var timezone = $thisDialog.find("#add_user_timezone").val();	
+			if(timezone != null && timezone.length > 0)
+				array1.push("&timezone=" + todb(timezone));	
+	        */
+			           
 			$.ajax({
-			  url: createURL("registerTemplate" + array1.join("")),
+			  url: createURL("createAccount" + array1.join("")),
 			  dataType: "json",
 			  success: function(json) {					    
-				var items = json.registertemplateresponse.template;	 //items might have more than one array element if it's create templates for all zones.			       
-				args.response.success({data:items[0]});	
-				/*                        
-				if(items.length > 1) {                               
-				  for(var i=1; i<items.length; i++) {   
-					var $midmenuItem2 = $("#midmenu_item").clone();
-					templateToMidmenu(items[i], $midmenuItem2);
-					bindClickToMidMenu($midmenuItem2, templateToRightPanel, templateGetMidmenuId); 
-					$("#midmenu_container").append($midmenuItem2.show());
-				  }                                    
-				}  
-				*/						
+				var item = json.createaccountresponse.account;	 
+				args.response.success({data:item});									
 			  }, 
 			  error: function(XMLHttpResponse) {	
 				var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
 				args.response.error(errorMsg);		
 			  }						
-			});						
+			});	          	
 		  },			
 
 		  notification: {                
