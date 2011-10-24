@@ -1489,25 +1489,25 @@
             multiple: true,
             fields: [
               {
-                name: { label: 'Name', header: true },
-                ipaddress: { label: 'IP Address' },
+			    id: { label: 'ID' },
+				ipaddress: { label: 'IP Address' },
+			    type: { label: 'Type' },
                 gateway: { label: 'Default gateway' },
-                netmask: { label: 'Netmask' },
-                type: { label: 'Type' }
+                netmask: { label: 'Netmask' }                
               }
             ],
-            dataProvider: function(args) {
-              setTimeout(function() {
-                var instance = $.grep(testData.data.instances, function(elem) {
-                  return elem.id == args.id;
-                });
-                args.response.success({
-                  data: $.map(instance[0].nic, function(item, index) {
-                    item.name = 'NIC ' + (index + 1);
-                    return item;
-                  })
-                });
-              }, 500);
+            dataProvider: function(args) {	
+			  /*
+              var array1 = [];
+			  var nicObjs = args.context.instances[0].nic;
+			  $(nicObjs).each(function(){
+			    array1.push(this);
+				array1.push(this);
+				array1.push(this);
+			  });			 
+			  args.response.success({data: array1});	
+			  */
+			  args.response.success({data: args.context.instances[0].nic});			  	  
             }
           },
 
