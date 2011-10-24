@@ -1178,6 +1178,33 @@
 					  });
 					}
                   },
+				  				 
+				  ipAllocations: {
+					title: 'IP Allocations',
+					multiple: true,
+					fields: [
+					  {
+						id: { label: 'ID' },
+						description: { label: 'Description' },
+						gateway: { label: 'Gateway' },
+						netmask: { label: 'Netmask' },
+						startip: { label: 'Start IP range' },
+						endip: { label: 'End IP range' }						     
+					  }
+					],
+					dataProvider: function(args) {						  				 
+					  $.ajax({
+						url: createURL("listVlanIpRanges&zoneid=" + args.context.zones[0].id + "&podid=" + args.context.pods[0].id),
+						dataType: "json",
+						success: function(json) {			       
+							var items = json.listvlaniprangesresponse.vlaniprange;
+							args.response.success({data: items});	
+						}			
+					  });						  		  	  
+					}
+				  }
+				 
+				  
                 }
               }
             }
