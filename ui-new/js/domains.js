@@ -139,11 +139,7 @@
             ],
             dataProvider: function(args) {
               args.response.success({
-                data: {
-                  name: 'Domain name',
-                  accounts: 12,
-                  volumes: 23
-                }
+                data: args.context.domains[0]
               });
             }
           },
