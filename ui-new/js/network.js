@@ -205,7 +205,7 @@
                           dataType: 'json',
                           success: function(data) {
                             args.response.success({
-                              _custom: { 
+                              _custom: {
                                 jobId: data.createfirewallruleresponse.jobid
                               },
                               notification: {
@@ -296,15 +296,31 @@
                           url: createURL(),
                           data: $.extend(args.data, {
                             command: 'createLoadBalancerRule',
-                            publicipid: args.context.ipAddresses[0].id,
-                            virtualmachineids: $.map(args.itemData, function(elem) {
-                              return elem.id;
-                            }).join(',')
+                            publicipid: args.context.ipAddresses[0].id
                           }),
                           dataType: 'json',
+                          async: true,
                           success: function(data) {
+                            var itemData = args.itemData;
+
+                            $.ajax({
+                              url: createURL(),
+                              data: {
+                                command: 'assignToLoadBalancerRule',
+                                id: data.createloadbalancerruleresponse.id,
+                                virtualmachineids: $.map(itemData, function(elem) {
+                                  return elem.id
+                                }).join(',')
+                              },
+                              dataType: 'json',
+                              async: true,
+                              success: function(data) {
+                                
+                              }
+                            });
+
                             args.response.success({
-                              _custom: { 
+                              _custom: {
                                 jobId: data.createloadbalancerruleresponse.jobid
                               },
                               notification: {
@@ -435,7 +451,7 @@
                           async: true,
                           success: function(data) {
                             args.response.success({
-                              _custom: { 
+                              _custom: {
                                 jobId: data.createportforwardingruleresponse.jobid
                               },
                               notification: {
@@ -645,97 +661,6 @@
                         args.response.success({data:items[0]});
                       }
                     }
-                  });
-                }
-              },
-              ingressRules: {
-                title: 'Ingress Rules',
-                multiEdit: true,
-                fields: {
-                  protocol: {
-                    label: 'Protocol',
-                    editable: true,
-                    select: [
-                      { id: 'tcp', label: 'TCP' },
-                      { id: 'udp', label: 'UDP' }
-                    ]
-                  },
-                  startport: { label: 'Start Port', editable: true },
-                  endport: { label: 'End Port', editable: true },
-                  cidr: { label: 'CIDR', editable: true }
-                },
-                actions: {
-                  create: {
-                    label: 'Add ingress rule',
-                    messages: {
-                      confirm: function(args) {
-                        return 'Are you sure you want to add this port range?';
-                      },
-                      success: function(args) {
-                        return 'Added port range';
-                      },
-                      notification: function(args) {
-                        return 'Added port range';
-                      },
-                      complete: function(args) {
-                        return 'Port range has been added.';
-                      }
-                    },
-                    notification: {
-                      poll: testData.notifications.testPoll
-                    },
-                    action: function(args) {
-                      setTimeout(function() {
-                        args.response.success();
-                      }, 500);
-                    }
-                  },
-                  destroy: {
-                    label: 'Remove rule',
-                    messages: {
-                      confirm: function(args) {
-                        return 'Are you sure you want to remove this ingress rule?';
-                      },
-                      success: function(args) {
-                        return 'Removed ingress rule';
-                      },
-                      notification: function(args) {
-                        return 'Removed ingress rule: ' + args.name;
-                      },
-                      complete: function(args) {
-                        return 'Ingress rule has been removed.';
-                      }
-                    },
-                    notification: {
-                      poll: testData.notifications.testPoll
-                    },
-                    action: function(args) {
-                      setTimeout(function() {
-                        args.response.success();
-                      }, 500);
-                    }
-                  }
-                },
-                dataProvider: function(args) {
-                  setTimeout(function() {
-                    args.response.success({
-                      data: [
-                        {
-                          "ruleid": 2,
-                          "protocol": "tcp",
-                          "startport": 22,
-                          "endport": 22,
-                          "cidr": "0.0.0.0/0"
-                        },
-                        {
-                          "ruleid": 3,
-                          "protocol": "icmp",
-                          "startport": 80,
-                          "endport": 90,
-                          "cidr": "0.0.0.0/0"
-                        }
-                      ]
-                    });
                   });
                 }
               }
