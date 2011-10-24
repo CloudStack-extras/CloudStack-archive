@@ -82,12 +82,17 @@
 
         $instanceRow = options.$item ? options.$item : $instanceRow;
         var $item = options.$item;
+        var context = $.extend({}, listViewArgs.context);
+        context[
+          listViewArgs.activeSection
+        ] = [$instanceRow.data('jsonObj')];
 
         if (action.custom) {
           action.custom({
             data: data,
             ref: options.ref,
-            context: listViewArgs.context,
+            context: context,
+            $instanceRow: $instanceRow,
             complete: function(args) {
               args = args ? args : {};
 
@@ -95,6 +100,18 @@
 
               notification.desc = messages.notification(args.messageArgs);
               notification._custom = args._custom;
+
+              if (action.noAdd) {
+                $item = replaceItem(
+                  $item,
+                  $.extend($instanceRow.data('json-obj'), args.data),
+                  $item.data('list-view-action-filter')
+                );
+
+                $item.find('td:last').children().remove();
+                $item.find('td:last').append($('<div>').addClass('loading'));
+                $item.addClass('loading');                
+              }
 
               addNotification(
                 notification,
@@ -1052,6 +1069,7 @@
     var targetArgs = listViewArgs.activeSection ? listViewArgs.sections[
       listViewArgs.activeSection
     ].listView : listViewArgs;
+    var $table = $row.closest('table');
 
     $newRow = addTableRows(
       targetArgs.fields,
@@ -1064,7 +1082,7 @@
     )[0];
 
     $row.replaceWith($newRow);
-    $newRow.closest('table').dataTable('refresh');
+    $table.dataTable('refresh');
 
     return $newRow;
   };
