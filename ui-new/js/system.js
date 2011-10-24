@@ -1152,7 +1152,64 @@
 					notification: {           
 					  poll: function(args) { args.complete(); }
 					}		  
-				  }					  
+				  },
+                  
+                   addIpRange: { 
+					label: 'Add IP range' ,                    					
+					messages: {
+					  confirm: function(args) {
+						return 'Please confirm that you want to add IP range to this pod';
+					  },
+					  success: function(args) {
+						return 'IP range is being added.';
+					  },
+					  notification: function(args) {
+						return 'Adding IP range';
+					  },
+					  complete: function(args) {
+						return 'IP range has been added.';
+					  }
+					},	
+
+                    createForm: {
+					  title: 'Add IP range',					  
+					  fields: {	
+                        gateway: { label: 'Guest gateway' },
+						netmask: { label: 'Guest netmask' },
+						startip: { label: 'Guest start IP' },
+						endip: { label: 'Guest end IP' }
+                      }
+                    },					  
+					
+					action: function(args) {     					  
+					  var array1 = [];
+					  array1.push("&vlan=untagged");	
+					  debugger;
+					  array1.push("&zoneid=" + args.context.zones[0].id);
+					  array1.push("&podId=" + args.context.pods[0].id);	
+					  array1.push("&forVirtualNetwork=false"); //direct VLAN			
+					  array1.push("&gateway=" + todb(args.data.gateway));
+					  array1.push("&netmask=" + todb(args.data.netmask));	
+					  array1.push("&startip=" + todb(args.data.startip));
+					  if(args.data.endip != null && args.data.endip.length > 0)
+						array1.push("&endip=" + todb(args.data.endip));	
+					  				
+					  $.ajax({
+						url: createURL("createVlanIpRange" + array1.join("")),
+						dataType: "json",
+						async: false,
+						success: function(json) { 	
+						  debugger;
+						  var item = json.createvlaniprangeresponse.vlan;
+						  args.response.success({data: item});							
+						}
+					  });  	
+					},					
+					notification: {           
+					  poll: function(args) { args.complete(); }
+					}		  
+				  }
+                  			  
 				},
                 tabs: {
                   details: {
@@ -3597,6 +3654,7 @@
     else if(jsonObj.allocationstate == "Enabled")  
       allowedActions.push("disable");	    
     allowedActions.push("delete");	 
+	allowedActions.push("addIpRange");	 
 	return allowedActions;
   }
   
