@@ -610,8 +610,7 @@
           }
         },
         subsections: {
-          networks: {
-		    //???
+          networks: {		    
 			sectionSelect: { label: 'Network type' },
             sections: {
               publicNetwork: {
@@ -627,7 +626,63 @@
                     type: { label: 'Type' }
                   },
                   
-                  dataProvider: testData.dataProvider.listView('networks'),				  
+                  //dataProvider: testData.dataProvider.listView('networks'),		
+		          dataProvider: function(args) {     
+                    debugger;
+					//???
+					var showPublicNetwork = true;
+					var zoneObj = args.context.zones[0];
+					if(zoneObj.networktype == "Basic") {   
+					    //$("#add_network_button").hide();	
+						$.ajax({
+							url: createURL("listExternalFirewalls&zoneid=" + zoneObj.id),
+							dataType: "json",
+							async: false,
+							success: function(json) {            
+								var items = json.listexternalfirewallsresponse.externalfirewall;    		   
+								if(items != null && items.length > 0) {
+									showPublicNetwork = true;
+									//$("#add_iprange_button,#tab_ipallocation").show();
+								}
+								else {
+									showPublicNetwork = false;  
+									//$("#add_iprange_button,#tab_ipallocation").hide();	    		    	  
+								}
+							}
+						});       	
+					}					
+					else { // Advanced zone
+						showPublicNetwork = true;
+						//$("#add_network_button,#add_iprange_button,#tab_ipallocation").show();	
+						//listMidMenuItems2(("listNetworks&type=Direct&zoneId="+zoneObj.id), networkGetSearchParams, "listnetworksresponse", "network", directNetworkToMidmenu, directNetworkToRightPanel, directNetworkGetMidmenuId, false, 1);
+					}
+					
+					if(showPublicNetwork == true && zoneObj.securitygroupsenabled == false) { //public network           
+						$.ajax({
+							url: createURL("listNetworks&trafficType=Public&isSystem=true&zoneId="+zoneObj.id),
+							dataType: "json",
+							async: false,
+							success: function(json) {       
+								var items = json.listnetworksresponse.network;       
+								args.response.success({data: items});									
+							}
+						});  
+					}
+					else if (showPublicNetwork == true && zoneObj.securitygroupsenabled == true){
+						$.ajax({
+							url: createURL("listNetworks&type=Direct&trafficType=Guest&isSystem=true&zoneId="+zoneObj.id),
+							dataType: "json",
+							async: false,
+							success: function(json) {       
+								var items = json.listnetworksresponse.network;       
+								args.response.success({data: items});	
+							}
+						});  
+					}
+					else {
+						args.response.success({data: null});		
+					}					
+				  }	,				  
 				 				  
                   detailView: {
                     viewAll: { label: 'Hosts', path: 'instances' },
@@ -723,8 +778,7 @@
                 }
               }
             }
-			//???
-			
+						
 		    /*
             listView: {
               section: 'networks',
@@ -864,7 +918,10 @@
                 }
               }
             }
-          },
+			*/
+			
+          },		  
+		  
           pods: {
             title: 'Pods',
             listView: {
@@ -1389,8 +1446,7 @@
 				  
                 }
               }
-            }
-			*/
+            }			
           },
           clusters: {
             title: 'Clusters',
