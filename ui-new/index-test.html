@@ -687,38 +687,130 @@
         </ul>
       </div>
 
+      <!-- System dashboard -->
+      <div class="system-dashboard-view">
+        <div class="toolbar"></div>
+
+        <!-- Zone dashboard -->
+        <div class="system-dashboard">
+          <div class="head">
+            <span>Zones</span>
+            <div class="view-more"><span>View more</span></div>
+          </div>
+          <ul class="status_box good">
+            <li class="block">
+              <span class="header">Number of Zones</span>
+              <span class="overview total">0</span>
+            </li>
+            <li class="block">
+              <span class="header">Number of Pods</span>
+              <span class="overview total">0</span>
+            </li>
+            <li class="block">
+              <span class="header">Number of Clusters</span>
+              <span class="overview total">0</span>
+            </li>
+            <li class="block last">
+              <span class="header">Number of Hosts</span>
+              <span class="overview total">0</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Host dashboard -->
+        <div class="system-dashboard">
+          <div class="head">
+            <span>Hosts</span>
+            <div class="view-more"><span>View more</span></div>
+          </div>
+          <ul class="status_box good">
+            <li class="block">
+              <span class="header">Total Hosts</span>
+              <span class="overview total">0</span>
+            </li>
+            <li class="block">
+              <span class="header">Total CPU</span>
+              <span class="overview total">500</span>
+            </li>
+            <li class="block">
+              <span class="header">Total Memory</span>
+              <span class="overview total">60</span>
+            </li>
+            <li class="block last">
+              <span class="header">Total Storage</span>
+              <span class="overview total">10</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
       <!-- Zone chart -->
       <div class="zone-chart">
-        <ul>
-          <li class="zone">
-            <div class="name"><span></span></div>
-            <div class="view-details" zone-target="pods">Details</div>
-          </li>
-          <li class="pod">
-            <div class="name"><span>Pods</span></div>
-            <div class="view-all" zone-target="pods">View All</div>
-          </li>
-          <li class="cluster">
-            <div class="name"><span>Clusters</span></div>
-            <div class="view-all" zone-target="clusters">View All</div>
-          </li>
-          <li class="host">
-            <div class="name"><span>Hosts</span></div>
-            <div class="view-all" zone-target="hosts">View All</div>
-          </li>
-          <li class="primary-storage">
-            <div class="name"><span>Primary Storage</span></div>
-            <div class="view-all" zone-target="primary-storage">View All</div>
-          </li>
-          <li class="network">
-            <div class="name"><span>Network</span></div>
-            <div class="view-all" zone-target="networks">View All</div>
-          </li>
-          <li class="secondary-storage">
-            <div class="name"><span>Secondary Storage</span></div>
-            <div class="view-all" zone-target="secondary-storage">View All</div>
-          </li>
-        </ul>
+        <div class="toolbar"></div>
+
+        <!-- Network resources -->
+        <div class="resources network">
+          <div class="head">
+            <span>Network Resources</span>
+            <div class="add">Add</div>
+          </div>
+          <ul>
+            <li class="zone">
+              <div class="name">Zone: <span></span></div>
+              <div class="view-details" zone-target="pods">Details</div>
+            </li>
+            <li class="pod">
+              <div class="name"><span>Pods</span></div>
+              <div class="view-all" zone-target="pods">View All</div>
+            </li>
+            <li class="cluster">
+              <div class="name"><span>Clusters</span></div>
+              <div class="view-all" zone-target="clusters">View All</div>
+            </li>
+            <li class="host">
+              <div class="name"><span>Hosts</span></div>
+              <div class="view-all" zone-target="hosts">View All</div>
+            </li>
+            <li class="primary-storage">
+              <div class="name"><span>Primary Storage</span></div>
+              <div class="view-all" zone-target="primary-storage">View All</div>
+            </li>
+            <li class="network">
+              <div class="name"><span>Network</span></div>
+              <div class="view-all" zone-target="networks">View All</div>
+            </li>
+            <li class="secondary-storage">
+              <div class="name"><span>Secondary Storage</span></div>
+              <div class="view-all" zone-target="secondary-storage">View All</div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Service resources -->
+        <div class="resources service">
+          <div class="head">
+            <span>Service Resources</span>
+            <div class="add">Add</div>
+          </div>
+          <ul>
+            <li>
+              <div class="name"><span>Item 1</span></div>
+              <div class="view-details">Details</div>
+            </li>
+            <li>
+              <div class="name"><span>Item 2</span></div>
+              <div class="view-all">View All</div>
+            </li>
+            <li>
+              <div class="name"><span>Item 3</span></div>
+              <div class="view-all">View All</div>
+            </li>
+            <li>
+              <div class="name"><span>Item 4</span></div>
+              <div class="view-all">View All</div>
+            </li>
+          </ul>
+        </div>
       </div>
 
       <!-- Admin dashboard -->
@@ -1007,6 +1099,7 @@
     <script src="js-test/accounts.js" type="text/javascript"></script>
     <script src="js-test/configuration.js" type="text/javascript"></script>
     <script src="js-test/globalSettings.js" type="text/javascript"></script>
+    <script src="js/ui-custom/physicalResources.js" type="text/javascript"></script>
     <script src="js/ui-custom/zoneChart.js" type="text/javascript"></script>
     <script src="js/ui-custom/zoneWizard.js" type="text/javascript"></script>
     <script src="js-test/system.js" type="text/javascript"></script>

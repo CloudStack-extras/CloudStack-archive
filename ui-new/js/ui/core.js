@@ -64,7 +64,7 @@
 
     // Append specified widget to view
     if (data.show)
-      $panel.append(data.show());
+      $panel.append(data.show(data));
     else if (data.treeView)
       $panel.treeView(data);
     else

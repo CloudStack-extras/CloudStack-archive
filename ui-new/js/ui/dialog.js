@@ -154,7 +154,35 @@
         }
       });
 
-      $formContainer.dialog({
+      var complete = function($formContainer) {
+        var $form = $formContainer.find('form');
+        var data = cloudStack.serializeForm($form);
+
+        if (!$formContainer.find('form').valid()) {
+          // Ignore hidden field validation
+          if ($formContainer.find('input.error:visible').size()) {
+            return false;
+          }
+        }
+
+        args.after({
+          data: data,
+          ref: args.ref, // For backwards compatibility; use context
+          context: args.context,
+          $form: $form
+        });
+
+        return true;
+      };
+
+      if (args.noDialog) {
+        return {
+          $formContainer: $formContainer,
+          completeAction: complete
+        };
+      }
+
+      return $formContainer.dialog({
         dialogClass: 'create-form',
         width: 400,
         title: args.form.title,
@@ -168,23 +196,9 @@
             text: 'Create',
             'class': 'ok',
             click: function() {
-              var $form = $formContainer.find('form');
-              var data = cloudStack.serializeForm($form);
-
-              if (!$formContainer.find('form').valid()) {
-                // Ignore hidden field validation
-                if ($formContainer.find('input.error:visible').size()) {
-                  return false;
-                }
-              }
+              if (!complete($formContainer)) { return false; }
 
               $('div.overlay').remove();
-              args.after({
-                data: data,
-                ref: args.ref, // For backwards compatibility; use context
-                context: args.context,
-                $form: $form
-              });
               $(this).dialog('destroy');
 
               return true;
