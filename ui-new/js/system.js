@@ -611,6 +611,121 @@
         },
         subsections: {
           networks: {
+		    //???
+			sectionSelect: { label: 'Network type' },
+            sections: {
+              publicNetwork: {
+                type: 'select',
+                title: 'Public network',
+                listView: {
+                  section: 'networks',
+                  id: 'networks',
+                  fields: {
+                    name: { label: 'Name' },
+                    startip: { label: 'Start IP' },
+                    endip: { label: 'End IP' },
+                    type: { label: 'Type' }
+                  },
+                  
+                  dataProvider: testData.dataProvider.listView('networks'),				  
+				 				  
+                  detailView: {
+                    viewAll: { label: 'Hosts', path: 'instances' },
+                    tabs: {
+                      details: {
+                        title: 'Details',
+                        fields: [
+                          {
+                            name: { label: 'name' },
+                            displaytext: { label: 'displaytext' }
+                          },
+                          {
+                            broadcastdomaintype: { label: 'broadcastdomaintype' },
+                            traffictype: { label: 'traffictype' },
+                            gateway: { label: 'gateway' },
+                            netmask: { label: 'netmask' },
+                            startip: { label: 'startip' },
+                            endip: { label: 'endip' },
+                            zoneid: { label: 'zoneid' },
+                            networkofferingid: { label: 'networkofferingid' },
+                            networkofferingname: { label: 'networkofferingname' },
+                            networkofferingdisplaytext: { label: 'networkofferingdisplaytext' },
+                            networkofferingavailability: { label: 'networkofferingavailability' },
+                            isshared: { label: 'isshared' },
+                            issystem: { label: 'issystem' },
+                            state: { label: 'state' },
+                            related: { label: 'related' },
+                            broadcasturi: { label: 'broadcasturi' },
+                            dns1: { label: 'dns1' },
+                            type: { label: 'type' }
+                          }
+                        ],
+                        dataProvider: function(args) {     
+                          args.response.success({data: []});                          
+						}	  
+                      }
+                    }
+                  }
+                }
+              },
+              directNetwork: {
+                title: 'Direct network',
+                type: 'select',
+                listView: {
+                  section: 'networks',
+                  id: 'networks',
+                  fields: {
+                    name: { label: 'Name' },
+                    startip: { label: 'Start IP' },
+                    endip: { label: 'End IP' },
+                    type: { label: 'Type' }
+                  },
+                  				  
+				  dataProvider: testData.dataProvider.listView('networks'),	
+				  
+                  detailView: {
+                    viewAll: { label: 'Hosts', path: 'instances' },
+                    tabs: {
+                      details: {
+                        title: 'Details',
+                        fields: [
+                          {
+                            name: { label: 'name' },
+                            displaytext: { label: 'displaytext' }
+                          },
+                          {
+                            broadcastdomaintype: { label: 'broadcastdomaintype' },
+                            traffictype: { label: 'traffictype' },
+                            gateway: { label: 'gateway' },
+                            netmask: { label: 'netmask' },
+                            startip: { label: 'startip' },
+                            endip: { label: 'endip' },
+                            zoneid: { label: 'zoneid' },
+                            networkofferingid: { label: 'networkofferingid' },
+                            networkofferingname: { label: 'networkofferingname' },
+                            networkofferingdisplaytext: { label: 'networkofferingdisplaytext' },
+                            networkofferingavailability: { label: 'networkofferingavailability' },
+                            isshared: { label: 'isshared' },
+                            issystem: { label: 'issystem' },
+                            state: { label: 'state' },
+                            related: { label: 'related' },
+                            broadcasturi: { label: 'broadcasturi' },
+                            dns1: { label: 'dns1' },
+                            type: { label: 'type' }
+                          }
+                        ],
+                        dataProvider: function(args) {     
+                          args.response.success({data: []});                        
+						}	  
+                      }
+                    }
+                  }
+                }
+              }
+            }
+			//???
+			
+		    /*
             listView: {
               section: 'networks',
               id: 'networks',
@@ -1275,6 +1390,7 @@
                 }
               }
             }
+			*/
           },
           clusters: {
             title: 'Clusters',
