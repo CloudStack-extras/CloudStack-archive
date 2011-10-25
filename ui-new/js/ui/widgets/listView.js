@@ -633,7 +633,9 @@
           return key;
         });
 
-        var isUICustom = $tr.closest('.list-view').data().viewArgs.uiCustom;
+        var $listView = $tr.closest('.list-view');
+        var isUICustom = $listView.data('view-args') ? 
+              $tr.closest('.list-view').data('view-args').uiCustom : false;
 
         if (options.actionFilter && !isUICustom) allowedActions = options.actionFilter({
           context: {
