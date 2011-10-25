@@ -17,9 +17,11 @@
  */
 package com.cloud.agent.api.to;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+
+
+import com.cloud.utils.Pair;
 
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
 import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
@@ -50,24 +52,13 @@ public class LoadBalancerTO {
         }
     }
     
-    public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> arg_destinations,List<LbStickinessPolicy> stickinessPolicies) {
-        //LoadBalancerTO(srcIp,srcPort,protocol,algorithm,revoked,alreadyAdded,destination); FIXME : to remove some of below assigments
-        this.srcIp = srcIp;
-        this.srcPort = srcPort;
-        this.protocol = protocol;
-        this.algorithm = algorithm;     
-        this.revoked = revoked;
-        this.alreadyAdded = alreadyAdded;
-        this.destinations = new DestinationTO[arg_destinations.size()];
-        int i = 0;
-        for (LbDestination destination : arg_destinations) {
-            this.destinations[i++] = new DestinationTO(destination.getIpAddress(), destination.getDestinationPortStart(), destination.isRevoked(), false);
-        }
+    public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> arg_destinations, List<LbStickinessPolicy> stickinessPolicies) {
+        this(srcIp,srcPort,protocol,algorithm,revoked,alreadyAdded,arg_destinations);
         this.stickinessPolicies = null;
         if (stickinessPolicies != null && stickinessPolicies.size()>0)
         {
     	    this.stickinessPolicies = new StickinessPolicyTO[stickinessPolicies.size()];
-            i = 0;
+            int i = 0;
             for (LbStickinessPolicy stickinesspolicy : stickinessPolicies) {
         	    if (!stickinesspolicy.isRevoked())
                     this.stickinessPolicies[i++] = new StickinessPolicyTO(stickinesspolicy.getMethodName(), stickinesspolicy.getDbParams());
@@ -115,13 +106,13 @@ public class LoadBalancerTO {
     public static class StickinessPolicyTO {
         private String _methodName;
         private String _paramsDB;
-        private Map<String, String> _paramsList;
+        private List<Pair<String, String>> _paramsList;
 
         public String getMethodName() {
             return _methodName;
         }
 
-        public Map<String, String> getParams() {
+        public List<Pair<String, String>> getParams() {
             return _paramsList;
         }
 
@@ -132,13 +123,13 @@ public class LoadBalancerTO {
         public StickinessPolicyTO(String methodName, String paramsDB) {
             this._methodName = methodName;
             this._paramsDB = paramsDB;
+            this._paramsList = new ArrayList<Pair<String, String>>();
             String[] temp;
             temp = paramsDB.split("[,]");
-            Map<String, String> paramList = new HashMap<String, String>();
+     
             for (int i = 0; i < (temp.length - 1); i = i + 2) {
-                paramList.put(temp[i], temp[i + 1]);
+                this._paramsList.add(new Pair(temp[i], temp[i + 1]));
             }
-            this._paramsList = paramList;
         }
     }
     

@@ -167,7 +167,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 					if (serviceCapabilities != null) {
 						for (Capability capability : serviceCapabilities
 								.keySet()) {
-							if ("SupportedStickinessMethods".equals(capability.getName())) {	//FIXME: do not use hardcoded string
+							if (Capability.SupportedStickinessMethods.getName().equals(capability.getName())) {	
 								return serviceCapabilities.get(capability);
 							}
 						}
@@ -206,18 +206,9 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             	
             	List<LbStickinessMethodParam> methodParamList = method.getParamList();
         		Map<String,String> tempParamList = new HashMap<String, String>(); 
+        		        		    
         		
-        		/* validation-1 : check for http based or not */
-        		if (method.getHttpbased()) {
-        		    String publicPort = Integer.toString(loadBalancer.getDefaultPortStart());
-        		    if (!publicPort.equals(NetUtils.HTTP_PORT))
-        		    {
-        		        throw new InvalidParameterValueException("Failed:  Stickiness method is not HTTP based :" + cmd.getLbRuleId() );   
-        		    }
-        		}
-        		    
-        		
-		    	/*validation-2: check for any extra params that are not required by the policymethod(capability)  */
+		    	/*validation-1: check for any extra params that are not required by the policymethod(capability)  */
                 if (apiParamList != null) {
                     Collection userGroupCollection = apiParamList.values();
                     Iterator iter = userGroupCollection.iterator();
@@ -231,6 +222,10 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                         for (LbStickinessMethodParam param : methodParamList) {
                             if (param.getParamName()
                                     .equalsIgnoreCase(paramName)) {
+                                if ((param.getIsflag() == false) && (paramValue == null)) {
+                                    throw new InvalidParameterValueException("Failed : Value expected for the Param :" + param.getParamName());
+                                }
+                                    
                                 found = true;
                                 break;
                             }
@@ -243,7 +238,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                     }
                 }
             	
-            	/*validation-3: check for mandatory params */
+            	/*validation-2: check for mandatory params */
 				for (LbStickinessMethodParam param : methodParamList) {
 					if (param.getRequired())
 					{
@@ -272,7 +267,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         /*Finally Insert into DB */
         Transaction txn = Transaction.currentTxn();
         txn.start();
-        LBStickinessPolicyVO policy = new LBStickinessPolicyVO(loadBalancer.getId(), cmd.getLBStickinessPolicyName(),cmd.getStickinessMethodName(), cmd.getparamList());
+        LBStickinessPolicyVO policy = new LBStickinessPolicyVO(loadBalancer.getId(), cmd.getLBStickinessPolicyName(),cmd.getStickinessMethodName(), cmd.getparamList(),cmd.getDescription());
         policy = _lb2stickinesspoliciesDao.persist(policy);
         txn.commit();
         
@@ -298,22 +293,24 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     public boolean deleteLBStickinessPolicy(long stickinessPolicyId) {
         UserContext caller = UserContext.current();
         
-    	LBStickinessPolicyVO stickinesspolicy = _lb2stickinesspoliciesDao.findById(stickinessPolicyId);
-        if (stickinesspolicy == null) {
+    	LBStickinessPolicyVO stickinessPolicy = _lb2stickinesspoliciesDao.findById(stickinessPolicyId);
+        if (stickinessPolicy == null) {
             throw new InvalidParameterException("Invalid Stickiness policy value: " + stickinessPolicyId);
         }
-        LoadBalancerVO loadBalancer = _lbDao.findById(Long.valueOf(stickinesspolicy.getLoadBalancerId()));
+        LoadBalancerVO loadBalancer = _lbDao.findById(Long.valueOf(stickinessPolicy.getLoadBalancerId()));
         if (loadBalancer == null) {
-            throw new InvalidParameterException("Invalid Stickiness policy value: " + stickinessPolicyId);
+            throw new InvalidParameterException("Invalid Load balancer :"+stickinessPolicy.getLoadBalancerId()+" for Stickiness policy id: " + stickinessPolicyId);
         }
         long loadBalancerId = loadBalancer.getId();
         _accountMgr.checkAccess(caller.getCaller(), null, loadBalancer);
         try {
-            loadBalancer.setState(FirewallRule.State.Add);
-            _lbDao.persist(loadBalancer);
+            if (loadBalancer.getState() == FirewallRule.State.Active) {
+                loadBalancer.setState(FirewallRule.State.Add);
+                _lbDao.persist(loadBalancer);
+            }
 
-            stickinesspolicy.setRevoke(true);
-            _lb2stickinesspoliciesDao.persist(stickinesspolicy);
+            stickinessPolicy.setRevoke(true);
+            _lb2stickinesspoliciesDao.persist(stickinessPolicy);
                 s_logger.debug("Set load balancer rule for revoke: rule id " + loadBalancerId + ", stickinesspolicyID " + stickinessPolicyId);
             
             if (!applyLoadBalancerConfig(loadBalancerId)) {

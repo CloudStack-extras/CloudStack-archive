@@ -19,7 +19,7 @@ package com.cloud.network.rules;
 
 import java.util.List;
 import java.util.ArrayList;
-
+import com.google.gson.annotations.SerializedName;
 
 
 public class LbStickinessMethod {
@@ -37,91 +37,104 @@ public class LbStickinessMethod {
             return _name;
         }
     }
-    /* FIXME: Here variable names appear in the jason object inserted into capability, so the names of variable are important */
+
     public class LbStickinessMethodParam {
-        private String paramname;
-        private Boolean required;
-        private String description;
+        @SerializedName("paramname")
+        private String _paramName;
+        
+        @SerializedName("required")
+        private Boolean _required;
+        
+        @SerializedName("isflag")
+        private Boolean _isFlag;
+        
+        @SerializedName("description")
+        private String _description;
 
         public LbStickinessMethodParam(String name, Boolean required,
-                String description) {
-            this.paramname = name;
-            this.required = required;
-            this.description = description;
+                String description,Boolean flag) {
+            this._paramName = name;
+            this._required = required;
+            this._description = description;
+            this._isFlag = flag;
         }
 
         public String getParamName() {
-            return paramname;
+            return _paramName;
         }
 
         public void setParamName(String paramName) {
-            this.paramname = paramName;
+            this._paramName = paramName;
+        }
+        
+        public Boolean getIsflag() {
+            return _isFlag;
         }
 
+        public void setIsflag(Boolean isFlag) {
+            this._isFlag = isFlag;
+        }
+        
         public Boolean getRequired() {
-            return required;
+            return _required;
         }
 
         public void setRequired(Boolean required) {
-            this.required = required;
+            this._required = required;
         }
 
         public String getDescription() {
-            return description;
+            return _description;
         }
 
         public void setDescription(String description) {
-            this.description = description;
+            this._description = description;
         }
 
     }
 
-    private String methodname;
-    private Boolean httpbased;
-    private List<LbStickinessMethodParam> paramlist;
-    private String description;
+    @SerializedName("methodname")
+    private String _methodName;
+    
+    @SerializedName("paramlist")
+    private List<LbStickinessMethodParam> _paramList;
+   
+    @SerializedName("description")
+    private String _description;
 
-    public LbStickinessMethod(StickinessMethodType methodType, String description, Boolean httpbased) {
-        this.methodname = methodType.getName();
-        this.description = description;
-        this.httpbased = httpbased;
-        this.paramlist = new ArrayList<LbStickinessMethodParam>(1);
+    public LbStickinessMethod(StickinessMethodType methodType, String description) {
+        this._methodName = methodType.getName();
+        this._description = description;
+        this._paramList = new ArrayList<LbStickinessMethodParam>(1);
     }
 
-    public void addParam(String name, Boolean required, String description) {
+    public void addParam(String name, Boolean required, String description, Boolean isFlag) {
         /* FIXME : UI is breaking if the capability string length is larger , temporarily description is commented out */
        // LbStickinessMethodParam param = new LbStickinessMethodParam(name, required, description);
-        LbStickinessMethodParam param = new LbStickinessMethodParam(name,required, " ");
-        paramlist.add(param);
+        LbStickinessMethodParam param = new LbStickinessMethodParam(name,required, " ",isFlag);
+        _paramList.add(param);
         return;
     }
 
     public String getMethodName() {
-        return methodname;
+        return _methodName;
     }
     
-    public Boolean getHttpbased() {
-        return httpbased;
-    }
-
-    public void setHttpbased(Boolean httpbased) {
-        this.httpbased = httpbased;
-    }
     public List<LbStickinessMethodParam> getParamList() {
-        return paramlist;
+        return _paramList;
     }
 
     public void setParamList(List<LbStickinessMethodParam> paramList) {
-        this.paramlist = paramList;
+        this._paramList = paramList;
     }
 
     public String getDescription() {
-        return description;
+        return _description;
     }
 
     public void setDescription(String description) {
         /* FIXME : UI is breaking if the capability string length is larger , temporarily description is commented out */
         //this.description = description;
-        this.description = " ";
+        this._description = " ";
     }
 }
