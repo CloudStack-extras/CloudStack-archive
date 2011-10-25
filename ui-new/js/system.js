@@ -613,17 +613,16 @@
           networks: {		    
 			sectionSelect: { label: 'Network type' },
             sections: {
-              publicNetwork: {
+              publicNetworks: {
                 type: 'select',
                 title: 'Public network',
                 listView: {
                   section: 'networks',
                   id: 'networks',
                   fields: {
-                    name: { label: 'Name' },
-                    startip: { label: 'Start IP' },
-                    endip: { label: 'End IP' },
-                    type: { label: 'Type' }
+                    id: { label: "ID" },	
+                    traffictype:  { label: "Traffic type" },
+                    broadcastdomaintype:  { label: "Broadcast domain type" }						
                   },
                                    		
 		          dataProvider: function(args) {                       
@@ -688,32 +687,47 @@
                         title: 'Details',
                         fields: [
                           {
-                            name: { label: 'name' },
-                            displaytext: { label: 'displaytext' }
+                            networkofferingdisplaytext:  { label: "Network offering description" }
                           },
                           {
-                            broadcastdomaintype: { label: 'broadcastdomaintype' },
-                            traffictype: { label: 'traffictype' },
-                            gateway: { label: 'gateway' },
-                            netmask: { label: 'netmask' },
-                            startip: { label: 'startip' },
-                            endip: { label: 'endip' },
-                            zoneid: { label: 'zoneid' },
-                            networkofferingid: { label: 'networkofferingid' },
-                            networkofferingname: { label: 'networkofferingname' },
-                            networkofferingdisplaytext: { label: 'networkofferingdisplaytext' },
-                            networkofferingavailability: { label: 'networkofferingavailability' },
-                            isshared: { label: 'isshared' },
-                            issystem: { label: 'issystem' },
-                            state: { label: 'state' },
-                            related: { label: 'related' },
-                            broadcasturi: { label: 'broadcasturi' },
-                            dns1: { label: 'dns1' },
-                            type: { label: 'type' }
+                            id: { label: "ID" },		
+                            broadcastdomaintype: { label: 'Broadcast domain type' },
+                            traffictype: { label: 'Traffic type' },	
+							gateway: { label: 'Gateway' },
+							netmask: { label: 'Netmask' },
+							startip: { label: 'Start IP' },
+							endip: { label: 'End IP' },
+							zoneid: { label: 'Zone ID' },
+							networkofferingid: { label: 'Network offering ID' },
+							networkofferingname: { label: 'Network offering name' },							
+							networkofferingavailability: { label: 'network offering availability' },														
+							isshared: { 
+							  label: 'Shared',
+							  converter: cloudStack.converters.toBooleanText
+							},
+							issystem: { 
+							  label: 'System',
+                              converter: cloudStack.converters.toBooleanText							  
+							},	
+							isdefault: { 
+							  label: 'Default',
+                              converter: cloudStack.converters.toBooleanText								  
+							},
+							securitygroupenabled: { 
+							  label: 'Security group enabled',
+							  converter: cloudStack.converters.toBooleanText
+							},
+                            state: { label: 'State' },	                            									
+							related: { label: 'Related' },							
+							dns1: { label: 'DNS 1' },
+							dns2: { label: 'DNS 2' },
+							vlan: { label: 'VLAN' },														
+							domainid: { label: 'Domain ID' },
+							account: { label: 'Account' }			
                           }
                         ],
-                        dataProvider: function(args) {     
-                          args.response.success({data: []});                          
+                        dataProvider: function(args) {                          			
+                          args.response.success({data: args.context.publicNetworks[0]});                          
 						}	  
                       }
                     }
