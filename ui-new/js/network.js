@@ -260,9 +260,8 @@
                       label: 'Add',
                       action: function(args) {
                         $.ajax({
-                          url: createURL(),
+                          url: createURL('createFirewallRule'),
                           data: $.extend(args.data, {
-                            command: 'createFirewallRule',
                             ipaddressid: args.context.ipAddresses[0].id
                           }),
                           dataType: 'json',
@@ -285,9 +284,8 @@
                         label: 'Remove Rule',
                         action: function(args) {
                           $.ajax({
-                            url: createURL(),
+                            url: createURL('deleteFirewallRule'),
                             data: {
-                              command: 'deleteFirewallRule',
                               id: args.context.multiRule[0].id
                             },
                             dataType: 'json',
@@ -311,9 +309,8 @@
                     },
                     dataProvider: function(args) {
                       $.ajax({
-                        url: createURL(),
+                        url: createURL('listFirewallRules'),
                         data: {
-                          command: 'listFirewallRules',
                           ipaddressid: args.context.ipAddresses[0].id
                         },
                         dataType: 'json',
