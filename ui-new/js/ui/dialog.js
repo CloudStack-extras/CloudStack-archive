@@ -13,7 +13,7 @@
               .addClass('form-item')
               .attr({ rel: key });
 
-        if (this.hidden) $formItem.hide();
+        if (this.hidden || this.isHidden) $formItem.hide();
 
         $formItem.appendTo($form);
 
@@ -130,7 +130,7 @@
         } else {
           $input = $('<input>').attr({ 
             name: key, 
-            type: this.password ? 'password' : 'text'
+            type: this.password || this.isPassword ? 'password' : 'text'
           }).appendTo($value);
         }
 
