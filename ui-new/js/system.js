@@ -597,7 +597,7 @@
                       }
                     ],
                     
-					dataProvider: function(args) {					  
+					dataProvider: function(args) {	                      		
 					  args.response.success({
 					    actionFilter: zoneActionfilter,
 					    data: args.context.zones[0]
@@ -1153,8 +1153,8 @@
 					  poll: function(args) { args.complete(); }
 					}		  
 				  },
-                  
-                   addIpRange: { 
+                  				 
+                  addIpRange: { 
 					label: 'Add IP range' ,                    					
 					messages: {
 					  confirm: function(args) {
@@ -1183,8 +1183,7 @@
 					
 					action: function(args) {     					  
 					  var array1 = [];
-					  array1.push("&vlan=untagged");	
-					  debugger;
+					  array1.push("&vlan=untagged");					  
 					  array1.push("&zoneid=" + args.context.zones[0].id);
 					  array1.push("&podId=" + args.context.pods[0].id);	
 					  array1.push("&forVirtualNetwork=false"); //direct VLAN			
@@ -1198,8 +1197,7 @@
 						url: createURL("createVlanIpRange" + array1.join("")),
 						dataType: "json",
 						async: false,
-						success: function(json) { 	
-						  debugger;
+						success: function(json) { 						  
 						  var item = json.createvlaniprangeresponse.vlan;
 						  args.response.success({data: item});							
 						}
@@ -1228,7 +1226,7 @@
                       }
                     ],
 					
-                    dataProvider: function(args) {	                      			
+                    dataProvider: function(args) {	                      	
 					  args.response.success({
 					    actionFilter: podActionfilter,
 					    data: args.context.pods[0]
@@ -3646,15 +3644,31 @@
   }
   
   var podActionfilter = function(args) {	 
-    var jsonObj = args.context.item;
+    var podObj = args.context.item;
 	var allowedActions = [];
     allowedActions.push("edit"); 	
-    if(jsonObj.allocationstate == "Disabled")
+    if(podObj.allocationstate == "Disabled")
       allowedActions.push("enable"); 
-    else if(jsonObj.allocationstate == "Enabled")  
+    else if(podObj.allocationstate == "Enabled")  
       allowedActions.push("disable");	    
     allowedActions.push("delete");	 
-	allowedActions.push("addIpRange");	 
+		
+	var selectedZoneObj;
+	$(zoneObjs).each(function(){	 
+	  if(this.id == podObj.zoneid) {	    
+	    selectedZoneObj = this;
+	    return false;  //break the $.each() loop 
+	  }	   
+	});
+	
+	if(selectedZoneObj.networktype == "Basic") { //basic-mode network (pod-wide VLAN)
+        //$("#tab_ipallocation, #add_iprange_button, #tab_network_device, #add_network_device_button").show();  
+        allowedActions.push("addIpRange");	 
+    }
+    else if(selectedZoneObj.networktype == "Advanced") { //advanced-mode network (zone-wide VLAN)
+    	//$("#tab_ipallocation, #add_iprange_button, #tab_network_device, #add_network_device_button").hide();               
+    }
+	
 	return allowedActions;
   }
   
