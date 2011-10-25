@@ -63,7 +63,7 @@
                         $browser: $browser,
                         $chartView: $chartView,
                         ref: { zoneID: listViewArgs.id },
-                        context: { zones: [listViewArgs.jsonObj] }
+                        context: { zones: listViewArgs.context.physicalResources }
                       })
                     );
                   }
