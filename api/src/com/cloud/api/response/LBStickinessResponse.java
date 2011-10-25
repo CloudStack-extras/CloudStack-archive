@@ -22,7 +22,6 @@ import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
-import java.util.Map;
 
 public class LBStickinessResponse extends BaseResponse {
     @SerializedName("lbruleid")
@@ -53,10 +52,6 @@ public class LBStickinessResponse extends BaseResponse {
     @Param(description = "the state of the policy")
     private String state;
 
-    @SerializedName("params")
-    @Param(description = "the params of the policy")
-    private Map<String, String> params;
-
     @SerializedName(ApiConstants.ZONE_ID)
     @Param(description = "the id of the zone the policy belongs to")
     private Long zoneId;
@@ -81,10 +76,14 @@ public class LBStickinessResponse extends BaseResponse {
         this.name = name;
     }
 
+    public List<LBStickinessPolicyResponse> getStickinessPolicies() {
+        return stickinessPolicies;
+    }
+    
     public String getDescription() {
         return description;
     }
-
+    
     public void setDescription(String description) {
         this.description = description;
     }
@@ -97,10 +96,18 @@ public class LBStickinessResponse extends BaseResponse {
         this.accountName = accountName;
     }
 
+    public Long getLbRuleId() {
+        return lbRuleId;
+    }
+    
     public Long getDomainId() {
         return domainId;
     }
 
+    public Long getZoneId() {
+        return zoneId;
+    }
+    
     public void setDomainId(Long domainId) {
         this.domainId = domainId;
     }

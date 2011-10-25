@@ -17,23 +17,17 @@
  */
 package com.cloud.api.response;
 
-import com.cloud.api.ApiConstants;
 import com.cloud.network.rules.StickinessPolicy;
 import com.cloud.serializer.Param;
 import com.google.gson.annotations.SerializedName;
-
-import java.util.HashMap;
 import java.util.Map;
+import java.util.HashMap;
 
 public class LBStickinessPolicyResponse extends BaseResponse {
     @SerializedName("id")
     @Param(description = "the LB Stickiness policy ID")
     private Long id;
-
-    @SerializedName("lbruleid")
-    @Param(description = "the LB rule ID")
-    private Long lbRuleId;
-
+    
     @SerializedName("name")
     @Param(description = "the name of the Stickiness policy")
     private String name;
@@ -46,43 +40,30 @@ public class LBStickinessPolicyResponse extends BaseResponse {
     @Param(description = "the description of the Stickiness policy")
     private String description;;
 
-    @SerializedName("account")
-    @Param(description = "the account of the Stickiness policy")
-    private String accountName;
-
-    @SerializedName("domainid")
-    @Param(description = "the domain ID of the Stickiness policy")
-    private Long domainId;
-
-    @SerializedName("domain")
-    @Param(description = "the domain of the Stickiness policy")
-    private String domainName;
-
     @SerializedName("state")
     @Param(description = "the state of the policy")
     private String state;
 
-    // FIXME : the format of display looks different from the input . input are
-    // of the form parame[0].name .... where as response is different , this is
-    // especially for the CreateLBstickinessPolicy
+    // FIXME : if prams with the same name exists more then once then value are concatinated with ":" as delimitor .
+    // Reason: Map does not support duplicate keys, need to look for the alernate data structure
+    // Example: <params>{indirect=null, name=testcookie, nocache=null, domain=www.yahoo.com:www.google.com, postonly=null}</params>
+    // in the above there are two domains with values www.yahoo.com and www.google.com
     @SerializedName("params")
     @Param(description = "the params of the policy")
     private Map<String, String> params;
-
-    @SerializedName(ApiConstants.ZONE_ID)
-    @Param(description = "the id of the zone the policy belongs to")
-    private Long zoneId;
-
+   // private List<Pair<String, String>> params;
+    
     public Long getId() {
         return id;
     }
+    
+    public Map<String, String> getParams() {
+        return params;
+    }
+
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public void setlbRuleId(Long lbRuleId) {
-        this.lbRuleId = lbRuleId;
     }
 
     public String getName() {
@@ -101,30 +82,10 @@ public class LBStickinessPolicyResponse extends BaseResponse {
         this.description = description;
     }
 
-    public String getAccountName() {
-        return accountName;
+    public String getMethodName() {
+        return methodName;
     }
-
-    public void setAccountName(String accountName) {
-        this.accountName = accountName;
-    }
-
-    public Long getDomainId() {
-        return domainId;
-    }
-
-    public void setDomainId(Long domainId) {
-        this.domainId = domainId;
-    }
-
-    public String getDomainName() {
-        return domainName;
-    }
-
-    public void setDomainName(String domainName) {
-        this.domainName = domainName;
-    }
-
+    
     public String getState() {
         return state;
     }
@@ -146,12 +107,19 @@ public class LBStickinessPolicyResponse extends BaseResponse {
 
         String[] temp;
         temp = dbparams.split("[,]");
-        Map<String, String> paramList = new HashMap<String, String>();
+        Map<String, String> paramList =  new HashMap<String, String>();
         for (int i = 0; i < (temp.length - 1); i = i + 2) {
-            paramList.put(temp[i], temp[i + 1]);
+            StringBuilder sb = new StringBuilder();
+            sb.append(temp[i+1]);
+            if (paramList.get(temp[i]) != null)
+            {
+                sb.append(":").append(paramList.get(temp[i]));
+            }
+                
+            paramList.put(temp[i],sb.toString());
         }
         this.params = paramList;
-        setObjectName("Stickinesspolicy");
+        setObjectName("stickinesspolicy");
     }
 
 }

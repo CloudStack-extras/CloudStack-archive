@@ -65,7 +65,7 @@ public class LBStickinessPolicyVO implements StickinessPolicy {
     }
 
     public LBStickinessPolicyVO(long loadBalancerId, String name,
-            String methodName, Map<String, String> paramList) {
+            String methodName, Map<String, String> paramList, String description) {
         this.loadBalancerId = loadBalancerId;
         this.name = name;
         this.methodName = methodName;
@@ -90,6 +90,7 @@ public class LBStickinessPolicyVO implements StickinessPolicy {
         } else {
             paramsInDb = "";
         }
+        this.description = description;
     }
 
     public long getId() {

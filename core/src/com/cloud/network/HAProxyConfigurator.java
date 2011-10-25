@@ -24,16 +24,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Iterator;
+import com.cloud.utils.Pair;
 
 import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
 import com.cloud.agent.api.to.LoadBalancerTO;
 import com.cloud.agent.api.to.PortForwardingRuleTO;
 import com.cloud.agent.api.to.LoadBalancerTO.DestinationTO;
 import com.cloud.agent.api.to.LoadBalancerTO.StickinessPolicyTO;
-import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.network.rules.LbStickinessMethod.StickinessMethodType;
-import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.NetUtils;
 
 
@@ -139,10 +137,11 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
         result.add(getBlankLine());
         return result;
     }
-/*
- * cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
-              [ postonly ] [ preserve ] [ domain <domain> ]*
-              [ maxidle <idle> ] [ maxlife <life> ]
+
+    /*
+
+cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
+              [ postonly ] [ domain <domain> ]*
   Enable cookie-based persistence in a backend.
   May be used in sections :   defaults | frontend | listen | backend
                                  yes   |    no    |   yes  |   yes
@@ -170,19 +169,14 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
               "insert" and "prefix".
 
     insert    This keyword indicates that the persistence cookie will have to
-              be inserted by haproxy in server responses if the client did not
-
-              already have a cookie that would have permitted it to access this
-              server. When used without the "preserve" option, if the server
-              emits a cookie with the same name, it will be remove before
-              processing.  For this reason, this mode can be used to upgrade
-              existing configurations running in the "rewrite" mode. The cookie
-              will only be a session cookie and will not be stored on the
-              client's disk. By default, unless the "indirect" option is added,
-              the server will see the cookies emitted by the client. Due to
-              caching effects, it is generally wise to add the "nocache" or
-              "postonly" keywords (see below). The "insert" keyword is not
-              compatible with "rewrite" and "prefix".
+              be inserted by haproxy in the responses. If the server emits a
+              cookie with the same name, it will be replaced anyway. For this
+              reason, this mode can be used to upgrade existing configurations
+              running in the "rewrite" mode. The cookie will only be a session
+              cookie and will not be stored on the client's disk. Due to
+              caching effects, it is generally wise to add the "indirect" and
+              "nocache" or "postonly" keywords (see below). The "insert"
+              keyword is not compatible with "rewrite" and "prefix".
 
     prefix    This keyword indicates that instead of relying on a dedicated
               cookie for the persistence, an existing one will be completed.
@@ -196,13 +190,16 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
               this mode requires the HTTP close mode. The "prefix" keyword is
               not compatible with "rewrite" and "insert".
 
-    indirect  When this option is specified, no cookie will be emitted to a
-              client which already has a valid one for the server which has
-              processed the request. If the server sets such a cookie itself,
-              it will be removed, unless the "preserve" option is also set. In
-              "insert" mode, this will additionally remove cookies from the
-              requests transmitted to the server, making the persistence
-              mechanism totally transparent from an application point of view.
+    indirect  When this option is specified in insert mode, cookies will only
+              be added when the server was not reached after a direct access,
+              which means that only when a server is elected after applying a
+              load-balancing algorithm, or after a redispatch, then the cookie
+              will be inserted. If the client has all the required information
+              to connect to the same server next time, no further cookie will
+              be inserted. In all cases, when the "indirect" option is used in
+              insert mode, the cookie is always removed from the requests
+              transmitted to the server. The persistence mechanism then becomes
+              totally transparent from the application point of view.
 
     nocache   This option is recommended in conjunction with the insert mode
               when there is a cache between the client and HAProxy, as it
@@ -224,17 +221,6 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
               persistence cookie in the cache.
               See also the "insert" and "nocache" options.
 
-    preserve  This option may only be used with "insert" and/or "indirect". It
-              allows the server to emit the persistence cookie itself. In this
-              case, if a cookie is found in the response, haproxy will leave it
-              untouched. This is useful in order to end persistence after a
-              logout request for instance. For this, the server just has to
-              emit a cookie with an invalid value (eg: empty) or with a date in
-              the past. By combining this mechanism with the "disable-on-404"
-              check option, it is possible to perform a completely graceful
-              shutdown because users will definitely leave the server after
-              they logout.
-
     domain    This option allows to specify the domain at which a cookie is
               inserted. It requires exactly one parameter: a valid domain
               name. If the domain begins with a dot, the browser is allowed to
@@ -243,39 +229,6 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
               times. Some browsers might have small limits on the number of
               domains, so be careful when doing that. For the record, sending
               10 domains to MSIE 6 or Firefox 2 works as expected.
-
-    maxidle   This option allows inserted cookies to be ignored after some idle
-              time. It only works with insert-mode cookies. When a cookie is
-              sent to the client, the date this cookie was emitted is sent too.
-              Upon further presentations of this cookie, if the date is older
-              than the delay indicated by the parameter (in seconds), it will
-              be ignored. Otherwise, it will be refreshed if needed when the
-              response is sent to the client. This is particularly useful to
-              prevent users who never close their browsers from remaining for
-              too long on the same server (eg: after a farm size change). When
-              this option is set and a cookie has no date, it is always
-              accepted, but gets refreshed in the response. This maintains the
-              ability for admins to access their sites. Cookies that have a
-              date in the future further than 24 hours are ignored. Doing so
-              lets admins fix timezone issues without risking kicking users off
-              the site.
-
-    maxlife   This option allows inserted cookies to be ignored after some life
-              time, whether they're in use or not. It only works with insert
-              mode cookies. When a cookie is first sent to the client, the date
-              this cookie was emitted is sent too. Upon further presentations
-              of this cookie, if the date is older than the delay indicated by
-              the parameter (in seconds), it will be ignored. If the cookie in
-              the request has no date, it is accepted and a date will be set.
-              Cookies that have a date in the future further than 24 hours are
-              ignored. Doing so lets admins fix timezone issues without risking
-              kicking users off the site. Contrary to maxidle, this value is
-              not refreshed, only the first visit date counts. Both maxidle and
-              maxlife may be used at the time. This is particularly useful to
-              prevent users who never close their browsers from remaining for
-              too long on the same server (eg: after a farm size change). This
-              is stronger than the maxidle method in that it forces a
-              redispatch after some absolute delay.
 
   There can be only one persistence cookie per HTTP backend, and it can be
   declared in a defaults section. The value of the cookie will be the value
@@ -286,8 +239,70 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
         cookie JSESSIONID prefix
         cookie SRV insert indirect nocache
         cookie SRV insert postonly indirect
-        cookie SRV insert indirect nocache maxidle 30m maxlife 8h
  */
+    
+    /*
+     * 
+    appsession <cookie> len <length> timeout <holdtime>
+           [request-learn] [prefix] [mode <path-parameters|query-string>]
+  Define session stickiness on an existing application cookie.
+  May be used in sections :   defaults | frontend | listen | backend
+                                 no    |    no    |   yes  |   yes
+  Arguments :
+    <cookie>   this is the name of the cookie used by the application and which
+               HAProxy will have to learn for each new session.
+
+    <length>   this is the max number of characters that will be memorized and
+               checked in each cookie value.
+
+    <holdtime> this is the time after which the cookie will be removed from
+               memory if unused. If no unit is specified, this time is in
+               milliseconds.
+
+    request-learn
+               If this option is specified, then haproxy will be able to learn
+               the cookie found in the request in case the server does not
+               specify any in response. This is typically what happens with
+               PHPSESSID cookies, or when haproxy's session expires before
+               the application's session and the correct server is selected.
+               It is recommended to specify this option to improve reliability.
+
+    prefix     When this option is specified, haproxy will match on the cookie
+               prefix (or URL parameter prefix). The appsession value is the
+               data following this prefix.
+
+               Example :
+               appsession ASPSESSIONID len 64 timeout 3h prefix
+
+               This will match the cookie ASPSESSIONIDXXXX=XXXXX,
+               the appsession value will be XXXX=XXXXX.
+
+    mode       This option allows to change the URL parser mode.
+               2 modes are currently supported :
+               - path-parameters :
+                 The parser looks for the appsession in the path parameters
+                 part (each parameter is separated by a semi-colon), which is
+                 convenient for JSESSIONID for example.
+                 This is the default mode if the option is not set.
+               - query-string :
+                 In this mode, the parser will look for the appsession in the
+                 query string.
+
+  When an application cookie is defined in a backend, HAProxy will check when
+  the server sets such a cookie, and will store its value in a table, and
+  associate it with the server's identifier. Up to <length> characters from
+  the value will be retained. On each connection, haproxy will look for this
+  cookie both in the "Cookie:" headers, and as a URL parameter (depending on
+  the mode used). If a known value is found, the client will be directed to the
+  server associated with this value. Otherwise, the load balancing algorithm is
+  applied. Cookies are automatically removed from memory when they have been
+  unused for a duration longer than <holdtime>.
+
+  The definition of an application cookie is limited to one per backend.
+
+  Example :
+        appsession JSESSIONID len 52 timeout 3h
+     */
     private String getLbSubRuleForStickiness(LoadBalancerTO lbTO) throws Exception{
         int i = 0;
         
@@ -299,13 +314,13 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
         for (StickinessPolicyTO stickinessPolicy : lbTO.getStickinessPolicies()) {
             if (stickinessPolicy == null)
                 continue;
-            Map<String, String> paramsList = stickinessPolicy.getParams();
+            List<Pair<String, String>> paramsList = stickinessPolicy.getParams();
             i++;
             
             /*
-             *  * cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
-              [ postonly ] [ preserve ] [ domain <domain> ]*
-              [ maxidle <idle> ] [ maxlife <life> ]
+             * cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
+              [ postonly ] [ domain <domain> ]*
+             
              */
             if (StickinessMethodType.LBCookieBased.getName().equalsIgnoreCase(stickinessPolicy.getMethodName())) {
                 /* Default Values */
@@ -313,23 +328,24 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
                 String mode ="insert "; /* optional*/
                 Boolean indirect = false; /* optional*/
                 Boolean nocache = false; /* optional*/
-                Boolean postonly = false; /* optional*/
-                Boolean preserve = false; /* optional*/
-                String domain = null; /* optional*/
-                String maxidle = null; /* optional*/
-                String maxlife = null; /* optional*/
-                
-                Set<String>  keys = paramsList.keySet();
-                for(String key : keys){
-                    if ("name".equalsIgnoreCase(key)) name = paramsList.get(key);
-                    if ("mode".equalsIgnoreCase(key)) mode = paramsList.get(key);
-                    if ("domain".equalsIgnoreCase(key)) domain = paramsList.get(key);
-                    if ("maxidle".equalsIgnoreCase(key)) maxidle = paramsList.get(key);
-                    if ("maxlife".equalsIgnoreCase(key)) maxlife = paramsList.get(key);
+                Boolean postonly = false; /* optional*/       
+                StringBuilder domainSb = null ; /* optional */
+
+                for(Pair<String,String> paramKV :paramsList){
+                    String key = paramKV.first();
+                    String value = paramKV.second();
+                    if ("name".equalsIgnoreCase(key)) name = value;
+                    if ("mode".equalsIgnoreCase(key)) mode = value;
+                    if ("domain".equalsIgnoreCase(key)) {
+                        if (domainSb == null) {
+                            domainSb = new StringBuilder();
+                        }
+                        domainSb = domainSb.append("domain ");
+                        domainSb.append(value).append(" ");
+                    }
                     if ("indirect".equalsIgnoreCase(key)) indirect = true;
                     if ("nocache".equalsIgnoreCase(key)) nocache = true;
                     if ("postonly".equalsIgnoreCase(key)) postonly = true;
-                    if ("preserve".equalsIgnoreCase(key)) preserve = true;
                         
                 }
                 if (name == null)  {/* re-check all mandatory params */
@@ -343,11 +359,7 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
                 if (indirect) sb.append("indirect ");
                 if (nocache) sb.append("nocache ");
                 if (postonly) sb.append("postonly ");
-                if (indirect) sb.append("indirect ");
-                if (preserve) sb.append("preserve ");
-                if (domain != null) sb.append("domain ").append(domain).append(" ");
-                if (maxidle != null) sb.append("maxidle ").append(maxidle).append(" ");
-                if (maxlife != null) sb.append("maxlife ").append(maxlife).append(" ");
+                if (domainSb != null) sb.append(domainSb).append(" ");
                         
             } else if (StickinessMethodType.SourceBased.getName().equalsIgnoreCase(stickinessPolicy.getMethodName())) {
                 /* Default Values */
@@ -355,10 +367,11 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
                 String expire = "30m"; /* optional */
 
                 /* overwrite default values with the stick parameters */
-                Set<String>  keys = paramsList.keySet();
-                for(String key : keys){
-                    if ("tablesize".equalsIgnoreCase(key)) tablesize = paramsList.get(key);
-                    if ("expire".equalsIgnoreCase(key)) expire = paramsList.get(key);             
+                for(Pair<String,String> paramKV :paramsList){
+                    String key = paramKV.first();
+                    String value = paramKV.second();
+                    if ("tablesize".equalsIgnoreCase(key)) tablesize = value;
+                    if ("expire".equalsIgnoreCase(key)) expire = value;             
                 }
 
                 sb.append("\t").append("stick-table type ip size ")
@@ -378,13 +391,14 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
                 Boolean requestlearn = false; /* optional */
                 Boolean prefix = false; /* optional */
 
-                Set<String>  keys = paramsList.keySet();
-                for(String key : keys){
-                    if ("name".equalsIgnoreCase(key))   name = paramsList.get(key);
-                    if ("length".equalsIgnoreCase(key)) length = paramsList.get(key);                   
-                    if ("holdtime".equalsIgnoreCase(key))  holdtime = paramsList.get(key);       
-                    if ("mode".equalsIgnoreCase(key))  mode = paramsList.get(key);
-                    if ("requestlearn".equalsIgnoreCase(key)) requestlearn = true;
+                for(Pair<String,String> paramKV :paramsList){
+                    String key = paramKV.first();
+                    String value = paramKV.second();
+                    if ("name".equalsIgnoreCase(key))   name = value;
+                    if ("length".equalsIgnoreCase(key)) length = value;                   
+                    if ("holdtime".equalsIgnoreCase(key))  holdtime = value;       
+                    if ("mode".equalsIgnoreCase(key))  mode = value;
+                    if ("request-learn".equalsIgnoreCase(key)) requestlearn = true;
                     if ("prefix".equalsIgnoreCase(key)) prefix = true;
                 }
                 if ((name == null) || (length == null) || (holdtime == null)) {
@@ -398,7 +412,7 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
                         .append(" len ").append(length).append(" timeout ")
                         .append(holdtime).append(" ");
                 if (prefix) sb.append("prefix ");
-                if (requestlearn) sb.append("request-learn").append(mode).append(" ");
+                if (requestlearn) sb.append("request-learn").append(" ");
                 if (mode != null) sb.append("mode ").append(mode).append(" ");
 
             } else {
@@ -431,16 +445,8 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
         sb.append("\t").append("balance ").append(algorithm);
         result.add(sb.toString());
 
-        if (publicPort.equals(NetUtils.HTTP_PORT)) {
-            sb = new StringBuilder();
-            sb.append("\t").append("mode http");
-            result.add(sb.toString());
-            sb = new StringBuilder();
-            sb.append("\t").append("option httpclose");
-            result.add(sb.toString());
-        }
         int i = 0;
-        Boolean destsAvailable=false;
+        Boolean destsAvailable = false;
         for (DestinationTO dest : lbTO.getDestinations()) {
             // add line like this: "server  65_37_141_30-80_3 10.1.1.4:80 check"
             if (dest.isRevoked()) {
@@ -456,8 +462,26 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
         }
         
         String stickinessSubRule = getLbSubRuleForStickiness(lbTO);
+        Boolean httpbasedStickiness = false;
+        /* attach stickiness sub rule only if the destinations are avilable */
         if ((stickinessSubRule != null) && (destsAvailable == true))
+        {
             result.add(stickinessSubRule);
+            for (StickinessPolicyTO stickinessPolicy : lbTO.getStickinessPolicies()) {
+                if (StickinessMethodType.LBCookieBased.getName().equalsIgnoreCase(stickinessPolicy.getMethodName()) || StickinessMethodType.AppCookieBased.getName().equalsIgnoreCase(stickinessPolicy.getMethodName())) {
+                    httpbasedStickiness = true;
+                }
+            }
+        }
+        
+        if ((publicPort.equals(NetUtils.HTTP_PORT)) || (httpbasedStickiness) ) {
+            sb = new StringBuilder();
+            sb.append("\t").append("mode http");
+            result.add(sb.toString());
+            sb = new StringBuilder();
+            sb.append("\t").append("option httpclose");
+            result.add(sb.toString());
+        }
         
         result.add(getBlankLine());
         return result;
