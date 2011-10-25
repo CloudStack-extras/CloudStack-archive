@@ -625,11 +625,8 @@
                     endip: { label: 'End IP' },
                     type: { label: 'Type' }
                   },
-                  
-                  //dataProvider: testData.dataProvider.listView('networks'),		
-		          dataProvider: function(args) {     
-                    debugger;
-					//???
+                                   		
+		          dataProvider: function(args) {                       
 					var showPublicNetwork = true;
 					var zoneObj = args.context.zones[0];
 					if(zoneObj.networktype == "Basic") {   
@@ -736,7 +733,25 @@
                     type: { label: 'Type' }
                   },
                   				  
-				  dataProvider: testData.dataProvider.listView('networks'),	
+				  dataProvider: function(args) {                       
+					var showPublicNetwork = true;
+					var zoneObj = args.context.zones[0];
+					if(zoneObj.networktype == "Basic") {   
+					    args.response.success({data: null});	
+					}					
+					else { // Advanced zone						
+						//$("#add_network_button,#add_iprange_button,#tab_ipallocation").show();							
+						$.ajax({
+							url: createURL("listNetworks&type=Direct&zoneId="+zoneObj.id),
+							dataType: "json",
+							async: false,
+							success: function(json) {       
+								var items = json.listnetworksresponse.network;    
+								args.response.success({data: items});	
+							}
+						});  
+					}					
+				  }	,			
 				  
                   detailView: {
                     viewAll: { label: 'Hosts', path: 'instances' },
@@ -778,148 +793,6 @@
                 }
               }
             }
-						
-		    /*
-            listView: {
-              section: 'networks',
-              id: 'networks',
-              fields: {
-                name: { label: 'Name' },
-                startip: { label: 'Start IP' },
-                endip: { label: 'End IP' },
-                type: { label: 'Type' }
-              },
-              
-              //dataProvider: testData.dataProvider.listView('networks'),
-              dataProvider: function(args) {                   
-                var zoneObj = args.context.zones[0];              
-                var networkArray = [];
-                var showPublicNetwork = true;
-                if(zoneObj.networktype == "Basic") {   
-                  //$("#add_network_button").hide();  
-                  $.ajax({
-                    url: createURL("listExternalFirewalls&zoneid=" + zoneObj.id),
-                    dataType: "json",
-                    async: false,
-                    success: function(json) {            
-                      var items = json.listexternalfirewallsresponse.externalfirewall;           
-                      if(items != null && items.length > 0) {
-                        showPublicNetwork = true;
-                        //$("#add_iprange_button,#tab_ipallocation").show();
-                      }
-                      else {
-                        showPublicNetwork = false;  
-                        //$("#add_iprange_button,#tab_ipallocation").hide();                  
-                      }
-                    }
-                  });         
-                }
-                else { // "Advanced"  
-                  showPublicNetwork = true;
-                  //$("#add_network_button,#add_iprange_button,#tab_ipallocation").show();  
-                  
-                  //listMidMenuItems2(("listNetworks&type=Direct&zoneId="+zoneObj.id), networkGetSearchParams, "listnetworksresponse", "network", directNetworkToMidmenu, directNetworkToRightPanel, directNetworkGetMidmenuId, false, 1);
-                  $.ajax({
-                    url: createURL("listNetworks&type=Direct&zoneId=" + args.ref.zoneID + "&page=" + args.page + "&pagesize=" + pageSize),
-                    dataType: "json",
-                    async: false,
-                    success: function(json) {             
-                      networkArray = json.listnetworksresponse.network;           
-                      //args.response.success({data:items});                            
-                    }
-                  });           
-                }
-                
-                if(showPublicNetwork == true && zoneObj.securitygroupsenabled == false) { //public network           
-                  //$midmenuContainer.find("#midmenu_container_no_items_available").remove();  //There is always at least one item (i.e. public network) in middle menu. So, "no items available" shouldn't be in middle menu even there is zero direct network item in middle menu.   
-                  $.ajax({
-                    url: createURL("listNetworks&trafficType=Public&isSystem=true&zoneId=" + zoneObj.id),
-                    dataType: "json",
-                    async: false,
-                    success: function(json) {       
-                      var items = json.listnetworksresponse.network;       
-                      if(items != null && items.length > 0) {
-                        var item = items[0];
-                        //var $midmenuItem1 = $("#midmenu_item").clone();                      
-                        //$midmenuItem1.data("toRightPanelFn", publicNetworkToRightPanel);  //to implement later                           
-                        //publicNetworkToMidmenu(item, $midmenuItem1);    
-                        //bindClickToMidMenu($midmenuItem1, publicNetworkToRightPanel, publicNetworkGetMidmenuId);   
-                        
-                        //$midmenuContainer.prepend($midmenuItem1.show());    //prepend public network on the top of middle menu
-                        networkArray.unshift(item);
-                        
-                        //$midmenuItem1.click();  
-                      }
-                    }
-                  });  
-                }
-                else if (showPublicNetwork == true && zoneObj.securitygroupsenabled == true){
-                  //$midmenuContainer.find("#midmenu_container_no_items_available").remove();  //There is always at least one item (i.e. public network) in middle menu. So, "no items available" shouldn't be in middle menu even there is zero direct network item in middle menu.   
-                  $.ajax({
-                    data: createURL("command=listNetworks&type=Direct&trafficType=Guest&isSystem=true&zoneId="+zoneObj.id),
-                    dataType: "json",
-                    async: false,
-                    success: function(json) {       
-                      var items = json.listnetworksresponse.network;       
-                      if(items != null && items.length > 0) {
-                        var item = items[0];
-                        //var $midmenuItem1 = $("#midmenu_item").clone();                      
-                        //$midmenuItem1.data("toRightPanelFn", publicNetworkToRightPanel);                             
-                        //publicNetworkToMidmenu(item, $midmenuItem1);    
-                        //bindClickToMidMenu($midmenuItem1, publicNetworkToRightPanel, publicNetworkGetMidmenuId);   
-                        
-                        //$midmenuContainer.prepend($midmenuItem1.show());    //prepend public network on the top of middle menu
-                        networkArray.unshift(item);
-                        
-                        //$midmenuItem1.click();  
-                      }
-                    }
-                  });  
-                }
-                else {
-                  //publicNetworkToRightPanel(null);  
-                }       
-                args.response.success({data:networkArray});                  
-              },  
-              
-              detailView: {
-                viewAll: { label: 'Hosts', path: 'instances' },
-                tabs: {
-                  details: {
-                    title: 'Details',
-                    fields: [
-                      {
-                        name: { label: 'name' },
-                        displaytext: { label: 'displaytext' }
-                      },
-                      {
-                        broadcastdomaintype: { label: 'broadcastdomaintype' },
-                        traffictype: { label: 'traffictype' },
-                        gateway: { label: 'gateway' },
-                        netmask: { label: 'netmask' },
-                        startip: { label: 'startip' },
-                        endip: { label: 'endip' },
-                        zoneid: { label: 'zoneid' },
-                        networkofferingid: { label: 'networkofferingid' },
-                        networkofferingname: { label: 'networkofferingname' },
-                        networkofferingdisplaytext: { label: 'networkofferingdisplaytext' },
-                        networkofferingavailability: { label: 'networkofferingavailability' },
-                        isshared: { label: 'isshared' },
-                        issystem: { label: 'issystem' },
-                        state: { label: 'state' },
-                        related: { label: 'related' },
-                        broadcasturi: { label: 'broadcasturi' },
-                        dns1: { label: 'dns1' },
-                        type: { label: 'type' }
-                      }
-                    ],
-                    dataProvider: testData.dataProvider.detailView('networks')
-                  }
-                }
-              }
-            }
-			*/
-			
           },		  
 		  
           pods: {
