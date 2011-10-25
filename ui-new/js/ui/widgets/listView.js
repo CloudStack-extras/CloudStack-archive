@@ -534,7 +534,8 @@
     var $panel = args.$panel;
     var title = args.title;
     var id = args.id;
-    var data = $.extend(args.data, {
+    var data = $.extend(true, {}, args.data, {
+      $browser: $('#browser .container'),
       id: id,
       jsonObj: args.jsonObj,
       section: args.section,
@@ -544,6 +545,7 @@
     var panelArgs = {
       title: title,
       parent: $panel,
+      maximizeIfSelected: data.isMaximized,
       complete: function($newPanel) {
         // Make detail view element
         if (!args.pageGenerator)

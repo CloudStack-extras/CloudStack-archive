@@ -309,7 +309,7 @@
       else {
         // Sub-section of the zone chart
         listViewArgs = cloudStackArgs.sections.system
-          .sections.physicalResources.subsections[viewAllPath[1]];
+          .subsections[viewAllPath[1]];
       }
     }
     else

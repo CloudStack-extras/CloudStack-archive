@@ -5115,6 +5115,21 @@
         }, 
       ],
 
+      hypervisors: [
+        {
+          id: 'xen',
+          description: 'XenServer'
+        },
+        {
+          id: 'kvm',
+          description: 'KVM'
+        },
+        {
+          id: 'VMware',
+          description: 'VMware'
+        }
+      ],
+
       pods: [
         {
           "id": 1,
