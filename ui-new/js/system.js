@@ -1022,6 +1022,18 @@
 			 
               detailView: {
                 viewAll: { path: '_zone.clusters', label: 'Clusters' },
+				tabFilter: function(args) {				 
+				  var hiddenTabs = [];
+				  var selectedZoneObj = args.context.zones[0];
+				  if(selectedZoneObj.networktype == "Basic") { //basic-mode network (pod-wide VLAN)
+					//$("#tab_ipallocation, #add_iprange_button, #tab_network_device, #add_network_device_button").show();  						 
+				  }
+				  else if(selectedZoneObj.networktype == "Advanced") { //advanced-mode network (zone-wide VLAN)
+					//$("#tab_ipallocation, #add_iprange_button, #tab_network_device, #add_network_device_button").hide();       
+                    hiddenTabs.push("ipAllocations");					
+				  }				  
+				  return hiddenTabs;
+				},
 				actions: {	                 
                   edit: {
 					label: 'Edit',
