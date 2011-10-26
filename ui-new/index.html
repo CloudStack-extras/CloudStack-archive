@@ -670,7 +670,7 @@
       </div>
 
       <!-- Network chart -->
-      <div class="network-chart">
+      <div class="network-chart normal">
         <ul>
           <li class="firewall">
             <div class="name"><span>Firewall</span></div>
@@ -683,6 +683,19 @@
           <li class="portForwarding">
             <div class="name"><span>Port Forwarding</span></div>
             <div class="view-details" net-target="portForwarding">View All</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Static NAT network chart -->
+      <div class="network-chart static-nat">
+        <ul>
+          <li class="static-nat-enabled">
+            <div class="name"><span>Static NAT Enabled</span></div>
+          </li>
+          <li class="firewall">
+            <div class="name"><span>Firewall</span></div>
+            <div class="view-details" net-target="staticNAT">View All</div>
           </li>
         </ul>
       </div>
@@ -1058,6 +1071,223 @@
           </ul>
         </div>
       </div>
+
+      <!-- Recurring Snapshots -->
+      <div class="recurring-snapshots">
+        <p class="desc">Description</p>
+
+        <div class="schedule">
+          <p>Schedule:</p>
+
+          <div class="forms">
+            <ul>
+              <li class="hourly"><a href="#recurring-snapshots-hourly">Hourly</a></li>
+              <li class="daily"><a href="#recurring-snapshots-daily">Daily</a></li>
+              <li class="weekly"><a href="#recurring-snapshots-weekly">Weekly</a></li>
+              <li class="monthly"><a href="#recurring-snapshots-monthly">Monthly</a></li>
+            </ul>
+
+            <!-- Hourly -->
+            <div id="recurring-snapshots-hourly">
+              <form>
+                <input type="hidden" name="snapshot-type" value="0" />
+
+                <!-- Time -->
+                <div class="field time">
+                  <div class="name">Time</div>
+                  <div class="value">
+                    <select name="schedule"></select>
+                    <label for="schedule">minutes(s) past the hour</label>
+                  </div>
+                </div>
+
+                <!-- Timezone -->
+                <div class="field timezone">
+                  <div class="name">Timezone</div>
+                  <div class="value">
+                    <select name="timezone"></select>
+                  </div>
+                </div>
+
+                <!-- Max snapshots -->
+                <div class="field maxsnaps">
+                  <div class="name">Keep</div>
+                  <div class="value">
+                    <input type="text" name="maxsnaps" class="required" />
+                    <label for="maxsnaps">snapshot(s)</label>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <!-- Daily -->
+            <div id="recurring-snapshots-daily">
+              <form>
+                <input type="hidden" name="snapshot-type" value="1" />
+
+                <!-- Time -->
+                <div class="field time">
+                  <div class="name">Time</div>
+                  <div class="value">
+                    <select name="time-hour"></select>
+                    <select name="time-minute"></select>
+                    <select name="time-meridiem"></select>
+                  </div>
+                </div>
+
+                <!-- Timezone -->
+                <div class="field timezone">
+                  <div class="name">Timezone</div>
+                  <div class="value">
+                    <select name="timezone"></select>
+                  </div>
+                </div>
+
+                <!-- Max snapshots -->
+                <div class="field maxsnaps">
+                  <div class="name">Keep</div>
+                  <div class="value">
+                    <input type="text" name="maxsnaps" class="required" />
+                    <label for="maxsnaps">snapshot(s)</label>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <!-- Weekly -->
+            <div id="recurring-snapshots-weekly">
+              <form>
+                <input type="hidden" name="snapshot-type" value="2" />
+
+                <!-- Time -->
+                <div class="field time">
+                  <div class="name">Time</div>
+                  <div class="value">
+                    <select name="time-hour"></select>
+                    <select name="time-minute"></select>
+                    <select name="time-meridiem"></select>
+                  </div>
+                </div>
+
+                <!-- Day of week -->
+                <div class="field day-of-week">
+                  <div class="name">Day of week</div>
+                  <div class="value">
+                    <select name="day-of-week"></select>
+                  </div>
+                </div>
+
+                <!-- Timezone -->
+                <div class="field timezone">
+                  <div class="name">Timezone</div>
+                  <div class="value">
+                    <select name="timezone"></select>
+                  </div>
+                </div>
+
+                <!-- Max snapshots -->
+                <div class="field maxsnaps">
+                  <div class="name">Keep</div>
+                  <div class="value">
+                    <input type="text" name="maxsnaps" class="required" />
+                    <label for="maxsnaps">snapshot(s)</label>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <!-- Monthly -->
+            <div id="recurring-snapshots-monthly">
+              <form>
+                <input type="hidden" name="snapshot-type" value="3" />
+
+                <!-- Time -->
+                <div class="field time">
+                  <div class="name">Time</div>
+                  <div class="value">
+                    <select name="time-hour"></select>
+                    <select name="time-minute"></select>
+                    <select name="time-meridiem"></select>
+                  </div>
+                </div>
+
+                <!-- Day of week -->
+                <div class="field day-of-month">
+                  <div class="name">Day of month</div>
+                  <div class="value">
+                    <select name="day-of-month"></select>
+                  </div>
+                </div>
+
+                <!-- Timezone -->
+                <div class="field timezone">
+                  <div class="name">Timezone</div>
+                  <div class="value">
+                    <select name="timezone"></select>
+                  </div>
+                </div>
+
+                <!-- Max snapshots -->
+                <div class="field maxsnaps">
+                  <div class="name">Keep</div>
+                  <div class="value">
+                    <input type="text" name="maxsnaps" class="required" />
+                    <label for="maxsnaps">snapshot(s)</label>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="add-snapshot-actions">
+            <div class="add-snapshot-action add">Add</div>
+          </div>
+        </div>
+
+        <!-- Scheduled snapshots -->
+        <div class="scheduled-snapshots">
+          <p>Scheduled Snapshots</p>
+          <table>
+            <tbody>
+              <!-- Hourly -->
+              <tr class="hourly">
+                <td class="time">Time: <span></span> min past the hr</td>
+                <td class="day-of-week"><span></span></td>
+                <td class="timezone">Timezone:<br/><span></span></td>
+                <td class="keep">Keep: <span></span></td>
+                <td class="actions"><div class="action destroy"><span class="icon">&nbsp;</span></div></td>
+              </tr>
+
+              <!-- Daily -->
+              <tr class="daily">
+                <td class="time">Time: <span></span></td>
+                <td class="day-of-week"><span></span></td>
+                <td class="timezone">Timezone:<br/><span></span></td>
+                <td class="keep">Keep: <span></span></td>
+                <td class="actions"><div class="action destroy"><span class="icon">&nbsp;</span></div></td>
+              </tr>
+
+              <!-- Weekly -->
+              <tr class="weekly">
+                <td class="time">Time: <span></span></td>
+                <td class="day-of-week">Every <span></span></td>
+                <td class="timezone">Timezone:<br/><span></span></td>
+                <td class="keep">Keep: <span></span></td>
+                <td class="actions"><div class="action destroy"><span class="icon">&nbsp;</span></div></td>
+              </tr>
+
+              <!-- Monthly -->
+              <tr class="monthly">
+                <td class="time">Time: <span></span></td>
+                <td class="day-of-week"><span></span> day of month</td>
+                <td class="timezone">Timezone:<br/><span></span></td>
+                <td class="keep">Keep: <span></span></td>
+                <td class="actions"><div class="action destroy"><span class="icon">&nbsp;</span></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- jQuery -->
@@ -1101,6 +1331,7 @@
     <script src="js/ui-custom/ipRules.js" type="text/javascript"></script>
     <script src="js/ui-custom/enableStaticNAT.js" type="text/javascript"></script>
     <script src="js/network.js" type="text/javascript"></script>
+    <script src="js/ui-custom/recurringSnapshots.js" type="text/javascript"></script>
     <script src="js/storage.js" type="text/javascript"></script>
     <script src="js/templates.js" type="text/javascript"></script>
     <script src="js/accounts.js" type="text/javascript"></script>

@@ -17,7 +17,16 @@
             mine: { label: 'My network' }
           },
           fields: {
-            ipaddress: { label: 'IP' },
+            ipaddress: {
+              label: 'IP',
+              converter: function(text, item) {
+                if (item.issourcenat) {
+                  return text + ' [Source NAT]';
+                }
+
+                return text;
+              }
+            },
             zonename: { label: 'Zone' },
             vlanname: { label: 'VLAN' },
             networkid: { label: 'Network Type' },
@@ -75,7 +84,7 @@
                     args.response.success();
                   }
                 })
-              }, 
+              },
               messages: {
                 confirm: function(args) {
                   return 'Are you sure you want to enable static NAT?';
@@ -85,7 +94,66 @@
                 }
               },
               notification: {
-                poll: testData.notifications.testPoll
+                poll: testData.notifications.customPoll({ isstaticnat: true })
+              }
+            },
+            disableStaticNAT: {
+              label: 'Disable static NAT',
+              action: function(args) {
+                args.response.success();
+              },
+              messages: {
+                confirm: function(args) {
+                  return 'Are you sure you want to disable static NAT?';
+                },
+                notification: function(args) {
+                  return 'Disabled Static NAT';
+                }
+              },
+              notification: {
+                poll: testData.notifications.customPoll({ isstaticnat: false })
+              }
+            },
+            enableVPN: {
+              label: 'Enable VPN',
+              action: function(args) {
+                args.response.success();
+              },
+              messages: {
+                confirm: function(args) {
+                  return 'Please confirm that you want VPN enabled for this IP address.';
+                },
+                notification: function(args) {
+                  return 'Enabled VPN';
+                },
+                complete: function(args) {
+                  return 'VPN is now enabled for IP ' + args.publicip + '.'
+                    + '<br/>Your IPsec pre-shared key is:<br/>' + args.presharedkey;
+                }
+              },
+              notification: {
+                poll: testData.notifications.customPoll({
+                  publicip: '10.2.2.1',
+                  presharedkey: '23fudh881ssx88199488PP!#Dwdw',
+                  vpnenabled: true
+                })
+              }
+            },
+            disableVPN: {
+              label: 'Disable VPN',
+              action: function(args) {
+                args.response.success();
+              },
+              messages: {
+                confirm: function(args) {
+                  return 'Are you sure you want to disable VPN?';
+                },
+                notification: function(args) {
+                  return 'Disabled VPN';
+                }
+              },
+              notification: {
+                poll: testData.notifications.customPoll({ vpnenabled: false })
               }
             }
           },
@@ -96,7 +164,15 @@
             name: 'IP address detail',
             // Example tab filter
             tabFilter: function(args) {
-              return [];
+              var disabledTabs = [];
+              var ipAddress = args.context.ipAddresses[0];
+
+              if (!ipAddress.issourcenat ||
+                  (ipAddress.issourcenat && !ipAddress.vpnenabled)) {
+                disabledTabs.push('vpn');
+              }
+
+              return disabledTabs;
             },
             tabs: {
               details: {
@@ -118,6 +194,13 @@
               ipRules: {
                 title: 'Configuration',
                 custom: cloudStack.ipRules({
+                  preFilter: function(args) {
+                    if (args.context.ipAddresses[0].isstaticnat) {
+                      return args.items; // All items filtered means static NAT
+                    }
+
+                    return [];
+                  },
 
                   // Firewall rules
                   firewall: {
@@ -212,6 +295,85 @@
                               "icmptype": 2,
                               "icmpcode": 22
                             },
+                            {
+                              "id": 10,
+                              "protocol": "udp",
+                              "startport": "500",
+                              "endport": "10000",
+                              "ipaddressid": 4,
+                              "ipaddress": "10.223.71.23",
+                              "state": "Active",
+                              "cidrlist": "0.0.0.0/24"
+                            },
+                            {
+                              "id": 9,
+                              "protocol": "tcp",
+                              "startport": "20",
+                              "endport": "200",
+                              "ipaddressid": 4,
+                              "ipaddress": "10.223.71.23",
+                              "state": "Active",
+                              "cidrlist": "0.0.0.0/24"
+                            }
+                          ]
+                        });
+                      }, 100);
+                    }
+                  },
+
+                  staticNAT: {
+                    noSelect: true,
+                    fields: {
+                      'protocol': {
+                        label: 'Protocol',
+                        select: function(args) {
+                          args.response.success({
+                            data: [
+                              { name: 'tcp', description: 'TCP' },
+                              { name: 'udp', description: 'UDP' }
+                            ]
+                          });
+                        }
+                      },
+                      'startport': { edit: true, label: 'Start Port' },
+                      'endport': { edit: true, label: 'End Port' },
+                      'add-rule': {
+                        label: 'Add Rule',
+                        addButton: true
+                      }
+                    },
+                    add: {
+                      label: 'Add',
+                      action: function(args) {
+                        setTimeout(function() {
+                          args.response.success({
+                            notification: {
+                              label: 'Add firewall rule',
+                              poll: testData.notifications.testPoll
+                            }
+                          });
+                        }, 500);
+                      }
+                    },
+                    actions: {
+                      destroy: {
+                        label: 'Remove Rule',
+                        action: function(args) {
+                          setTimeout(function() {
+                            args.response.success({
+                              notification: {
+                                label: 'Remove firewall rule',
+                                poll: testData.notifications.testPoll
+                              }
+                            });
+                          }, 500);
+                        }
+                      }
+                    },
+                    dataProvider: function(args) {
+                      setTimeout(function() {
+                        args.response.success({
+                          data: [
                             {
                               "id": 10,
                               "protocol": "udp",

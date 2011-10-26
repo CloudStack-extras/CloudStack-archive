@@ -17,6 +17,26 @@
         disallowedActions = allowedActions;
       }
 
+      if (item.isstaticnat) {
+        disallowedActions.push('enableStaticNAT');
+      } else {
+        disallowedActions.push('disableStaticNAT');
+      }
+
+      if (item.vpnenabled) {
+        disallowedActions.push('enableVPN');
+      } else {
+        disallowedActions.push('disableVPN');
+      }
+
+      if (item.issourcenat){
+        disallowedActions.push('enableStaticNAT');
+        disallowedActions.push('disableStaticNAT');
+      } else {
+        disallowedActions.push('enableVPN');
+        disallowedActions.push('disableVPN');
+      }
+
       allowedActions = $.grep(allowedActions, function(item) {
         return $.inArray(item, disallowedActions) == -1;
       });

@@ -1853,6 +1853,7 @@ Dialogs*/
 .ui-dialog span.message {
   display: block;
   text-align: center;
+  margin: 0 0 30px;
   color: #445361;
   /*+text-shadow:0px 1px 1px #FFFFFF;*/
   -moz-text-shadow: 0px 1px 1px #FFFFFF;
@@ -4042,12 +4043,322 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   background: #F2F0F0;
 }
 
+/*Recurring snapshots*/
+.recurring-snapshots {
+  display: inline-block;
+}
+
+.recurring-snapshots .schedule {
+}
+
+.recurring-snapshots .schedule .add-snapshot-actions {
+  width: 581px;
+  clear: both;
+  float: left;
+  font-size: 13px;
+  margin-bottom: 13px;
+  border-top: 1px solid #FFFFFF;
+}
+
+.recurring-snapshots .schedule .add-snapshot-action {
+  /*+placement:shift -7px -34px;*/
+  position: relative;
+  left: -7px;
+  top: -34px;
+  float: right;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.recurring-snapshots .schedule .add-snapshot-action.add {
+  color: #0000FF;
+  /*+text-shadow:0px 1px 1px #FFFFFF;*/
+  -moz-text-shadow: 0px 1px 1px #FFFFFF;
+  -webkit-text-shadow: 0px 1px 1px #FFFFFF;
+  -o-text-shadow: 0px 1px 1px #FFFFFF;
+  text-shadow: 0px 1px 1px #FFFFFF;
+  font-weight: bold;
+}
+
+.recurring-snapshots .schedule .add-snapshot-action.add:hover {
+  color: #1A85F4;
+}
+
+.recurring-snapshots .schedule p {
+  float: left;
+  font-size: 13px;
+  padding: 0;
+  margin: 5px 0 0 14px;
+}
+
+.recurring-snapshots .schedule .forms {
+  width: 436px;
+  float: left;
+  /*+placement:shift 24px 2px;*/
+  position: relative;
+  left: 24px;
+  top: 2px;
+}
+
+.recurring-snapshots .schedule .forms form {
+  font-size: 12px;
+  color: #4F6171;
+}
+
+.recurring-snapshots .schedule .forms form select {
+  float: left;
+  margin: 3px 10px 3px 3px;
+}
+
+.recurring-snapshots .schedule .forms form input {
+  /*+placement:shift 1px 4px;*/
+  position: relative;
+  left: 1px;
+  top: 4px;
+}
+
+.recurring-snapshots .schedule .forms form label {
+  /*+placement:shift 5px 4px;*/
+  position: relative;
+  left: 5px;
+  top: 4px;
+}
+
+.recurring-snapshots .schedule .forms form label.error {
+  width: 100%;
+  float: left;
+  font-size: 10px;
+}
+
+.recurring-snapshots .schedule .forms form .field {
+  width: 100%;
+  float: left;
+  margin: 8px 0 0;
+}
+
+.recurring-snapshots .schedule .forms form .name {
+  float: left;
+  text-align: right;
+  width: 72px;
+  padding: 4px 0 0;
+  margin: 3px 14px 0 0;
+}
+
+.recurring-snapshots .schedule .forms form .value {
+  width: 370px;
+  float: left;
+  text-align: left;
+}
+
+.ui-dialog .recurring-snapshots .ui-widget-content {
+  padding: 0;
+  margin: 0;
+}
+
+.recurring-snapshots .ui-button {
+  float: right;
+  /*+placement:shift 294px -30px;*/
+  position: relative;
+  left: 294px;
+  top: -30px;
+}
+
+.recurring-snapshots .scheduled-snapshots {
+  clear: both;
+  display: inline-block;
+  /*+placement:shift 0px -26px;*/
+  position: relative;
+  left: 0px;
+  top: -26px;
+}
+
+.recurring-snapshots .scheduled-snapshots p {
+  font-weight: bold;
+  font-size: 12px;
+  /*+text-shadow:0px 2px 2px #FFFFFF;*/
+  -moz-text-shadow: 0px 2px 2px #FFFFFF;
+  -webkit-text-shadow: 0px 2px 2px #FFFFFF;
+  -o-text-shadow: 0px 2px 2px #FFFFFF;
+  text-shadow: 0px 2px 2px #FFFFFF;
+  text-indent: 12px;
+  padding-bottom: 8px;
+}
+
+.recurring-snapshots .scheduled-snapshots table {
+  border: none;
+  /*+placement:shift 0px -14px;*/
+  position: relative;
+  left: 0px;
+  top: -14px;
+  width: 564px;
+}
+
+.recurring-snapshots .scheduled-snapshots table td.actions div.action span.icon {
+  /*+placement:shift -3px -4px;*/
+  position: relative;
+  left: -3px;
+  top: -4px;
+}
+
+.recurring-snapshots .scheduled-snapshots tr {
+  padding: 0;
+  border: 0;
+  display: block;
+  width: 100%;
+  height: 38px;
+  margin: 22px 0 0;
+  display: none;
+}
+
+.recurring-snapshots .scheduled-snapshots tr td {
+  border: none;
+  min-width: 102px;
+  padding: 5px 0px 0 14px;
+  font-size: 12px;
+  word-break: keep-all;
+  word-wrap: normal;
+  text-indent: 0px;
+}
+
+.recurring-snapshots .scheduled-snapshots tr td.keep {
+  min-width: 60px;
+}
+
+.recurring-snapshots .scheduled-snapshots tr td.timezone {
+  min-width: 168px;
+  font-size: 12px;
+}
+
+.recurring-snapshots .scheduled-snapshots tr td.timezone span {
+  font-size: 10px;
+}
+
+.recurring-snapshots .scheduled-snapshots table tbody tr td.actions {
+  max-width: 22px !important;
+  min-width: 22px;
+}
+
+.recurring-snapshots .scheduled-snapshots tr td.time {
+  min-width: 144px;
+  background: url(../images/sprites.png) no-repeat -536px -533px;
+  text-indent: 0.7em;
+}
+
+.recurring-snapshots .scheduled-snapshots tr.daily td.time {
+  background-position: -537px -569px;
+}
+
+.recurring-snapshots .scheduled-snapshots tr.weekly td.time {
+  background-position: -537px -605px;
+}
+
+.recurring-snapshots .scheduled-snapshots tr.monthly td.time {
+  background-position: -537px -648px;
+}
+
+.recurring-snapshots p {
+  text-align: left;
+  font-size: 14px;
+  line-height: 18px;
+  padding: 0 47px 0 0;
+  color: #475765;
+  margin-bottom: 16px;
+  /*+text-shadow:0px 3px 3px #FFFFFF;*/
+  -moz-text-shadow: 0px 3px 3px #FFFFFF;
+  -webkit-text-shadow: 0px 3px 3px #FFFFFF;
+  -o-text-shadow: 0px 3px 3px #FFFFFF;
+  text-shadow: 0px 3px 3px #FFFFFF;
+  max-width: 550px;
+  display: block;
+}
+
+.recurring-snapshots .ui-tabs ul {
+  margin: 0;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.recurring-snapshots .ui-tabs ul li a {
+  width: 76px;
+  text-indent: 28px;
+  margin: 0 32px 0 0;
+  padding: 8px 0 5px;
+  background: url(../images/sprites.png) no-repeat -521px -540px;
+  border: none;
+}
+
+.recurring-snapshots .ui-tabs ul li.disabled a {
+  /*+opacity:50%;*/
+  filter: alpha(opacity=50);
+  -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=50);
+  -moz-opacity: 0.5;
+  opacity: 0.5;
+}
+
+.recurring-snapshots .ui-tabs ul li.disabled:hover a {
+  border: none;
+  background-color: transparent;
+  border: none;
+  /*+box-shadow:none;*/
+  -moz-box-shadow: none;
+  -webkit-box-shadow: none;
+  -o-box-shadow: none;
+  box-shadow: none;
+  cursor: default;
+}
+
+.recurring-snapshots .ui-tabs ul li.ui-state-active a,
+.recurring-snapshots .ui-tabs ul li:hover a {
+  background-color: #DFDFDF;
+  /*+border-radius:8px;*/
+  -moz-border-radius: 8px;
+  -webkit-border-radius: 8px;
+  -khtml-border-radius: 8px;
+  border-radius: 8px 8px 8px 8px;
+  /*+box-shadow:inset 0px 1px 2px #4E4E4E;*/
+  -moz-box-shadow: inset 0px 1px 2px #4E4E4E;
+  -webkit-box-shadow: inset 0px 1px 2px #4E4E4E;
+  -o-box-shadow: inset 0px 1px 2px #4E4E4E;
+  box-shadow: inset 0px 1px 2px #4E4E4E;
+}
+
+.recurring-snapshots .ui-tabs ul li.daily a {
+  background-position: -522px -577px;
+}
+
+.recurring-snapshots .ui-tabs ul li.weekly a {
+  background-position: -526px -612px;
+}
+
+.recurring-snapshots .ui-tabs ul li.monthly a {
+  background-position: -528px -656px;
+}
+
+.recurring-snapshots .ui-tabs div.ui-tabs-panel {
+  height: 144px;
+  width: 576px;
+  border: none;
+  border-bottom: 1px solid #C3C3C3;
+  background: inherit;
+  margin: 0;
+  padding: 0;
+  /*+placement:shift -89px 0px;*/
+  position: relative;
+  left: -89px;
+  top: 0px;
+}
+
 /*Network detail chat*/
 .network-chart {
   width: 100%;
   height: 100%;
   position: relative;
   background: url(../images/bg-network.png) no-repeat 38% 70px;
+}
+
+.network-chart.static-nat {
+  background: url(../images/bg-network-nat.png) no-repeat 31% 62px;
 }
 
 .network-chart ul {
@@ -4063,6 +4374,30 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   width: 147px;
   height: 86px;
   background: url(../images/buttons.png) no-repeat 0px -399px;
+}
+
+.network-chart li.static-nat-enabled {
+  /*+placement:shift 31px 44px;*/
+  position: relative;
+  left: 31px;
+  top: 44px;
+}
+
+.network-chart li.static-nat-enabled .name {
+  background: url(../images/sprites.png) no-repeat -6px -460px;
+}
+
+.network-chart li.static-nat-enabled .name span {
+  font-size: 11px;
+  padding: 0 0 0 25px;
+}
+
+.network-chart li.disabled {
+  /*+opacity:100%;*/
+  filter: alpha(opacity=100);
+  -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+  -moz-opacity: 1;
+  opacity: 1;
 }
 
 .network-chart li.firewall {
@@ -4103,6 +4438,16 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   top: 11px;
 }
 
+.network-chart li.disabled .name {
+  color: #8695A5;
+  /*+placement:shift 5px 32px;*/
+  position: relative;
+  left: 5px;
+  top: 32px;
+  text-decoration: line-through;
+  text-align: center;
+}
+
 .network-chart li .view-details {
   /*+placement:anchor-bottom-right 11px 11px;*/
   position: absolute;
@@ -4118,6 +4463,10 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   -webkit-text-shadow: 0px 1px 1px #395065;
   -o-text-shadow: 0px 1px 1px #395065;
   text-shadow: 0px 1px 1px #395065;
+}
+
+.network-chart li.disabled .view-details {
+  display: none;
 }
 
 /*System Dashboard*/
@@ -4671,5 +5020,21 @@ div.panel.ui-dialog div.list-view div.fixed-header {
 .restoreVM:hover .icon,
 .restore:hover .icon {
   background-position: -168px -613px;
+}
+
+.enableVPN .icon {
+  background-position: -202px 0px;
+}
+
+.enableVPN:hover .icon {
+  background-position: -199px -585px;
+}
+
+.disableVPN .icon {
+  background-position: -202px -30px;
+}
+
+.disableVPN:hover .icon {
+  background-position: -199px -615px;
 }
 
