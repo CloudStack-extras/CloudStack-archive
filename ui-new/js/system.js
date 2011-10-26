@@ -834,7 +834,7 @@
               fields: {
                 id: { label: "ID" },
                 traffictype:  { label: "Traffic type" },
-                broadcastdomaintype:  { label: "Broadcast domain type" }
+                vlan:  { label: "VLAN ID" }
               },
               actions: {			   
 				add: {
@@ -1034,8 +1034,7 @@
 								}
 							}
 						}
-					});						
-					//???	
+					});					
 				  },			
 
 				  notification: {                
@@ -1074,9 +1073,10 @@
                         networkofferingdisplaytext:  { label: "Network offering description" }
                       },
                       {
-                        id: { label: "ID" },
-                        broadcastdomaintype: { label: 'Broadcast domain type' },
+                        id: { label: "ID" },                        
                         traffictype: { label: 'Traffic type' },
+						broadcastdomaintype: { label: 'Broadcast domain type' },
+						vlan: { label: 'VLAN ID' },
                         gateway: { label: 'Gateway' },
                         netmask: { label: 'Netmask' },
                         startip: { label: 'Start IP' },
@@ -1104,8 +1104,7 @@
                         state: { label: 'State' },
                         related: { label: 'Related' },
                         dns1: { label: 'DNS 1' },
-                        dns2: { label: 'DNS 2' },
-                        vlan: { label: 'VLAN' },
+                        dns2: { label: 'DNS 2' },                       
                         domainid: { label: 'Domain ID' },
                         account: { label: 'Account' }
                       }
