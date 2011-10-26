@@ -914,20 +914,47 @@
 					  domainId: {
 						label: 'Domain',
 						validation: { required: true },
-						select: function(args) {				                 
-						  $.ajax({
-							url: createURL("listDomains"),				
-							dataType: "json",
-							async: false,
-							success: function(json) {		
-							  var items = [];					
-							  var domainObjs = json.listdomainsresponse.domain;	                      
-							  $(domainObjs).each(function() {
-								items.push({id: this.id, description: this.name});
-							  });					  
-							  args.response.success({data: items});					  
-							}
-						  });	
+						select: function(args) {	                          					  
+						  var items = [];						  
+						  var zoneObj = args.context.zones[0];
+						  if(zoneObj.domainid != null) { //list only domains under zoneObj.domainid						
+							$.ajax({
+								url: createURL("listDomainChildren&id=" + zoneObj.domainid + "&isrecursive=true"),				
+								dataType: "json",
+								async: false,
+								success: function(json) {	
+									var domainObjs = json.listdomainchildrenresponse.domain;	
+                                    $(domainObjs).each(function() {
+									  items.push({id: this.id, description: this.name});
+									});					
+								}
+							});								
+							$.ajax({
+								url: createURL("listDomains&id=" + zoneObj.domainid),				
+								dataType: "json",
+								async: false,
+								success: function(json) {	
+									var domainObjs = json.listdomainsresponse.domain;	 								
+									$(domainObjs).each(function() {
+									  items.push({id: this.id, description: this.name});
+									});	
+								}
+							});													
+						  }
+						  else { //list all domains    							
+							$.ajax({
+							  url: createURL("listDomains"),				
+							  dataType: "json",
+							  async: false,
+							  success: function(json) {		
+							    var domainObjs = json.listdomainsresponse.domain;	                      
+							    $(domainObjs).each(function() {
+								  items.push({id: this.id, description: this.name});
+							    });								
+							  }
+						    });								
+						  }  						  
+						  args.response.success({data: items});	
 						} 
 					  },
 					  account: { label: 'Account' },
