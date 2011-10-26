@@ -124,8 +124,8 @@
 
       // Get existing data
       dataProvider({
+        context: context,
         response: {
-          context: context,
           success: function(args) {
             $(args.data).each(function() {
               var snapshot = this;
