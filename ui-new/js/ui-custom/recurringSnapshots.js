@@ -52,7 +52,7 @@
           response: {
             success: function(args) {
               var $snapshotRow = $snapshots.find('.scheduled-snapshots tr').filter(function() {
-                return $(this).index() == formData['snapshot-type'];
+                return $(this).index() == args.data.type;
               }).addClass('active').show();
 
               $snapshotRow.data('json-obj', args.data);
@@ -95,10 +95,11 @@
           else { $(this).removeClass('disabled ui-state-disabled'); }
 
           if ($(this).is('.ui-tabs-selected.ui-state-disabled')) {
+            $snapshots.find('form').show();
+
             if ($snapshots.find('li.ui-state-disabled').size() == $snapshots.find('li').size()) {
               $snapshots.find('form').hide();
             } else {
-              $snapshots.find('form').show();
               $snapshots.find('li:not(.ui-state-disabled):first a').click();
             }
           }
@@ -134,6 +135,8 @@
               var $tr = $snapshots.find('tr').filter(function() {
                 return $(this).index() == snapshot.type;
               }).addClass('active').show();
+
+              $tr.data('json-obj', snapshot);
 
               $tr.find('td.time span').html(snapshot.time);
               $tr.find('td.timezone span').html(
