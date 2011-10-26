@@ -884,6 +884,7 @@
 
     // Setup filter events
     $listView.find('.button.search, select, input[type=text]').bind('click change', function(event) {
+      if ($(event.target).closest('.section-select').size()) return true;
       if ((event.type == 'click' ||
            event.type == 'mouseup') &&
           ($(event.target).is('select') ||
