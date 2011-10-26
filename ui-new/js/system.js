@@ -1112,7 +1112,29 @@
                     dataProvider: function(args) {
                       args.response.success({data: args.context.directNetworks[0]});
                     }
-                  }
+                  },				  
+				  ipAllocations: {
+					title: 'IP Allocations',
+					multiple: true,
+					fields: [
+					  {
+						id: { label: 'ID' },
+						vlan: { label: 'VLAN' },
+						startip: { label: 'Start IP' },
+						endip: { label: 'End IP' }
+					  }
+					],
+					dataProvider: function(args) {						  
+					  $.ajax({
+						url: createURL("listVlanIpRanges&zoneid="+ args.context.zones[0].id + "&networkid="+ args.context.directNetworks[0].id),
+						dataType: "json",		
+						success: function(json) {
+						  var items = json.listvlaniprangesresponse.vlaniprange;		    
+						  args.response.success({data: items});	
+						}
+					  });  			  		  	  
+					}
+				  }					    
                 }
               }
             }
