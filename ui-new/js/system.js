@@ -711,7 +711,7 @@
               section: 'networks',
               id: 'networks',
               fields: {
-                id: { label: "ID" },
+                //id: { label: "ID" },
                 traffictype:  { label: "Traffic type" },
                 broadcastdomaintype:  { label: "Broadcast domain type" }
               },
@@ -832,9 +832,9 @@
               section: 'networks',
               id: 'networks',
               fields: {
-                id: { label: "ID" },
-                traffictype:  { label: "Traffic type" },
-                vlan:  { label: "VLAN ID" }
+                //id: { label: "ID" },
+				vlan:  { label: "VLAN ID" },
+                traffictype:  { label: "Traffic type" }                
               },
               actions: {			   
 				add: {
@@ -1057,7 +1057,9 @@
                     async: false,
                     success: function(json) {
                       var items = json.listnetworksresponse.network;
-                      args.response.success({data: items});
+                      args.response.success({
+					    actionFilter: directNetworkActionfilter,
+					    data: items});
                     }
                   });
                 }
@@ -1065,6 +1067,83 @@
 
               detailView: {
                 //viewAll: { label: 'Hosts', path: 'instances' },
+				actions: {		
+				  //??? 
+				  addIpRange: {
+					label: 'Add IP range',
+					messages: {     
+					  confirm: function(args) {			
+						return 'Are you sure you want to add IP range?';
+					  },
+					  success: function(args) {
+						return 'IP range is being added.';
+					  },
+					  notification: function(args) {			
+						return 'Adding IP range';
+					  },
+					  complete: function(args) {			  
+						return 'IP range has been added.';
+					  }
+					}, 
+					preFilter: function(args) {
+					  debugger;
+					  
+					},
+					createForm: {
+					  title: 'Add IP range',				 
+					  fields: { 
+						vlanId: { label: 'VLAN ID' },
+						gateway: { label: 'Gateway' },
+						netmask: { label: 'Netmask' },		     
+						startip: { label: 'Start IP' },
+						endip: { label: 'End IP' }	 
+					  }
+					},        			
+					action: function(args) {   
+					  debugger;
+					  var $form = args.$form;									  
+					  var array1 = [];								
+					  if($form.find('.form-item[rel=vlanId]').css("display") != "none") {				        
+						array1.push("&vlan="+todb(args.data.vlanId)); 
+					  }
+					  //else {   //Bug 8950 (don't specify "vlan=untagged" if vlanId is not available when Adding Ip Range to Direct Network)
+					  //  array1.push("&vlan=untagged");
+					  //}
+						 											
+				      if($form.find('.form-item[rel=gateway]').css("display") != "none") {				       
+						array1.push("&gateway=" + todb(args.data.gateway));
+					  }
+								
+					  if($form.find('.form-item[rel=netmask]').css("display") != "none") {				        
+						array1.push("&netmask=" + todb(args.data.netmask));
+					  }																
+					   
+					  array1.push("&startip=" + todb(args.data.startip));    				
+					   
+					  if(args.data.endip != null && args.data.endip.length > 0)
+						array1.push("&endip=" + todb(args.data.endip));		
+					  
+					  
+					  $.ajax({
+						  url: createURL("createVlanIpRange&forVirtualNetwork=false&networkid=" + args.context.directNetworks[0].id + array1.join("")),
+						  dataType: "json",
+						  success: function(json) {							
+						    var item = json.createvlaniprangeresponse.vlan;	
+						    args.response.success({data: item});				    			   
+						  },
+						  error: function(XMLHttpResponse) {
+						    var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
+						    args.response.error(errorMsg);		
+						  }			
+					  });	
+					},
+					notification: {
+					  poll: pollAsyncJobResult	  
+					}               
+				  }
+				  //???
+				},
+				
                 tabs: {
                   details: {
                     title: 'Details',
@@ -4076,15 +4155,23 @@
   else if (jsonObj.state == "Disconnected"){
       allowedActions.push("delete");
     }
-  return allowedActions;
+    return allowedActions;
   }
 
   var secondarystorageActionfilter = function(args) {
     var jsonObj = args.context.item;
-  var allowedActions = [];
+    var allowedActions = [];
     allowedActions.push("delete");
-  return allowedActions;
+    return allowedActions;
   }
+  
+  var directNetworkActionfilter = function(args) {
+    var jsonObj = args.context.item;
+    var allowedActions = [];
+    allowedActions.push("addIpRange");
+    return allowedActions;
+  }
+  
   //action filters (end)
 
 })($, cloudStack, testData);
