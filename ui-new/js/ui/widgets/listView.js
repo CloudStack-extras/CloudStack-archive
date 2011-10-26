@@ -87,7 +87,7 @@
           listViewArgs.activeSection
         ] = [$instanceRow.data('jsonObj')];
 
-        if (action.custom) {
+        if (action.custom && !action.noAdd) {
           action.custom({
             data: data,
             ref: options.ref,
@@ -100,18 +100,6 @@
 
               notification.desc = messages.notification(args.messageArgs);
               notification._custom = args._custom;
-
-              if (action.noAdd) {
-                $item = replaceItem(
-                  $item,
-                  $.extend($instanceRow.data('json-obj'), args.data),
-                  $item.data('list-view-action-filter')
-                );
-
-                $item.find('td:last').children().remove();
-                $item.find('td:last').append($('<div>').addClass('loading'));
-                $item.addClass('loading');                
-              }
 
               addNotification(
                 notification,
@@ -140,7 +128,7 @@
             $item: $instanceRow
           });
         } else {
-          action({
+          var actionArgs = {
             data: data,
             ref: options.ref,
             context: options.context,
@@ -204,6 +192,12 @@
                       if (additional && additional.complete)
                         additional.complete(args, $newRow);
                     }
+
+                    if (messages.complete) {
+                      cloudStack.dialog.notice({
+                        message: messages.complete(args.data)
+                      });
+                    }
                   },
 
                   {},
@@ -231,7 +225,19 @@
                   cloudStack.dialog.notice({ message: data.message });
               }
             }
-          });
+          };
+          
+          if (action.custom && action.noAdd) {
+            action.custom({
+              data: data,
+              ref: options.ref,
+              context: context,
+              $instanceRow: $instanceRow,
+              complete: actionArgs.response.success
+            });
+          } else {
+            action(actionArgs);            
+          }
         }
       };
 
@@ -611,7 +617,7 @@
           $td.data('list-view-action', key);
         }
         if (field.converter) {
-          content = field.converter(content);
+          content = field.converter(content, dataItem);
         }
 
         $td.html(content);
