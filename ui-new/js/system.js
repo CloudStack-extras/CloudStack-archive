@@ -1067,8 +1067,7 @@
 
               detailView: {
                 //viewAll: { label: 'Hosts', path: 'instances' },
-                actions: {
-                  //???
+                actions: {                  
                   addIpRange: {
                     label: 'Add IP range',
                     messages: {
@@ -1084,13 +1083,21 @@
                       complete: function(args) {
                         return 'IP range has been added.';
                       }
-                    },
-                    preFilter: function(args) {
-                      debugger;
-
-                    },
+                    },                   
                     createForm: {
                       title: 'Add IP range',
+                      preFilter: function(args) {                                             
+                        if(args.context.zones[0].securitygroupsenabled) {                         
+                          args.$form.find('.form-item[rel=vlanId]').css('display', 'inline-block');
+                          args.$form.find('.form-item[rel=gateway]').css('display', 'inline-block');
+                          args.$form.find('.form-item[rel=netmask]').css('display', 'inline-block');
+                        }
+                        else {                          
+                          args.$form.find('.form-item[rel=vlanId]').hide();
+                          args.$form.find('.form-item[rel=gateway]').hide();
+                          args.$form.find('.form-item[rel=netmask]').hide();
+                        }                       
+                      },
                       fields: {
                         vlanId: { label: 'VLAN ID' },
                         gateway: { label: 'Gateway' },
@@ -1099,8 +1106,7 @@
                         endip: { label: 'End IP' }
                       }
                     },
-                    action: function(args) {
-                      debugger;
+                    action: function(args) {                      
                       var $form = args.$form;
                       var array1 = [];
                       if($form.find('.form-item[rel=vlanId]').css("display") != "none") {
@@ -1138,10 +1144,11 @@
                       });
                     },
                     notification: {
-                      poll: pollAsyncJobResult
+                      poll: function(args) {
+                        args.complete();
+                      }
                     }
-                  }
-                  //???
+                  }                  
                 },
 
                 tabs: {
