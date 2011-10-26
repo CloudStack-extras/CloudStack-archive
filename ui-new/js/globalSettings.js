@@ -10,7 +10,7 @@
           action: function(args) {
             var name = args.data.jsonObj.name;
             var value = args.data.value;
-            
+
             $.ajax({
               url: createURL(
                 'updateConfiguration&name=' + name + '&value=' + value

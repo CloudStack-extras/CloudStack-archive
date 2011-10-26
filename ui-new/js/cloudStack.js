@@ -20,9 +20,9 @@
       configuration: {}
     }
   });
-  
-  login();	  
-  
+
+  login();
+
   $(function() {
     $('#cloudStack3-container').cloudStack(cloudStack);
   });

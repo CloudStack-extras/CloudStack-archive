@@ -716,7 +716,7 @@
                 broadcastdomaintype:  { label: "Broadcast domain type" }
               },
 
-              dataProvider: function(args) {  //public network			  
+              dataProvider: function(args) {  //public network
                 var showPublicNetwork = true;
                 var zoneObj = args.context.zones[0];
                 if(zoneObj.networktype == "Basic") {
@@ -833,218 +833,218 @@
               id: 'networks',
               fields: {
                 //id: { label: "ID" },
-				vlan:  { label: "VLAN ID" },
-                traffictype:  { label: "Traffic type" }                
+                vlan:  { label: "VLAN ID" },
+                traffictype:  { label: "Traffic type" }
               },
-              actions: {			   
-				add: {
-				  label: 'Create network',			   		  
+              actions: {
+                add: {
+                  label: 'Create network',
 
-				  messages: {
-					confirm: function(args) {
-					  return 'Are you sure you want to create a network?';
-					},
-					success: function(args) {
-					  return 'Your new network is being created.';
-					},
-					notification: function(args) {
-					  return 'Creating new network';
-					},
-					complete: function(args) {
-					  return 'Network has been created successfully!';
-					}
-				  },
+                  messages: {
+                    confirm: function(args) {
+                      return 'Are you sure you want to create a network?';
+                    },
+                    success: function(args) {
+                      return 'Your new network is being created.';
+                    },
+                    notification: function(args) {
+                      return 'Creating new network';
+                    },
+                    complete: function(args) {
+                      return 'Network has been created successfully!';
+                    }
+                  },
 
-				  createForm: {
-					title: 'Create network',					        
-					fields: {
-					  name: {
-						label: 'Name',
-						validation: { required: true }					
-					  },
-					  description: {
-						label: 'Description',
-						validation: { required: true }
-					  },
-					  isDefault: {
-						label: "Default",
-						isBoolean: true
-					  },
-					  vlanTagged: {
-						label: 'VLAN',  
-						dependsOn: 'isBootable',						               			
-						select: function(args) {    		  
-						  args.response.success({data: {id: "tagged", description: "tagged"}});								 						  		 
-						}		
-					  },					  
-					  vlanId: { label: "VLAN ID" },					  
-					  scope: { 
-					    label: 'Scope',
-						select: function(args) {						  
-						  var zoneObj = args.context.zones[0];						  
-						  var array1 = [];
-						  if(zoneObj.securitygroupsenabled) {
-						    array1.push({id: 'account-specific', description: 'account-specific'});
-						  }
-						  else {  
-							array1.push({id: 'zone-wide', description: 'zone-wide'});
-							array1.push({id: 'domain-specific', description: 'domain-specific'});
-							array1.push({id: 'account-specific', description: 'account-specific'});
-					      }
+                  createForm: {
+                    title: 'Create network',
+                    fields: {
+                      name: {
+                        label: 'Name',
+                        validation: { required: true }
+                      },
+                      description: {
+                        label: 'Description',
+                        validation: { required: true }
+                      },
+                      isDefault: {
+                        label: "Default",
+                        isBoolean: true
+                      },
+                      vlanTagged: {
+                        label: 'VLAN',
+                        dependsOn: 'isBootable',
+                        select: function(args) {
+                          args.response.success({data: {id: "tagged", description: "tagged"}});
+                        }
+                      },
+                      vlanId: { label: "VLAN ID" },
+                      scope: {
+                        label: 'Scope',
+                        select: function(args) {
+                          var zoneObj = args.context.zones[0];
+                          var array1 = [];
+                          if(zoneObj.securitygroupsenabled) {
+                            array1.push({id: 'account-specific', description: 'account-specific'});
+                          }
+                          else {
+                            array1.push({id: 'zone-wide', description: 'zone-wide'});
+                            array1.push({id: 'domain-specific', description: 'domain-specific'});
+                            array1.push({id: 'account-specific', description: 'account-specific'});
+                          }
                           args.response.success({data: array1});
-						                           				  
-						  args.$select.change(function() { 				   
-							var $form = $(this).closest('form');							
-							if($(this).val() == "zone-wide") {
-							  $form.find('.form-item[rel=domainId]').hide();
-							  $form.find('.form-item[rel=account]').hide();
-							}
-							else if ($(this).val() == "domain-specific") {
-							  $form.find('.form-item[rel=domainId]').css('display', 'inline-block');
-							  $form.find('.form-item[rel=account]').hide();
-							}
-							else if($(this).val() == "account-specific") {
-							  $form.find('.form-item[rel=domainId]').css('display', 'inline-block');
-							  $form.find('.form-item[rel=account]').css('display', 'inline-block');
-							}
-						  });				  
-						}
-					  },					 					  
-					  domainId: {
-						label: 'Domain',
-						validation: { required: true },
-						select: function(args) {	                          					  
-						  var items = [];						  
-						  var zoneObj = args.context.zones[0];
-						  if(zoneObj.domainid != null) { //list only domains under zoneObj.domainid						
-							$.ajax({
-								url: createURL("listDomainChildren&id=" + zoneObj.domainid + "&isrecursive=true"),				
-								dataType: "json",
-								async: false,
-								success: function(json) {	
-									var domainObjs = json.listdomainchildrenresponse.domain;	
-                                    $(domainObjs).each(function() {
-									  items.push({id: this.id, description: this.name});
-									});					
-								}
-							});								
-							$.ajax({
-								url: createURL("listDomains&id=" + zoneObj.domainid),				
-								dataType: "json",
-								async: false,
-								success: function(json) {	
-									var domainObjs = json.listdomainsresponse.domain;	 								
-									$(domainObjs).each(function() {
-									  items.push({id: this.id, description: this.name});
-									});	
-								}
-							});													
-						  }
-						  else { //list all domains    							
-							$.ajax({
-							  url: createURL("listDomains"),				
-							  dataType: "json",
-							  async: false,
-							  success: function(json) {		
-							    var domainObjs = json.listdomainsresponse.domain;	                      
-							    $(domainObjs).each(function() {
-								  items.push({id: this.id, description: this.name});
-							    });								
-							  }
-						    });								
-						  }  						  
-						  args.response.success({data: items});	
-						} 
-					  },
-					  account: { label: 'Account' },
-					  gateway: { label: 'Gateway' },
-					  netmask: { label: 'Netmask' },
-					  startip: { label: 'Start IP' },
-					  endip: { label: 'End IP' },
-					  networkdomain: { label: 'Network domain' },
-                      tags: { label: 'Tags' }					 			  
-					}
-				  },
-				  
-				  action: function(args) {						
-                    var array1 = [];					
-					array1.push("&zoneId=" + args.context.zones[0].id);		
-					array1.push("&name=" + todb(args.data.name));
-					array1.push("&displayText=" + todb(args.data.description));
-										
-					if (args.data.vlanTagged == "tagged") 
-						array1.push("&vlan=" + todb(args.data.vlanId));					 
-					else 
-						array1.push("&vlan=untagged");
-														
-					var $form = args.$form;
-					
-					if($form.find('.form-item[rel=domainId]').css("display") != "none") {
-					  if($form.find('.form-item[rel=account]').css("display") != "none") {  //account-specific
-					     array1.push("&domainId=" + args.data.domainId);
-						 array1.push("&account=" + args.data.account);
-					  }
-					  else {  //domain-specific
-					    array1.push("&domainId=" + args.data.domainId);
-						array1.push("&isshared=true");
-					  }
-					}
-					else { //zone-wide
-					  array1.push("&isshared=true");
-					}
-										
-					array1.push("&isDefault=" + args.data.isDefault);	
-					array1.push("&gateway=" + args.data.gateway);	
-					array1.push("&netmask=" + args.data.netmask);	
-					array1.push("&startip=" + args.data.startip);					
-					array1.push("&endip=" + args.data.endip);								
-					
-					if(args.data.networkdomain != null && args.data.networkdomain.length > 0)
-						array1.push("&networkdomain=" + todb(args.data.networkdomain));
-													
-					if(args.data.tags != null && args.data.tags.length > 0)
-						array1.push("&tags=" + todb(args.data.tags));
-				                   	
-                    //get network offering of direct network					
-					$.ajax({
-						url: createURL("listNetworkOfferings&guestiptype=Direct"),
-						dataType: "json",
-						async: false,
-						success: function(json) {						    
-							var networkOfferings = json.listnetworkofferingsresponse.networkoffering;
-							if (networkOfferings != null && networkOfferings.length > 0) {
-								for (var i = 0; i < networkOfferings.length; i++) {
-									if (networkOfferings[i].isdefault) {
-										array1.push("&networkOfferingId=" + networkOfferings[i].id);
-										
-										// Create a network from this.
-										$.ajax({
-											url: createURL("createNetwork" + array1.join("")),
-											dataType: "json",
-											success: function(json) {												   
-												var item = json.createnetworkresponse.network;
-												args.response.success({data:item});													    
-											},											
-											error: function(XMLHttpResponse) {											  
-												var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
-												args.response.error(errorMsg);		
-											}	
-										});
-									}
-								}
-							}
-						}
-					});					
-				  },			
 
-				  notification: {                
-					poll: function(args) {			  
-					  args.complete();
-					}		
-				  }
-				}				
-			  },
-              dataProvider: function(args) { //direct netwoerk               
+                          args.$select.change(function() {
+                            var $form = $(this).closest('form');
+                            if($(this).val() == "zone-wide") {
+                              $form.find('.form-item[rel=domainId]').hide();
+                              $form.find('.form-item[rel=account]').hide();
+                            }
+                            else if ($(this).val() == "domain-specific") {
+                              $form.find('.form-item[rel=domainId]').css('display', 'inline-block');
+                              $form.find('.form-item[rel=account]').hide();
+                            }
+                            else if($(this).val() == "account-specific") {
+                              $form.find('.form-item[rel=domainId]').css('display', 'inline-block');
+                              $form.find('.form-item[rel=account]').css('display', 'inline-block');
+                            }
+                          });
+                        }
+                      },
+                      domainId: {
+                        label: 'Domain',
+                        validation: { required: true },
+                        select: function(args) {
+                          var items = [];
+                          var zoneObj = args.context.zones[0];
+                          if(zoneObj.domainid != null) { //list only domains under zoneObj.domainid
+                            $.ajax({
+                              url: createURL("listDomainChildren&id=" + zoneObj.domainid + "&isrecursive=true"),
+                              dataType: "json",
+                              async: false,
+                              success: function(json) {
+                                var domainObjs = json.listdomainchildrenresponse.domain;
+                                $(domainObjs).each(function() {
+                                  items.push({id: this.id, description: this.name});
+                                });
+                              }
+                            });
+                            $.ajax({
+                              url: createURL("listDomains&id=" + zoneObj.domainid),
+                              dataType: "json",
+                              async: false,
+                              success: function(json) {
+                                var domainObjs = json.listdomainsresponse.domain;
+                                $(domainObjs).each(function() {
+                                  items.push({id: this.id, description: this.name});
+                                });
+                              }
+                            });
+                          }
+                          else { //list all domains
+                            $.ajax({
+                              url: createURL("listDomains"),
+                              dataType: "json",
+                              async: false,
+                              success: function(json) {
+                                var domainObjs = json.listdomainsresponse.domain;
+                                $(domainObjs).each(function() {
+                                  items.push({id: this.id, description: this.name});
+                                });
+                              }
+                            });
+                          }
+                          args.response.success({data: items});
+                        }
+                      },
+                      account: { label: 'Account' },
+                      gateway: { label: 'Gateway' },
+                      netmask: { label: 'Netmask' },
+                      startip: { label: 'Start IP' },
+                      endip: { label: 'End IP' },
+                      networkdomain: { label: 'Network domain' },
+                      tags: { label: 'Tags' }
+                    }
+                  },
+
+                  action: function(args) {
+                    var array1 = [];
+                    array1.push("&zoneId=" + args.context.zones[0].id);
+                    array1.push("&name=" + todb(args.data.name));
+                    array1.push("&displayText=" + todb(args.data.description));
+
+                    if (args.data.vlanTagged == "tagged")
+                      array1.push("&vlan=" + todb(args.data.vlanId));
+                    else
+                      array1.push("&vlan=untagged");
+
+                    var $form = args.$form;
+
+                    if($form.find('.form-item[rel=domainId]').css("display") != "none") {
+                      if($form.find('.form-item[rel=account]').css("display") != "none") {  //account-specific
+                        array1.push("&domainId=" + args.data.domainId);
+                        array1.push("&account=" + args.data.account);
+                      }
+                      else {  //domain-specific
+                        array1.push("&domainId=" + args.data.domainId);
+                        array1.push("&isshared=true");
+                      }
+                    }
+                    else { //zone-wide
+                      array1.push("&isshared=true");
+                    }
+
+                    array1.push("&isDefault=" + args.data.isDefault);
+                    array1.push("&gateway=" + args.data.gateway);
+                    array1.push("&netmask=" + args.data.netmask);
+                    array1.push("&startip=" + args.data.startip);
+                    array1.push("&endip=" + args.data.endip);
+
+                    if(args.data.networkdomain != null && args.data.networkdomain.length > 0)
+                      array1.push("&networkdomain=" + todb(args.data.networkdomain));
+
+                    if(args.data.tags != null && args.data.tags.length > 0)
+                      array1.push("&tags=" + todb(args.data.tags));
+
+                    //get network offering of direct network
+                    $.ajax({
+                      url: createURL("listNetworkOfferings&guestiptype=Direct"),
+                      dataType: "json",
+                      async: false,
+                      success: function(json) {
+                        var networkOfferings = json.listnetworkofferingsresponse.networkoffering;
+                        if (networkOfferings != null && networkOfferings.length > 0) {
+                          for (var i = 0; i < networkOfferings.length; i++) {
+                            if (networkOfferings[i].isdefault) {
+                              array1.push("&networkOfferingId=" + networkOfferings[i].id);
+
+                              // Create a network from this.
+                              $.ajax({
+                                url: createURL("createNetwork" + array1.join("")),
+                                dataType: "json",
+                                success: function(json) {
+                                  var item = json.createnetworkresponse.network;
+                                  args.response.success({data:item});
+                                },
+                                error: function(XMLHttpResponse) {
+                                  var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+                                  args.response.error(errorMsg);
+                                }
+                              });
+                            }
+                          }
+                        }
+                      }
+                    });
+                  },
+
+                  notification: {
+                    poll: function(args) {
+                      args.complete();
+                    }
+                  }
+                }
+              },
+              dataProvider: function(args) { //direct netwoerk
                 var zoneObj = args.context.zones[0];
                 if(zoneObj.networktype == "Basic") {
                   args.response.success({data: null});
@@ -1058,8 +1058,8 @@
                     success: function(json) {
                       var items = json.listnetworksresponse.network;
                       args.response.success({
-					    actionFilter: directNetworkActionfilter,
-					    data: items});
+                        actionFilter: directNetworkActionfilter,
+                        data: items});
                     }
                   });
                 }
@@ -1067,83 +1067,83 @@
 
               detailView: {
                 //viewAll: { label: 'Hosts', path: 'instances' },
-				actions: {		
-				  //??? 
-				  addIpRange: {
-					label: 'Add IP range',
-					messages: {     
-					  confirm: function(args) {			
-						return 'Are you sure you want to add IP range?';
-					  },
-					  success: function(args) {
-						return 'IP range is being added.';
-					  },
-					  notification: function(args) {			
-						return 'Adding IP range';
-					  },
-					  complete: function(args) {			  
-						return 'IP range has been added.';
-					  }
-					}, 
-					preFilter: function(args) {
-					  debugger;
-					  
-					},
-					createForm: {
-					  title: 'Add IP range',				 
-					  fields: { 
-						vlanId: { label: 'VLAN ID' },
-						gateway: { label: 'Gateway' },
-						netmask: { label: 'Netmask' },		     
-						startip: { label: 'Start IP' },
-						endip: { label: 'End IP' }	 
-					  }
-					},        			
-					action: function(args) {   
-					  debugger;
-					  var $form = args.$form;									  
-					  var array1 = [];								
-					  if($form.find('.form-item[rel=vlanId]').css("display") != "none") {				        
-						array1.push("&vlan="+todb(args.data.vlanId)); 
-					  }
-					  //else {   //Bug 8950 (don't specify "vlan=untagged" if vlanId is not available when Adding Ip Range to Direct Network)
-					  //  array1.push("&vlan=untagged");
-					  //}
-						 											
-				      if($form.find('.form-item[rel=gateway]').css("display") != "none") {				       
-						array1.push("&gateway=" + todb(args.data.gateway));
-					  }
-								
-					  if($form.find('.form-item[rel=netmask]').css("display") != "none") {				        
-						array1.push("&netmask=" + todb(args.data.netmask));
-					  }																
-					   
-					  array1.push("&startip=" + todb(args.data.startip));    				
-					   
-					  if(args.data.endip != null && args.data.endip.length > 0)
-						array1.push("&endip=" + todb(args.data.endip));		
-					  
-					  
-					  $.ajax({
-						  url: createURL("createVlanIpRange&forVirtualNetwork=false&networkid=" + args.context.directNetworks[0].id + array1.join("")),
-						  dataType: "json",
-						  success: function(json) {							
-						    var item = json.createvlaniprangeresponse.vlan;	
-						    args.response.success({data: item});				    			   
-						  },
-						  error: function(XMLHttpResponse) {
-						    var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
-						    args.response.error(errorMsg);		
-						  }			
-					  });	
-					},
-					notification: {
-					  poll: pollAsyncJobResult	  
-					}               
-				  }
-				  //???
-				},
-				
+                actions: {
+                  //???
+                  addIpRange: {
+                    label: 'Add IP range',
+                    messages: {
+                      confirm: function(args) {
+                        return 'Are you sure you want to add IP range?';
+                      },
+                      success: function(args) {
+                        return 'IP range is being added.';
+                      },
+                      notification: function(args) {
+                        return 'Adding IP range';
+                      },
+                      complete: function(args) {
+                        return 'IP range has been added.';
+                      }
+                    },
+                    preFilter: function(args) {
+                      debugger;
+
+                    },
+                    createForm: {
+                      title: 'Add IP range',
+                      fields: {
+                        vlanId: { label: 'VLAN ID' },
+                        gateway: { label: 'Gateway' },
+                        netmask: { label: 'Netmask' },
+                        startip: { label: 'Start IP' },
+                        endip: { label: 'End IP' }
+                      }
+                    },
+                    action: function(args) {
+                      debugger;
+                      var $form = args.$form;
+                      var array1 = [];
+                      if($form.find('.form-item[rel=vlanId]').css("display") != "none") {
+                        array1.push("&vlan="+todb(args.data.vlanId));
+                      }
+                      //else {   //Bug 8950 (don't specify "vlan=untagged" if vlanId is not available when Adding Ip Range to Direct Network)
+                      //  array1.push("&vlan=untagged");
+                      //}
+
+                      if($form.find('.form-item[rel=gateway]').css("display") != "none") {
+                        array1.push("&gateway=" + todb(args.data.gateway));
+                      }
+
+                      if($form.find('.form-item[rel=netmask]').css("display") != "none") {
+                        array1.push("&netmask=" + todb(args.data.netmask));
+                      }
+
+                      array1.push("&startip=" + todb(args.data.startip));
+
+                      if(args.data.endip != null && args.data.endip.length > 0)
+                        array1.push("&endip=" + todb(args.data.endip));
+
+
+                      $.ajax({
+                        url: createURL("createVlanIpRange&forVirtualNetwork=false&networkid=" + args.context.directNetworks[0].id + array1.join("")),
+                        dataType: "json",
+                        success: function(json) {
+                          var item = json.createvlaniprangeresponse.vlan;
+                          args.response.success({data: item});
+                        },
+                        error: function(XMLHttpResponse) {
+                          var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+                          args.response.error(errorMsg);
+                        }
+                      });
+                    },
+                    notification: {
+                      poll: pollAsyncJobResult
+                    }
+                  }
+                  //???
+                },
+
                 tabs: {
                   details: {
                     title: 'Details',
@@ -1152,10 +1152,10 @@
                         networkofferingdisplaytext:  { label: "Network offering description" }
                       },
                       {
-                        id: { label: "ID" },                        
+                        id: { label: "ID" },
                         traffictype: { label: 'Traffic type' },
-						broadcastdomaintype: { label: 'Broadcast domain type' },
-						vlan: { label: 'VLAN ID' },
+                        broadcastdomaintype: { label: 'Broadcast domain type' },
+                        vlan: { label: 'VLAN ID' },
                         gateway: { label: 'Gateway' },
                         netmask: { label: 'Netmask' },
                         startip: { label: 'Start IP' },
@@ -1183,7 +1183,7 @@
                         state: { label: 'State' },
                         related: { label: 'Related' },
                         dns1: { label: 'DNS 1' },
-                        dns2: { label: 'DNS 2' },                       
+                        dns2: { label: 'DNS 2' },
                         domainid: { label: 'Domain ID' },
                         account: { label: 'Account' }
                       }
@@ -1191,29 +1191,29 @@
                     dataProvider: function(args) {
                       args.response.success({data: args.context.directNetworks[0]});
                     }
-                  },				  
-				  ipAllocations: {
-					title: 'IP Allocations',
-					multiple: true,
-					fields: [
-					  {
-						id: { label: 'ID' },
-						vlan: { label: 'VLAN' },
-						startip: { label: 'Start IP' },
-						endip: { label: 'End IP' }
-					  }
-					],
-					dataProvider: function(args) {						  
-					  $.ajax({
-						url: createURL("listVlanIpRanges&zoneid="+ args.context.zones[0].id + "&networkid="+ args.context.directNetworks[0].id),
-						dataType: "json",		
-						success: function(json) {
-						  var items = json.listvlaniprangesresponse.vlaniprange;		    
-						  args.response.success({data: items});	
-						}
-					  });  			  		  	  
-					}
-				  }					    
+                  },
+                  ipAllocations: {
+                    title: 'IP Allocations',
+                    multiple: true,
+                    fields: [
+                      {
+                        id: { label: 'ID' },
+                        vlan: { label: 'VLAN' },
+                        startip: { label: 'Start IP' },
+                        endip: { label: 'End IP' }
+                      }
+                    ],
+                    dataProvider: function(args) {
+                      $.ajax({
+                        url: createURL("listVlanIpRanges&zoneid="+ args.context.zones[0].id + "&networkid="+ args.context.directNetworks[0].id),
+                        dataType: "json",
+                        success: function(json) {
+                          var items = json.listvlaniprangesresponse.vlaniprange;
+                          args.response.success({data: items});
+                        }
+                      });
+                    }
+                  }
                 }
               }
             }
@@ -3977,72 +3977,72 @@
     var url;
     if(server.indexOf("://")==-1)
       url = "nfs://" + server + path;
-  else
+    else
       url = server + path;
-  return url;
+    return url;
   }
 
   function presetupURL(server, path) {
     var url;
     if(server.indexOf("://")==-1)
       url = "presetup://" + server + path;
-  else
+    else
       url = server + path;
-  return url;
+    return url;
   }
 
   function ocfs2URL(server, path) {
     var url;
     if(server.indexOf("://")==-1)
       url = "ocfs2://" + server + path;
-  else
+    else
       url = server + path;
-  return url;
+    return url;
   }
 
   function SharedMountPointURL(server, path) {
     var url;
     if(server.indexOf("://")==-1)
       url = "SharedMountPoint://" + server + path;
-  else
+    else
       url = server + path;
-  return url;
+    return url;
   }
 
   function vmfsURL(server, path) {
     var url;
     if(server.indexOf("://")==-1)
       url = "vmfs://" + server + path;
-  else
+    else
       url = server + path;
-  return url;
+    return url;
   }
 
   function iscsiURL(server, iqn, lun) {
     var url;
     if(server.indexOf("://")==-1)
       url = "iscsi://" + server + iqn + "/" + lun;
-  else
+    else
       url = server + iqn + "/" + lun;
-  return url;
+    return url;
   }
 
   //action filters (begin)
   var zoneActionfilter = function(args) {
     var jsonObj = args.context.item;
-  var allowedActions = [];
+    var allowedActions = [];
     allowedActions.push("edit");
     if(jsonObj.allocationstate == "Disabled")
       allowedActions.push("enable");
     else if(jsonObj.allocationstate == "Enabled")
       allowedActions.push("disable");
     allowedActions.push("delete");
-  return allowedActions;
+    return allowedActions;
   }
 
   var podActionfilter = function(args) {
     var podObj = args.context.item;
-  var allowedActions = [];
+    var allowedActions = [];
     allowedActions.push("edit");
     if(podObj.allocationstate == "Disabled")
       allowedActions.push("enable");
@@ -4050,78 +4050,78 @@
       allowedActions.push("disable");
     allowedActions.push("delete");
 
-  var selectedZoneObj;
-  $(zoneObjs).each(function(){
-    if(this.id == podObj.zoneid) {
-      selectedZoneObj = this;
-      return false;  //break the $.each() loop
-    }
-  });
+    var selectedZoneObj;
+    $(zoneObjs).each(function(){
+      if(this.id == podObj.zoneid) {
+        selectedZoneObj = this;
+        return false;  //break the $.each() loop
+      }
+    });
 
-  if(selectedZoneObj.networktype == "Basic") { //basic-mode network (pod-wide VLAN)
-        //$("#tab_ipallocation, #add_iprange_button, #tab_network_device, #add_network_device_button").show();
-        allowedActions.push("addIpRange");
+    if(selectedZoneObj.networktype == "Basic") { //basic-mode network (pod-wide VLAN)
+      //$("#tab_ipallocation, #add_iprange_button, #tab_network_device, #add_network_device_button").show();
+      allowedActions.push("addIpRange");
     }
     else if(selectedZoneObj.networktype == "Advanced") { //advanced-mode network (zone-wide VLAN)
       //$("#tab_ipallocation, #add_iprange_button, #tab_network_device, #add_network_device_button").hide();
     }
 
-  return allowedActions;
+    return allowedActions;
   }
 
   var clusterActionfilter = function(args) {
     var jsonObj = args.context.item;
-  var allowedActions = [];
+    var allowedActions = [];
 
-  if(jsonObj.allocationstate == "Disabled")
+    if(jsonObj.allocationstate == "Disabled")
       allowedActions.push("enable");
     else if(jsonObj.allocationstate == "Enabled")
       allowedActions.push("disable");
 
     if(jsonObj.managedstate == "Managed")
-    allowedActions.push("unmanage");
+      allowedActions.push("unmanage");
     else //PrepareUnmanaged , PrepareUnmanagedError, Unmanaged
       allowedActions.push("manage");
 
-  allowedActions.push("delete");
+    allowedActions.push("delete");
 
-  return allowedActions;
+    return allowedActions;
   }
 
   var hostActionfilter = function(args) {
     var jsonObj = args.context.item;
-  var allowedActions = [];
+    var allowedActions = [];
 
-  if (jsonObj.state == 'Up' || jsonObj.state == "Connecting") {
-    allowedActions.push("edit");
-    allowedActions.push("enableMaintenaceMode");
-    allowedActions.push("forceReconnect");
-  }
-  else if(jsonObj.state == 'Down') {
-    allowedActions.push("edit");
+    if (jsonObj.state == 'Up' || jsonObj.state == "Connecting") {
+      allowedActions.push("edit");
+      allowedActions.push("enableMaintenaceMode");
+      allowedActions.push("forceReconnect");
+    }
+    else if(jsonObj.state == 'Down') {
+      allowedActions.push("edit");
       allowedActions.push("enableMaintenaceMode");
       allowedActions.push("delete");
     }
-  else if(jsonObj.state == "Alert") {
-    allowedActions.push("edit");
-    allowedActions.push("delete");
-  }
-  else if (jsonObj.state == "ErrorInMaintenance") {
-    allowedActions.push("edit");
-    allowedActions.push("enableMaintenaceMode");
+    else if(jsonObj.state == "Alert") {
+      allowedActions.push("edit");
+      allowedActions.push("delete");
+    }
+    else if (jsonObj.state == "ErrorInMaintenance") {
+      allowedActions.push("edit");
+      allowedActions.push("enableMaintenaceMode");
       allowedActions.push("cancelMaintenaceMode");
     }
-  else if (jsonObj.state == "PrepareForMaintenance") {
-    allowedActions.push("edit");
+    else if (jsonObj.state == "PrepareForMaintenance") {
+      allowedActions.push("edit");
       allowedActions.push("cancelMaintenaceMode");
     }
-  else if (jsonObj.state == "Maintenance") {
-    allowedActions.push("edit");
+    else if (jsonObj.state == "Maintenance") {
+      allowedActions.push("edit");
       allowedActions.push("cancelMaintenaceMode");
       allowedActions.push("delete");
     }
-  else if (jsonObj.state == "Disconnected"){
-    allowedActions.push("edit");
+    else if (jsonObj.state == "Disconnected"){
+      allowedActions.push("edit");
       allowedActions.push("delete");
     }
     return allowedActions;
@@ -4129,30 +4129,30 @@
 
   var primarystorageActionfilter = function(args) {
     var jsonObj = args.context.item;
-  var allowedActions = [];
+    var allowedActions = [];
 
-  if (jsonObj.state == 'Up' || jsonObj.state == "Connecting") {
-    allowedActions.push("enableMaintenaceMode");
-  }
-  else if(jsonObj.state == 'Down') {
-    allowedActions.push("enableMaintenaceMode");
+    if (jsonObj.state == 'Up' || jsonObj.state == "Connecting") {
+      allowedActions.push("enableMaintenaceMode");
+    }
+    else if(jsonObj.state == 'Down') {
+      allowedActions.push("enableMaintenaceMode");
       allowedActions.push("delete");
     }
-  else if(jsonObj.state == "Alert") {
-    allowedActions.push("delete");
-  }
-  else if (jsonObj.state == "ErrorInMaintenance") {
-    allowedActions.push("enableMaintenaceMode");
+    else if(jsonObj.state == "Alert") {
+      allowedActions.push("delete");
+    }
+    else if (jsonObj.state == "ErrorInMaintenance") {
+      allowedActions.push("enableMaintenaceMode");
       allowedActions.push("cancelMaintenaceMode");
     }
-  else if (jsonObj.state == "PrepareForMaintenance") {
-    allowedActions.push("cancelMaintenaceMode");
+    else if (jsonObj.state == "PrepareForMaintenance") {
+      allowedActions.push("cancelMaintenaceMode");
     }
-  else if (jsonObj.state == "Maintenance") {
-    allowedActions.push("cancelMaintenaceMode");
+    else if (jsonObj.state == "Maintenance") {
+      allowedActions.push("cancelMaintenaceMode");
       allowedActions.push("delete");
     }
-  else if (jsonObj.state == "Disconnected"){
+    else if (jsonObj.state == "Disconnected"){
       allowedActions.push("delete");
     }
     return allowedActions;
@@ -4164,14 +4164,14 @@
     allowedActions.push("delete");
     return allowedActions;
   }
-  
+
   var directNetworkActionfilter = function(args) {
     var jsonObj = args.context.item;
     var allowedActions = [];
     allowedActions.push("addIpRange");
     return allowedActions;
   }
-  
+
   //action filters (end)
 
 })($, cloudStack, testData);

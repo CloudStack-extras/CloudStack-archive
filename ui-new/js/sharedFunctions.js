@@ -4,7 +4,7 @@ var g_role = null; // roles - root, domain-admin, ro-admin, user
 var g_username = null;
 var g_account = null;
 var g_domainid = null;
-var g_enableLogging = false; 
+var g_enableLogging = false;
 var g_timezoneoffset = null;
 var g_timezone = null;
 var g_supportELB = null;
@@ -29,359 +29,359 @@ var pageSize = 50;
 
 //login
 function login() {
-	var array1 = [];
-	
-	//var username = $("#account_username").val();
-	var username = "admin"; //for testing
-	//var username = "aaa_admin"; //for testing
-	//var username = "aaa_user"; //for testing	
-	array1.push("&username="+encodeURIComponent(username));
-	
-	//var password = $("#account_password").val();
-	var password = "password"; //for testing
-	//var password = "a"; //for testing	
-	if (md5Hashed) {
-		password = $.md5(password);
-	} 
-	array1.push("&password="+password);
-	
-	//var domain = $("#account_domain").val();
-	var domain = ""; //for testing
-	//var domain = "aaa"; //for testing	
-	if(domain != null && domain.length > 0) {
-		if (domain.charAt(0) != "/") {
-			domain = "/" + domain;
-		}
-	    array1.push("&domain="+encodeURIComponent(domain));
-	} else {
-		array1.push("&domain="+encodeURIComponent("/"));
-	}
-		
-	$.ajax({
-		//type: "POST",
-		url: createURL("login") + array1.join(""),	    
-		dataType: "json",
-		async: false,
-		success: function(json) {		    
-			g_mySession = $.cookie('JSESSIONID');
-			g_sessionKey = encodeURIComponent(json.loginresponse.sessionkey);
-			g_role = json.loginresponse.type;
-			g_username = json.loginresponse.username;	
-			g_account = json.loginresponse.account;
-			g_domainid = json.loginresponse.domainid;	
-			g_timezone = json.loginresponse.timezone;								
-			g_timezoneoffset = json.loginresponse.timezoneoffset;					
-				
-			$.cookie('sessionKey', g_sessionKey, { expires: 1});
-			$.cookie('username', g_username, { expires: 1});	
-			$.cookie('account', g_account, { expires: 1});	
-			$.cookie('domainid', g_domainid, { expires: 1});				
-			$.cookie('role', g_role, { expires: 1});
-			$.cookie('timezoneoffset', g_timezoneoffset, { expires: 1});  
-			$.cookie('timezone', g_timezone, { expires: 1});  				
-				           			
-			$.ajax({
-			    url: createURL("listCapabilities"),
-				//url: "command=/client/api?listCapabilities&sessionkey="+g_sessionKey,
-				dataType: "json",
-				async: false,
-				success: function(json) {					   
-				    /* g_supportELB: "guest"   — ips are allocated on guest network (so use 'forvirtualnetwork' = false)
-				     * g_supportELB: "public"  - ips are allocated on public network (so use 'forvirtualnetwork' = true)
-				     * g_supportELB: "false"   – no ELB support
-				     */
-				    g_supportELB = json.listcapabilitiesresponse.capability.supportELB.toString(); //convert boolean to string if it's boolean				    
-				    $.cookie('supportELB', g_supportELB, { expires: 1}); 
-				    					    
-				    g_firewallRuleUiEnabled = json.listcapabilitiesresponse.capability.firewallRuleUiEnabled.toString(); //convert boolean to string if it's boolean						    
-				    $.cookie('firewallRuleUiEnabled', g_firewallRuleUiEnabled, { expires: 1}); 
-				    			    
-					if (json.listcapabilitiesresponse.capability.userpublictemplateenabled != null) {
-						g_userPublicTemplateEnabled = json.listcapabilitiesresponse.capability.userpublictemplateenabled.toString(); //convert boolean to string if it's boolean
-						$.cookie('userpublictemplateenabled', g_userPublicTemplateEnabled, { expires: 1});
-					}
-					
-					if (json.listcapabilitiesresponse.capability.securitygroupsenabled != null) {
-						g_directAttachSecurityGroupsEnabled = json.listcapabilitiesresponse.capability.securitygroupsenabled.toString(); //convert boolean to string if it's boolean
-						$.cookie('directattachsecuritygroupsenabled', g_directAttachSecurityGroupsEnabled, { expires: 1});
-					}			
-				},
-				error: function(xmlHTTP) {
-					//logout(false);
-				},
-				beforeSend: function(xmlHTTP) {
-					return true;
-				}
-			});
-		},
-		error: function() {
-			//$("#account_password").val("");
-			//$("#login_wrapper #login_error").show();
-			//$("#account_username").focus();
-		},
-		beforeSend: function(XMLHttpRequest) {
-			return true;
-		}
-	});
+  var array1 = [];
+
+  //var username = $("#account_username").val();
+  var username = "admin"; //for testing
+  //var username = "aaa_admin"; //for testing
+  //var username = "aaa_user"; //for testing
+  array1.push("&username="+encodeURIComponent(username));
+
+  //var password = $("#account_password").val();
+  var password = "password"; //for testing
+  //var password = "a"; //for testing
+  if (md5Hashed) {
+    password = $.md5(password);
+  }
+  array1.push("&password="+password);
+
+  //var domain = $("#account_domain").val();
+  var domain = ""; //for testing
+  //var domain = "aaa"; //for testing
+  if(domain != null && domain.length > 0) {
+    if (domain.charAt(0) != "/") {
+      domain = "/" + domain;
+    }
+    array1.push("&domain="+encodeURIComponent(domain));
+  } else {
+    array1.push("&domain="+encodeURIComponent("/"));
+  }
+
+  $.ajax({
+    //type: "POST",
+    url: createURL("login") + array1.join(""),
+    dataType: "json",
+    async: false,
+    success: function(json) {
+      g_mySession = $.cookie('JSESSIONID');
+      g_sessionKey = encodeURIComponent(json.loginresponse.sessionkey);
+      g_role = json.loginresponse.type;
+      g_username = json.loginresponse.username;
+      g_account = json.loginresponse.account;
+      g_domainid = json.loginresponse.domainid;
+      g_timezone = json.loginresponse.timezone;
+      g_timezoneoffset = json.loginresponse.timezoneoffset;
+
+      $.cookie('sessionKey', g_sessionKey, { expires: 1});
+      $.cookie('username', g_username, { expires: 1});
+      $.cookie('account', g_account, { expires: 1});
+      $.cookie('domainid', g_domainid, { expires: 1});
+      $.cookie('role', g_role, { expires: 1});
+      $.cookie('timezoneoffset', g_timezoneoffset, { expires: 1});
+      $.cookie('timezone', g_timezone, { expires: 1});
+
+      $.ajax({
+        url: createURL("listCapabilities"),
+        //url: "command=/client/api?listCapabilities&sessionkey="+g_sessionKey,
+        dataType: "json",
+        async: false,
+        success: function(json) {
+          /* g_supportELB: "guest"   — ips are allocated on guest network (so use 'forvirtualnetwork' = false)
+           * g_supportELB: "public"  - ips are allocated on public network (so use 'forvirtualnetwork' = true)
+           * g_supportELB: "false"   – no ELB support
+           */
+          g_supportELB = json.listcapabilitiesresponse.capability.supportELB.toString(); //convert boolean to string if it's boolean
+          $.cookie('supportELB', g_supportELB, { expires: 1});
+
+          g_firewallRuleUiEnabled = json.listcapabilitiesresponse.capability.firewallRuleUiEnabled.toString(); //convert boolean to string if it's boolean
+          $.cookie('firewallRuleUiEnabled', g_firewallRuleUiEnabled, { expires: 1});
+
+          if (json.listcapabilitiesresponse.capability.userpublictemplateenabled != null) {
+            g_userPublicTemplateEnabled = json.listcapabilitiesresponse.capability.userpublictemplateenabled.toString(); //convert boolean to string if it's boolean
+            $.cookie('userpublictemplateenabled', g_userPublicTemplateEnabled, { expires: 1});
+          }
+
+          if (json.listcapabilitiesresponse.capability.securitygroupsenabled != null) {
+            g_directAttachSecurityGroupsEnabled = json.listcapabilitiesresponse.capability.securitygroupsenabled.toString(); //convert boolean to string if it's boolean
+            $.cookie('directattachsecuritygroupsenabled', g_directAttachSecurityGroupsEnabled, { expires: 1});
+          }
+        },
+        error: function(xmlHTTP) {
+          //logout(false);
+        },
+        beforeSend: function(xmlHTTP) {
+          return true;
+        }
+      });
+    },
+    error: function() {
+      //$("#account_password").val("");
+      //$("#login_wrapper #login_error").show();
+      //$("#account_username").focus();
+    },
+    beforeSend: function(XMLHttpRequest) {
+      return true;
+    }
+  });
 }
 
 //async action
-var pollAsyncJobResult = function(args) {	        
-	$.ajax({
-        url: createURL("queryAsyncJobResult&jobId=" + args._custom.jobId),
-        dataType: "json",	
-        async: false,		
-        success: function(json) {		                                                     							                       
-            var result = json.queryasyncjobresultresponse;										                   
-            if (result.jobstatus == 0) {
-                return; //Job has not completed
-            } else {				                        			                          			                                             
-                if (result.jobstatus == 1) { // Succeeded 
-					//debugger;
-					if(args._custom.getUpdatedItem != null && args._custom.getActionFilter != null) {					
-						args.complete({					  
-						  data: args._custom.getUpdatedItem(json),
-						  actionFilter: args._custom.getActionFilter()
-						});		
-                    }	
-                    else {
-                        args.complete();
-                    }					
-                } 
-				else if (result.jobstatus == 2) { // Failed	                        
-					args.error({message:result.jobresult.errortext});						
-                }											                    
-            }
-        },
-        error: function(XMLHttpResponse) {	                            
-            args.error();
+var pollAsyncJobResult = function(args) {
+  $.ajax({
+    url: createURL("queryAsyncJobResult&jobId=" + args._custom.jobId),
+    dataType: "json",
+    async: false,
+    success: function(json) {
+      var result = json.queryasyncjobresultresponse;
+      if (result.jobstatus == 0) {
+        return; //Job has not completed
+      } else {
+        if (result.jobstatus == 1) { // Succeeded
+          //debugger;
+          if(args._custom.getUpdatedItem != null && args._custom.getActionFilter != null) {
+            args.complete({
+              data: args._custom.getUpdatedItem(json),
+              actionFilter: args._custom.getActionFilter()
+            });
+          }
+          else {
+            args.complete();
+          }
         }
-    });		
+        else if (result.jobstatus == 2) { // Failed
+          args.error({message:result.jobresult.errortext});
+        }
+      }
+    },
+    error: function(XMLHttpResponse) {
+      args.error();
+    }
+  });
 }
 
 //API calls
 function createURL(apiName) {
-    return "/client/api?" + "command=" + apiName +"&response=json&sessionkey=" + g_sessionKey;
+  return "/client/api?" + "command=" + apiName +"&response=json&sessionkey=" + g_sessionKey;
 }
 
 function fromdb(val) {
-    return sanitizeXSS(noNull(val));
+  return sanitizeXSS(noNull(val));
 }
 
 function todb(val) {
-    return encodeURIComponent(val);
+  return encodeURIComponent(val);
 }
 
 function noNull(val) {
-    if(val == null)
-        return "";
-    else
-        return val;
+  if(val == null)
+    return "";
+  else
+    return val;
 }
 
-function sanitizeXSS(val) {  // Prevent cross-site-script(XSS) attack   
-    if(val == null || typeof(val) != "string")
-        return val; 
-    val = val.replace(/</g, "&lt;");  //replace < whose unicode is \u003c     
-    val = val.replace(/>/g, "&gt;");  //replace > whose unicode is \u003e  
-    return unescape(val);
+function sanitizeXSS(val) {  // Prevent cross-site-script(XSS) attack
+  if(val == null || typeof(val) != "string")
+    return val;
+  val = val.replace(/</g, "&lt;");  //replace < whose unicode is \u003c
+  val = val.replace(/>/g, "&gt;");  //replace > whose unicode is \u003e
+  return unescape(val);
 }
 
 // Role Functions
 function isAdmin() {
-	return (g_role == 1);
+  return (g_role == 1);
 }
 
 function isDomainAdmin() {
-	return (g_role == 2);
+  return (g_role == 2);
 }
 
 function isUser() {
-	return (g_role == 0);
+  return (g_role == 0);
 }
 
-// FUNCTION: Handles AJAX error callbacks.  You can pass in an optional function to 
-// handle errors that are not already handled by this method.  
+// FUNCTION: Handles AJAX error callbacks.  You can pass in an optional function to
+// handle errors that are not already handled by this method.
 function handleError(XMLHttpResponse, handleErrorCallback) {
-	// User Not authenticated
-	if (XMLHttpResponse.status == ERROR_ACCESS_DENIED_DUE_TO_UNAUTHORIZED) {
-		$("#dialog_session_expired").dialog("open");
-	} 	
-	else if (XMLHttpResponse.status == ERROR_INTERNET_NAME_NOT_RESOLVED) {
-		$("#dialog_error_internet_not_resolved").dialog("open");
-	} 
-	else if (XMLHttpResponse.status == ERROR_INTERNET_CANNOT_CONNECT) {
-		$("#dialog_error_management_server_not_accessible").dialog("open");
-	} 
-	else if (XMLHttpResponse.status == ERROR_VMOPS_ACCOUNT_ERROR && handleErrorCallback != undefined) {
-		handleErrorCallback();
-	} 
-	else if (handleErrorCallback != undefined) {
-		handleErrorCallback();
-	}
-	else {	  
-		var errorMsg = parseXMLHttpResponse(XMLHttpResponse);				
-		$("#dialog_error").text(fromdb(errorMsg)).dialog("open");
-	}
+  // User Not authenticated
+  if (XMLHttpResponse.status == ERROR_ACCESS_DENIED_DUE_TO_UNAUTHORIZED) {
+    $("#dialog_session_expired").dialog("open");
+  }
+  else if (XMLHttpResponse.status == ERROR_INTERNET_NAME_NOT_RESOLVED) {
+    $("#dialog_error_internet_not_resolved").dialog("open");
+  }
+  else if (XMLHttpResponse.status == ERROR_INTERNET_CANNOT_CONNECT) {
+    $("#dialog_error_management_server_not_accessible").dialog("open");
+  }
+  else if (XMLHttpResponse.status == ERROR_VMOPS_ACCOUNT_ERROR && handleErrorCallback != undefined) {
+    handleErrorCallback();
+  }
+  else if (handleErrorCallback != undefined) {
+    handleErrorCallback();
+  }
+  else {
+    var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+    $("#dialog_error").text(fromdb(errorMsg)).dialog("open");
+  }
 }
 
-function parseXMLHttpResponse(XMLHttpResponse) {	
-	if(isValidJsonString(XMLHttpResponse.responseText) == false) {
-	    return "";
-	}
-	
-	//var json = jQuery.parseJSON(XMLHttpResponse.responseText);	
-	var json = JSON.parse(XMLHttpResponse.responseText);
-	if (json != null) {
-		var property;
-		for(property in json) {}
-		var errorObj = json[property];
-		return fromdb(errorObj.errortext);	
-	} else {
-		return "";
-	}
+function parseXMLHttpResponse(XMLHttpResponse) {
+  if(isValidJsonString(XMLHttpResponse.responseText) == false) {
+    return "";
+  }
+
+  //var json = jQuery.parseJSON(XMLHttpResponse.responseText);
+  var json = JSON.parse(XMLHttpResponse.responseText);
+  if (json != null) {
+    var property;
+    for(property in json) {}
+    var errorObj = json[property];
+    return fromdb(errorObj.errortext);
+  } else {
+    return "";
+  }
 }
 
 function isValidJsonString(str) {
-    try {         
-        JSON.parse(str);     
-    } 
-    catch (e) {         
-        return false;     
-    }     
-    return true;
+  try {
+    JSON.parse(str);
+  }
+  catch (e) {
+    return false;
+  }
+  return true;
 }
 
 cloudStack.preFilter = {
-    createTemplate: function(args) { 	    
-        if(isAdmin()) {		           
-            args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');                 
-            args.$form.find('.form-item[rel=isFeatured]').css('display', 'inline-block');  
-        }
-        else {  
-		    if (g_userPublicTemplateEnabled == "true") {
-		        args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');   
-		    } 
-		    else {
-			    args.$form.find('.form-item[rel=isPublic]').hide();
-		    }			            
-		    args.$form.find('.form-item[rel=isFeatured]').hide();	
-        }                  	  
+  createTemplate: function(args) {
+    if(isAdmin()) {
+      args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');
+      args.$form.find('.form-item[rel=isFeatured]').css('display', 'inline-block');
     }
+    else {
+      if (g_userPublicTemplateEnabled == "true") {
+        args.$form.find('.form-item[rel=isPublic]').css('display', 'inline-block');
+      }
+      else {
+        args.$form.find('.form-item[rel=isPublic]').hide();
+      }
+      args.$form.find('.form-item[rel=isFeatured]').hide();
+    }
+  }
 }
 
 cloudStack.converters = {
-    convertBytes: function(bytes) {
-		if (bytes < 1024 * 1024) {
-			return (bytes / 1024).toFixed(2) + " KB";
-		} else if (bytes < 1024 * 1024 * 1024) {
-			return (bytes / 1024 / 1024).toFixed(2) + " MB";
-		} else if (bytes < 1024 * 1024 * 1024 * 1024) {
-			return (bytes / 1024 / 1024 / 1024).toFixed(2) + " GB";
-		} else {
-			return (bytes / 1024 / 1024 / 1024 / 1024).toFixed(2) + " TB";
-		}
-	},	
-	toBooleanText: function(booleanValue) {
-		if(booleanValue == true)
-			return "Yes";
-		else if(booleanValue == false)
-			return "No";
-	},		
-	convertHz: function(hz) {
-		if (hz == null)
-			return "";
+  convertBytes: function(bytes) {
+    if (bytes < 1024 * 1024) {
+      return (bytes / 1024).toFixed(2) + " KB";
+    } else if (bytes < 1024 * 1024 * 1024) {
+      return (bytes / 1024 / 1024).toFixed(2) + " MB";
+    } else if (bytes < 1024 * 1024 * 1024 * 1024) {
+      return (bytes / 1024 / 1024 / 1024).toFixed(2) + " GB";
+    } else {
+      return (bytes / 1024 / 1024 / 1024 / 1024).toFixed(2) + " TB";
+    }
+  },
+  toBooleanText: function(booleanValue) {
+    if(booleanValue == true)
+      return "Yes";
+    else if(booleanValue == false)
+      return "No";
+  },
+  convertHz: function(hz) {
+    if (hz == null)
+      return "";
 
-		if (hz < 1000) {
-			return hz + " MHZ";
-		} else {
-			return (hz / 1000).toFixed(2) + " GHZ";
-		} 
-	},	
-	toDayOfWeekDesp: function(dayOfWeek) {
-		if (dayOfWeek == "1")
-			return "Sunday";
-		else if (dayOfWeek == "2")
-			return "Monday";
-		else if (dayOfWeek == "3")
-			return "Tuesday";
-		else if (dayOfWeek == "4")
-			return "Wednesday";
-		else if (dayOfWeek == "5")
-			return "Thursday"
-		else if (dayOfWeek == "6")
-			return "Friday";
-		else if (dayOfWeek == "7")
-			return "Saturday";    
-	},
-	toDayOfWeekDesp: function(dayOfWeek) {
-		if (dayOfWeek == "1")
-			return "Sunday";
-		else if (dayOfWeek == "2")
-			return "Monday";
-		else if (dayOfWeek == "3")
-			return "Tuesday";
-		else if (dayOfWeek == "4")
-			return "Wednesday";
-		else if (dayOfWeek == "5")
-			return "Thursday"
-		else if (dayOfWeek == "6")
-			return "Friday";
-		else if (dayOfWeek == "7")
-			return "Saturday";    
-	},
-	toNetworkType: function(usevirtualnetwork) {
-		if(usevirtualnetwork == true || usevirtualnetwork == "true")
-			return "Public";
-		else
-			return "Direct";
-	},
-	toRole: function(type) {
-		if (type == "0") {
-			return "User";
-		} else if (type == "1") {
-			return "Admin";
-		} else if (type == "2") {
-			return "Domain-Admin";
-		}
-	},
-	toAlertType: function(alertCode) {
-		switch (alertCode) {
-			case 0 : return "Capacity Threshold - Memory";
-			case 1 : return "Capacity Threshold - CPU";
-			case 2 : return "Capacity Threshold - Storage Used";
-			case 3 : return "Capacity Threshold - Storage Allocated";
-			case 4 : return "Capacity Threshold - Public IP";
-			case 5 : return "Capacity Threshold - Private IP";
-			case 6 : return "Monitoring - Host";
-			case 7 : return "Monitoring - VM";
-			case 8 : return "Monitoring - Domain Router";
-			case 9 : return "Monitoring - Console Proxy";
-			case 10 : return "Monitoring - Routing Host";
-			case 11 : return "Monitoring - Storage";
-			case 12 : return "Monitoring - Usage Server";
-			case 13 : return "Monitoring - Management Server";
-			case 14 : return "Migration - Domain Router";
-			case 15 : return "Migration - Console Proxy";
-			case 16 : return "Migration - User VM";
-			case 17 : return "VLAN";
-			case 18 : return "Monitoring - Secondary Storage VM";
-		}
-	}	
+    if (hz < 1000) {
+      return hz + " MHZ";
+    } else {
+      return (hz / 1000).toFixed(2) + " GHZ";
+    }
+  },
+  toDayOfWeekDesp: function(dayOfWeek) {
+    if (dayOfWeek == "1")
+      return "Sunday";
+    else if (dayOfWeek == "2")
+      return "Monday";
+    else if (dayOfWeek == "3")
+      return "Tuesday";
+    else if (dayOfWeek == "4")
+      return "Wednesday";
+    else if (dayOfWeek == "5")
+      return "Thursday"
+    else if (dayOfWeek == "6")
+      return "Friday";
+    else if (dayOfWeek == "7")
+      return "Saturday";
+  },
+  toDayOfWeekDesp: function(dayOfWeek) {
+    if (dayOfWeek == "1")
+      return "Sunday";
+    else if (dayOfWeek == "2")
+      return "Monday";
+    else if (dayOfWeek == "3")
+      return "Tuesday";
+    else if (dayOfWeek == "4")
+      return "Wednesday";
+    else if (dayOfWeek == "5")
+      return "Thursday"
+    else if (dayOfWeek == "6")
+      return "Friday";
+    else if (dayOfWeek == "7")
+      return "Saturday";
+  },
+  toNetworkType: function(usevirtualnetwork) {
+    if(usevirtualnetwork == true || usevirtualnetwork == "true")
+      return "Public";
+    else
+      return "Direct";
+  },
+  toRole: function(type) {
+    if (type == "0") {
+      return "User";
+    } else if (type == "1") {
+      return "Admin";
+    } else if (type == "2") {
+      return "Domain-Admin";
+    }
+  },
+  toAlertType: function(alertCode) {
+    switch (alertCode) {
+    case 0 : return "Capacity Threshold - Memory";
+    case 1 : return "Capacity Threshold - CPU";
+    case 2 : return "Capacity Threshold - Storage Used";
+    case 3 : return "Capacity Threshold - Storage Allocated";
+    case 4 : return "Capacity Threshold - Public IP";
+    case 5 : return "Capacity Threshold - Private IP";
+    case 6 : return "Monitoring - Host";
+    case 7 : return "Monitoring - VM";
+    case 8 : return "Monitoring - Domain Router";
+    case 9 : return "Monitoring - Console Proxy";
+    case 10 : return "Monitoring - Routing Host";
+    case 11 : return "Monitoring - Storage";
+    case 12 : return "Monitoring - Usage Server";
+    case 13 : return "Monitoring - Management Server";
+    case 14 : return "Migration - Domain Router";
+    case 15 : return "Migration - Console Proxy";
+    case 16 : return "Migration - User VM";
+    case 17 : return "VLAN";
+    case 18 : return "Monitoring - Secondary Storage VM";
+    }
+  }
 }
 
 //VM Instance
 function getVmName(p_vmName, p_vmDisplayname) {
-    if(p_vmDisplayname == null)
-        return fromdb(p_vmName);
-    
-    var vmName = null;	
-	if (p_vmDisplayname != p_vmName) {
-		vmName = fromdb(p_vmName) + " (" + fromdb(p_vmDisplayname) + ")";
-	} else {
-		vmName = fromdb(p_vmName);
-	}		
-	return vmName;
+  if(p_vmDisplayname == null)
+    return fromdb(p_vmName);
+
+  var vmName = null;
+  if (p_vmDisplayname != p_vmName) {
+    vmName = fromdb(p_vmName) + " (" + fromdb(p_vmDisplayname) + ")";
+  } else {
+    vmName = fromdb(p_vmName);
+  }
+  return vmName;
 }
 
 // Timezones
@@ -445,6 +445,3 @@ timezones['Australia/Brisbane']='[UTC+10:00] Eastern Standard Time (Queensland)'
 timezones['Australia/Canberra']='[UTC+10:00] Eastern Standard Time (New South Wales)';
 timezones['Pacific/Guam']='[UTC+10:00] Chamorro Standard Time';
 timezones['Pacific/Auckland']='[UTC+12:00] New Zealand Standard Time';
-
-
-

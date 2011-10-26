@@ -5,7 +5,7 @@
     show: function() {
       return $('#template').find('div.dashboard.admin').clone();
     }
-  };  
+  };
 
   // User dashboard
   /*
