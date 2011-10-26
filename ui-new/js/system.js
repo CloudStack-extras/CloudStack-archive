@@ -716,7 +716,8 @@
                 broadcastdomaintype:  { label: "Broadcast domain type" }
               },
 
-              dataProvider: function(args) {
+              dataProvider: function(args) {  //public network
+			    //debugger;
                 var showPublicNetwork = true;
                 var zoneObj = args.context.zones[0];
                 if(zoneObj.networktype == "Basic") {
@@ -836,9 +837,137 @@
                 traffictype:  { label: "Traffic type" },
                 broadcastdomaintype:  { label: "Broadcast domain type" }
               },
+              actions: {			   
+				add: {
+				  label: 'Create network',			   		  
 
-              dataProvider: function(args) {
-                var showPublicNetwork = true;
+				  messages: {
+					confirm: function(args) {
+					  return 'Are you sure you want to create a network?';
+					},
+					success: function(args) {
+					  return 'Your new network is being created.';
+					},
+					notification: function(args) {
+					  return 'Creating new network';
+					},
+					complete: function(args) {
+					  return 'Network has been created successfully!';
+					}
+				  },
+
+				  createForm: {
+					title: 'Create network',					        
+					fields: {
+					  name: {
+						label: 'Name',
+						validation: { required: true }					
+					  },
+					  description: {
+						label: 'Description',
+						validation: { required: true }
+					  },
+					  isDefault: {
+						label: "Default",
+						isBoolean: true
+					  },
+					  vlanTagged: {
+						label: 'VLAN',  
+						dependsOn: 'isBootable',						               			
+						select: function(args) {    		  
+						  args.response.success({data: {id: "tagged", description: "tagged"}});								 						  		 
+						}		
+					  },					  
+					  vlanId: { label: "VLAN ID" },					  
+					  scope: { 
+					    label: 'Scope',
+						select: function(args) {						  
+						  var zoneObj = args.context.zones[0];						  
+						  var array1 = [];
+						  if(zoneObj.securitygroupsenabled) {
+						    array1.push({id: 'account-specific', description: 'account-specific'});
+						  }
+						  else {  
+							array1.push({id: 'zone-wide', description: 'zone-wide'});
+							array1.push({id: 'domain-specific', description: 'domain-specific'});
+							array1.push({id: 'account-specific', description: 'account-specific'});
+					      }
+                          args.response.success({data: array1});
+						  // show/hide related fields here (to do)						  
+						}
+					  },					 					  
+					  domainId: {
+						label: 'Domain',
+						validation: { required: true },
+						select: function(args) {				                 
+						  $.ajax({
+							url: createURL("listDomains"),				
+							dataType: "json",
+							async: false,
+							success: function(json) {		
+							  var items = [];					
+							  var domainObjs = json.listdomainsresponse.domain;	                      
+							  $(domainObjs).each(function() {
+								items.push({id: this.id, description: this.name});
+							  });					  
+							  args.response.success({data: items});					  
+							}
+						  });	
+						} 
+					  },
+					  account: { label: 'Account' },
+					  gateway: { label: 'Gateway' },
+					  netmask: { label: 'Netmask' },
+					  startip: { label: 'Start IP' },
+					  endip: { label: 'End IP' },
+					  networkdomain: { label: 'Network domain' },
+                      tags: { label: 'Tags' }					 			  
+					}
+				  },
+				  
+				  action: function(args) {	
+					var array1 = [];		
+
+                    /*					
+					array1.push("&name=" + todb(args.data.name));			    			    
+					array1.push("&displayText=" + todb(args.data.description));					   
+					array1.push("&url=" + todb(args.data.url));					    								   
+					array1.push("&zoneid=" + args.data.zone);				    			   
+					array1.push("&isextractable=" + (args.data.isExtractable=="on"));				    					 	   
+					array1.push("&bootable=" + (args.data.isBootable=="on"));	
+										   
+					if(args.$form.find('.form-item[rel=osTypeId]').css("display") != "none")
+						array1.push("&osTypeId=" + args.data.osTypeId);		
+											
+					if(args.$form.find('.form-item[rel=isPublic]').css("display") != "none")
+					  array1.push("&ispublic=" + (args.data.isPublic == "on"));	
+					if(args.$form.find('.form-item[rel=isFeatured]').css("display") != "none")
+					  array1.push("&isfeatured=" + (args.data.isFeatured == "on")); 
+												
+					$.ajax({
+					  url: createURL("registerIso" + array1.join("")),
+					  dataType: "json",
+					  success: function(json) {					
+						var items = json.registerisoresponse.iso;	//items might have more than one array element if it's create ISOs for all zones.			       
+						args.response.success({data:items[0]});										
+					  }, 
+					  error: function(XMLHttpResponse) {
+						var errorMsg = parseXMLHttpResponse(XMLHttpResponse); 
+						args.response.error(errorMsg);		
+					  }				
+					});	
+                    */					
+				  },			
+
+				  notification: {                
+					poll: function(args) {			  
+					  args.complete();
+					}		
+				  }
+				}				
+			  },
+              dataProvider: function(args) { //direct netwoerk
+                //debugger;
                 var zoneObj = args.context.zones[0];
                 if(zoneObj.networktype == "Basic") {
                   args.response.success({data: null});
@@ -858,7 +987,7 @@
               }	,
 
               detailView: {
-                viewAll: { label: 'Hosts', path: 'instances' },
+                //viewAll: { label: 'Hosts', path: 'instances' },
                 tabs: {
                   details: {
                     title: 'Details',
