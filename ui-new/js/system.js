@@ -893,7 +893,22 @@
 							array1.push({id: 'account-specific', description: 'account-specific'});
 					      }
                           args.response.success({data: array1});
-						  // show/hide related fields here (to do)						  
+						                           				  
+						  args.$select.change(function() { 				   
+							var $form = $(this).closest('form');							
+							if($(this).val() == "zone-wide") {
+							  $form.find('.form-item[rel=domainId]').hide();
+							  $form.find('.form-item[rel=account]').hide();
+							}
+							else if ($(this).val() == "domain-specific") {
+							  $form.find('.form-item[rel=domainId]').css('display', 'inline-block');
+							  $form.find('.form-item[rel=account]').hide();
+							}
+							else if($(this).val() == "account-specific") {
+							  $form.find('.form-item[rel=domainId]').css('display', 'inline-block');
+							  $form.find('.form-item[rel=account]').css('display', 'inline-block');
+							}
+						  });				  
 						}
 					  },					 					  
 					  domainId: {
