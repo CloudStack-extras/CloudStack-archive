@@ -85,7 +85,7 @@
                     });
                   }
                 })
-              }, 
+              },
               messages: {
                 confirm: function(args) {
                   return 'Are you sure you want to enable static NAT?';
@@ -112,7 +112,7 @@
                   async: true,
                   success: function(data) {
                     args.response.success({
-                      _custom: { 
+                      _custom: {
                         jobId: data.disablestaticnatresponse.jobid,
                         getActionFilter: function() {
                           return function() { return ['enableStaticNAT']; };
@@ -152,7 +152,7 @@
 
                     $(actions).each(function() {
                       var action = this.toString();
-                      
+
                       if ((action == 'enableStaticNAT' && !item.isstaticnat) ||
                           (action == 'disableStaticNAT' && item.isstaticnat) ||
                           (action != 'enableStaticNAT' && action != 'disableStaticNAT')) {
@@ -375,7 +375,7 @@
                               dataType: 'json',
                               async: true,
                               success: function(data) {
-                                
+
                               }
                             });
 
