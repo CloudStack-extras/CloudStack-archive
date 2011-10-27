@@ -20,48 +20,50 @@
         var $td = $('<td>').addClass(fieldName).appendTo($tr);
         var $input, val;
 
-        if (field.edit) {
-          // Edit fields append value of data
-          if (field.range) {
-            var start = data[field.range[0]];
-            var end = data[field.range[1]];
+        if (!field.isPassword) {
+          if (field.edit) {
+            // Edit fields append value of data
+            if (field.range) {
+              var start = data[field.range[0]];
+              var end = data[field.range[1]];
 
+              $td.append(
+                $('<span>').html(start + ' - ' + end)
+              );
+            } else {
+              $td.append(
+                $('<span>').html(data[fieldName])
+              );
+            }
+          } else if (field.select) {
             $td.append(
-              $('<span>').html(start + ' - ' + end)
+              $('<span>').html(
+                // Get matching option text
+                $multi.find('select').filter(function() {
+                  return $(this).attr('name') == fieldName;
+                }).find('option').filter(function() {
+                  return $(this).val() == data[fieldName];
+                }).html()
+              )
             );
-          } else {
-            $td.append(
-              $('<span>').html(data[fieldName])
-            );
+          } else if (field.addButton && $.isArray(itemData) && !options.noSelect) {
+            // Show VM data
+            $td
+              .html(
+                options.multipleAdd ?
+                  itemData.length + ' VMs' : itemData[0].name
+              )
+              .click(function() {
+                var $browser = $(this).closest('.detail-view').data('view-args').$browser;
+
+                if (options.multipleAdd) {
+                  _medit.multiItem.details(itemData, $browser);
+                } else {
+                  _medit.details(itemData[0], $browser, { context: options.context });
+                }
+              });
           }
-        } else if (field.select) {
-          $td.append(
-            $('<span>').html(
-              // Get matching option text
-              $multi.find('select').filter(function() {
-                return $(this).attr('name') == fieldName;
-              }).find('option').filter(function() {
-                return $(this).val() == data[fieldName];
-              }).html()
-            )
-          );
-        } else if (field.addButton && $.isArray(itemData) && !options.noSelect) {
-          // Show VM data
-          $td
-            .html(
-              options.multipleAdd ?
-                itemData.length + ' VMs' : itemData[0].name
-            )
-            .click(function() {
-              var $browser = $(this).closest('.detail-view').data('view-args').$browser;
-
-              if (options.multipleAdd) {
-                _medit.multiItem.details(itemData, $browser);
-              } else {
-                _medit.details(itemData[0], $browser, { context: options.context });
-              }
-            });
-        }
+        };
 
         // Add blank styling for empty fields
         if ($td.html() == '') {
@@ -339,7 +341,7 @@
           $('<input>')
             .attr({
               name: fieldName,
-              type: 'text'
+              type: field.isPassword ? 'password' : 'text'
             })
             .addClass('required')
             .attr('disabled', field.isDisabled ? 'disabled' : false)
