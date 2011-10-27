@@ -5038,3 +5038,35 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   background-position: -199px -615px;
 }
 
+.addIpRange .icon {
+  background-position: -197px -65px;
+}
+
+.addIpRange:hover .icon {
+  background-position: -197px -647px;
+}
+
+.forceReconnect .icon {
+  background-position: -196px -95px;
+}
+
+.forceReconnect:hover .icon {
+  background-position: -196px -677px;
+}
+
+.manage .icon {
+  background-position: -165px -122px;
+}
+
+.manage:hover .icon {
+  background-position: -165px -704px;
+}
+
+.unmanage .icon {
+  background-position: -196px -122px;
+}
+
+.unmanage:hover .icon {
+  background-position: -196px -704px;
+}
+
