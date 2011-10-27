@@ -36,7 +36,12 @@
       },
       dataProvider: function(args) {
         $.ajax({
-          url: createURL("listConfigurations&page="+args.page+"&pagesize="+pageSize),
+          url: createURL('listConfigurations'),
+          data: {
+            page: args.page,
+            pagesize: pageSize,
+            keyword: args.filterBy ? args.filterBy.search.value : null
+          },
           dataType: "json",
           async: true,
           success: function(json) {
