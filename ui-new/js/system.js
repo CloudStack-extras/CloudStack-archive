@@ -1720,6 +1720,7 @@
               else if(selectedZoneObj.networktype == "Advanced") { //advanced-mode network (zone-wide VLAN)
                 //$("#tab_ipallocation, #add_iprange_button, #tab_network_device, #add_network_device_button").hide();
                 hiddenTabs.push("ipAllocations");
+                hiddenTabs.push("networkDevices");
               }
               return hiddenTabs;
             },
@@ -4326,6 +4327,7 @@
     if(selectedZoneObj.networktype == "Basic") { //basic-mode network (pod-wide VLAN)
       //$("#tab_ipallocation, #add_iprange_button, #tab_network_device, #add_network_device_button").show();
       allowedActions.push("addIpRange");
+      allowedActions.push("addNetworkDevice");
     }
     else if(selectedZoneObj.networktype == "Advanced") { //advanced-mode network (zone-wide VLAN)
       //$("#tab_ipallocation, #add_iprange_button, #tab_network_device, #add_network_device_button").hide();
