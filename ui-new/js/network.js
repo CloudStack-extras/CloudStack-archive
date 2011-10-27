@@ -1,4 +1,49 @@
 (function(cloudStack, $, testData) {
+  var actionFilters = {
+    ipAddress: function(args) {
+      var allowedActions = args.context.actions;
+      var disallowedActions = [];
+      var item = args.context.item;
+      var status = item.state;
+
+      if (status == 'Destroyed' ||
+          status == 'Releasing' ||
+          status == 'Released' ||
+          status == 'Creating' ||
+          status == 'Allocating' ||
+          item.issystem) {
+        disallowedActions = allowedActions;
+      }
+
+      if (item.isstaticnat) {
+        disallowedActions.push('enableStaticNAT');
+      } else {
+        disallowedActions.push('disableStaticNAT');
+      }
+
+      if (item.vpnenabled) {
+        disallowedActions.push('enableVPN');
+      } else {
+        disallowedActions.push('disableVPN');
+      }
+
+      if (item.issourcenat){
+        disallowedActions.push('enableStaticNAT');
+        disallowedActions.push('disableStaticNAT');
+        disallowedActions.push('destroy');
+      } else {
+        disallowedActions.push('enableVPN');
+        disallowedActions.push('disableVPN');
+      }
+
+      allowedActions = $.grep(allowedActions, function(item) {
+        return $.inArray(item, disallowedActions) == -1;
+      });
+
+      return allowedActions;
+    }
+  };
+
   cloudStack.sections.network = {
     title: 'Network',
     id: 'network',
@@ -17,7 +62,16 @@
             mine: { label: 'My network' }
           },
           fields: {
-            ipaddress: { label: 'IP' },
+            ipaddress: {
+              label: 'IP',
+              converter: function(text, item) {
+                if (item.issourcenat) {
+                  return text + ' [Source NAT]';
+                }
+
+                return text;
+              }
+            },
             zonename: { label: 'Zone' },
             vlanname: { label: 'VLAN' },
             networkid: { label: 'Network Type' },
@@ -28,21 +82,35 @@
               label: 'Acquire new IP',
 
               action: function(args) {
-                args.response.success();
+                $.ajax({
+                  url: createURL('associateIpAddress'),
+                  data: {
+                    zoneid: args.data.availabilityZone
+                  },
+                  dataType: 'json',
+                  async: true,
+                  success: function(data) {
+                    args.response.success({
+                      _custom: {
+                        jobId: data.associateipaddressresponse.jobid,
+                        getUpdatedItem: function(data) {
+                          return data.queryasyncjobresultresponse.jobresult.ipaddress;
+                        },
+                        getActionFilter: function(args) {
+                          return ['enableStaticNAT', 'destroy'];
+                        }
+                      }
+                    });
+                  }
+                });
               },
 
               messages: {
                 confirm: function(args) {
                   return 'Are you sure you want to add this new IP?';
                 },
-                success: function(args) {
-                  return 'Your new IP is being allocated.';
-                },
                 notification: function(args) {
                   return 'Allocated IP';
-                },
-                complete: function(args) {
-                  return 'IP has been acquired successfully';
                 }
               },
 
@@ -52,16 +120,86 @@
                 fields: {
                   availabilityZone: {
                     label: 'Zone',
-                    select: [
-                      { id: 'sanjose', description: 'San Jose' },
-                      { id: 'Chicago', description: 'Chicago' }
-                    ]
+                    select: function(args) {
+                      $.ajax({
+                        url: createURL('listZones'),
+                        dataType: 'json',
+                        async: true,
+                        success: function(data) {
+                          args.response.success({
+                            data: $.map(data.listzonesresponse.zone, function(zone) {
+                              return {
+                                id: zone.id,
+                                description: zone.name
+                              };
+                            })
+                          });
+                        }
+                      });
+                    }
                   }
                 }
               },
 
               notification: {
-                poll: testData.notifications.testPoll
+                poll: pollAsyncJobResult
+              }
+            },
+            enableVPN: {
+              label: 'Enable VPN',
+              action: function(args) {
+                args.response.success();
+              },
+              messages: {
+                confirm: function(args) {
+                  return 'Please confirm that you want VPN enabled for this IP address.';
+                },
+                notification: function(args) {
+                  return 'Enabled VPN';
+                },
+                complete: function(args) {
+                  return 'VPN is now enabled for IP ' + args.publicip + '.'
+                    + '<br/>Your IPsec pre-shared key is:<br/>' + args.presharedkey;
+                }
+              },
+              notification: {
+                poll: testData.notifications.customPoll({
+                  publicip: '10.2.2.1',
+                  presharedkey: '23fudh881ssx88199488PP!#Dwdw',
+                  vpnenabled: true
+                })
+              }
+            },
+            disableVPN: {
+              label: 'Disable VPN',
+              action: function(args) {
+                $.ajax({
+                  url: createURL('deleteRemoteAccessVpn'),
+                  data: {
+                    publicipid: args.context.ipAddresses[0].id,
+                    domainid: args.context.ipAddresses[0].domainid
+                  },
+                  dataType: 'json',
+                  async: true,
+                  success: function(data) {
+                    args.response.success({
+                      _custom: {
+                        _jobId: args.deleteremoteaccessvpnresponse.jobid
+                      }
+                    });
+                  }
+                });
+              },
+              messages: {
+                confirm: function(args) {
+                  return 'Are you sure you want to disable VPN?';
+                },
+                notification: function(args) {
+                  return 'Disabled VPN';
+                }
+              },
+              notification: {
+                poll: testData.notifications.customPoll({ vpnenabled: false })
               }
             },
             enableStaticNAT: {
@@ -115,7 +253,9 @@
                       _custom: {
                         jobId: data.disablestaticnatresponse.jobid,
                         getActionFilter: function() {
-                          return function() { return ['enableStaticNAT']; };
+                          return function(args) {
+                            return ['enableStaticNAT'];
+                          };
                         }
                       }
                     });
@@ -133,6 +273,47 @@
               notification: {
                 poll: pollAsyncJobResult
               }
+            },
+            destroy: {
+              label: 'Release IP',
+              action: function(args) {
+                $.ajax({
+                  url: createURL('disassociateIpAddress'),
+                  data: {
+                    id: args.context.ipAddresses[0].id
+                  },
+                  dataType: 'json',
+                  async: true,
+                  success: function(data) {
+                    args.response.success({
+                      _custom: {
+                        jobId: data.disassociateipaddressresponse.jobid,
+                        getActionFilter: function() {
+                          return function(args) {
+                            var allowedActions = ['enableStaticNAT'];
+
+                            return allowedActions;
+                          };
+                        },
+                        getUpdatedItem: function(args) {
+                          return {
+                            state: 'Released'
+                          };
+                        }
+                      }
+                    });
+                  }
+                });
+              },
+              messages: {
+                confirm: function(args) {
+                  return 'Are you sure you want to release this IP?';
+                },
+                notification: function(args) {
+                  return 'Release IP';
+                }
+              },
+              notification: { poll: pollAsyncJobResult }
             }
           },
 
@@ -145,23 +326,7 @@
               success: function(json) {
                 var items = json.listpublicipaddressesresponse.publicipaddress;
                 args.response.success({
-                  actionFilter: function(args) {
-                    var actions = args.context.actions;
-                    var item = args.context.item;
-                    var allowedActions = [];
-
-                    $(actions).each(function() {
-                      var action = this.toString();
-
-                      if ((action == 'enableStaticNAT' && !item.isstaticnat) ||
-                          (action == 'disableStaticNAT' && item.isstaticnat) ||
-                          (action != 'enableStaticNAT' && action != 'disableStaticNAT')) {
-                        allowedActions.push(action);
-                      }
-                    });
-
-                    return allowedActions;
-                  },
+                  actionFilter: actionFilters.ipAddress,
                   data:items
                 });
               }
