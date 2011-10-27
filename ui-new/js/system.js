@@ -772,7 +772,191 @@
               }	,
 
               detailView: {
-                viewAll: { label: 'Hosts', path: 'instances' },
+                //viewAll: { label: 'Hosts', path: 'instances' },
+                
+                //???
+                actions: {                  
+                  addIpRange: {
+                    label: 'Add IP range',
+                    messages: {
+                      confirm: function(args) {
+                        return 'Are you sure you want to add IP range?';
+                      },
+                      success: function(args) {
+                        return 'IP range is being added.';
+                      },
+                      notification: function(args) {
+                        return 'Adding IP range';
+                      },
+                      complete: function(args) {
+                        return 'IP range has been added.';
+                      }
+                    },                   
+                    createForm: {
+                      title: 'Add IP range',                      
+                      fields: {                        
+                        vlanTagged: {
+                          label: 'VLAN',
+                          dependsOn: 'isBootable',
+                          select: function(args) {
+                            var items = [];
+                            items.push({id: "untagged", description: "untagged"});
+                            items.push({id: "tagged", description: "tagged"});                            
+                            args.response.success({data: items});  
+                            args.$select.change(function() {
+                              var $form = $(this).closest('form');
+                              if($(this).val() == "tagged") 
+                                $form.find('.form-item[rel=vlanId]').css('display', 'inline-block');
+                              else //"untagged"
+                                $form.find('.form-item[rel=vlanId]').hide();
+                            });                            
+                          }
+                        },
+                        vlanId: { label: "VLAN ID" },
+                                               
+                        scope: {
+                          label: 'Scope',
+                          select: function(args) {
+                            var zoneObj = args.context.zones[0];
+                            var array1 = [];
+                            if(zoneObj.securitygroupsenabled) {
+                              array1.push({id: 'account-specific', description: 'account-specific'});
+                            }
+                            else {
+                              array1.push({id: 'zone-wide', description: 'zone-wide'});
+                              array1.push({id: 'domain-specific', description: 'domain-specific'});
+                              array1.push({id: 'account-specific', description: 'account-specific'});
+                            }
+                            args.response.success({data: array1});
+
+                            args.$select.change(function() {
+                              var $form = $(this).closest('form');
+                              if($(this).val() == "zone-wide") {
+                                $form.find('.form-item[rel=domainId]').hide();
+                                $form.find('.form-item[rel=account]').hide();
+                              }
+                              else if ($(this).val() == "domain-specific") {
+                                $form.find('.form-item[rel=domainId]').css('display', 'inline-block');
+                                $form.find('.form-item[rel=account]').hide();
+                              }
+                              else if($(this).val() == "account-specific") {
+                                $form.find('.form-item[rel=domainId]').css('display', 'inline-block');
+                                $form.find('.form-item[rel=account]').css('display', 'inline-block');
+                              }
+                            });
+                          }
+                        },
+                        domainId: {
+                          label: 'Domain',
+                          validation: { required: true },
+                          select: function(args) {
+                            var items = [];
+                            var zoneObj = args.context.zones[0];                            
+                            if(zoneObj.domainid != null) { //list only domains under zoneObj.domainid
+                              $.ajax({
+                                url: createURL("listDomainChildren&id=" + zoneObj.domainid + "&isrecursive=true"),
+                                dataType: "json",
+                                async: false,
+                                success: function(json) {
+                                  var domainObjs = json.listdomainchildrenresponse.domain;
+                                  $(domainObjs).each(function() {
+                                    items.push({id: this.id, description: this.name});
+                                  });
+                                }
+                              });
+                              $.ajax({
+                                url: createURL("listDomains&id=" + zoneObj.domainid),
+                                dataType: "json",
+                                async: false,
+                                success: function(json) {
+                                  var domainObjs = json.listdomainsresponse.domain;
+                                  $(domainObjs).each(function() {
+                                    items.push({id: this.id, description: this.name});
+                                  });
+                                }
+                              });
+                            }
+                            else { //list all domains
+                              $.ajax({
+                                url: createURL("listDomains"),
+                                dataType: "json",
+                                async: false,
+                                success: function(json) {
+                                  var domainObjs = json.listdomainsresponse.domain;
+                                  $(domainObjs).each(function() {
+                                    items.push({id: this.id, description: this.name});
+                                  });
+                                }
+                              });
+                            }
+                            args.response.success({data: items});
+                          }
+                        },
+                        account: { label: 'Account' },      
+                        
+                        gateway: { label: 'Gateway' },
+                        netmask: { label: 'Netmask' },
+                        startip: { label: 'Start IP' },
+                        endip: { label: 'End IP' }
+                      }
+                    },
+                    action: function(args) {    
+                      var $form = args.$form;
+                      var array1 = [];                   
+                      array1.push("&zoneId=" + args.context.zones[0].id);
+                      
+                      if (args.data.vlanTagged == "tagged")
+                        array1.push("&vlan=" + todb(args.data.vlanId));
+                      else
+                        array1.push("&vlan=untagged");
+                      
+                      if($form.find('.form-item[rel=domainId]').css("display") != "none") {
+                        if($form.find('.form-item[rel=account]').css("display") != "none") {  //account-specific
+                          array1.push("&domainId=" + args.data.domainId);
+                          array1.push("&account=" + args.data.account);
+                        }
+                        else {  //domain-specific
+                          array1.push("&domainId=" + args.data.domainId);
+                          array1.push("&isshared=true");
+                        }
+                      }
+                      else { //zone-wide
+                        array1.push("&isshared=true");
+                      }
+                      
+                      array1.push("&gateway=" + args.data.gateway);
+                      array1.push("&netmask=" + args.data.netmask);
+                      array1.push("&startip=" + args.data.startip);
+                      if(args.data.endip != null && args.data.endip.length > 0)
+                        array1.push("&endip=" + args.data.endip);
+                      
+                      if(args.context.zones[0].securitygroupsenabled == false)   
+                        array1.push("&forVirtualNetwork=true");
+                      else
+                        array1.push("&forVirtualNetwork=false");                     
+                     
+                      $.ajax({
+                        url: createURL("createVlanIpRange" + array1.join("")),
+                        dataType: "json",
+                        success: function(json) {                     
+                          var item = json.createvlaniprangeresponse.vlan;			
+                          args.response.success({data: item});
+                        },
+                        error: function(XMLHttpResponse) {
+                          var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+                          args.response.error(errorMsg);
+                        }
+                      });
+                    },
+                    notification: {
+                      poll: function(args) {
+                        args.complete();
+                      }
+                    }
+                  }                  
+                },
+                //???
+                
                 tabs: {
                   details: {
                     title: 'Details',
@@ -899,8 +1083,7 @@
                         isBoolean: true
                       },
                       vlanTagged: {
-                        label: 'VLAN',
-                        dependsOn: 'isBootable',
+                        label: 'VLAN',                        
                         select: function(args) {
                           args.response.success({data: {id: "tagged", description: "tagged"}});
                         }
@@ -1114,7 +1297,7 @@
                     },                   
                     createForm: {
                       title: 'Add IP range',
-                      preFilter: function(args) {                                             
+                      preFilter: function(args) {                                         
                         if(args.context.zones[0].securitygroupsenabled) {                         
                           args.$form.find('.form-item[rel=vlanId]').css('display', 'inline-block');
                           args.$form.find('.form-item[rel=gateway]').css('display', 'inline-block');
