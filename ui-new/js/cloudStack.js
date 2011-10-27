@@ -23,6 +23,16 @@
 
   login();
 
+  // Store capabilities
+  $.ajax({
+    url: createURL('listCapabilities'),
+    dataType: 'json',
+    async: false,
+    success: function(data) {
+      cloudStack._capabilities = data.listcapabilitiesresponse.capability;
+    }
+  });
+
   $(function() {
     $('#cloudStack3-container').cloudStack(cloudStack);
   });

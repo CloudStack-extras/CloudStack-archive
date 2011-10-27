@@ -11,7 +11,7 @@
           status == 'Released' ||
           status == 'Creating' ||
           status == 'Allocating' ||
-          item.issystem) {
+          item.account == 'system') {
         disallowedActions = allowedActions;
       }
 
@@ -74,7 +74,7 @@
             },
             zonename: { label: 'Zone' },
             vlanname: { label: 'VLAN' },
-            networkid: { label: 'Network Type' },
+            account: { label: 'Account' },
             state: { label: 'State', indicator: { 'Allocated': 'on' } }
           },
           actions: {
@@ -148,7 +148,20 @@
             enableVPN: {
               label: 'Enable VPN',
               action: function(args) {
-                args.response.success();
+                $.ajax({
+                  url: createURL('createRemoteAccessVpn'),
+                  data: {
+                    publicipid: args.context.ipAddresses[0].id,
+                    domainid: args.context.ipAddresses[0].domainid
+                  },
+                  dataType: 'json',
+                  async: true,
+                  success: function(data) {
+                    args.response.success({
+                      _custom: { jobId: data.createremoteaccessvpnresponse.jobid }
+                    });
+                  }
+                });
               },
               messages: {
                 confirm: function(args) {
@@ -163,11 +176,7 @@
                 }
               },
               notification: {
-                poll: testData.notifications.customPoll({
-                  publicip: '10.2.2.1',
-                  presharedkey: '23fudh881ssx88199488PP!#Dwdw',
-                  vpnenabled: true
-                })
+                poll: pollAsyncJobResult
               }
             },
             disableVPN: {
@@ -184,7 +193,10 @@
                   success: function(data) {
                     args.response.success({
                       _custom: {
-                        _jobId: args.deleteremoteaccessvpnresponse.jobid
+                        getUpdatedItem: function(data) {
+                          
+                        },
+                        jobId: data.deleteremoteaccessvpnresponse.jobid
                       }
                     });
                   }
@@ -199,7 +211,7 @@
                 }
               },
               notification: {
-                poll: testData.notifications.customPoll({ vpnenabled: false })
+                poll: pollAsyncJobResult
               }
             },
             enableStaticNAT: {
@@ -325,9 +337,45 @@
               async: true,
               success: function(json) {
                 var items = json.listpublicipaddressesresponse.publicipaddress;
-                args.response.success({
-                  actionFilter: actionFilters.ipAddress,
-                  data:items
+                var processedItems = 0;
+
+                // Get network data
+                $(items).each(function() {
+                  var item = this;
+                  $.ajax({
+                    url: createURL('listNetworks'),
+                    data: {
+                      networkid: this.networkid
+                    },
+                    dataType: 'json',
+                    async: true,
+                    success: function(data) {
+                      // Get VPN data
+                      $.ajax({
+                        url: createURL('listRemoteAccessVpns'),
+                        data: {
+                          publicipid: item.id
+                        },
+                        dataType: 'json',
+                        async: true,
+                        success: function(vpnResponse) {
+                          var isVPNEnabled = vpnResponse.listremoteaccessvpnsresponse.count;
+                          if (isVPNEnabled) { item.vpnenabled = true; };
+
+                          // Check if data retrieval complete
+                          item.network = data.listnetworksresponse.network[0];
+                          processedItems++;
+                          
+                          if (processedItems == items.length) {
+                            args.response.success({
+                              actionFilter: actionFilters.ipAddress,
+                              data: items
+                            });
+                          }
+                        }
+                      });
+                    }
+                  });
                 });
               }
             });
