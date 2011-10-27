@@ -1963,6 +1963,24 @@
               networkDevices: {
                 title: 'Network devices',
                 multiple: true,
+                
+                //comment this one out until Brian fix Bug #155
+                /*
+                preFilter: function(args) {   
+                  var networkDeviceObj = args.context.networkDevices[0];
+                
+                  var hiddenFields;
+                  if(networkDeviceObj.pingstorageserverip == null || networkDeviceObj.pingstorageserverip.length == 0)
+                    hiddenFields.push("pingstorageserverip");
+                  if(networkDeviceObj.pingdir == null || networkDeviceObj.pingdir.length == 0)
+                    hiddenFields.push("pingdir");
+                  if(networkDeviceObj.tftpdir == null || networkDeviceObj.tftpdir.length == 0)
+                    hiddenFields.push("tftpdir");
+                  
+                  return hiddenFields;
+                },
+                */
+                
                 fields: [
                   {
                     id: { label: 'ID' },
