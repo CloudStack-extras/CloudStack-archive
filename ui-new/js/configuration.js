@@ -252,27 +252,25 @@
               },
 
               action: function(args) {
-                var array1 = [];
-                debugger;
+                var array1 = [];               
                 array1.push("&name=" + args.data.name);
                 array1.push("&displaytext=" + todb(args.data.description));
                               
                 array1.push("&customized=" + (args.data.isCustomized=="on"));                
-                if(args.$form.find('.form-item[rel=isCustomized]').css("display") != "none")     
+                if(args.$form.find('.form-item[rel=disksize]').css("display") != "none")     
                   array1.push("&disksize=" + args.data.disksize);                
                               
                 if(args.data.tags != null && args.data.tags.length > 0)                  
                   array1.push("&tags=" + todb(args.data.tags));								
                 
                 if(args.$form.find('.form-item[rel=domainId]').css("display") != "none") 
-                  array1.push("&domainid="+domainId);		
+                  array1.push("&domainid=" + args.data.domainId);		
                         
                 $.ajax({
                   url: createURL("createDiskOffering&isMirrored=false" + array1.join("")),
                   dataType: "json",
                   async: true,
-                  success: function(json) {
-                    debugger;
+                  success: function(json) {                   
                     var item = json.creatediskofferingresponse.diskoffering;		
                     args.response.success({data: item});		
                   }
