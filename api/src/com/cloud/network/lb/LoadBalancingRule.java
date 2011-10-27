@@ -28,11 +28,6 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     private List<LbDestination> destinations;
     private List<LbStickinessPolicy> stickinessPolicies;
     
-    public LoadBalancingRule(LoadBalancer lb, List<LbDestination> destinations) { 
-        this.lb = lb;
-        this.destinations = destinations;
-    }
-    
     public LoadBalancingRule(LoadBalancer lb, List<LbDestination> destinations,List<LbStickinessPolicy> stickinessPolicies) { 
         this.lb = lb;
         this.destinations = destinations;
