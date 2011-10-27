@@ -84,6 +84,7 @@ import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.LoadBalancerDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
+import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
 import com.cloud.network.lb.dao.ElasticLbVmMapDao;
 import com.cloud.network.router.VirtualNetworkApplianceManager;
 import com.cloud.network.router.VirtualRouter;
@@ -347,8 +348,9 @@ public class ElasticLoadBalancerManagerImpl implements
             List<LoadBalancingRule> lbRules = new ArrayList<LoadBalancingRule>();
             for (LoadBalancerVO lb : lbs) {
                 List<LbDestination> dstList = _lbMgr.getExistingDestinations(lb.getId());
+                List<LbStickinessPolicy> policyList = _lbMgr.getStickinessPolicies(lb.getId());
                 LoadBalancingRule loadBalancing = new LoadBalancingRule(
-                        lb, dstList);
+                        lb, dstList, policyList);
                 lbRules.add(loadBalancing); 
             }
             return applyLBRules(elbVm, lbRules);
@@ -947,7 +949,8 @@ public class ElasticLoadBalancerManagerImpl implements
         List<LoadBalancingRule> lbRules = new ArrayList<LoadBalancingRule>();
         for (LoadBalancerVO lb : lbs) {
             List<LbDestination> dstList = _lbMgr.getExistingDestinations(lb.getId());
-            LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList);
+            List<LbStickinessPolicy> policyList = _lbMgr.getStickinessPolicies(lb.getId());
+            LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList,policyList);
             lbRules.add(loadBalancing);
         }
 

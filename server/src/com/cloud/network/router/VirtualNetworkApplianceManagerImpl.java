@@ -1649,7 +1649,8 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                 List<LoadBalancingRule> lbRules = new ArrayList<LoadBalancingRule>();
                 for (LoadBalancerVO lb : lbs) {
                     List<LbDestination> dstList = _lbMgr.getExistingDestinations(lb.getId());
-                    LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList);
+                    List<LbStickinessPolicy> policyList = _lbMgr.getStickinessPolicies(lb.getId());
+                    LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList,policyList);
                     lbRules.add(loadBalancing);
                 }
 

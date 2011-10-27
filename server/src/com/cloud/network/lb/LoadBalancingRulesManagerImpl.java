@@ -147,6 +147,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @Inject
     ElasticLoadBalancerManager _elbMgr;
     @Inject
+    LoadBalancingRulesManager _lbMgr;
+    @Inject
     NetworkDao _networkDao;
     @Inject
     FirewallRulesDao _firewallDao;
@@ -1012,7 +1014,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         List<LoadBalancingRule> lbRules = new ArrayList<LoadBalancingRule>();
         for (LoadBalancerVO lb : lbs) {
             List<LbDestination> dstList = getExistingDestinations(lb.getId());
-            LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList);
+            List<LbStickinessPolicy> policyList = _lbMgr.getStickinessPolicies(lb.getId());
+            LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList, policyList);
             lbRules.add(loadBalancing);
         }
         return lbRules;
