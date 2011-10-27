@@ -178,7 +178,115 @@
                 args.response.success({data:items});
               }
             });
+          },
+          
+          //???         
+          actions: {            
+            add: {
+              label: 'Add disk offering',
+
+              messages: {
+                confirm: function(args) {
+                  return 'Are you sure you want to add a disk offering?';
+                },
+                success: function(args) {
+                  return 'Your new disk offering is being created.';
+                },
+                notification: function(args) {
+                  return 'Creating new disk offering';
+                },
+                complete: function(args) {
+                  return 'Disk offering has been created successfully!';
+                }
+              },
+
+              createForm: {
+                title: 'Add disk offering',               
+                fields: {
+                  name: {
+                    label: 'Name',
+                    validation: { required: true }
+                  },
+                  description: {
+                    label: 'Description',
+                    validation: { required: true }
+                  },
+                  isCustomized: {
+                    label: 'Custom disk size',
+                    isBoolean: true
+                  },
+                  disksize: {
+                    label: 'Disk size (in GB)',
+                    dependsOn: 'isCustomized',
+                    validation: { required: true, number: true },
+                    isHidden: true
+                  },
+                  tags: {
+                    label: 'Storage tags'
+                  },
+                  isDomainSpecific: {
+                    label: 'Domain specific',
+                    isBoolean: true
+                  },
+                  domainId: {
+                    label: 'Domain',
+                    dependsOn: 'isDomainSpecific',
+                    select: function(args) {                                         
+                      $.ajax({
+                        url: createURL("listDomains"),
+                        dataType: "json",
+                        async: false,
+                        success: function(json) {
+                          var items = [];
+                          var domainObjs = json.listdomainsresponse.domain;                          
+                          $(domainObjs).each(function(){                            
+                            items.push({id: this.id, description: this.name});
+                          });                         
+                          args.response.success({data: items});
+                        }
+                      });                     
+                    },
+                    isHidden: true
+                  }                  
+                }
+              },
+
+              action: function(args) {
+                var array1 = [];
+                debugger;
+                array1.push("&name=" + args.data.name);
+                array1.push("&displaytext=" + todb(args.data.description));
+                              
+                array1.push("&customized=" + (args.data.isCustomized=="on"));                
+                if(args.$form.find('.form-item[rel=isCustomized]').css("display") != "none")     
+                  array1.push("&disksize=" + args.data.disksize);                
+                              
+                if(args.data.tags != null && args.data.tags.length > 0)                  
+                  array1.push("&tags=" + todb(args.data.tags));								
+                
+                if(args.$form.find('.form-item[rel=domainId]').css("display") != "none") 
+                  array1.push("&domainid="+domainId);		
+                        
+                $.ajax({
+                  url: createURL("createDiskOffering&isMirrored=false" + array1.join("")),
+                  dataType: "json",
+                  async: true,
+                  success: function(json) {
+                    debugger;
+                    var item = json.creatediskofferingresponse.diskoffering;		
+                    args.response.success({data: item});		
+                  }
+                });
+              },
+
+              notification: {
+                poll: function(args) {
+                  args.complete();
+                }
+              }
+            }
           }
+          //???          
         }
       },
       networkOfferings: {
