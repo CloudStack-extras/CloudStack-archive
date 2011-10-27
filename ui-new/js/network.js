@@ -339,6 +339,13 @@
                 var items = json.listpublicipaddressesresponse.publicipaddress;
                 var processedItems = 0;
 
+                if (!items) {
+                  args.response.success({
+                    data: []
+                  });
+                  return;
+                }
+
                 // Get network data
                 $(items).each(function() {
                   var item = this;
@@ -836,21 +843,28 @@
               label: 'Add security group',
 
               action: function(args) {
-                args.response.success();
+                $.ajax({
+                  url: createURL('createSecurityGroup'),
+                  data: {
+                    name: args.data.name,
+                    description: args.data.description
+                  },
+                  dataType: 'json',
+                  async: true,
+                  success: function(data) {
+                    args.response.success({
+                      data: data.createsecuritygroupresponse.securitygroup
+                    });
+                  }
+                });
               },
 
               messages: {
                 confirm: function(args) {
                   return 'Are you sure you want to add ' + args.name + '?';
                 },
-                success: function(args) {
-                  return 'Your new security group is being created.';
-                },
                 notification: function(args) {
                   return 'Created security group';
-                },
-                complete: function(args) {
-                  return 'Security group has been created';
                 }
               },
 
@@ -861,10 +875,6 @@
                   name: { label: 'Name' },
                   description: { label: 'Description' }
                 }
-              },
-
-              notification: {
-                poll: testData.notifications.testPoll
               }
             },
             destroy: {
@@ -873,23 +883,24 @@
                 confirm: function(args) {
                   return 'Are you sure you want to delete ' + args.name + '?';
                 },
-                success: function(args) {
-                  return args.name + ' is being deleted.';
-                },
                 notification: function(args) {
                   return 'Deleted security group: ' + args.name;
-                },
-                complete: function(args) {
-                  return args.name + ' has been deleted.';
                 }
               },
               action: function(args) {
-                setTimeout(function() {
-                  args.response.success();
-                }, 200);
-              },
-              notification: {
-                poll: testData.notifications.testPoll
+                $.ajax({
+                  url: createURL('deleteSecurityGroup'),
+                  data: {
+                    id: args.context.securityGroups[0].id
+                  },
+                  dataType: 'json',
+                  async: true,
+                  success: function(data) {
+                    args.response.success({
+                      actionFilter: function() { return []; }
+                    });
+                  }
+                });
               }
             }
           },
