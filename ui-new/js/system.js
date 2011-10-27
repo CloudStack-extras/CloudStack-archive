@@ -1958,9 +1958,38 @@
                     }
                   });
                 }
-              }
-
-
+              },
+                           
+              networkDevices: {
+                title: 'Network devices',
+                multiple: true,
+                fields: [
+                  {
+                    id: { label: 'ID' },
+                    url: { label: 'URL' },
+                    type: { label: 'Type' },
+                    pingstorageserverip: { label: 'PING storage IP' },
+                    pingdir: { label: 'PING directory' },
+                    tftpdir: { label: 'TFTP directory' }                 
+                  }
+                ],
+                dataProvider: function(args) {
+                  var array1 = [];                     
+                  array1.push("&networkdeviceparameterlist[0].zoneid=" + args.context.pods[0].zoneid);
+	                array1.push("&networkdeviceparameterlist[0].podid=" + args.context.pods[0].id);	 	
+                  $.ajax({
+                    url: createURL("listNetworkDevice" + array1.join("")),
+                    dataType: "json",
+                    success: function(json) {
+                      var items = json.listnetworkdevice.networkdevice;	
+                      args.response.success({
+                        actionFilter: networkDeviceActionfilter,
+                        data: items
+                      });
+                    }
+                  });
+                }
+              }             
             }
           }
         }
@@ -4286,7 +4315,13 @@
 
     return allowedActions;
   }
-
+  
+  var networkDeviceActionfilter = function(args) {
+    var jsonObj = args.context.item;
+    var allowedActions = [];    
+    return allowedActions;
+  }
+   
   var clusterActionfilter = function(args) {
     var jsonObj = args.context.item;
     var allowedActions = [];
