@@ -1720,7 +1720,7 @@
               else if(selectedZoneObj.networktype == "Advanced") { //advanced-mode network (zone-wide VLAN)
                 //$("#tab_ipallocation, #add_iprange_button, #tab_network_device, #add_network_device_button").hide();
                 hiddenTabs.push("ipAllocations");
-                hiddenTabs.push("networkDevices");
+                //hiddenTabs.push("networkDevices"); //network devices tab is moved out of pod page at 3.0 UI. It will go to new network page.
               }
               return hiddenTabs;
             },
@@ -1960,13 +1960,14 @@
                   });
                 }
               },
-                           
+              
+              //network devices tab is moved out of pod page at 3.0 UI. It will go to new network page.
+              /*
               networkDevices: {
                 title: 'Network devices',
                 multiple: true,
                 
-                //comment this one out until Brian fix Bug #155
-                /*
+                //preFilter won't work until Brian fix Bug #155               
                 preFilter: function(args) {   
                   var networkDeviceObj = args.context.networkDevices[0];
                 
@@ -1980,7 +1981,7 @@
                   
                   return hiddenFields;
                 },
-                */
+                
                 
                 fields: [
                   {
@@ -2008,7 +2009,8 @@
                     }
                   });
                 }
-              }             
+              }    
+              */              
             }
           }
         }
