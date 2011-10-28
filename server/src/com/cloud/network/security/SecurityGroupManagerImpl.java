@@ -109,6 +109,7 @@ import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.VirtualMachineManager;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.VMInstanceDao;
+import com.cloud.network.security.SecurityRule.SecurityRuleType;
 
 import edu.emory.mathcs.backport.java.util.Collections;
 
@@ -328,7 +329,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
 
     }
 
-    protected Map<PortAndProto, Set<String>> generateRulesForVM(Long userVmId, SecurityRule.Type type) {
+    protected Map<PortAndProto, Set<String>> generateRulesForVM(Long userVmId, SecurityRuleType type) {
 
         Map<PortAndProto, Set<String>> allowed = new TreeMap<PortAndProto, Set<String>>();
 
@@ -481,7 +482,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
         return affectedVms;
     }
 
-    protected SecurityGroupRulesCmd generateRulesetCmd(SecurityRule.Type ruleType, String vmName, String guestIp, String guestMac, Long vmId, String signature, long seqnum, Map<PortAndProto, Set<String>> rules) {
+    protected SecurityGroupRulesCmd generateRulesetCmd(SecurityRuleType ruleType, String vmName, String guestIp, String guestMac, Long vmId, String signature, long seqnum, Map<PortAndProto, Set<String>> rules) {
         List<IpPortAndProto> result = new ArrayList<IpPortAndProto>();
         for (PortAndProto pAp : rules.keySet()) {
             Set<String> cidrs = rules.get(pAp);
@@ -534,7 +535,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
         Integer icmpCode = cmd.getIcmpCode();
         List<String> cidrList = cmd.getCidrList();
         Map groupList = cmd.getUserSecurityGroupList();
-        return authorizeSecurityGroupRule(securityGroupId,protocol,startPort,endPort,icmpType,icmpCode,cidrList,groupList,SecurityRule.Type.EgressRule);
+        return authorizeSecurityGroupRule(securityGroupId,protocol,startPort,endPort,icmpType,icmpCode,cidrList,groupList,SecurityRuleType.EgressRule);
     }
 
     @Override
@@ -550,10 +551,10 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
         Integer icmpCode = cmd.getIcmpCode();
         List<String> cidrList = cmd.getCidrList();
         Map groupList = cmd.getUserSecurityGroupList();
-        return authorizeSecurityGroupRule(securityGroupId,protocol,startPort,endPort,icmpType,icmpCode,cidrList,groupList,SecurityRule.Type.IngressRule);
+        return authorizeSecurityGroupRule(securityGroupId,protocol,startPort,endPort,icmpType,icmpCode,cidrList,groupList,SecurityRuleType.IngressRule);
     }
     
-    private List<SecurityGroupRuleVO> authorizeSecurityGroupRule(Long securityGroupId,String protocol,Integer startPort,Integer endPort,Integer icmpType,Integer icmpCode,List<String>  cidrList,Map groupList,SecurityRule.Type ruleType) {
+    private List<SecurityGroupRuleVO> authorizeSecurityGroupRule(Long securityGroupId,String protocol,Integer startPort,Integer endPort,Integer icmpType,Integer icmpCode,List<String>  cidrList,Map groupList,SecurityRuleType ruleType) {
         Integer startPortOrType = null;
         Integer endPortOrCode = null;
         
@@ -727,7 +728,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
     @ActionEvent(eventType = EventTypes.EVENT_SECURITY_GROUP_REVOKE_EGRESS, eventDescription = "Revoking Egress Rule ", async = true)
     public boolean revokeSecurityGroupEgress(RevokeSecurityGroupEgressCmd cmd) {
         Long id = cmd.getId();
-        return revokeSecurityGroupRule(id, SecurityRule.Type.EgressRule);
+        return revokeSecurityGroupRule(id, SecurityRuleType.EgressRule);
     }
     
     @Override
@@ -736,10 +737,10 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
     public boolean revokeSecurityGroupIngress(RevokeSecurityGroupIngressCmd cmd) {
 
         Long id = cmd.getId();
-        return revokeSecurityGroupRule(id, SecurityRule.Type.IngressRule);
+        return revokeSecurityGroupRule(id, SecurityRuleType.IngressRule);
     }
     
-    private boolean revokeSecurityGroupRule(Long id, SecurityRule.Type type) {
+    private boolean revokeSecurityGroupRule(Long id, SecurityRuleType type) {
         // input validation
         Account caller = UserContext.current().getCaller();
         
@@ -925,10 +926,10 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
             seqnum = log.getLogsequence();
 
             if (vm != null && vm.getState() == State.Running) {
-                Map<PortAndProto, Set<String>> rules = generateRulesForVM(userVmId, SecurityRule.Type.IngressRule);
+                Map<PortAndProto, Set<String>> rules = generateRulesForVM(userVmId, SecurityRuleType.IngressRule);
                 agentId = vm.getHostId();
                 if (agentId != null) {
-                    SecurityGroupRulesCmd cmd = generateRulesetCmd(SecurityRule.Type.IngressRule, vm.getInstanceName(), vm.getPrivateIpAddress(), vm.getPrivateMacAddress(), vm.getId(), generateRulesetSignature(rules), seqnum,
+                    SecurityGroupRulesCmd cmd = generateRulesetCmd(SecurityRuleType.IngressRule, vm.getInstanceName(), vm.getPrivateIpAddress(), vm.getPrivateMacAddress(), vm.getId(), generateRulesetSignature(rules), seqnum,
                             rules);
                     Commands cmds = new Commands(cmd);
                     try {
@@ -938,7 +939,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
                         _workDao.updateStep(work.getInstanceId(), seqnum, Step.Done);
                     }
                     
-                    cmd = generateRulesetCmd(SecurityRule.Type.EgressRule, vm.getInstanceName(), vm.getPrivateIpAddress(), vm.getPrivateMacAddress(), vm.getId(), generateRulesetSignature(rules), seqnum,
+                    cmd = generateRulesetCmd(SecurityRuleType.EgressRule, vm.getInstanceName(), vm.getPrivateIpAddress(), vm.getPrivateMacAddress(), vm.getId(), generateRulesetSignature(rules), seqnum,
                             rules);
                     cmds = new Commands(cmd);
                     try {

@@ -18,7 +18,7 @@
 
 package com.cloud.api.response;
 
-import com.cloud.network.security.SecurityRule;
+import com.cloud.network.security.SecurityRule.SecurityRuleType;
 import com.cloud.serializer.Param;
 
 public class SecurityGroupRuleResultObject {
@@ -43,7 +43,7 @@ public class SecurityGroupRuleResultObject {
     @Param(name="cidr")
     private String allowedSourceIpCidr = null;
     
-    private SecurityRule.Type type;
+    private SecurityRuleType type;
 
     public SecurityGroupRuleResultObject() { }
 
@@ -69,12 +69,12 @@ public class SecurityGroupRuleResultObject {
         return startPort;
     }
 
-    public void setRuleType(SecurityRule.Type type) {
+    public void setRuleType(SecurityRuleType type) {
     	this.type = type;
     }
     
 
-    public SecurityRule.Type getRuleType() {
+    public SecurityRuleType getRuleType() {
     	return type;
     }
     

@@ -21,11 +21,11 @@ package com.cloud.network.security.dao;
 import java.util.List;
 
 import com.cloud.network.security.SecurityGroupRuleVO;
-import com.cloud.network.security.SecurityRule;
+import com.cloud.network.security.SecurityRule.SecurityRuleType;
 import com.cloud.utils.db.GenericDao;
 
 public interface SecurityGroupRuleDao extends GenericDao<SecurityGroupRuleVO, Long> {
-    List<SecurityGroupRuleVO> listBySecurityGroupId(long securityGroupId, SecurityRule.Type type);
+    List<SecurityGroupRuleVO> listBySecurityGroupId(long securityGroupId, SecurityRuleType type);
     List<SecurityGroupRuleVO> listByAllowedSecurityGroupId(long networkGroupId);
     SecurityGroupRuleVO findByProtoPortsAndCidr(long networkGroupId, String proto, int startPort, int endPort, String cidr);
     SecurityGroupRuleVO findByProtoPortsAndGroup(String proto, int startPort, int endPort, String networkGroup);

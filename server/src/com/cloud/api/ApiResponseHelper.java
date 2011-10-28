@@ -126,6 +126,7 @@ import com.cloud.network.rules.LoadBalancer;
 import com.cloud.network.rules.PortForwardingRule;
 import com.cloud.network.rules.StaticNatRule;
 import com.cloud.network.security.SecurityRule;
+import com.cloud.network.security.SecurityRule.SecurityRuleType;
 import com.cloud.network.security.SecurityGroup;
 import com.cloud.network.security.SecurityGroupRules;
 import com.cloud.offering.DiskOffering;
@@ -1573,8 +1574,10 @@ public class ApiResponseHelper implements ResponseGenerator {
     }
 
     @Override
-    public ListResponse<SecurityGroupResponse> createSecurityGroupResponses(List<? extends SecurityGroupRules> networkGroups) {
-        List<SecurityGroupResultObject> groupResultObjs = SecurityGroupResultObject.transposeNetworkGroups(networkGroups);
+    public ListResponse<SecurityGroupResponse> createSecurityGroupResponses(
+            List<? extends SecurityGroupRules> networkGroups) {
+        List<SecurityGroupResultObject> groupResultObjs = SecurityGroupResultObject
+                .transposeNetworkGroups(networkGroups);
 
         ListResponse<SecurityGroupResponse> response = new ListResponse<SecurityGroupResponse>();
         List<SecurityGroupResponse> netGrpResponses = new ArrayList<SecurityGroupResponse>();
@@ -1583,43 +1586,48 @@ public class ApiResponseHelper implements ResponseGenerator {
             netGrpResponse.setId(networkGroup.getId());
             netGrpResponse.setName(networkGroup.getName());
             netGrpResponse.setDescription(networkGroup.getDescription());
-            
+
             populateOwner(netGrpResponse, networkGroup);
 
-            List<SecurityGroupRuleResultObject> securityGroupRules = networkGroup.getSecurityGroupRules();
+            List<SecurityGroupRuleResultObject> securityGroupRules = networkGroup
+                    .getSecurityGroupRules();
             if ((securityGroupRules != null) && !securityGroupRules.isEmpty()) {
                 List<SecurityGroupRuleResponse> ingressRulesResponse = new ArrayList<SecurityGroupRuleResponse>();
                 List<SecurityGroupRuleResponse> egressRulesResponse = new ArrayList<SecurityGroupRuleResponse>();
                 for (SecurityGroupRuleResultObject securityGroupRule : securityGroupRules) {
-                	SecurityGroupRuleResponse ruleData = new SecurityGroupRuleResponse();
+                    SecurityGroupRuleResponse ruleData = new SecurityGroupRuleResponse();
+                    ruleData.setRuleId(securityGroupRule.getId());
+                    ruleData.setProtocol(securityGroupRule.getProtocol());
 
-                	ruleData.setRuleId(securityGroupRule.getId());
-                	ruleData.setProtocol(securityGroupRule.getProtocol());
-                    if ("icmp".equalsIgnoreCase(securityGroupRule.getProtocol())) {
-                    	ruleData.setIcmpType(securityGroupRule.getStartPort());
-                    	ruleData.setIcmpCode(securityGroupRule.getEndPort());
-                    	
+                    if ("icmp"
+                            .equalsIgnoreCase(securityGroupRule.getProtocol())) {
+                        ruleData.setIcmpType(securityGroupRule.getStartPort());
+                        ruleData.setIcmpCode(securityGroupRule.getEndPort());
                     } else {
-                    	ruleData.setStartPort(securityGroupRule.getStartPort());
-                    	ruleData.setEndPort(securityGroupRule.getEndPort());
+                        ruleData.setStartPort(securityGroupRule.getStartPort());
+                        ruleData.setEndPort(securityGroupRule.getEndPort());
                     }
 
                     if (securityGroupRule.getAllowedSecurityGroup() != null) {
-                    	ruleData.setSecurityGroupName(securityGroupRule.getAllowedSecurityGroup());
-                    	ruleData.setAccountName(securityGroupRule.getAllowedSecGroupAcct());
+                        ruleData.setSecurityGroupName(securityGroupRule
+                                .getAllowedSecurityGroup());
+                        ruleData.setAccountName(securityGroupRule
+                                .getAllowedSecGroupAcct());
                     } else {
-                    	ruleData.setCidr(securityGroupRule.getAllowedSourceIpCidr());
+                        ruleData.setCidr(securityGroupRule
+                                .getAllowedSourceIpCidr());
                     }
 
-                    if (securityGroupRule.getRuleType() == SecurityRule.Type.IngressRule) {
-                    	ruleData.setObjectName("ingressrule");
-                    	ingressRulesResponse.add(ruleData);
+                    if (securityGroupRule.getRuleType() == SecurityRuleType.IngressRule) {
+                        ruleData.setObjectName("ingressrule");
+                        ingressRulesResponse.add(ruleData);
                     } else {
-                    	ruleData.setObjectName("egressrule");
-                    	egressRulesResponse.add(ruleData);
+                        ruleData.setObjectName("egressrule");
+                        egressRulesResponse.add(ruleData);
                     }
                 }
-                netGrpResponse.setSecurityGroupIngressRules(ingressRulesResponse);
+                netGrpResponse
+                        .setSecurityGroupIngressRules(ingressRulesResponse);
                 netGrpResponse.setSecurityGroupEgressRules(egressRulesResponse);
             }
             netGrpResponse.setObjectName("securitygroup");
@@ -2028,11 +2036,11 @@ public class ApiResponseHelper implements ResponseGenerator {
                 } else {
                 	securityGroupData.setCidr(securityRule.getAllowedSourceIpCidr());
                 }
-                if (securityRule.getRuleType() == SecurityRule.Type.IngressRule) {
-                	securityGroupData.setObjectName("ingressrule");
+                if (securityRule.getRuleType() == SecurityRuleType.IngressRule) {
+                    securityGroupData.setObjectName("ingressrule");
                     ingressResponses.add(securityGroupData);
                 } else {
-                	securityGroupData.setObjectName("egressrule");
+                    securityGroupData.setObjectName("egressrule");
                     egressResponses.add(securityGroupData);
                 }
 

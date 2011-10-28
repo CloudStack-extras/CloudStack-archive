@@ -26,7 +26,7 @@ import javax.naming.ConfigurationException;
 
 import com.cloud.network.security.SecurityGroupRuleVO;
 import com.cloud.network.security.SecurityGroupVO;
-import com.cloud.network.security.SecurityRule;
+import com.cloud.network.security.SecurityRule.SecurityRuleType;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.JoinBuilder;
@@ -78,12 +78,17 @@ public class SecurityGroupRuleDaoImpl extends GenericDaoBase<SecurityGroupRuleVO
 
     }
 
-    public List<SecurityGroupRuleVO> listBySecurityGroupId(long securityGroupId, SecurityRule.Type type) {
+    public List<SecurityGroupRuleVO> listBySecurityGroupId(long securityGroupId, SecurityRuleType type) {
         SearchCriteria<SecurityGroupRuleVO> sc = securityGroupIdAndTypeSearch.create();
         sc.setParameters("securityGroupId", securityGroupId);
-        String dbType = "I" ; // FIXME: better way of converting from enum to string 
-        if (type == SecurityRule.Type.EgressRule)
-        	dbType = "E" ;
+        String dbType; 
+        if (type == SecurityRuleType.EgressRule) {
+            dbType = SecurityRuleType.EgressRule.getDbType();     
+        }else {
+            dbType = SecurityRuleType.IngressRule.getDbType();
+        }
+
+        
         sc.setParameters("type", dbType);
         return listBy(sc);
     }

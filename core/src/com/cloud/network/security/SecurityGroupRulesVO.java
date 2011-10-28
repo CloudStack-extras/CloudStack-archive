@@ -26,6 +26,7 @@ import javax.persistence.Id;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SecondaryTable;
 import javax.persistence.Table;
+import com.cloud.network.security.SecurityRule.SecurityRuleType;
 
 @Entity
 @Table(name = ("security_group"))
@@ -133,11 +134,11 @@ public class SecurityGroupRulesVO implements SecurityGroupRules {
     }
     
     @Override
-    public SecurityRule.Type getRuleType() {
+    public SecurityRuleType getRuleType() {
         if ("I".equalsIgnoreCase(this.type)) {
-        	return SecurityRule.Type.IngressRule;
-        }else {
-        	return SecurityRule.Type.EgressRule;
+            return SecurityRuleType.IngressRule;
+        } else {
+            return SecurityRuleType.EgressRule;
         }
     }
 
