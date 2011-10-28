@@ -757,7 +757,7 @@ div.detail-group.actions td {
 }
 
 .detail-group table td.detail-actions {
-  width: 55%;
+  width: 60%;
   height: 26px;
 }
 
@@ -2876,7 +2876,7 @@ label.error {
 }
 
 .multi-wizard .content .section .select-area input[type=radio] {
-  margin: 16px;
+  margin: 14px 16px 0;
 }
 
 .multi-wizard .content .section .select-area label {
@@ -3059,7 +3059,7 @@ label.error {
 
 .multi-wizard .select-container .select input {
   float: left;
-  margin: 24px;
+  margin: 24px 24px 0;
 }
 
 .multi-wizard .select-container .select .select-desc {
