@@ -28,13 +28,17 @@
       
       // Use this for checking the session, to bypass login screen
       bypassLoginCheck: function(args) {
-        return false;
-        return {
-          user: {
-            login: 'wchan',
-            name: 'Will Chan'
-          }
-        };
+        var disabledLogin = document.location.href.split('?')[1] == 'login=disabled';
+
+        if (disabledLogin)
+          return {
+            user: {
+              login: 'wchan',
+              name: 'Will Chan'
+            }
+          };
+        else
+          return false;
       },
 
       // Actual login process, via form
