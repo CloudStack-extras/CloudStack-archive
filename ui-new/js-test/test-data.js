@@ -187,6 +187,26 @@
               "traffictype": "Guest",
               "type": "Virtual",
               "isdefault": true
+            },
+            {
+              "id": 489,
+              "networkid": 206,
+              "netmask": "255.255.255.0",
+              "gateway": "10.1.1.1",
+              "ipaddress": "10.1.1.156",
+              "traffictype": "Guest",
+              "type": "Virtual",
+              "isdefault": false
+            },
+            {
+              "id": 490,
+              "networkid": 207,
+              "netmask": "255.255.255.0",
+              "gateway": "10.1.1.1",
+              "ipaddress": "10.1.1.157",
+              "traffictype": "Guest",
+              "type": "Virtual",
+              "isdefault": false
             }
           ],
           "hypervisor": "XenServer"
@@ -1010,6 +1030,12 @@
             }
           ],
           "hypervisor": "XenServer"
+        }
+      ],
+      domains: [
+        {
+          "id": 123,
+          "name": "ROOT"
         }
       ],
       storage: [
@@ -4069,6 +4095,66 @@
           "offerha": false,
           "domainid": 14,
           "domain": "Turkey"
+        }
+      ],
+      systemServiceOfferings: [
+        {
+          "id": 12,
+          "name": "System Offering For Secondary Storage VM",
+          "cpunumber": 1,
+          "cpuspeed": 500,
+          "memory": 256,
+          "created": "2011-10-27T14:17:54-0700",
+          "storagetype": "shared",
+          "offerha": false,
+          "limitcpuuse": false,
+          "issystem": true,
+          "defaultuse": true,
+          "systemvmtype": "secondarystoragevm"
+        },
+        {
+          "id": 15,
+          "name": "System Offering For Elastic LB VM",
+          "cpunumber": 1,
+          "cpuspeed": 128,
+          "memory": 128,
+          "created": "2011-10-27T14:17:54-0700",
+          "storagetype": "shared",
+          "offerha": true,
+          "limitcpuuse": false,
+          "issystem": true,
+          "defaultuse": true,
+          "systemvmtype": "elasticloadbalancervm",
+          "networkrate": 0
+        },
+        {
+          "id": 13,
+          "name": "System Offering For Software Router",
+          "cpunumber": 1,
+          "cpuspeed": 500,
+          "memory": 128,
+          "created": "2011-10-27T14:17:54-0700",
+          "storagetype": "shared",
+          "offerha": true,
+          "limitcpuuse": false,
+          "issystem": true,
+          "defaultuse": true,
+          "systemvmtype": "domainrouter"
+        },
+        {
+          "id": 14,
+          "name": "System Offering For Console Proxy",
+          "cpunumber": 1,
+          "cpuspeed": 500,
+          "memory": 1024,
+          "created": "2011-10-27T14:17:54-0700",
+          "storagetype": "shared",
+          "offerha": false,
+          "limitcpuuse": false,
+          "issystem": true,
+          "defaultuse": true,
+          "systemvmtype": "consoleproxy",
+          "networkrate": 0
         }
       ],
       diskOfferings: [
