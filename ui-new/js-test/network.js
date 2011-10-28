@@ -574,7 +574,22 @@
               vpn: {
                 title: 'VPN',
                 custom: function(args) {
-                  return $('<div>').multiEdit({
+                  var ipAddress = args.context.ipAddresses[0].ipaddress;
+                  var psk = '081XufGFmEDBAEfsfdXTNpramSZ';
+                  
+                  return $('<div>').append(
+                    $('<ul>').addClass('info')
+                      .append(
+                        // VPN IP
+                        $('<li>').addClass('ip').html('Your VPN access is currently enabled and can be accessed via the IP: ')
+                          .append($('<strong>').html(ipAddress))
+                      )
+                      .append(
+                        // PSK
+                        $('<li>').addClass('psk').html('Your IPSec pre-shared key is: ')
+                          .append($('<strong>').html(psk))
+                      )
+                  ).multiEdit({
                     noSelect: true,
                     fields: {
                       'username': { edit: true, label: 'Username' },
@@ -612,12 +627,11 @@
                     dataProvider: function(args) {
                       setTimeout(function() {
                         args.response.success({
-                          data: [
-                          ]
+                          data: []
                         });
                       }, 100);
                     }
-                  })
+                  });
                 }
               }
             }
