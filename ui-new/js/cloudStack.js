@@ -39,23 +39,89 @@
       },
 
       // Actual login process, via form
-      loginAction: function(args) {
-        if (args.data.username != 'invalid') {
-          login();
-
-          // Store capabilities
-          $.ajax({
-            url: createURL('listCapabilities'),
-            dataType: 'json',
-            async: false,
-            success: function(data) {
-              cloudStack._capabilities = data.listcapabilitiesresponse.capability;
-            }
-          });
-          return args.response.success();
+      loginAction: function(args) {  
+        var array1 = []; 
+        array1.push("&username=" + encodeURIComponent(args.data.username));
+       
+        var password;
+        if (md5Hashed) 
+          password = $.md5(args.data.password);
+        else
+          password = args.data.password; 
+        array1.push("&password=" + password);
+       
+        var domain;
+        if(args.data.domain != null && args.data.domain.length > 0) {
+          if (args.data.domain.charAt(0) != "/") 
+            domain = "/" + args.data.domain;
+          else
+            domain = args.data.domain;
+          array1.push("&domain=" + encodeURIComponent(domain));
+        } 
+        else {
+          array1.push("&domain=" + encodeURIComponent("/"));
         }
 
-        return args.response.error();
+        $.ajax({
+          //type: "POST",
+          url: createURL("login") + array1.join(""),
+          dataType: "json",
+          async: false,
+          success: function(json) {    
+            g_mySession = $.cookie('JSESSIONID');
+            g_sessionKey = encodeURIComponent(json.loginresponse.sessionkey);
+            g_role = json.loginresponse.type;
+            g_username = json.loginresponse.username;
+            g_account = json.loginresponse.account;
+            g_domainid = json.loginresponse.domainid;
+            g_timezone = json.loginresponse.timezone;
+            g_timezoneoffset = json.loginresponse.timezoneoffset;
+
+            $.cookie('sessionKey', g_sessionKey, { expires: 1});
+            $.cookie('username', g_username, { expires: 1});
+            $.cookie('account', g_account, { expires: 1});
+            $.cookie('domainid', g_domainid, { expires: 1});
+            $.cookie('role', g_role, { expires: 1});
+            $.cookie('timezoneoffset', g_timezoneoffset, { expires: 1});
+            $.cookie('timezone', g_timezone, { expires: 1});
+
+            $.ajax({
+              url: createURL("listCapabilities"),
+              //url: "command=/client/api?listCapabilities&sessionkey="+g_sessionKey,
+              dataType: "json",
+              async: false,
+              success: function(json) {
+                /* g_supportELB: "guest"   — ips are allocated on guest network (so use 'forvirtualnetwork' = false)
+                 * g_supportELB: "public"  - ips are allocated on public network (so use 'forvirtualnetwork' = true)
+                 * g_supportELB: "false"   – no ELB support
+                 */                 
+                g_supportELB = json.listcapabilitiesresponse.capability.supportELB.toString(); //convert boolean to string if it's boolean
+                $.cookie('supportELB', g_supportELB, { expires: 1});
+
+                g_firewallRuleUiEnabled = json.listcapabilitiesresponse.capability.firewallRuleUiEnabled.toString(); //convert boolean to string if it's boolean
+                $.cookie('firewallRuleUiEnabled', g_firewallRuleUiEnabled, { expires: 1});
+
+                if (json.listcapabilitiesresponse.capability.userpublictemplateenabled != null) {
+                  g_userPublicTemplateEnabled = json.listcapabilitiesresponse.capability.userpublictemplateenabled.toString(); //convert boolean to string if it's boolean
+                  $.cookie('userpublictemplateenabled', g_userPublicTemplateEnabled, { expires: 1});
+                }
+
+                if (json.listcapabilitiesresponse.capability.securitygroupsenabled != null) {
+                  g_directAttachSecurityGroupsEnabled = json.listcapabilitiesresponse.capability.securitygroupsenabled.toString(); //convert boolean to string if it's boolean
+                  $.cookie('directattachsecuritygroupsenabled', g_directAttachSecurityGroupsEnabled, { expires: 1});
+                }
+                
+                args.response.success();                  
+              },
+              error: function(xmlHTTP) {
+                args.response.error();
+              }
+            });
+          },
+          error: function() {
+            args.response.error();
+          }
+        });        
       },
 
       // Show cloudStack main UI widget
