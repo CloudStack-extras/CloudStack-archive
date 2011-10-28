@@ -200,6 +200,89 @@ table th div.ui-resizable-handle {
   display: none;
 }
 
+/*Login screen*/
+.login {
+  width: 1024px;
+  height: 768px;
+  margin: auto;
+  overflow: hidden;
+  border-top: none;
+  position: relative;
+  background: url(../images/bg-login.jpg);
+}
+
+.login .fields {
+  width: 409px;
+  float: left;
+  margin: 72px 0 0 88px;
+}
+
+.login .fields .field {
+  position: relative;
+}
+
+.login .fields .field label {
+  font-size: 11px;
+  color: #4E4F53;
+  /*+placement:displace 11px 12px;*/
+  position: absolute;
+  margin-left: 11px;
+  margin-top: 12px;
+}
+
+.login .fields .field label.error {
+  color: #FF0000;
+  float: right;
+}
+
+.login .fields input {
+  width: 204px;
+  height: 20px;
+  margin: 5px 0 0;
+  text-indent: 7px;
+  border: 1px solid #CACACA;
+  /*+border-radius:3px;*/
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  -khtml-border-radius: 3px;
+  border-radius: 3px 3px 3px 3px;
+  background: #ECECEC;
+}
+
+.login .fields input.error {
+  border-color: #FF8080;
+  background: #FFEAEA;
+}
+
+.login .fields input[type=submit] {
+  background: transparent url(../images/sprites.png) -563px -747px;
+  cursor: pointer;
+  border: none;
+  margin: 7px 0 0;
+  width: 68px;
+  height: 25px;
+  display: block;
+}
+
+.login .fields input[type=submit]:hover {
+  background-position: -563px -772px;
+}
+
+.login .logo {
+  width: 243px;
+  height: 31px;
+  float: left;
+  margin: 72px 0 0 209px;
+  background: url(../images/logo.png) no-repeat;
+}
+
+.login form {
+  display: block;
+  height: 245px;
+  margin: 225px 0 0;
+  background: #FFFFFF;
+}
+
 /*Notifications*/
 div.notification-box {
   width: 323px;
@@ -757,7 +840,7 @@ div.detail-group.actions td {
 }
 
 .detail-group table td.detail-actions {
-  width: 60%;
+  width: 55%;
   height: 26px;
 }
 
@@ -830,10 +913,10 @@ div.detail-group.actions td {
 
 #header div.logo {
   width: 35%;
-  height: 100%;
+  height: 32px;
   position: relative;
   float: left;
-  margin: 0 0 0 5px;
+  margin: 4px 0 0 5px;
   background: transparent url(../images/logo.png) no-repeat 5px 0px;
 }
 
@@ -853,8 +936,7 @@ div.detail-group.actions td {
   background: none;
   height: 18px;
   padding: 1px 0 0;
-  margin: 8px 36px 0 62px;
-  width: 110px;
+  margin: 8px 36px 0 50px;
 }
 
 #header div.notifications span {
@@ -898,7 +980,7 @@ div.detail-group.actions td {
 }
 
 #header div.view-switcher {
-  width: 264px;
+  width: 256px;
   height: 39px;
   background-position: 0px -5px;
   /*+placement:shift 0px 1px;*/
@@ -984,6 +1066,7 @@ div.detail-group.actions td {
   border-right: none;
   min-width: 54px;
   text-align: center;
+  max-width: 80px;
 }
 
 #user div.options {
@@ -2664,7 +2747,7 @@ Dialogs*/
 
 /*Form validation*/
 input.error {
-  background: #FFEAEA;
+  background: #F64E4E;
 }
 
 label.error {
@@ -2876,7 +2959,7 @@ label.error {
 }
 
 .multi-wizard .content .section .select-area input[type=radio] {
-  margin: 14px 16px 0;
+  margin: 4px 16px 0;
 }
 
 .multi-wizard .content .section .select-area label {
@@ -3680,14 +3763,14 @@ label.error {
   width: 100%;
 }
 
-.tree-view > ul {
+.tree-view>ul {
   /*+placement:shift 3px 40px;*/
   position: relative;
   left: 3px;
   top: 40px;
 }
 
-.tree-view > ul > li {
+.tree-view>ul>li {
   left: 5px;
 }
 
@@ -3722,7 +3805,7 @@ label.error {
   position: absolute;
 }
 
-.tree-view ul li.expanded > .expand {
+.tree-view ul li.expanded>.expand {
   background-position: -631px -228px;
 }
 
