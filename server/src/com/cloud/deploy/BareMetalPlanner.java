@@ -87,22 +87,20 @@ public class BareMetalPlanner implements DeploymentPlanner {
 			}
 		}
 		
-		List<ClusterVO> clusters = _clusterDao.listByDcHyType(vm.getDataCenterIdToDeployIn(), HypervisorType.BareMetal.toString());
-		if (clusters.size() != 1) {
-			throw new CloudRuntimeException("Invaild baremetal cluster number " + clusters.size());
-		}
-		Cluster cluster = clusters.get(0);
-		
+		List<ClusterVO> clusters = _clusterDao.listByDcHyType(vm.getDataCenterIdToDeployIn(), HypervisorType.BareMetal.toString());		
 		int cpu_requested;
 		long ram_requested;
 		HostVO target = null;
-		List<HostVO> hosts = _hostDao.listByCluster(cluster.getId());
-		if (hostTag != null) {
-			for (HostVO h : hosts) {
-				_hostDao.loadDetails(h);
-				if (h.getDetail("hostTag") != null && h.getDetail("hostTag").equalsIgnoreCase(hostTag)) {
-					target = h;
-					break;
+		for (ClusterVO cluster : clusters) {
+			List<HostVO> hosts = _hostDao.listByCluster(cluster.getId());
+			if (hostTag != null) {
+				for (HostVO h : hosts) {
+					_hostDao.loadDetails(h);
+					if (h.getDetail("hostTag") != null
+							&& h.getDetail("hostTag").equalsIgnoreCase(hostTag)) {
+						target = h;
+						break;
+					}
 				}
 			}
 		}
@@ -116,13 +114,19 @@ public class BareMetalPlanner implements DeploymentPlanner {
 			ram_requested = target.getTotalMemory();
 		}
 		
-		for (HostVO h : hosts) {
-			if (h.getStatus() == Status.Up) {
-				if(_capacityMgr.checkIfHostHasCapacity(h.getId(), cpu_requested, ram_requested, false, cpuOverprovisioningFactor)){
-					s_logger.debug("Find host " + h.getId() + " has enough capacity");
-					DataCenter dc = _dcDao.findById(h.getDataCenterId());
-					Pod pod = _podDao.findById(h.getPodId());
-					return new DeployDestination(dc, pod, cluster, h);
+		for (ClusterVO cluster : clusters) {
+			List<HostVO> hosts = _hostDao.listByCluster(cluster.getId());
+			for (HostVO h : hosts) {
+				if (h.getStatus() == Status.Up) {
+					if (_capacityMgr.checkIfHostHasCapacity(h.getId(),
+							cpu_requested, ram_requested, false,
+							cpuOverprovisioningFactor)) {
+						s_logger.debug("Find host " + h.getId()
+								+ " has enough capacity");
+						DataCenter dc = _dcDao.findById(h.getDataCenterId());
+						Pod pod = _podDao.findById(h.getPodId());
+						return new DeployDestination(dc, pod, cluster, h);
+					}
 				}
 			}
 		}
