@@ -26,7 +26,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.api.LogLevel.Log4jLevel;
-import com.cloud.network.security.SecurityRule;
+import com.cloud.network.security.SecurityRule.SecurityRuleType;
 import com.cloud.utils.net.NetUtils;
 
 
@@ -81,14 +81,14 @@ public class SecurityGroupRulesCmd extends Command {
     Long vmId;
     Long msId;
     IpPortAndProto [] ruleSet;
-    SecurityRule.Type ruleType;
+    SecurityRuleType ruleType;
 
     public SecurityGroupRulesCmd() {
         super();
     }
 
 
-    public SecurityGroupRulesCmd(SecurityRule.Type ruleType, String guestIp, String guestMac, String vmName, Long vmId, String signature, Long seqNum, IpPortAndProto[] ruleSet) {
+    public SecurityGroupRulesCmd(SecurityRuleType ruleType, String guestIp, String guestMac, String vmName, Long vmId, String signature, Long seqNum, IpPortAndProto[] ruleSet) {
         super();
         this.guestIp = guestIp;
         this.vmName = vmName;
@@ -105,8 +105,8 @@ public class SecurityGroupRulesCmd extends Command {
     }
 
     public String getRuleType(){
-    	if (this.ruleType == SecurityRule.Type.EgressRule) return "egress"; // FIXME : better way of converting from enum to string 
-    	return "ingress";
+    	if (this.ruleType == SecurityRuleType.EgressRule) return SecurityRuleType.EgressRule.getStrType();  
+    	return SecurityRuleType.IngressRule.getStrType();
     }
 
     @Override

@@ -37,7 +37,7 @@ import com.cloud.utils.Profiler;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.mgmt.JmxUtil;
 import com.cloud.vm.VirtualMachine.State;
-
+import com.cloud.network.security.SecurityRule.SecurityRuleType;
 
 /**
  * Same as the base class -- except it uses the abstracted security group work queue
@@ -144,8 +144,8 @@ public class SecurityGroupManagerImpl2 extends SecurityGroupManagerImpl{
                         continue;
                     }
                     work.setLogsequenceNumber(rulesetLog.getLogsequence());
-                    sendRulesetUpdates(work, SecurityRule.Type.IngressRule);
-                    sendRulesetUpdates(work, SecurityRule.Type.EgressRule);
+                    sendRulesetUpdates(work, SecurityRuleType.IngressRule);
+                    sendRulesetUpdates(work, SecurityRuleType.EgressRule);
                     _mBean.logUpdateDetails(work.getInstanceId(), work.getLogsequenceNumber());
                 }catch (Exception e) {
                     s_logger.error("Problem during SG work " + work, e);
@@ -159,7 +159,7 @@ public class SecurityGroupManagerImpl2 extends SecurityGroupManagerImpl{
 
     }
     
-    public void sendRulesetUpdates(SecurityGroupWork work, SecurityRule.Type ruleType){
+    public void sendRulesetUpdates(SecurityGroupWork work, SecurityRuleType ruleType){
         Long userVmId = work.getInstanceId();
         UserVm vm = _userVMDao.findById(userVmId);
 
@@ -210,7 +210,7 @@ public class SecurityGroupManagerImpl2 extends SecurityGroupManagerImpl{
      * then we get all ips, including the default nic ip. This is also probably the correct behavior.
      */
     @Override
-    protected Map<PortAndProto, Set<String>> generateRulesForVM(Long userVmId, SecurityRule.Type type) {
+    protected Map<PortAndProto, Set<String>> generateRulesForVM(Long userVmId, SecurityRuleType type) {
 
         Map<PortAndProto, Set<String>> allowed = new TreeMap<PortAndProto, Set<String>>();
 

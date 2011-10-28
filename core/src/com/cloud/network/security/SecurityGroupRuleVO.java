@@ -67,31 +67,31 @@ public class SecurityGroupRuleVO implements SecurityRule {
     public SecurityGroupRuleVO() {
     }
 
-    public SecurityGroupRuleVO(SecurityRule.Type type,long securityGroupId, int fromPort, int toPort, String protocol, long allowedNetworkId ) {
+    public SecurityGroupRuleVO(SecurityRuleType type,long securityGroupId, int fromPort, int toPort, String protocol, long allowedNetworkId ) {
         this.securityGroupId = securityGroupId;
         this.startPort = fromPort;
         this.endPort = toPort;
         this.protocol = protocol;
         this.allowedNetworkId = allowedNetworkId;
-        if (type == SecurityRule.Type.IngressRule)
+        if (type == SecurityRuleType.IngressRule)
         {
-        	this.type = "I";
+        	this.type = SecurityRuleType.IngressRule.getDbType();
         }else{
-        	this.type = "E";
+        	this.type = SecurityRuleType.EgressRule.getDbType();
         }
     }
 
-    public SecurityGroupRuleVO(SecurityRule.Type type,long securityGroupId, int fromPort, int toPort, String protocol, String allowedIpCidr) {
+    public SecurityGroupRuleVO(SecurityRuleType type,long securityGroupId, int fromPort, int toPort, String protocol, String allowedIpCidr) {
         this.securityGroupId = securityGroupId;
         this.startPort = fromPort;
         this.endPort = toPort;
         this.protocol = protocol;
         this.allowedSourceIpCidr = allowedIpCidr;
-        if (type == SecurityRule.Type.IngressRule)
+        if (type == SecurityRuleType.IngressRule)
         {
-        	this.type = "I";
+            this.type = SecurityRuleType.IngressRule.getDbType();
         }else{
-        	this.type = "E";
+            this.type = SecurityRuleType.EgressRule.getDbType();
         }
     }
 
@@ -111,11 +111,11 @@ public class SecurityGroupRuleVO implements SecurityRule {
     }
 
     
-    public SecurityRule.Type getRuleType() {
+    public SecurityRuleType getRuleType() {
     	if ("I".equalsIgnoreCase(this.type))
-            return SecurityRule.Type.IngressRule;
+            return SecurityRuleType.IngressRule;
     	else
-    		return SecurityRule.Type.EgressRule;
+    		return SecurityRuleType.EgressRule;
     }
     
     @Override

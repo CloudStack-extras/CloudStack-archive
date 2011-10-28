@@ -16,6 +16,7 @@
  * 
  */
 package com.cloud.network.security;
+import com.cloud.network.security.SecurityRule.SecurityRuleType;
 
 public interface SecurityGroupRules {
     long getId();
@@ -40,5 +41,5 @@ public interface SecurityGroupRules {
 
     String getAllowedSourceIpCidr();
     
-    SecurityRule.Type getRuleType();
+    SecurityRuleType getRuleType();
 }

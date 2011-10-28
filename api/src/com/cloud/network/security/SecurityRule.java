@@ -24,9 +24,25 @@ import com.cloud.async.AsyncInstanceCreateStatus;
  * 
  */
 public interface SecurityRule {
-    public enum Type {
-        IngressRule,
-        EgressRule
+
+    public static class SecurityRuleType {
+        public static final SecurityRuleType IngressRule = new SecurityRuleType("ingress", "I");
+        public static final SecurityRuleType EgressRule = new SecurityRuleType("egress", "E");
+        
+        public SecurityRuleType(String rule, String dbType) {
+            this._strType = rule;
+            this._dbType = dbType;
+        }
+        
+        public String getStrType(){
+            return _strType;
+        }
+        
+        public String getDbType(){
+            return _dbType;
+        }
+        private String _strType;
+        private String _dbType;
     }
     long getId();
 
@@ -38,7 +54,7 @@ public interface SecurityRule {
     
     String getType();
     
-    SecurityRule.Type getRuleType();
+    SecurityRuleType getRuleType();
     
     String getProtocol();
 
