@@ -213,24 +213,26 @@
                   },
                   isCustomized: {
                     label: 'Custom disk size',
-                    isBoolean: true
+                    isBoolean: true,
+                    defaultValue: false
                   },
                   disksize: {
                     label: 'Disk size (in GB)',
                     dependsOn: 'isCustomized',
-                    validation: { required: true, number: true },
-                    isHidden: true
+                    validation: { required: true, number: true }//,
+                    //isHidden: true  //uncomment this line when Brian fixes bug 157
                   },
                   tags: {
                     label: 'Storage tags'
                   },
-                  isDomainSpecific: {
-                    label: 'Domain specific',
-                    isBoolean: true
+                  isPublic: {
+                    label: 'Public',
+                    isBoolean: true,
+                    defaultValue: true //will take effect when Brian fixes bug 157
                   },
                   domainId: {
                     label: 'Domain',
-                    dependsOn: 'isDomainSpecific',
+                    dependsOn: 'isPublic',
                     select: function(args) {                                         
                       $.ajax({
                         url: createURL("listDomains"),
@@ -259,13 +261,16 @@
                 array1.push("&customized=" + (args.data.isCustomized=="on"));                
                 if(args.$form.find('.form-item[rel=disksize]').css("display") != "none")     
                   array1.push("&disksize=" + args.data.disksize);                
-                              
+                                
                 if(args.data.tags != null && args.data.tags.length > 0)                  
                   array1.push("&tags=" + todb(args.data.tags));								
                 
+                //uncomment the following 2 lines when Brian fixes bug 157
+                /*
                 if(args.$form.find('.form-item[rel=domainId]').css("display") != "none") 
                   array1.push("&domainid=" + args.data.domainId);		
-                        
+                */   
+                
                 $.ajax({
                   url: createURL("createDiskOffering&isMirrored=false" + array1.join("")),
                   dataType: "json",
