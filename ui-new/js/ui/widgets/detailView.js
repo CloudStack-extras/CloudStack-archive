@@ -64,6 +64,30 @@
       var messages = action.messages;
       var messageArgs = { name: $detailView.find('tr.name td.value').html() };
       var id = args.id;
+      var context = $detailView.data('view-args').context;
+
+      var externalLinkAction = action.action.externalLink;
+      if (externalLinkAction) {
+        // Show popup immediately, do not proceed through normal action process
+        window.open(
+          // URL
+          externalLinkAction.url({
+            context: context
+          }),
+
+          // Title
+          externalLinkAction.title({
+            context: context
+          }),
+
+          // Window options
+          'menubar=0,resizable=0,'
+            + 'width=' + externalLinkAction.width + ','
+            + 'height=' + externalLinkAction.height
+        );
+        
+        return;
+      }
 
       notification.desc = messages.notification(messageArgs);
       notification.section = 'instances';
@@ -422,6 +446,12 @@
     var detailViewArgs = $detailView.data('view-args');
     var fields = tabData.fields;
     var hiddenFields;
+    var context = detailViewArgs.context;
+    var isMultiple = tabData.multiple || tabData.isMultiple;
+
+    if (isMultiple) {
+      context[tabData.id] = data;
+    }
 
     // Make header
     if (args.header) {
@@ -433,7 +463,7 @@
 
     if (tabData.preFilter) {
       hiddenFields = tabData.preFilter({
-        context: detailViewArgs.context,
+        context: context,
         fields: $.map(fields, function(fieldGroup) { 
           return $.map(fieldGroup, function(value, key) { return key; }); 
         })
@@ -557,7 +587,7 @@
     var targetTabID = $tabContent.data('detail-view-tab-id');
     var tabs = args.tabs[targetTabID];
     var dataProvider = tabs.dataProvider;
-    var isMultiple = tabs.multiple;
+    var isMultiple = tabs.multiple || tabs.isMultiple;
     var viewAll = args.viewAll;
     var $detailView = $tabContent.closest('.detail-view');
 
@@ -592,11 +622,16 @@
 
           if (isMultiple) {
             $(data).each(function() {
-              var $fieldContent = makeFieldContent(tabs, $tabContent.closest('div.detail-view'), this, {
-                header: 'name',
-                isFirstPanel: isFirstPanel,
-                actionFilter: actionFilter
-              }).appendTo($tabContent);
+              var $fieldContent = makeFieldContent(
+                $.extend(true, {}, tabs, {
+                  id: targetTabID
+                }),
+                $tabContent.closest('div.detail-view'), this, {
+                  header: 'name',
+                  isFirstPanel: isFirstPanel,
+                  actionFilter: actionFilter
+                }
+              ).appendTo($tabContent);
             });
 
             return true;

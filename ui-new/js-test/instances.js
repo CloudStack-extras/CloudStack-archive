@@ -252,6 +252,22 @@
               poll: testData.notifications.testPoll
             }
           },
+          viewConsole: {
+            label: 'View VM console',
+            action: {
+              externalLink: {
+                url: function(args) {
+                  return 'http://localhost:8080/client/console?cmd=access&vm=' +
+                    args.context.instances[0].id;
+                },
+                title: function(args) {
+                  return args.context.instances[0].displayname + ' console';
+                },
+                width: 800,
+                height: 600
+              }
+            }
+          },
           stop: {
             label: 'Stop VM',
             messages: {
@@ -419,7 +435,10 @@
            */
           nics: {
             title: 'NICs',
-            multiple: true,
+            isMultiple: true,
+            preFilter: function(args) {
+              return ['type'];
+            },
             fields: [
               {
                 name: { label: 'Name', header: true },

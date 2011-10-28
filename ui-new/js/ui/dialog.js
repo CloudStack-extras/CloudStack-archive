@@ -8,7 +8,8 @@
       var $message = $('<span>').addClass('message').appendTo($formContainer).html(args.form.desc);
       var $form = $('<form>').appendTo($formContainer);
 
-      $.each(args.form.fields, function(key) {
+      // Render fields and events
+      $.each(args.form.fields, function(key, field) {
         var $formItem = $('<div>')
               .addClass('form-item')
               .attr({ rel: key });
@@ -38,26 +39,41 @@
           });
 
           if ($dependsOn.is('[type=checkbox]')) {
+            var isReverse = args.form.fields[dependsOn].isReverse;
+
+            // Checkbox
             $dependsOn.bind('click', function(event) {
               var $target = $(this);
               var $dependent = $form.find('[depends-on=' + dependsOn + ']');
 
-              if ($target.is(':checked')) {
+              if (($target.is(':checked') && !isReverse) ||
+                  ($target.is(':unchecked') && isReverse)) {
                 $dependent.css('display', 'inline-block');
                 $dependent.each(function() {
                   if ($(this).data('dialog-select-fn')) {
                     $(this).data('dialog-select-fn')();
                   }
                 });
-              } else {
+              } else if (($target.is(':unchecked') && !isReverse) ||
+                         ($target.is(':checked') && isReverse)) {
                 $dependent.hide();
-                $dependent.find('input[type=checkbox]').trigger('click');
               }
 
-              $dependent.find('input[type=checkbox]').attr('checked', false);
+              $dependent.find('input[type=checkbox]').click();
+
+              if (!isReverse) {
+                $dependent.find('input[type=checkbox]').attr('checked', false);
+              } else {
+                $dependent.find('input[type=checkbox]').attr('checked', true);
+              }
 
               return true;
             });
+
+            // Show fields by default if it is reverse checkbox
+            if (isReverse) {
+              $dependsOn.click();
+            }
           }
         }
 
@@ -105,7 +121,7 @@
               var $target = $(this);
 
               if (!$dependsOn.is('select')) return true;
-              
+
               var dependsOnArgs = {};
 
               $input.find('option').remove();
@@ -127,9 +143,12 @@
           }
         } else if (this.isBoolean) {
           $input = $('<input>').attr({ name: key, type: 'checkbox' }).appendTo($value);
+          if (this.isChecked) {
+            $input.attr('checked', 'checked');
+          }
         } else {
-          $input = $('<input>').attr({ 
-            name: key, 
+          $input = $('<input>').attr({
+            name: key,
             type: this.password || this.isPassword ? 'password' : 'text'
           }).appendTo($value);
         }
