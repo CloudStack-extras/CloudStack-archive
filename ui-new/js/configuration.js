@@ -18,59 +18,168 @@
             memory: { label: 'Memory' },
             domain: { label: 'Domain'}
           },
-          actions: {
+                   
+          actions: {            
             add: {
               label: 'Add service offering',
 
-              action: function(args) {
-                args.response.success();
-              },
-
               messages: {
                 confirm: function(args) {
-                  return 'Are you sure you want to add ' + args.name + '?';
+                  return 'Are you sure you want to add a service offering?';
                 },
                 success: function(args) {
                   return 'Your new service offering is being created.';
                 },
                 notification: function(args) {
-                  return 'Created service offering';
+                  return 'Creating new service offering';
                 },
                 complete: function(args) {
-                  return 'Service offering has been created';
+                  return 'Service offering has been created successfully!';
                 }
               },
 
               createForm: {
-                title: 'New service offering',
-                desc: 'Please fill in the following data to add a new service offering.',
+                title: 'Add service offering',               
                 fields: {
-                  name: { label: 'Name', editable: true },
-                  displayText: { label: 'Display Text' },
-                  storageType: {
-                    label: 'Storage Type',
-                    select: [
-                      { id: 'shared', description: 'Shared' },
-                      { id: 'local', description: 'Local' }
-                    ]
+                  name: {
+                    label: 'Name',
+                    validation: { required: true }
                   },
-                  cpuCores: { label: '# of CPU cores' },
-                  cpuSpeed: { label: 'CPU Speed (in MHz)'},
-                  memory: { label: 'Memory (in MB)' },
-                  tags: { label: 'Tags' },
-                  offerHA: { label: 'Offer HA', isBoolean: true },
-                  isPublic: { label: 'Public', isBoolean: true }
+                  description: {
+                    label: 'Description',
+                    validation: { required: true }
+                  },
+                  storageType: {
+                    label: 'Storage type',
+                    select: function(args) {
+                      var items = [];
+                      items.push({id: 'shared', description: 'shared'});
+                      items.push({id: 'local', description: 'local'});
+                      args.response.success({data: items});
+                    }
+                  },
+                  cpuNumber: {
+                    label: '# of CPU cores',
+                    validation: { 
+                      required: true, 
+                      number: true 
+                    }
+                  },
+                  cpuSpeed: {
+                    label: 'CPU (in MHz)',
+                    validation: { 
+                      required: true, 
+                      number: true 
+                    }
+                  },
+                  memory: {
+                    label: 'Memory (in MB)',
+                    validation: { 
+                      required: true, 
+                      number: true 
+                    }
+                  },
+                  networkRate: {
+                    label: 'Network rate',
+                    validation: { 
+                      required: false, //optional
+                      number: true 
+                    }
+                  },
+                  offerHA: {
+                    label: 'Offer HA',
+                    isBoolean: true,
+                    defaultValue: false
+                  },
+                  storageTags: {
+                    label: 'Storage tags'
+                  },
+                  hostTags: {
+                    label: 'Host tags'
+                  },
+                  cpuCap: {
+                    label: 'CPU cap',
+                    isBoolean: true,
+                    defaultValue: false
+                  },                  
+                  isPublic: {
+                    label: 'Public',
+                    isBoolean: true,
+                    defaultValue: true //will take effect when Brian fixes bug 157
+                  },
+                  domainId: {
+                    label: 'Domain',
+                    dependsOn: 'isPublic',
+                    select: function(args) {                                         
+                      $.ajax({
+                        url: createURL("listDomains"),
+                        dataType: "json",
+                        async: false,
+                        success: function(json) {
+                          var items = [];
+                          var domainObjs = json.listdomainsresponse.domain;                          
+                          $(domainObjs).each(function(){                            
+                            items.push({id: this.id, description: this.name});
+                          });                         
+                          args.response.success({data: items});
+                        }
+                      });                     
+                    },
+                    isHidden: true
+                  }                  
                 }
               },
 
+              action: function(args) {
+                var array1 = [];               
+                array1.push("&name=" + args.data.name);
+                array1.push("&displaytext=" + todb(args.data.description));
+                array1.push("&storageType=" + todb(args.data.storageType));	              
+                array1.push("&cpuNumber=" + args.data.cpuNumber);	
+                array1.push("&cpuSpeed="+ args.data.cpuSpeed);	
+                array1.push("&memory=" + args.data.memory);	
+                               
+                if(args.data.networkRate != null && args.data.networkRate.length > 0)
+				          array1.push("&networkrate=" + args.data.networkRate);	
+				    	
+                array1.push("&offerha=" + (args.data.offerHA == "on"));			
+               
+                if(args.data.storageTags != null && args.data.storageTags.length > 0)
+				          array1.push("&tags=" + todb(args.data.storageTags));	
+                
+                if(args.data.hostTags != null && args.data.hostTags.length > 0)
+				          array1.push("&hosttags=" + todb(args.data.hostTags));	
+                
+                array1.push("&limitcpuuse=" + (args.data.cpuCap == "on"));		
+                
+                //uncomment the following 2 lines when Brian fixes bug 157
+                /*
+                if(args.$form.find('.form-item[rel=domainId]').css("display") != "none") 
+                  array1.push("&domainid=" + args.data.domainId);		
+                */   
+                
+                $.ajax({
+                  url: createURL("createServiceOffering&issystem=false"+array1.join("")),
+                  dataType: "json",
+                  async: true,
+                  success: function(json) {                                 
+                    var item = json.createserviceofferingresponse.serviceoffering;			
+                    args.response.success({data: item});		
+                  }
+                });
+              },
+
               notification: {
-                poll: testData.notifications.testPoll
+                poll: function(args) {
+                  args.complete();
+                }
               }
             }
-          },
+          },         
+          
           dataProvider: function(args) {
             $.ajax({
-              url: createURL("listServiceOfferings&issystem=false&page="+args.page+"&pagesize="+pageSize),
+              url: createURL("listServiceOfferings&issystem=false&page=" + args.page + "&pagesize=" + pageSize),
               dataType: "json",
               async: true,
               success: function(json) {
@@ -179,8 +288,7 @@
               }
             });
           },
-          
-          //???         
+                            
           actions: {            
             add: {
               label: 'Add disk offering',
@@ -288,8 +396,7 @@
                 }
               }
             }
-          }
-          //???          
+          }                  
         }
       },
       networkOfferings: {
