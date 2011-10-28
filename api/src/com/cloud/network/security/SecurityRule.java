@@ -26,23 +26,17 @@ import com.cloud.async.AsyncInstanceCreateStatus;
 public interface SecurityRule {
 
     public static class SecurityRuleType {
-        public static final SecurityRuleType IngressRule = new SecurityRuleType("ingress", "I");
-        public static final SecurityRuleType EgressRule = new SecurityRuleType("egress", "E");
+        public static final SecurityRuleType IngressRule = new SecurityRuleType("ingress");
+        public static final SecurityRuleType EgressRule = new SecurityRuleType("egress");
         
-        public SecurityRuleType(String rule, String dbType) {
-            this._strType = rule;
-            this._dbType = dbType;
+        public SecurityRuleType(String type) {
+            this._type = type;
         }
         
-        public String getStrType(){
-            return _strType;
+        public String getType(){
+            return _type;
         }
-        
-        public String getDbType(){
-            return _dbType;
-        }
-        private String _strType;
-        private String _dbType;
+        private String _type;
     }
     long getId();
 

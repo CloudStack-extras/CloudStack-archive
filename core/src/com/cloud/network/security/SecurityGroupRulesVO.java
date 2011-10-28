@@ -135,7 +135,7 @@ public class SecurityGroupRulesVO implements SecurityGroupRules {
     
     @Override
     public SecurityRuleType getRuleType() {
-        if ("I".equalsIgnoreCase(this.type)) {
+        if ("ingress".equalsIgnoreCase(this.type)) {
             return SecurityRuleType.IngressRule;
         } else {
             return SecurityRuleType.EgressRule;
