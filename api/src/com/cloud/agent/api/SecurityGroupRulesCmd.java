@@ -105,8 +105,8 @@ public class SecurityGroupRulesCmd extends Command {
     }
 
     public String getRuleType(){
-    	if (this.ruleType == SecurityRuleType.EgressRule) return SecurityRuleType.EgressRule.getStrType();  
-    	return SecurityRuleType.IngressRule.getStrType();
+    	if (this.ruleType == SecurityRuleType.EgressRule) return SecurityRuleType.EgressRule.getType();  
+    	return SecurityRuleType.IngressRule.getType();
     }
 
     @Override

@@ -83,11 +83,10 @@ public class SecurityGroupRuleDaoImpl extends GenericDaoBase<SecurityGroupRuleVO
         sc.setParameters("securityGroupId", securityGroupId);
         String dbType; 
         if (type == SecurityRuleType.EgressRule) {
-            dbType = SecurityRuleType.EgressRule.getDbType();     
+            dbType = SecurityRuleType.EgressRule.getType();     
         }else {
-            dbType = SecurityRuleType.IngressRule.getDbType();
+            dbType = SecurityRuleType.IngressRule.getType();
         }
-
         
         sc.setParameters("type", dbType);
         return listBy(sc);

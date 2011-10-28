@@ -75,9 +75,9 @@ public class SecurityGroupRuleVO implements SecurityRule {
         this.allowedNetworkId = allowedNetworkId;
         if (type == SecurityRuleType.IngressRule)
         {
-        	this.type = SecurityRuleType.IngressRule.getDbType();
+        	this.type = SecurityRuleType.IngressRule.getType();
         }else{
-        	this.type = SecurityRuleType.EgressRule.getDbType();
+        	this.type = SecurityRuleType.EgressRule.getType();
         }
     }
 
@@ -89,9 +89,9 @@ public class SecurityGroupRuleVO implements SecurityRule {
         this.allowedSourceIpCidr = allowedIpCidr;
         if (type == SecurityRuleType.IngressRule)
         {
-            this.type = SecurityRuleType.IngressRule.getDbType();
+            this.type = SecurityRuleType.IngressRule.getType();
         }else{
-            this.type = SecurityRuleType.EgressRule.getDbType();
+            this.type = SecurityRuleType.EgressRule.getType();
         }
     }
 
@@ -109,10 +109,9 @@ public class SecurityGroupRuleVO implements SecurityRule {
     public long getSecurityGroupId() {
         return securityGroupId;
     }
-
     
     public SecurityRuleType getRuleType() {
-    	if ("I".equalsIgnoreCase(this.type))
+    	if ("ingress".equalsIgnoreCase(this.type))
             return SecurityRuleType.IngressRule;
     	else
     		return SecurityRuleType.EgressRule;

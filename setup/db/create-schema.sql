@@ -1429,7 +1429,7 @@ CREATE TABLE `cloud`.`security_group` (
 CREATE TABLE `cloud`.`security_group_rule` (
   `id` bigint unsigned NOT NULL auto_increment,
   `security_group_id` bigint unsigned NOT NULL,
-  `type` varchar(10) default 'I',
+  `type` varchar(10) default 'ingress',
   `start_port` varchar(10) default NULL,
   `end_port` varchar(10) default NULL,
   `protocol` varchar(16) NOT NULL default 'TCP',
