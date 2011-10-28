@@ -201,14 +201,16 @@ table th div.ui-resizable-handle {
 }
 
 /*Login screen*/
+body.login {
+  background: #066CAA url(../images/bg-login.jpg) no-repeat 50% -82px;
+}
+
 .login {
-  width: 1024px;
-  height: 768px;
-  margin: auto;
-  overflow: hidden;
-  border-top: none;
-  position: relative;
-  background: url(../images/bg-login.jpg);
+  display: block;
+  width: 100%;
+  height: 245px;
+  margin: 166px auto auto;
+  background: #FFFFFF;
 }
 
 .login .fields {
@@ -240,12 +242,17 @@ table th div.ui-resizable-handle {
   height: 20px;
   margin: 5px 0 0;
   text-indent: 7px;
-  border: 1px solid #CACACA;
+  border: none;
   /*+border-radius:3px;*/
   -moz-border-radius: 3px;
   -webkit-border-radius: 3px;
   -khtml-border-radius: 3px;
   border-radius: 3px 3px 3px 3px;
+  /*+box-shadow:inset 0px 1px 1px #4E4E4E;*/
+  -moz-box-shadow: inset 0px 1px 1px #4E4E4E;
+  -webkit-box-shadow: inset 0px 1px 1px #4E4E4E;
+  -o-box-shadow: inset 0px 1px 1px #4E4E4E;
+  box-shadow: inset 0px 1px 1px #4E4E4E;
   background: #ECECEC;
 }
 
@@ -278,8 +285,9 @@ table th div.ui-resizable-handle {
 
 .login form {
   display: block;
-  height: 245px;
-  margin: 225px 0 0;
+  width: 1000px;
+  height: 100%;
+  margin: auto;
   background: #FFFFFF;
 }
 

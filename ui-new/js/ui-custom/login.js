@@ -19,7 +19,8 @@
       return;
     }
 
-    $login.appendTo($container);
+    $login.appendTo('html body');
+    $('html body').addClass('login');
 
     // Form validation
     $form.validate();
@@ -54,6 +55,7 @@
         response: {
           success: function(args) {
             $login.remove();
+            $('html body').removeClass('login');
             complete({
               user: {
                 login: data.username
