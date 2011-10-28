@@ -187,25 +187,29 @@
                         timezone: snap.timezone
                       };
 
-                      switch (parseInt(snap['snapshot-type'])) {
-                        case 0: // Hourly
+                      switch (snap['snapshot-type']) {
+                        case 'hourly': // Hourly
                         $.extend(data, {
+                          type: 0,
                           time: snap.schedule
                         }); break;
 
-                        case 1: // Daily
+                        case 'daily': // Daily
                         $.extend(data, {
+                          type: 1,
                           time: snap['time-hour'] + ':' + snap['time-minute'] + ' ' + snap['time-meridiem']
                         }); break;
 
-                        case 2: // Weekly
+                        case 'weekly': // Weekly
                         $.extend(data, {
+                          type: 2,
                           time: snap['time-hour'] + ':' + snap['time-minute'] + ' ' + snap['time-meridiem'],
                           'day-of-week': snap['day-of-week']
                         }); break;
 
-                        case 3: // Monthly
+                        case 'monthly': // Monthly
                         $.extend(data, {
+                          type: 3,
                           time: snap['time-hour'] + ':' + snap['time-minute'] + ' ' + snap['time-meridiem'],
                           'day-of-month': snap['day-of-month']                          
                         }); break;
