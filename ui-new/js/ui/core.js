@@ -8,7 +8,7 @@
 
   /**
    * Generate navigation <li>s
-   * 
+   *
    * @param args cloudStack data args
    */
   var makeNavigation = function(args) {
@@ -21,7 +21,7 @@
             .append($('<span>').addClass('icon').html('&nbsp;'))
             .append($('<span>').html(args.title))
             .data('cloudStack-section-id', sectionID);
-      
+
       $li.appendTo($navList);
     });
 
@@ -34,14 +34,14 @@
 
   /**
    * Create section contents
-   * 
+   *
    * @param sectionID Section's ID to show
-   * @param args CloudStack3 configuration 
+   * @param args CloudStack3 configuration
    */
   var showSection = function(sectionID, args) {
     var $panel;
     var $browser = $('#browser div.container');
-    var $navItem = $('#navigation').find('li').filter(function() { 
+    var $navItem = $('#navigation').find('li').filter(function() {
       return $(this).hasClass(sectionID);
     });
     var data = args.sections[sectionID];
@@ -69,7 +69,7 @@
       $panel.treeView(data);
     else
       $panel.listView(data);
-      
+
 
     return $navItem;
   };
@@ -109,7 +109,13 @@
       // User status area
       var $userInfo = $('<div>').attr({ id: 'user' }).addClass('button')
             .append(
-              $('<div>').addClass('name').html('Will Chan')
+              $('<div>').addClass('name').html(
+                args.context && args.context.users ?
+                  (
+                    args.context.users[0].name ?
+                      args.context.users[0].name : args.context.users[0].login
+                  ) : 'Invalid User'
+              )
             )
             .append(
               $('<div>').addClass('icon options')
@@ -117,7 +123,7 @@
                   $('<div>').addClass('icon arrow')
                 )
             );
-      
+
       return [
         $('<div>').addClass('logo'),
         $('<div>').addClass('controls')
@@ -158,11 +164,12 @@
           })
           .data('cloudStack-args', args)
           .appendTo(this);
+    var context = args.context;
 
     // Create pageElems
     $.each(pageElems, function(id, fn) {
       var $elem = $('<div>').attr({ id: id });
-      
+
       $(fn(args)).each(function() {
         $elem.append($(this));
       });
@@ -221,8 +228,8 @@
 
       // Browser expand
       if ($target.hasClass('control expand') && $target.closest('div.panel div.toolbar').size()) {
-        $('#browser div.container').cloudBrowser('toggleMaximizePanel', { 
-          panel: $target.closest('div.panel') 
+        $('#browser div.container').cloudBrowser('toggleMaximizePanel', {
+          panel: $target.closest('div.panel')
         });
 
         return false;
@@ -257,7 +264,7 @@
               .click();
             $('div.overlay').remove();
             $(this).remove();
-            $('div.panel:first').children().remove()
+            $('div.panel:first').children().remove();
             $('div.panel:first')
               .append(
                 $('<img>')
@@ -271,7 +278,7 @@
               )
               .append(
                 $('<div>').addClass('end')
-              )
+              );
           });
 
         return false;

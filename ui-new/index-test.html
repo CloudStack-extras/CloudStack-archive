@@ -12,6 +12,35 @@
 
     <!-- Templates -->
     <div id="template">
+      <!-- Login form -->
+      <div class="login">
+        <form>
+          <div class="logo"></div>
+          <div class="fields">
+            <!-- User name -->
+            <div class="field username">
+              <label for="username">User Name</label>
+              <input type="text" name="username" class="required" />
+            </div>
+
+            <!-- Password -->
+            <div class="field password">
+              <label for="password">Password</label>
+              <input type="password" name="password" class="required" />
+            </div>
+
+            <!-- Domain -->
+            <div class="field domain">
+              <label for="domain">Domain</label>
+              <input type="text" name="domain" />
+            </div>
+
+            <!-- Submit (login) -->
+            <input type="submit" value="" />
+          </div>
+        </form>
+      </div>
+
       <!-- Instance wizard -->
       <div class="multi-wizard instance-wizard">
         <div class="progress">
@@ -1316,6 +1345,7 @@
     <script src="js-test/test-data.js" type="text/javascript"></script>
 
     <!-- CloudStack -->
+    <script src="js/ui-custom/login.js" type="text/javascript"></script>
     <script src="js-test/cloudStack.js" type="text/javascript"></script>
     <script src="js-test/dashboard.js" type="text/javascript"></script>
     <script src="js/ui-custom/instanceWizard.js" type="text/javascript"></script>
