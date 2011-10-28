@@ -89,7 +89,7 @@
                   offerHA: {
                     label: 'Offer HA',
                     isBoolean: true,
-                    defaultValue: false
+                    isChecked: false
                   },
                   storageTags: {
                     label: 'Storage tags'
@@ -100,16 +100,17 @@
                   cpuCap: {
                     label: 'CPU cap',
                     isBoolean: true,
-                    defaultValue: false
+                    isChecked: false
                   },                  
                   isPublic: {
                     label: 'Public',
                     isBoolean: true,
-                    defaultValue: true //will take effect when Brian fixes bug 157
+                    isReverse: true,
+                    isChecked: true 
                   },
                   domainId: {
                     label: 'Domain',
-                    dependsOn: 'isPublic',
+                    dependsOn: 'isPublic',                    
                     select: function(args) {                                         
                       $.ajax({
                         url: createURL("listDomains"),
@@ -151,13 +152,10 @@
 				          array1.push("&hosttags=" + todb(args.data.hostTags));	
                 
                 array1.push("&limitcpuuse=" + (args.data.cpuCap == "on"));		
-                
-                //uncomment the following 2 lines when Brian fixes bug 157
-                /*
+                               
                 if(args.$form.find('.form-item[rel=domainId]').css("display") != "none") 
                   array1.push("&domainid=" + args.data.domainId);		
-                */   
-                
+                               
                 $.ajax({
                   url: createURL("createServiceOffering&issystem=false"+array1.join("")),
                   dataType: "json",
@@ -274,7 +272,7 @@
                   offerHA: {
                     label: 'Offer HA',
                     isBoolean: true,
-                    defaultValue: false
+                    isChecked: false
                   },
                   storageTags: {
                     label: 'Storage tags'
@@ -285,16 +283,17 @@
                   cpuCap: {
                     label: 'CPU cap',
                     isBoolean: true,
-                    defaultValue: false
+                    isChecked: false
                   },                  
                   isPublic: {
                     label: 'Public',
                     isBoolean: true,
-                    defaultValue: true //will take effect when Brian fixes bug 157
+                    isReverse: true,
+                    isChecked: true 
                   },
                   domainId: {
                     label: 'Domain',
-                    dependsOn: 'isPublic',
+                    dependsOn: 'isPublic',                    
                     select: function(args) {                                         
                       $.ajax({
                         url: createURL("listDomains"),
@@ -336,13 +335,10 @@
 				          array1.push("&hosttags=" + todb(args.data.hostTags));	
                 
                 array1.push("&limitcpuuse=" + (args.data.cpuCap == "on"));		
-                
-                //uncomment the following 2 lines when Brian fixes bug 157
-                /*
+                              
                 if(args.$form.find('.form-item[rel=domainId]').css("display") != "none") 
                   array1.push("&domainid=" + args.data.domainId);		
-                */   
-                
+                               
                 $.ajax({
                   url: createURL("createServiceOffering&issystem=true"+array1.join("")),
                   dataType: "json",
@@ -431,13 +427,13 @@
                   isCustomized: {
                     label: 'Custom disk size',
                     isBoolean: true,
-                    defaultValue: false
+                    isReverse: true,
+                    isChecked: false
                   },
                   disksize: {
                     label: 'Disk size (in GB)',
-                    dependsOn: 'isCustomized',
-                    validation: { required: true, number: true }//,
-                    //isHidden: true  //uncomment this line when Brian fixes bug 157
+                    dependsOn: 'isCustomized',                    
+                    validation: { required: true, number: true }
                   },
                   tags: {
                     label: 'Storage tags'
@@ -445,11 +441,12 @@
                   isPublic: {
                     label: 'Public',
                     isBoolean: true,
-                    defaultValue: true //will take effect when Brian fixes bug 157
+                    isReverse: true,
+                    isChecked: true 
                   },
                   domainId: {
                     label: 'Domain',
-                    dependsOn: 'isPublic',
+                    dependsOn: 'isPublic',                    
                     select: function(args) {                                         
                       $.ajax({
                         url: createURL("listDomains"),
@@ -482,12 +479,9 @@
                 if(args.data.tags != null && args.data.tags.length > 0)                  
                   array1.push("&tags=" + todb(args.data.tags));								
                 
-                //uncomment the following 2 lines when Brian fixes bug 157
-                /*
                 if(args.$form.find('.form-item[rel=domainId]').css("display") != "none") 
                   array1.push("&domainid=" + args.data.domainId);		
-                */   
-                
+                               
                 $.ajax({
                   url: createURL("createDiskOffering&isMirrored=false" + array1.join("")),
                   dataType: "json",
