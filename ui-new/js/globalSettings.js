@@ -8,6 +8,7 @@
         edit: {
           label: 'Change value',
           action: function(args) {
+            debugger;
             var name = args.data.jsonObj.name;
             var value = args.data.value;
 
@@ -17,10 +18,11 @@
               ),
               dataType: 'json',
               async: true,
-              success: function(json) {
-                args.response.success();
+              success: function(json) {                
+                var item = json.updateconfigurationresponse.configuration;
+                args.response.success({data: item});
               },
-              error: function(json) {
+              error: function(json) {                
                 args.response.error({
                   message: $.parseJSON(json.responseText).updateconfigurationresponse.errortext
                 });
@@ -36,12 +38,7 @@
       },
       dataProvider: function(args) {
         $.ajax({
-          url: createURL('listConfigurations'),
-          data: {
-            page: args.page,
-            pagesize: pageSize,
-            keyword: args.filterBy ? args.filterBy.search.value : null
-          },
+          url: createURL("listConfigurations&page=" + args.page + "&pagesize=" + pageSize),
           dataType: "json",
           async: true,
           success: function(json) {
