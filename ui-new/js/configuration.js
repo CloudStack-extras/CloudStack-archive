@@ -508,23 +508,84 @@
         listView: {
           label: 'Network Offerings',
           fields: {
-            name: { label: 'Name', editable: true },
-            networkrate: { label: 'Network Rate' },
+            name: { label: 'Name' },            
             traffictype: { label: 'Traffic Type'}
           },
           dataProvider: function(args) {
             $.ajax({
-              url: createURL("listNetworkOfferings&guestiptype=Virtual&page="+args.page+"&pagesize="+pageSize),
+              url: createURL("listNetworkOfferings&guestiptype=Virtual&page=" + args.page + "&pagesize=" + pageSize),
               dataType: "json",
               async: true,
               success: function(json) {
                 var items = json.listnetworkofferingsresponse.networkoffering;
-                args.response.success({data:items});
+                args.response.success({
+                  actionFilter: networkOfferingsActionfilter,
+                  data:items
+                });
               }
             });
-          }
+          },         
+          detailView: {
+            name: 'Network offering details',
+            actions: {
+            
+            },
+            tabs: {
+              details: {
+                title: 'Details',
+
+                fields: [
+                  {
+                    name: {
+                      label: 'Name'
+                    }
+                  },
+                  {
+                    id: { label: 'ID' },
+                    displaytext: { label: 'Description' },
+                    availability: { label: 'Availability' },
+                    redundantrouter: {
+                      label: 'Redundant Router',
+                      converter:cloudStack.converters.toBooleanText
+                    },
+                    isdefault: {
+                      label: 'Default',
+                      converter:cloudStack.converters.toBooleanText
+                    },
+                    specifyvlan: {
+                      label: 'Specify VLAN',
+                      converter:cloudStack.converters.toBooleanText
+                    },
+                    networkRate: {
+                      label: 'Network rate'
+                    },
+                    traffictype: {
+                      label: 'Traffic type'
+                    }                    
+                  }
+                ],
+
+                dataProvider: function(args) {
+                  args.response.success(
+                    {
+                      actionFilter: networkOfferingsActionfilter,
+                      data:args.context.networkOfferings[0]
+                    }
+                  );
+                }
+              }
+            }
+          }          
         }
       }
     }
   };
+  
+  var networkOfferingsActionfilter = function(args) {
+    var jsonObj = args.context.item;
+    var allowedActions = [];
+    allowedActions.push("edit");
+    return allowedActions;
+  }
+  
 })(cloudStack, testData);
