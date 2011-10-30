@@ -45,11 +45,14 @@ import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
 import com.cloud.agent.api.to.IpAddressTO;
 import com.cloud.agent.api.to.LoadBalancerTO;
 import com.cloud.agent.api.to.LoadBalancerTO.DestinationTO;
+import com.cloud.agent.api.to.LoadBalancerTO.StickinessPolicyTO;
 import com.cloud.host.Host;
 import com.cloud.host.Host.Type;
+import com.cloud.network.rules.LbStickinessMethod.StickinessMethodType;
 import com.cloud.resource.ServerResource;
 import com.cloud.serializer.GsonHelper;
 import com.cloud.utils.NumbersUtil;
+import com.cloud.utils.Pair;
 import com.cloud.utils.exception.ExecutionException;
 import com.cloud.utils.net.NetUtils;
 import com.google.gson.Gson;
@@ -273,33 +276,13 @@ public class NetscalerMPXResource implements ServerResource {
     }
     
     private synchronized Answer execute(LoadBalancerConfigCommand cmd, int numRetries) {
-        try {            
-            String lbProtocol;
-            String lbMethod;
+        try {
             LoadBalancerTO[] loadBalancers = cmd.getLoadBalancers();
-            
             for (LoadBalancerTO loadBalancer : loadBalancers) {
-
-                if (loadBalancer.getProtocol() == null) {
-                    lbProtocol = "TCP";
-                } else if (loadBalancer.getProtocol().equals(NetUtils.TCP_PROTO)){
-                    lbProtocol = "TCP";
-                } else if (loadBalancer.getProtocol().equals(NetUtils.UDP_PROTO)) {
-                    lbProtocol = "UDP";                    
-                } else {
-                    throw new ExecutionException("Got invalid protocol: " + loadBalancer.getProtocol());
-                }
-                
-                if (loadBalancer.getAlgorithm().equals("roundrobin")) {
-                    lbMethod = "ROUNDROBIN";
-                } else if (loadBalancer.getAlgorithm().equals("leastconn")) {
-                    lbMethod = "LEASTCONNECTION";
-                } else {
-                    throw new ExecutionException("Got invalid load balancing algorithm: " + loadBalancer.getAlgorithm());
-                }        
-                
                 String srcIp = loadBalancer.getSrcIp();
-                int srcPort = loadBalancer.getSrcPort();    
+                int srcPort = loadBalancer.getSrcPort();
+                String lbProtocol = loadBalancer.getProtocol();
+                String lbAlgorithm = loadBalancer.getAlgorithm();
                 String nsVirtualServerName  = generateNSVirtualServerName(srcIp, srcPort, lbProtocol);
                 
                 boolean destinationsToAdd = false;
@@ -313,10 +296,7 @@ public class NetscalerMPXResource implements ServerResource {
                 if (!loadBalancer.isRevoked() && destinationsToAdd) {
 
                     // create a load balancing virtual server
-                    addLBVirtualServer(nsVirtualServerName, srcIp, srcPort, lbMethod, lbProtocol);
-                    if (s_logger.isDebugEnabled()) {
-                        s_logger.debug("Created load balancing virtual server " + nsVirtualServerName + " on the Netscaler device");
-                    }
+                    addLBVirtualServer(nsVirtualServerName, srcIp, srcPort, lbAlgorithm, lbProtocol, loadBalancer.getStickinessPolicies());
 
                     List<String> activePoolMembers = new ArrayList<String>();
                     for (DestinationTO destination : loadBalancer.getDestinations()) {
@@ -375,13 +355,13 @@ public class NetscalerMPXResource implements ServerResource {
                                         // delete the binding
                                         apiCallResult = com.citrix.netscaler.nitro.resource.config.lb.lbvserver_service_binding.delete(nsService, binding);
                                         if (apiCallResult.errorcode != 0) {
-                                            throw new ExecutionException("Failed to delete the binding between the virtual server: " + nsVirtualServerName + " and service:" + nsServiceName);
+                                            throw new ExecutionException("Failed to delete the binding between the virtual server: " + nsVirtualServerName + " and service:" + nsServiceName + " due to" + apiCallResult.message);
                                         }
     
                                         // delete the service
                                         apiCallResult = com.citrix.netscaler.nitro.resource.config.basic.service.delete(nsService, nsServiceName);
                                         if (apiCallResult.errorcode != 0) {
-                                            throw new ExecutionException("Failed to delete service: " + nsServiceName);
+                                            throw new ExecutionException("Failed to delete service: " + nsServiceName + " due to " + apiCallResult.message);
                                         }
     
                                         // delete the server if there is no associated services
@@ -389,7 +369,7 @@ public class NetscalerMPXResource implements ServerResource {
                                         if ((services == null) || (services.length == 0)) {
                                             apiCallResult = com.citrix.netscaler.nitro.resource.config.basic.server.delete(nsService, nsServerName);
                                             if (apiCallResult.errorcode != 0) {
-                                                throw new ExecutionException("Failed to remove server:" + nsServerName);
+                                                throw new ExecutionException("Failed to remove server:" + nsServerName + " due to " + apiCallResult.message);
                                             }
                                         }
                                     }
@@ -399,7 +379,7 @@ public class NetscalerMPXResource implements ServerResource {
                     }
                 } else {
                     // delete the implemented load balancing rule and its destinations 
-                    lbvserver lbserver = lbvserver.get(nsService, nsVirtualServerName);
+                    lbvserver lbserver = getVirtualServerIfExisits(nsVirtualServerName);
                     if (lbserver == null) {
                         throw new ExecutionException("Failed to find virtual server with name:" + nsVirtualServerName);
                     }
@@ -411,7 +391,7 @@ public class NetscalerMPXResource implements ServerResource {
                             String serviceName = binding.get_servicename();
                             apiCallResult = com.citrix.netscaler.nitro.resource.config.lb.lbvserver_service_binding.delete(nsService, binding);
                             if (apiCallResult.errorcode != 0) {
-                                throw new ExecutionException("Failed to unbind servic from the lb virtual server: " + nsVirtualServerName);
+                                throw new ExecutionException("Failed to unbind service from the lb virtual server: " + nsVirtualServerName + " due to " + apiCallResult.message);
                             }
     
                             com.citrix.netscaler.nitro.resource.config.basic.service svc = com.citrix.netscaler.nitro.resource.config.basic.service.get(nsService, serviceName);
@@ -425,7 +405,7 @@ public class NetscalerMPXResource implements ServerResource {
                             if ((services == null) || (services.length == 0)) {
                                 apiCallResult = com.citrix.netscaler.nitro.resource.config.basic.server.delete(nsService, nsServerName);
                                 if (apiCallResult.errorcode != 0) {
-                                    throw new ExecutionException("Failed to remove server:" + nsServerName);
+                                    throw new ExecutionException("Failed to remove server:" + nsServerName + " due to " + apiCallResult.message);
                                 }
                             }
                         }
@@ -597,6 +577,20 @@ public class NetscalerMPXResource implements ServerResource {
         }
     }
 
+    private lbvserver getVirtualServerIfExisits(String lbVServerName ) throws ExecutionException {
+        try {
+            return lbvserver.get(nsService, lbVServerName);
+        } catch (nitro_exception e) {
+            if (e.getErrorCode() == NitroError.NS_RESOURCE_NOT_EXISTS) {
+                return null;
+            } else {
+                throw new ExecutionException(e.getMessage());
+            }
+        } catch (Exception e) {
+            throw new ExecutionException(e.getMessage());
+        }
+    }
+
     private boolean nsServiceExists(String serviceName) throws ExecutionException {
         try {
             if (com.citrix.netscaler.nitro.resource.config.basic.service.get(nsService, serviceName) != null) {
@@ -660,7 +654,7 @@ public class NetscalerMPXResource implements ServerResource {
                     // remove the server
                     apiCallResult = com.citrix.netscaler.nitro.resource.config.basic.server.delete(nsService, server.get_name());
                     if (apiCallResult.errorcode != 0) {
-                        throw new ExecutionException("Failed to remove server:" + server.get_name());
+                        throw new ExecutionException("Failed to remove server:" + server.get_name()+ " due to " + apiCallResult.message);
                     }
                 }
             }
@@ -669,21 +663,85 @@ public class NetscalerMPXResource implements ServerResource {
         }
     }
 
-    private void addLBVirtualServer(String virtualServerName, String srcIp, int srcPort, String lbMethod, String lbProtocol) throws ExecutionException {
+    private void addLBVirtualServer(String virtualServerName, String srcIp, int srcPort, String lbMethod, String lbProtocol, StickinessPolicyTO[] stickyPolicies) throws ExecutionException {
         try {
-            lbvserver vserver = new lbvserver();
+
+            if (lbProtocol == null) {
+                lbProtocol = "TCP";
+            } else if (lbProtocol.equals(NetUtils.TCP_PROTO)){
+                lbProtocol = "TCP";
+            } else if (lbProtocol.equals(NetUtils.UDP_PROTO)) {
+                lbProtocol = "UDP";
+            } else {
+                throw new ExecutionException("Got invalid protocol: " + lbProtocol);
+            }
+
+            if (lbMethod.equals("roundrobin")) {
+                lbMethod = "ROUNDROBIN";
+            } else if (lbMethod.equals("leastconn")) {
+                lbMethod = "LEASTCONNECTION";
+            } else {
+                throw new ExecutionException("Got invalid load balancing algorithm: " + lbMethod);
+            }
+
+            boolean vserverExisis = false;
+            lbvserver vserver = getVirtualServerIfExisits(virtualServerName);
+            if (vserver == null) {
+                vserver = new lbvserver();
+            } else {
+            	vserverExisis = true;
+            }
             vserver.set_name(virtualServerName);
             vserver.set_ipv46(srcIp);
             vserver.set_port(srcPort);
             vserver.set_servicetype(lbProtocol);
             vserver.set_lbmethod(lbMethod);
-            apiCallResult = lbvserver.add(nsService,vserver);
+
+            if ((stickyPolicies != null) && (stickyPolicies[0] != null)){
+                long timeout = 2;// netscaler default 2 min
+                String cookieName=null;
+                StickinessPolicyTO stickinessPolicy = stickyPolicies[0];
+                List<Pair<String, String>> paramsList = stickinessPolicy.getParams();
+                for(Pair<String,String> param : paramsList) {
+                    if ("holdtime".equalsIgnoreCase(param.first())) {
+                        timeout = Long.parseLong(param.second()); 
+                    } else if ("name".equalsIgnoreCase(param.first())) {
+                    	cookieName = param.second();
+                    }
+                }
+                if (stickinessPolicy.getMethodName().equalsIgnoreCase(StickinessMethodType.LBCookieBased.getName())) {
+                    vserver.set_persistencetype("COOKIEINSERT");
+                    vserver.set_servicetype("HTTP");
+                } else if (stickinessPolicy.getMethodName().equalsIgnoreCase(StickinessMethodType.SourceBased.getName())) {
+                    vserver.set_persistencetype("SOURCEIP");
+                } else if (stickinessPolicy.getMethodName().equalsIgnoreCase(StickinessMethodType.AppCookieBased.getName())) {
+                    vserver.set_persistencetype("RULE");
+                    vserver.set_rule("HTTP.REQ.HEADER(\"COOKIE\").VALUE(0).typecast_nvlist_t('=',';').value(\"" + cookieName + "\")");
+                    vserver.set_resrule("HTTP.RES.HEADER(\"SET-COOKIE\").VALUE(0).typecast_nvlist_t('=',';').value(\"" + cookieName + "\")");
+                }
+                vserver.set_timeout(timeout);
+            } else {
+                if (vserver.get_persistencetype() != null) {
+                    // delete the LB stickyness policy
+                	vserver.set_persistencetype("NONE");
+                }
+            }
+
+            if (vserverExisis) {
+                apiCallResult = lbvserver.update(nsService,vserver);
+            } else {
+                apiCallResult = lbvserver.add(nsService,vserver);
+            }
             if (apiCallResult.errorcode != 0) {
-                throw new ExecutionException("Failed to create new virtual server:" + virtualServerName);
+                throw new ExecutionException("Failed to create new virtual server:" + virtualServerName+ " due to " + apiCallResult.message);
             }            
+
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug("Created load balancing virtual server " + virtualServerName + " on the Netscaler device");
+            }
         } catch (nitro_exception e) {
             if (e.getErrorCode() != NitroError.NS_RESOURCE_EXISTS) {
-                throw new ExecutionException("Failed to create new virtual server:" + virtualServerName + " due to " + e.getMessage());    
+                throw new ExecutionException("Failed to create new virtual server:" + virtualServerName + " due to " + e.getMessage());
             }
         } catch (Exception e) {
             throw new ExecutionException("Failed to create new virtual server:" + virtualServerName + " due to " + e.getMessage());
@@ -698,10 +756,14 @@ public class NetscalerMPXResource implements ServerResource {
             }
             apiCallResult = lbvserver.delete(nsService, vserver);
             if (apiCallResult.errorcode != 0) {
-                throw new ExecutionException("Failed to remove virtual server:" + virtualServerName);
+                throw new ExecutionException("Failed to remove virtual server:" + virtualServerName + " due to " + apiCallResult.message);
             }
         } catch (nitro_exception e) {
-            throw new ExecutionException("Failed remove virtual server:" + virtualServerName +" due to " + e.getMessage());
+            if (e.getErrorCode() == NitroError.NS_RESOURCE_NOT_EXISTS) {
+                return;
+            } else {
+                throw new ExecutionException("Failed remove virtual server:" + virtualServerName +" due to " + e.getMessage());
+            }
         } catch (Exception e) {
             throw new ExecutionException("Failed remove virtual server:" + virtualServerName +" due to " + e.getMessage());
         }
@@ -711,7 +773,7 @@ public class NetscalerMPXResource implements ServerResource {
         try {
             apiCallResult = nsconfig.save(nsService);
             if (apiCallResult.errorcode != 0) {
-                throw new ExecutionException("Error occured while saving configuration changes to Netscaler device due to error:" + apiCallResult.errorcode);
+                throw new ExecutionException("Error occured while saving configuration changes to Netscaler device due to " + apiCallResult.message);
             }
         } catch (nitro_exception e) {
             throw new ExecutionException("Failed to save configuration changes to Netscaler device due to " + e.getMessage());
@@ -733,7 +795,7 @@ public class NetscalerMPXResource implements ServerResource {
         return answer;
     }
 
-    private Answer retry(Command cmd, int numRetries) {                
+    private Answer retry(Command cmd, int numRetries) {
         int numRetriesRemaining = numRetries - 1;
         s_logger.error("Retrying " + cmd.getClass().getSimpleName() + ". Number of retries remaining: " + numRetriesRemaining);
         return executeRequest(cmd, numRetriesRemaining);    
