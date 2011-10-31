@@ -1369,7 +1369,7 @@
                               name != 'add-rule' &&
                               name != 'cidr' &&
                               name != 'accountname' &&
-                              name != 'securitygroupname';
+                              name != 'securitygroup';
                           });
 
                           if ($(this).val() == 'icmp') {
@@ -1399,7 +1399,7 @@
                       edit: true,
                       label: 'Account, Security Group',
                       isHidden: true,
-                      range: ['account', 'securitygroupname']
+                      range: ['accountname', 'securitygroup']
                     },
                     'add-rule': {
                       label: 'Add',
@@ -1409,28 +1409,67 @@
                   add: {
                     label: 'Add',
                     action: function(args) {
-                      setTimeout(function() {
-                        args.response.success({
-                          notification: {
-                            label: 'Add ingress rule',
-                            poll: testData.notifications.testPoll
+                      var data = args.data;
+
+                      $.ajax({
+                        url: createURL('authorizeSecurityGroupIngress'),
+                        data: $.extend(
+                          true, {},
+                          data,
+                          {
+                            securitygroupid: args.context.securityGroups[0].id  
+                          },
+                          data.cidr ? {
+                            cidrlist: data.cidr
+                          } : {
+                            'usersecuritygrouplist[0].account': data.accountname,
+                            'usersecuritygrouplist[0].group': data.securitygroup
                           }
-                        });
-                      }, 500);
+                        ),
+                        dataType: 'json',
+                        async: true,
+                        success: function(data) {
+                          var jobId = data.authorizesecuritygroupingressresponse.jobid;
+
+                          args.response.success({
+                            _custom: {
+                              jobId: jobId
+                            },
+                            notification: {
+                              label: 'Add new ingress rule',
+                              poll: pollAsyncJobResult
+                            }
+                          });
+                        }
+                      });
                     }
                   },
                   actions: {
                     destroy: {
                       label: 'Remove Rule',
                       action: function(args) {
-                        setTimeout(function() {
-                          args.response.success({
-                            notification: {
-                              label: 'Remove ingress rule',
-                              poll: testData.notifications.testPoll
-                            }
-                          });
-                        }, 500);
+                        $.ajax({
+                          url: createURL('revokeSecurityGroupIngress'),
+                          data: {
+                            domainid: args.context.securityGroups[0].domainid,
+                            id: args.context.multiRule[0].id
+                          },
+                          dataType: 'json',
+                          async: true,
+                          success: function(data) {
+                            var jobID = data.revokesecuritygroupingress.jobid;
+
+                            args.response.success({
+                              _custom: {
+                                jobId: jobID
+                              },
+                              notification: {
+                                label: 'Revoke ingress rule',
+                                poll: pollAsyncJobResult
+                              }
+                            });
+                          }
+                        });
                       }
                     }
                   },
@@ -1449,10 +1488,11 @@
                             data.listsecuritygroupsresponse.securitygroup[0].ingressrule,
                             function(elem) {
                               return {
+                                id: elem.ruleid,
                                 protocol: elem.protocol,
                                 startport: elem.startport ? elem.startport : elem.icmptype,
                                 endport: elem.endport ? elem.endport : elem.icmpcode,
-                                cidr: elem.cidr ? elem.cidr : elem.account
+                                cidr: elem.cidr ? elem.cidr : ''.concat(elem.account, ' - ', elem.securitygroupname)
                               };
                             }
                           )
