@@ -1378,9 +1378,16 @@
             }
           },
 
-          dataProvider: function(args) {
+          dataProvider: function(args) {            
+            var apiCmd = "listSnapshots&page=" + args.page + "&pagesize=" + pageSize;
+            if(args.context != null) {
+              if("volumes" in args.context) {
+                apiCmd += "&volumeid=" + args.context.volumes[0].id;
+              }
+            }       
+          
             $.ajax({
-              url: createURL("listSnapshots&page=" + args.page + "&pagesize=" + pageSize),
+              url: createURL(apiCmd),
               dataType: "json",
               async: true,
               success: function(json) {
