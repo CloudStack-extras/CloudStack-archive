@@ -17,8 +17,16 @@
 
       // Setup columns
       $.each(fields, function(fieldName, field) {
+        if (options.ignoreEmptyFields && !data[fieldName]) {
+          return true; 
+        }
+
         var $td = $('<td>').addClass(fieldName).appendTo($tr);
         var $input, val;
+
+        if ($multi.find('th,td').filter(function() {
+          return $(this).attr('rel') == fieldName;
+        }).is(':hidden')) return true;
 
         if (!field.isPassword) {
           if (field.edit) {
@@ -172,6 +180,28 @@
     },
 
     /**
+     * Align width of each data row to main header
+     */
+    refreshItemWidths: function($multi) {
+      $multi.find('.data tr').filter(function() {
+        return !$(this).closest('.expandable-listing').size();
+      }).each(function() {
+        var $tr = $(this);
+        $tr.find('td').each(function() {
+          var $td = $(this);
+
+          $td.width(
+            $(
+              $multi.find('th:visible')[
+                $td.index()
+              ]
+            ).width() + 5
+          );
+        });
+      });
+    },
+
+    /**
      * Create a fake 'loading' item box
      */
     loadingItem: function($multi, label) {
@@ -285,6 +315,7 @@
     var actions = args.actions;
     var noSelect = args.noSelect;
     var context = args.context;
+    var ignoreEmptyFields = args.ignoreEmptyFields;
 
     var $thead = $('<tr>').appendTo(
       $('<thead>').appendTo($inputTable)
@@ -296,11 +327,17 @@
 
     // Setup input table headers
     $.each(args.fields, function(fieldName, field) {
-      $thead.append(
-        $('<th>').addClass(fieldName).html(field.label.toString())
-      );
+      var $th = $('<th>').addClass(fieldName).html(field.label.toString())
+            .attr('rel', fieldName)
+            .appendTo($thead);
+      var $td = $('<td>').addClass(fieldName)
+            .attr('rel', fieldName)
+            .appendTo($inputForm);
 
-      var $td = $('<td>').addClass(fieldName).appendTo($inputForm);
+      if (field.isHidden) {
+        $th.hide();
+        $td.hide();
+      }
 
       if (field.select) {
         var $select = $('<select>')
@@ -318,6 +355,8 @@
                 $('<option>').val(this.name).html(this.description)
                   .appendTo($select);
               });
+
+              _medit.refreshItemWidths($multi);
             }
           }
         });
@@ -354,7 +393,7 @@
       }
     });
 
-    if (args.actions) {
+    if (args.actions && !args.noHeaderActionsColumn) {
       $thead.append($('<th>Actions</th>').addClass('multi-actions'));
       $inputForm.append($('<td></td>').addClass('multi-actions'));
     }
@@ -401,7 +440,9 @@
     $addVM.bind('click', function() {
       // Validate form first
       if (!$multiForm.valid()) {
-        return true;
+        if ($multiForm.find('input.error:visible').size()) {
+          return false;
+        }
       }
 
       var $dataList;
@@ -414,7 +455,7 @@
 
         // Clear out fields
         $multi.find('input').val('');
-
+        
         // Apply action
         args.add.action({
           context: context,
@@ -447,7 +488,8 @@
                           {
                             multipleAdd: multipleAdd,
                             noSelect: noSelect,
-                            context: context
+                            context: context,
+                            ignoreEmptyFields: ignoreEmptyFields
                           }
                         ).appendTo($dataBody);
                       }
@@ -455,6 +497,8 @@
                   }
                 });
               }
+
+              _medit.refreshItemWidths($multi);
             }
           }
         });
@@ -528,12 +572,19 @@
               {
                 multipleAdd: multipleAdd,
                 noSelect: noSelect,
-                context: $.extend(true, {}, context, this._context)
+                context: $.extend(true, {}, context, this._context),
+                ignoreEmptyFieds: ignoreEmptyFields
               }
             ).appendTo($dataBody);
           });
+
+          _medit.refreshItemWidths($multi);
         }
       }
+    });
+
+    $multi.bind('change select', function() {
+      _medit.refreshItemWidths($multi);
     });
 
     $multiForm.validate();

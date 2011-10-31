@@ -249,7 +249,7 @@
                       'icmptype': { edit: true, label: 'ICMP Type', isDisabled: true },
                       'icmpcode': { edit: true, label: 'ICMP Code', isDisabled: true },
                       'add-rule': {
-                        label: 'Add Rule',
+                        label: 'Add',
                         addButton: true
                       }
                     },
@@ -338,7 +338,7 @@
                       'startport': { edit: true, label: 'Start Port' },
                       'endport': { edit: true, label: 'End Port' },
                       'add-rule': {
-                        label: 'Add Rule',
+                        label: 'Add',
                         addButton: true
                       }
                     },
@@ -348,7 +348,7 @@
                         setTimeout(function() {
                           args.response.success({
                             notification: {
-                              label: 'Add firewall rule',
+                              label: 'Add static NAT rule',
                               poll: testData.notifications.testPoll
                             }
                           });
@@ -362,7 +362,7 @@
                           setTimeout(function() {
                             args.response.success({
                               notification: {
-                                label: 'Remove firewall rule',
+                                label: 'Remove static NAT rule',
                                 poll: testData.notifications.testPoll
                               }
                             });
@@ -576,7 +576,7 @@
                 custom: function(args) {
                   var ipAddress = args.context.ipAddresses[0].ipaddress;
                   var psk = '081XufGFmEDBAEfsfdXTNpramSZ';
-                  
+
                   return $('<div>').append(
                     $('<ul>').addClass('info')
                       .append(
@@ -716,6 +716,109 @@
                   }
                 ],
                 dataProvider: testData.dataProvider.detailView('securityGroups')
+              },
+              ingressRules: {
+                title: 'Ingress Rules',
+                custom: cloudStack.uiCustom.securityRules({
+                  noSelect: true,
+                  noHeaderActionsColumn: true,
+                  fields: {
+                    'protocol': {
+                      label: 'Protocol',
+                      select: function(args) {
+                        args.$select.change(function() {
+                          var $inputs = args.$form.find('th, td');
+                          var $icmpFields = $inputs.filter(function() {
+                            var name = $(this).attr('rel');
+
+                            return $.inArray(name, [
+                              'icmptype',
+                              'icmpcode'
+                            ]) > -1;
+                          });
+                          var $otherFields = $inputs.filter(function() {
+                            var name = $(this).attr('rel');
+
+                            return name != 'icmptype' &&
+                              name != 'icmpcode' &&
+                              name != 'protocol' &&
+                              name != 'add-rule' &&
+                              name != 'cidr' &&
+                              name != 'accountname' &&
+                              name != 'securitygroupname';
+                          });
+
+                          if ($(this).val() == 'icmp') {
+                            $icmpFields.show();
+                            $otherFields.hide();
+                          } else {
+                            $icmpFields.hide();
+                            $otherFields.show();
+                          }
+                        });
+
+                        args.response.success({
+                          data: [
+                            { name: 'tcp', description: 'TCP' },
+                            { name: 'udp', description: 'UDP' },
+                            { name: 'icmp', description: 'ICMP' }
+                          ]
+                        });
+                      }
+                    },
+                    'startport': { edit: true, label: 'Start Port' },
+                    'endport': { edit: true, label: 'End Port' },
+                    'icmptype': { edit: true, label: 'ICMP Type', isHidden: true },
+                    'icmpcode': { edit: true, label: 'ICMP Code', isHidden: true },
+                    'cidr': { edit: true, label: 'CIDR', isHidden: true },
+                    'accountname': { 
+                      edit: true, 
+                      label: 'Account, Security Group', 
+                      isHidden: true,
+                      range: ['accountname', 'securitygroupname']
+                    },
+                    'add-rule': {
+                      label: 'Add',
+                      addButton: true
+                    }
+                  },
+                  add: {
+                    label: 'Add',
+                    action: function(args) {
+                      setTimeout(function() {
+                        args.response.success({
+                          notification: {
+                            label: 'Add ingress rule',
+                            poll: testData.notifications.testPoll
+                          }
+                        });
+                      }, 500);
+                    }
+                  },
+                  actions: {
+                    destroy: {
+                      label: 'Remove Rule',
+                      action: function(args) {
+                        setTimeout(function() {
+                          args.response.success({
+                            notification: {
+                              label: 'Remove ingress rule',
+                              poll: testData.notifications.testPoll
+                            }
+                          });
+                        }, 500);
+                      }
+                    }
+                  },
+                  ignoreEmptyFields: true,
+                  dataProvider: function(args) {
+                    setTimeout(function() {
+                      args.response.success({
+                        data: []
+                      });
+                    }, 100);
+                  }
+                })
               }
             }
           }

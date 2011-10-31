@@ -1340,55 +1340,6 @@
                     }
                   });
                 }
-              },
-
-              ingressRules: {
-                title: 'Ingress Rules',
-                custom: function(args) {
-                  return $('<div>').multiEdit({
-                    noSelect: true,
-                    fields: {
-                      'cidrlist': { edit: true, label: 'Source CIDR' },
-                      'protocol': {
-                        label: 'Protocol',
-                        select: function(args) {
-                          args.response.success({
-                            data: [
-                              { name: 'tcp', description: 'TCP' },
-                              { name: 'udp', description: 'UDP' },
-                              { name: 'icmp', description: 'ICMP' }
-                            ]
-                          });
-                        }
-                      },
-                      'startport': { edit: true, label: 'Start Port' },
-                      'endport': { edit: true, label: 'End Port' },
-                      'icmptype': { edit: true, label: 'ICMP Type', isDisabled: true },
-                      'icmpcode': { edit: true, label: 'ICMP Code', isDisabled: true },
-                      'add-rule': {
-                        label: 'Add Rule',
-                        addButton: true
-                      }
-                    },
-                    add: {
-                      label: 'Add',
-                      action: function(args) {
-                        args.response.success();
-                      }
-                    },
-                    actions: {
-                      destroy: {
-                        label: 'Remove Rule',
-                        action: function(args) {
-                          args.response.success();
-                        }
-                      }
-                    },
-                    dataProvider: function(args) {
-
-                    }
-                  });
-                }
               }
             }
           }
