@@ -1204,7 +1204,7 @@
                       array1.push("&isshared=true");
                     }
 
-                    array1.push("&isDefault=" + args.data.isDefault);
+                    array1.push("&isDefault=" + (args.data.isDefault=="on"));
                     array1.push("&gateway=" + args.data.gateway);
                     array1.push("&netmask=" + args.data.netmask);
                     array1.push("&startip=" + args.data.startip);
@@ -1359,7 +1359,53 @@
                         args.complete();
                       }
                     }
-                  }                  
+                  },
+
+                  //???
+                  'delete': {
+                    label: 'Delete network',
+                    messages: {
+                      confirm: function(args) {
+                        return 'Are you sure you want to delete network ?';
+                      },
+                      success: function(args) {
+                        return 'Network is being deleted.';
+                      },
+                      notification: function(args) {
+                        return 'Deleting network';
+                      },
+                      complete: function(args) {
+                        return 'Network has been deleted.';
+                      }
+                    },
+                    action: function(args) {                  
+                      debugger;
+                      $.ajax({
+                        url: createURL("deleteNetwork&id=" + args.context.directNetworks[0].id),
+                        dataType: "json",
+                        async: true,
+                        success: function(json) {
+                          var jid = json.deletenetworkresponse.jobid;
+                          args.response.success(
+                            {_custom:
+                             {jobId: jid,
+                              getUpdatedItem: function(json) {
+                                return {}; //nothing in this template needs to be updated, in fact, this whole template has being deleted
+                              },
+                              getActionFilter: function() {
+                                return directNetworkActionfilter;
+                              }
+                             }
+                            }
+                          );
+                        }
+                      });
+                    },
+                    notification: {
+                      poll: pollAsyncJobResult
+                    }
+                  }
+                  //???                  
                 },
 
                 tabs: {
@@ -4451,6 +4497,8 @@
     var jsonObj = args.context.item;
     var allowedActions = [];
     allowedActions.push("addIpRange");
+    allowedActions.push("edit");
+    allowedActions.push("delete");
     return allowedActions;
   }
 

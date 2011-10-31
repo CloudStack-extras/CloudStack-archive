@@ -524,12 +524,27 @@
                 });
               }
             });
-          },         
+          },             
           detailView: {
-            name: 'Network offering details',
-            actions: {
-            
-            },
+            name: 'Network offering details',                                       
+            actions: {            
+              edit: {
+                label: 'Edit',
+                action: function(args) {                  
+                  var array1 = [];
+                  array1.push("&displayText=" + todb(args.data.displaytext));
+                  array1.push("&availability=" + todb(args.data.availability));	                  
+                  $.ajax({
+                    url: createURL("updateNetworkOffering&id=" + args.context.networkOfferings[0].id + array1.join("")),
+                    dataType: "json",
+                    success: function(json) {
+                      var item = json.updatenetworkofferingresponse.networkoffering;   	                                    
+                      args.response.success({ data:item });
+                    }
+                  });                 
+                }
+              }           
+            },            
             tabs: {
               details: {
                 title: 'Details',
@@ -542,12 +557,21 @@
                   },
                   {
                     id: { label: 'ID' },
-                    displaytext: { label: 'Description' },
-                    availability: { label: 'Availability' },
-                    redundantrouter: {
-                      label: 'Redundant Router',
-                      converter:cloudStack.converters.toBooleanText
+                    displaytext: { 
+                      label: 'Description',
+                      isEditable: true
                     },
+                    availability: { 
+                      label: 'Availability',
+                      isEditable: true,
+                      select: function(args) {
+                        var items = [];
+                        items.push({id: 'Required', description: 'Required'});
+                        items.push({id: 'Optional', description: 'Optional'});
+                        items.push({id: 'Unavailable', description: 'Unavailable'});
+                        args.response.success({data: items});
+                      }
+                    },                  
                     isdefault: {
                       label: 'Default',
                       converter:cloudStack.converters.toBooleanText
@@ -575,14 +599,14 @@
                   }
                 ],
 
-                dataProvider: function(args) {
+                dataProvider: function(args) {                  
                   args.response.success(
                     {
                       actionFilter: networkOfferingsActionfilter,
                       data:args.context.networkOfferings[0]
                     }
                   );
-                }
+                }                
               }
             }
           }          
@@ -592,7 +616,7 @@
   };
   
   var networkOfferingsActionfilter = function(args) {
-    var jsonObj = args.context.item;
+    var jsonObj = args.context.item;    
     var allowedActions = [];
     allowedActions.push("edit");
     return allowedActions;
