@@ -745,9 +745,16 @@
 
           },
 
-          dataProvider: function(args) {
+          dataProvider: function(args) {            
+            var apiCmd = "listVolumes&page=" + args.page + "&pagesize=" + pageSize;
+            if(args.context != null) {
+              if("instances" in args.context) {
+                apiCmd += "&virtualMachineId=" + args.context.instances[0].id;
+              }
+            }        
+          
             $.ajax({
-              url: createURL("listVolumes&page=" + args.page + "&pagesize=" + pageSize),
+              url: createURL(apiCmd),
               dataType: "json",
               async: true,
               success: function(json) {
