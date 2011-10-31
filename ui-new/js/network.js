@@ -367,7 +367,7 @@
                         async: true,
                         success: function(vpnResponse) {
                           var isVPNEnabled = vpnResponse.listremoteaccessvpnsresponse.count;
-                          if (isVPNEnabled) { 
+                          if (isVPNEnabled) {
                             item.vpnenabled = true;
                             item.remoteaccessvpn = vpnResponse.listremoteaccessvpnsresponse.remoteaccessvpn[0];
                           };
@@ -1340,6 +1340,127 @@
                     }
                   });
                 }
+              },
+              ingressRules: {
+                title: 'Ingress Rules',
+                custom: cloudStack.uiCustom.securityRules({
+                  noSelect: true,
+                  noHeaderActionsColumn: true,
+                  fields: {
+                    'protocol': {
+                      label: 'Protocol',
+                      select: function(args) {
+                        args.$select.change(function() {
+                          var $inputs = args.$form.find('th, td');
+                          var $icmpFields = $inputs.filter(function() {
+                            var name = $(this).attr('rel');
+
+                            return $.inArray(name, [
+                              'icmptype',
+                              'icmpcode'
+                            ]) > -1;
+                          });
+                          var $otherFields = $inputs.filter(function() {
+                            var name = $(this).attr('rel');
+
+                            return name != 'icmptype' &&
+                              name != 'icmpcode' &&
+                              name != 'protocol' &&
+                              name != 'add-rule' &&
+                              name != 'cidr' &&
+                              name != 'accountname' &&
+                              name != 'securitygroupname';
+                          });
+
+                          if ($(this).val() == 'icmp') {
+                            $icmpFields.show();
+                            $otherFields.hide();
+                          } else {
+                            $icmpFields.hide();
+                            $otherFields.show();
+                          }
+                        });
+
+                        args.response.success({
+                          data: [
+                            { name: 'tcp', description: 'TCP' },
+                            { name: 'udp', description: 'UDP' },
+                            { name: 'icmp', description: 'ICMP' }
+                          ]
+                        });
+                      }
+                    },
+                    'startport': { edit: true, label: 'Start Port' },
+                    'endport': { edit: true, label: 'End Port' },
+                    'icmptype': { edit: true, label: 'ICMP Type', isHidden: true },
+                    'icmpcode': { edit: true, label: 'ICMP Code', isHidden: true },
+                    'cidr': { edit: true, label: 'CIDR', isHidden: true },
+                    'accountname': {
+                      edit: true,
+                      label: 'Account, Security Group',
+                      isHidden: true,
+                      range: ['account', 'securitygroupname']
+                    },
+                    'add-rule': {
+                      label: 'Add',
+                      addButton: true
+                    }
+                  },
+                  add: {
+                    label: 'Add',
+                    action: function(args) {
+                      setTimeout(function() {
+                        args.response.success({
+                          notification: {
+                            label: 'Add ingress rule',
+                            poll: testData.notifications.testPoll
+                          }
+                        });
+                      }, 500);
+                    }
+                  },
+                  actions: {
+                    destroy: {
+                      label: 'Remove Rule',
+                      action: function(args) {
+                        setTimeout(function() {
+                          args.response.success({
+                            notification: {
+                              label: 'Remove ingress rule',
+                              poll: testData.notifications.testPoll
+                            }
+                          });
+                        }, 500);
+                      }
+                    }
+                  },
+                  ignoreEmptyFields: true,
+                  dataProvider: function(args) {
+                    $.ajax({
+                      url: createURL('listSecurityGroups'),
+                      data: {
+                        id: args.context.securityGroups[0].id
+                      },
+                      dataType: 'json',
+                      async: true,
+                      success: function(data) {
+                        args.response.success({
+                          data: $.map(
+                            data.listsecuritygroupsresponse.securitygroup[0].ingressrule,
+                            function(elem) {
+                              return {
+                                protocol: elem.protocol,
+                                startport: elem.startport ? elem.startport : elem.icmptype,
+                                endport: elem.endport ? elem.endport : elem.icmpcode,
+                                cidr: elem.cidr ? elem.cidr : elem.account
+                              };
+                            }
+                          )
+                        });
+                      }
+                    });
+                  }
+                })
               }
             }
           }

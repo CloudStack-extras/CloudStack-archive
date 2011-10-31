@@ -573,7 +573,7 @@
                 multipleAdd: multipleAdd,
                 noSelect: noSelect,
                 context: $.extend(true, {}, context, this._context),
-                ignoreEmptyFieds: ignoreEmptyFields
+                ignoreEmptyFields: ignoreEmptyFields
               }
             ).appendTo($dataBody);
           });
