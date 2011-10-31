@@ -1204,7 +1204,7 @@
                       array1.push("&isshared=true");
                     }
 
-                    array1.push("&isDefault=" + args.data.isDefault);
+                    array1.push("&isDefault=" + (args.data.isDefault=="on"));
                     array1.push("&gateway=" + args.data.gateway);
                     array1.push("&netmask=" + args.data.netmask);
                     array1.push("&startip=" + args.data.startip);
