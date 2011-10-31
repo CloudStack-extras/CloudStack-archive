@@ -556,8 +556,18 @@
                       label: 'Specify VLAN',
                       converter:cloudStack.converters.toBooleanText
                     },
-                    networkRate: {
-                      label: 'Network rate'
+                    networkrate: {
+                      label: 'Network rate', 
+                      converter: function(args) {                       
+                        var networkRate = args;
+                        if (args == null || args == -1) {
+                          return "Unlimited";                          
+                        } 
+                        else {
+                          return fromdb(args) + " Mb/s";
+                         
+                        }       
+                      }
                     },
                     traffictype: {
                       label: 'Traffic type'
