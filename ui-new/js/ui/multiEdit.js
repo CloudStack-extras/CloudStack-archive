@@ -447,7 +447,13 @@
 
       var $dataList;
       var addItem = function(itemData) {
-        var data = cloudStack.serializeForm($multiForm);
+        var data = {};
+
+        $.each(cloudStack.serializeForm($multiForm), function(key, value) {
+          if (value != '') {
+            data[key] = value;
+          }
+        });
 
         // Loading appearance
         var $loading = _medit.loadingItem($multi, 'Adding rule...');
