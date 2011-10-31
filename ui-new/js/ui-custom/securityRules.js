@@ -3,7 +3,12 @@
     var multiEdit = args;
     
     return function(args) {
-      var $multi = $('<div>').addClass('security-rules').multiEdit(multiEdit);
+      var context = args.context;
+      var $multi = $('<div>').addClass('security-rules').multiEdit(
+        $.extend(true, {}, multiEdit, {
+          context: context
+        })
+      );
       var $fields = $multi.find('form table').find('th, td');
       var $accountFields = $fields.filter(function() {
         return $(this).hasClass('accountname') ||
