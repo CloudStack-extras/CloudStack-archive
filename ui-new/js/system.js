@@ -1361,6 +1361,22 @@
                   
                   edit: {
                     label: 'Edit',
+                                       
+                    messages: {
+                      confirm: function(args) {
+                        return 'Are you sure you want to edit network?';
+                      },
+                      success: function(args) {
+                        return 'Network is being edited.';
+                      },
+                      notification: function(args) {
+                        return 'Editing network';
+                      },
+                      complete: function(args) {
+                        return 'Network has been edited.';
+                      }
+                    },
+                   
                     action: function(args) {
                       var array1 = [];                                                       
                       array1.push("&name=" + todb(args.data.name));      
@@ -1376,8 +1392,7 @@
                           args.response.success(
                             {_custom:
                              {jobId: jid,
-                              getUpdatedItem: function(json) {
-                                //debugger;
+                              getUpdatedItem: function(json) {                                
                                 var item = json.queryasyncjobresultresponse.jobresult.network; 
                                 return {data: item}; 
                               },
