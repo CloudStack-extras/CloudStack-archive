@@ -620,10 +620,15 @@
             label: 'Virtual Appliances',
             fields: {
               name: { label: 'Name' },
-              hostname: { label: 'Hostname' },
-              publicip: { label: 'Public IP' },
-              publicmacaddress: { label: 'Public MAC' },
-              state: { label: 'Status', indicator: { 'Stopped': 'off', 'Running': 'on' } }
+              zonename: { label: 'Zone' },             
+              state: {
+                label: 'Status',
+                indicator: {
+                  'Running': 'on',
+                  'Stopped': 'off',
+                  'Error': 'off'
+                }
+              }
             },
             actions: {
               start: {
@@ -797,8 +802,7 @@
                   }
                 }
               },
-
-              //???
+              
               migrate: {
                 label: 'Migrate router',
                 messages: {
@@ -909,8 +913,16 @@
             label: 'System VMs',
             fields: {
               name: { label: 'Name' },
-              zonename: { label: 'Zone' },
-              state: { label: 'Status' }
+              systemvmtype: { label: 'Type' },
+              zonename: { label: 'Zone' },             
+              state: {
+                label: 'Status',
+                indicator: {
+                  'Running': 'on',
+                  'Stopped': 'off',
+                  'Error': 'off'
+                }
+              }
             },
             dataProvider: function(args) {
               $.ajax({
