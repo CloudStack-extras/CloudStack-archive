@@ -612,10 +612,10 @@
             }
           }
         },
-        virtualAppliances: {
+        routers: {
           type: 'select',
           title: 'Virtual Appliances',
-          id: 'virtualAppliances',
+          id: 'routers',
           listView: {
             label: 'Virtual Appliances',
             fields: {
@@ -628,6 +628,14 @@
             actions: {
               start: {
                 label: 'Start router',
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to start router?';
+                  },
+                  notification: function(args) {
+                    return 'Starting router';
+                  }
+                },
                 action: function(args) {
                   $.ajax({
                     url: createURL('startRouter&id=' + args.data.id),
@@ -637,28 +645,59 @@
                       var jid = json.startrouterresponse.jobid;
                       args.response.success({
                         _custom: {
-                          jobId: jid
+                          jobId: jid,                         
+                          getUpdatedItem: function(json) {
+                            return json.queryasyncjobresultresponse.jobresult.domainrouter;
+                          },
+                          getActionFilter: function() {
+                            return routerActionfilter;
+                          }                          
                         }
                       });
-                    },
-                    error: function(json) {
-                      args.response.error({ message: 'Cannot start router' });
                     }
                   });
-                },
-                messages: {
-                  confirm: function(args) {
-                    return 'Are you sure you want to start router ' + args.name + '?';
-                  },
-                  notification: function(args) {
-                    return 'Starting router: ' + args.name;
-                  }
-                },
+                },               
                 notification: {
                   poll: pollAsyncJobResult
                 }
-
-              }
+              },
+              
+              stop: {
+                label: 'Stop router',
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to stop router?';
+                  },
+                  notification: function(args) {
+                    return 'Stopping router';
+                  }
+                },
+                action: function(args) {
+                  $.ajax({
+                    url: createURL('stopRouter&id=' + args.data.id),
+                    dataType: 'json',
+                    async: true,
+                    success: function(json) {
+                      var jid = json.stoprouterresponse.jobid;
+                      args.response.success({
+                        _custom: {
+                          jobId: jid,                         
+                          getUpdatedItem: function(json) {
+                            return json.queryasyncjobresultresponse.jobresult.domainrouter;
+                          },
+                          getActionFilter: function() {
+                            return routerActionfilter;
+                          }                          
+                        }
+                      });
+                    }
+                  });
+                },               
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              }     
+              
             },
             dataProvider: function(args) {
               $.ajax({
@@ -667,7 +706,10 @@
                 async: true,
                 success: function(json) {
                   var items = json.listroutersresponse.router;
-                  args.response.success({ data: items });
+                  args.response.success({ 
+                    actionFilter: routerActionfilter,
+                    data: items 
+                  });
                 }
               });
             }
@@ -4541,6 +4583,15 @@
     return allowedActions;
   }
 
+  var routerActionfilter = function(args) {
+    var jsonObj = args.context.item;
+    var allowedActions = [];
+    allowedActions.push("start");
+    allowedActions.push("stop");
+    allowedActions.push("restart");
+    return allowedActions;
+  }
+  
   //action filters (end)
 
 })($, cloudStack, testData);
