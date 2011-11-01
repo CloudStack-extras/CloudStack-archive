@@ -696,7 +696,43 @@
                 notification: {
                   poll: pollAsyncJobResult
                 }
-              }     
+              },
+
+              restart: {
+                label: 'reboot router',
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to reboot router?';
+                  },
+                  notification: function(args) {
+                    return 'rebooting router';
+                  }
+                },
+                action: function(args) {
+                  $.ajax({
+                    url: createURL('rebootRouter&id=' + args.data.id),
+                    dataType: 'json',
+                    async: true,
+                    success: function(json) {
+                      var jid = json.rebootrouterresponse.jobid;
+                      args.response.success({
+                        _custom: {
+                          jobId: jid,                         
+                          getUpdatedItem: function(json) {
+                            return json.queryasyncjobresultresponse.jobresult.domainrouter;
+                          },
+                          getActionFilter: function() {
+                            return routerActionfilter;
+                          }                          
+                        }
+                      });
+                    }
+                  });
+                },               
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              }                    
               
             },
             dataProvider: function(args) {
@@ -4586,12 +4622,20 @@
   var routerActionfilter = function(args) {
     var jsonObj = args.context.item;
     var allowedActions = [];
-    allowedActions.push("start");
-    allowedActions.push("stop");
-    allowedActions.push("restart");
+       
+    if (jsonObj.state == 'Running') {   
+      allowedActions.push("stop");
+      allowedActions.push("restart");      
+      allowedActions.push("changeService");     
+      if (isAdmin()) 		  		  
+        allowedActions.push("migrate");		        
+    }
+    else if (jsonObj.state == 'Stopped') {        
+        allowedActions.push("start");
+        allowedActions.push("changeService");         
+    }     
     return allowedActions;
-  }
-  
+  }  
   //action filters (end)
 
 })($, cloudStack, testData);
