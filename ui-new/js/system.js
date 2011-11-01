@@ -732,7 +732,71 @@
                 notification: {
                   poll: pollAsyncJobResult
                 }
-              }                    
+              },
+             
+              changeService: {
+                label: 'Change service offering',
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to change service offering?';
+                  },
+                  success: function(args) {
+                    return 'Service offering is being changed.';
+                  },
+                  notification: function(args) {
+                    return 'Changing service offering';
+                  },
+                  complete: function(args) {
+                    return 'Service offering has been changed.';
+                  }
+                },
+                createForm: {
+                  title: 'Change Service Offering',
+                  desc: '',
+                  fields: {
+                    serviceOfferingId: {
+                      label: 'Service offering',
+                      select: function(args) {                        
+                        $.ajax({
+                          url: createURL("listServiceOfferings&issystem=true&systemvmtype=domainrouter"),
+                          dataType: "json",
+                          async: true,
+                          success: function(json) {
+                            var serviceofferings = json.listserviceofferingsresponse.serviceoffering;
+                            var items = [];                           
+                            $(serviceofferings).each(function() {
+                              if(this.id != args.context.routers[0].serviceofferingid) {
+                                items.push({id: this.id, description: this.displaytext});
+                              }
+                            });                            
+                            args.response.success({data: items});
+                          }
+                        });
+                      }
+                    }
+                  }
+                },
+                action: function(args) {                  
+                  $.ajax({
+                    url: createURL("changeServiceForRouter&id=" + args.context.routers[0].id + "&serviceofferingid=" + args.data.serviceOfferingId),                
+                    dataType: "json",
+                    async: true,
+                    success: function(json) {
+                      var jsonObj = json.changeserviceforrouterresponse.domainrouter; 
+                      args.response.success({data: jsonObj});
+                    },                    
+                    error: function(XMLHttpResponse) {                      
+                      var errorMsg = parseXMLHttpResponse(XMLHttpResponse);                      
+                      args.response.error(errorMsg);                        
+                    }                    
+                  });
+                },
+                notification: {
+                  poll: function(args) {
+                    args.complete();
+                  }
+                }
+              }                      
               
             },
             dataProvider: function(args) {
