@@ -3,13 +3,11 @@
     title: 'Events',
     id: 'events',
     sectionSelect: {
-      preFilter: function(args) {
-        var user = args.context.users[0];
-
-        if (user.role == 'admin')
-          return args.context.sections;
-
-        return ['events'];
+      preFilter: function(args) {        
+        if(isAdmin()) 
+          return ["events", "alerts"];
+        else
+          return ["events"];      
       },
       label: 'Select view'
     },
@@ -26,7 +24,7 @@
             username: { label: 'Initiated By' },
             created: { label: 'Date' }
           },
-          dataProvider: function(args) {
+          dataProvider: function(args) {            
             $.ajax({
               url: createURL("listEvents&page="+args.page+"&pagesize="+pageSize),
               dataType: "json",
