@@ -82,7 +82,7 @@
 
         $instanceRow = options.$item ? options.$item : $instanceRow;
         var $item = options.$item;
-        var context = $.extend({}, listViewArgs.context);
+        var context = $.extend(true, {}, listViewArgs.context);
         context[
           listViewArgs.activeSection
         ] = [$instanceRow.data('jsonObj')];
@@ -645,12 +645,14 @@
         var isUICustom = $listView.data('view-args') ? 
               $tr.closest('.list-view').data('view-args').uiCustom : false;
 
-        if (options.actionFilter && !isUICustom) allowedActions = options.actionFilter({
-          context: {
-            actions: allowedActions,
-            item: dataItem
-          }
-        });
+        if (options.actionFilter && !isUICustom) {
+          allowedActions = options.actionFilter({
+            context: $.extend(true, {}, options.context, {
+              actions: allowedActions,
+              item: dataItem
+            })
+          }); 
+        }
 
         makeActionIcons(
           $('<td></td>').addClass('actions reduced-hide')
@@ -689,6 +691,8 @@
 
   var loadBody = function($table, dataProvider, fields, append, loadArgs, actions, options) {
     if (!options) options = {};
+    var context = options.context;
+
     var $tbody = $table.find('tbody');
     if (!loadArgs) loadArgs = {
       page: 1,
@@ -709,12 +713,14 @@
     setLoading($table, function(setLoadingArgs) {
       $table.dataTable();
       $.extend(loadArgs, {
+        context: options.context,
         response: {
           success: function(args) {
             setLoadingArgs.loadingCompleted();
 
             addTableRows(fields, args.data, $tbody, actions, {
-              actionFilter: args.actionFilter
+              actionFilter: args.actionFilter,
+              context: context
             });
             $table.dataTable(null, { noSelect: uiCustom });
           },
@@ -742,16 +748,27 @@
               .addClass('section-select')
               .appendTo($switcher)
           );
+    var sectionPreFilter;
 
     if (args.sectionSelect) {
       $('<label>')
         .prependTo($sectionSelect.parent())
         .html(args.sectionSelect.label + ':');
+
+      sectionPreFilter = args.sectionSelect.preFilter ?
+            args.sectionSelect.preFilter({
+              context: cloudStack.context
+            }) :
+          null;
     } else {
       $sectionSelect.hide();
     }
 
     $.each(sections, function(key) {
+      if (sectionPreFilter && $.inArray(key, sectionPreFilter) == -1) {
+        return true;
+      }
+      
       var $sectionButton;
 
       if (!this.type || this.type == 'button') {
@@ -773,6 +790,8 @@
             .html(this.title)
         );
       }
+
+      return true;
     });
 
     $switcher.find('div.section:first').addClass('first');
@@ -859,10 +878,13 @@
       false,
       {
         page: page,
-        ref: args.ref,
-        context: args.context
+        ref: args.ref
       },
-      actions);
+      actions,
+      {
+        context: args.context
+      }
+    );
 
     // Keyboard events
     $listView.bind('keypress', function(event) {
@@ -898,16 +920,26 @@
            $(event.target).is('input')))
         return true;
 
-      loadBody($table, listViewData.dataProvider, listViewData.fields, false, {
-        page: 1,
-        filterBy: {
-          kind: $listView.find('select').val(),
-          search: {
-            value: $listView.find('input[type=text]').val(),
-            by: 'name'
+      loadBody(
+        $table, 
+        listViewData.dataProvider, 
+        listViewData.fields, 
+        false,
+        {
+          page: 1,
+          filterBy: {
+            kind: $listView.find('select').val(),
+            search: {
+              value: $listView.find('input[type=text]').val(),
+              by: 'name'
+            }
           }
+        },
+        listViewData.actions,
+        {
+          context: $listView.data('view-args').context
         }
-      }, listViewData.actions);
+      );
 
       return true;
     });
@@ -969,7 +1001,7 @@
           id: id,
           jsonObj: jsonObj,
           ref: jsonObj,
-          context: $.extend({}, $listView.data('view-args').context)
+          context: $.extend(true, {}, $listView.data('view-args').context)
         };
 
         // Populate context object w/ instance data
@@ -1099,6 +1131,7 @@
   };
 
   $.fn.listView = function(args, options) {
+    if (!options) options = {};
     if (args == 'prependItem') {
       return prependItem(this, options.data, options.actionFilter);
     } else if (args =='replaceItem') {
@@ -1109,9 +1142,9 @@
         targetSection = key;
         return false;
       });
-      makeListView(this, args, targetSection);
+      makeListView(this, $.extend(true, {}, args, { context: options.context }), targetSection);
     } else {
-      makeListView(this, args);
+      makeListView(this, $.extend(true, {}, args, { context: options.context ? options.context : cloudStack.context }));
     }
 
     return this;

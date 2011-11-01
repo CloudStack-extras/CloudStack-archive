@@ -13,8 +13,20 @@
    */
   var makeNavigation = function(args) {
     var $navList = $('<ul>');
+    var preFilter = cloudStack.sectionPreFilter ?
+          cloudStack.sectionPreFilter({
+            context: $.extend(true, {}, args.context, {
+              sections: $.map(cloudStack.sections, function(value, key) {
+                return key;
+              })
+            })
+          }) : null;
 
     $.each(args.sections, function(sectionID, args) {
+      if (preFilter && $.inArray(sectionID, preFilter) == -1) {
+        return true;
+      }
+      
       var $li = $('<li>')
             .addClass('navigation-item')
             .addClass(sectionID)
@@ -23,6 +35,8 @@
             .data('cloudStack-section-id', sectionID);
 
       $li.appendTo($navList);
+
+      return true;
     });
 
     // Special classes for first and last items
@@ -66,9 +80,9 @@
     if (data.show)
       $panel.append(data.show(data));
     else if (data.treeView)
-      $panel.treeView(data);
+      $panel.treeView(data, { context: args.context });
     else
-      $panel.listView(data);
+      $panel.listView(data, { context: args.context });
 
 
     return $navItem;

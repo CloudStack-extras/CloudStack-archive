@@ -3,6 +3,14 @@
     title: 'Events',
     id: 'events',
     sectionSelect: {
+      preFilter: function(args) {
+        var user = args.context.users[0];
+
+        if (user.role == 'admin')
+          return args.context.sections;
+
+        return ['events'];
+      },
       label: 'Select view'
     },
     sections: {
@@ -46,7 +54,7 @@
                   }
                 ],
                 dataProvider: testData.dataProvider.detailView('alerts')
-              },
+              }
             }
           }
         }
