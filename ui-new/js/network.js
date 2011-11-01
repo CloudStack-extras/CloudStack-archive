@@ -331,8 +331,25 @@
 
           //dataProvider: testData.dataProvider.listView('network'),
           dataProvider: function(args) {
+            var data = {
+              page: args.page,
+              pageSize: pageSize
+            };
+
+            if (g_supportELB == "guest") // IPs are allocated on guest network
+              $.extend(data, {
+                forvirtualnetwork: false,
+                forloadbalancing: true
+              });
+            else if(g_supportELB == "public") // IPs are allocated on public network
+              $.extend(data, {
+                forvirtualnetwork: true,
+                forloadbalancing: true
+              });
+
             $.ajax({
-              url: createURL("listPublicIpAddresses&page="+args.page+"&pagesize="+pageSize),
+              url: createURL('listPublicIpAddresses'),
+              data: data,
               dataType: "json",
               async: true,
               success: function(json) {
@@ -1417,7 +1434,7 @@
                           true, {},
                           data,
                           {
-                            securitygroupid: args.context.securityGroups[0].id  
+                            securitygroupid: args.context.securityGroups[0].id
                           },
                           data.cidr ? {
                             cidrlist: data.cidr
