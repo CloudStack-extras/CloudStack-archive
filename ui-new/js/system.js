@@ -796,8 +796,95 @@
                     args.complete();
                   }
                 }
-              }                      
-              
+              },
+
+              //???
+              migrate: {
+                label: 'Migrate router',
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to migrate router?';
+                  },
+                  success: function(args) {
+                    return 'Router is being migrated.';
+                  },
+                  notification: function(args) {
+                    return 'Migrating router';
+                  },
+                  complete: function(args) {
+                    return 'Router has been migrated.';
+                  }
+                },
+                createForm: {
+                  title: 'Migrate router',
+                  desc: '',
+                  fields: {
+                    hostId: {
+                      label: 'Host',
+                      validation: { required: true },
+                      select: function(args) {                       
+                        $.ajax({
+                          url: createURL("listHosts&VirtualMachineId=" + args.context.routers[0].id),
+                          //url: createURL("listHosts"),	//for testing only, comment it out before checking in.
+                          dataType: "json",
+                          async: true,
+                          success: function(json) {
+                            var hostObjs = json.listhostsresponse.host;
+                            var items = [];
+                            $(hostObjs).each(function() {                              
+                              items.push({id: this.id, description: (this.name + ": " +(this.hasEnoughCapacity? "Available" : "Full"))});
+                            });                            
+                            args.response.success({data: items});
+                          }
+                        });
+                      },
+                      error: function(XMLHttpResponse) {                      
+                        var errorMsg = parseXMLHttpResponse(XMLHttpResponse);                      
+                        args.response.error(errorMsg);                        
+                      }                
+                    }
+                  }
+                },
+                action: function(args) {     
+                  if(args.data.hostId == null) {
+                    args.response.error("Host field is required");   
+                    return;    
+                  }                    
+                  $.ajax({
+                    url: createURL("migrateSystemVm&hostid=" + args.data.hostId + "&virtualmachineid=" + args.context.routers[0].id),               
+                    dataType: "json",
+                    async: true,
+                    success: function(json) {                      
+                      var jid = json.migratesystemvmresponse.jobid;
+                      args.response.success({
+                        _custom: {
+                          jobId: jid,
+                          getUpdatedItem: function(json) {                        
+                            //return json.queryasyncjobresultresponse.jobresult.systemvminstance;    //not all properties returned in systemvminstance    
+                            $.ajax({
+                              data: createURL("listRouters&id=" + json.queryasyncjobresultresponse.jobresult.systemvminstance.id),
+                              dataType: "json",
+                              async: false,
+                              success: function(json) {  
+                                var items = json.listroutersresponse.router;                   
+                                if(items != null && items.length > 0) {
+                                  return items[0];	                                  
+                                }
+                              }
+                            });   
+                          },
+                          getActionFilter: function() {
+                            return routerActionfilter;
+                          }
+                        }
+                      });
+                    }                      
+                  });
+                },
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              }   
             },
             dataProvider: function(args) {
               $.ajax({
@@ -805,7 +892,7 @@
                 dataType: 'json',
                 async: true,
                 success: function(json) {
-                  var items = json.listroutersresponse.router;
+                  var items = json.listroutersresponse.router;            
                   args.response.success({ 
                     actionFilter: routerActionfilter,
                     data: items 
@@ -4690,7 +4777,7 @@
     if (jsonObj.state == 'Running') {   
       allowedActions.push("stop");
       allowedActions.push("restart");      
-      allowedActions.push("changeService");     
+      allowedActions.push("changeService");           
       if (isAdmin()) 		  		  
         allowedActions.push("migrate");		        
     }
