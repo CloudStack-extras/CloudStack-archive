@@ -2,13 +2,16 @@
   $.extend(window.cloudStack, testData, {
     home: 'dashboard',
 
-    sectionPreFilter: function(args) {
-      var user = args.context.users[0];
-
-      if (user.role == 'admin')
-        return args.context.sections;
-
-      return ['dashboard', 'instances', 'storage', 'templates', 'network', 'events'];
+    sectionPreFilter: function(args) {      
+      if(isAdmin()) {
+        return ["dashboard", "instances", "storage", "network", "templates", "accounts", "domains", "events", "system", "global-settings", "configuration"];
+      }
+      else if(isDomainAdmin()) {
+        return ["dashboard", "instances", "storage", "network", "templates", "accounts", "domains", "events"];
+      }
+      else { //normal user
+        return ["dashboard", "instances", "storage", "network", "templates", "events"];
+      }     
     },
     sections: {
       /**
