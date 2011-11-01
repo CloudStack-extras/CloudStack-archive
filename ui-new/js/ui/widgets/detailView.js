@@ -353,8 +353,7 @@
     };
 
     // Load context data
-    listViewArgs.context = {};
-    $.extend(listViewArgs.context, $detailView.data('view-args').context);
+    var context = $.extend(true, {}, $detailView.data('view-args').context);
 
     // Make panel
     var $panel = $browser.cloudBrowser('addPanel', {
@@ -363,7 +362,7 @@
       noSelectPanel: true,
       maximizeIfSelected: true,
       complete: function($newPanel) {
-        return $('<div>').listView(listViewArgs).appendTo($newPanel);
+        return $('<div>').listView(listViewArgs, { context: context }).appendTo($newPanel);
       }
     });
   };
@@ -388,10 +387,10 @@
 
       if (options.actionFilter)
         allowedActions = options.actionFilter({
-          context: {
+          context: $.extend(true, {}, options.context, {
             actions: allowedActions,
             item: options.data
-          }
+          })
         });
 
       $.each(actions, function(key, value) {
@@ -412,6 +411,8 @@
                 $('<span>').addClass('icon').html('&nbsp;')
               )
               .appendTo($action);
+
+        return true;
       });
 
       var $actionButtons = $actions.find('div.action');
@@ -545,7 +546,8 @@
       if (actions || detailViewArgs.viewAll)
         $actions = makeActionButtons(detailViewArgs.actions, {
           actionFilter: actionFilter,
-          data: data
+          data: data,
+          context: $detailView.data('view-args').context
         }).prependTo($firstRow.closest('div.detail-group'));
 
       // 'View all' button

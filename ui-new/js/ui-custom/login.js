@@ -57,9 +57,7 @@
             $login.remove();
             $('html body').removeClass('login');
             complete({
-              user: {
-                login: data.username
-              }
+              user: args.data.user
             });
           },
           error: function(args) {

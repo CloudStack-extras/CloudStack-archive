@@ -2,10 +2,15 @@
   $.extend(cloudStack, testData, {
     home: 'dashboard',
 
+    sectionPreFilter: function(args) {
+      var user = args.context.users[0];
+
+      if (user.role == 'admin')
+        return args.context.sections;
+
+      return ['dashboard', 'instances', 'storage', 'templates', 'events'];
+    },
     sections: {
-      /**
-       * Dashboard
-       */
       dashboard: {},
       instances: {},
       storage: {},
@@ -34,7 +39,8 @@
           return {
             user: {
               login: 'wchan',
-              name: 'Will Chan'
+              name: 'Will Chan',
+              role: 'admin'
             }
           };
         else
@@ -44,7 +50,15 @@
       // Actual login process, via form
       loginAction: function(args) {
         if (args.data.username != 'invalid'){
-          return args.response.success();
+          return args.response.success({
+            data: {
+              user: {
+                username: args.data.username,
+                name: args.data.name ? args.data.name : args.data.username,
+                role: args.data.username == 'jdoe' ? 'user' : 'admin'
+              }
+            }
+          });
         }
 
         return args.response.error();
@@ -54,12 +68,7 @@
       complete: function(args) {
         $container.cloudStack($.extend(cloudStack, {
           context: {
-            users: [
-              {
-                name: args.user.name,
-                login: args.user.login
-              }
-            ]
+            users: [args.user]
           }
         }));
       }
