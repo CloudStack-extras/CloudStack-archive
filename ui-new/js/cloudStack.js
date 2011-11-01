@@ -8,7 +8,7 @@
       if (user.role == 'admin')
         return args.context.sections;
 
-      return ['dashboard', 'instances', 'storage', 'templates', 'events'];
+      return ['dashboard', 'instances', 'storage', 'templates', 'network', 'events'];
     },
     sections: {
       /**
