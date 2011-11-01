@@ -773,8 +773,7 @@
 
               detailView: {
                 //viewAll: { label: 'Hosts', path: 'instances' },
-                
-                //???
+                                
                 actions: {                  
                   addIpRange: {
                     label: 'Add IP range',
@@ -955,8 +954,7 @@
                     }
                   }                  
                 },
-                //???
-                
+                               
                 tabs: {
                   details: {
                     title: 'Details',
@@ -1360,8 +1358,43 @@
                       }
                     }
                   },
-
-                  //???
+                  
+                  edit: {
+                    label: 'Edit',
+                    action: function(args) {
+                      var array1 = [];                                                       
+                      array1.push("&name=" + todb(args.data.name));      
+                      array1.push("&displayText=" + todb(args.data.displaytext));   
+                      array1.push("&networkdomain=" + todb(args.data.networkdomain));                
+                      array1.push("&tags=" + todb(args.data.tags));
+                         
+                      $.ajax({
+                        url: createURL("updateNetwork&id=" + args.context.directNetworks[0].id + array1.join("")),
+                        dataType: "json",
+                        success: function(json) {
+                          var jid = json.updatenetworkresponse.jobid;		 
+                          args.response.success(
+                            {_custom:
+                             {jobId: jid,
+                              getUpdatedItem: function(json) {
+                                //debugger;
+                                var item = json.queryasyncjobresultresponse.jobresult.network; 
+                                return {data: item}; 
+                              },
+                              getActionFilter: function() {
+                                return directNetworkActionfilter;
+                              }
+                             }
+                            }
+                          );                         
+                        }
+                      });                     
+                    },                    
+                    notification: {
+                      poll: pollAsyncJobResult
+                    }                   
+                  },
+                                    
                   'delete': {
                     label: 'Delete network',
                     messages: {
@@ -1378,8 +1411,7 @@
                         return 'Network has been deleted.';
                       }
                     },
-                    action: function(args) {                  
-                      debugger;
+                    action: function(args) {     
                       $.ajax({
                         url: createURL("deleteNetwork&id=" + args.context.directNetworks[0].id),
                         dataType: "json",
@@ -1404,52 +1436,44 @@
                     notification: {
                       poll: pollAsyncJobResult
                     }
-                  }
-                  //???                  
+                  }                                
                 },
 
                 tabs: {
                   details: {
-                    title: 'Details',
+                    title: 'Details', //direct network details
                     fields: [
                       {
-                        networkofferingdisplaytext:  { label: "Network offering description" }
+                        name:  { 
+                          label: 'Name',
+                          isEditable: true
+                        }
                       },
                       {
                         id: { label: "ID" },
-                        traffictype: { label: 'Traffic type' },
-                        broadcastdomaintype: { label: 'Broadcast domain type' },
-                        vlan: { label: 'VLAN ID' },
-                        gateway: { label: 'Gateway' },
-                        netmask: { label: 'Netmask' },
-                        startip: { label: 'Start IP' },
-                        endip: { label: 'End IP' },
-                        zoneid: { label: 'Zone ID' },
-                        networkofferingid: { label: 'Network offering ID' },
-                        networkofferingname: { label: 'Network offering name' },
-                        networkofferingavailability: { label: 'network offering availability' },
-                        isshared: {
-                          label: 'Shared',
-                          converter: cloudStack.converters.toBooleanText
-                        },
-                        issystem: {
-                          label: 'System',
-                          converter: cloudStack.converters.toBooleanText
+                        displaytext: {
+                          label: 'Description',
+                          isEditable: true
                         },
                         isdefault: {
                           label: 'Default',
                           converter: cloudStack.converters.toBooleanText
                         },
-                        securitygroupenabled: {
-                          label: 'Security group enabled',
-                          converter: cloudStack.converters.toBooleanText
+                        vlan: { label: 'VLAN ID' },
+                        domain: { label: 'Domain' },
+                        account: { label: 'Account' },
+                        gateway: { label: 'Gateway' },
+                        netmask: { label: 'Netmask' },
+                        startip: { label: 'Start IP' },
+                        endip: { label: 'End IP' },
+                        networkdomain: { 
+                          label: 'Network domain',
+                          isEditable: true
                         },
-                        state: { label: 'State' },
-                        related: { label: 'Related' },
-                        dns1: { label: 'DNS 1' },
-                        dns2: { label: 'DNS 2' },
-                        domainid: { label: 'Domain ID' },
-                        account: { label: 'Account' }
+                        tags: {
+                          label: 'Tags',
+                          isEditable: true
+                        }  
                       }
                     ],
                     dataProvider: function(args) {
