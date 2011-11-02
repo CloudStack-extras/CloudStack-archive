@@ -932,6 +932,7 @@
                 success: function(json) {
                   var items = json.listsystemvmsresponse.systemvm;
                   args.response.success({
+                    actionFilter: systemvmActionfilter,
                     data: items
                   });
                 }
@@ -4794,9 +4795,30 @@
         allowedActions.push("migrate");		        
     }
     else if (jsonObj.state == 'Stopped') {        
-        allowedActions.push("start");
-        allowedActions.push("changeService");         
+      allowedActions.push("start");
+      allowedActions.push("changeService");         
     }     
+    return allowedActions;
+  }  
+  
+  var systemvmActionfilter = function(args) {
+    var jsonObj = args.context.item;
+    var allowedActions = [];
+       
+    if (jsonObj.state == 'Running') {   
+      allowedActions.push("stop");
+      allowedActions.push("restart");      
+      allowedActions.push("destroy");           
+      if (isAdmin()) 		  		  
+        allowedActions.push("migrate");		        
+    }
+    else if (jsonObj.state == 'Stopped') {        
+      allowedActions.push("start");
+      allowedActions.push("destroy");         
+    }    
+    else if (jsonObj.state == 'Error') {
+      allowedActions.push("destroy"); 
+    }    
     return allowedActions;
   }  
   //action filters (end)
