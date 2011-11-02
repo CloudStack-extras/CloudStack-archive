@@ -643,7 +643,7 @@
                 },
                 action: function(args) {
                   $.ajax({
-                    url: createURL('startRouter&id=' + args.data.id),
+                    url: createURL('startRouter&id=' + args.context.routers[0].id),
                     dataType: 'json',
                     async: true,
                     success: function(json) {
@@ -679,7 +679,7 @@
                 },
                 action: function(args) {
                   $.ajax({
-                    url: createURL('stopRouter&id=' + args.data.id),
+                    url: createURL('stopRouter&id=' + args.context.routers[0].id),
                     dataType: 'json',
                     async: true,
                     success: function(json) {
@@ -715,7 +715,7 @@
                 },
                 action: function(args) {
                   $.ajax({
-                    url: createURL('rebootRouter&id=' + args.data.id),
+                    url: createURL('rebootRouter&id=' + args.context.routers[0].id),
                     dataType: 'json',
                     async: true,
                     success: function(json) {
@@ -866,11 +866,11 @@
                           getUpdatedItem: function(json) {                        
                             //return json.queryasyncjobresultresponse.jobresult.systemvminstance;    //not all properties returned in systemvminstance    
                             $.ajax({
-                              data: createURL("listRouters&id=" + json.queryasyncjobresultresponse.jobresult.systemvminstance.id),
+                              url: createURL("listRouters&id=" + json.queryasyncjobresultresponse.jobresult.systemvminstance.id),
                               dataType: "json",
                               async: false,
                               success: function(json) {  
-                                var items = json.listroutersresponse.router;                   
+                                var items = json.listroutersresponse.router;                                                        
                                 if(items != null && items.length > 0) {
                                   return items[0];	                                  
                                 }
@@ -906,7 +906,7 @@
             }
           }
         },
-        systemVMs: {
+        systemvms: {
           type: 'select',
           title: 'System VMs',
           listView: {
@@ -930,14 +930,216 @@
                 dataType: "json",
                 async: true,
                 success: function(json) {
-                  var items = json.listsystemvmsresponse.systemvm;
+                  var items = json.listsystemvmsresponse.systemvm;                  
                   args.response.success({
                     actionFilter: systemvmActionfilter,
                     data: items
                   });
                 }
               });
+            },
+            
+            //???
+            actions: {
+              start: {
+                label: 'Start system VM',
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to start system VM?';
+                  },
+                  notification: function(args) {
+                    return 'Starting system VM';
+                  }
+                },
+                action: function(args) {             
+                  $.ajax({
+                    url: createURL('startSystemVm&id=' + args.context.systemvms[0].id),
+                    dataType: 'json',
+                    async: true,
+                    success: function(json) {
+                      var jid = json.startsystemvmresponse.jobid;
+                      args.response.success({
+                        _custom: {
+                          jobId: jid,                         
+                          getUpdatedItem: function(json) {
+                            return json.queryasyncjobresultresponse.jobresult.systemvm;
+                          },
+                          getActionFilter: function() {
+                            return systemvmActionfilter;
+                          }                          
+                        }
+                      });
+                    }
+                  });
+                },               
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              },
+              
+              stop: {
+                label: 'Stop system VM',
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to stop system VM?';
+                  },
+                  notification: function(args) {
+                    return 'Stopping system VM';
+                  }
+                },
+                action: function(args) {           
+                  $.ajax({
+                    url: createURL('stopSystemVm&id=' + args.context.systemvms[0].id),
+                    dataType: 'json',
+                    async: true,
+                    success: function(json) {
+                      var jid = json.stopsystemvmresponse.jobid;
+                      args.response.success({
+                        _custom: {
+                          jobId: jid,                         
+                          getUpdatedItem: function(json) {
+                            return json.queryasyncjobresultresponse.jobresult.systemvm;
+                          },
+                          getActionFilter: function() {
+                            return systemvmActionfilter;
+                          }                          
+                        }
+                      });
+                    }
+                  });
+                },               
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              },
+
+              restart: {
+                label: 'reboot system VM',
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to reboot system VM?';
+                  },
+                  notification: function(args) {
+                    return 'rebooting system VM';
+                  }
+                },
+                action: function(args) {
+                  $.ajax({
+                    url: createURL('rebootSystemVm&id=' + args.context.systemvms[0].id),
+                    dataType: 'json',
+                    async: true,
+                    success: function(json) {
+                      var jid = json.rebootsystemvmresponse.jobid;
+                      args.response.success({
+                        _custom: {
+                          jobId: jid,                         
+                          getUpdatedItem: function(json) {
+                            return json.queryasyncjobresultresponse.jobresult.systemvm;
+                          },
+                          getActionFilter: function() {
+                            return systemvmActionfilter;
+                          }                          
+                        }
+                      });
+                    }
+                  });
+                },               
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              },
+             
+              //destroy
+              
+              migrate: {
+                label: 'Migrate system VM',
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to migrate system VM?';
+                  },
+                  success: function(args) {
+                    return 'System VM is being migrated.';
+                  },
+                  notification: function(args) {
+                    return 'Migrating system VM';
+                  },
+                  complete: function(args) {
+                    return 'System VM has been migrated.';
+                  }
+                },
+                createForm: {
+                  title: 'Migrate system VM',
+                  desc: '',
+                  fields: {
+                    hostId: {
+                      label: 'Host',
+                      validation: { required: true },
+                      select: function(args) {                       
+                        $.ajax({
+                          url: createURL("listHosts&VirtualMachineId=" + args.context.systemvms[0].id),
+                          //url: createURL("listHosts"),	//for testing only, comment it out before checking in.
+                          dataType: "json",
+                          async: true,
+                          success: function(json) {
+                            var hostObjs = json.listhostsresponse.host;
+                            var items = [];
+                            $(hostObjs).each(function() {                              
+                              items.push({id: this.id, description: (this.name + ": " +(this.hasEnoughCapacity? "Available" : "Full"))});
+                            });                            
+                            args.response.success({data: items});
+                          }
+                        });
+                      },
+                      error: function(XMLHttpResponse) {                      
+                        var errorMsg = parseXMLHttpResponse(XMLHttpResponse);                      
+                        args.response.error(errorMsg);                        
+                      }                
+                    }
+                  }
+                },
+                action: function(args) {     
+                  if(args.data.hostId == null) {
+                    args.response.error("Host field is required");   
+                    return;    
+                  }                    
+                  $.ajax({
+                    url: createURL("migrateSystemVm&hostid=" + args.data.hostId + "&virtualmachineid=" + args.context.systemvms[0].id),               
+                    dataType: "json",
+                    async: true,
+                    success: function(json) {                      
+                      var jid = json.migratesystemvmresponse.jobid;
+                      args.response.success({
+                        _custom: {
+                          jobId: jid,
+                          getUpdatedItem: function(json) {                        
+                            //return json.queryasyncjobresultresponse.jobresult.systemvminstance;    //not all properties returned in systemvminstance                                                     
+                            $.ajax({
+                              url: createURL("listSystemVms&id=" + json.queryasyncjobresultresponse.jobresult.systemvminstance.id),
+                              dataType: "json",
+                              async: false,
+                              success: function(json) {  
+                                var items = json.listsystemvmsresponse.systemvm;                                                         
+                                if(items != null && items.length > 0) {
+                                  return items[0];	                                  
+                                }
+                              }
+                            });   
+                          },
+                          getActionFilter: function() {
+                            return systemvmActionfilter;
+                          }
+                        }
+                      });
+                    }                      
+                  });
+                },
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              }   
             }
+            //???
+            
           }
         }
       }
