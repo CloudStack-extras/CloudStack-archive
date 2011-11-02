@@ -1401,7 +1401,7 @@
     <script src="scripts/ui/widgets/treeView.js" type="text/javascript"></script>
     <script src="scripts/ui/widgets/notifications.js" type="text/javascript"></script>
 
-    <script src="scripts-test/test-data.js" type="text/javascript"></script>
+    <script src="js-test/test-data.js" type="text/javascript"></script>
 
 	  <!-- Common libraries -->
     <script src="lib/date.js" type="text/javascript"></script>
@@ -1409,7 +1409,7 @@
     <script src="lib/jquery.timers.js" type="text/javascript"></script>
     <script src="lib/jquery.md5.js" type="text/javascript" ></script>
 
-    <!-- CloudStack -->
+    <!-- CloudStack -->    
     <script src="scripts/cloud.core.callbacks.js" type="text/javascript"></script>
 	  <script src="scripts/sharedFunctions.js" type="text/javascript"></script>
     <script src="scripts/ui-custom/login.js" type="text/javascript"></script>
