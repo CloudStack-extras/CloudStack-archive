@@ -191,7 +191,10 @@
             async: false,
             success: function(json) {
               var domainObjs = json.listdomainsresponse.domain;
-              args.response.success({data: domainObjs});
+              args.response.success({
+                actionFilter: domainActionfilter,
+                data: domainObjs
+              });
             }
           });
         }
@@ -202,11 +205,29 @@
             async: false,
             success: function(json) {
               var domainObjs = json.listdomainchildrenresponse.domain;
-              args.response.success({data: domainObjs});
+              args.response.success({
+                actionFilter: domainActionfilter,
+                data: domainObjs
+              });
             }
           });
         }
       }
     }
   };
+  
+  var domainActionfilter = function(args) {
+    var jsonObj = args.context.item;
+    var allowedActions = [];           
+    if(isAdmin()) {       
+      allowedActions.push("add");    
+    	if(jsonObj.id != 1) { //"ROOT" domain is not allowed to edit or delete
+        allowedActions.push("edit");
+	      allowedActions.push("delete");	        
+    	}    	
+    }   
+	  allowedActions.push("updateResourceCount");
+    return allowedActions;
+  }  
+  
 })(cloudStack, testData);
