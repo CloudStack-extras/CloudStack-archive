@@ -63,7 +63,7 @@ var pollAsyncJobResult = function(args) {
 
 //API calls
 function createURL(apiName) {
-  return "/client/api?" + "command=" + apiName +"&response=json&sessionkey=" + g_sessionKey;
+  return clientApiUrl + "?" + "command=" + apiName +"&response=json&sessionkey=" + g_sessionKey;
 }
 
 function fromdb(val) {
