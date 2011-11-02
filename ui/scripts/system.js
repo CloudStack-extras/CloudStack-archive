@@ -938,8 +938,7 @@
                 }
               });
             },
-            
-            //???
+                       
             actions: {
               start: {
                 label: 'Start system VM',
@@ -1049,7 +1048,41 @@
                 }
               },
              
-              //destroy
+              'delete': {
+                label: 'Destroy system VM',
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to destroy this system VM?';
+                  },
+                  notification: function(args) {
+                    return 'Destroyping system VM';
+                  }
+                },
+                action: function(args) {           
+                  $.ajax({
+                    url: createURL('destroySystemVm&id=' + args.context.systemvms[0].id),
+                    dataType: 'json',
+                    async: true,
+                    success: function(json) {
+                      var jid = json.destroysystemvmresponse.jobid;
+                      args.response.success({
+                        _custom: {
+                          jobId: jid,                         
+                          getUpdatedItem: function(json) {
+                            //return {}; //nothing in this systemVM needs to be updated, in fact, this whole systemVM has being destroyed
+                          },
+                          getActionFilter: function() {
+                            return systemvmActionfilter;
+                          }                          
+                        }
+                      });
+                    }
+                  });
+                },               
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              },
               
               migrate: {
                 label: 'Migrate system VM',
@@ -1137,9 +1170,7 @@
                   poll: pollAsyncJobResult
                 }
               }   
-            }
-            //???
-            
+            }                        
           }
         }
       }
@@ -5010,16 +5041,16 @@
     if (jsonObj.state == 'Running') {   
       allowedActions.push("stop");
       allowedActions.push("restart");      
-      allowedActions.push("destroy");           
+      allowedActions.push("delete");  //destroy         
       if (isAdmin()) 		  		  
         allowedActions.push("migrate");		        
     }
     else if (jsonObj.state == 'Stopped') {        
       allowedActions.push("start");
-      allowedActions.push("destroy");         
+      allowedActions.push("delete");  //destroy       
     }    
     else if (jsonObj.state == 'Error') {
-      allowedActions.push("destroy"); 
+      allowedActions.push("delete");  //destroy 
     }    
     return allowedActions;
   }  
