@@ -1426,23 +1426,37 @@
                   add: {
                     label: 'Add',
                     action: function(args) {
-                      var data = args.data;
+                      var data = {
+                        securitygroupid: args.context.securityGroups[0].id,
+                        protocol: args.data.protocol,
+                        domainid: args.context.securityGroups[0].domainid,
+                        account: args.context.securityGroups[0].account
+                      };
+
+                      // TCP / ICMP
+                      if (args.data.icmptype && args.data.icmpcode) { // ICMP
+                        $.extend(data, {
+                          icmptype: args.data.icmptype,
+                          icmpcode: args.data.icmpcode
+                        });
+                      } else { // TCP
+                        $.extend(data, {
+                          startport: args.data.startport,
+                          endport: args.data.endport
+                        });
+                      }
+
+                      // CIDR / account
+                      if (args.data.cidr) {
+                        data.cidrlist = args.data.cidr;
+                      } else {
+                        data['usersecuritygrouplist[0].account'] = args.data.accountname;
+                        data['usersecuritygrouplist[0].group'] = args.data.securitygroup;
+                      }
 
                       $.ajax({
                         url: createURL('authorizeSecurityGroupIngress'),
-                        data: $.extend(
-                          true, {},
-                          data,
-                          {
-                            securitygroupid: args.context.securityGroups[0].id
-                          },
-                          data.cidr ? {
-                            cidrlist: data.cidr
-                          } : {
-                            'usersecuritygrouplist[0].account': data.accountname,
-                            'usersecuritygrouplist[0].group': data.securitygroup
-                          }
-                        ),
+                        data: data,
                         dataType: 'json',
                         async: true,
                         success: function(data) {
@@ -1469,6 +1483,7 @@
                           url: createURL('revokeSecurityGroupIngress'),
                           data: {
                             domainid: args.context.securityGroups[0].domainid,
+                            account: args.context.securityGroups[0].account,
                             id: args.context.multiRule[0].id
                           },
                           dataType: 'json',
