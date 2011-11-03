@@ -1512,18 +1512,26 @@
                 netmask: { label: 'Netmask' }
               }
             ],
-            dataProvider: function(args) {
-              /*
-               var array1 = [];
-               var nicObjs = args.context.instances[0].nic;
-               $(nicObjs).each(function(){
-               array1.push(this);
-               array1.push(this);
-               array1.push(this);
-               });
-               args.response.success({data: array1});
-               */
+            dataProvider: function(args) {              
               args.response.success({data: args.context.instances[0].nic});
+            }
+          },
+                    
+           /**
+           * Security Groups tab
+           */
+          securityGroups: {
+            title: 'Security groups',
+            multiple: true,
+            fields: [
+              {
+                id: { label: 'ID' },
+                name: { label: 'Name' },
+                description: { label: 'Description' }
+              }
+            ],
+            dataProvider: function(args) {              
+              args.response.success({data: args.context.instances[0].securitygroup});
             }
           },
 
