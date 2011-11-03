@@ -48,6 +48,14 @@
     title: 'Network',
     id: 'network',
     sectionSelect: {
+      preFilter: function(args) {
+        if (g_directAttachSecurityGroupsEnabled == "true") {
+          return args.context.sections;
+        }
+        else {
+          return ['ipAddresses'];
+        }
+      },
       label: 'Select view'
     },
     sections: {
