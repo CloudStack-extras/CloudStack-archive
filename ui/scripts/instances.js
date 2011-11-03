@@ -1560,8 +1560,9 @@
       allowedActions.push("restart");
       allowedActions.push("destroy");
       if (isAdmin()
-          && (jsonObj.rootdevicetype == 'NetworkFilesystem' || jsonObj.rootdevicetype == 'IscsiLUN' || jsonObj.rootdevicetype == 'PreSetup')
-          && (jsonObj.hypervisor == 'XenServer' || jsonObj.hypervisor == 'VMware'))
+          && (jsonObj.rootdevicetype == 'NetworkFilesystem' || jsonObj.rootdevicetype == 'IscsiLUN' || jsonObj.rootdevicetype == 'PreSetup'  || jsonObj.rootdevicetype == 'OCFS2')
+          //&& (jsonObj.hypervisor == 'XenServer' || jsonObj.hypervisor == 'VMware')
+          )
       {
         allowedActions.push("migrate");
       }
