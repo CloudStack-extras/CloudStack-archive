@@ -336,7 +336,7 @@ public class JuniperSrxManagerImpl extends ExternalNetworkManagerImpl implements
         // Get network rate
         Integer networkRate = _networkMgr.getNetworkRate(network.getId(), null);
 
-        IpAddressTO ip = new IpAddressTO(account.getId(), sourceNatIpAddress, add, false, !sharedSourceNat, publicVlanTag, null, null, null, null, networkRate, sourceNatIp.isOneToOneNat());
+        IpAddressTO ip = new IpAddressTO(account.getId(), sourceNatIpAddress, add, false, !sharedSourceNat, publicVlanTag, null, null, null, null, networkRate, false);
         IpAddressTO[] ips = new IpAddressTO[1];
         ips[0] = ip;
         IpAssocCommand cmd = new IpAssocCommand(ips);
