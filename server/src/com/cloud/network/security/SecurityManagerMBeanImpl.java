@@ -119,8 +119,7 @@ public class SecurityManagerMBeanImpl extends StandardMBean implements SecurityG
     @Override
     public void tryRulesetUpdateForVmBypassSchedulerVeryDangerous(Long vmId, Long seqno) {
        LocalSecurityGroupWork work = new LocalSecurityGroupWorkQueue.LocalSecurityGroupWork(vmId, seqno, Step.Scheduled);
-        _sgMgr.sendRulesetUpdates(work, SecurityRuleType.IngressRule);
-        _sgMgr.sendRulesetUpdates(work, SecurityRuleType.EgressRule);
+        _sgMgr.sendRulesetUpdates(work);
     }
     
     @Override

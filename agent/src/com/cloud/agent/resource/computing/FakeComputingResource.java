@@ -258,7 +258,7 @@ public class FakeComputingResource extends ServerResourceBase implements ServerR
     }
 
     private Answer execute(SecurityGroupRulesCmd cmd) {
-        s_logger.info("Programmed network rules for vm " + cmd.getVmName() + " guestIp=" + cmd.getGuestIp() + ", numrules=" + cmd.getRuleSet().length);
+        s_logger.info("Programmed network rules for vm " + cmd.getVmName() + " guestIp=" + cmd.getGuestIp() + ",ingress numrules=" + cmd.getIngressRuleSet().length + ",egress numrules=" + cmd.getEgressRuleSet().length);
         return new SecurityGroupRuleAnswer(cmd);
     }
 

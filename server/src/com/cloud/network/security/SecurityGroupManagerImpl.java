@@ -364,8 +364,9 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
         return allowed;
     }
 
-    protected String generateRulesetSignature(Map<PortAndProto, Set<String>> allowed) {
-        String ruleset = allowed.toString();
+    protected String generateRulesetSignature(Map<PortAndProto, Set<String>> ingress, Map<PortAndProto, Set<String>> egress) {
+        String ruleset = ingress.toString();
+        ruleset.concat(egress.toString());
         return DigestUtils.md5Hex(ruleset);
     }
 
@@ -447,11 +448,11 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
         List<Long> affectedVms = new ArrayList<Long>();
         affectedVms.add(vm.getId());
         List<SecurityGroupVMMapVO> groupsForVm = _securityGroupVMMapDao.listByInstanceId(vm.getId());
-        // For each group, find the ingress rules that allow the group
+        // For each group, find the security rules that allow the group
         for (SecurityGroupVMMapVO mapVO : groupsForVm) {// FIXME: use custom sql in the dao
             List<SecurityGroupRuleVO> allowingRules = _securityGroupRuleDao.listByAllowedSecurityGroupId(mapVO.getSecurityGroupId());
-            // For each ingress rule that allows a group that the vm belongs to, find the group it belongs to
-            affectedVms.addAll(getAffectedVmsForIngressRules(allowingRules));
+            // For each security rule that allows a group that the vm belongs to, find the group it belongs to
+            affectedVms.addAll(getAffectedVmsForSecurityRules(allowingRules));
         }
         return affectedVms;
     }
@@ -459,16 +460,16 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
     protected List<Long> getAffectedVmsForVmStop(VMInstanceVO vm) {
         List<Long> affectedVms = new ArrayList<Long>();
         List<SecurityGroupVMMapVO> groupsForVm = _securityGroupVMMapDao.listByInstanceId(vm.getId());
-        // For each group, find the ingress rules that allow the group
+        // For each group, find the security rules rules that allow the group
         for (SecurityGroupVMMapVO mapVO : groupsForVm) {// FIXME: use custom sql in the dao
             List<SecurityGroupRuleVO> allowingRules = _securityGroupRuleDao.listByAllowedSecurityGroupId(mapVO.getSecurityGroupId());
-            // For each ingress rule that allows a group that the vm belongs to, find the group it belongs to
-            affectedVms.addAll(getAffectedVmsForIngressRules(allowingRules));
+            // For each security rule that allows a group that the vm belongs to, find the group it belongs to
+            affectedVms.addAll(getAffectedVmsForSecurityRules(allowingRules));
         }
         return affectedVms;
     }
 
-    protected List<Long> getAffectedVmsForIngressRules(List<SecurityGroupRuleVO> allowingRules) {
+    protected List<Long> getAffectedVmsForSecurityRules(List<SecurityGroupRuleVO> allowingRules) {
         Set<Long> distinctGroups = new HashSet<Long>();
         List<Long> affectedVms = new ArrayList<Long>();
 
@@ -482,16 +483,24 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
         return affectedVms;
     }
 
-    protected SecurityGroupRulesCmd generateRulesetCmd(SecurityRuleType ruleType, String vmName, String guestIp, String guestMac, Long vmId, String signature, long seqnum, Map<PortAndProto, Set<String>> rules) {
-        List<IpPortAndProto> result = new ArrayList<IpPortAndProto>();
-        for (PortAndProto pAp : rules.keySet()) {
-            Set<String> cidrs = rules.get(pAp);
+    protected SecurityGroupRulesCmd generateRulesetCmd(String vmName, String guestIp, String guestMac, Long vmId, String signature, long seqnum, Map<PortAndProto, Set<String>> ingressRules, Map<PortAndProto, Set<String>> egressRules) {
+        List<IpPortAndProto> ingressResult = new ArrayList<IpPortAndProto>();
+        List<IpPortAndProto> egressResult = new ArrayList<IpPortAndProto>();
+        for (PortAndProto pAp : ingressRules.keySet()) {
+            Set<String> cidrs = ingressRules.get(pAp);
             if (cidrs.size() > 0) {
                 IpPortAndProto ipPortAndProto = new SecurityGroupRulesCmd.IpPortAndProto(pAp.getProto(), pAp.getStartPort(), pAp.getEndPort(), cidrs.toArray(new String[cidrs.size()]));
-                result.add(ipPortAndProto);
+                ingressResult.add(ipPortAndProto);
             }
         }
-        return new SecurityGroupRulesCmd(ruleType,guestIp, guestMac, vmName, vmId, signature, seqnum, result.toArray(new IpPortAndProto[result.size()]));
+        for (PortAndProto pAp : egressRules.keySet()) {
+            Set<String> cidrs = egressRules.get(pAp);
+            if (cidrs.size() > 0) {
+                IpPortAndProto ipPortAndProto = new SecurityGroupRulesCmd.IpPortAndProto(pAp.getProto(), pAp.getStartPort(), pAp.getEndPort(), cidrs.toArray(new String[cidrs.size()]));
+                egressResult.add(ipPortAndProto);
+            }
+        }
+        return new SecurityGroupRulesCmd(guestIp, guestMac, vmName, vmId, signature, seqnum, ingressResult.toArray(new IpPortAndProto[ingressResult.size()]), egressResult.toArray(new IpPortAndProto[egressResult.size()]));
     }
 
     protected void handleVmStopped(VMInstanceVO vm) {
@@ -667,7 +676,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
         authorizedGroups2.addAll(authorizedGroups); // Ensure we don't re-lock the same row
         txn.start();
 
-        // Prevents other threads/management servers from creating duplicate ingress rules
+        // Prevents other threads/management servers from creating duplicate security rules
         securityGroup = _securityGroupDao.acquireInLockTable(securityGroupId);
         if (securityGroup == null) {
             s_logger.warn("Could not acquire lock on network security group: id= " + securityGroupId);
@@ -773,7 +782,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
             }
 
             _securityGroupRuleDao.remove(id);
-            s_logger.debug("revokeSecurityGroupIngress succeeded for security rule id: " + id);
+            s_logger.debug("revokeSecurityGroupRule succeeded for security rule id: " + id);
 
             final ArrayList<Long> affectedVms = new ArrayList<Long>();
             affectedVms.addAll(_securityGroupVMMapDao.listVmIdsBySecurityGroup(groupHandle.getId()));
@@ -926,11 +935,12 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
             seqnum = log.getLogsequence();
 
             if (vm != null && vm.getState() == State.Running) {
-                Map<PortAndProto, Set<String>> rules = generateRulesForVM(userVmId, SecurityRuleType.IngressRule);
+                Map<PortAndProto, Set<String>> ingressRules = generateRulesForVM(userVmId, SecurityRuleType.IngressRule);
+                Map<PortAndProto, Set<String>> egressRules = generateRulesForVM(userVmId, SecurityRuleType.EgressRule);
                 agentId = vm.getHostId();
                 if (agentId != null) {
-                    SecurityGroupRulesCmd cmd = generateRulesetCmd(SecurityRuleType.IngressRule, vm.getInstanceName(), vm.getPrivateIpAddress(), vm.getPrivateMacAddress(), vm.getId(), generateRulesetSignature(rules), seqnum,
-                            rules);
+                    SecurityGroupRulesCmd cmd = generateRulesetCmd( vm.getInstanceName(), vm.getPrivateIpAddress(), vm.getPrivateMacAddress(), vm.getId(), generateRulesetSignature(ingressRules, egressRules), seqnum,
+                            ingressRules, egressRules);
                     Commands cmds = new Commands(cmd);
                     try {
                         _agentMgr.send(agentId, cmds, _answerListener);
@@ -939,15 +949,6 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
                         _workDao.updateStep(work.getInstanceId(), seqnum, Step.Done);
                     }
                     
-                    cmd = generateRulesetCmd(SecurityRuleType.EgressRule, vm.getInstanceName(), vm.getPrivateIpAddress(), vm.getPrivateMacAddress(), vm.getId(), generateRulesetSignature(rules), seqnum,
-                            rules);
-                    cmds = new Commands(cmd);
-                    try {
-                        _agentMgr.send(agentId, cmds, _answerListener);
-                    } catch (AgentUnavailableException e) {
-                        s_logger.debug("Unable to send egress rules updates for vm: " + userVmId + "(agentid=" + agentId + ")");
-                        _workDao.updateStep(work.getInstanceId(), seqnum, Step.Done);
-                    }
                 }
             }
         } finally {
@@ -1056,7 +1057,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
         List<SecurityGroupRuleVO> allowingRules = _securityGroupRuleDao.listByAllowedSecurityGroupId(groupId);
         List<SecurityGroupVMMapVO> securityGroupVmMap = _securityGroupVMMapDao.listBySecurityGroup(groupId);
         if (!allowingRules.isEmpty()) {
-            throw new ResourceInUseException("Cannot delete group when there are ingress rules that allow this group");
+            throw new ResourceInUseException("Cannot delete group when there are security rules that allow this group");
         } else if (!securityGroupVmMap.isEmpty()) {
             throw new ResourceInUseException("Cannot delete group when it's in use by virtual machines");
         }
