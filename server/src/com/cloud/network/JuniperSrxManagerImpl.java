@@ -324,11 +324,15 @@ public class JuniperSrxManagerImpl extends ExternalNetworkManagerImpl implements
         long guestVlanTag = Long.parseLong(network.getBroadcastUri().getHost());
         String guestVlanGateway = network.getGateway();
         String guestVlanCidr = network.getCidr();
-        String sourceNatIpAddress = sourceNatIp.getAddress().addr();
+        String sourceNatIpAddress = null;
+        String publicVlanTag = null;
         
-        VlanVO publicVlan = _vlanDao.findById(sourceNatIp.getVlanId());
-        String publicVlanTag = publicVlan.getVlanTag();
-
+        if (sourceNatIp != null) {
+        	sourceNatIpAddress = sourceNatIp.getAddress().addr();
+        	VlanVO publicVlan = _vlanDao.findById(sourceNatIp.getVlanId());
+        	publicVlanTag = publicVlan.getVlanTag();
+        }
+        
         // Get network rate
         Integer networkRate = _networkMgr.getNetworkRate(network.getId(), null);
 
