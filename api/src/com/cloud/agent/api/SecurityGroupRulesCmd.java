@@ -26,7 +26,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.api.LogLevel.Log4jLevel;
-import com.cloud.network.security.SecurityRule.SecurityRuleType;
 import com.cloud.utils.net.NetUtils;
 
 
@@ -80,34 +79,30 @@ public class SecurityGroupRulesCmd extends Command {
     Long seqNum;
     Long vmId;
     Long msId;
-    IpPortAndProto [] ruleSet;
-    SecurityRuleType ruleType;
+    IpPortAndProto [] ingressRuleSet;
+    IpPortAndProto [] egressRuleSet;
 
     public SecurityGroupRulesCmd() {
         super();
     }
 
 
-    public SecurityGroupRulesCmd(SecurityRuleType ruleType, String guestIp, String guestMac, String vmName, Long vmId, String signature, Long seqNum, IpPortAndProto[] ruleSet) {
+    public SecurityGroupRulesCmd(String guestIp, String guestMac, String vmName, Long vmId, String signature, Long seqNum, IpPortAndProto[] ingressRuleSet, IpPortAndProto[] egressRuleSet) {
         super();
         this.guestIp = guestIp;
         this.vmName = vmName;
-        this.ruleSet = ruleSet;
+        this.ingressRuleSet = ingressRuleSet;
+        this.egressRuleSet = egressRuleSet;
         this.guestMac = guestMac;
         this.signature = signature;
         this.seqNum = seqNum;
         this.vmId  = vmId;
-        this.ruleType = ruleType;
         if (signature == null) {
             String stringified = stringifyRules();
             this.signature = DigestUtils.md5Hex(stringified);
         }
     }
 
-    public String getRuleType(){
-    	if (this.ruleType == SecurityRuleType.EgressRule) return SecurityRuleType.EgressRule.getType();  
-    	return SecurityRuleType.IngressRule.getType();
-    }
 
     @Override
     public boolean executeInSequence() {
@@ -115,16 +110,24 @@ public class SecurityGroupRulesCmd extends Command {
     }
 
 
-    public IpPortAndProto[] getRuleSet() {
-        return ruleSet;
+    public IpPortAndProto[] getIngressRuleSet() {
+        return ingressRuleSet;
     }
 
 
-    public void setRuleSet(IpPortAndProto[] ruleSet) {
-        this.ruleSet = ruleSet;
+    public void setIngressRuleSet(IpPortAndProto[] ingressRuleSet) {
+        this.ingressRuleSet = ingressRuleSet;
+    }
+
+    public IpPortAndProto[] getEgressRuleSet() {
+        return egressRuleSet;
     }
 
 
+    public void setEgressRuleSet(IpPortAndProto[] egressRuleSet) {
+        this.egressRuleSet = egressRuleSet;
+    }
+    
     public String getGuestIp() {
         return guestIp;
     }
@@ -136,8 +139,16 @@ public class SecurityGroupRulesCmd extends Command {
 
     public String stringifyRules() {
         StringBuilder ruleBuilder = new StringBuilder();
-        for (SecurityGroupRulesCmd.IpPortAndProto ipPandP: getRuleSet()) {
-            ruleBuilder.append(ipPandP.getProto()).append(":").append(ipPandP.getStartPort()).append(":").append(ipPandP.getEndPort()).append(":");
+        for (SecurityGroupRulesCmd.IpPortAndProto ipPandP: getIngressRuleSet()) {
+            ruleBuilder.append("I:").append(ipPandP.getProto()).append(":").append(ipPandP.getStartPort()).append(":").append(ipPandP.getEndPort()).append(":");
+            for (String cidr: ipPandP.getAllowedCidrs()) {
+                ruleBuilder.append(cidr).append(",");
+            }
+            ruleBuilder.append("NEXT");
+            ruleBuilder.append(" ");
+        }
+        for (SecurityGroupRulesCmd.IpPortAndProto ipPandP: getEgressRuleSet()) {
+            ruleBuilder.append("E:").append(ipPandP.getProto()).append(":").append(ipPandP.getStartPort()).append(":").append(ipPandP.getEndPort()).append(":");
             for (String cidr: ipPandP.getAllowedCidrs()) {
                 ruleBuilder.append(cidr).append(",");
             }
@@ -157,8 +168,17 @@ public class SecurityGroupRulesCmd extends Command {
     
     public String stringifyCompressedRules() {
         StringBuilder ruleBuilder = new StringBuilder();
-        for (SecurityGroupRulesCmd.IpPortAndProto ipPandP: getRuleSet()) {
-            ruleBuilder.append(ipPandP.getProto()).append(":").append(ipPandP.getStartPort()).append(":").append(ipPandP.getEndPort()).append(":");
+        for (SecurityGroupRulesCmd.IpPortAndProto ipPandP: getIngressRuleSet()) {
+            ruleBuilder.append("I:").append(ipPandP.getProto()).append(":").append(ipPandP.getStartPort()).append(":").append(ipPandP.getEndPort()).append(":");
+            for (String cidr: ipPandP.getAllowedCidrs()) {
+                //convert cidrs in the form "a.b.c.d/e" to "hexvalue of 32bit ip/e"
+                ruleBuilder.append(compressCidr(cidr)).append(",");
+            }
+            ruleBuilder.append("NEXT");
+            ruleBuilder.append(" ");
+        }
+        for (SecurityGroupRulesCmd.IpPortAndProto ipPandP: getEgressRuleSet()) {
+            ruleBuilder.append("E:").append(ipPandP.getProto()).append(":").append(ipPandP.getStartPort()).append(":").append(ipPandP.getEndPort()).append(":");
             for (String cidr: ipPandP.getAllowedCidrs()) {
                 //convert cidrs in the form "a.b.c.d/e" to "hexvalue of 32bit ip/e"
                 ruleBuilder.append(compressCidr(cidr)).append(",");
@@ -174,8 +194,16 @@ public class SecurityGroupRulesCmd extends Command {
      */
     public String compressStringifiedRules() {
         StringBuilder ruleBuilder = new StringBuilder();
-        for (SecurityGroupRulesCmd.IpPortAndProto ipPandP: getRuleSet()) {
-            ruleBuilder.append(ipPandP.getProto()).append(":").append(ipPandP.getStartPort()).append(":").append(ipPandP.getEndPort()).append(":");
+        for (SecurityGroupRulesCmd.IpPortAndProto ipPandP: getIngressRuleSet()) {
+            ruleBuilder.append("I:").append(ipPandP.getProto()).append(":").append(ipPandP.getStartPort()).append(":").append(ipPandP.getEndPort()).append(":");
+            for (String cidr: ipPandP.getAllowedCidrs()) {
+                ruleBuilder.append(cidr).append(",");
+            }
+            ruleBuilder.append("NEXT");
+            ruleBuilder.append(" ");
+        }
+        for (SecurityGroupRulesCmd.IpPortAndProto ipPandP: getEgressRuleSet()) {
+            ruleBuilder.append("E:").append(ipPandP.getProto()).append(":").append(ipPandP.getStartPort()).append(":").append(ipPandP.getEndPort()).append(":");
             for (String cidr: ipPandP.getAllowedCidrs()) {
                 ruleBuilder.append(cidr).append(",");
             }
@@ -219,7 +247,10 @@ public class SecurityGroupRulesCmd extends Command {
     public int getTotalNumCidrs() {
         //useful for logging
         int count = 0;
-        for (IpPortAndProto i: ruleSet) {
+        for (IpPortAndProto i: ingressRuleSet) {
+            count += i.allowedCidrs.length;
+        }
+        for (IpPortAndProto i: egressRuleSet) {
             count += i.allowedCidrs.length;
         }
         return count;

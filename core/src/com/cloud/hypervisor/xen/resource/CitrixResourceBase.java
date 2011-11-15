@@ -4726,7 +4726,6 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                 "vmName", cmd.getVmName(),
                 "vmIP", cmd.getGuestIp(),
                 "vmMAC", cmd.getGuestMac(),
-                "type", cmd.getRuleType(),
                 "vmID", Long.toString(cmd.getVmId()),
                 "signature", cmd.getSignature(),
                 "seqno", Long.toString(cmd.getSeqNum()),
@@ -4737,7 +4736,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             s_logger.warn("Failed to program network rules for vm " + cmd.getVmName());
             return new SecurityGroupRuleAnswer(cmd, false, "programming network rules failed");
         } else {
-            s_logger.info("Programmed network rules for vm " + cmd.getVmName() + " guestIp=" + cmd.getGuestIp() + ", numrules=" + cmd.getRuleSet().length);
+            s_logger.info("Programmed network rules for vm " + cmd.getVmName() + " guestIp=" + cmd.getGuestIp() + ",ingress numrules=" + cmd.getIngressRuleSet().length + ",egress numrules=" + cmd.getEgressRuleSet().length);
             return new SecurityGroupRuleAnswer(cmd);
         }
     }

@@ -1631,7 +1631,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             return new SecurityGroupRuleAnswer(cmd, false, e.toString());
         }
         
-    	boolean result = add_network_rules(cmd.getRuleType(), cmd.getVmName(),
+    	boolean result = add_network_rules(cmd.getVmName(),
     			Long.toString(cmd.getVmId()), 
     			cmd.getGuestIp(),cmd.getSignature(), 
     			Long.toString(cmd.getSeqNum()), 
@@ -1642,7 +1642,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     		s_logger.warn("Failed to program network rules for vm " + cmd.getVmName());
     		return new SecurityGroupRuleAnswer(cmd, false, "programming network rules failed");
     	} else {
-    		s_logger.debug("Programmed network rules for vm " + cmd.getVmName() + " guestIp=" + cmd.getGuestIp() + ", numrules=" + cmd.getRuleSet().length);
+    		s_logger.debug("Programmed network rules for vm " + cmd.getVmName() + " guestIp=" + cmd.getGuestIp() + ",ingress numrules=" + cmd.getIngressRuleSet().length + ",egress numrules=" + cmd.getEgressRuleSet().length);
     		return new SecurityGroupRuleAnswer(cmd);
     	}
     }
@@ -3508,7 +3508,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	return true;
     }
     
-    private boolean add_network_rules(String ruleType, String vmName, String vmId, String guestIP, String sig, String seq, String mac, String rules, String vif, String brname) {
+    private boolean add_network_rules( String vmName, String vmId, String guestIP, String sig, String seq, String mac, String rules, String vif, String brname) {
     	if (!_can_bridge_firewall) {
             return false;
         }
@@ -3519,7 +3519,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	cmd.add("--vmname", vmName);
     	cmd.add("--vmid", vmId);
     	cmd.add("--vmip", guestIP);
-    	cmd.add("--ruletype", ruleType);
     	cmd.add("--sig", sig);
     	cmd.add("--seq", seq);
     	cmd.add("--vmmac", mac);

@@ -144,8 +144,7 @@ public class SecurityGroupManagerImpl2 extends SecurityGroupManagerImpl{
                         continue;
                     }
                     work.setLogsequenceNumber(rulesetLog.getLogsequence());
-                    sendRulesetUpdates(work, SecurityRuleType.IngressRule);
-                    sendRulesetUpdates(work, SecurityRuleType.EgressRule);
+                    sendRulesetUpdates(work);
                     _mBean.logUpdateDetails(work.getInstanceId(), work.getLogsequenceNumber());
                 }catch (Exception e) {
                     s_logger.error("Problem during SG work " + work, e);
@@ -159,7 +158,7 @@ public class SecurityGroupManagerImpl2 extends SecurityGroupManagerImpl{
 
     }
     
-    public void sendRulesetUpdates(SecurityGroupWork work, SecurityRuleType ruleType){
+    public void sendRulesetUpdates(SecurityGroupWork work){
         Long userVmId = work.getInstanceId();
         UserVm vm = _userVMDao.findById(userVmId);
 
@@ -167,16 +166,17 @@ public class SecurityGroupManagerImpl2 extends SecurityGroupManagerImpl{
             if (s_logger.isTraceEnabled()) { 
                 s_logger.trace("SecurityGroupManager v2: found vm, " + userVmId + " state=" + vm.getState());
             }
-            Map<PortAndProto, Set<String>> rules = generateRulesForVM(userVmId, ruleType);
+            Map<PortAndProto, Set<String>> ingressRules = generateRulesForVM(userVmId, SecurityRuleType.IngressRule);
+            Map<PortAndProto, Set<String>> egressRules = generateRulesForVM(userVmId, SecurityRuleType.EgressRule);
             Long agentId = vm.getHostId();
             if (agentId != null) {
-                SecurityGroupRulesCmd cmd = generateRulesetCmd(ruleType, vm.getInstanceName(), vm.getPrivateIpAddress(), 
+                SecurityGroupRulesCmd cmd = generateRulesetCmd(vm.getInstanceName(), vm.getPrivateIpAddress(), 
                         vm.getPrivateMacAddress(), vm.getId(), null, 
-                        work.getLogsequenceNumber(), rules);
+                        work.getLogsequenceNumber(), ingressRules, egressRules);
                 cmd.setMsId(_serverId);
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("SecurityGroupManager v2: sending ruleset update for vm " + vm.getInstanceName() + 
-                                   ": num rules=" + cmd.getRuleSet().length + " num cidrs=" + cmd.getTotalNumCidrs() + " sig=" + cmd.getSignature());
+                                   ":ingress num rules=" + cmd.getIngressRuleSet().length + ":egress num rules=" + cmd.getEgressRuleSet().length + " num cidrs=" + cmd.getTotalNumCidrs() + " sig=" + cmd.getSignature());
                 }
                 Commands cmds = new Commands(cmd);
                 try {
