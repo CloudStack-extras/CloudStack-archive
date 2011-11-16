@@ -110,42 +110,25 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
     }
 
     @Override
-    public void execute() throws ResourceAllocationException,
-            ResourceUnavailableException {
-        boolean success = true;
-        Exception error = null;
+    public void execute() throws ResourceAllocationException, ResourceUnavailableException {
         StickinessPolicy policy = null;
         try {
             UserContext.current().setEventDetails("Rule Id: " + getEntityId());
-
-            success = _lbService.applyLBStickinessPolicy(getLbRuleId());
-            if (success) {
-                // State might be different after the rule is applied, so get new
-                // object here
+            if (_lbService.applyLBStickinessPolicy(getLbRuleId())) {
+                // State might be different after the rule is applied, so get new object here
                 policy = _entityMgr.findById(StickinessPolicy.class, getEntityId());
                 LoadBalancer lb = _lbService.findById(policy.getLoadBalancerId());
-                LBStickinessResponse spResponse = _responseGenerator
-                        .createLBStickinessPolicyResponse(policy, lb);
+                LBStickinessResponse spResponse = _responseGenerator.createLBStickinessPolicyResponse(policy, lb);
                 setResponseObject(spResponse);
                 spResponse.setResponseName(getCommandName());
             }
-        } catch (Exception e) {
-            error = e;
-            s_logger.warn("Exception: ", e);
-        } finally {
-            if (!success || policy == null) {
-                // no need to apply the rule on the backend as it exists in the
-                // db only
+            else {
                 _lbService.deleteLBStickinessPolicy(getEntityId());
-                if (error == null) {
-                    throw new ServerApiException(BaseCmd.INTERNAL_ERROR,
-                            "Failed to create stickiness policy");
-                } else {
-                    throw new ServerApiException(BaseCmd.INTERNAL_ERROR,
-                            "Failed to create stickiness policy due to:"+ error);
-                }
             }
-        }
+        } catch (Exception e) {
+            _lbService.deleteLBStickinessPolicy(getEntityId());
+            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to create stickiness policy due to " + e.getMessage());
+        } 
     }
 
     @Override
