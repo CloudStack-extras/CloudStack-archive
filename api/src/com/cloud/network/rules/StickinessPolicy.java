@@ -33,10 +33,8 @@ public interface StickinessPolicy {
 
     public String getMethodName();
 
-    public String getDBParams();
+    public String getParamsInDB(); /* get params in Database */
 
     public boolean isRevoke();
-
-    public Map<String, String> getParams();
 
 }

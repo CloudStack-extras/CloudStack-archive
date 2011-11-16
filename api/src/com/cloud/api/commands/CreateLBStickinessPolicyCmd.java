@@ -58,10 +58,10 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
     private String description;
 
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = true, description = "name of the LB Stickiness policy")
-    private String LBStickinessPolicyName;
+    private String lbStickinessPolicyName;
 
     @Parameter(name = ApiConstants.METHOD_NAME, type = CommandType.STRING, required = true, description = "name of the LB Stickiness policy method, possible values can be obtained from ListNetworks API ")
-    private String StickinessMethodName;
+    private String stickinessMethodName;
 
     @Parameter(name = ApiConstants.PARAM_LIST, type = CommandType.MAP, description = "param list. Example: param[0].name=cookiename&param[0].value=LBCookie ")
     private Map<String, String> paramList;
@@ -79,11 +79,11 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
     }
 
     public String getLBStickinessPolicyName() {
-        return LBStickinessPolicyName;
+        return lbStickinessPolicyName;
     }
 
     public String getStickinessMethodName() {
-        return StickinessMethodName;
+        return stickinessMethodName;
     }
 
     public Map<String, String> getparamList() {
@@ -101,14 +101,12 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
 
     @Override
     public long getEntityOwnerId() {
-        LoadBalancer lb = _entityMgr
-                .findById(LoadBalancer.class, getLbRuleId());
-        if (lb == null) {
-            return Account.ACCOUNT_ID_SYSTEM; // bad id given, parent this
-                                              // command to SYSTEM so ERROR
-                                              // events are tracked
+        Account account = UserContext.current().getCaller();
+        if (account != null) {
+            return account.getId();
         }
-        return lb.getAccountId();
+
+        return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are tracked
     }
 
     @Override
@@ -121,17 +119,19 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
             UserContext.current().setEventDetails("Rule Id: " + getEntityId());
 
             success = _lbService.applyLBStickinessPolicy(getLbRuleId());
-
-            // State might be different after the rule is applied, so get new
-            // object here
-            policy = _entityMgr.findById(StickinessPolicy.class, getEntityId());
-            LoadBalancer lb = _lbService.findById(policy.getLoadBalancerId());
-            LBStickinessResponse spResponse = _responseGenerator
-                    .createLBStickinessPolicyResponse(policy, lb);
-            setResponseObject(spResponse);
-            spResponse.setResponseName(getCommandName());
+            if (success) {
+                // State might be different after the rule is applied, so get new
+                // object here
+                policy = _entityMgr.findById(StickinessPolicy.class, getEntityId());
+                LoadBalancer lb = _lbService.findById(policy.getLoadBalancerId());
+                LBStickinessResponse spResponse = _responseGenerator
+                        .createLBStickinessPolicyResponse(policy, lb);
+                setResponseObject(spResponse);
+                spResponse.setResponseName(getCommandName());
+            }
         } catch (Exception e) {
             error = e;
+            s_logger.warn("Exception: ", e);
         } finally {
             if (!success || policy == null) {
                 // no need to apply the rule on the backend as it exists in the

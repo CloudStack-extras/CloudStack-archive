@@ -287,12 +287,7 @@ public class VirtualRoutingResource implements Manager {
         try {
             String cfgFilePath = "";
             LoadBalancerConfigurator cfgtr = new HAProxyConfigurator();
-            String[] config;
-            try {
-                config = cfgtr.generateConfiguration(cmd);
-            } catch ( Exception e) {
-                return new Answer(cmd, false, e.getMessage());
-            }
+            String[] config = cfgtr.generateConfiguration(cmd);
             String[][] rules = cfgtr.generateFwRules(cmd);
             if (routerIp != null) {
                 tmpCfgFile = File.createTempFile(routerIp.replace('.', '_'), "cfg");

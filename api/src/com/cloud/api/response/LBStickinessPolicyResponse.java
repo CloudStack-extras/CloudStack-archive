@@ -96,7 +96,7 @@ public class LBStickinessPolicyResponse extends BaseResponse {
 
     public LBStickinessPolicyResponse(StickinessPolicy stickinesspolicy) {
         this.name = stickinesspolicy.getName();
-        String dbparams = stickinesspolicy.getDBParams();
+        String paramsInDB = stickinesspolicy.getParamsInDB();
         this.methodName = stickinesspolicy.getMethodName();
         this.description = stickinesspolicy.getDescription();
         if (stickinesspolicy.isRevoke()) {
@@ -105,8 +105,12 @@ public class LBStickinessPolicyResponse extends BaseResponse {
         if (stickinesspolicy.getId() != 0)
             this.id = stickinesspolicy.getId();
 
+        /* Get the param and values from the database(dbparams) and fill the response object 
+         * Format :  param1,value1,param2,value2,param3,value3 
+         *  Example for App cookie method:  "name,cookapp,length,12,holdtime,3h" . Here 3 parameters name,length and holdtime with corresponsing values.
+         * */
         String[] temp;
-        temp = dbparams.split("[,]");
+        temp = paramsInDB.split("[,]");
         Map<String, String> paramList =  new HashMap<String, String>();
         for (int i = 0; i < (temp.length - 1); i = i + 2) {
             StringBuilder sb = new StringBuilder();

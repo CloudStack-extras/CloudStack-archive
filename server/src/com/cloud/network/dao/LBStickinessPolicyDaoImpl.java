@@ -45,9 +45,7 @@ public class LBStickinessPolicyDaoImpl extends
     public void remove(long loadBalancerId, Boolean revoke) {
         SearchCriteria<LBStickinessPolicyVO> sc = createSearchCriteria();
         sc.addAnd("loadBalancerId", SearchCriteria.Op.EQ, loadBalancerId);
-        if (revoke != null) {
-            sc.addAnd("revoke", SearchCriteria.Op.EQ, revoke);
-        }
+        sc.addAnd("revoke", SearchCriteria.Op.EQ, revoke);
 
         expunge(sc);
     }

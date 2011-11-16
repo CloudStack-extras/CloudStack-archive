@@ -56,14 +56,19 @@ public class LBStickinessPolicyVO implements StickinessPolicy {
     private String methodName;
 
     @Column(name = "params")
-    private String paramsInDb;
+    private String paramsInDB;
 
     @Column(name = "revoke")
     private boolean revoke = false;
 
     protected LBStickinessPolicyVO() {
     }
-
+/*  get the params in Map format and converts in to string format and stores in DB
+ *  paramsInDB represent the string stored in database :
+ *  Format :  param1,value1,param2,value2,param3,value3 
+ *  Example for App cookie method:  "name,cookapp,length,12,holdtime,3h" . Here 3 parameters name,length and holdtime with corresponsing values.
+ * 
+ */
     public LBStickinessPolicyVO(long loadBalancerId, String name,
             String methodName, Map<String, String> paramList, String description) {
         this.loadBalancerId = loadBalancerId;
@@ -86,9 +91,9 @@ public class LBStickinessPolicyVO implements StickinessPolicy {
                 paramValue =  paramKVpair.get("value");
                 sb.append("," + paramName + "," + paramValue);
             }
-            paramsInDb = sb.toString();
+            paramsInDB = sb.toString();
         } else {
-            paramsInDb = "";
+            paramsInDB = "";
         }
         this.description = description;
     }
@@ -113,12 +118,8 @@ public class LBStickinessPolicyVO implements StickinessPolicy {
         return methodName;
     }
 
-    public String getDBParams() {
-        return paramsInDb;
-    }
-
-    public Map getParams() {
-        return null;
+    public String getParamsInDB() {
+        return paramsInDB;
     }
 
     public boolean isRevoke() {

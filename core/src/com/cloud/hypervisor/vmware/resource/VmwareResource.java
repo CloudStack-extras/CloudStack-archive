@@ -593,12 +593,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
         assert(controlIp != null);
 
         LoadBalancerConfigurator cfgtr = new HAProxyConfigurator();
-        String[] config;
-        try {
-            config = cfgtr.generateConfiguration(cmd);  
-        }catch ( Exception e) {
-            return new Answer(cmd, false, e.getMessage());
-        }
+        String[] config = cfgtr.generateConfiguration(cmd);
 
         String[][] rules = cfgtr.generateFwRules(cmd);
         String tmpCfgFilePath = "/tmp/" + routerIp.replace('.', '_') + ".cfg";

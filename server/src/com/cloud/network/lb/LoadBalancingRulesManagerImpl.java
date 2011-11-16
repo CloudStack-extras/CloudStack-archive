@@ -147,8 +147,6 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @Inject
     ElasticLoadBalancerManager _elbMgr;
     @Inject
-    LoadBalancingRulesManager _lbMgr;
-    @Inject
     NetworkDao _networkDao;
     @Inject
     FirewallRulesDao _firewallDao;
@@ -156,14 +154,13 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 	private String getLBStickinessCapability(long networkid) {
 		NetworkVO network = _networkDao.findById(networkid);
 
-		Map<Service, Map<Capability, String>> serviceCapabilitiesMap = ApiDBUtils
-				.getNetworkCapabilities(network.getNetworkOfferingId(),
-						network.getDataCenterId());
+		Map<Service, Map<Capability, String>> serviceCapabilitiesMap = _networkMgr.getNetworkCapabilities(network.getNetworkOfferingId(),
+                network.getDataCenterId());
 		if (serviceCapabilitiesMap != null) {
 			for (Service service : serviceCapabilitiesMap.keySet()) {
 				ServiceResponse serviceResponse = new ServiceResponse();
 				serviceResponse.setName(service.getName());
-				if ("Lb".equals(service.getName())) {
+				if ("Lb".equalsIgnoreCase(service.getName())) {
 					Map<Capability, String> serviceCapabilities = serviceCapabilitiesMap
 							.get(service);
 					if (serviceCapabilities != null) {
@@ -183,22 +180,24 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @Override
     @DB
     public StickinessPolicy createLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws NetworkRuleConflictException {
-    	
+        UserContext caller = UserContext.current();
+        
     	/* Validation : check corresponding load balancer rule exist */
         LoadBalancerVO loadBalancer = _lbDao.findById(cmd.getLbRuleId());
         if (loadBalancer == null) {
-            throw new InvalidParameterValueException("Failed: tLB rule not present " + cmd.getLbRuleId());
+            throw new InvalidParameterValueException("Failed: LB rule id: "+ cmd.getLbRuleId() +" not present ");
         }
-
+        
+        _accountMgr.checkAccess(caller.getCaller(), null, loadBalancer);
         if (loadBalancer.getState() == FirewallRule.State.Revoke) {
-            throw new InvalidParameterValueException("Failed:  LB rule is in deleting state:" + cmd.getLbRuleId() ); 
+            throw new InvalidParameterValueException("Failed:  LB rule id:" + cmd.getLbRuleId() +" is in deleting state: "); 
         }
         /* Validation : check for valid Method name and params */
         List <LbStickinessMethod> stickinessMethodList = getStickinessMethods(loadBalancer.getNetworkId());
         boolean methodMatch = false;
         
         if (stickinessMethodList == null) {
-            throw new InvalidParameterValueException("Failed:  No Stickiness method available for :" + cmd.getLbRuleId() );   
+            throw new InvalidParameterValueException("Failed:  No Stickiness method available for LB rule:" + cmd.getLbRuleId() );   
         }
         for (LbStickinessMethod method : stickinessMethodList) {
             if (method.getMethodName().equalsIgnoreCase(cmd.getStickinessMethodName()))
@@ -210,7 +209,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         		Map<String,String> tempParamList = new HashMap<String, String>(); 
         		        		    
         		
-		    	/*validation-1: check for any extra params that are not required by the policymethod(capability)  */
+		    	/*validation-1: check for any extra params that are not required by the policymethod(capability), FIXME: make the below loop simple without using raw data type */
                 if (apiParamList != null) {
                     Collection userGroupCollection = apiParamList.values();
                     Iterator iter = userGroupCollection.iterator();
@@ -232,7 +231,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                                 break;
                             }
                         }
-                        if (found == false) {
+                        if (!found) {
                             throw new InvalidParameterValueException(
                                     "Failed :This Stickiness policy does not support param name :"
                                             + paramName);
@@ -263,7 +262,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     	/* Validation : check for the multiple policies to the rule id */
         List<LBStickinessPolicyVO> stickinessPolicies = _lb2stickinesspoliciesDao.listByLoadBalancerId(cmd.getLbRuleId(), false);
         if  (stickinessPolicies.size() > 0) {
-            throw new InvalidParameterValueException("Failed to create to load balancer stickipolcy: Already policy attached " + cmd.getLbRuleId() );
+            throw new InvalidParameterValueException("Failed to create Stickiness policy: Already policy attached " + cmd.getLbRuleId() );
         }
 
         /*Finally Insert into DB */
@@ -765,7 +764,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
         String dstIp = null;
         for (LBStickinessPolicyVO sDbPolicy : sDbpolicies) {
-        	LbStickinessPolicy sPolicy = new LbStickinessPolicy(sDbPolicy.getMethodName(), sDbPolicy.getDBParams(), sDbPolicy.isRevoke());
+        	LbStickinessPolicy sPolicy = new LbStickinessPolicy(sDbPolicy.getMethodName(), sDbPolicy.getParamsInDB(), sDbPolicy.isRevoke());
         	stickinessPolicies.add(sPolicy);
         }
         return stickinessPolicies;
@@ -908,8 +907,16 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     }
 
     @Override
-    public List<LBStickinessPolicyVO> searchForLBStickinessPolicies(ListLBStickinessPoliciesCmd cmd) {
-    
+    public List<LBStickinessPolicyVO> searchForLBStickinessPolicies(ListLBStickinessPoliciesCmd cmd) throws PermissionDeniedException {
+        Account caller = UserContext.current().getCaller();
+        Long loadBalancerId = cmd.getLbRuleId();
+        LoadBalancerVO loadBalancer = _lbDao.findById(loadBalancerId);
+        if (loadBalancer == null) {
+            return null;
+        }
+        
+        _accountMgr.checkAccess(caller, null, loadBalancer);
+        
         List<LBStickinessPolicyVO> sDbpolicies = _lb2stickinesspoliciesDao.listByLoadBalancerId(cmd.getLbRuleId());
         
         return sDbpolicies;
@@ -1014,7 +1021,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         List<LoadBalancingRule> lbRules = new ArrayList<LoadBalancingRule>();
         for (LoadBalancerVO lb : lbs) {
             List<LbDestination> dstList = getExistingDestinations(lb.getId());
-            List<LbStickinessPolicy> policyList = _lbMgr.getStickinessPolicies(lb.getId());
+            List<LbStickinessPolicy> policyList = this.getStickinessPolicies(lb.getId());
             LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList, policyList);
             lbRules.add(loadBalancing);
         }
