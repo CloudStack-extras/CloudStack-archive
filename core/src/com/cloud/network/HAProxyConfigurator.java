@@ -24,6 +24,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.log4j.Logger;
+
 import com.cloud.utils.Pair;
 
 import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
@@ -31,6 +34,7 @@ import com.cloud.agent.api.to.LoadBalancerTO;
 import com.cloud.agent.api.to.PortForwardingRuleTO;
 import com.cloud.agent.api.to.LoadBalancerTO.DestinationTO;
 import com.cloud.agent.api.to.LoadBalancerTO.StickinessPolicyTO;
+import com.cloud.agent.resource.virtualnetwork.VirtualRoutingResource;
 import com.cloud.network.rules.LbStickinessMethod.StickinessMethodType;
 import com.cloud.utils.net.NetUtils;
 
@@ -41,16 +45,26 @@ import com.cloud.utils.net.NetUtils;
  */
 public class HAProxyConfigurator implements LoadBalancerConfigurator {
 
+    private static final Logger s_logger = Logger.getLogger(HAProxyConfigurator.class);
     private static String[] globalSection = { "global",
-            "\tlog 127.0.0.1:3914   local0 warning", "\tmaxconn 4096",
-            "\tchroot /var/lib/haproxy", "\tuser haproxy", "\tgroup haproxy",
+            "\tlog 127.0.0.1:3914   local0 warning", 
+            "\tmaxconn 4096",
+            "\tchroot /var/lib/haproxy", 
+            "\tuser haproxy",
+            "\tgroup haproxy",
             "\tdaemon" };
 
-    private static String[] defaultsSection = { "defaults", "\tlog     global",
-            "\tmode    tcp", "\toption  dontlognull", "\tretries 3",
-            "\toption redispatch", "\toption forwardfor",
-            "\toption forceclose", "\ttimeout connect    5000",
-            "\ttimeout client     50000", "\ttimeout server     50000" };
+    private static String[] defaultsSection = { "defaults", 
+            "\tlog     global",
+            "\tmode    tcp", 
+            "\toption  dontlognull", 
+            "\tretries 3",
+            "\toption redispatch", 
+            "\toption forwardfor",
+            "\toption forceclose", 
+            "\ttimeout connect    5000",
+            "\ttimeout client     50000", 
+            "\ttimeout server     50000" };
 
     private static String[] defaultListen = { "listen  vmops 0.0.0.0:9",
             "\toption transparent" };
@@ -137,9 +151,49 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
         result.add(getBlankLine());
         return result;
     }
-
     /*
+     *   This function detects numbers like 12 32h 42m .. etc,. 
+     *   It can be used to detect:
+     *     1) plain  number  like 12 13 14 
+     *     2) time or size like 12h 34m 45k 54m , here last character is non-digit but from known characters .  
+     * 
+     */
+    private boolean containsOnlyNumbers(String str, String endChar) {
+           
+        boolean ret = true;
+        boolean completed = false;
+        
+       /* It can't contain only numbers if it's null or empty...
+        */
+        if (str == null || str.length() == 0)
+            return false;
+        if (endChar != null) ret = false; // this make sure atleast one number digit appears in time
+        for (int i = 0; i < str.length(); i++) {
+            if (completed)  return false; // non-number character is already detected, so we should not expect any character .
+            if (endChar != null) {
+                char c = str.charAt(i);
 
+                for (int j = 0; j < endChar.length(); j++) {
+                    if (str.charAt(i) == endChar.charAt(j)) {
+                        completed = true;
+                        break;
+                    }
+                }
+                if (completed) continue;
+            }
+            /* If we find a non-digit character we return false.
+             */
+            if (!Character.isDigit(str.charAt(i))) {
+                return false; 
+            } else {
+                ret = true;
+            }    
+        }
+
+        if (endChar != null && !completed) return false; 
+        return ret;
+    }
+    /*
 cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
               [ postonly ] [ domain <domain> ]*
   Enable cookie-based persistence in a backend.
@@ -303,8 +357,12 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
   Example :
         appsession JSESSIONID len 52 timeout 3h
      */
-    private String getLbSubRuleForStickiness(LoadBalancerTO lbTO) throws Exception{
+    private String getLbSubRuleForStickiness(LoadBalancerTO lbTO) {
         int i = 0;
+        /* This is timeformat as per the haproxy doc, d=day, h=hour m=minute, s=seconds
+        * example: 20s 30m 400h 20d
+        */
+        String timeEndChar = "dhms";
         
         if (lbTO.getStickinessPolicies() == null)
             return null;
@@ -324,12 +382,12 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
              */
             if (StickinessMethodType.LBCookieBased.getName().equalsIgnoreCase(stickinessPolicy.getMethodName())) {
                 /* Default Values */
-                String name = null; /* required */
-                String mode ="insert "; /* optional*/
-                Boolean indirect = false; /* optional*/
-                Boolean nocache = false; /* optional*/
-                Boolean postonly = false; /* optional*/       
-                StringBuilder domainSb = null ; /* optional */
+                String name = null; // optional 
+                String mode ="insert "; // optional
+                Boolean indirect = false; // optional
+                Boolean nocache = false; // optional
+                Boolean postonly = false; // optional       
+                StringBuilder domainSb = null ; // optional 
 
                 for(Pair<String,String> paramKV :paramsList){
                     String key = paramKV.first();
@@ -348,13 +406,16 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                     if ("postonly".equalsIgnoreCase(key)) postonly = true;
                         
                 }
-                if (name == null)  {/* re-check all mandatory params */
-                    /*
-                     * Not supposed to reach here, validation of params are
-                     * done at the higher layer
-                     */
-                    throw new Exception("Haproxy: name is mandatory \n");
+                if (name == null) {// re-check all mandatory params 
+                    StringBuilder tempSb = new StringBuilder();
+                    String srcip = lbTO.getSrcIp();
+                    if (srcip == null)
+                        srcip = "TESTCOOKIE";
+                    tempSb.append("lbcooki_").append(srcip.hashCode())
+                            .append("_").append(lbTO.getSrcPort());
+                    name = tempSb.toString();
                 }
+                
                 sb.append("\t").append("cookie ").append(name).append(" ").append(mode).append(" ");
                 if (indirect) sb.append("indirect ");
                 if (nocache) sb.append("nocache ");
@@ -363,8 +424,8 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                         
             } else if (StickinessMethodType.SourceBased.getName().equalsIgnoreCase(stickinessPolicy.getMethodName())) {
                 /* Default Values */
-                String tablesize = "200k"; /* optional */
-                String expire = "30m"; /* optional */
+                String tablesize = "200k"; // optional 
+                String expire = "30m"; // optional 
 
                 /* overwrite default values with the stick parameters */
                 for(Pair<String,String> paramKV :paramsList){
@@ -373,7 +434,15 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                     if ("tablesize".equalsIgnoreCase(key)) tablesize = value;
                     if ("expire".equalsIgnoreCase(key)) expire = value;             
                 }
-
+                
+                if ((expire != null) && !containsOnlyNumbers(expire, timeEndChar)) {
+                    s_logger.warn("Haproxy stickiness: error swallowed: " + StickinessMethodType.SourceBased.getName() + " expire is not in timeformat:" + expire);
+                    return null;
+                } 
+                if ((tablesize != null) && !containsOnlyNumbers(tablesize, "kmg")) {
+                    s_logger.warn("Haproxy stickiness: error swallowed: " + StickinessMethodType.SourceBased.getName() + " tablesize is not in size format:" + tablesize);
+                    return null;
+                } 
                 sb.append("\t").append("stick-table type ip size ")
                         .append(tablesize).append(" expire ").append(expire);
                 sb.append("\n\t").append("stick on src");
@@ -384,12 +453,12 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                  * <path-parameters|query-string>]
                  */
                 /* example: appsession JSESSIONID len 52 timeout 3h */
-                String name = null; /* required */
-                String length = null; /* required */
-                String holdtime = null; /* required */
-                String mode = null; /* optional */
-                Boolean requestlearn = false; /* optional */
-                Boolean prefix = false; /* optional */
+                String name = null; // required 
+                String length = null; // required 
+                String holdtime = null; // required 
+                String mode = null; // optional 
+                Boolean requestlearn = false; // optional 
+                Boolean prefix = false; // optional 
 
                 for(Pair<String,String> paramKV :paramsList){
                     String key = paramKV.first();
@@ -403,11 +472,22 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                 }
                 if ((name == null) || (length == null) || (holdtime == null)) {
                     /*
+                     * Error is silently swallowed.
                      * Not supposed to reach here, validation of params are
                      * done at the higher layer
                      */
-                    throw new Exception("Haproxy: Appcookie - name/length/holdtime are mandatory params\n");
+                    s_logger.warn("Haproxy stickiness: error swallowed:  " + StickinessMethodType.AppCookieBased.getName() + " length,holdtime or name is null");
+                    return null;
                 }
+                
+                if (!containsOnlyNumbers(length, null)) {
+                    s_logger.warn("Haproxy stickiness: error swallowed: " + StickinessMethodType.AppCookieBased.getName() + " length is not a number:" + length);
+                    return null;
+                }
+                if (!containsOnlyNumbers(holdtime, timeEndChar)) {
+                    s_logger.warn("Haproxy stickiness: error swallowed: " + StickinessMethodType.AppCookieBased.getName() + "holdtime is not in timeformat:" + holdtime);
+                    return null;
+                }   
                 sb.append("\t").append("appsession ").append(name)
                         .append(" len ").append(length).append(" timeout ")
                         .append(holdtime).append(" ");
@@ -416,18 +496,20 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                 if (mode != null) sb.append("mode ").append(mode).append(" ");
 
             } else {
-                /*
+                /* 
+                 * Error is silently swallowed.
                  * Not supposed to reach here, validation of methods are
                  * done at the higher layer
                  */
-                throw new Exception("Haproxy: Not supported Method\n");
+                s_logger.warn("Haproxy stickiness: error swallowed : invalid method ");
+                return null;
             }
         }
         if (i == 0) return null;
         return sb.toString();
     }
 
-    private List<String> getRulesForPool(LoadBalancerTO lbTO) throws Exception {
+    private List<String> getRulesForPool(LoadBalancerTO lbTO)  {
         StringBuilder sb = new StringBuilder();
         String poolName = sb.append(lbTO.getSrcIp().replace(".", "_"))
                 .append('-').append(lbTO.getSrcPort()).toString();
@@ -506,7 +588,7 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
     }
 
     @Override
-    public String[] generateConfiguration(LoadBalancerConfigCommand lbCmd) throws Exception  {
+    public String[] generateConfiguration(LoadBalancerConfigCommand lbCmd)   {
         List<String> result = new ArrayList<String>();
 
         result.addAll(Arrays.asList(globalSection));
@@ -555,13 +637,8 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
         result.add(getBlankLine());
 
         for (LoadBalancerTO lbTO : lbCmd.getLoadBalancers()) {
-            List<String> poolRules;
-            try {
-                poolRules = getRulesForPool(lbTO);
-                result.addAll(poolRules);
-            } catch (Exception e) {
-                throw  e;
-            }
+            List<String> poolRules = getRulesForPool(lbTO);
+            result.addAll(poolRules);
         }
 
         return result.toArray(new String[result.size()]);

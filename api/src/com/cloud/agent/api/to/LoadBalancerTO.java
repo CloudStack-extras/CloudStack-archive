@@ -55,8 +55,8 @@ public class LoadBalancerTO {
     public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> arg_destinations, List<LbStickinessPolicy> stickinessPolicies) {
         this(srcIp,srcPort,protocol,algorithm,revoked,alreadyAdded,arg_destinations);
         this.stickinessPolicies = null;
-        if (stickinessPolicies != null && stickinessPolicies.size()>0)
-        {
+        if (stickinessPolicies != null && stickinessPolicies.size()>0) {
+
     	    this.stickinessPolicies = new StickinessPolicyTO[stickinessPolicies.size()];
             int i = 0;
             for (LbStickinessPolicy stickinesspolicy : stickinessPolicies) {
@@ -124,11 +124,11 @@ public class LoadBalancerTO {
             this._methodName = methodName;
             this._paramsDB = paramsDB;
             this._paramsList = new ArrayList<Pair<String, String>>();
-            String[] temp;
-            temp = paramsDB.split("[,]");
+            String[] temp = paramsDB.split("[,]");;
+             
      
             for (int i = 0; i < (temp.length - 1); i = i + 2) {
-                this._paramsList.add(new Pair(temp[i], temp[i + 1]));
+                this._paramsList.add(new Pair<String, String>(temp[i], temp[i + 1]));
             }
         }
     }

@@ -950,7 +950,7 @@ public class ElasticLoadBalancerManagerImpl implements
         for (LoadBalancerVO lb : lbs) {
             List<LbDestination> dstList = _lbMgr.getExistingDestinations(lb.getId());
             List<LbStickinessPolicy> policyList = _lbMgr.getStickinessPolicies(lb.getId());
-            LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList,policyList);
+            LoadBalancingRule loadBalancing = new LoadBalancingRule(lb, dstList, policyList);
             lbRules.add(loadBalancing);
         }
 
