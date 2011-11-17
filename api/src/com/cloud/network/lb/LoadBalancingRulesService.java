@@ -56,7 +56,7 @@ public interface LoadBalancingRulesService {
      */
     public StickinessPolicy createLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws NetworkRuleConflictException;
     
-    public boolean applyLBStickinessPolicy(long lbRuleId) throws NetworkRuleConflictException;
+    public boolean applyLBStickinessPolicy(long lbRuleId);
     
     boolean deleteLBStickinessPolicy(long stickinessPolicyId);
     /**

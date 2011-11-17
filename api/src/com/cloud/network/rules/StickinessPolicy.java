@@ -16,7 +16,11 @@
  *
  */
 package com.cloud.network.rules;
-import java.util.Map;
+
+import java.util.List;
+
+import com.cloud.utils.Pair;
+
 
 /**
  * Definition for a StickinessPolicy 
@@ -33,8 +37,8 @@ public interface StickinessPolicy {
 
     public String getMethodName();
 
-    public String getParamsInDB(); /* get params in Database */
-
     public boolean isRevoke();
+    
+    public List<Pair<String, String>> getParams(); /* get params in Map <string,String> format */
 
 }

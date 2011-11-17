@@ -280,11 +280,12 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @Override
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_CREATE, eventDescription = "create lb stickinesspolicy to load balancer", async = true)
-    public boolean applyLBStickinessPolicy(long lbRuleId) throws NetworkRuleConflictException {
+    public boolean applyLBStickinessPolicy(long lbRuleId) {
         try {
             applyLoadBalancerConfig(lbRuleId);
         } catch (ResourceUnavailableException e) {
-            s_logger.warn("Unable to apply the load balancer config because resource is unavaliable.", e);
+            s_logger.warn("Unable to apply Stickiness policy to the lb rule: " + lbRuleId + " because resource is unavaliable:", e);
+            return false;
         }
         return true;
     }
@@ -764,7 +765,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
         String dstIp = null;
         for (LBStickinessPolicyVO sDbPolicy : sDbpolicies) {
-        	LbStickinessPolicy sPolicy = new LbStickinessPolicy(sDbPolicy.getMethodName(), sDbPolicy.getParamsInDB(), sDbPolicy.isRevoke());
+        	LbStickinessPolicy sPolicy = new LbStickinessPolicy(sDbPolicy.getMethodName(), sDbPolicy.getParams(), sDbPolicy.isRevoke());
         	stickinessPolicies.add(sPolicy);
         }
         return stickinessPolicies;

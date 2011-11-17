@@ -19,6 +19,7 @@
 
 package com.cloud.api.commands;
 
+
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -41,6 +42,7 @@ import com.cloud.user.UserContext;
 
 
 @Implementation(description = "Creates a Load Balancer stickiness policy ", responseObject = LBStickinessResponse.class)
+@SuppressWarnings("rawtypes")
 public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
     public static final Logger s_logger = Logger
             .getLogger(CreateLBStickinessPolicyCmd.class.getName());
@@ -64,7 +66,7 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
     private String stickinessMethodName;
 
     @Parameter(name = ApiConstants.PARAM_LIST, type = CommandType.MAP, description = "param list. Example: param[0].name=cookiename&param[0].value=LBCookie ")
-    private Map<String, String> paramList;
+    private Map paramList;
 
     // ///////////////////////////////////////////////////
     // ///////////////// Accessors ///////////////////////
@@ -112,9 +114,11 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
     @Override
     public void execute() throws ResourceAllocationException, ResourceUnavailableException {
         StickinessPolicy policy = null;
+        boolean success = true;
         try {
             UserContext.current().setEventDetails("Rule Id: " + getEntityId());
-            if (_lbService.applyLBStickinessPolicy(getLbRuleId())) {
+            success = _lbService.applyLBStickinessPolicy(getLbRuleId());
+            if (success) {
                 // State might be different after the rule is applied, so get new object here
                 policy = _entityMgr.findById(StickinessPolicy.class, getEntityId());
                 LoadBalancer lb = _lbService.findById(policy.getLoadBalancerId());
@@ -122,12 +126,11 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
                 setResponseObject(spResponse);
                 spResponse.setResponseName(getCommandName());
             }
-            else {
+        } finally {
+            if (!success || policy == null) {
                 _lbService.deleteLBStickinessPolicy(getEntityId());
+                throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to create stickiness policy ");  
             }
-        } catch (Exception e) {
-            _lbService.deleteLBStickinessPolicy(getEntityId());
-            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to create stickiness policy due to " + e.getMessage());
         } 
     }
 
