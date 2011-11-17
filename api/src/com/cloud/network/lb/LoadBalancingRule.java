@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.LoadBalancer;
+import com.cloud.utils.Pair;
 
 public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     private LoadBalancer lb;
@@ -135,13 +136,13 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
 
     public static class LbStickinessPolicy {
         private String _methodName;
-        private String _paramsInDb;
+        private List<Pair<String, String>> _params;
         private boolean _revoke;
 
-        public LbStickinessPolicy(String methodName, String params,
+        public LbStickinessPolicy(String methodName, List<Pair<String, String>> params,
                 boolean revoke) {
             this._methodName = methodName;
-            this._paramsInDb = params;
+            this._params = params;
             this._revoke = revoke;
         }
 
@@ -149,8 +150,8 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
             return _methodName;
         }
 
-        public String getDbParams() {
-            return _paramsInDb;
+        public List<Pair<String, String>> getParams() {
+            return _params;
         }
 
         public boolean isRevoked() {

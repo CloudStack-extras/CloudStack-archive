@@ -19,7 +19,10 @@ package com.cloud.api.response;
 
 import com.cloud.network.rules.StickinessPolicy;
 import com.cloud.serializer.Param;
+import com.cloud.utils.Pair;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -96,7 +99,7 @@ public class LBStickinessPolicyResponse extends BaseResponse {
 
     public LBStickinessPolicyResponse(StickinessPolicy stickinesspolicy) {
         this.name = stickinesspolicy.getName();
-        String paramsInDB = stickinesspolicy.getParamsInDB();
+        List<Pair<String, String>> paramsList = stickinesspolicy.getParams();
         this.methodName = stickinesspolicy.getMethodName();
         this.description = stickinesspolicy.getDescription();
         if (stickinesspolicy.isRevoke()) {
@@ -105,25 +108,27 @@ public class LBStickinessPolicyResponse extends BaseResponse {
         if (stickinesspolicy.getId() != 0)
             this.id = stickinesspolicy.getId();
 
-        /* Get the param and values from the database(dbparams) and fill the response object 
-         * Format :  param1,value1,param2,value2,param3,value3 
-         *  Example for App cookie method:  "name,cookapp,length,12,holdtime,3h" . Here 3 parameters name,length and holdtime with corresponsing values.
+        /* Get the param and values from the database and fill the response object 
+         *  The following loop is to 
+         *    1) convert from List of Pair<String,String> to Map<String, String> 
+         *    2)  combine all params with name with ":" , currently we have one param called "domain" that can appear multiple times.
          * */
-        String[] temp;
-        temp = paramsInDB.split("[,]");
-        Map<String, String> paramList =  new HashMap<String, String>();
-        for (int i = 0; i < (temp.length - 1); i = i + 2) {
+
+        Map<String, String> tempParamList =  new HashMap<String, String>();
+        for(Pair<String,String> paramKV :paramsList){
+            String key = paramKV.first();
+            String value = paramKV.second();
             StringBuilder sb = new StringBuilder();
-            sb.append(temp[i+1]);
-            if (paramList.get(temp[i]) != null)
+            sb.append(value);
+            if (tempParamList.get(key) != null)
             {
-                sb.append(":").append(paramList.get(temp[i]));
+                sb.append(":").append(tempParamList.get(key));
             }
                 
-            paramList.put(temp[i],sb.toString());
+            tempParamList.put(key,sb.toString());
         }
-        this.params = paramList;
+
+        this.params = tempParamList;
         setObjectName("stickinesspolicy");
     }
-
 }

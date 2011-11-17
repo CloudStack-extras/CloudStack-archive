@@ -436,11 +436,11 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                 }
                 
                 if ((expire != null) && !containsOnlyNumbers(expire, timeEndChar)) {
-                    s_logger.warn("Haproxy stickiness: error swallowed: " + StickinessMethodType.SourceBased.getName() + " expire is not in timeformat:" + expire);
+                    s_logger.warn("Haproxy stickiness ploicy for lb rule: " + lbTO.getSrcIp() + ":" + lbTO.getSrcPort() +": Not Applied, cause: expire is not in timeformat:" + expire);
                     return null;
                 } 
                 if ((tablesize != null) && !containsOnlyNumbers(tablesize, "kmg")) {
-                    s_logger.warn("Haproxy stickiness: error swallowed: " + StickinessMethodType.SourceBased.getName() + " tablesize is not in size format:" + tablesize);
+                    s_logger.warn("Haproxy stickiness ploicy for lb rule: " + lbTO.getSrcIp() + ":" + lbTO.getSrcPort() +": Not Applied, cause: tablesize is not in size format:" + tablesize);
                     return null;
                 } 
                 sb.append("\t").append("stick-table type ip size ")
@@ -476,16 +476,16 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                      * Not supposed to reach here, validation of params are
                      * done at the higher layer
                      */
-                    s_logger.warn("Haproxy stickiness: error swallowed:  " + StickinessMethodType.AppCookieBased.getName() + " length,holdtime or name is null");
+                    s_logger.warn("Haproxy stickiness ploicy for lb rule: " + lbTO.getSrcIp() + ":" + lbTO.getSrcPort() +": Not Applied, cause: length,holdtime or name is null");
                     return null;
                 }
                 
                 if (!containsOnlyNumbers(length, null)) {
-                    s_logger.warn("Haproxy stickiness: error swallowed: " + StickinessMethodType.AppCookieBased.getName() + " length is not a number:" + length);
+                    s_logger.warn("Haproxy stickiness ploicy for lb rule: " + lbTO.getSrcIp() + ":" + lbTO.getSrcPort() +": Not Applied, cause: length is not a number:" + length);
                     return null;
                 }
                 if (!containsOnlyNumbers(holdtime, timeEndChar)) {
-                    s_logger.warn("Haproxy stickiness: error swallowed: " + StickinessMethodType.AppCookieBased.getName() + "holdtime is not in timeformat:" + holdtime);
+                    s_logger.warn("Haproxy stickiness ploicy for lb rule: " + lbTO.getSrcIp() + ":" + lbTO.getSrcPort() +": Not Applied, cause: holdtime is not in timeformat:" + holdtime);
                     return null;
                 }   
                 sb.append("\t").append("appsession ").append(name)
@@ -501,7 +501,7 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                  * Not supposed to reach here, validation of methods are
                  * done at the higher layer
                  */
-                s_logger.warn("Haproxy stickiness: error swallowed : invalid method ");
+                s_logger.warn("Haproxy stickiness ploicy for lb rule: " + lbTO.getSrcIp() + ":" + lbTO.getSrcPort() +": Not Applied, cause:invalid method ");
                 return null;
             }
         }
@@ -546,16 +546,19 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
         String stickinessSubRule = getLbSubRuleForStickiness(lbTO);
         Boolean httpbasedStickiness = false;
         /* attach stickiness sub rule only if the destinations are avilable */
-        if ((stickinessSubRule != null) && (destsAvailable == true))
-        {
+        if ((stickinessSubRule != null) && (destsAvailable == true)) {
             result.add(stickinessSubRule);
             for (StickinessPolicyTO stickinessPolicy : lbTO.getStickinessPolicies()) {
+                if (stickinessPolicy == null)
+                    continue;
                 if (StickinessMethodType.LBCookieBased.getName().equalsIgnoreCase(stickinessPolicy.getMethodName()) || StickinessMethodType.AppCookieBased.getName().equalsIgnoreCase(stickinessPolicy.getMethodName())) {
                     httpbasedStickiness = true;
                 }
             }
         }
-        
+        if ((stickinessSubRule != null) && !destsAvailable) {
+            s_logger.warn("Haproxy stickiness ploicy for lb rule: " + lbTO.getSrcIp() + ":" + lbTO.getSrcPort() +": Not Applied, cause:  backends are unavailable");
+        }
         if ((publicPort.equals(NetUtils.HTTP_PORT)) || (httpbasedStickiness) ) {
             sb = new StringBuilder();
             sb.append("\t").append("mode http");
