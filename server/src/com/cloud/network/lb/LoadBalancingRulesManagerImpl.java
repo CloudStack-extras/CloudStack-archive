@@ -151,65 +151,76 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @Inject
     FirewallRulesDao _firewallDao;
 
-	private String getLBStickinessCapability(long networkid) {
-		NetworkVO network = _networkDao.findById(networkid);
+    private String getLBStickinessCapability(long networkid) {
+        NetworkVO network = _networkDao.findById(networkid);
 
-		Map<Service, Map<Capability, String>> serviceCapabilitiesMap = _networkMgr.getNetworkCapabilities(network.getNetworkOfferingId(),
-                network.getDataCenterId());
-		if (serviceCapabilitiesMap != null) {
-			for (Service service : serviceCapabilitiesMap.keySet()) {
-				ServiceResponse serviceResponse = new ServiceResponse();
-				serviceResponse.setName(service.getName());
-				if ("Lb".equalsIgnoreCase(service.getName())) {
-					Map<Capability, String> serviceCapabilities = serviceCapabilitiesMap
-							.get(service);
-					if (serviceCapabilities != null) {
-						for (Capability capability : serviceCapabilities
-								.keySet()) {
-							if (Capability.SupportedStickinessMethods.getName().equals(capability.getName())) {	
-								return serviceCapabilities.get(capability);
-							}
-						}
-					}
-				}
-			}
-		}
-		return null;
-	}
+        Map<Service, Map<Capability, String>> serviceCapabilitiesMap = _networkMgr
+                .getNetworkCapabilities(network.getNetworkOfferingId(),
+                        network.getDataCenterId());
+        if (serviceCapabilitiesMap != null) {
+            for (Service service : serviceCapabilitiesMap.keySet()) {
+                ServiceResponse serviceResponse = new ServiceResponse();
+                serviceResponse.setName(service.getName());
+                if ("Lb".equalsIgnoreCase(service.getName())) {
+                    Map<Capability, String> serviceCapabilities = serviceCapabilitiesMap
+                            .get(service);
+                    if (serviceCapabilities != null) {
+                        for (Capability capability : serviceCapabilities
+                                .keySet()) {
+                            if (Capability.SupportedStickinessMethods.getName()
+                                    .equals(capability.getName())) {
+                                return serviceCapabilities.get(capability);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
     
     @Override
     @DB
     public StickinessPolicy createLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws NetworkRuleConflictException {
         UserContext caller = UserContext.current();
-        
-    	/* Validation : check corresponding load balancer rule exist */
+
+        /* Validation : check corresponding load balancer rule exist */
         LoadBalancerVO loadBalancer = _lbDao.findById(cmd.getLbRuleId());
         if (loadBalancer == null) {
-            throw new InvalidParameterValueException("Failed: LB rule id: "+ cmd.getLbRuleId() +" not present ");
+            throw new InvalidParameterValueException("Failed: LB rule id: "
+                    + cmd.getLbRuleId() + " not present ");
         }
-        
+
         _accountMgr.checkAccess(caller.getCaller(), null, loadBalancer);
         if (loadBalancer.getState() == FirewallRule.State.Revoke) {
-            throw new InvalidParameterValueException("Failed:  LB rule id:" + cmd.getLbRuleId() +" is in deleting state: "); 
+            throw new InvalidParameterValueException("Failed:  LB rule id:"
+                    + cmd.getLbRuleId() + " is in deleting state: ");
         }
         /* Validation : check for valid Method name and params */
-        List <LbStickinessMethod> stickinessMethodList = getStickinessMethods(loadBalancer.getNetworkId());
+        List<LbStickinessMethod> stickinessMethodList = getStickinessMethods(loadBalancer
+                .getNetworkId());
         boolean methodMatch = false;
-        
+
         if (stickinessMethodList == null) {
-            throw new InvalidParameterValueException("Failed:  No Stickiness method available for LB rule:" + cmd.getLbRuleId() );   
+            throw new InvalidParameterValueException(
+                    "Failed:  No Stickiness method available for LB rule:"
+                            + cmd.getLbRuleId());
         }
         for (LbStickinessMethod method : stickinessMethodList) {
-            if (method.getMethodName().equalsIgnoreCase(cmd.getStickinessMethodName()))
-            {
-            	methodMatch = true;
-            	Map<String,String> apiParamList = cmd.getparamList();
-            	
-            	List<LbStickinessMethodParam> methodParamList = method.getParamList();
-        		Map<String,String> tempParamList = new HashMap<String, String>(); 
-        		        		    
-        		
-		    	/*validation-1: check for any extra params that are not required by the policymethod(capability), FIXME: make the below loop simple without using raw data type */
+            if (method.getMethodName().equalsIgnoreCase(
+                    cmd.getStickinessMethodName())) {
+                methodMatch = true;
+                Map<String, String> apiParamList = cmd.getparamList();
+
+                List<LbStickinessMethodParam> methodParamList = method
+                        .getParamList();
+                Map<String, String> tempParamList = new HashMap<String, String>();
+
+                /*
+                 * validation-1: check for any extra params that are not
+                 * required by the policymethod(capability), FIXME: make the
+                 * below loop simple without using raw data type
+                 */
                 if (apiParamList != null) {
                     Collection userGroupCollection = apiParamList.values();
                     Iterator iter = userGroupCollection.iterator();
@@ -221,59 +232,52 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                         tempParamList.put(paramName, paramValue);
                         Boolean found = false;
                         for (LbStickinessMethodParam param : methodParamList) {
-                            if (param.getParamName()
-                                    .equalsIgnoreCase(paramName)) {
+                            if (param.getParamName().equalsIgnoreCase(paramName)) {
                                 if ((param.getIsflag() == false) && (paramValue == null)) {
                                     throw new InvalidParameterValueException("Failed : Value expected for the Param :" + param.getParamName());
                                 }
-                                    
                                 found = true;
                                 break;
                             }
                         }
                         if (!found) {
-                            throw new InvalidParameterValueException(
-                                    "Failed :This Stickiness policy does not support param name :"
-                                            + paramName);
+                            throw new InvalidParameterValueException("Failed :This Stickiness policy does not support param name :" + paramName);
                         }
                     }
                 }
-            	
-            	/*validation-2: check for mandatory params */
-				for (LbStickinessMethodParam param : methodParamList) {
-					if (param.getRequired())
-					{
-						if (tempParamList.get(param.getParamName()) == null)
-						{
-		    	    		throw new InvalidParameterValueException("Failed : Missing Manadatory Param :" + param.getParamName());
-						}
-					}	
-				}
-		    	
-		    	/* Successfully completed the Validation */
-            	break;
+
+                /* validation-2: check for mandatory params */
+                for (LbStickinessMethodParam param : methodParamList) {
+                    if (param.getRequired()) {
+                        if (tempParamList.get(param.getParamName()) == null) {
+                            throw new InvalidParameterValueException("Failed : Missing Manadatory Param :" + param.getParamName());
+                        }
+                    }
+                }
+                /* Successfully completed the Validation */
+                break;
             }
         }
-        if (methodMatch == false)
-        {
-        	throw new InvalidParameterValueException("Failed to match Stickiness method name :" + cmd.getLbRuleId() );
-        }
-        
-    	/* Validation : check for the multiple policies to the rule id */
-        List<LBStickinessPolicyVO> stickinessPolicies = _lb2stickinesspoliciesDao.listByLoadBalancerId(cmd.getLbRuleId(), false);
-        if  (stickinessPolicies.size() > 0) {
-            throw new InvalidParameterValueException("Failed to create Stickiness policy: Already policy attached " + cmd.getLbRuleId() );
+        if (methodMatch == false) {
+            throw new InvalidParameterValueException("Failed to match Stickiness method name :" + cmd.getLbRuleId());
         }
 
-        /*Finally Insert into DB */
+        /* Validation : check for the multiple policies to the rule id */
+        List<LBStickinessPolicyVO> stickinessPolicies = _lb2stickinesspoliciesDao
+                .listByLoadBalancerId(cmd.getLbRuleId(), false);
+        if (stickinessPolicies.size() > 0) {
+            throw new InvalidParameterValueException("Failed to create Stickiness policy: Already policy attached " + cmd.getLbRuleId());
+        }
+
+        /* Finally Insert into DB */
         Transaction txn = Transaction.currentTxn();
         txn.start();
-        LBStickinessPolicyVO policy = new LBStickinessPolicyVO(loadBalancer.getId(), cmd.getLBStickinessPolicyName(),cmd.getStickinessMethodName(), cmd.getparamList(),cmd.getDescription());
+        LBStickinessPolicyVO policy = new LBStickinessPolicyVO(loadBalancer.getId(), cmd.getLBStickinessPolicyName(), cmd.getStickinessMethodName(), cmd.getparamList(), cmd.getDescription());
         policy = _lb2stickinesspoliciesDao.persist(policy);
         txn.commit();
-        
+
         loadBalancer.setState(FirewallRule.State.Add);
-       _lbDao.persist(loadBalancer);
+        _lbDao.persist(loadBalancer);
         return policy;
     }
     
@@ -294,8 +298,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_DELETE, eventDescription = "revoking LB Stickiness policy ", async = true)
     public boolean deleteLBStickinessPolicy(long stickinessPolicyId) {
         UserContext caller = UserContext.current();
+        LBStickinessPolicyVO stickinessPolicy = _lb2stickinesspoliciesDao.findById(stickinessPolicyId);
         
-    	LBStickinessPolicyVO stickinessPolicy = _lb2stickinesspoliciesDao.findById(stickinessPolicyId);
         if (stickinessPolicy == null) {
             throw new InvalidParameterException("Invalid Stickiness policy value: " + stickinessPolicyId);
         }
@@ -324,7 +328,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             s_logger.warn("Unable to apply the load balancer config because resource is unavaliable.", e);
             return false;
         }
-    	return true;
+        return true;
     }   
     
     @Override
@@ -765,8 +769,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
         String dstIp = null;
         for (LBStickinessPolicyVO sDbPolicy : sDbpolicies) {
-        	LbStickinessPolicy sPolicy = new LbStickinessPolicy(sDbPolicy.getMethodName(), sDbPolicy.getParams(), sDbPolicy.isRevoke());
-        	stickinessPolicies.add(sPolicy);
+            LbStickinessPolicy sPolicy = new LbStickinessPolicy(sDbPolicy.getMethodName(), sDbPolicy.getParams(), sDbPolicy.isRevoke());
+            stickinessPolicies.add(sPolicy);
         }
         return stickinessPolicies;
     }
@@ -899,12 +903,12 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @Override
     public  List<LbStickinessMethod> getStickinessMethods(long networkid)
     {
-    	String capability = getLBStickinessCapability(networkid);
-    	if (capability == null) return null;
+        String capability = getLBStickinessCapability(networkid);
+        if (capability == null) return null;
         Gson gson = new Gson();
         java.lang.reflect.Type listType = new TypeToken<List<LbStickinessMethod>>() {}.getType();
         List<LbStickinessMethod> result = gson.fromJson(capability,listType);
-    	return result;
+        return result;
     }
 
     @Override

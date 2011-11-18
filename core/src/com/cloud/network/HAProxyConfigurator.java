@@ -404,7 +404,6 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                     if ("indirect".equalsIgnoreCase(key)) indirect = true;
                     if ("nocache".equalsIgnoreCase(key)) nocache = true;
                     if ("postonly".equalsIgnoreCase(key)) postonly = true;
-                        
                 }
                 if (name == null) {// re-check all mandatory params 
                     StringBuilder tempSb = new StringBuilder();
@@ -415,13 +414,11 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                             .append("_").append(lbTO.getSrcPort());
                     name = tempSb.toString();
                 }
-                
                 sb.append("\t").append("cookie ").append(name).append(" ").append(mode).append(" ");
                 if (indirect) sb.append("indirect ");
                 if (nocache) sb.append("nocache ");
                 if (postonly) sb.append("postonly ");
-                if (domainSb != null) sb.append(domainSb).append(" ");
-                        
+                if (domainSb != null) sb.append(domainSb).append(" ");       
             } else if (StickinessMethodType.SourceBased.getName().equalsIgnoreCase(stickinessPolicy.getMethodName())) {
                 /* Default Values */
                 String tablesize = "200k"; // optional 
@@ -434,7 +431,6 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                     if ("tablesize".equalsIgnoreCase(key)) tablesize = value;
                     if ("expire".equalsIgnoreCase(key)) expire = value;             
                 }
-                
                 if ((expire != null) && !containsOnlyNumbers(expire, timeEndChar)) {
                     s_logger.warn("Haproxy stickiness ploicy for lb rule: " + lbTO.getSrcIp() + ":" + lbTO.getSrcPort() +": Not Applied, cause: expire is not in timeformat:" + expire);
                     return null;
@@ -459,13 +455,13 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                 String mode = null; // optional 
                 Boolean requestlearn = false; // optional 
                 Boolean prefix = false; // optional 
-
+                
                 for(Pair<String,String> paramKV :paramsList){
                     String key = paramKV.first();
                     String value = paramKV.second();
                     if ("name".equalsIgnoreCase(key))   name = value;
-                    if ("length".equalsIgnoreCase(key)) length = value;                   
-                    if ("holdtime".equalsIgnoreCase(key))  holdtime = value;       
+                    if ("length".equalsIgnoreCase(key)) length = value;                
+                    if ("holdtime".equalsIgnoreCase(key))  holdtime = value;
                     if ("mode".equalsIgnoreCase(key))  mode = value;
                     if ("request-learn".equalsIgnoreCase(key)) requestlearn = true;
                     if ("prefix".equalsIgnoreCase(key)) prefix = true;
@@ -479,7 +475,6 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                     s_logger.warn("Haproxy stickiness ploicy for lb rule: " + lbTO.getSrcIp() + ":" + lbTO.getSrcPort() +": Not Applied, cause: length,holdtime or name is null");
                     return null;
                 }
-                
                 if (!containsOnlyNumbers(length, null)) {
                     s_logger.warn("Haproxy stickiness ploicy for lb rule: " + lbTO.getSrcIp() + ":" + lbTO.getSrcPort() +": Not Applied, cause: length is not a number:" + length);
                     return null;
@@ -494,7 +489,6 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
                 if (prefix) sb.append("prefix ");
                 if (requestlearn) sb.append("request-learn").append(" ");
                 if (mode != null) sb.append("mode ").append(mode).append(" ");
-
             } else {
                 /* 
                  * Error is silently swallowed.
