@@ -152,49 +152,38 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
         return result;
     }
     /*
-     *   This function detects numbers like 12 32h 42m .. etc,. 
-     *   It can be used to detect:
-     *     1) plain  number  like 12 13 14 
-     *     2) time or size like 12h 34m 45k 54m , here last character is non-digit but from known characters .  
+     *   This function detects numbers like 12 ,32h ,42m .. etc,. 
+     *     1) plain  number  like 12  
+     *     2) time or tablesize like 12h, 34m, 45k, 54m , here last character is non-digit but from known characters .  
      * 
      */
     private boolean containsOnlyNumbers(String str, String endChar) {
-           
-        boolean ret = true;
-        boolean completed = false;
+        if (str == null) return false;
+        str.trim();
         
-       /* It can't contain only numbers if it's null or empty...
-        */
-        if (str == null || str.length() == 0)
-            return false;
-        if (endChar != null) ret = false; // this make sure atleast one number digit appears in time
-        for (int i = 0; i < str.length(); i++) {
-            if (completed)  return false; // non-number character is already detected, so we should not expect any character .
-            if (endChar != null) {
-                char c = str.charAt(i);
-
-                for (int j = 0; j < endChar.length(); j++) {
-                    if (str.charAt(i) == endChar.charAt(j)) {
-                        completed = true;
-                        break;
-                    }
+        String number=str;
+        if (endChar != null && str.length() > 1){
+            boolean matched_end_char=false;
+            char strEnd = str.toCharArray()[str.length()-1];
+            for (char c: endChar.toCharArray()){
+                if (strEnd == c){
+                   number = str.substring(0, str.length()-1);
+                   matched_end_char = true;
+                   break;
                 }
-                if (completed) continue;
             }
-            /* If we find a non-digit character we return false.
-             */
-            if (!Character.isDigit(str.charAt(i))) {
-                return false; 
-            } else {
-                ret = true;
-            }    
+            if (!matched_end_char) return false;
         }
-
-        if (endChar != null && !completed) return false; 
-        return ret;
+        try {
+            int i = Integer.parseInt(number);
+        }
+        catch (NumberFormatException e){
+            return false;
+        }
+        return true;
     }
-    /*
-cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
+  /*
+  cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
               [ postonly ] [ domain <domain> ]*
   Enable cookie-based persistence in a backend.
   May be used in sections :   defaults | frontend | listen | backend
@@ -293,11 +282,9 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
         cookie JSESSIONID prefix
         cookie SRV insert indirect nocache
         cookie SRV insert postonly indirect
- */
-    
-    /*
-     * 
-    appsession <cookie> len <length> timeout <holdtime>
+ 
+  
+  appsession <cookie> len <length> timeout <holdtime>
            [request-learn] [prefix] [mode <path-parameters|query-string>]
   Define session stickiness on an existing application cookie.
   May be used in sections :   defaults | frontend | listen | backend
@@ -353,10 +340,9 @@ cookie <name> [ rewrite | insert | prefix ] [ indirect ] [ nocache ]
   unused for a duration longer than <holdtime>.
 
   The definition of an application cookie is limited to one per backend.
-
   Example :
         appsession JSESSIONID len 52 timeout 3h
-     */
+*/
     private String getLbSubRuleForStickiness(LoadBalancerTO lbTO) {
         int i = 0;
         /* This is timeformat as per the haproxy doc, d=day, h=hour m=minute, s=seconds

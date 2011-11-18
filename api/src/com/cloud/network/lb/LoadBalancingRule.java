@@ -158,6 +158,7 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
             return _revoke;
         }
     }
+    
     public static class LbDestination implements Destination {
         private int portStart;
         private int portEnd;

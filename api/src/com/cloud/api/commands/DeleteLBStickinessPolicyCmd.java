@@ -64,17 +64,12 @@ public class DeleteLBStickinessPolicyCmd extends BaseAsyncCmd {
 
     @Override
     public long getEntityOwnerId() {
-        StickinessPolicy policy = _entityMgr.findById(StickinessPolicy.class,
-                getId());
-
-        if (policy != null) {
-            LoadBalancer lb = _entityMgr.findById(LoadBalancer.class,
-                    policy.getLoadBalancerId());
-            if (lb != null) {
-                return lb.getAccountId();
-            }
+        Account account = UserContext.current().getCaller();
+        if (account != null) {
+            return account.getId();
         }
-        return Account.ACCOUNT_ID_SYSTEM; 
+
+        return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are tracked
     }
 
     @Override
@@ -89,16 +84,14 @@ public class DeleteLBStickinessPolicyCmd extends BaseAsyncCmd {
 
     @Override
     public void execute() {
-        UserContext.current().setEventDetails(
-                "Load balancer stickiness policy Id: " + getId());
+        UserContext.current().setEventDetails("Load balancer stickiness policy Id: " + getId());
         boolean result = _lbService.deleteLBStickinessPolicy(getId());
 
         if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
         } else {
-            throw new ServerApiException(BaseCmd.INTERNAL_ERROR,
-                    "Failed to delete load balancer stickiness policy");
+            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to delete load balancer stickiness policy");
         }
     }
 
@@ -112,14 +105,11 @@ public class DeleteLBStickinessPolicyCmd extends BaseAsyncCmd {
         StickinessPolicy policy = _entityMgr.findById(StickinessPolicy.class,
                 getId());
         if (policy == null) {
-            throw new InvalidParameterValueException(
-                    "Unable to find LB stickiness rule: " + id);
+            throw new InvalidParameterValueException("Unable to find LB stickiness rule: " + id);        
         }
         LoadBalancer lb = _lbService.findById(policy.getLoadBalancerId());
         if (lb == null) {
-            throw new InvalidParameterValueException(
-                    "Unable to find load balancer rule for stickiness rule: "
-                            + id);
+            throw new InvalidParameterValueException("Unable to find load balancer rule for stickiness rule: " + id);                 
         }
         return lb.getNetworkId();
     }
