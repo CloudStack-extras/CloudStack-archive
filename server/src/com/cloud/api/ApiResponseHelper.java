@@ -754,12 +754,12 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         if (lb == null) return spResponse ;
         spResponse.setlbRuleId(lb.getId());
-        Account accountTemp = ApiDBUtils.findAccountById(lb.getAccountId());
-        if (accountTemp != null) {
-            spResponse.setAccountName(accountTemp.getAccountName());
-            spResponse.setDomainId(accountTemp.getDomainId());
+        Account account = ApiDBUtils.findAccountById(lb.getAccountId());
+        if (account != null) {
+            spResponse.setAccountName(account.getAccountName());
+            spResponse.setDomainId(account.getDomainId());
             spResponse.setDomainName(ApiDBUtils.findDomainById(
-                    accountTemp.getDomainId()).getName());
+                    account.getDomainId()).getName());
         }
 
         List<LBStickinessPolicyResponse> responses = new ArrayList<LBStickinessPolicyResponse>();

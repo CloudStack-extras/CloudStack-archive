@@ -88,7 +88,7 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
         return stickinessMethodName;
     }
 
-    public Map<String, String> getparamList() {
+    public Map getparamList() {
         return paramList;
     }
 
@@ -141,8 +141,7 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
             this.setEntityId(result.getId());
         } catch (NetworkRuleConflictException e) {
             s_logger.warn("Exception: ", e);
-            throw new ServerApiException(BaseCmd.NETWORK_RULE_CONFLICT_ERROR,
-                    e.getMessage());
+            throw new ServerApiException(BaseCmd.NETWORK_RULE_CONFLICT_ERROR, e.getMessage());
         }
     }
 
@@ -153,13 +152,8 @@ public class CreateLBStickinessPolicyCmd extends BaseAsyncCreateCmd {
 
     @Override
     public String getEventDescription() {
-        return "creating a Load Balancer Stickiness policy: "
-                + getLBStickinessPolicyName();
+        return "creating a Load Balancer Stickiness policy: " + getLBStickinessPolicyName();
     }
 
-    public String getXid() {
-        /* FIXME */
-        return null;
-    }
 }
 

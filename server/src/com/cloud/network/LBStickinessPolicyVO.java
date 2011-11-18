@@ -60,10 +60,9 @@ public class LBStickinessPolicyVO implements StickinessPolicy {
 
     @Column(name = "revoke")
     private boolean revoke = false;
-
-    final static String DB_PARM_DELIMITER = ",";
     protected LBStickinessPolicyVO() {
     }
+
 /*  get the params in Map format and converts in to string format and stores in DB
  *  paramsInDB represent the string stored in database :
  *  Format :  param1=value1&param2=value2&param3=value3& 
@@ -78,7 +77,7 @@ public class LBStickinessPolicyVO implements StickinessPolicy {
         this.loadBalancerId = loadBalancerId;
         this.name = name;
         this.methodName = methodName;
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder("");
 
         if (paramList != null) {
             Iterator<HashMap<String, String>> iter = paramList.values().iterator();
@@ -88,19 +87,17 @@ public class LBStickinessPolicyVO implements StickinessPolicy {
                 String paramValue =  paramKVpair.get("value");
                 sb.append(paramName + "=" + paramValue + "&");
             }
-            paramsInDB = sb.toString();
-        } else {
-            paramsInDB = "";
-        }
+        } 
+        paramsInDB = sb.toString();
         this.description = description;
     }
 
     public List<Pair<String, String>> getParams() {
         List<Pair<String, String>> paramsList = new ArrayList<Pair<String, String>>();
-        String[] temp = paramsInDB.split("[=&]");
+        String[] params = paramsInDB.split("[=&]");
  
-        for (int i = 0; i < (temp.length - 1); i = i + 2) {
-            paramsList.add(new Pair<String, String>(temp[i], temp[i + 1]));
+        for (int i = 0; i < (params.length - 1); i = i + 2) {
+            paramsList.add(new Pair<String, String>(params[i], params[i + 1]));
         }
         return paramsList;
     }
