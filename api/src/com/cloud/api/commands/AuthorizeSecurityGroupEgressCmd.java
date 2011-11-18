@@ -1,5 +1,5 @@
 /**
- *  Copyright (C) 2010 Cloud.com, Inc.  All rights reserved.
+ * Copyright (C) 2011 Citrix Systems, Inc. All rights reserved
  * 
  * This software is licensed under the GNU General Public License v3 or later.
  * 
@@ -23,23 +23,19 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.log4j.Logger;
-
 import com.cloud.api.ApiConstants;
 import com.cloud.api.BaseAsyncCmd;
 import com.cloud.api.BaseCmd;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
-import com.cloud.api.BaseCmd.CommandType;
 import com.cloud.api.response.SecurityGroupRuleResponse;
 import com.cloud.api.response.SecurityGroupResponse;
 import com.cloud.async.AsyncJob;
 import com.cloud.event.EventTypes;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.network.security.SecurityRule;
-import com.cloud.user.Account;
 import com.cloud.user.UserContext;
 import com.cloud.utils.StringUtils;
 
@@ -70,7 +66,7 @@ public class AuthorizeSecurityGroupEgressCmd extends BaseAsyncCmd {
     private Integer icmpCode;
 
     @Parameter(name=ApiConstants.CIDR_LIST, type=CommandType.LIST, collectionType=CommandType.STRING, description="the cidr list associated")
-    private List cidrList;
+    private List<String> cidrList;
 
     @Parameter(name = ApiConstants.USER_SECURITY_GROUP_LIST, type = CommandType.MAP, description = "user to security group mapping")
     private Map userSecurityGroupList;
@@ -98,7 +94,7 @@ public class AuthorizeSecurityGroupEgressCmd extends BaseAsyncCmd {
         return accountName;
     }
 
-    public List getCidrList() {
+    public List<String> getCidrList() {
         return cidrList;
     }
 

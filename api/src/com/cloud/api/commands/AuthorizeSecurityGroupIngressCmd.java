@@ -70,7 +70,7 @@ public class AuthorizeSecurityGroupIngressCmd extends BaseAsyncCmd {
     private Integer icmpCode;
 
     @Parameter(name=ApiConstants.CIDR_LIST, type=CommandType.LIST, collectionType=CommandType.STRING, description="the cidr list associated")
-    private List cidrList;
+    private List<String> cidrList;
 
     @Parameter(name = ApiConstants.USER_SECURITY_GROUP_LIST, type = CommandType.MAP, description = "user to security group mapping")
     private Map userSecurityGroupList;
@@ -98,7 +98,7 @@ public class AuthorizeSecurityGroupIngressCmd extends BaseAsyncCmd {
         return accountName;
     }
 
-    public List getCidrList() {
+    public List<String> getCidrList() {
         return cidrList;
     }
 
