@@ -249,13 +249,15 @@ public abstract class AbstractStoragePoolAllocator extends AdapterBase implement
 			storageOverprovisioningFactor = _storageOverprovisioningFactor;
 		}
 
+        long _overprovisionedCapacity = (long) (pool.getCapacityBytes() * storageOverprovisioningFactor);
+
 		if (s_logger.isDebugEnabled()) {
-			s_logger.debug("Attempting to look for pool " + pool.getId() + " for storage, maxSize : " + (pool.getCapacityBytes() * storageOverprovisioningFactor) + ", totalSize : " + totalAllocatedSize + ", askingSize : " + askingSize);
+			s_logger.debug("Attempting to look for pool " + pool.getId() + " for storage, maxSize : " + _overprovisionedCapacity + ", totalSize : " + totalAllocatedSize + ", askingSize : " + askingSize);
 		}
 
-		if ((pool.getCapacityBytes() * storageOverprovisioningFactor) < (totalAllocatedSize + askingSize)) {
+		if (_overprovisionedCapacity < (totalAllocatedSize + askingSize)) {
 			if (s_logger.isDebugEnabled()) {
-				s_logger.debug("Cannot allocate this pool " + pool.getId() + " for storage, not enough storage, maxSize : " + (pool.getCapacityBytes() * storageOverprovisioningFactor) + ", totalSize : " + totalAllocatedSize + ", askingSize : " + askingSize);
+				s_logger.debug("Cannot allocate this pool " + pool.getId() + " for storage, not enough storage, maxSize : " + _overprovisionedCapacity + ", totalSize : " + totalAllocatedSize + ", askingSize : " + askingSize);
 			}
 
 			return false;
