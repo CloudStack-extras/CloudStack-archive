@@ -88,6 +88,7 @@ public class Upgrade2212to2213 implements DbUpgrade {
             throw new CloudRuntimeException("Unable to reinsert data center key for the network", e);
         }
         
+        
         // drop primary keys
         DbUpgradeUtils.dropPrimaryKeyIfExists(conn, "cloud_usage.usage_load_balancer_policy");
         DbUpgradeUtils.dropPrimaryKeyIfExists(conn, "cloud_usage.usage_port_forwarding");
@@ -99,19 +100,6 @@ public class Upgrade2212to2213 implements DbUpgrade {
             s_logger.debug("Dropped usage_network_offering unique key");
         } catch (Exception e) {
             // Ignore error if the usage_network_offering table or the unique key doesn't exist
-        }
-        
-        //Drop i_usage_event__created key (if exists) and re-add it again
-        keys = new ArrayList<String>();
-        keys.add("i_usage_event__created");
-        DbUpgradeUtils.dropKeysIfExist(conn, "usage_event", keys, false);
-        
-        try {
-            PreparedStatement pstmt = conn.prepareStatement("ALTER TABLE `cloud`.`usage_event` ADD INDEX `i_usage_event__created`(`created`)");
-            pstmt.executeUpdate();
-            pstmt.close();
-        } catch (SQLException e) {
-            throw new CloudRuntimeException("Unable to execute usage_event table update", e);
         }
     }
 }
