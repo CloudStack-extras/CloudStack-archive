@@ -289,9 +289,9 @@ def default_network_rules(vm_name, vm_id, vm_ip, vm_mac, vif, brname):
 
         #don't let vm spoof its ip address
         if vm_ip is not None:
-            execute("iptables -A " + vmchain_default + " -m physdev --physdev-is-bridged --physdev-in " + vif  + " --source " +  vm_ip +  " -p udp --dport 57  -j RETURN ")
+            execute("iptables -A " + vmchain_default + " -m physdev --physdev-is-bridged --physdev-in " + vif  + " --source " +  vm_ip +  " -p udp --dport 53  -j RETURN ")
             execute("iptables -A " + vmchain_default + " -m physdev --physdev-is-bridged --physdev-in " + vif  + " --source " +  vm_ip +  " -j " + vmchain_egress)
-        execute("iptables -A " + vmchain_default + " -j " +  vmchain)
+        execute("iptables -A " + vmchain_default + " -m physdev --physdev-is-bridged --physdev-out " + vif  + " -j " +  vmchain)
         execute("iptables -A " + vmchain + " -j DROP")
     except:
         logging.debug("Failed to program default rules for vm " + vm_name)
@@ -637,17 +637,17 @@ def add_network_rules(vm_name, vm_id, vm_ip, signature, seqno, vmMac, rules, vif
                     execute("iptables -I " + vmchain + " -m state --state NEW " + direction + " " + ip + " -j "+action)
             elif protocol != 'icmp':
                 for ip in ips:
-                    execute("iptables -I " + vmchain + " -p " + protocol + " -m " + protocol + " --dport " + range + " -m state --state NEW " + direction + " " + ip + " -j "+action)
+                    execute("iptables -I " + vmchain + " -p " + protocol + " -m " + protocol + " --dport " + range + " -m state --state NEW " + direction + " " + ip + " -j "+ action)
             else:
                 range = start + "/" + end
                 if start == "-1":
                     range = "any"
                     for ip in ips:
-                        execute("iptables -I " + vmchain + " -p icmp --icmp-type " + range + " " + direction + "  " + ip + " -j "+action)
+                        execute("iptables -I " + vmchain + " -p icmp --icmp-type " + range + " " + direction + "  " + ip + " -j "+ action)
         
         if allow_any and protocol != 'all':
             if protocol != 'icmp':
-                execute("iptables -I " + vmchain + " -p " + protocol + " -m " +  protocol + " --dport " + range + " -m state --state NEW -j "+action)
+                execute("iptables -I " + vmchain + " -p " + protocol + " -m " +  protocol + " --dport " + range + " -m state --state NEW -j "+ action)
             else:
                 range = start + "/" + end
                 if start == "-1":

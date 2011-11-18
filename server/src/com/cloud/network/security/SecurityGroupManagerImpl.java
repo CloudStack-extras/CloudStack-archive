@@ -567,7 +567,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
         Integer startPortOrType = null;
         Integer endPortOrCode = null;
         
-    	// Validate parameters
+        // Validate parameters
         SecurityGroup securityGroup = _securityGroupDao.findById(securityGroupId);
         if (securityGroup == null) {
             throw new InvalidParameterValueException("Unable to find security group by id " + securityGroupId);

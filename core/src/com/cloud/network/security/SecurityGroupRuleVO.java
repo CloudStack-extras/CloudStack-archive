@@ -73,11 +73,10 @@ public class SecurityGroupRuleVO implements SecurityRule {
         this.endPort = toPort;
         this.protocol = protocol;
         this.allowedNetworkId = allowedNetworkId;
-        if (type == SecurityRuleType.IngressRule)
-        {
-        	this.type = SecurityRuleType.IngressRule.getType();
-        }else{
-        	this.type = SecurityRuleType.EgressRule.getType();
+        if (type == SecurityRuleType.IngressRule) {
+            this.type = SecurityRuleType.IngressRule.getType();
+        } else {
+            this.type = SecurityRuleType.EgressRule.getType();
         }
     }
 
@@ -87,10 +86,9 @@ public class SecurityGroupRuleVO implements SecurityRule {
         this.endPort = toPort;
         this.protocol = protocol;
         this.allowedSourceIpCidr = allowedIpCidr;
-        if (type == SecurityRuleType.IngressRule)
-        {
+        if (type == SecurityRuleType.IngressRule) {
             this.type = SecurityRuleType.IngressRule.getType();
-        }else{
+        } else {
             this.type = SecurityRuleType.EgressRule.getType();
         }
     }
@@ -111,10 +109,10 @@ public class SecurityGroupRuleVO implements SecurityRule {
     }
     
     public SecurityRuleType getRuleType() {
-    	if ("ingress".equalsIgnoreCase(this.type))
+        if ("ingress".equalsIgnoreCase(this.type))
             return SecurityRuleType.IngressRule;
-    	else
-    		return SecurityRuleType.EgressRule;
+        else
+            return SecurityRuleType.EgressRule;
     }
     
     @Override
