@@ -51,22 +51,20 @@ public class LoadBalancerTO {
     }
     
     public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> arg_destinations, List<LbStickinessPolicy> stickinessPolicies) {
-        this(srcIp,srcPort,protocol,algorithm,revoked,alreadyAdded,arg_destinations);
+        this(srcIp, srcPort, protocol, algorithm, revoked, alreadyAdded, arg_destinations);
         this.stickinessPolicies = null;
         if (stickinessPolicies != null && stickinessPolicies.size()>0) {
-
-    	    this.stickinessPolicies = new StickinessPolicyTO[MAX_STICKINESS_POLICIES];
+            this.stickinessPolicies = new StickinessPolicyTO[MAX_STICKINESS_POLICIES];
             int index = 0;
             for (LbStickinessPolicy stickinesspolicy : stickinessPolicies) {
-        	    if (!stickinesspolicy.isRevoked()) {
+                if (!stickinesspolicy.isRevoked()) {
                     this.stickinessPolicies[index] = new StickinessPolicyTO(stickinesspolicy.getMethodName(), stickinesspolicy.getParams());
                     index++;
                     if (index == MAX_STICKINESS_POLICIES) break;
-        	    }
+                }
             }
             if (index == 0) this.stickinessPolicies = null;
         }
-
     }
     
     

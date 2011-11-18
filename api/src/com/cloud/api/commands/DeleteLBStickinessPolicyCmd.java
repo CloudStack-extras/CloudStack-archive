@@ -74,10 +74,7 @@ public class DeleteLBStickinessPolicyCmd extends BaseAsyncCmd {
                 return lb.getAccountId();
             }
         }
-
-        return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this
-                                          // command to SYSTEM so ERROR events
-                                          // are tracked
+        return Account.ACCOUNT_ID_SYSTEM; 
     }
 
     @Override

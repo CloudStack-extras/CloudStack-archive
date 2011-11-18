@@ -19,7 +19,6 @@
 package com.cloud.network;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -34,7 +33,6 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import com.cloud.network.rules.StickinessPolicy;
 import com.cloud.utils.Pair;
-
 
 @Entity
 @Table(name = ("load_balancer_stickiness_policies"))
@@ -69,7 +67,7 @@ public class LBStickinessPolicyVO implements StickinessPolicy {
 /*  get the params in Map format and converts in to string format and stores in DB
  *  paramsInDB represent the string stored in database :
  *  Format :  param1=value1&param2=value2&param3=value3& 
- *  Example for App cookie method:  "name=cookapp&length=12&holdtime=3h" . Here 3 parameters name,length and holdtime with corresponsing values.
+ *  Example for App cookie method:  "name=cookapp&length=12&holdtime=3h" . Here 3 parameters name,length and holdtime with corresponding values.
  *  getParams function is used to get in List<Pair<string,String>> Format.
  *           - API response use Map format
  *           - In database plain String with DB_PARM_DELIMITER 
@@ -83,18 +81,11 @@ public class LBStickinessPolicyVO implements StickinessPolicy {
         StringBuilder sb = new StringBuilder();
 
         if (paramList != null) {
-            Collection userGroupCollection = paramList.values();
-            Iterator iter = userGroupCollection.iterator();
-            HashMap<String, String> paramKVpair = (HashMap) iter.next();
-
-            String paramName =  paramKVpair.get("name");
-            String paramValue =  paramKVpair.get("value");
-            sb.append(paramName + "=" + paramValue + "&");
-
+            Iterator<HashMap<String, String>> iter = paramList.values().iterator();
             while (iter.hasNext())  {
-                paramKVpair = (HashMap) iter.next();
-                paramName = paramKVpair.get("name");
-                paramValue =  paramKVpair.get("value");
+                HashMap<String, String>  paramKVpair =  iter.next();
+                String paramName = paramKVpair.get("name");
+                String paramValue =  paramKVpair.get("value");
                 sb.append(paramName + "=" + paramValue + "&");
             }
             paramsInDB = sb.toString();
