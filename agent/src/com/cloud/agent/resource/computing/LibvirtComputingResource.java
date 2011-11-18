@@ -3508,7 +3508,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
     	return true;
     }
     
-    private boolean add_network_rules( String vmName, String vmId, String guestIP, String sig, String seq, String mac, String rules, String vif, String brname) {
+    private boolean add_network_rules(String vmName, String vmId, String guestIP, String sig, String seq, String mac, String rules, String vif, String brname) {
     	if (!_can_bridge_firewall) {
             return false;
         }

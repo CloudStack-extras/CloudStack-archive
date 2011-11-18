@@ -1,5 +1,5 @@
 /**
- *  Copyright (C) 2010 Cloud.com, Inc.  All rights reserved.
+ *  Copyright (C) 2011 Citrix Systems, Inc. All rights reserved
  * 
  * This software is licensed under the GNU General Public License v3 or later.
  * 
@@ -32,11 +32,11 @@ import com.cloud.utils.net.NetUtils;
 public class SecurityGroupRulesCmd extends Command {
     private static Logger s_logger = Logger.getLogger(SecurityGroupRulesCmd.class);
     public static class IpPortAndProto {
-        String proto;
-        int startPort;
-        int endPort;
+        private String proto;
+        private int startPort;
+        private int endPort;
         @LogLevel(Log4jLevel.Trace)
-        String [] allowedCidrs;
+        private String [] allowedCidrs;
 
         public IpPortAndProto() { }
 
@@ -168,7 +168,7 @@ public class SecurityGroupRulesCmd extends Command {
     
     public String stringifyCompressedRules() {
         StringBuilder ruleBuilder = new StringBuilder();
-        for (SecurityGroupRulesCmd.IpPortAndProto ipPandP: getIngressRuleSet()) {
+        for (SecurityGroupRulesCmd.IpPortAndProto ipPandP : getIngressRuleSet()) {
             ruleBuilder.append("I:").append(ipPandP.getProto()).append(":").append(ipPandP.getStartPort()).append(":").append(ipPandP.getEndPort()).append(":");
             for (String cidr: ipPandP.getAllowedCidrs()) {
                 //convert cidrs in the form "a.b.c.d/e" to "hexvalue of 32bit ip/e"
@@ -177,7 +177,7 @@ public class SecurityGroupRulesCmd extends Command {
             ruleBuilder.append("NEXT");
             ruleBuilder.append(" ");
         }
-        for (SecurityGroupRulesCmd.IpPortAndProto ipPandP: getEgressRuleSet()) {
+        for (SecurityGroupRulesCmd.IpPortAndProto ipPandP : getEgressRuleSet()) {
             ruleBuilder.append("E:").append(ipPandP.getProto()).append(":").append(ipPandP.getStartPort()).append(":").append(ipPandP.getEndPort()).append(":");
             for (String cidr: ipPandP.getAllowedCidrs()) {
                 //convert cidrs in the form "a.b.c.d/e" to "hexvalue of 32bit ip/e"
@@ -188,6 +188,7 @@ public class SecurityGroupRulesCmd extends Command {
         }
         return ruleBuilder.toString();
     }
+    
     /*
      * Compress the security group rules using zlib compression to allow the call to the hypervisor
      * to scale beyond 8k cidrs.

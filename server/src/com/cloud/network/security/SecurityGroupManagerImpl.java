@@ -544,7 +544,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
         Integer icmpCode = cmd.getIcmpCode();
         List<String> cidrList = cmd.getCidrList();
         Map groupList = cmd.getUserSecurityGroupList();
-        return authorizeSecurityGroupRule(securityGroupId,protocol,startPort,endPort,icmpType,icmpCode,cidrList,groupList,SecurityRuleType.EgressRule);
+        return authorizeSecurityGroupRule(securityGroupId, protocol, startPort, endPort, icmpType, icmpCode, cidrList, groupList, SecurityRuleType.EgressRule);
     }
 
     @Override
@@ -699,7 +699,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
                 if ((securityGroupRule != null) && (securityGroupRule.getRuleType() == ruleType)) {
                     continue; // rule already exists.
                 }
-                securityGroupRule = new SecurityGroupRuleVO(ruleType,securityGroup.getId(), startPortOrType, endPortOrCode, protocol, ngVO.getId());
+                securityGroupRule = new SecurityGroupRuleVO(ruleType, securityGroup.getId(), startPortOrType, endPortOrCode, protocol, ngVO.getId());
                 securityGroupRule = _securityGroupRuleDao.persist(securityGroupRule);
                 newRules.add(securityGroupRule);
             }
@@ -709,7 +709,7 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
                     if ((securityGroupRule != null) && (securityGroupRule.getRuleType() == ruleType)) {
                         continue;
                     }
-                    securityGroupRule = new SecurityGroupRuleVO(ruleType,securityGroup.getId(), startPortOrType, endPortOrCode, protocol, cidr);
+                    securityGroupRule = new SecurityGroupRuleVO(ruleType, securityGroup.getId(), startPortOrType, endPortOrCode, protocol, cidr);
                     securityGroupRule = _securityGroupRuleDao.persist(securityGroupRule);
                     newRules.add(securityGroupRule);
                 }
