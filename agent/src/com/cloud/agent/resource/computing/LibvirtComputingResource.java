@@ -1640,10 +1640,10 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
     	if (!result) {
     		s_logger.warn("Failed to program network rules for vm " + cmd.getVmName());
-    		return new SecurityGroupRuleAnswer(cmd, false, "programming network rules failed");
+            return new SecurityGroupRuleAnswer(cmd, false, "programming network rules failed");
     	} else {
-    		s_logger.debug("Programmed network rules for vm " + cmd.getVmName() + " guestIp=" + cmd.getGuestIp() + ",ingress numrules=" + cmd.getIngressRuleSet().length + ",egress numrules=" + cmd.getEgressRuleSet().length);
-    		return new SecurityGroupRuleAnswer(cmd);
+            s_logger.debug("Programmed network rules for vm " + cmd.getVmName() + " guestIp=" + cmd.getGuestIp() + ",ingress numrules=" + cmd.getIngressRuleSet().length + ",egress numrules=" + cmd.getEgressRuleSet().length);
+            return new SecurityGroupRuleAnswer(cmd);
     	}
     }
     

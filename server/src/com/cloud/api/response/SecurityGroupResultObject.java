@@ -165,13 +165,12 @@ public class SecurityGroupResultObject implements ControlledEntity{
 
                 if (netGroupRule.getRuleId() != null) {
                     // there's at least one securitygroup rule for this network group, add the securitygroup rule data
-                	SecurityGroupRuleResultObject securityGroupRuleData = new SecurityGroupRuleResultObject();
-                	securityGroupRuleData.setEndPort(netGroupRule.getEndPort());
-                	securityGroupRuleData.setStartPort(netGroupRule.getStartPort());
-                	securityGroupRuleData.setId(netGroupRule.getRuleId());
-                	securityGroupRuleData.setProtocol(netGroupRule.getProtocol());
-                	securityGroupRuleData.setRuleType(netGroupRule.getRuleType());
-                	
+                    SecurityGroupRuleResultObject securityGroupRuleData = new SecurityGroupRuleResultObject();
+                    securityGroupRuleData.setEndPort(netGroupRule.getEndPort());
+                    securityGroupRuleData.setStartPort(netGroupRule.getStartPort());
+                    securityGroupRuleData.setId(netGroupRule.getRuleId());
+                    securityGroupRuleData.setProtocol(netGroupRule.getProtocol());
+                    securityGroupRuleData.setRuleType(netGroupRule.getRuleType());
                     Long allowedSecurityGroupId = netGroupRule.getAllowedNetworkId();
                     if (allowedSecurityGroupId != null) {
                         SecurityGroup allowedSecurityGroup = allowedSecurityGroups.get(allowedSecurityGroupId);

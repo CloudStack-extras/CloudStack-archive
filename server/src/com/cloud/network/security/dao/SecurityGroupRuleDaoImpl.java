@@ -98,40 +98,38 @@ public class SecurityGroupRuleDaoImpl extends GenericDaoBase<SecurityGroupRuleVO
         return expunge(sc);
     }
 
-	@Override
-	public List<SecurityGroupRuleVO> listByAllowedSecurityGroupId(long securityGroupId) {
-		 SearchCriteria<SecurityGroupRuleVO> sc = allowedSecurityGroupIdSearch.create();
-		 sc.setParameters("allowedNetworkId", securityGroupId);
-		 return listBy(sc);
-	}
+    @Override
+    public List<SecurityGroupRuleVO> listByAllowedSecurityGroupId(long securityGroupId) {
+        SearchCriteria<SecurityGroupRuleVO> sc = allowedSecurityGroupIdSearch.create();
+        sc.setParameters("allowedNetworkId", securityGroupId);
+        return listBy(sc);
+    }
+
+    @Override
+    public SecurityGroupRuleVO findByProtoPortsAndCidr(long securityGroupId,
+            String proto, int startPort, int endPort, String cidr) {
+        SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndCidrSearch.create();
+        sc.setParameters("securityGroupId", securityGroupId);
+        sc.setParameters("proto", proto);
+        sc.setParameters("startPort", startPort);
+        sc.setParameters("endPort", endPort);
+        sc.setParameters("cidr", cidr);
+        return findOneIncludingRemovedBy(sc);
+    }
+
+    @Override
+    public SecurityGroupRuleVO findByProtoPortsAndGroup(String proto, int startPort, int endPort, String securityGroup) {
+        SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndSecurityGroupNameSearch.create();
+        sc.setParameters("proto", proto);
+        sc.setParameters("startPort", startPort);
+        sc.setParameters("endPort", endPort);
+        sc.setJoinParameters("groupName", "groupName", securityGroup);
+        return findOneIncludingRemovedBy(sc);
+    }
 
 	@Override
-	public SecurityGroupRuleVO findByProtoPortsAndCidr(long securityGroupId, String proto, int startPort,
-			int endPort, String cidr) {
-		SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndCidrSearch.create();
-		sc.setParameters("securityGroupId", securityGroupId);
-		sc.setParameters("proto", proto);
-		sc.setParameters("startPort", startPort);
-		sc.setParameters("endPort", endPort);
-		sc.setParameters("cidr", cidr);
-		return findOneIncludingRemovedBy(sc);
-	}
-
-	@Override
-	public SecurityGroupRuleVO findByProtoPortsAndGroup(String proto, int startPort,
-			int endPort, String securityGroup) {
-		SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndSecurityGroupNameSearch.create();
-		sc.setParameters("proto", proto);
-		sc.setParameters("startPort", startPort);
-		sc.setParameters("endPort", endPort);
-		sc.setJoinParameters("groupName", "groupName", securityGroup);
-		return findOneIncludingRemovedBy(sc);
-	}
-
-	@Override
-	public boolean configure(String name, Map<String, Object> params)
-			throws ConfigurationException {
-		protoPortsAndSecurityGroupNameSearch = createSearchBuilder();
+	public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
+        protoPortsAndSecurityGroupNameSearch = createSearchBuilder();
         protoPortsAndSecurityGroupNameSearch.and("proto", protoPortsAndSecurityGroupNameSearch.entity().getProtocol(), SearchCriteria.Op.EQ);
         protoPortsAndSecurityGroupNameSearch.and("startPort", protoPortsAndSecurityGroupNameSearch.entity().getStartPort(), SearchCriteria.Op.EQ);
         protoPortsAndSecurityGroupNameSearch.and("endPort", protoPortsAndSecurityGroupNameSearch.entity().getEndPort(), SearchCriteria.Op.EQ);
@@ -139,44 +137,39 @@ public class SecurityGroupRuleDaoImpl extends GenericDaoBase<SecurityGroupRuleVO
         ngSb.and("groupName", ngSb.entity().getName(), SearchCriteria.Op.EQ);
         protoPortsAndSecurityGroupNameSearch.join("groupName", ngSb, protoPortsAndSecurityGroupNameSearch.entity().getAllowedNetworkId(), ngSb.entity().getId(), JoinBuilder.JoinType.INNER);
         protoPortsAndSecurityGroupNameSearch.done();
-		return super.configure(name, params);
-	}
+        return super.configure(name, params);
+    }
 
-	@Override
-	public int deleteByPortProtoAndGroup(long securityGroupId, String protocol, int startPort, int endPort, Long allowedGroupId) {
-		SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndSecurityGroupIdSearch.create();
-		sc.setParameters("securityGroupId", securityGroupId);
-		sc.setParameters("proto", protocol);
-		sc.setParameters("startPort", startPort);
-		sc.setParameters("endPort", endPort);
-		sc.setParameters("allowedNetworkId", allowedGroupId);
-		
+    @Override
+    public int deleteByPortProtoAndGroup(long securityGroupId, String protocol, int startPort, int endPort, Long allowedGroupId) {
+        SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndSecurityGroupIdSearch.create();
+        sc.setParameters("securityGroupId", securityGroupId);
+        sc.setParameters("proto", protocol);
+        sc.setParameters("startPort", startPort);
+        sc.setParameters("endPort", endPort);
+        sc.setParameters("allowedNetworkId", allowedGroupId);
         return expunge(sc);
-		
-	}
+    }
 
-	@Override
-	public int deleteByPortProtoAndCidr(long securityGroupId, String protocol, int startPort, int endPort, String cidr) {
-		SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndCidrSearch.create();
-		sc.setParameters("securityGroupId", securityGroupId);
-		sc.setParameters("proto", protocol);
-		sc.setParameters("startPort", startPort);
-		sc.setParameters("endPort", endPort);
-		sc.setParameters("cidr", cidr);
-		
-		return expunge(sc);
-	}
+    @Override
+    public int deleteByPortProtoAndCidr(long securityGroupId, String protocol, int startPort, int endPort, String cidr) {
+        SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndCidrSearch.create();
+        sc.setParameters("securityGroupId", securityGroupId);
+        sc.setParameters("proto", protocol);
+        sc.setParameters("startPort", startPort);
+        sc.setParameters("endPort", endPort);
+        sc.setParameters("cidr", cidr);
+        return expunge(sc);
+    }
 
-	@Override
-	public SecurityGroupRuleVO findByProtoPortsAndAllowedGroupId(long securityGroupId, String proto,
-			int startPort, int endPort, Long allowedGroupId) {
-		SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndSecurityGroupIdSearch.create();
-		sc.addAnd("securityGroupId", SearchCriteria.Op.EQ, securityGroupId);
-		sc.setParameters("proto", proto);
-		sc.setParameters("startPort", startPort);
-		sc.setParameters("endPort", endPort);
-		sc.setParameters("allowedNetworkId", allowedGroupId);
-		
+    @Override
+    public SecurityGroupRuleVO findByProtoPortsAndAllowedGroupId(long securityGroupId, String proto, int startPort, int endPort, Long allowedGroupId) {
+        SearchCriteria<SecurityGroupRuleVO> sc = protoPortsAndSecurityGroupIdSearch.create();
+        sc.addAnd("securityGroupId", SearchCriteria.Op.EQ, securityGroupId);
+        sc.setParameters("proto", proto);
+        sc.setParameters("startPort", startPort);
+        sc.setParameters("endPort", endPort);
+        sc.setParameters("allowedNetworkId", allowedGroupId);
         return findOneIncludingRemovedBy(sc);
-	}
+    }
 }

@@ -52,13 +52,13 @@ public class SecurityGroupRuleAnswer extends Answer {
         reason = r;
     }
 
-	public Long getLogSequenceNumber() {
-		return logSequenceNumber;
-	}
+    public Long getLogSequenceNumber() {
+        return logSequenceNumber;
+    }
 
-	public Long getVmId() {
-		return vmId;
-	}
+    public Long getVmId() {
+        return vmId;
+    }
 
     public FailureReason getReason() {
         return reason;

@@ -1599,8 +1599,7 @@ public class ApiResponseHelper implements ResponseGenerator {
                     ruleData.setRuleId(securityGroupRule.getId());
                     ruleData.setProtocol(securityGroupRule.getProtocol());
 
-                    if ("icmp"
-                            .equalsIgnoreCase(securityGroupRule.getProtocol())) {
+                    if ("icmp".equalsIgnoreCase(securityGroupRule.getProtocol())) {
                         ruleData.setIcmpType(securityGroupRule.getStartPort());
                         ruleData.setIcmpCode(securityGroupRule.getEndPort());
                     } else {
@@ -2009,10 +2008,10 @@ public class ApiResponseHelper implements ResponseGenerator {
                 securityGroupData.setRuleId(securityRule.getId());
                 securityGroupData.setProtocol(securityRule.getProtocol());
                 if ("icmp".equalsIgnoreCase(securityRule.getProtocol())) {
-                	securityGroupData.setIcmpType(securityRule.getStartPort());
-                	securityGroupData.setIcmpCode(securityRule.getEndPort());
+                    securityGroupData.setIcmpType(securityRule.getStartPort());
+                    securityGroupData.setIcmpCode(securityRule.getEndPort());
                 } else {
-                	securityGroupData.setStartPort(securityRule.getStartPort());
+                    securityGroupData.setStartPort(securityRule.getStartPort());
                     securityGroupData.setEndPort(securityRule.getEndPort());
                 }
 
@@ -2034,7 +2033,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
                     securityGroupData.setAccountName(allowedAccount.getAccountName());
                 } else {
-                	securityGroupData.setCidr(securityRule.getAllowedSourceIpCidr());
+                    securityGroupData.setCidr(securityRule.getAllowedSourceIpCidr());
                 }
                 if (securityRule.getRuleType() == SecurityRuleType.IngressRule) {
                     securityGroupData.setObjectName("ingressrule");
