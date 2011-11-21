@@ -182,6 +182,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @SuppressWarnings("rawtypes")
     @Override
     @DB
+    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_CREATE, eventDescription = "create lb stickinesspolicy to load balancer", create = true)
     public StickinessPolicy createLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws NetworkRuleConflictException {
         UserContext caller = UserContext.current();
 
@@ -274,7 +275,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     
     @Override
     @DB
-    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_CREATE, eventDescription = "create lb stickinesspolicy to load balancer", async = true)
+    @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_CREATE, eventDescription = "Apply Stickinesspolicy to load balancer ", async = true)
     public boolean applyLBStickinessPolicy(long lbRuleId)  {
         try {
             applyLoadBalancerConfig(lbRuleId);
