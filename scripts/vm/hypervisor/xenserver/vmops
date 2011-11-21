@@ -1120,15 +1120,14 @@ def network_rules(session, args):
         ips = cidrs.split(",")
         ips.pop()
         allow_any = False
+        action = "RETURN"
         if type == 'E':
             vmchain = egress_chain_name(vm_name)
             direction = "dst"
-            action = "RETURN"
             egressrules = egressrules + 1
         else:
             vmchain = chain_name(vm_name)
             direction = "src"
-            action = "ACCEPT"
         if  '0.0.0.0/0' in ips:
             i = ips.index('0.0.0.0/0')
             del ips[i]
