@@ -161,9 +161,10 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
         if (str == null) return false;
         str.trim();
         
-        String number=str;
-        if (endChar != null && str.length() > 1){
-            boolean matched_end_char=false;
+        String number = str;
+        if (endChar != null){
+            boolean matched_end_char = false;
+            if (str.length() < 2) return false; // atleast one numeric and one char.  example: 3h
             char strEnd = str.toCharArray()[str.length()-1];
             for (char c: endChar.toCharArray()){
                 if (strEnd == c){
