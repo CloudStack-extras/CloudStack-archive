@@ -617,15 +617,14 @@ def add_network_rules(vm_name, vm_id, vm_ip, signature, seqno, vmMac, rules, vif
         ips = cidrs.split(",")
         ips.pop()
         allow_any = False
+        action = "RETURN"
         if ruletype == 'E':
             vmchain = egress_chain_name(vm_name)
             direction = "-d"
-            action = "RETURN"
             egressrule = egressrule + 1
         else:
             vmchain = vm_name
             direction = "-s"
-            action = "ACCEPT"
         if  '0.0.0.0/0' in ips:
             i = ips.index('0.0.0.0/0')
             del ips[i]
@@ -730,10 +729,10 @@ def addFWFramework(brname):
             execute("iptables -I FORWARD -i " + brname + " -m physdev --physdev-is-bridged -j " + brfw)
             execute("iptables -I FORWARD -o " + brname + " -m physdev --physdev-is-bridged -j " + brfw)
             phydev = execute("brctl show |grep " + brname + " | awk '{print $4}'").strip()
-            execute("iptables -A " + brfw + " -m physdev --physdev-is-bridged --physdev-out " + phydev + " -j ACCEPT")
             execute("iptables -A " + brfw + " -m state --state RELATED,ESTABLISHED -j ACCEPT")
             execute("iptables -A " + brfw + " -m physdev --physdev-is-bridged --physdev-is-out -j " + brfwout)
             execute("iptables -A " + brfw + " -m physdev --physdev-is-bridged --physdev-is-in -j " + brfwin)
+            execute("iptables -A " + brfw + " -m physdev --physdev-is-bridged --physdev-out " + phydev + " -j ACCEPT")
            
     
         return True
