@@ -243,7 +243,7 @@ def default_network_rules_systemvm(vm_name, brname):
             logging.debug("Failed to program default rules")
             return 'false'
 
-    execute("iptables -A " + vmchain + " -j ACCEPT")
+    execute("iptables -A " + vmchain + " -j RETURN")
     
     if write_rule_log_for_vm(vm_name, '-1', '_ignore_', domid, '_initial_', '-1') == False:
         logging.debug("Failed to log default network rules for systemvm, ignoring")
