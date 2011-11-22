@@ -159,21 +159,20 @@ public class HAProxyConfigurator implements LoadBalancerConfigurator {
      */
     private boolean containsOnlyNumbers(String str, String endChar) {
         if (str == null) return false;
-        str.trim();
         
         String number = str;
         if (endChar != null){
-            boolean matched_end_char = false;
+            boolean matchedEndChar = false;
             if (str.length() < 2) return false; // atleast one numeric and one char.  example: 3h
             char strEnd = str.toCharArray()[str.length()-1];
             for (char c: endChar.toCharArray()){
                 if (strEnd == c){
                    number = str.substring(0, str.length()-1);
-                   matched_end_char = true;
+                   matchedEndChar = true;
                    break;
                 }
             }
-            if (!matched_end_char) return false;
+            if (!matchedEndChar) return false;
         }
         try {
             int i = Integer.parseInt(number);
