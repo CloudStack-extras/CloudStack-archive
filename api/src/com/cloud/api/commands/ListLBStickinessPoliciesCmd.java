@@ -73,11 +73,9 @@ public class ListLBStickinessPoliciesCmd extends BaseListCmd {
         ListResponse<LBStickinessResponse> response = new ListResponse<LBStickinessResponse>();
         
         if (lb != null) {
-            List<? extends StickinessPolicy> stickinessPolicies = _lbService
-                    .searchForLBStickinessPolicies(this);
+            List<? extends StickinessPolicy> stickinessPolicies = _lbService.searchForLBStickinessPolicies(this);
 
-            LBStickinessResponse spResponse = _responseGenerator
-                    .createLBStickinessPolicyResponse(stickinessPolicies, lb);
+            LBStickinessResponse spResponse = _responseGenerator.createLBStickinessPolicyResponse(stickinessPolicies, lb);
             spResponses.add(spResponse);
             response.setResponses(spResponses);
         }

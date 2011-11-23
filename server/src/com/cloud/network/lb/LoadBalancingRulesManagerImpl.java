@@ -276,11 +276,13 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @Override
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_LB_STICKINESSPOLICY_CREATE, eventDescription = "Apply Stickinesspolicy to load balancer ", async = true)
-    public boolean applyLBStickinessPolicy(long lbRuleId)  {
+    public boolean applyLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd)  {
+
         try {
-            applyLoadBalancerConfig(lbRuleId);
+            applyLoadBalancerConfig(cmd.getLbRuleId());
         } catch (ResourceUnavailableException e) {
-            s_logger.warn("Unable to apply Stickiness policy to the lb rule: " + lbRuleId + " because resource is unavaliable:", e);
+            s_logger.warn("Unable to apply Stickiness policy to the lb rule: " + cmd.getLbRuleId() + " because resource is unavaliable:", e);
+            deleteLBStickinessPolicy(cmd.getEntityId());
             return false;
         }
         return true;
