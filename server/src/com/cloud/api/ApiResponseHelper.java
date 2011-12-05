@@ -2677,7 +2677,6 @@ public class ApiResponseHelper implements ResponseGenerator {
         if (network.getAclType() != null) {
             response.setAclType(network.getAclType().toString());
         }
-        response.setIsDefault(network.isDefault());
         response.setState(network.getState().toString());
         response.setRelated(network.getRelated());
         response.setNetworkDomain(network.getNetworkDomain());
