@@ -130,9 +130,6 @@ public class NetworkVO implements Network, Identity {
 
     @Column(name="reservation_id")
     String reservationId;
-
-    @Column(name="is_default")
-    boolean isDefault;
     
     @Column(name="uuid")
     String uuid;
@@ -176,8 +173,8 @@ public class NetworkVO implements Network, Identity {
     	this.uuid = UUID.randomUUID().toString();
     }
 
-    public NetworkVO(long id, Network that, long offeringId, String guruName, long domainId, long accountId, long related, String name, String displayText, boolean isDefault, String networkDomain, GuestType guestType, long dcId, Long physicalNetworkId, ACLType aclType) {
-        this(id, that.getTrafficType(), that.getMode(), that.getBroadcastDomainType(), offeringId, domainId, accountId, related, name, displayText, isDefault,networkDomain, guestType, dcId, physicalNetworkId, aclType);
+    public NetworkVO(long id, Network that, long offeringId, String guruName, long domainId, long accountId, long related, String name, String displayText, String networkDomain, GuestType guestType, long dcId, Long physicalNetworkId, ACLType aclType) {
+        this(id, that.getTrafficType(), that.getMode(), that.getBroadcastDomainType(), offeringId, domainId, accountId, related, name, displayText, networkDomain,guestType, dcId, physicalNetworkId, aclType);
         this.gateway = that.getGateway();
         this.cidr = that.getCidr();
         this.broadcastUri = that.getBroadcastUri();
@@ -200,7 +197,6 @@ public class NetworkVO implements Network, Identity {
      * @param accountId
      * @param name
      * @param displayText
-     * @param isDefault
      * @param networkDomain
      * @param guestType TODO
      * @param aclType TODO
@@ -208,7 +204,7 @@ public class NetworkVO implements Network, Identity {
      * @param isShared
      * @param dataCenterId
      */
-    public NetworkVO(long id, TrafficType trafficType, Mode mode, BroadcastDomainType broadcastDomainType, long networkOfferingId, long domainId, long accountId, long related, String name, String displayText, boolean isDefault, String networkDomain, GuestType guestType, long dcId, Long physicalNetworkId, ACLType aclType) {
+    public NetworkVO(long id, TrafficType trafficType, Mode mode, BroadcastDomainType broadcastDomainType, long networkOfferingId, long domainId, long accountId, long related, String name, String displayText, String networkDomain, GuestType guestType, long dcId, Long physicalNetworkId, ACLType aclType) {
         this(trafficType, mode, broadcastDomainType, networkOfferingId, State.Allocated, dcId, physicalNetworkId);
         this.domainId = domainId;
         this.accountId = accountId;
@@ -216,7 +212,6 @@ public class NetworkVO implements Network, Identity {
         this.id = id;
         this.name = name;
         this.displayText = displayText;
-        this.isDefault = isDefault;
         this.aclType = aclType;
         this.networkDomain = networkDomain;
     	this.uuid = UUID.randomUUID().toString();
@@ -401,11 +396,6 @@ public class NetworkVO implements Network, Identity {
 
     public void setDisplayText(String displayText) {
         this.displayText = displayText;
-    }
-
-    @Override
-    public boolean isDefault() {
-        return isDefault;
     }
 
     public Date getRemoved() {
