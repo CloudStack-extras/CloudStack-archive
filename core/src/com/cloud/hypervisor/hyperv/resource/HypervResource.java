@@ -635,6 +635,12 @@ public class HypervResource extends ServerResourceBase implements ServerResource
         String args = " " + cmd.getVmMac();
         args += " " + cmd.getVmIpAddress();
         args += " " + cmd.getVmName();
+        if (cmd.getDefaultRouter() != null) {
+            args += " " + cmd.getDefaultRouter();
+            args += " " + cmd.getDefaultDns();
+            args += " " + cmd.getStaticRoutes();
+        }
+
 
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Run command on domR " + cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP) + ", /root/edithosts.sh " + args);
