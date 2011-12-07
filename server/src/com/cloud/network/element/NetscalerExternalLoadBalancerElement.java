@@ -154,7 +154,12 @@ public class NetscalerExternalLoadBalancerElement extends ExternalLoadBalancerDe
     public boolean destroy(Network config) {
         return true;
     }
-
+    
+    @Override
+    public boolean validateLBRule(Network network, LoadBalancingRule rule) {    
+        return true;
+    }
+    
     @Override
     public boolean applyLBRules(Network config, List<LoadBalancingRule> rules) throws ResourceUnavailableException {
         if (!canHandle(config)) {
