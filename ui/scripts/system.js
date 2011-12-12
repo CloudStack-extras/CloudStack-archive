@@ -1842,105 +1842,36 @@
 
           // NetScaler list view
           netscaler: {
+            type: 'detailView',
             id: 'netscalerProviders',
             label: 'NetScaler',
-            fields: {
-              ipaddress: { label: 'IP Address' },
-              lbdevicestate: { label: 'Status' }
-            },
-            providerActionFilter: function(args) {
-              var allowedActions = [];
-              var jsonObj = nspMap["netscaler"];
-              if(jsonObj.state == "Enabled")
-                allowedActions.push("disable");
-              else if(jsonObj.state == "Disabled")
-                allowedActions.push("enable");
-              allowedActions.push("shutdown");
-              return allowedActions;
-            },
-            providerActions: {
-              enable: {
-                label: 'Enable provider',
-                action: function(args) {
-                  $.ajax({
-                    url: createURL("updateNetworkServiceProvider&id=" + nspMap["netscaler"].id + "&state=Enabled"),
-                    dataType: "json",
-                    success: function(json) {
-                      var jid = json.updatenetworkserviceproviderresponse.jobid;
-                      args.response.success(
-                        {_custom:
-                          {
-                            jobId: jid,
-                            getUpdatedItem: function(json) {
-                              var item = json.queryasyncjobresultresponse.jobresult.networkserviceprovider;
-                              nspMap["netscaler"] = item;
-                              return item;
-                            }
-                          }
-                        }
-                      );
+            viewAll: { label: 'Providers', path: '_zone.netscalerProviders' },
+            tabs: {
+              details: {
+                title: 'Details',
+                fields: [
+                  {
+                    name: { label: 'Name' }
+                  },
+                  {
+                    id: { label: 'ID' }
+                  }
+                ],
+                dataProvider: function(args) {
+                  args.response.success({
+                    data: selectedPhysicalNetworkObj,
+                    actionFilter: function(args) {
+                      var allowedActions = [];
+                      var jsonObj = nspMap["netscaler"];
+                      if(jsonObj.state == "Enabled")
+                        allowedActions.push("disable");
+                      else if(jsonObj.state == "Disabled")
+                        allowedActions.push("enable");
+                      allowedActions.push("destroy");
+                      return allowedActions;
                     }
                   });
-                },
-                messages: {
-                  notification: function() { return 'Provider is enabled'; }
-                },
-                notification: { poll: pollAsyncJobResult }
-              },
-              disable: {
-                label: 'Disable provider',
-                action: function(args) {
-                  $.ajax({
-                    url: createURL("updateNetworkServiceProvider&id=" + nspMap["netscaler"].id + "&state=Disabled"),
-                    dataType: "json",
-                    success: function(json) {
-                      var jid = json.updatenetworkserviceproviderresponse.jobid;
-                      args.response.success(
-                        {_custom:
-                          {
-                            jobId: jid,
-                            getUpdatedItem: function(json) {
-                              var item = json.queryasyncjobresultresponse.jobresult.networkserviceprovider;
-                              nspMap["netscaler"] = item;
-                              return item;
-                            }
-                          }
-                        }
-                      );
-                    }
-                  });
-                },
-                messages: {
-                  notification: function() { return 'Provider is disabled'; }
-                },
-                notification: { poll: pollAsyncJobResult }
-              },
-              shutdown: {
-                label: 'Shutdown provider',
-                action: function(args) {
-                  $.ajax({
-                    url: createURL("deleteNetworkServiceProvider&id=" + nspMap["netscaler"].id),
-                    dataType: "json",
-                    success: function(json) {
-                      var jid = json.deletenetworkserviceproviderresponse.jobid;
-                      args.response.success(
-                        {_custom:
-                          {
-                            jobId: jid,
-                            getUpdatedItem: function(json) {
-                              nspMap["netscaler"] = null;
-                              return {}; //nothing in this network service provider needs to be updated, in fact, this whole network service provider has being deleted
-                            }
-                          }
-                        }
-                      );
-                    }
-                  });
-                },
-                messages: {
-                  notification: function() { return 'Provider is shutdown'; }
-                },
-                notification: { poll: pollAsyncJobResult }
+                }
               }
             },
             actions: {
@@ -2049,87 +1980,81 @@
                 notification: {
                   poll: pollAsyncJobResult
                 }
-              }
-            },
-            dataProvider: function(args) {
-              $.ajax({
-                url: createURL("listNetscalerLoadBalancers&physicalnetworkid=" + selectedPhysicalNetworkObj.id),
-                dataType: "json",
-                async: false,
-                success: function(json) {
-                  var items = json.listnetscalerloadbalancerresponse.netscalerloadbalancer;
-                  args.response.success({data: items});
-                }
-              });
-            },
-            detailView: {
-              name: 'NetScaler details',
-              actions: {
-                'delete': {
-                  label: 'Delete NetScaler',
-                  messages: {
-                    confirm: function(args) {
-                      return 'Are you sure you want to delete this NetScaler?';
-                    },
-                    success: function(args) {
-                      return 'NetScaler is being deleted.';
-                    },
-                    notification: function(args) {
-                      return 'Deleting NetScaler';
-                    },
-                    complete: function(args) {
-                      return 'NetScaler has been deleted.';
-                    }
-                  },
-                  action: function(args) {
-                    $.ajax({
-                      url: createURL("deleteNetscalerLoadBalancer&lbdeviceid=" + args.context.netscalerProviders[0].lbdeviceid),
-                      dataType: "json",
-                      async: true,
-                      success: function(json) {
-                        var jid = json.deletenetscalerloadbalancerresponse.jobid;
-                        args.response.success(
-                          {_custom:
-                           {jobId: jid}
-                          }
-                        );
-                      }
-                    });
-                  },
-                  notification: {
-                    poll: pollAsyncJobResult
-                  }
-                }
               },
-              tabs: {
-                details: {
-                  title: 'Details',
-                  fields: [
-                    {
-                      lbdeviceid: { label: 'ID' },
-                      ipaddress: { label: 'IP Address' },
-                      lbdevicestate: { label: 'Status' },
-                      lbdevicename: { label: 'Type' },
-                      lbdevicecapacity: { label: 'Capacity' },
-                      lbdevicededicated: {
-                        label: 'Dedicated',
-                        converter: cloudStack.converters.toBooleanText
-                      },
-                      inline: {
-                        label: 'Mode',
-                        converter: function(args) {
-                          if(args == false)
-                            return "side by side";
-                          else //args == true
-                            return "inline";
+              enable: {
+                label: 'Enable provider',
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("updateNetworkServiceProvider&id=" + nspMap["netscaler"].id + "&state=Enabled"),
+                    dataType: "json",
+                    success: function(json) {
+                      var jid = json.updatenetworkserviceproviderresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+                            jobId: jid
+                          }
                         }
-                      }
+                      );
+
+                      $(window).trigger('cloudStack.fullRefresh');
                     }
-                  ],
-                  dataProvider: function(args) {
-                    args.response.success({data: args.context.netscalerProviders[0]});
-                  }
+                  });
                 },
+                messages: {
+                  notification: function() { return 'Provider is enabled'; }
+                },
+                notification: { poll: pollAsyncJobResult }
+              },
+              disable: {
+                label: 'Disable provider',
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("updateNetworkServiceProvider&id=" + nspMap["netscaler"].id + "&state=Disabled"),
+                    dataType: "json",
+                    success: function(json) {
+                      var jid = json.updatenetworkserviceproviderresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+                            jobId: jid
+                          }
+                        }
+                      );
+
+                      $(window).trigger('cloudStack.fullRefresh');
+                    }
+                  });
+                },
+                messages: {
+                  notification: function() { return 'Provider is disabled'; }
+                },
+                notification: { poll: pollAsyncJobResult }
+              },
+              destroy: {
+                label: 'Shutdown provider',
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("deleteNetworkServiceProvider&id=" + nspMap["netscaler"].id),
+                    dataType: "json",
+                    success: function(json) {
+                      var jid = json.deletenetworkserviceproviderresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+                            jobId: jid
+                          }
+                        }
+                      );
+
+                      $(window).trigger('cloudStack.fullRefresh');
+                    }
+                  });
+                },
+                messages: {
+                  notification: function() { return 'Provider is shutdown'; }
+                },
+                notification: { poll: pollAsyncJobResult }
               }
             }
           },
@@ -3478,6 +3403,99 @@
       }
     }),
     subsections: {
+      // Provider list views
+      netscalerProviders: {
+        id: 'netscalerProviders',
+        title: 'NetScaler Providers',
+        listView: {
+          id: 'netscalerProviders',
+          fields: {
+            ipaddress: { label: 'IP Address' },
+            lbdevicestate: { label: 'Status' }
+          },
+          dataProvider: function(args) {
+            $.ajax({
+              url: createURL("listNetscalerLoadBalancers&physicalnetworkid=" + selectedPhysicalNetworkObj.id),
+              dataType: "json",
+              async: false,
+              success: function(json) {
+                var items = json.listnetscalerloadbalancerresponse.netscalerloadbalancer;
+                args.response.success({data: items});
+              }
+            });
+          },
+          detailView: {
+            name: 'NetScaler details',
+            actions: {
+              'delete': {
+                label: 'Delete NetScaler',
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to delete this NetScaler?';
+                  },
+                  success: function(args) {
+                    return 'NetScaler is being deleted.';
+                  },
+                  notification: function(args) {
+                    return 'Deleting NetScaler';
+                  },
+                  complete: function(args) {
+                    return 'NetScaler has been deleted.';
+                  }
+                },
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("deleteNetscalerLoadBalancer&lbdeviceid=" + args.context.netscalerProviders[0].lbdeviceid),
+                    dataType: "json",
+                    async: true,
+                    success: function(json) {
+                      var jid = json.deletenetscalerloadbalancerresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                         {jobId: jid}
+                        }
+                      );
+                    }
+                  });
+                },
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              }
+            },
+            tabs: {
+              details: {
+                title: 'Details',
+                fields: [
+                  {
+                    lbdeviceid: { label: 'ID' },
+                    ipaddress: { label: 'IP Address' },
+                    lbdevicestate: { label: 'Status' },
+                    lbdevicename: { label: 'Type' },
+                    lbdevicecapacity: { label: 'Capacity' },
+                    lbdevicededicated: {
+                      label: 'Dedicated',
+                      converter: cloudStack.converters.toBooleanText
+                    },
+                    inline: {
+                      label: 'Mode',
+                      converter: function(args) {
+                        if(args == false)
+                          return "side by side";
+                        else //args == true
+                          return "inline";
+                      }
+                    }
+                  }
+                ],
+                dataProvider: function(args) {
+                  args.response.success({data: args.context.netscalerProviders[0]});
+                }
+              }
+            }
+          }
+        }
+      },
       systemVMs: {
         type: 'select',
         title: 'System VMs',
