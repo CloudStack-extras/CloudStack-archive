@@ -2288,107 +2288,38 @@
 
           // SRX list view
           srx: {
+            type: 'detailView',
             id: 'srxProviders',
             label: 'SRX',
-            fields: {
-              ipaddress: { label: 'IP Address' },
-              fwdevicestate: { label: 'Status' }
-            },
-            providerActionFilter: function(args) {
-              var allowedActions = [];
-              var jsonObj = nspMap["srx"];
-              if(jsonObj.state == "Enabled") {
-                allowedActions.push("disable");
-              }
-              else if(jsonObj.state == "Disabled") {
-                allowedActions.push("enable");
-              }
-              allowedActions.push("shutdown");
-              return allowedActions;
-            },
-            providerActions: {
-              enable: {
-                label: 'Enable provider',
-                action: function(args) {
-                  $.ajax({
-                    url: createURL("updateNetworkServiceProvider&id=" + nspMap["srx"].id + "&state=Enabled"),
-                    dataType: "json",
-                    success: function(json) {
-                      var jid = json.updatenetworkserviceproviderresponse.jobid;
-                      args.response.success(
-                        {_custom:
-                          {
-                            jobId: jid,
-                            getUpdatedItem: function(json) {
-                              var item = json.queryasyncjobresultresponse.jobresult.networkserviceprovider;
-                              nspMap["srx"] = item;
-                              return item;
-                            }
-                          }
-                        }
-                      );
+            viewAll: { label: 'Providers', path: '_zone.srxProviders' },
+            tabs: {
+              details: {
+                title: 'Details',
+                fields: [
+                  {
+                    name: { label: 'Name' }
+                  },
+                  {
+                    id: { label: 'ID' }
+                  }
+                ],
+                dataProvider: function(args) {
+                  args.response.success({
+                    data: selectedPhysicalNetworkObj,
+                    actionFilter: function(args) {
+                      var allowedActions = [];
+                      var jsonObj = nspMap["srx"];
+                      if(jsonObj.state == "Enabled") {
+                        allowedActions.push("disable");
+                      }
+                      else if(jsonObj.state == "Disabled") {
+                        allowedActions.push("enable");
+                      }
+                      allowedActions.push("destroy");
+                      return allowedActions;
                     }
                   });
-                },
-                messages: {
-                  notification: function() { return 'Provider is enabled'; }
-                },
-                notification: { poll: pollAsyncJobResult }
-              },
-              disable: {
-                label: 'Disable provider',
-                action: function(args) {
-                  $.ajax({
-                    url: createURL("updateNetworkServiceProvider&id=" + nspMap["srx"].id + "&state=Disabled"),
-                    dataType: "json",
-                    success: function(json) {
-                      var jid = json.updatenetworkserviceproviderresponse.jobid;
-                      args.response.success(
-                        {_custom:
-                          {
-                            jobId: jid,
-                            getUpdatedItem: function(json) {
-                              var item = json.queryasyncjobresultresponse.jobresult.networkserviceprovider;
-                              nspMap["srx"] = item;
-                              return item;
-                            }
-                          }
-                        }
-                      );
-                    }
-                  });
-                },
-                messages: {
-                  notification: function() { return 'Provider is disabled'; }
-                },
-                notification: { poll: pollAsyncJobResult }
-              },
-              shutdown: {
-                label: 'Shutdown provider',
-                action: function(args) {
-                  $.ajax({
-                    url: createURL("deleteNetworkServiceProvider&id=" + nspMap["srx"].id),
-                    dataType: "json",
-                    success: function(json) {
-                      var jid = json.deletenetworkserviceproviderresponse.jobid;
-                      args.response.success(
-                        {_custom:
-                          {
-                            jobId: jid,
-                            getUpdatedItem: function(json) {
-                              nspMap["srx"] = null;
-                              return {}; //nothing in this network service provider needs to be updated, in fact, this whole network service provider has being deleted
-                            }
-                          }
-                        }
-                      );
-                    }
-                  });
-                },
-                messages: {
-                  notification: function() { return 'Provider is shutdown'; }
-                },
-                notification: { poll: pollAsyncJobResult }
+                }
               }
             },
             actions: {
@@ -2510,75 +2441,81 @@
                 notification: {
                   poll: pollAsyncJobResult
                 }
-              }
-            },
-            dataProvider: function(args) {
-              $.ajax({
-                url: createURL("listSrxFirewalls&physicalnetworkid=" + selectedPhysicalNetworkObj.id),
-                dataType: "json",
-                async: false,
-                success: function(json) {
-                  var items = json.listsrxfirewallresponse.srxfirewall;
-                  args.response.success({data: items});
-                }
-              });
-            },
-            detailView: {
-              name: 'SRX details',
-              actions: {
-                'delete': {
-                  label: 'Delete SRX',
-                  messages: {
-                    confirm: function(args) {
-                      return 'Are you sure you want to delete this SRX?';
-                    },
-                    success: function(args) {
-                      return 'SRX is being deleted.';
-                    },
-                    notification: function(args) {
-                      return 'Deleting SRX';
-                    },
-                    complete: function(args) {
-                      return 'SRX has been deleted.';
-                    }
-                  },
-                  action: function(args) {
-                    $.ajax({
-                      url: createURL("deleteSrcFirewall&fwdeviceid=" + args.context.srxProviders[0].fwdeviceid),
-                      dataType: "json",
-                      async: true,
-                      success: function(json) {
-                        var jid = json.deletesrxfirewallresponse.jobid;
-                        args.response.success(
-                          {_custom:
-                           {jobId: jid}
-                          }
-                        );
-                      }
-                    });
-                  },
-                  notification: {
-                    poll: pollAsyncJobResult
-                  }
-                }
               },
-              tabs: {
-                details: {
-                  title: 'Details',
-                  fields: [
-                    {
-                      fwdeviceid: { label: 'ID' },
-                      ipaddress: { label: 'IP Address' },
-                      fwdevicestate: { label: 'Status' },
-                      fwdevicename: { label: 'Type' },
-                      fwdevicecapacity: { label: 'Capacity' },
-                      timeout: { label: 'Timeout' }
+              enable: {
+                label: 'Enable provider',
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("updateNetworkServiceProvider&id=" + nspMap["srx"].id + "&state=Enabled"),
+                    dataType: "json",
+                    success: function(json) {
+                      var jid = json.updatenetworkserviceproviderresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+                            jobId: jid
+                          }
+                        }
+                      );
+
+                      $(window).trigger('cloudStack.fullRefresh');
                     }
-                  ],
-                  dataProvider: function(args) {
-                    args.response.success({data: args.context.srxProviders[0]});
-                  }
-                }
+                  });
+                },
+                messages: {
+                  notification: function() { return 'Provider is enabled'; }
+                },
+                notification: { poll: pollAsyncJobResult }
+              },
+              disable: {
+                label: 'Disable provider',
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("updateNetworkServiceProvider&id=" + nspMap["srx"].id + "&state=Disabled"),
+                    dataType: "json",
+                    success: function(json) {
+                      var jid = json.updatenetworkserviceproviderresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+                            jobId: jid
+                          }
+                        }
+                      );
+
+                      $(window).trigger('cloudStack.fullRefresh');
+                    }
+                  });
+                },
+                messages: {
+                  notification: function() { return 'Provider is disabled'; }
+                },
+                notification: { poll: pollAsyncJobResult }
+              },
+              destroy: {
+                label: 'Shutdown provider',
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("deleteNetworkServiceProvider&id=" + nspMap["srx"].id),
+                    dataType: "json",
+                    success: function(json) {
+                      var jid = json.deletenetworkserviceproviderresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+                            jobId: jid
+                          }
+                        }
+                      );
+
+                      $(window).trigger('cloudStack.fullRefresh');
+                    }
+                  });
+                },
+                messages: {
+                  notification: function() { return 'Provider is shutdown'; }
+                },
+                notification: { poll: pollAsyncJobResult }
               }
             }
           },
@@ -3429,6 +3366,7 @@
           }
         }
       },
+      
       f5Providers: {
         id: 'f5Providers',
         title: 'F5 Providers',
@@ -3515,6 +3453,87 @@
                 ],
                 dataProvider: function(args) {
                   args.response.success({data: args.context.f5Providers[0]});
+                }
+              }
+            }
+          }
+        }
+      },
+
+      srxProviders: {
+        id: 'srxProviders',
+        title: 'SRX Providers',
+        listView: {
+          id: 'srxProviders',
+          fields: {
+            ipaddress: { label: 'IP Address' },
+            lbdevicestate: { label: 'Status' }
+          },
+          dataProvider: function(args) {
+            $.ajax({
+              url: createURL("listSrxFirewalls&physicalnetworkid=" + selectedPhysicalNetworkObj.id),
+              dataType: "json",
+              async: false,
+              success: function(json) {
+                var items = json.listsrxfirewallresponse.srxfirewall;
+                args.response.success({data: items});
+              }
+            });
+          },
+          detailView: {
+            name: 'SRX details',
+            actions: {
+              'delete': {
+                label: 'Delete SRX',
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to delete this SRX?';
+                  },
+                  success: function(args) {
+                    return 'SRX is being deleted.';
+                  },
+                  notification: function(args) {
+                    return 'Deleting SRX';
+                  },
+                  complete: function(args) {
+                    return 'SRX has been deleted.';
+                  }
+                },
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("deleteSrcFirewall&fwdeviceid=" + args.context.srxProviders[0].fwdeviceid),
+                    dataType: "json",
+                    async: true,
+                    success: function(json) {
+                      var jid = json.deletesrxfirewallresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                         {jobId: jid}
+                        }
+                      );
+                    }
+                  });
+                },
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              }
+            },
+            tabs: {
+              details: {
+                title: 'Details',
+                fields: [
+                  {
+                    fwdeviceid: { label: 'ID' },
+                    ipaddress: { label: 'IP Address' },
+                    fwdevicestate: { label: 'Status' },
+                    fwdevicename: { label: 'Type' },
+                    fwdevicecapacity: { label: 'Capacity' },
+                    timeout: { label: 'Timeout' }
+                  }
+                ],
+                dataProvider: function(args) {
+                  args.response.success({data: args.context.srxProviders[0]});
                 }
               }
             }
