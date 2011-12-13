@@ -894,6 +894,15 @@
                               label: 'Description',
                               isEditable: true
                             },
+                            restartrequired: {
+                              label: 'Restart required',
+                              converter: function(booleanValue) {
+                                if(booleanValue == true)
+                                  return "<font color='red'>Yes</font>";
+                                else if(booleanValue == false)
+                                  return "No";
+                              },
+                            },
                             isdefault: {
                               label: 'Default',
                               converter: cloudStack.converters.toBooleanText

@@ -498,15 +498,40 @@
                   var array1 = [];
                   array1.push("&name=" + todb(args.data.name));
                   array1.push("&displaytext=" + todb(args.data.displaytext));
-                  array1.push("&ostypeid=" + args.data.ostypeid);
+                  array1.push("&ostypeid=" + args.data.ostypeid);                  
+                  array1.push("&passwordenabled=" + (args.data.passwordenabled=="on"));	                                                                      
                   $.ajax({
                     url: createURL("updateTemplate&id=" + args.context.templates[0].id + "&zoneid=" + args.context.templates[0].zoneid + array1.join("")),
                     dataType: "json",
-                    success: function(json) {
-                      var item = json.updatetemplateresponse.template;
-                      args.response.success({data:item});
+                    async: false,
+                    success: function(json) {    
+                      //API returns an incomplete embedded object  (some properties are missing in the embedded template object)                   
                     }
                   });
+                                                      
+                  var array2 = [];
+                  array2.push("&ispublic=" + (args.data.ispublic=="on"));                           
+                  array2.push("&isfeatured=" + (args.data.isfeatured=="on"));	
+                  array2.push("&isextractable=" + (args.data.isextractable=="on"));	                                          
+                  $.ajax({
+                    url: createURL("updateTemplatePermissions&id=" + args.context.templates[0].id + "&zoneid=" + args.context.templates[0].zoneid + array2.join("")),
+                    dataType: "json",
+                    async: false,
+                    success: function(json) {   
+                      //API doesn't return an embedded object                    
+                    }
+                  });
+                  
+                  //So, we call listTemplates API to get a complete template object
+                  $.ajax({                  
+                    url: createURL("listTemplates&id=" + args.context.templates[0].id + "&zoneid=" + args.context.templates[0].zoneid + "&templatefilter=self"),
+                    dataType: "json",
+                    async: false,
+                    success: function(json){            
+                      var item = json.listtemplatesresponse.template;
+                      args.response.success({data: item});
+                    }
+                  });                  
                 }
               },
 
@@ -718,25 +743,25 @@
                     isextractable: {
                       label: 'Extractable',
                       isBoolean: true,
-                      //isEditable: true,  //uncomment after Brian fix it to be checkbox instead of textfield
+                      isEditable: true,  
                       converter:cloudStack.converters.toBooleanText
                     },
                     passwordenabled: {
                       label: 'Password Enabled',
                       isBoolean: true,
-                      //isEditable: true,  //uncomment after Brian fix it to be checkbox instead of textfield
+                      isEditable: true,  
                       converter:cloudStack.converters.toBooleanText
                     },
                     ispublic: {
                       label: 'Public',
                       isBoolean: true,
-                      //isEditable: true,  //uncomment after Brian fix it to be checkbox instead of textfield
+                      isEditable: true, 
                       converter:cloudStack.converters.toBooleanText
                     },
                     isfeatured: {
                       label: 'Featured',
                       isBoolean: true,
-                      //isEditable: true,  //uncomment after Brian fix it to be checkbox instead of textfield
+                      isEditable: true,  
                       converter:cloudStack.converters.toBooleanText
                     },
                     crossZones: {
@@ -1167,11 +1192,35 @@
                   $.ajax({
                     url: createURL("updateIso&id=" + args.context.isos[0].id + "&zoneid=" + args.context.isos[0].zoneid + array1.join("")),
                     dataType: "json",
+                    async: false,
                     success: function(json) {
-                      var item = json.updateisoresponse.iso;
-                      args.response.success({data:item});
+                      //updateIso API returns an incomplete ISO object (isextractable and isfeatured are missing)              
                     }
                   });
+                                   
+                  var array2 = [];
+                  array2.push("&ispublic=" + (args.data.ispublic=="on"));                           
+                  array2.push("&isfeatured=" + (args.data.isfeatured=="on"));	
+                  array2.push("&isextractable=" + (args.data.isextractable=="on"));	  
+                  $.ajax({
+                    url: createURL("updateIsoPermissions&id=" + args.context.isos[0].id + "&zoneid=" + args.context.isos[0].zoneid + array2.join("")),
+                    dataType: "json",
+                    async: false,
+                    success: function(json) {   
+                      //updateIsoPermissions API doesn't return ISO object             
+                    }
+                  });
+                  
+                  //So, we call listIsos API to get a complete ISO object
+                  $.ajax({                  
+                    url: createURL("listIsos&id=" + args.context.isos[0].id + "&zoneid=" + args.context.isos[0].zoneid + "&isofilter=self"),
+                    dataType: "json",
+                    async: false,
+                    success: function(json){  
+                      var item = json.listisosresponse.iso;
+                      args.response.success({data: item});
+                    }
+                  });    
                 }
               },
 
@@ -1381,6 +1430,8 @@
                     },
                     isextractable: {
                       label: 'Extractable',
+                       isBoolean: true,
+                      isEditable: true,  
                       converter:cloudStack.converters.toBooleanText
                     },
                     bootable: {
@@ -1389,10 +1440,14 @@
                     },
                     ispublic: {
                       label: 'Public',
+                       isBoolean: true,
+                      isEditable: true,  
                       converter:cloudStack.converters.toBooleanText
                     },
                     isfeatured: {
                       label: 'Featured',
+                       isBoolean: true,
+                      isEditable: true,  
                       converter:cloudStack.converters.toBooleanText
                     },
                     crossZones: {
