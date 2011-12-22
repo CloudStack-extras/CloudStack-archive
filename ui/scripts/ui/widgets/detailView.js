@@ -158,7 +158,9 @@
                 {},
 
                 // Error
-                function(args) {}
+                function(args) {
+                  $loading.remove();
+                }
               );
             }
           });
@@ -208,13 +210,12 @@
 
                   // Error
                   function(args) {
-
+                    $loading.remove();
                   }
                 );
               },
               error: function(args) {
-                // if (args.message)
-                //   cloudStack.dialog.notice({ message: args.message });
+                $loading.remove();
               }
             }
           });
