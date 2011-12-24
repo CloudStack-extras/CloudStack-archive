@@ -8,8 +8,10 @@
 /etc/cloud/management/ehcache.xml
 /etc/cloud/management/log4j-cloud.xml
 /etc/cloud/management/logging.properties
-/etc/cloud/management/server.xml
-/etc/cloud/management/tomcat6.conf
+/etc/cloud/management/server-ssl.xml
+/etc/cloud/management/server-nonssl.xml
+/etc/cloud/management/tomcat6-nonssl.conf
+/etc/cloud/management/tomcat6-ssl.conf
 /etc/cloud/management/classpath.conf
 /etc/cloud/management/tomcat-users.xml
 /etc/cloud/management/web.xml
