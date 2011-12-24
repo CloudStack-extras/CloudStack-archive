@@ -1,6 +1,9 @@
 /etc/cloud/management/catalina.policy
 /etc/cloud/management/catalina.properties
 /etc/cloud/management/commands.properties
+/etc/cloud/management/virtualrouter_commands.properties
+/etc/cloud/management/f5bigip_commands.properties
+/etc/cloud/management/netscalerloadbalancer_commands.properties
 /etc/cloud/management/components.xml
 /etc/cloud/management/context.xml
 /etc/cloud/management/db.properties
