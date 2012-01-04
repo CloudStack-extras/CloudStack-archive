@@ -1590,17 +1590,17 @@ public class JuniperSrxResource implements ServerResource {
             return sendRequestAndCheckResponse(command, xml, "name", publicIp + "/32");
 
         case CHECK_IF_IN_USE:
-        	// Check if any NAT rules are using this proxy ARP entry
-        	String poolName = genSourceNatPoolName(publicIp);
-               
-        	String allStaticNatRules = sendRequest(SrxXml.STATIC_NAT_RULE_GETALL.getXml());
-        	String allDestNatRules = sendRequest(replaceXmlValue(SrxXml.DEST_NAT_RULE_GETALL.getXml(), "rule-set", _publicZone));
-        	String allSrcNatRules = sendRequest(SrxXml.SRC_NAT_RULE_GETALL.getXml());
-    
-        	return (allStaticNatRules.contains(publicIp) ||
-        			allDestNatRules.contains(publicIp) ||
-        			allSrcNatRules.contains(poolName));
-
+            // Check if any static or destination NAT rules use this proxy ARP entry
+            List<String[]> staticAndDestNatRules = getAllStaticAndDestNatRules();            
+	    
+            for (String[] rule : staticAndDestNatRules) {
+                String rulePublicIp = rule[0];
+                if (publicIp.equals(rulePublicIp)) {
+                    return true;
+                }
+            }
+	    
+            return false;
         case ADD:
             if (manageProxyArp(SrxCommand.CHECK_IF_EXISTS, publicVlanTag, publicIp)) {
                 return true;
