@@ -305,7 +305,7 @@
 
       return $wizard.dialog({
         title: 'Add zone',
-        width: 665,
+        width: 750,
         height: 665,
         zIndex: 5000,
         resizable: false

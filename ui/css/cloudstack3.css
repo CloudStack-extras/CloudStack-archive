@@ -2,7 +2,8 @@
 /*Base*/
 /*+clearfix {*/
 div.toolbar:after,
-.multi-wizard .progress ul li:after {
+.multi-wizard .progress ul li:after,
+.multi-wizard.zone-wizard .select-container .field .select-array-item:after {
   content: ".";
   display: block;
   height: 0;
@@ -12,12 +13,14 @@ div.toolbar:after,
 }
 
 div.toolbar,
-.multi-wizard .progress ul li {
+.multi-wizard .progress ul li,
+.multi-wizard.zone-wizard .select-container .field .select-array-item {
   display: inline-block;
 }
 
 div.toolbar,
-.multi-wizard .progress ul li {
+.multi-wizard .progress ul li,
+.multi-wizard.zone-wizard .select-container .field .select-array-item {
 /*\*/
   display: block;
 /**/
@@ -4357,11 +4360,8 @@ label.error {
 }
 
 .multi-wizard .progress ul li span.multiline {
-  /*+placement:shift -21px 12px;*/
-  position: relative;
-  left: -21px;
-  top: 12px;
   width: 71px;
+  top: 12px;
 }
 
 .multi-wizard .progress ul li span.arrow {
@@ -4422,10 +4422,10 @@ label.error {
   font-size: 11px;
   text-align: left;
   width: 437px;
-  /*+placement:shift 3px 17px;*/
+  /*+placement:shift 3px 25px;*/
   position: relative;
   left: 3px;
-  top: 17px;
+  top: 25px;
   line-height: 17px;
 }
 
@@ -5258,9 +5258,18 @@ label.error {
 
 /** Add zone wizard*/
 .multi-wizard.zone-wizard {
-  width: 647px;
   display: block;
   height: 675px;
+}
+
+.multi-wizard.zone-wizard .main-desc {
+  width: 516px;
+  float: left;
+  /*+placement:shift 0;*/
+  position: relative;
+  left: 0;
+  top: 0;
+  margin: 18px 0 0px 6px;
 }
 
 .multi-wizard.zone-wizard .buttons {
@@ -5268,20 +5277,29 @@ label.error {
 }
 
 .multi-wizard.zone-wizard .progress ul {
-  width: 646px;
+  width: 776px;
 }
 
 .multi-wizard.zone-wizard .progress ul li {
-  width: 182px;
+  width: 88px;
   padding: 0 32px 0 0;
 }
 
+.multi-wizard.zone-wizard .progress ul li span {
+  width: 102px;
+  left: 17px;
+}
+
+.multi-wizard.zone-wizard .progress ul li span.number {
+  left: -34px;
+}
+
 .multi-wizard.zone-wizard .progress ul li span.arrow {
-  margin: -4px 0 0 160px;
+  margin: -4px 0 0 94px;
 }
 
 .multi-wizard.zone-wizard .select-network .content .section {
-  width: 606px;
+  width: 665px;
   height: 430px;
   /*+placement:shift 0px 14px;*/
   position: relative;
@@ -5364,14 +5382,35 @@ label.error {
 }
 
 .multi-wizard.zone-wizard .content.input-area {
-  width: 505px;
-  height: 391px;
-  margin: 45px auto auto 71px;
+  width: 727px;
+  height: 427px;
+  margin: 12px auto auto 4px;
+  overflow: auto;
+}
+
+.multi-wizard.zone-wizard .select-container.multi {
+  display: inline-block;
+  height: auto;
+  border: 1px solid #BFBFBF;
+  /*+border-radius:4px;*/
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  -khtml-border-radius: 4px;
+  border-radius: 4px 4px 4px 4px;
+  /*+box-shadow:0px 2px 7px #DDDCDC;*/
+  -moz-box-shadow: 0px 2px 7px #DDDCDC;
+  -webkit-box-shadow: 0px 2px 7px #DDDCDC;
+  -o-box-shadow: 0px 2px 7px #DDDCDC;
+  box-shadow: 0px 2px 7px #DDDCDC;
+}
+
+.multi-wizard.zone-wizard .select-container.multi .field {
+  width: 100%;
 }
 
 .multi-wizard.zone-wizard .select-container .field {
-  width: 100%;
-  height: 40px;
+  width: 689px;
+  padding-bottom: 13px;
   float: left;
 }
 
@@ -5435,6 +5474,72 @@ label.error {
 .multi-wizard.zone-wizard .select-container .field .value.multi-range span {
   float: left;
   margin: 13px 0 0;
+}
+
+.multi-wizard.zone-wizard .select-container .field .select-array {
+  width: 360px;
+  display: inline-block;
+}
+
+/*[clearfix]*/.multi-wizard.zone-wizard .select-container .field .select-array-item {
+  width: 175px;
+  height: 34px;
+  float: left;
+}
+
+.multi-wizard.zone-wizard .select-container .field .select-array-item .name {
+  width: 127px;
+  float: right;
+  padding: 0;
+  margin: 11px 0 0;
+}
+
+.multi-wizard.zone-wizard .select-container .field .select-array-item .value {
+  width: 41px;
+  float: right;
+  padding: 0;
+  margin: 0;
+}
+
+.multi-wizard.zone-wizard .select-container .field .select-array-item .value input {
+  width: inherit;
+  margin: 12px 0 0 11px;
+}
+
+.multi-wizard.zone-wizard .setup-physical-network .button.add.new-physical-network {
+  background: #808080 url(../images/bg-gradients.png) 0px -264px;
+  border: 1px solid #ADA7A7;
+  padding: 6px 20px 6px 11px;
+  font-size: 12px;
+  float: right;
+  margin: 14px 6px 0 0;
+  /*+border-radius:4px;*/
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  -khtml-border-radius: 4px;
+  border-radius: 4px 4px 4px 4px;
+  color: #475765;
+  /*+text-shadow:0px 1px 1px #FFFFFF;*/
+  -moz-text-shadow: 0px 1px 1px #FFFFFF;
+  -webkit-text-shadow: 0px 1px 1px #FFFFFF;
+  -o-text-shadow: 0px 1px 1px #FFFFFF;
+  text-shadow: 0px 1px 1px #FFFFFF;
+  cursor: pointer;
+}
+
+.multi-wizard.zone-wizard .setup-physical-network .button.add.new-physical-network:hover {
+  background-position: 0px -349px;
+  color: #000000;
+  /*+text-shadow:0px 1px 2px #FFFFFF;*/
+  -moz-text-shadow: 0px 1px 2px #FFFFFF;
+  -webkit-text-shadow: 0px 1px 2px #FFFFFF;
+  -o-text-shadow: 0px 1px 2px #FFFFFF;
+  text-shadow: 0px 1px 2px #FFFFFF;
+}
+
+.multi-wizard.zone-wizard .setup-physical-network .button.add.new-physical-network .icon {
+  padding: 10px;
+  background: url(../images/sprites.png) -44px -58px;
 }
 
 /*Tree view*/

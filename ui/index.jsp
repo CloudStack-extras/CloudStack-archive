@@ -411,8 +411,11 @@
         <div class="progress">
           <ul>
             <li class="first"><span class="number">1</span><span>Select Type</span><span class="arrow"></span></li>
-            <li><span class="number">2</span><span>Setup Zone</span><span class="arrow"></span></li>
-            <li class="last"><span class="number">3</span><span>Setup Pod</span></li>
+            <li><span class="number">2</span><span>Add Zone</span><span class="arrow"></span></li>
+            <li><span class="number">3</span><span class="multiline">Add Physical Network</span><span class="arrow"></span></li>
+            <li><span class="number">4</span><span class="multiline">Configure Public Traffic</span><span class="arrow"></span></li>
+            <li><span class="number">5</span><span>Add Pod</span><span class="arrow"></span></li>
+            <li class="last"><span class="number">6</span><span class="multiline">Configure Guest Traffic</span></li>
           </ul>
         </div>
         <div class="steps">
@@ -549,6 +552,69 @@
                   </div>
                 </form>
               </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Setup Physical Network -->
+          <div class="setup-physical-network">
+            <div class="main-desc">You are able to add multiple physical networks, however certain network types have limit restrictions.</div>
+            <div class="button add new-physical-network"><span class="icon">&nbsp;</span><span>Add network</span></span></div>
+            <div class="content input-area">
+              <form>
+                <div class="select-container multi">
+                  <!-- Name -->
+                  <div class="field">
+                    <div class="name">
+                      <span>Network Name</span>
+                    </div>
+                    <div class="value">
+                      <input type="text" name="name" class="required" />
+                    </div>
+                  </div>
+
+                  <!-- Network Types -->
+                  <div class="field odd">
+                    <div class="name">
+                      Network Types
+                    </div>
+                    <div class="value">
+                      <div class="select-array">
+                        <!-- Public -->
+                        <div class="select-array-item">
+                          <div class="name">Public (1 required)</div>
+                          <div class="value">
+                            <input type="radio" name="network-type-public" value="0" />
+                          </div>
+                        </div>
+
+                        <!-- Guest -->
+                        <div class="select-array-item">
+                          <div class="name">Guest (multiple allowed)</div>
+                          <div class="value">
+                            <input type="checkbox" name="network-type-guest" value="0" />
+                          </div>
+                        </div>
+
+                        <!-- Management -->
+                        <div class="select-array-item">
+                          <div class="name">Management (1 required)</div>
+                          <div class="value">
+                            <input type="radio" name="network-type-management" value="0" />
+                          </div>
+                        </div>
+
+                        <!-- Storage -->
+                        <div class="select-array-item">
+                          <div class="name">Storage (optional)</div>
+                          <div class="value">
+                            <input type="checkbox" name="network-type-storage" value="0" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </form>
             </div>
           </div>
 
