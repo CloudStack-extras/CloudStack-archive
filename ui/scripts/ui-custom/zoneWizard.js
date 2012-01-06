@@ -140,7 +140,7 @@
                   var $select = $targetStep.find('select.network-offering');
                   var objs = $check.is(':checked') ?
                         args.securityGroupNetworkOfferings : args.networkOfferings;
-                  
+
                   $select.children().remove();
                   $(objs).each(function() {
                     $('<option></option>')
@@ -284,6 +284,65 @@
         }
 
         return true;
+      });
+
+      // Add/remove network action
+      $wizard.find(
+        '.button.add.new-physical-network, .button.remove.physical-network'
+      ).live('click', function() {
+        var $container = $wizard.find('.setup-physical-network .content.input-area form');
+
+        // Sets correct unique value for all network types
+        var renumberFormItems = function($container) {
+          var $items = $container.find('.select-container.multi');
+
+          $items.each(function() {
+            var $item = $(this);
+            var $networkName = $item.find('.field.name input[type=text]');
+            var $networkTypes = $item.find('.field.network-types input');
+            var index = $item.index();
+
+            $networkName.attr('name', 'physicalNetworks[' + index + ']' + '.name');
+            $networkTypes.val(index);
+          });
+        };
+
+        var addPhysicalNetwork = function() {
+          // Initialize new default network form elem
+          var $physicalNetworkItem = $('#template .zone-wizard')
+            .find('.steps .setup-physical-network')
+            .find('.select-container.multi:first').clone();
+
+          $physicalNetworkItem.hide().appendTo($container).fadeIn('fast');
+        };
+
+        var removePhysicalNetwork = function($button) {
+          var $item = $button.closest('.select-container.multi');
+
+          if (!$item.siblings().size()) {
+            cloudStack.dialog.notice({
+              message: 'You must have at least 1 physical network'
+            });
+          } else if ($item.find('input[type=radio]:checked').size()) {
+            cloudStack.dialog.notice({
+              message: 'Please select a different public and/or management network before removing'
+            });
+          } else {
+            $item.remove();
+          }
+        };
+
+        var $button = $(this);
+
+        if ($button.hasClass('add')) {
+          addPhysicalNetwork();
+        }
+        else if ($button.hasClass('remove')) {
+          removePhysicalNetwork($button);
+        }
+
+        renumberFormItems($container);
+        $container.validate('refresh');
       });
 
       showStep(1);

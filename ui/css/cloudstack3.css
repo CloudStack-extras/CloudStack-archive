@@ -5527,6 +5527,20 @@ label.error {
   cursor: pointer;
 }
 
+.multi-wizard.zone-wizard .setup-physical-network .button.remove.physical-network {
+  padding: 10px 10px 0px;
+  background: url(../images/sprites.png) -6px -93px;
+  cursor: pointer;
+  position: relative;
+  float: right;
+  top: 27px;
+  margin: -26px 0 0;
+}
+
+.multi-wizard.zone-wizard .setup-physical-network .button.remove.physical-network:hover {
+  background-position: -6px -675px;
+}
+
 .multi-wizard.zone-wizard .setup-physical-network .button.add.new-physical-network:hover {
   background-position: 0px -349px;
   color: #000000;

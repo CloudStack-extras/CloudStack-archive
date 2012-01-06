@@ -562,18 +562,23 @@
             <div class="content input-area">
               <form>
                 <div class="select-container multi">
+                  <!-- Delete button -->
+                  <div class="button remove physical-network"
+                       title="Remove this physical network">
+                    <span class="icon">&nbsp;</span>
+                  </div>
                   <!-- Name -->
-                  <div class="field">
+                  <div class="field name">
                     <div class="name">
                       <span>Network Name</span>
                     </div>
                     <div class="value">
-                      <input type="text" name="name" class="required" />
+                      <input type="text" name="physicalNetworks[0].name" class="required" />
                     </div>
                   </div>
 
                   <!-- Network Types -->
-                  <div class="field odd">
+                  <div class="field network-types odd">
                     <div class="name">
                       Network Types
                     </div>
