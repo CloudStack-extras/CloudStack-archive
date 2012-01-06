@@ -284,14 +284,25 @@
 								listView: {
 									fields: {
 										name: { label: 'Pod name' },
-										gateway: { label: 'Reserved system gateway' },
-										netmask: { label: 'Reserved system netmask' },
-										startip: { label: 'Reserved system start IP' },
-										endip: { label: 'Reserved system end IP' }
+										gateway: { label: 'Gateway' },  //'Reserved system gateway' is too long and causes a visual format bug (2 lines overlay)
+										netmask: { label: 'Netmask' },  //'Reserved system netmask' is too long and causes a visual format bug (2 lines overlay)
+										startip: { label: 'Start IP' }, //'Reserved system start IP' is too long and causes a visual format bug (2 lines overlay)
+										endip: { label: 'End IP' }      //'Reserved system end IP' is too long and causes a visual format bug (2 lines overlay)
 									},
-									dataProvider: function(args) {										
+									dataProvider: function(args) {	                    
+										var array1 = [];  
+										if(args.filterBy != null) {          
+											if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+												switch(args.filterBy.search.by) {
+												case "name":
+													if(args.filterBy.search.value.length > 0)
+														array1.push("&keyword=" + args.filterBy.search.value);
+													break;
+												}
+											}
+										}
 										$.ajax({
-											url: createURL("listPods&zoneid=" + selectedZoneObj.id + "&page=" + args.page + "&pagesize=" + pageSize),  
+											url: createURL("listPods&zoneid=" + selectedZoneObj.id + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),  
 											dataType: "json",
 											async: true,
 											success: function(json) {												
@@ -924,9 +935,21 @@
                     }
                   },
                   
-                  dataProvider: function(args) {
+                  dataProvider: function(args) {									  
+										var array1 = [];  
+										if(args.filterBy != null) {          
+											if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+												switch(args.filterBy.search.by) {
+												case "name":
+													if(args.filterBy.search.value.length > 0)
+														array1.push("&keyword=" + args.filterBy.search.value);
+													break;
+												}
+											}
+										}
+										
                     $.ajax({
-                      url: createURL("listNetworks&trafficType=Guest&zoneId=" + selectedZoneObj.id),
+                      url: createURL("listNetworks&trafficType=Guest&zoneId=" + selectedZoneObj.id + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
                       dataType: "json",
                       success: function(json) {
                         var items = json.listnetworksresponse.network;
@@ -1445,9 +1468,21 @@
                       }
                     }
                   },                 									
-                  dataProvider: function(args) {
+                  dataProvider: function(args) {									 
+									  var array1 = [];  
+										if(args.filterBy != null) {          
+											if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+												switch(args.filterBy.search.by) {
+												case "name":
+													if(args.filterBy.search.value.length > 0)
+														array1.push("&keyword=" + args.filterBy.search.value);
+													break;
+												}
+											}
+										}
+									
                     $.ajax({
-                      url: createURL("listRouters&zoneid=" + selectedZoneObj.id + "&page=" + args.page + "&pagesize=" + pageSize),
+                      url: createURL("listRouters&zoneid=" + selectedZoneObj.id + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
                       dataType: 'json',
                       async: true,
                       success: function(json) {
@@ -3207,9 +3242,21 @@
 
             },
 
-            dataProvider: function(args) {
+            dataProvider: function(args) {						  
+							var array1 = [];  
+							if(args.filterBy != null) {          
+								if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+									switch(args.filterBy.search.by) {
+									case "name":
+										if(args.filterBy.search.value.length > 0)
+											array1.push("&keyword=" + args.filterBy.search.value);
+										break;
+									}
+								}
+							}
+							
               $.ajax({
-                url: createURL("listZones&page=" + args.page + "&pagesize=" + pageSize),
+                url: createURL("listZones&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
                 dataType: "json",
                 async: true,
                 success: function(json) {
@@ -3318,11 +3365,22 @@
                         }
                       }
                     },
-                    dataProvider: function(args) {
+                    dataProvider: function(args) {										  
+											var array1 = [];  
+											if(args.filterBy != null) {          
+												if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+													switch(args.filterBy.search.by) {
+													case "name":
+														if(args.filterBy.search.value.length > 0)
+															array1.push("&keyword=" + args.filterBy.search.value);
+														break;
+													}
+												}
+											}
+																					
                       var selectedZoneObj = args.context.physicalResources[0];
-
                       $.ajax({
-                        url: createURL("listSystemVms&zoneid=" + selectedZoneObj.id + "&page=" + args.page + "&pagesize=" + pageSize),
+                        url: createURL("listSystemVms&zoneid=" + selectedZoneObj.id + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
                         dataType: "json",
                         async: true,
                         success: function(json) {
@@ -5052,9 +5110,21 @@
             allocationstate: { label: 'Allocation Status' }
           },
 
-          dataProvider: function(args) {
+          dataProvider: function(args) {					  
+						var array1 = [];  
+						if(args.filterBy != null) {          
+							if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+								switch(args.filterBy.search.by) {
+								case "name":
+									if(args.filterBy.search.value.length > 0)
+										array1.push("&keyword=" + args.filterBy.search.value);
+									break;
+								}
+							}
+						}
+					
             $.ajax({
-              url: createURL("listPods&zoneid=" + args.context.zones[0].id + "&page=" + args.page + "&pagesize=" + pageSize),
+              url: createURL("listPods&zoneid=" + args.context.zones[0].id + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
               dataType: "json",
               async: true,
               success: function(json) {
@@ -5459,7 +5529,17 @@
           },
 
           dataProvider: function(args) {
-            var array1 = [];
+            var array1 = [];						
+						if(args.filterBy != null) {          
+							if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+								switch(args.filterBy.search.by) {
+								case "name":
+									if(args.filterBy.search.value.length > 0)
+										array1.push("&keyword=" + args.filterBy.search.value);
+									break;
+								}
+							}
+						}						
             array1.push("&zoneid=" + args.context.zones[0].id);
             if("pods" in args.context)
               array1.push("&podid=" + args.context.pods[0].id);
@@ -6062,7 +6142,17 @@
           },
 
           dataProvider: function(args) {
-            var array1 = [];
+            var array1 = [];						
+						if(args.filterBy != null) {          
+							if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+								switch(args.filterBy.search.by) {
+								case "name":
+									if(args.filterBy.search.value.length > 0)
+										array1.push("&keyword=" + args.filterBy.search.value);
+									break;
+								}
+							}
+						}						
             array1.push("&zoneid=" + args.context.zones[0].id);
             if("pods" in args.context)
               array1.push("&podid=" + args.context.pods[0].id);
@@ -6845,14 +6935,24 @@
           },
 
           dataProvider: function(args) {
-            var array1 = [];
+            var array1 = [];				
+						if(args.filterBy != null) {          
+							if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+								switch(args.filterBy.search.by) {
+								case "name":
+									if(args.filterBy.search.value.length > 0)
+										array1.push("&keyword=" + args.filterBy.search.value);
+									break;
+								}
+							}
+						}						
             array1.push("&zoneid=" + args.context.zones[0].id);
             if("pods" in args.context)
               array1.push("&podid=" + args.context.pods[0].id);
             if("clusters" in args.context)
               array1.push("&clusterid=" + args.context.clusters[0].id);
             $.ajax({
-              url: createURL("listStoragePools&zoneid=" + args.context.zones[0].id + "&page=" + args.page + "&pagesize=" + pageSize),
+              url: createURL("listStoragePools&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
               dataType: "json",
               async: true,
               success: function(json) {
@@ -7572,14 +7672,24 @@
           },
 
           dataProvider: function(args) {
-            var array1 = [];
+            var array1 = [];						
+						if(args.filterBy != null) {          
+							if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+								switch(args.filterBy.search.by) {
+								case "name":
+									if(args.filterBy.search.value.length > 0)
+										array1.push("&keyword=" + args.filterBy.search.value);
+									break;
+								}
+							}
+						}						
             array1.push("&zoneid=" + args.context.zones[0].id);
             if("pods" in args.context)
               array1.push("&podid=" + args.context.pods[0].id);
             if("clusters" in args.context)
               array1.push("&clusterid=" + args.context.clusters[0].id);
             $.ajax({
-              url: createURL("listHosts&type=SecondaryStorage&zoneid=" + args.context.zones[0].id + "&page=" + args.page + "&pagesize=" + pageSize),
+              url: createURL("listHosts&type=SecondaryStorage&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
               dataType: "json",
               async: true,
               success: function(json) {
