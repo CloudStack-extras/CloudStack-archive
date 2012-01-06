@@ -3,6 +3,62 @@
    * Zone wizard
    */
   cloudStack.zoneWizard = function(args) {
+    var renumberPhysicalNetworkForm = function($container) {
+      var $items = $container.find('.select-container.multi');
+
+      $items.each(function() {
+        var $item = $(this);
+        var $networkName = $item.find('.field.name input[type=text]');
+        var $networkTypes = $item.find('.field.network-types input');
+        var index = $item.index();
+
+        $networkName.attr('name', 'physicalNetworks[' + index + ']' + '.name');
+        $networkTypes.val(index);
+      });
+    };
+    
+    var addPhysicalNetwork = function($wizard) {
+      var $container = $wizard.find('.setup-physical-network .content.input-area form');
+      var $physicalNetworkItem = $('<div>').addClass('select-container.multi');
+      var $deleteButton = $('<div>').addClass('button.remove.physical-network')
+        .attr({ title: 'Remove this physical network' })
+        .append('<span>').addClass('icon').html('&nbsp;');
+      var $nameField = $('<div>').addClass('field name')
+        .append('<div>').addClass('name')
+        .append('<div>').addClass('value');
+
+      // Initialize new default network form elem
+      $physicalNetworkItem = $('#template .zone-wizard')
+        .find('.steps .setup-physical-network')
+        .find('.select-container.multi:first').clone();
+      $physicalNetworkItem.hide().appendTo($container).fadeIn('fast');
+      renumberPhysicalNetworkForm($container);
+
+      // Remove network action
+      $physicalNetworkItem.find('.button.remove.physical-network').click(function() {
+        removePhysicalNetwork($physicalNetworkItem);
+      });
+    };
+
+    var removePhysicalNetwork = function($item) {
+      var $container = $item.closest('.setup-physical-network .content.input-area form');
+      
+      if (!$item.siblings().size()) {
+        cloudStack.dialog.notice({
+          message: 'You must have at least 1 physical network'
+        });
+      } else if ($item.find('input[type=radio]:checked').size()) {
+        cloudStack.dialog.notice({
+          message: 'Please select a different public and/or management network before removing'
+        });
+      } else {
+        $item.remove();
+      }
+
+      renumberPhysicalNetworkForm($container);
+      $container.validate('refresh');
+    };
+
     return function(listViewArgs) {
       var $wizard = $('#template').find('div.zone-wizard').clone();
       var $progress = $wizard.find('div.progress ul li');
@@ -273,7 +329,6 @@
           return false;
         }
 
-
         // Edit link
         if ($target.closest('div.edit').size()) {
           var $edit = $target.closest('div.edit');
@@ -287,80 +342,14 @@
       });
 
       // Add/remove network action
-      $wizard.find(
-        '.button.add.new-physical-network, .button.remove.physical-network'
-      ).live('click', function() {
-        var $container = $wizard.find('.setup-physical-network .content.input-area form');
-
-        // Sets correct unique value for all network types
-        var renumberFormItems = function($container) {
-          var $items = $container.find('.select-container.multi');
-
-          $items.each(function() {
-            var $item = $(this);
-            var $networkName = $item.find('.field.name input[type=text]');
-            var $networkTypes = $item.find('.field.network-types input');
-            var index = $item.index();
-
-            $networkName.attr('name', 'physicalNetworks[' + index + ']' + '.name');
-            $networkTypes.val(index);
-          });
-        };
-
-        var addPhysicalNetwork = function() {
-          // Initialize new default network form elem
-          var $physicalNetworkItem = $('#template .zone-wizard')
-            .find('.steps .setup-physical-network')
-            .find('.select-container.multi:first').clone();
-
-          $physicalNetworkItem.hide().appendTo($container).fadeIn('fast');
-        };
-
-        var removePhysicalNetwork = function($button) {
-          var $item = $button.closest('.select-container.multi');
-
-          if (!$item.siblings().size()) {
-            cloudStack.dialog.notice({
-              message: 'You must have at least 1 physical network'
-            });
-          } else if ($item.find('input[type=radio]:checked').size()) {
-            cloudStack.dialog.notice({
-              message: 'Please select a different public and/or management network before removing'
-            });
-          } else {
-            $item.remove();
-          }
-        };
-
-        var $button = $(this);
-
-        if ($button.hasClass('add')) {
-          addPhysicalNetwork();
-        }
-        else if ($button.hasClass('remove')) {
-          removePhysicalNetwork($button);
-        }
-
-        renumberFormItems($container);
-        $container.validate('refresh');
+      $wizard.find('.button.add.new-physical-network').click(function() {
+        addPhysicalNetwork($wizard);
       });
+
+      // Initialize first physical network item
+      addPhysicalNetwork($wizard);
 
       showStep(1);
-
-      // Setup tabs and slider
-      $wizard.find('.tab-view').tabs();
-      $wizard.find('.slider').slider({
-        min: 1,
-        max: 100,
-        start: function(event) {
-          $wizard.find('div.data-disk-offering div.custom-size input[type=radio]').click();
-        },
-        slide: function(event, ui) {
-          $wizard.find('div.data-disk-offering div.custom-size input[type=text]').val(
-            ui.value
-          );
-        }
-      });
 
       return $wizard.dialog({
         title: 'Add zone',
@@ -368,8 +357,7 @@
         height: 665,
         zIndex: 5000,
         resizable: false
-      })
-        .closest('.ui-dialog').overlay();
+      }).closest('.ui-dialog').overlay();
     };
   };
 })(jQuery, cloudStack);
