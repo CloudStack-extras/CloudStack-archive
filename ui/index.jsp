@@ -532,7 +532,7 @@
 
                   <div class="conditional basic">
                     <!-- Enable security groups -->
-                    <div class="field">
+                    <div class="field odd">
                       <div class="name">
                         <span>Enable security groups</span>
                       </div>
@@ -557,69 +557,54 @@
 
           <!-- Step 3: Setup Physical Network -->
           <div class="setup-physical-network">
-            <div class="main-desc">You are able to add multiple physical networks, however certain network types have limit restrictions.</div>
-            <div class="button add new-physical-network"><span class="icon">&nbsp;</span><span>Add network</span></span></div>
+            <div class="main-desc"></div>
+            <div class="button add new-physical-network"><span class="icon">&nbsp;</span><span>Add network</span></div>
+
+            <!-- Traffic types drag area -->
+            <div class="traffic-types-drag-area">
+              <div class="header">Traffic Types</div>
+              <ul>
+                <li class="management">
+                  <ul class="container">
+                    <li class="traffic-type-draggable management"></li>
+                  </ul>
+                  <div class="info">
+                    <div class="title">Management</div>
+                    <div class="desc">Set up the network for traffic between end-user VMs.</div>
+                  </div>
+                </li>
+                <li class="public">
+                  <ul class="container">
+                    <li class="traffic-type-draggable public"></li>
+                  </ul>
+                  <div class="info">
+                    <div class="title">Public</div>
+                    <div class="desc">Set up the network for traffic between end-user VMs.</div>
+                  </div>
+                </li>
+                <li class="guest">
+                  <ul class="container">
+                    <li class="traffic-type-draggable guest"></li>
+                  </ul>
+                  <div class="info">
+                    <div class="title">Guest</div>
+                    <div class="desc">Set up the network for traffic between end-user VMs.</div>
+                  </div>
+                </li>
+                <li class="storage">
+                  <ul class="container">
+                    <li class="traffic-type-draggable storage"></li>
+                  </ul>
+                  <div class="info">
+                    <div class="title">Storage</div>
+                    <div class="desc">Set up the network for traffic between end-user VMs.</div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          
             <div class="content input-area">
-              <form>
-                <div class="select-container multi">
-                  <!-- Delete button -->
-                  <div class="button remove physical-network"
-                       title="Remove this physical network">
-                    <span class="icon">&nbsp;</span>
-                  </div>
-                  <!-- Name -->
-                  <div class="field name">
-                    <div class="name">
-                      <span>Network Name</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="physicalNetworks[0].name" class="required" />
-                    </div>
-                  </div>
-
-                  <!-- Network Types -->
-                  <div class="field network-types odd">
-                    <div class="name">
-                      Network Types
-                    </div>
-                    <div class="value">
-                      <div class="select-array">
-                        <!-- Public -->
-                        <div class="select-array-item">
-                          <div class="name">Public (1 required)</div>
-                          <div class="value">
-                            <input type="radio" name="network-type-public" value="0" />
-                          </div>
-                        </div>
-
-                        <!-- Guest -->
-                        <div class="select-array-item">
-                          <div class="name">Guest (multiple allowed)</div>
-                          <div class="value">
-                            <input type="checkbox" name="network-type-guest" value="0" />
-                          </div>
-                        </div>
-
-                        <!-- Management -->
-                        <div class="select-array-item">
-                          <div class="name">Management (1 required)</div>
-                          <div class="value">
-                            <input type="radio" name="network-type-management" value="0" />
-                          </div>
-                        </div>
-
-                        <!-- Storage -->
-                        <div class="select-array-item">
-                          <div class="name">Storage (optional)</div>
-                          <div class="value">
-                            <input type="checkbox" name="network-type-storage" value="0" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </form>
+              <form></form>
             </div>
           </div>
 

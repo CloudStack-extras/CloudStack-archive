@@ -5383,13 +5383,20 @@ label.error {
 
 .multi-wizard.zone-wizard .content.input-area {
   width: 727px;
-  height: 427px;
+  min-height: inherit;
   margin: 12px auto auto 4px;
   overflow: auto;
 }
 
+/*** Add physical network -- network form items*/
+.multi-wizard.zone-wizard .setup-physical-network .content.input-area {
+  height: 310px;
+}
+
 .multi-wizard.zone-wizard .select-container.multi {
   display: inline-block;
+  width: 97%;
+  margin: 11px auto auto;
   height: auto;
   border: 1px solid #BFBFBF;
   /*+border-radius:4px;*/
@@ -5408,6 +5415,110 @@ label.error {
   width: 100%;
 }
 
+.multi-wizard.zone-wizard .select-container.multi .drop-container {
+  background: #E8ECF0;
+  width: 100%;
+  height: 71px;
+  clear: both;
+}
+
+.multi-wizard.zone-wizard .select-container.multi .drop-container span.empty-message {
+  text-align: center;
+  color: #959BA0;
+  font-size: 13px;
+  /*+placement:shift 0px 24px;*/
+  position: relative;
+  left: 0px;
+  top: 24px;
+}
+
+/*** Add physical network -- traffic type drag area*/
+.multi-wizard.zone-wizard .traffic-types-drag-area {
+  width: 100%;
+  height: 106px;
+  float: left;
+  text-align: left;
+  padding: 0 0 0 7px;
+}
+
+.multi-wizard.zone-wizard .traffic-types-drag-area .header {
+  font-size: 13px;
+  font-weight: bold;
+  color: #5C5C5C;
+  /*+text-shadow:0px 1px 1px #FFFFFF;*/
+  -moz-text-shadow: 0px 1px 1px #FFFFFF;
+  -webkit-text-shadow: 0px 1px 1px #FFFFFF;
+  -o-text-shadow: 0px 1px 1px #FFFFFF;
+  text-shadow: 0px 1px 1px #FFFFFF;
+}
+
+.multi-wizard.zone-wizard .traffic-types-drag-area > ul {
+  width: 100%;
+}
+
+.multi-wizard.zone-wizard .traffic-types-drag-area > ul > li {
+  float: left;
+  font-size: 11px;
+  width: 170px;
+  height: 76px;
+  margin: 12px 13px 0 0;
+  overflow: hidden;
+}
+
+.multi-wizard.zone-wizard .traffic-types-drag-area > ul > li ul.container {
+  padding: 4px;
+  float: left;
+  background: transparent;
+  /*+border-radius:5px;*/
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px 5px 5px 5px;
+  /*+box-shadow:inset 0px 2px 4px #999696;*/
+  -moz-box-shadow: inset 0px 2px 4px #999696;
+  -webkit-box-shadow: inset 0px 2px 4px #999696;
+  -o-box-shadow: inset 0px 2px 4px #999696;
+  box-shadow: inset 0px 2px 4px #999696;
+  border-bottom: 1px solid #FFFFFF;
+}
+
+.multi-wizard.zone-wizard li.traffic-type-draggable {
+  display: block;
+  background: transparent url(../images/sprites.png) no-repeat 0px -1161px;
+  width: 50px;
+  height: 50px;
+  margin: auto;
+  cursor: move;
+}
+
+.multi-wizard.zone-wizard li.traffic-type-draggable.management {
+  background-position: 0px -1161px;
+}
+
+.multi-wizard.zone-wizard li.traffic-type-draggable.public {
+  background-position: -56px -1161px;
+}
+
+.multi-wizard.zone-wizard li.traffic-type-draggable.guest {
+  background-position: -113px -1161px;
+}
+
+.multi-wizard.zone-wizard li.traffic-type-draggable.storage {
+  background-position: -171px -1161px;
+}
+
+.multi-wizard.zone-wizard .traffic-types-drag-area > ul > li .info {
+  width: 100px;
+  margin: 0 0 0 8px;
+  line-height: 14px;
+  float: left;
+}
+
+.multi-wizard.zone-wizard .traffic-types-drag-area > ul > li .info .title {
+  font-weight: bold;
+}
+
+/*** Select container fields*/
 .multi-wizard.zone-wizard .select-container .field {
   width: 689px;
   padding-bottom: 13px;

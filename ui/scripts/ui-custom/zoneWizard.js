@@ -19,18 +19,31 @@
     
     var addPhysicalNetwork = function($wizard) {
       var $container = $wizard.find('.setup-physical-network .content.input-area form');
-      var $physicalNetworkItem = $('<div>').addClass('select-container.multi');
-      var $deleteButton = $('<div>').addClass('button.remove.physical-network')
+      var $physicalNetworkItem = $('<div>').addClass('select-container multi');
+      var $deleteButton = $('<div>').addClass('button remove physical-network')
         .attr({ title: 'Remove this physical network' })
         .append('<span>').addClass('icon').html('&nbsp;');
-      var $nameField = $('<div>').addClass('field name')
-        .append('<div>').addClass('name')
-        .append('<div>').addClass('value');
+      var $nameField = $('<div>').addClass('field name').append(
+        $('<div>').addClass('name').append(
+          $('<span>').html('Network Name')
+        ),
+        $('<div>').addClass('value').append(
+          $('<input>').attr({ type: 'text' }).addClass('required')
+        )
+      );
+      var $dropContainer = $('<div>').addClass('drop-container').append(
+        $('<span>').addClass('empty-message').html(
+          'Drag and drop traffic types you would like to add here.'
+        ),
+        $('<ul>')
+      );
 
       // Initialize new default network form elem
-      $physicalNetworkItem = $('#template .zone-wizard')
-        .find('.steps .setup-physical-network')
-        .find('.select-container.multi:first').clone();
+      $physicalNetworkItem.append(
+        $deleteButton,
+        $nameField,
+        $dropContainer
+      );
       $physicalNetworkItem.hide().appendTo($container).fadeIn('fast');
       renumberPhysicalNetworkForm($container);
 
