@@ -103,6 +103,7 @@ import com.cloud.utils.db.Transaction;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.script.Script;
+import com.cloud.uuididentity.dao.IdentityDao;
 
 public class ConfigurationServerImpl implements ConfigurationServer {
     public static final Logger s_logger = Logger.getLogger(ConfigurationServerImpl.class.getName());
@@ -121,6 +122,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
     private final AccountDao _accountDao;
     private final ResourceCountDao _resourceCountDao;
     private final NetworkOfferingServiceMapDao _ntwkOfferingServiceMapDao;
+    private final IdentityDao _identityDao;
     
     public ConfigurationServerImpl() {
         ComponentLocator locator = ComponentLocator.getLocator(Name);
@@ -137,6 +139,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         _accountDao = locator.getDao(AccountDao.class);
         _resourceCountDao = locator.getDao(ResourceCountDao.class);
         _ntwkOfferingServiceMapDao = locator.getDao(NetworkOfferingServiceMapDao.class);
+        _identityDao = locator.getDao(IdentityDao.class);
     }
 
     @Override @DB
@@ -266,10 +269,33 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         // Update the cloud identifier
         updateCloudIdentifier();
         
+        updateUuids();
+        
+        
         // Set init to true
         _configDao.update("init", "Hidden", "true");
     }
-
+    
+    private void updateUuids() {
+        _identityDao.initializeDefaultUuid("disk_offering");
+        _identityDao.initializeDefaultUuid("network_offerings");
+        _identityDao.initializeDefaultUuid("vm_template");
+        _identityDao.initializeDefaultUuid("user");
+        _identityDao.initializeDefaultUuid("domain");
+        _identityDao.initializeDefaultUuid("account");
+        _identityDao.initializeDefaultUuid("guest_os");
+        _identityDao.initializeDefaultUuid("guest_os_category");
+        _identityDao.initializeDefaultUuid("hypervisor_capabilities");
+        _identityDao.initializeDefaultUuid("snapshot_policy");
+        _identityDao.initializeDefaultUuid("security_group");
+        _identityDao.initializeDefaultUuid("security_group_rule");
+        _identityDao.initializeDefaultUuid("physical_network");
+        _identityDao.initializeDefaultUuid("physical_network_traffic_types");
+        _identityDao.initializeDefaultUuid("physical_network_service_providers");
+        _identityDao.initializeDefaultUuid("virtual_router_providers");
+        _identityDao.initializeDefaultUuid("networks");
+        _identityDao.initializeDefaultUuid("user_ip_address");
+    }
     
     private String getMountParent() {
         return getEnvironmentProperty("mount.parent");
@@ -852,7 +878,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
                 "Offering for Shared Security group enabled networks", 
                 TrafficType.Guest, 
                 false, true, null, null, true, Availability.Optional, 
-                null, Network.GuestType.Shared);
+                null, Network.GuestType.Shared, true);
         
         deafultSharedSGNetworkOffering.setState(NetworkOffering.State.Enabled);
         deafultSharedSGNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(deafultSharedSGNetworkOffering);
@@ -869,7 +895,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
                 "Offering for Shared networks", 
                 TrafficType.Guest, 
                 false, true, null, null, true, Availability.Optional, 
-                null, Network.GuestType.Shared);
+                null, Network.GuestType.Shared, true);
         
         defaultSharedNetworkOffering.setState(NetworkOffering.State.Enabled);
         defaultSharedNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(defaultSharedNetworkOffering);
@@ -886,7 +912,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
                 "Offering for Isolated networks with Source Nat service enabled", 
                 TrafficType.Guest, 
                 false, false, null, null, true, Availability.Required, 
-                null, Network.GuestType.Isolated);
+                null, Network.GuestType.Isolated, true);
         
         defaultIsolatedSourceNatEnabledNetworkOffering.setState(NetworkOffering.State.Enabled);
         defaultIsolatedSourceNatEnabledNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(defaultIsolatedSourceNatEnabledNetworkOffering);
@@ -904,7 +930,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
                 "Offering for Isolated networks with no Source Nat service", 
                 TrafficType.Guest, 
                 false, true, null, null, true, Availability.Optional, 
-                null, Network.GuestType.Isolated);
+                null, Network.GuestType.Isolated, true);
         
         defaultIsolatedEnabledNetworkOffering.setState(NetworkOffering.State.Enabled);
         defaultIsolatedEnabledNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(defaultIsolatedEnabledNetworkOffering);

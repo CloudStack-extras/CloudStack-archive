@@ -497,6 +497,7 @@ ALTER TABLE `cloud`.`user_ip_address` ADD CONSTRAINT `fk_user_ip_address__physic
 ALTER TABLE `cloud`.`networks` ADD COLUMN `restart_required` int(1) unsigned NOT NULL DEFAULT 0 COMMENT '1 if restart is required for the network';
 DELETE FROM `cloud`.`configuration` where name='cmd.wait';
 
+ALTER TABLE `cloud`.`network_offerings` ADD COLUMN `conserve` int(1) unsigned NOT NULL DEFAULT 0 COMMENT 'Is this network offering is IP conserve mode enabled';
 UPDATE `cloud`.`configuration` set value='true' where name='firewall.rule.ui.enabled';
 CREATE TABLE  `cloud`.`op_user_stats_log` (
   `user_stats_id` bigint unsigned NOT NULL,
@@ -519,6 +520,7 @@ ALTER TABLE `cloud`.`physical_network_traffic_types` ADD COLUMN `simulator_netwo
 ALTER TABLE `cloud`.`network_offerings` ADD COLUMN `sort_key` int(32) NOT NULL default 0 COMMENT 'sort key used for customising sort method';
 ALTER TABLE `cloud`.`network_offerings` ADD COLUMN `dedicated_lb_service` int(1) unsigned NOT NULL DEFAULT 1 COMMENT 'true if the network offering provides a dedicated load balancer for each network';
 ALTER TABLE `cloud`.`network_offerings` ADD COLUMN `redundant_router_service` int(1) unsigned NOT NULL DEFAULT 0 COMMENT 'true if the network offering provides the redundant router service';
+ALTER TABLE `cloud`.`network_offerings` ADD COLUMN `conserve_mode` int(1) unsigned NOT NULL DEFAULT 1 COMMENT 'Is this network offering is IP conserve mode enabled';
 
 ALTER TABLE `cloud`.`network_offerings` MODIFY `name` varchar(64) COMMENT 'name of the network offering';
 ALTER TABLE `cloud`.`network_offerings` MODIFY `unique_name` varchar(64) COMMENT 'unique name of the network offering';

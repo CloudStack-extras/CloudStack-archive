@@ -601,10 +601,13 @@ public class SecurityGroupManagerImpl implements SecurityGroupManager, SecurityG
                 throw new InvalidParameterValueException("Invalid ICMP type/code specified, icmpType = " + icmpType + ", icmpCode = " + icmpCode);
             }
             if (icmpType == -1 && icmpCode != -1) {
-                throw new InvalidParameterValueException("Invalid icmp type range");
+                throw new InvalidParameterValueException("Invalid icmp code");
             }
-            if (icmpCode > 255) {
-                throw new InvalidParameterValueException("Invalid icmp code ");
+            if (icmpType != -1 && icmpCode == -1) {
+                throw new InvalidParameterValueException("Invalid icmp code: need non-negative icmp code ");
+            }
+            if (icmpCode > 255 || icmpType > 255 || icmpCode < -1 || icmpType < -1) {
+                throw new InvalidParameterValueException("Invalid icmp type/code ");
             }
             startPortOrType = icmpType;
             endPortOrCode = icmpCode;
