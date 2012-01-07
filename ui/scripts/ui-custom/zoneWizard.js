@@ -16,7 +16,7 @@
         $networkTypes.val(index);
       });
     };
-    
+
     var addPhysicalNetwork = function($wizard) {
       var $container = $wizard.find('.setup-physical-network .content.input-area form');
       var $physicalNetworkItem = $('<div>').addClass('select-container multi');
@@ -35,8 +35,47 @@
         $('<span>').addClass('empty-message').html(
           'Drag and drop traffic types you would like to add here.'
         ),
-        $('<ul>')
-      );
+        $('<ul>').hide()
+      ).droppable({
+        over: function(event, ui) {
+          var $ul = $(this).find('ul');
+
+          $ul.addClass('active');
+          
+          if (!$ul.find('li').size()) {
+            $ul.fadeIn();
+          }
+        },
+
+        out: function(event, ui) {
+          var $ul = $(this).find('ul');
+
+          $ul.removeClass('active');
+          
+          if (!$ul.find('li').size()) {
+            $ul.fadeOut();
+          }
+        },
+        
+        drop: function(event, ui) {
+          var $ul = $(this).find('ul');
+
+          $ul.removeClass('active');
+          ui.draggable.appendTo($ul);
+        },
+
+        stop: function(event, ui) {
+          var $ul = $dropContainer.find('ul');
+
+          $ul.each(function() {
+            var $ul = $(this);
+
+            if (!$ul.find('li').size()) {
+              $ul.fadeOut();
+            }
+          });
+        }
+      });
 
       // Initialize new default network form elem
       $physicalNetworkItem.append(
@@ -55,7 +94,7 @@
 
     var removePhysicalNetwork = function($item) {
       var $container = $item.closest('.setup-physical-network .content.input-area form');
-      
+
       if (!$item.siblings().size()) {
         cloudStack.dialog.notice({
           message: 'You must have at least 1 physical network'
@@ -68,7 +107,6 @@
         $item.remove();
       }
 
-      renumberPhysicalNetworkForm($container);
       $container.validate('refresh');
     };
 
@@ -357,6 +395,21 @@
       // Add/remove network action
       $wizard.find('.button.add.new-physical-network').click(function() {
         addPhysicalNetwork($wizard);
+      });
+
+      // Setup traffic type draggables
+      $wizard.find('.traffic-type-draggable').draggable({
+        appendTo: $wizard,
+        helper: 'clone',
+
+        // Events
+        start: function(event, ui) {
+          $(this).addClass('disabled');
+        },
+
+        stop: function(event, ui) {
+          $(this).removeClass('disabled');
+        }
       });
 
       // Initialize first physical network item
