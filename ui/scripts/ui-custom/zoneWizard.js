@@ -163,6 +163,43 @@
         });
       };
 
+      /**
+       * Generate dynamic form, based on ID of form object given
+       */
+      var makeForm = function(id) {
+        var form = cloudStack.dialog.createForm({
+          noDialog: true,
+          form: {
+            title: '',
+            desc: '',
+            fields: args.forms[id]
+          },
+          after: function(args) {}
+        });
+
+        var $form = form.$formContainer.find('form');
+
+        // Cleanup form to follow zone wizard CSS naming
+        $form.find('.form-item').addClass('field').removeClass('form-item');
+        $form.find('label.error').hide();
+        $form.find('.form-item .name').each(function() {
+          $(this).html($(this).find('label'));
+        });
+
+        $form.find('select, input').change(function() {
+          cloudStack.evenOdd($form, '.field:visible', {
+            even: function($row) {
+              $row.removeClass('odd');
+            },
+            odd: function($row) {
+              $row.addClass('odd');
+            }
+          });
+        });
+
+        return $form;
+      };
+
       // Go to specified step in wizard,
       // updating nav items and diagram
       var showStep = function(index) {
@@ -174,6 +211,20 @@
         }
 
         var $targetStep = $($steps.hide()[targetIndex]).show();
+
+        var formID = $targetStep.attr('zone-wizard-form');
+        if (formID && !$targetStep.find('form').size()) {
+          makeForm(formID).appendTo($targetStep.find('.content.input-area .select-container'));
+          cloudStack.evenOdd($targetStep, '.field:visible', {
+            even: function() {},
+            odd: function($row) {
+              $row.addClass('odd');
+            }
+          });
+          
+          return;
+        }
+        
         var formState = cloudStack.serializeForm($wizard.find('form'));
 
         if (!targetIndex) {
