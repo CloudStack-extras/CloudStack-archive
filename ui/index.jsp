@@ -410,12 +410,13 @@
       <div class="multi-wizard zone-wizard">
         <div class="progress">
           <ul>
-            <li class="first"><span class="number">1</span><span>Select Type</span><span class="arrow"></span></li>
-            <li><span class="number">2</span><span>Add Zone</span><span class="arrow"></span></li>
-            <li><span class="number">3</span><span class="multiline">Add Physical Network</span><span class="arrow"></span></li>
+            <li class="first"><span class="number">1</span><span>Zone Type</span><span class="arrow"></span></li>
+            <li><span class="number">2</span><span>Setup Zone</span><span class="arrow"></span></li>
+            <li><span class="number">3</span><span>Setup Network</span><span class="arrow"></span></li>
+            <li style="display:none;"></li>
+            <li style="display:none;"></li>
             <li style="display:none;"></li>
             <li><span class="number">4</span><span>Add Resources</span><span class="arrow"></span></li>
-            <li style="display:none;"></li>
             <li style="display:none;"></li>
             <li style="display:none;"></li>
             <li style="display:none;"></li>
@@ -511,190 +512,49 @@
             </div>
           </div>
 
-          <!-- Step 3.2: Setup guest resources -->
-          <div class="add-ip-range">
+          <!-- Step 3.2: Configure public traffic -->
+          <div class="setup-public-traffic">
             <form>
-              <div class="main-desc">Please add an IP range for your zone</div>
-              <div class="content input-area">
-                <div class="select-container">
-                  <!-- VLAN Type -->
-                  <div class="field conditional vlan">
-                    <div class="name">
-                      <span>VLAN</span>
-                    </div>
-                    <div class="value">
-                      <select name="vlan-type">
-                        <option value="untagged">Untagged</option>
-                        <option value="tagged">Tagged</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <!-- VLAN ID -->
-                  <div class="field conditional security-groups vlan-type-tagged">
-                    <div class="name">
-                      <span>VLAN ID</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="vlan-id" class="required"/>
-                    </div>
-                  </div>
-
-                  <!-- Scope -->
-                  <div class="field conditional vlan-type-untagged">
-                    <div class="name">
-                      <span>Scope</span>
-                    </div>
-                    <div class="value">
-                      <select class="ip-scope" name="ip-scope-untagged">
-                        <option value="zone-wide">Zone-wide</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <!-- Scope (tagged) -->
-                  <div class="field conditional vlan-type-tagged">
-                    <div class="name">
-                      <span>Scope</span>
-                    </div>
-                    <div class="value">
-                      <select class="ip-scope" name="ip-scope-tagged">
-                        <option value="zone-wide">Zone-wide</option>
-                        <option value="account-specific">Account-specific</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <!-- Domain -->
-                  <div class="field conditional ip-scope-account-specific">
-                    <div class="name">
-                      <span>Domain</span>
-                    </div>
-                    <div class="value">
-                      <select name="ip-domain" class="domain required"></select>
-                    </div>
-                  </div>
-
-                  <!-- Account -->
-                  <div class="field conditional ip-scope-account-specific">
-                    <div class="name">
-                      <span>Account</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="account" />
-                    </div>
-                  </div>
-
-                  <!-- Gateway -->
-                  <div class="field">
-                    <div class="name">
-                      <span>Guest Gateway</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="guest-gateway" class="required" />
-                    </div>
-                  </div>
-
-                  <!-- Netmask -->
-                  <div class="field">
-                    <div class="name">
-                      <span>Guest Netmask</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="guest-netmask" class="required" />
-                    </div>
-                  </div>
-
-                  <!-- IP Range -->
-                  <div class="field">
-                    <div class="name">
-                      <span>Guest IP Range</span>
-                    </div>
-                    <div class="value multi-range">
-                      <input type="text" name="guest-ip-range-start" class="required" />
-                      <span class="divider">-</span>
-                      <input type="text" name="guest-ip-range-end" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <div class="main-desc">Configure public traffic</div>
             </form>
           </div>
 
-          <!-- Step 4.1: Setup pod -->
-          <div class="setup-pod">
+          <!-- Step 3.3: Add pod -->
+          <div class="add-pod">
             <form>
-              <div class="main-desc">Please enter the following information to add a new pod</div>
-              <div class="content input-area">
-                <div class="select-container">
-                  <!-- Name -->
-                  <div class="field">
-                    <div class="name">
-                      <span>Name</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="podName" class="required" />
-                    </div>
-                  </div>
-
-                  <!-- Gateway -->
-                  <div class="field odd">
-                    <div class="name">
-                      <span>Gateway</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="podGateway" class="required" />
-                    </div>
-                  </div>
-
-                  <!-- Netmask -->
-                  <div class="field">
-                    <div class="name">
-                      <span>Netmask</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="podNetmask" class="required" />
-                    </div>
-                  </div>
-
-                  <!-- Reserved System IP -->
-                  <div class="field odd">
-                    <div class="name">
-                      <span>Reserved IP</span>
-                    </div>
-                    <div class="value multi-range">
-                      <input type="text" name="podStartIp" class="required" />
-                      <span class="divider">-</span>
-                      <input type="text" name="podEndIp" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <div class="main-desc">Add pod</div>
             </form>
           </div>
 
-          <!-- Step 4.2: Add cluster -->
+          <!-- Step 3.4: Configure guest traffic -->
+          <div class="setup-guest-traffic">
+            <form>
+              <div class="main-desc">Setup guest traffic</div>
+            </form>
+          </div>
+
+          <!-- Step 4.1: Add cluster -->
           <div class="add-cluster">
             <form>
               <div class="main-desc">Add cluster</div>
             </form>
           </div>
 
-          <!-- Step 4.3: Add host -->
+          <!-- Step 4.2: Add host -->
           <div class="add-cluster">
             <form>
               <div class="main-desc">Add host</div>
             </form>
           </div>
 
-          <!-- Step 4.4: Add primary storage -->
+          <!-- Step 4.3: Add primary storage -->
           <div class="add-cluster">
             <form>
               <div class="main-desc">Add primary storage</div>
             </form>
           </div>
 
-          <!-- Step 4.5: Add secondary storage -->
+          <!-- Step 4.4: Add secondary storage -->
           <div class="add-cluster">
             <form>
               <div class="main-desc">Add secondary storage</div>
