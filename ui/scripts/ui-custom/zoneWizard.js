@@ -412,6 +412,18 @@
         }
       });
 
+      $wizard.find('.traffic-types-drag-area').droppable({
+        drop: function(event, ui) {
+          var $ul = $(this).find('ul').filter(function() {
+            return $(this).parent().hasClass(
+              ui.draggable.attr('traffic-type-id')
+            );
+          });
+
+          $ul.append(ui.draggable);
+        }
+      });
+
       // Initialize first physical network item
       addPhysicalNetwork($wizard);
 

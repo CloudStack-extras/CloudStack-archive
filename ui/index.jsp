@@ -566,7 +566,8 @@
               <ul>
                 <li class="management">
                   <ul class="container">
-                    <li class="traffic-type-draggable management"></li>
+                    <li traffic-type-id="management"
+                        class="traffic-type-draggable management"></li>
                   </ul>
                   <div class="info">
                     <div class="title">Management</div>
@@ -575,7 +576,8 @@
                 </li>
                 <li class="public">
                   <ul class="container">
-                    <li class="traffic-type-draggable public"></li>
+                    <li traffic-type-id="public"
+                        class="traffic-type-draggable public"></li>
                   </ul>
                   <div class="info">
                     <div class="title">Public</div>
@@ -584,7 +586,8 @@
                 </li>
                 <li class="guest">
                   <ul class="container">
-                    <li class="traffic-type-draggable guest"></li>
+                    <li traffic-type-id="guest"
+                        class="traffic-type-draggable guest"></li>
                   </ul>
                   <div class="info">
                     <div class="title">Guest</div>
@@ -593,7 +596,8 @@
                 </li>
                 <li class="storage">
                   <ul class="container">
-                    <li class="traffic-type-draggable storage"></li>
+                    <li traffic-type-id="storage"
+                        class="traffic-type-draggable storage"></li>
                   </ul>
                   <div class="info">
                     <div class="title">Storage</div>
