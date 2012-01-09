@@ -62,6 +62,14 @@
 
           $ul.removeClass('active');
           ui.draggable.appendTo($ul);
+
+          $ul.closest('.select-container.multi').siblings().each(function() {
+            var $ul = $(this).find('.drop-container ul');
+
+            if (!$ul.find('li').size()) {
+              $ul.fadeOut();
+            }
+          });
         }
       });
 
