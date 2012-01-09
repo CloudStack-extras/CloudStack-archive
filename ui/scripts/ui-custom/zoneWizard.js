@@ -62,18 +62,6 @@
 
           $ul.removeClass('active');
           ui.draggable.appendTo($ul);
-        },
-
-        stop: function(event, ui) {
-          var $ul = $dropContainer.find('ul');
-
-          $ul.each(function() {
-            var $ul = $(this);
-
-            if (!$ul.find('li').size()) {
-              $ul.fadeOut();
-            }
-          });
         }
       });
 
@@ -104,6 +92,17 @@
           message: 'Please select a different public and/or management network before removing'
         });
       } else {
+        // Put any traffic type symbols back in original container
+        $item.find('li.traffic-type-draggable').each(function() {
+          var $draggable = $(this);
+          var $originalContainer = $('.traffic-types-drag-area:visible > ul > li')
+            .filter(function() {
+              return $(this).hasClass($draggable.attr('traffic-type-id'));
+            });
+          
+          $draggable.appendTo($originalContainer.find('ul'));
+        });
+
         $item.remove();
       }
 
