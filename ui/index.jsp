@@ -446,116 +446,11 @@
             </form>
           </div>
 
-          <!-- Step 2: Setup zone -->
-          <div class="setup-zone">
+          <!-- Step 2: Add zone -->
+          <div class="setup-zone" zone-wizard-form="addZone">
             <div class="main-desc">Please enter in the information to make a new zone.</div>
             <div class="content input-area">
-              <div class="select-container">
-                <form>
-                  <!-- Name -->
-                  <div class="field">
-                    <div class="name">
-                      <span>Name</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="name" class="required" />
-                    </div>
-                  </div>
-
-                  <!-- DNS 1 -->
-                  <div class="field odd">
-                    <div class="name">
-                      <span>DNS 1</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="dns1" class="required" />
-                    </div>
-                  </div>
-
-                  <!-- DNS 2-->
-                  <div class="field">
-                    <div class="name">
-                      <span>DNS 2</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="dns2" />
-                    </div>
-                  </div>
-
-                  <!-- Internal DNS 1 -->
-                  <div class="field odd">
-                    <div class="name">
-                      <span>Internal DNS 1</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="internaldns1" class="required" />
-                    </div>
-                  </div>
-
-                  <!-- Internal DNS 2 -->
-                  <div class="field">
-                    <div class="name">
-                      <span>Internal DNS 2</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="internaldns2" />
-                    </div>
-                  </div>
-
-                  <!-- Network domain-->
-                  <div class="field odd">
-                    <div class="name">
-                      <span>Network domain</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="networkdomain" />
-                    </div>
-                  </div>
-
-                  <!-- Public -->
-                  <div class="field">
-                    <div class="name">
-                      <span>Public</span>
-                    </div>
-                    <div class="value">
-                      <input name="public" type="checkbox" checked="checked" />
-                    </div>
-                  </div>
-
-                  <div class="conditional public">
-                    <!-- Domain -->
-                    <div class="field odd">
-                      <div class="name">
-                        <span>Domain</span>
-                      </div>
-                      <div class="value">
-                        <select name="zone-domain" class="domain required"></select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="conditional basic">
-                    <!-- Enable security groups -->
-                    <div class="field odd">
-                      <div class="name">
-                        <span>Enable security groups</span>
-                      </div>
-                      <div class="value">
-                        <input type="checkbox" name="security-groups-enabled" />
-                      </div>
-                    </div>
-                    <!-- Network Offering -->
-                    <div class="field">
-                      <div class="name">
-                        <span>Network Offering</span>
-                      </div>
-                      <div class="value">
-                        <select name="networkOfferingId" class="network-offering required"></select>
-                      </div>
-                    </div>
-                  </div>
-                </form>
-              </div>
+              <div class="select-container"></div>
             </div>
           </div>
 

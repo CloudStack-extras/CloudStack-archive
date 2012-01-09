@@ -2633,6 +2633,137 @@
                 label: 'Add zone',
                 action: {
                   custom: cloudStack.zoneWizard({
+                    forms: {
+                      addZone: {
+                        name: { label: 'Name', validation: { required: true } },
+                        dns1: { label: 'DNS 1', validation: { required: true } },
+                        dns2: { label: 'DNS 2' },
+                        internaldns1: { label: 'Internal DNS 1', validation: { required: true } },
+                        internaldns2: { label: 'Internal DNS 2' },
+                        networkdomain: { label: 'Network Domain' },
+                        'public': { isBoolean: true, label: 'Public' },
+                        'zone-domain': {
+                          label: 'Domain',
+                          dependsOn: 'public',
+                          isHidden: true,
+                          select: function(args) {
+                            $.ajax({
+                              url: createURL("listDomains"),
+                              dataType: "json",
+                              async: false,
+                              success: function(json) {
+                                domainObjs = json.listdomainsresponse.domain;
+                                args.response.success({
+                                  data: $.map(domainObjs, function(domain) {
+                                    return {
+                                      id: domain.id,
+                                      description: domain.name
+                                    };
+                                  })
+                                });
+                              }
+                            }); 
+                          }
+                        },
+                        'security-groups-enabled': {
+                          label: 'Security Groups Enabled',
+                          isBoolean: true,
+                          isReverse: true,
+                        },
+
+                        networkOfferingIdWithoutSG: {
+                          label: 'Network Offering',
+                          dependsOn: 'security-groups-enabled',
+                          select: function(args) {
+                            var networkOfferingObjsWithSG = [];
+                            var networkOfferingObjsWithoutSG = [];
+                            $.ajax({
+                              url: createURL("listNetworkOfferings&state=Enabled&guestiptype=Shared"),
+                              dataType: "json",
+                              async: false,
+                              success: function(json) {
+                                networkOfferingObjs = json.listnetworkofferingsresponse.networkoffering;
+
+                                $(networkOfferingObjs).each(function() {
+                                  var includingSGP = false;
+                                  var serviceObjArray = this.service;
+                                  for(var k = 0; k < serviceObjArray.length; k++) {
+                                    if(serviceObjArray[k].name == "SecurityGroup") {
+                                      includingSGP = true;
+                                      break;
+                                    }
+                                  }
+                                  if(includingSGP == false) //without SG
+                                    networkOfferingObjsWithoutSG.push(this);
+                                  else //with SG
+                                    networkOfferingObjsWithSG.push(this);
+                                });
+
+                                var targetNetworkOfferings = networkOfferingObjsWithoutSG;
+
+                                args.response.success({
+                                  data: $.map(targetNetworkOfferings, function(offering) {
+                                    return {
+                                      id: offering.id,
+                                      description: offering.name
+                                    };
+                                  })
+                                });
+                              }
+                            });
+                          }
+                        },
+
+                        networkOfferingIdWithSG: {
+                          label: 'Network Offering',
+                          isHidden: true,
+                          select: function(args) {
+                            var $form = args.$select.closest('form');
+
+                            $form.find('input[name=security-groups-enabled]').change(function() {
+                              args.$select.closest('.field').toggle();
+                            });
+
+                            var networkOfferingObjsWithSG = [];
+                            var networkOfferingObjsWithoutSG = [];
+                            $.ajax({
+                              url: createURL("listNetworkOfferings&state=Enabled&guestiptype=Shared"),
+                              dataType: "json",
+                              async: false,
+                              success: function(json) {
+                                networkOfferingObjs = json.listnetworkofferingsresponse.networkoffering;
+
+                                $(networkOfferingObjs).each(function() {
+                                  var includingSGP = false;
+                                  var serviceObjArray = this.service;
+                                  for(var k = 0; k < serviceObjArray.length; k++) {
+                                    if(serviceObjArray[k].name == "SecurityGroup") {
+                                      includingSGP = true;
+                                      break;
+                                    }
+                                  }
+                                  if(includingSGP == false) //without SG
+                                    networkOfferingObjsWithoutSG.push(this);
+                                  else //with SG
+                                    networkOfferingObjsWithSG.push(this);
+                                });
+
+                                var targetNetworkOfferings = networkOfferingObjsWithSG;
+
+                                args.response.success({
+                                  data: $.map(targetNetworkOfferings, function(offering) {
+                                    return {
+                                      id: offering.id,
+                                      description: offering.name
+                                    };
+                                  })
+                                });
+                              }
+                            });
+                          }
+                        }
+                      }
+                    },
                     steps: [
                       // Step 1: Setup
                       null,
