@@ -5281,21 +5281,21 @@ label.error {
 }
 
 .multi-wizard.zone-wizard .progress ul li {
-  width: 88px;
+  width: 114px;
   padding: 0 32px 0 0;
 }
 
 .multi-wizard.zone-wizard .progress ul li span {
   width: 102px;
-  left: 17px;
+  left: 28px;
 }
 
 .multi-wizard.zone-wizard .progress ul li span.number {
-  left: -34px;
+  left: -28px;
 }
 
 .multi-wizard.zone-wizard .progress ul li span.arrow {
-  margin: -4px 0 0 94px;
+  margin: -4px 0 0 109px;
 }
 
 .multi-wizard.zone-wizard .select-network .content .section {

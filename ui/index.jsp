@@ -413,9 +413,13 @@
             <li class="first"><span class="number">1</span><span>Select Type</span><span class="arrow"></span></li>
             <li><span class="number">2</span><span>Add Zone</span><span class="arrow"></span></li>
             <li><span class="number">3</span><span class="multiline">Add Physical Network</span><span class="arrow"></span></li>
-            <li><span class="number">4</span><span class="multiline">Configure Public Traffic</span><span class="arrow"></span></li>
-            <li><span class="number">5</span><span>Add Pod</span><span class="arrow"></span></li>
-            <li class="last"><span class="number">6</span><span class="multiline">Configure Guest Traffic</span></li>
+            <li style="display:none;"></li>
+            <li><span class="number">4</span><span>Add Resources</span><span class="arrow"></span></li>
+            <li style="display:none;"></li>
+            <li style="display:none;"></li>
+            <li style="display:none;"></li>
+            <li style="display:none;"></li>
+            <li class="last"><span class="number">5</span><span>Review & Launch</span></li>
           </ul>
         </div>
         <div class="steps">
@@ -555,7 +559,7 @@
             </div>
           </div>
 
-          <!-- Step 3: Setup Physical Network -->
+          <!-- Step 3.1: Setup Physical Network -->
           <div class="setup-physical-network">
             <div class="main-desc"></div>
             <div class="button add new-physical-network"><span class="icon">&nbsp;</span><span>Add network</span></div>
@@ -612,60 +616,8 @@
             </div>
           </div>
 
-          <!-- Step 3: Setup pod -->
-          <div class="setup-pod">
-            <form>
-              <div class="main-desc">Please enter the following information to add a new pod</div>
-              <div class="content input-area">
-                <div class="select-container">
-                  <!-- Name -->
-                  <div class="field">
-                    <div class="name">
-                      <span>Name</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="podName" class="required" />
-                    </div>
-                  </div>
-
-                  <!-- Gateway -->
-                  <div class="field odd">
-                    <div class="name">
-                      <span>Gateway</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="podGateway" class="required" />
-                    </div>
-                  </div>
-
-                  <!-- Netmask -->
-                  <div class="field">
-                    <div class="name">
-                      <span>Netmask</span>
-                    </div>
-                    <div class="value">
-                      <input type="text" name="podNetmask" class="required" />
-                    </div>
-                  </div>
-
-                  <!-- Reserved System IP -->
-                  <div class="field odd">
-                    <div class="name">
-                      <span>Reserved IP</span>
-                    </div>
-                    <div class="value multi-range">
-                      <input type="text" name="podStartIp" class="required" />
-                      <span class="divider">-</span>
-                      <input type="text" name="podEndIp" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
-          </div>
-
-          <!-- Step 4: Add IP range -->
-          <div class="add-ip-range disabled">
+          <!-- Step 3.2: Setup guest resources -->
+          <div class="add-ip-range">
             <form>
               <div class="main-desc">Please add an IP range for your zone</div>
               <div class="content input-area">
@@ -771,6 +723,93 @@
                   </div>
                 </div>
               </div>
+            </form>
+          </div>
+
+          <!-- Step 4.1: Setup pod -->
+          <div class="setup-pod">
+            <form>
+              <div class="main-desc">Please enter the following information to add a new pod</div>
+              <div class="content input-area">
+                <div class="select-container">
+                  <!-- Name -->
+                  <div class="field">
+                    <div class="name">
+                      <span>Name</span>
+                    </div>
+                    <div class="value">
+                      <input type="text" name="podName" class="required" />
+                    </div>
+                  </div>
+
+                  <!-- Gateway -->
+                  <div class="field odd">
+                    <div class="name">
+                      <span>Gateway</span>
+                    </div>
+                    <div class="value">
+                      <input type="text" name="podGateway" class="required" />
+                    </div>
+                  </div>
+
+                  <!-- Netmask -->
+                  <div class="field">
+                    <div class="name">
+                      <span>Netmask</span>
+                    </div>
+                    <div class="value">
+                      <input type="text" name="podNetmask" class="required" />
+                    </div>
+                  </div>
+
+                  <!-- Reserved System IP -->
+                  <div class="field odd">
+                    <div class="name">
+                      <span>Reserved IP</span>
+                    </div>
+                    <div class="value multi-range">
+                      <input type="text" name="podStartIp" class="required" />
+                      <span class="divider">-</span>
+                      <input type="text" name="podEndIp" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Step 4.2: Add cluster -->
+          <div class="add-cluster">
+            <form>
+              <div class="main-desc">Add cluster</div>
+            </form>
+          </div>
+
+          <!-- Step 4.3: Add host -->
+          <div class="add-cluster">
+            <form>
+              <div class="main-desc">Add host</div>
+            </form>
+          </div>
+
+          <!-- Step 4.4: Add primary storage -->
+          <div class="add-cluster">
+            <form>
+              <div class="main-desc">Add primary storage</div>
+            </form>
+          </div>
+
+          <!-- Step 4.5: Add secondary storage -->
+          <div class="add-cluster">
+            <form>
+              <div class="main-desc">Add secondary storage</div>
+            </form>
+          </div>
+
+          <!-- Step 5: Review -->
+          <div class="add-cluster">
+            <form>
+              <div class="main-desc">Review</div>
             </form>
           </div>
         </div>
