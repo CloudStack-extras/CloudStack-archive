@@ -121,7 +121,6 @@
       var $wizard = $('#template').find('div.zone-wizard').clone();
       var $progress = $wizard.find('div.progress ul li');
       var $steps = $wizard.find('div.steps').children().hide().filter(':not(.disabled)');
-      var $diagramParts = $wizard.find('div.diagram').children().hide();
 
       // Close wizard
       var close = function() {
@@ -166,13 +165,16 @@
       /**
        * Generate dynamic form, based on ID of form object given
        */
-      var makeForm = function(id) {
+      var makeForm = function(id, formState) {
         var form = cloudStack.dialog.createForm({
           noDialog: true,
+          context: $.extend(true, {}, cloudStack.context, {
+            zones: [formState]
+          }),
           form: {
             title: '',
             desc: '',
-            fields: args.forms[id]
+            fields: args.forms[id].fields
           },
           after: function(args) {}
         });
@@ -180,6 +182,7 @@
         var $form = form.$formContainer.find('form');
 
         // Cleanup form to follow zone wizard CSS naming
+        $form.find('input[type=submit]').remove();
         $form.find('.form-item').addClass('field').removeClass('form-item');
         $form.find('label.error').hide();
         $form.find('.form-item .name').each(function() {
@@ -210,119 +213,52 @@
           completeAction();
         }
 
-        var $targetStep = $($steps.hide()[targetIndex]).show();
+        $steps.hide();
 
-        var formID = $targetStep.attr('zone-wizard-form');
-        if (formID && !$targetStep.find('form').size()) {
-          makeForm(formID).appendTo($targetStep.find('.content.input-area .select-container'));
-          cloudStack.evenOdd($targetStep, '.field:visible', {
-            even: function() {},
-            odd: function($row) {
-              $row.addClass('odd');
-            }
-          });
-          
-          return;
-        }
-        
+        var $targetStep = $($steps[targetIndex]).show();
         var formState = cloudStack.serializeForm($wizard.find('form'));
 
+        var formID = $targetStep.attr('zone-wizard-form');
+        if (formID) {
+          if (!$targetStep.find('form').size()) {
+            makeForm(formID, formState).appendTo($targetStep.find('.content.input-area .select-container'));         
+            
+            cloudStack.evenOdd($targetStep, '.field:visible', {
+              even: function() {},
+              odd: function($row) {
+                $row.addClass('odd');
+              }
+            });
+          }
+          
+          if (args.forms[formID].preFilter) {
+            var preFilter = args.forms[formID].preFilter({
+              $form: $targetStep.find('form'),
+              data: formState
+            });
+          }
+        }        
+        
         if (!targetIndex) {
           $wizard.find('.button.previous').hide();
         } else {
           $wizard.find('.button.previous').show();
         }
 
-        // Hide conditional fields by default
-        var $conditional = $targetStep.find('.conditional');
-        $conditional.hide();
-
-        // Show conditional fields for advanced network models
-        if (formState['network-model'] == 'Advanced') {
-          if (formState['isolation-mode'] == 'vlan') {
-            $conditional.filter('.vlan').show().find('select').trigger('change');
-            if ($conditional.find('select[name=vlan-type]').val() == 'tagged') {
-              $conditional.find('select.ip-scope').trigger('change');
-            }
-          } else if (formState['isolation-mode'] == 'security-groups') {
-            $conditional.filter('.security-groups').show();
-          }
-        } else if (formState['network-model'] == 'Basic') {
-          $conditional.filter('.basic').show();
-        }
-
-        if (!formState['public']) {
-          $conditional.filter('.public').show();
-        }
-
-        // Show launch button if last step
         var $nextButton = $wizard.find('.button.next');
         $nextButton.find('span').html('Next');
         $nextButton.removeClass('final');
+
+        // Show launch button if last step
         if ($targetStep.index() == $steps.size() - 1) {
           $nextButton.find('span').html('Add zone');
           $nextButton.addClass('final');
-        }
-
-        // Show relevant conditional sub-step if present
-        if ($targetStep.has('.wizard-step-conditional')) {
-          $targetStep.find('.wizard-step-conditional').hide();
-          $targetStep.find('.wizard-step-conditional.select-network').show();
         }
 
         // Update progress bar
         var $targetProgress = $progress.removeClass('active').filter(function() {
           return $(this).index() <= targetIndex;
         }).toggleClass('active');
-
-        var loadData = function(options) {
-          if (!options) options = {};
-
-          args.steps[targetIndex]({
-            response: {
-              success: function(args) {
-                $(args.domains).each(function() {
-                  $('<option>').val(this.id).html(this.name)
-                    .appendTo($targetStep.find('select.domain'));
-                });
-
-                $(args.networkOfferings).each(function() {
-                  $('<option></option>')
-                    .val(this.id)
-                    .html(this.name)
-                    .appendTo($targetStep.find('select.network-offering'));
-                });
-
-                $targetStep.addClass('loaded');
-
-                // Security groups checkbox filters offering drop-down
-                var $securityGroupsEnabled = $wizard.find(
-                  'input[name=security-groups-enabled]'
-                );
-                $securityGroupsEnabled.data('target-index', targetIndex);
-                $securityGroupsEnabled.change(function() {
-                  var $check = $(this);
-                  var $select = $targetStep.find('select.network-offering');
-                  var objs = $check.is(':checked') ?
-                        args.securityGroupNetworkOfferings : args.networkOfferings;
-
-                  $select.children().remove();
-                  $(objs).each(function() {
-                    $('<option></option>')
-                      .val(this.id)
-                      .html(this.name)
-                      .appendTo($select);
-                  });
-                });
-              }
-            }
-          });
-        };
-
-        // Load data provider for domain dropdowns
-        if (!$targetStep.hasClass('loaded') && (index == 2 || index == 4)) {
-          loadData();
-        }
 
         setTimeout(function() {
           if (!$targetStep.find('input[type=radio]:checked').size()) {
