@@ -5576,6 +5576,26 @@ label.error {
   font-weight: bold;
 }
 
+/*** Multi-edit*/
+.multi-wizard.zone-wizard .multi-edit {
+  width: 100%;
+}
+
+.multi-wizard.zone-wizard .multi-edit table {
+  float: left;
+  width: 98%;
+}
+
+.multi-wizard.zone-wizard .multi-edit .data {
+  width: 102%;
+  float: left;
+  overflow: visible;
+}
+
+.multi-wizard.zone-wizard .multi-edit .data-body .data-item {
+  float: left;
+}
+
 /*** Select container fields*/
 .multi-wizard.zone-wizard .select-container .field {
   width: 100%;

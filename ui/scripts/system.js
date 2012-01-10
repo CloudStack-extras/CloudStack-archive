@@ -2629,6 +2629,52 @@
                 label: 'Add zone',
                 action: {
                   custom: cloudStack.zoneWizard({
+                    customUI: {
+                      publicTrafficIPRange: function(args) {
+                        var multiEditData = [];
+                        var totalIndex = 0;
+                        
+                        return $('<div>').multiEdit({
+                          context: args.context,
+                          noSelect: true,
+                          fields: {
+                            'gateway': { edit: true, label: 'Gateway' },
+                            'netmask': { edit: true, label: 'Netmask' },
+                            'vlanid': { edit: true, label: 'VLAN', isOptional: true },
+                            'startip': { edit: true, label: 'Start IP' },
+                            'endip': { edit: true, label: 'End IP' },
+                            'add-rule': { label: 'Add', addButton: true }
+                          },
+                          add: {
+                            label: 'Add',
+                            action: function(args) {
+                              multiEditData.push($.extend(args.data, {
+                                index: totalIndex
+                              }));
+
+                              totalIndex++;
+                              args.response.success();
+                            }
+                          },
+                          actions: {
+                            destroy: {
+                              label: 'Remove Rule',
+                              action: function(args) {
+                                multiEditData = $.grep(multiEditData, function(item) {
+                                  return item.index != args.context.multiRule[0].index
+                                });
+                                args.response.success();
+                              }
+                            }
+                          },
+                          dataProvider: function(args) {
+                            args.response.success({
+                              data: multiEditData
+                            });
+                          }
+                        });
+                      }
+                    },
                     forms: {
                       addZone: {
                         preFilter: function(args) {

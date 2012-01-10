@@ -514,9 +514,8 @@
 
           <!-- Step 3.2: Configure public traffic -->
           <div class="setup-public-traffic">
-            <form>
-              <div class="main-desc">Configure public traffic</div>
-            </form>
+            <div class="main-desc">Configure public traffic</div>
+            <div ui-custom="publicTrafficIPRange"></div>
           </div>
 
           <!-- Step 3.3: Add pod -->

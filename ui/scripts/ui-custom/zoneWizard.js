@@ -3,6 +3,64 @@
    * Zone wizard
    */
   cloudStack.zoneWizard = function(args) {
+    /**
+     * Handles validation for custom UI components
+     */
+    var customValidation = {
+      networkRanges: function($form) {
+        if ($form.closest('.multi-edit').find('.data-item').size()) {
+          return true;
+        }
+
+        cloudStack.dialog.notice({
+          message: 'Please add at lease one traffic range.'
+        });
+        return false;
+      },
+
+      trafficTypes: function($form) {
+        var requiredTrafficTypes = [
+          'management',
+          'guest'
+        ];
+        var $requiredTrafficTypes = $form.find('li.traffic-type-draggable').filter(function() {
+          return $.inArray($(this).attr('traffic-type-id'), requiredTrafficTypes) > -1
+        });
+
+        if ($requiredTrafficTypes.size() == requiredTrafficTypes.length) {
+          return true;
+        }
+        
+        cloudStack.dialog.notice({
+          message: 'Please assign all required traffic types to a network.'
+        });
+        return false;
+      }
+    };
+
+    /**
+     * Determine if UI components in step should be custom-validated
+     * (i.e., not a standard form)
+     */
+    var checkCustomValidation = function($step) {
+      var $multiEditForm = $step.find('.multi-edit form');
+      var $physicalNetworks = $step.find('.select-container.multi');
+      var isCustomValidated;
+      
+      if ($multiEditForm.size()) {
+        isCustomValidated = customValidation.networkRanges($multiEditForm);
+      } else if ($physicalNetworks.size()) {
+        isCustomValidated = customValidation.trafficTypes($physicalNetworks);
+      } else {
+        isCustomValidated = true;
+      }
+
+      return isCustomValidated;
+    };
+
+    /**
+     * Physical network step: Renumber network form items
+     */
     var renumberPhysicalNetworkForm = function($container) {
       var $items = $container.find('.select-container.multi');
 
@@ -17,6 +75,9 @@
       });
     };
 
+    /**
+     * Physical network step: Generate new network element
+     */
     var addPhysicalNetwork = function($wizard) {
       var $container = $wizard.find('.setup-physical-network .content.input-area form');
       var $physicalNetworkItem = $('<div>').addClass('select-container multi');
@@ -41,7 +102,7 @@
           var $ul = $(this).find('ul');
 
           $ul.addClass('active');
-          
+
           if (!$ul.find('li').size()) {
             $ul.fadeIn();
           }
@@ -51,12 +112,12 @@
           var $ul = $(this).find('ul');
 
           $ul.removeClass('active');
-          
+
           if (!$ul.find('li').size()) {
             $ul.fadeOut();
           }
         },
-        
+
         drop: function(event, ui) {
           var $ul = $(this).find('ul');
 
@@ -88,6 +149,9 @@
       });
     };
 
+    /**
+     * Physical network step: Remove specified network element
+     */
     var removePhysicalNetwork = function($item) {
       var $container = $item.closest('.setup-physical-network .content.input-area form');
 
@@ -107,7 +171,7 @@
             .filter(function() {
               return $(this).hasClass($draggable.attr('traffic-type-id'));
             });
-          
+
           $draggable.appendTo($originalContainer.find('ul'));
         });
 
@@ -219,10 +283,12 @@
         var formState = cloudStack.serializeForm($wizard.find('form'));
 
         var formID = $targetStep.attr('zone-wizard-form');
+        var $uiCustom = $targetStep.find('[ui-custom]');
+
         if (formID) {
           if (!$targetStep.find('form').size()) {
-            makeForm(formID, formState).appendTo($targetStep.find('.content.input-area .select-container'));         
-            
+            makeForm(formID, formState).appendTo($targetStep.find('.content.input-area .select-container'));
+
             cloudStack.evenOdd($targetStep, '.field:visible', {
               even: function() {},
               odd: function($row) {
@@ -230,15 +296,29 @@
               }
             });
           }
-          
+
           if (args.forms[formID].preFilter) {
             var preFilter = args.forms[formID].preFilter({
               $form: $targetStep.find('form'),
               data: formState
             });
           }
-        }        
-        
+        }
+
+        if ($uiCustom.size()) {
+          $uiCustom.each(function() {
+            var $item = $(this);
+            var id = $item.attr('ui-custom');
+
+            $item.replaceWith(
+              args.customUI[id]({
+                data: formState,
+                context: cloudStack.context
+              })
+            )
+          });
+        }
+
         if (!targetIndex) {
           $wizard.find('.button.previous').hide();
         } else {
@@ -348,10 +428,17 @@
 
         // Next button
         if ($target.closest('div.button.next').size()) {
-          // Check validation first
-          var $form = $steps.filter(':visible').find('form');
-          if ($form.size() && !$form.valid()) {
-            if ($form.find('.error:visible').size())
+          var $step = $steps.filter(':visible');
+          // Validation
+          var $form = $step.find('form').filter(function() {
+            // Don't include multi-edit (validation happens separately)
+            return !$(this).closest('.multi-edit').size();
+          });
+
+          // Handle validation for custom UI components
+          var isCustomValidated = checkCustomValidation($step);
+          if (($form.size() && !$form.valid()) || !isCustomValidated) {
+            if (($form && $form.find('.error:visible').size()) || !isCustomValidated)
               return false;
           }
 
