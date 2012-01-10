@@ -36,6 +36,7 @@ import com.cloud.exception.InsufficientVirtualNetworkCapcityException;
 import com.cloud.network.Network;
 import com.cloud.network.NetworkProfile;
 import com.cloud.network.NetworkVO;
+import com.cloud.network.StorageNetworkManager;
 import com.cloud.network.Networks.AddressFormat;
 import com.cloud.network.Networks.BroadcastDomainType;
 import com.cloud.network.Networks.Mode;
@@ -58,16 +59,39 @@ import com.cloud.vm.VirtualMachineProfile;
 public class PodBasedNetworkGuru extends AdapterBase implements NetworkGuru {
     private static final Logger s_logger = Logger.getLogger(PodBasedNetworkGuru.class);
     @Inject DataCenterDao _dcDao;
+    @Inject StorageNetworkManager _sNwMgr;
     Random _rand = new Random(System.currentTimeMillis());
+    
+    private static final TrafficType[] _trafficTypes = {TrafficType.Management, TrafficType.Storage};
+    
+    @Override
+    public boolean isMyTrafficType(TrafficType type) {
+    	for (TrafficType t : _trafficTypes) {
+    		if (t == type) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }
 
+    @Override
+    public TrafficType[] getSupportedTrafficType() {
+    	return _trafficTypes;
+    }
+    
     @Override
     public Network design(NetworkOffering offering, DeploymentPlan plan, Network userSpecified, Account owner) {
         TrafficType type = offering.getTrafficType();
         
-        if (type != TrafficType.Management && type != TrafficType.Storage) {
+        if (!isMyTrafficType(type)) {
             return null;
         }
         
+        if (type == TrafficType.Storage && _sNwMgr.isStorageIpRangeAvailable()) {
+        	s_logger.debug("There is an storage network ip range, let StorageNetworkGuru to handle TrafficType.Storage");
+        	return null;
+        }
+                
         NetworkVO config = new NetworkVO(type, Mode.Static, BroadcastDomainType.Native, offering.getId(), Network.State.Setup, plan.getDataCenterId(), plan.getPhysicalNetworkId());
         return config;
     }
@@ -84,7 +108,7 @@ public class PodBasedNetworkGuru extends AdapterBase implements NetworkGuru {
     public NicProfile allocate(Network config, NicProfile nic, VirtualMachineProfile<? extends VirtualMachine> vm) throws InsufficientVirtualNetworkCapcityException,
             InsufficientAddressCapacityException {
         TrafficType trafficType = config.getTrafficType();
-        assert (trafficType == TrafficType.Storage || trafficType == TrafficType.Management) : "Well, I can't take care of this config now can I? " + config; 
+        assert trafficType == TrafficType.Management || trafficType == TrafficType.Storage: "Well, I can't take care of this config now can I? " + config; 
         
         if (nic != null) {
             if (nic.getRequestedIp() != null) {

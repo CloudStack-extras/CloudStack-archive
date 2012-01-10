@@ -148,7 +148,7 @@
 
                 dataProvider: function(args) {
                   $.ajax({
-                    url: createURL("listNetworks&trafficType=Public&isSystem=true&zoneId="+selectedZoneObj.id),
+                    url: createURL("listNetworks&listAll=true&trafficType=Public&isSystem=true&zoneId="+selectedZoneObj.id),
                     dataType: "json",
                     async: false,
                     success: function(json) {
@@ -270,7 +270,7 @@
                 ],
                 dataProvider: function(args) {                  
                   $.ajax({
-                    url: createURL("listNetworks&issystem=true&trafficType=Management&zoneId=" + selectedZoneObj.id),
+                    url: createURL("listNetworks&listAll=true&issystem=true&trafficType=Management&zoneId=" + selectedZoneObj.id),
                     dataType: "json",
                     success: function(json) {                      
                       selectedManagementNetworkObj =json.listnetworksresponse.network[0];
@@ -494,7 +494,7 @@
                     dataProvider: function(args) { //only basic zone has IP Range tab                      
                       selectedGuestNetworkObj = null;
                       $.ajax({
-                        url: createURL("listNetworks&trafficType=Guest&zoneid=" + selectedZoneObj.id),
+                        url: createURL("listNetworks&listAll=true&trafficType=Guest&zoneid=" + selectedZoneObj.id),
                         dataType: "json",
                         async: false,
                         success: function(json) {                         
@@ -647,7 +647,7 @@
                               }
                               else { //list all domains
                                 $.ajax({
-                                  url: createURL("listDomains"),
+                                  url: createURL("listDomains&listAll=true"),
                                   dataType: "json",
                                   async: false,
                                   success: function(json) {
@@ -903,7 +903,7 @@
                         // Only 1 guest network is allowed per basic zone,
                         // so don't show the dialog in this case
                         $.ajax({
-                          url: createURL('listNetworks'),
+                          url: createURL('listNetworks&listAll=true'),
                           data: {
                             trafficType: 'guest',
                             zoneId: zone.id
@@ -949,7 +949,7 @@
 										}
 										
                     $.ajax({
-                      url: createURL("listNetworks&trafficType=Guest&zoneId=" + selectedZoneObj.id + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
+                      url: createURL("listNetworks&listAll=true&trafficType=Guest&zoneId=" + selectedZoneObj.id + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
                       dataType: "json",
                       success: function(json) {
                         var items = json.listnetworksresponse.network;
@@ -1679,11 +1679,7 @@
                             }
                           }
                         },
-                        action: function(args) {
-                          if(args.data.hostId == null) {
-                            args.response.error("Host field is required");
-                            return;
-                          }
+                        action: function(args) {												                      
                           $.ajax({
                             url: createURL("migrateSystemVm&hostid=" + args.data.hostId + "&virtualmachineid=" + args.context.routers[0].id),
                             dataType: "json",
@@ -2785,7 +2781,7 @@
                       // Step 2: Setup Zone
                       function(args) {
                         $.ajax({
-                          url: createURL("listDomains"),
+                          url: createURL("listDomains&listAll=true"),
                           dataType: "json",
                           async: false,
                           success: function(json) {
@@ -3551,9 +3547,9 @@
                               return 'Starting system VM';
                             }
                           },
-                          action: function(args) {
+                          action: function(args) {													
                             $.ajax({
-                              url: createURL('startSystemVm&id=' + args.data.id),
+                              url: createURL('startSystemVm&id=' + args.context.systemVMs[0].id),
                               dataType: 'json',
                               async: true,
                               success: function(json) {
@@ -3587,9 +3583,9 @@
                               return 'Stopping system VM';
                             }
                           },
-                          action: function(args) {
+                          action: function(args) {												
                             $.ajax({
-                              url: createURL('stopSystemVm&id=' + args.data.id),
+                              url: createURL('stopSystemVm&id=' + args.context.systemVMs[0].id),
                               dataType: 'json',
                               async: true,
                               success: function(json) {
@@ -3623,9 +3619,9 @@
                               return 'rebooting system VM';
                             }
                           },
-                          action: function(args) {
+                          action: function(args) {													 
                             $.ajax({
-                              url: createURL('rebootSystemVm&id=' + args.data.id),
+                              url: createURL('rebootSystemVm&id=' + args.context.systemVMs[0].id),
                               dataType: 'json',
                               async: true,
                               success: function(json) {
@@ -3659,9 +3655,9 @@
                               return 'Destroyping system VM';
                             }
                           },
-                          action: function(args) {
+                          action: function(args) {												
                             $.ajax({
-                              url: createURL('destroySystemVm&id=' + args.data.id),
+                              url: createURL('destroySystemVm&id=' + args.context.systemVMs[0].id),
                               dataType: 'json',
                               async: true,
                               success: function(json) {
@@ -3731,13 +3727,9 @@
                               }
                             }
                           },
-                          action: function(args) {
-                            if(args.data.hostId == null) {
-                              args.response.error("Host field is required");
-                              return;
-                            }
+                          action: function(args) {													                           
                             $.ajax({
-                              url: createURL("migrateSystemVm&hostid=" + args.data.hostId + "&virtualmachineid=" + args.data.id),
+                              url: createURL("migrateSystemVm&hostid=" + args.data.hostId + "&virtualmachineid=" + args.context.systemVMs[0].id),
                               dataType: "json",
                               async: true,
                               success: function(json) {
@@ -4554,112 +4546,7 @@
                   return 'Added new pod';
                 }
               }
-            },
-
-            enable: {
-              label: 'Enable pod',
-              messages: {
-                confirm: function(args) {
-                  return 'Are you sure you want to enable this pod?';
-                },
-                success: function(args) {
-                  return 'This pod is being enabled.';
-                },
-                notification: function(args) {
-                  return 'Enabling pod';
-                },
-                complete: function(args) {
-                  return 'Pod has been enabled.';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("updatePod&id=" + args.context.pods[0].id + "&allocationstate=Enabled"),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var item = json.updatepodresponse.pod;
-                    args.response.success({
-                      actionFilter: podActionfilter,
-                      data:item
-                    });
-                  }
-                });
-              },
-              notification: {
-                poll: function(args) {
-                  args.complete();
-                }
-              }
-            },
-
-            disable: {
-              label: 'Disable pod',
-              messages: {
-                confirm: function(args) {
-                  return 'Are you sure you want to disable this pod?';
-                },
-                success: function(args) {
-                  return 'This pod is being disabled.';
-                },
-                notification: function(args) {
-                  return 'Disabling pod';
-                },
-                complete: function(args) {
-                  return 'Pod has been disabled.';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("updatePod&id=" + args.context.pods[0].id + "&allocationstate=Disabled"),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var item = json.updatepodresponse.pod;
-                    args.response.success({
-                      actionFilter: podActionfilter,
-                      data:item
-                    });
-                  }
-                });
-              },
-              notification: {
-                poll: function(args) {
-                  args.complete();
-                }
-              }
-            },
-
-            'delete': {
-              label: 'Delete' ,
-              messages: {
-                confirm: function(args) {
-                  return 'Please confirm that you want to delete this pod.';
-                },
-                success: function(args) {
-                  return 'pod is being deleted.';
-                },
-                notification: function(args) {
-                  return 'Deleting pod';
-                },
-                complete: function(args) {
-                  return 'Pod has been deleted.';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("deletePod&id=" + args.context.pods[0].id),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    args.response.success({data:{}});
-                  }
-                });
-              },
-              notification: {
-                poll: function(args) { args.complete(); }
-              }
-            }
+            }    
           },
 
           detailView: {
@@ -4985,8 +4872,11 @@
                         success: function(json) {
                           var pods = json.listpodsresponse.pod;
                           var items = [];
-                          $(pods).each(function() {
-                            items.push({id: this.id, description: this.name});
+                          $(pods).each(function() {													  
+														if(("pods" in args.context) && (this.id == args.context.pods[0].id))
+													    items.unshift({id: this.id, description: this.name});
+													  else														
+                              items.push({id: this.id, description: this.name});
                           });
                           args.response.success({data: items});
                         }
@@ -5079,188 +4969,9 @@
                   });
                 }
               }
-            },
-
-            enable: {
-              label: 'Enable cluster',
-              messages: {
-                confirm: function(args) {
-                  return 'Are you sure you want to enable this cluster?';
-                },
-                success: function(args) {
-                  return 'This cluster is being enabled.';
-                },
-                notification: function(args) {
-                  return 'Enabling cluster';
-                },
-                complete: function(args) {
-                  return 'Cluster has been enabled.';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("updateCluster&id=" + args.context.clusters[0].id + "&allocationstate=Enabled"),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var item = json.updateclusterresponse.cluster;
-                    args.response.success({
-                      actionFilter: clusterActionfilter,
-                      data:item
-                    });
-                  }
-                });
-              },
-              notification: {
-                poll: function(args) {
-                  args.complete();
-                }
-              }
-            },
-
-            disable: {
-              label: 'Disable cluster',
-              messages: {
-                confirm: function(args) {
-                  return 'Are you sure you want to disable this cluster?';
-                },
-                success: function(args) {
-                  return 'This cluster is being disabled.';
-                },
-                notification: function(args) {
-                  return 'Disabling cluster';
-                },
-                complete: function(args) {
-                  return 'Cluster has been disabled.';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("updateCluster&id=" + args.context.clusters[0].id + "&allocationstate=Disabled"),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var item = json.updateclusterresponse.cluster;
-                    args.response.success({
-                      actionFilter: clusterActionfilter,
-                      data:item
-                    });
-                  }
-                });
-              },
-              notification: {
-                poll: function(args) {
-                  args.complete();
-                }
-              }
-            },
-
-            manage: {
-              label: 'Manage cluster',
-              messages: {
-                confirm: function(args) {
-                  return 'Are you sure you want to manage this cluster?';
-                },
-                success: function(args) {
-                  return 'This cluster is being managed.';
-                },
-                notification: function(args) {
-                  return 'Managing cluster';
-                },
-                complete: function(args) {
-                  return 'Cluster has been managed.';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("updateCluster&id=" + args.context.clusters[0].id + "&managedstate=Managed"),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var item = json.updateclusterresponse.cluster;
-                    args.response.success({
-                      actionFilter: clusterActionfilter,
-                      data:item
-                    });
-                  }
-                });
-              },
-              notification: {
-                poll: function(args) {
-                  args.complete();
-                }
-              }
-            },
-
-            unmanage: {
-              label: 'Unmanage cluster',
-              messages: {
-                confirm: function(args) {
-                  return 'Are you sure you want to unmanage this cluster?';
-                },
-                success: function(args) {
-                  return 'This cluster is being unmanaged.';
-                },
-                notification: function(args) {
-                  return 'Unmanaging cluster';
-                },
-                complete: function(args) {
-                  return 'Cluster has been unmanaged.';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("updateCluster&id=" + args.context.clusters[0].id + "&managedstate=Unmanaged"),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var item = json.updateclusterresponse.cluster;
-                    args.response.success({
-                      actionFilter: clusterActionfilter,
-                      data:item
-                    });
-                  }
-                });
-              },
-              notification: {
-                poll: function(args) {
-                  args.complete();
-                }
-              }
-            },
-
-            'delete': {
-              label: 'Delete' ,
-              messages: {
-                confirm: function(args) {
-                  return 'Please confirm that you want to delete this cluster.';
-                },
-                success: function(args) {
-                  return 'Cluster is being deleted.';
-                },
-                notification: function(args) {
-                  return 'Deleting cluster';
-                },
-                complete: function(args) {
-                  return 'Cluster has been deleted.';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("deleteCluster&id=" + args.context.clusters[0].id),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    args.response.success({data:{}});
-                  }
-                });
-              },
-              notification: {
-                poll: function(args) { args.complete(); }
-              }
             }
-
           },
+					
           detailView: {
             viewAll: { path: '_zone.hosts', label: 'Hosts' },
 
@@ -5538,8 +5249,11 @@
                         success: function(json) {
                           var pods = json.listpodsresponse.pod;
                           var items = [];
-                          $(pods).each(function() {
-                            items.push({id: this.id, description: this.name});
+                          $(pods).each(function() {													 
+														if(("pods" in args.context) && (this.id == args.context.pods[0].id))
+													    items.unshift({id: this.id, description: this.name});
+													  else															
+                              items.push({id: this.id, description: this.name});
                           });
                           args.response.success({data: items});
                         }
@@ -5559,8 +5273,11 @@
                         success: function(json) {
                           clusterObjs = json.listclustersresponse.cluster;
                           var items = [];
-                          $(clusterObjs).each(function() {
-                            items.push({id: this.id, description: this.name});
+                          $(clusterObjs).each(function() {													  
+													  if(("clusters" in args.context) && (this.id == args.context.clusters[0].id))
+													    items.unshift({id: this.id, description: this.name});
+													  else
+                              items.push({id: this.id, description: this.name});
                           });
                           args.response.success({data: items});
                         }
@@ -5817,188 +5534,7 @@
                   return 'Added new host';
                 }
               }
-            },
-
-            enableMaintenanceMode: {
-              label: 'Enable Maintenace' ,
-              action: function(args) {
-                $.ajax({
-                  url: createURL("prepareHostForMaintenance&id=" + args.context.hosts[0].id),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var jid = json.preparehostformaintenanceresponse.jobid;
-                    args.response.success(
-                      {_custom:
-                       {jobId: jid,
-                        getUpdatedItem: function(json) {                         
-                          return json.queryasyncjobresultresponse.jobresult.host;
-                        },
-                        getActionFilter: function() {                         
-                          return hostActionfilter;
-                        }
-                       }
-                      }
-                    );
-                  }
-                });
-              },
-              messages: {
-                confirm: function(args) {
-                  return 'Enabling maintenance mode will cause a live migration of all running instances on this host to any available host.';
-                },
-                success: function(args) {
-                  return 'Maintenance is being enabled.';
-                },
-                notification: function(args) {
-                  return 'Enabling maintenance';
-                },
-                complete: function(args) {
-                  return 'Maintenance has been enabled.';
-                }
-              },
-              notification: {
-                poll: pollAsyncJobResult
-              }
-            },
-
-            cancelMaintenanceMode: {
-              label: 'Cancel Maintenace' ,
-              action: function(args) {
-                $.ajax({
-                  url: createURL("cancelHostMaintenance&id=" + args.context.hosts[0].id),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var jid = json.cancelhostmaintenanceresponse.jobid;
-                    args.response.success(
-                      {_custom:
-                       {jobId: jid,
-                        getUpdatedItem: function(json) {
-                          return json.queryasyncjobresultresponse.jobresult.host;
-                        },
-                        getActionFilter: function() {
-                          return hostActionfilter;
-                        }
-                       }
-                      }
-                    );
-                  }
-                });
-              },
-              messages: {
-                confirm: function(args) {
-                  return 'Please confirm that you want to cancel this maintenance.';
-                },
-                success: function(args) {
-                  return 'Maintenance is being cancelled.';
-                },
-                notification: function(args) {
-                  return 'Cancelling maintenance';
-                },
-                complete: function(args) {
-                  return 'Maintenance has been cancelled.';
-                }
-              },
-              notification: {
-                poll: pollAsyncJobResult
-              }
-            },
-
-            forceReconnect: {
-              label: 'Force Reconnect' ,
-              action: function(args) {
-                $.ajax({
-                  url: createURL("reconnectHost&id=" + args.context.hosts[0].id),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var jid = json.reconnecthostresponse.jobid;
-                    args.response.success(
-                      {_custom:
-                       {jobId: jid,
-                        getUpdatedItem: function(json) {
-                          return json.queryasyncjobresultresponse.jobresult.host;
-                        },
-                        getActionFilter: function() {
-                          return hostActionfilter;
-                        }
-                       }
-                      }
-                    );
-                  }
-                });
-              },
-              messages: {
-                confirm: function(args) {
-                  return 'Please confirm that you want to force reconnect this host.';
-                },
-                success: function(args) {
-                  return 'Host is being force reconnected.';
-                },
-                notification: function(args) {
-                  return 'Force reconnecting host';
-                },
-                complete: function(args) {
-                  return 'Host has been force reconnected.';
-                }
-              },
-              notification: {
-                poll: pollAsyncJobResult
-              }
-            },
-
-            'delete': {
-              label: 'Remove host' ,
-              messages: {
-                confirm: function(args) {
-                  return 'Please confirm that you want to remove this host.';
-                },
-                success: function(args) {
-                  return 'Host is being removed.';
-                },
-                notification: function(args) {
-                  return 'Removing host';
-                },
-                complete: function(args) {
-                  return 'Host has been removed.';
-                }
-              },
-              preFilter: function(args) {
-                if(isAdmin()) {
-                  args.$form.find('.form-item[rel=isForced]').css('display', 'inline-block');
-                }
-              },
-              createForm: {
-                title: 'Remove host',
-                fields: {
-                  isForced: {
-                    label: 'Force Remove',
-                    isBoolean: true,
-                    isHidden: true
-                  }
-                }
-              },
-              action: function(args) {
-                var array1 = [];
-                //if(args.$form.find('.form-item[rel=isForced]').css("display") != "none") //uncomment after Brian fix it to include $form in args
-                array1.push("&forced=" + (args.data.isForced == "on"));
-
-                $.ajax({
-                  url: createURL("deleteHost&id=" + args.context.hosts[0].id + array1.join("")),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    //{ "deletehostresponse" : { "success" : "true"}  }
-                    args.response.success({data:{}});
-                  }
-                });
-              },
-              notification: {
-                poll: function(args) { args.complete(); }
-              }
-            }
-
+            } 
           },
           detailView: {
             name: "Host details",												
@@ -6692,125 +6228,7 @@
                   return 'Added new primary storage';
                 }
               }
-            },
-
-            enableMaintenanceMode: {
-              label: 'Enable Maintenace' ,
-              action: function(args) {
-                $.ajax({
-                  url: createURL("enableStorageMaintenance&id=" + args.context.primarystorages[0].id),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var jid = json.prepareprimarystorageformaintenanceresponse.jobid;
-                    args.response.success(
-                      {_custom:
-                       {jobId: jid,
-                        getUpdatedItem: function(json) {
-                          return json.queryasyncjobresultresponse.jobresult.storagepool;
-                        },
-                        getActionFilter: function() {
-                          return primarystorageActionfilter;
-                        }
-                       }
-                      }
-                    );
-                  }
-                });
-              },
-              messages: {
-                confirm: function(args) {
-                  return 'Warning: placing the primary storage into maintenance mode will cause all VMs using volumes from it to be stopped.  Do you want to continue?';
-                },
-                success: function(args) {
-                  return 'Maintenance is being enabled.';
-                },
-                notification: function(args) {
-                  return 'Enabling maintenance';
-                },
-                complete: function(args) {
-                  return 'Maintenance has been enabled.';
-                }
-              },
-              notification: {
-                poll: pollAsyncJobResult
-              }
-            },
-
-            cancelMaintenanceMode: {
-              label: 'Cancel Maintenace' ,
-              action: function(args) {
-                $.ajax({
-                  url: createURL("cancelStorageMaintenance&id=" + args.context.primarystorages[0].id),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var jid = json.cancelprimarystoragemaintenanceresponse.jobid;
-                    args.response.success(
-                      {_custom:
-                       {jobId: jid,
-                        getUpdatedItem: function(json) {
-                          return json.queryasyncjobresultresponse.jobresult.storagepool;
-                        },
-                        getActionFilter: function() {
-                          return primarystorageActionfilter;
-                        }
-                       }
-                      }
-                    );
-                  }
-                });
-              },
-              messages: {
-                confirm: function(args) {
-                  return 'Please confirm that you want to cancel this maintenance.';
-                },
-                success: function(args) {
-                  return 'Maintenance is being cancelled.';
-                },
-                notification: function(args) {
-                  return 'Cancelling maintenance';
-                },
-                complete: function(args) {
-                  return 'Maintenance has been cancelled.';
-                }
-              },
-              notification: {
-                poll: pollAsyncJobResult
-              }
-            },
-
-            'delete': {
-              label: 'Delete' ,
-              messages: {
-                confirm: function(args) {
-                  return 'Please confirm that you want to delete this primary storage.';
-                },
-                success: function(args) {
-                  return 'Primary storage is being deleted.';
-                },
-                notification: function(args) {
-                  return 'Deleting primary storage';
-                },
-                complete: function(args) {
-                  return 'Primary storage has been deleted.';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("deleteStoragePool&id=" + args.context.primarystorages[0].id),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    args.response.success({data:{}});
-                  }
-                });
-              },
-              notification: {
-                poll: function(args) { args.complete(); }
-              }
-            }
-
+            }   
           },
 
           detailView: {
@@ -7014,7 +6432,8 @@
         listView: {
           section: 'seconary-storage',
           fields: {
-            name: { label: 'Name' }
+            name: { label: 'Name' },
+						created: { label: 'Created', converter: cloudStack.converters.toLocalDate }
           },
 
           dataProvider: function(args) {
@@ -7029,11 +6448,7 @@
 								}
 							}
 						}						
-            array1.push("&zoneid=" + args.context.zones[0].id);
-            if("pods" in args.context)
-              array1.push("&podid=" + args.context.pods[0].id);
-            if("clusters" in args.context)
-              array1.push("&clusterid=" + args.context.clusters[0].id);
+            array1.push("&zoneid=" + args.context.zones[0].id);            
             $.ajax({
               url: createURL("listHosts&type=SecondaryStorage&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
               dataType: "json",
@@ -7102,39 +6517,7 @@
                   return 'Added new secondary storage';
                 }
               }
-            },
-
-            'delete': {
-              label: 'Delete' ,
-              messages: {
-                confirm: function(args) {
-                  return 'Please confirm that you want to delete this secondary storage.';
-                },
-                success: function(args) {
-                  return 'Secondary storage is being deleted.';
-                },
-                notification: function(args) {
-                  return 'Deleting secondary storage';
-                },
-                complete: function(args) {
-                  return 'Secondary storage has been deleted.';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("deleteHost&id=" + args.context.secondarystorages[0].id),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    args.response.success({data:{}});
-                  }
-                });
-              },
-              notification: {
-                poll: function(args) { args.complete(); }
-              }
             }
-
           },
 
           detailView: {
@@ -7181,13 +6564,10 @@
                   },
                   {
                     id: { label: 'ID' },
-                    zonename: { label: 'Zone' },
-                    type: { label: 'Type' },
-                    ipaddress: { label: 'IP Address' }
+                    created: { label: 'Created', converter: cloudStack.converters.toLocalDate },
                   }
                 ],
-
-                //dataProvider: testData.dataProvider.detailView('secondaryStorage')
+                
                 dataProvider: function(args) {
                   args.response.success({
                     actionFilter: secondarystorageActionfilter,
@@ -7317,86 +6697,24 @@
                 }
               },
 
-              action: function(args) {
-							  /*
-                if(selectedZoneObj.networktype == "Basic") {
-                  var array2 = [];
-
-                  var podId;
-                  if(args.data.podId != "0") {
-                    podId = args.data.podId;
-                  }
-                  else { 
-                    var array1 = [];
-                    array1.push("&zoneId=" + selectedZoneObj.id);
-                    array1.push("&name=" + todb(args.data.podname));
-                    array1.push("&gateway=" + todb(args.data.reservedSystemGateway));
-                    array1.push("&netmask=" + todb(args.data.reservedSystemNetmask));
-                    array1.push("&startIp=" + todb(args.data.reservedSystemStartIp));
-
-                    var endip = args.data.reservedSystemEndIp;      
-                    if (endip != null && endip.length > 0)
-                      array1.push("&endIp=" + todb(endip));
-
-                    $.ajax({
-                      url: createURL("createPod" + array1.join("")),
-                      dataType: "json",
-                      async: false,
-                      success: function(json) {
-                        var item = json.createpodresponse.pod;
-                        podId = item.id;
-                      }
-                    });
-                  }
-                  if(podId == null)  {
-                    alert("podId is null, so unable to create IP range on pod level");
-                    return;
-                  }
-                  array2.push("&podId=" + podId);
-                  array2.push("&vlan=untagged");
-                  array2.push("&zoneid=" + selectedZoneObj.id);
-                  array2.push("&forVirtualNetwork=false"); 
-                  array2.push("&gateway=" + todb(args.data.guestGateway));
-                  array2.push("&netmask=" + todb(args.data.guestNetmask));
-                  array2.push("&startip=" + todb(args.data.guestStartIp));
-                  var endip = args.data.guestEndIp;
-                  if(endip != null && endip.length > 0)
-                    array2.push("&endip=" + todb(endip));
-                  $.ajax({
-                    url: createURL("createVlanIpRange" + array2.join("")),
-                    dataType: "json",
-                    async: false,
-                    success: function(json) {
-                      var item = json.createvlaniprangeresponse.vlan;
-                      args.response.success({data:item});
-                    },
-                    error: function(XMLHttpResponse) {
-                      var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-                      args.response.error(errorMsg);
-                    }
-                  });
-                }
-								*/
-								
-                //else {   //selectedZoneObj.networktype == "Advanced"
-                  var array2 = [];
-                  array2.push("&startip=" + args.data.guestStartIp);
-                  var endip = args.data.guestEndIp;
-                  if(endip != null && endip.length > 0)
-                    array2.push("&endip=" + endip);
-                  $.ajax({
-                    url: createURL("createVlanIpRange&forVirtualNetwork=false&networkid=" + args.context.networks[0].id + array2.join("")),
-                    dataType: "json",
-                    success: function(json) {
-                      var item = json.createvlaniprangeresponse.vlan;
-                      args.response.success({data:item});
-                    },
-                    error: function(XMLHttpResponse) {
-                      var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-                      args.response.error(errorMsg);
-                    }
-                  });
-                //}
+              action: function(args) {		                
+								var array2 = [];
+								array2.push("&startip=" + args.data.guestStartIp);
+								var endip = args.data.guestEndIp;
+								if(endip != null && endip.length > 0)
+									array2.push("&endip=" + endip);
+								$.ajax({
+									url: createURL("createVlanIpRange&forVirtualNetwork=false&networkid=" + args.context.networks[0].id + array2.join("")),
+									dataType: "json",
+									success: function(json) {
+										var item = json.createvlaniprangeresponse.vlan;
+										args.response.success({data:item});
+									},
+									error: function(XMLHttpResponse) {
+										var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+										args.response.error(errorMsg);
+									}
+								});                
               },
 
               notification: {
@@ -7428,7 +6746,7 @@
                   return 'IP range has been deleted.';
                 }
               },
-              action: function(args) {
+              action: function(args) {							
                 $.ajax({
                   url: createURL("deleteVlanIpRange&id=" + args.data.id),
                   dataType: "json",

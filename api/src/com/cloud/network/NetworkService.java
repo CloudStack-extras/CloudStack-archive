@@ -24,6 +24,7 @@ import java.util.Set;
 import com.cloud.api.commands.AssociateIPAddrCmd;
 import com.cloud.api.commands.CreateNetworkCmd;
 import com.cloud.api.commands.ListNetworksCmd;
+import com.cloud.api.commands.ListTrafficTypeImplementorsCmd;
 import com.cloud.api.commands.RestartNetworkCmd;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientAddressCapacityException;
@@ -36,6 +37,7 @@ import com.cloud.network.Network.Service;
 import com.cloud.network.Networks.TrafficType;
 import com.cloud.user.Account;
 import com.cloud.user.User;
+import com.cloud.utils.Pair;
 
 public interface NetworkService {
 
@@ -86,9 +88,9 @@ public interface NetworkService {
     
     Map<Service, Set<Provider>> getNetworkOfferingServiceProvidersMap(long networkOfferingId);
 
-    PhysicalNetwork createPhysicalNetwork(Long zoneId, String vnetRange, String networkSpeed, List<String> isolationMethods, String broadcastDomainRange, Long domainId, List<String> tags);
+    PhysicalNetwork createPhysicalNetwork(Long zoneId, String vnetRange, String networkSpeed, List<String> isolationMethods, String broadcastDomainRange, Long domainId, List<String> tags, String name);
 
-    List<? extends PhysicalNetwork> searchPhysicalNetworks(Long id, Long zoneId, String keyword, Long startIndex, Long pageSize);
+    List<? extends PhysicalNetwork> searchPhysicalNetworks(Long id, Long zoneId, String keyword, Long startIndex, Long pageSize, String name);
 
     PhysicalNetwork updatePhysicalNetwork(Long id, String networkSpeed, List<String> tags, String newVnetRangeString, String state);
 
@@ -129,4 +131,6 @@ public interface NetworkService {
     PhysicalNetwork getDefaultPhysicalNetworkByZoneAndTrafficType(long zoneId, TrafficType trafficType);
     
     Network getExclusiveGuestNetwork(long zoneId);
+    
+    List<Pair<TrafficType, String>> listTrafficTypeImplementor(ListTrafficTypeImplementorsCmd cmd);
 }

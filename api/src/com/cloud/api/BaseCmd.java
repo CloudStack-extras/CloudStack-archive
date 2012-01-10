@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
+import com.cloud.api.response.TrafficTypeImplementorResponse;
 import com.cloud.configuration.ConfigurationService;
 import com.cloud.consoleproxy.ConsoleProxyService;
 import com.cloud.dao.EntityManager;
@@ -39,6 +40,7 @@ import com.cloud.exception.PermissionDeniedException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.NetworkService;
+import com.cloud.network.StorageNetworkService;
 import com.cloud.network.VirtualNetworkApplianceService;
 import com.cloud.network.firewall.FirewallService;
 import com.cloud.network.lb.LoadBalancingRulesService;
@@ -126,6 +128,7 @@ public abstract class BaseCmd {
     public static DomainService _domainService;
     public static ResourceLimitService _resourceLimitService;
     public static IdentityService _identityService;
+    public static StorageNetworkService _storageNetworkService;
     
     static void setComponents(ResponseGenerator generator) {
         ComponentLocator locator = ComponentLocator.getLocator(ManagementService.Name);
@@ -152,6 +155,7 @@ public abstract class BaseCmd {
         _domainService = locator.getManager(DomainService.class);
         _resourceLimitService = locator.getManager(ResourceLimitService.class);
         _identityService = locator.getManager(IdentityService.class);
+        _storageNetworkService = locator.getManager(StorageNetworkService.class);
     }
     
     public abstract void execute() throws ResourceUnavailableException, InsufficientCapacityException, ServerApiException, ConcurrentOperationException, ResourceAllocationException;

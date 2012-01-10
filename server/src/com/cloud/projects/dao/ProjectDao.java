@@ -32,5 +32,4 @@ public interface ProjectDao extends GenericDao<ProjectVO, Long>{
     ProjectVO findByProjectAccountId(long projectAccountId);
     
     List<ProjectVO> listByState(Project.State state);
-
 }

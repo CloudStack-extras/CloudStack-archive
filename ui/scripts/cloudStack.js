@@ -9,8 +9,11 @@
       else if(isDomainAdmin()) {
         return ["dashboard", "instances", "storage", "network", "templates", "accounts", "domains", "events", "projects"];
       }
-      else { //normal user
+      else if (g_userProjectsEnabled) {
         return ["dashboard", "instances", "storage", "network", "templates", "events", "projects"];
+      }
+      else { //normal user
+        return ["dashboard", "instances", "storage", "network", "templates", "events"];
       }
     },
     sections: {
@@ -92,16 +95,15 @@
           dataType: "json",
           async: false,
           success: function(json) {
-            /* g_supportELB: "guest"   à¥†à¤††à¥†à¤…†ˆ€” ips are allocated on guest network (so use 'forvirtualnetwork' = false)
-             * g_supportELB: "public"  - ips are allocated on public network (so use 'forvirtualnetwork' = true)
-             * g_supportELB: "false"   à¥†à¤††à¥†à¤…†ˆ€“ no ELB support
-             */
             g_capabilities = json.listcapabilitiesresponse.capability;
             g_supportELB = json.listcapabilitiesresponse.capability.supportELB.toString(); //convert boolean to string if it's boolean
             $.cookie('supportELB', g_supportELB, { expires: 1});
 
             g_firewallRuleUiEnabled = json.listcapabilitiesresponse.capability.firewallRuleUiEnabled.toString(); //convert boolean to string if it's boolean
             $.cookie('firewallRuleUiEnabled', g_firewallRuleUiEnabled, { expires: 1});
+
+            g_userProjectsEnabled = json.listcapabilitiesresponse.capability.allowusercreateprojects;
+            $.cookie('userProjectsEnabled', g_userProjectsEnabled, { expires: 1 });
 
             if (json.listcapabilitiesresponse.capability.userpublictemplateenabled != null) {
               g_userPublicTemplateEnabled = json.listcapabilitiesresponse.capability.userpublictemplateenabled.toString(); //convert boolean to string if it's boolean
@@ -199,10 +201,6 @@
               dataType: "json",
               async: false,
               success: function(json) {
-                /* g_supportELB: "guest"   — ips are allocated on guest network (so use 'forvirtualnetwork' = false)
-                 * g_supportELB: "public"  - ips are allocated on public network (so use 'forvirtualnetwork' = true)
-                 * g_supportELB: "false"   – no ELB support
-                 */
                 g_capabilities = json.listcapabilitiesresponse.capability;
                 g_supportELB = json.listcapabilitiesresponse.capability.supportELB.toString(); //convert boolean to string if it's boolean
                 $.cookie('supportELB', g_supportELB, { expires: 1});
@@ -219,6 +217,9 @@
                   g_directAttachSecurityGroupsEnabled = json.listcapabilitiesresponse.capability.securitygroupsenabled.toString(); //convert boolean to string if it's boolean
                   $.cookie('directattachsecuritygroupsenabled', g_directAttachSecurityGroupsEnabled, { expires: 1});
                 }
+
+                g_userProjectsEnabled = json.listcapabilitiesresponse.capability.allowusercreateprojects;
+                $.cookie('userProjectsEnabled', g_userProjectsEnabled, { expires: 1 });
 
                 args.response.success({
                   data: {

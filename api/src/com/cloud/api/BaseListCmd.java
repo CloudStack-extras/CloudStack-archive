@@ -24,12 +24,13 @@ import com.cloud.exception.InvalidParameterValueException;
 public abstract class BaseListCmd extends BaseCmd {
 
     private static Long MAX_PAGESIZE = null;
+    public static Long PAGESIZE_UNLIMITED = -1L;
 
     // ///////////////////////////////////////////////////
     // ///////// BaseList API parameters /////////////////
     // ///////////////////////////////////////////////////
 
-    @Parameter(name = "keyword", type = CommandType.STRING, description = "List by keyword")
+    @Parameter(name = ApiConstants.KEYWORD, type = CommandType.STRING, description = "List by keyword")
     private String keyword;
 
     // FIXME: Need to be able to specify next/prev/first/last, so Integer might not be right
@@ -38,6 +39,8 @@ public abstract class BaseListCmd extends BaseCmd {
 
     @Parameter(name = ApiConstants.PAGE_SIZE, type = CommandType.INTEGER)
     private Integer pageSize;
+    
+
 
     // ///////////////////////////////////////////////////
     // ///////////////// Accessors ///////////////////////
@@ -56,7 +59,7 @@ public abstract class BaseListCmd extends BaseCmd {
             throw new InvalidParameterValueException("Page size can't exceed max allowed page size value: " + MAX_PAGESIZE.longValue());
         }
         
-        if (pageSize != null && pageSize.longValue() == -1 && page != null) {
+        if (pageSize != null && pageSize.longValue() == PAGESIZE_UNLIMITED && page != null) {
             throw new InvalidParameterValueException("Can't specify page parameter when pagesize is -1 (Unlimited)");
         }
         
@@ -64,7 +67,7 @@ public abstract class BaseListCmd extends BaseCmd {
     }
 
     static void configure() {
-        if (_configService.getDefaultPageSize().longValue() != -1) {
+        if (_configService.getDefaultPageSize().longValue() != PAGESIZE_UNLIMITED) {
             MAX_PAGESIZE = _configService.getDefaultPageSize();
         } 
     }
@@ -78,8 +81,12 @@ public abstract class BaseListCmd extends BaseCmd {
     public Long getPageSizeVal() {
         Long defaultPageSize = MAX_PAGESIZE;
         Integer pageSizeInt = getPageSize();
-        if (pageSizeInt != null && pageSizeInt.intValue() != -1) {
-            defaultPageSize = pageSizeInt.longValue();
+        if (pageSizeInt != null) {
+        	if (pageSizeInt.longValue() == PAGESIZE_UNLIMITED) {
+        		defaultPageSize = null;
+        	} else {
+                defaultPageSize = pageSizeInt.longValue();
+        	}
         }
         return defaultPageSize;
     }

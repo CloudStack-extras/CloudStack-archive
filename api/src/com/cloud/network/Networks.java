@@ -61,6 +61,7 @@ public class Networks {
         Vswitch("vs", String.class),
         LinkLocal(null, null),
         Vnet("vnet", Long.class),
+        Storage("storage", Integer.class),
         UnDecided(null, null);
         
         private String scheme;
@@ -98,6 +99,7 @@ public class Networks {
      * Different types of network traffic in the data center. 
      */
     public enum TrafficType {
+    	None,
         Public,
         Guest,
         Storage,
@@ -114,6 +116,23 @@ public class Networks {
             return false;
         }
         
+        public static TrafficType getTrafficType(String type) {
+        	if ("Public".equals(type)) {
+        		return Public;
+        	} else if ("Guest".equals(type)) {
+        		return Guest;
+        	} else if ("Storage".equals(type)) {
+        		return Storage;
+        	} else if ("Management".equals(type)) {
+        		return Management;
+        	} else if ("Control".equals(type)) {
+        		return Control;
+        	} else if ("Vpn".equals(type)) {
+        		return Vpn;
+        	} else {
+        		return None;
+        	}
+        }
     };
     
     public enum IsolationType {

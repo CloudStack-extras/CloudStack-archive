@@ -80,7 +80,7 @@
       },
 
       users: function() {
-        return $('<div>').addClass('management').data('tab-title', 'Users');
+        return $('<div>').addClass('management').data('tab-title', 'Accounts');
       },
 
       invitations: function() {
@@ -329,7 +329,7 @@
                               .append(
                                 // Users tab
                                 $('<li>').addClass('first').append(
-                                  $('<a>').attr({ href: '#new-project-review-tabs-users'}).html('Users')
+                                  $('<a>').attr({ href: '#new-project-review-tabs-users'}).html('Accounts')
                                 )
                               );
                         
@@ -544,8 +544,9 @@
       loadData(function() {
         if (!$list.find('li').size()) {
           cloudStack.dialog.notice({
-            message: 'You do not have any projects. '
-              + 'Please create a new project from the projects section.'
+            message: isAdmin() || g_userProjectsEnabled ?
+              'You do not have any projects.<br/>Please create a new one from the projects section.' :
+              'You do not have any projects.<br/>Please ask your administrator to create a new project.'
           }).closest('.ui-dialog');
           $.merge($selector, $('.overlay')).remove();
           $('.select.default-view').click();

@@ -83,6 +83,7 @@ import com.cloud.api.response.ServiceOfferingResponse;
 import com.cloud.api.response.ServiceResponse;
 import com.cloud.api.response.SnapshotPolicyResponse;
 import com.cloud.api.response.SnapshotResponse;
+import com.cloud.api.response.StorageNetworkIpRangeResponse;
 import com.cloud.api.response.StoragePoolResponse;
 import com.cloud.api.response.SwiftResponse;
 import com.cloud.api.response.SystemVmInstanceResponse;
@@ -111,6 +112,7 @@ import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.HostPodVO;
 import com.cloud.dc.Pod;
+import com.cloud.dc.StorageNetworkIpRange;
 import com.cloud.dc.Vlan;
 import com.cloud.dc.Vlan.VlanType;
 import com.cloud.dc.VlanVO;
@@ -317,13 +319,11 @@ public class ApiResponseHelper implements ResponseGenerator {
         // Get stopped and running VMs
         int vmStopped = 0;
         int vmRunning = 0;
+        
+        List<Long> permittedAccounts = new ArrayList<Long>();
+        permittedAccounts.add(account.getId());
 
-        Long[] accountIds = new Long[1];
-        accountIds[0] = account.getId();
-
-        Criteria c1 = new Criteria();
-        c1.addCriteria(Criteria.ACCOUNTID, accountIds);
-        List<? extends UserVm> virtualMachines = ApiDBUtils.searchForUserVMs(c1);
+        List<? extends UserVm> virtualMachines = ApiDBUtils.searchForUserVMs(new Criteria(), permittedAccounts);
 
         // get Running/Stopped VMs
         for (Iterator<? extends UserVm> iter = virtualMachines.iterator(); iter.hasNext();) {
@@ -3024,15 +3024,15 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setProjectName(ApiDBUtils.findProjectById(invite.getProjectId()).getName());
         response.setInvitationState(invite.getState().toString());
         
-        if (invite.getAccountId() != null) {
-            Account account = ApiDBUtils.findAccountById(invite.getAccountId());
+        if (invite.getForAccountId() != null) {
+            Account account = ApiDBUtils.findAccountById(invite.getForAccountId());
             response.setAccountName(account.getAccountName());
             
         } else {
             response.setEmail(invite.getEmail());
         }
        
-        populateDomain(response, invite.getDomainId());
+        populateDomain(response, invite.getInDomainId());
         
         response.setObjectName("projectinvitation");
         return response;
@@ -3077,6 +3077,9 @@ public class ApiResponseHelper implements ResponseGenerator {
         if(result.getState() != null){
             response.setState(result.getState().toString());
         }
+        
+        response.setName(result.getName());
+        
         response.setObjectName("physicalnetwork");
         return response;
     }
@@ -3236,5 +3239,17 @@ public class ApiResponseHelper implements ResponseGenerator {
         return lr;
     }
 
-
+	@Override
+    public StorageNetworkIpRangeResponse createStorageNetworkIpRangeResponse(StorageNetworkIpRange result) {
+		StorageNetworkIpRangeResponse response = new StorageNetworkIpRangeResponse();
+		response.setUuid(result.getUuid());
+		response.setVlan(result.getVlan());
+		response.setEndIp(result.getEndIp());
+		response.setStartIp(result.getStartIp());
+		response.setPodUuid(result.getPodUuid());
+		response.setZoneUuid(result.getZoneUuid());
+		response.setNetworkUuid(result.getNetworkUuid());
+		response.setObjectName("storagenetworkiprange");
+		return response;
+    }
 }

@@ -152,434 +152,7 @@
               notification: {
                 poll: pollAsyncJobResult
               }
-            },
-
-            takeSnapshot: {
-              label: 'Take snapshot',
-              messages: {
-                confirm: function(args) {
-                  return 'Please confirm that you want to take a snapshot';
-                },
-                notification: function(args) {
-                  return 'Take snapshot';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("createSnapshot&volumeid=" + args.context.volumes[0].id),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var jid = json.createsnapshotresponse.jobid;
-                    args.response.success(
-                      {_custom:
-                       {jobId: jid,
-                        getUpdatedItem: function(json) {
-                          return {}; //no properties in this volume needs to be updated
-                        },
-                        getActionFilter: function() {
-                          return volumeActionfilter;
-                        }
-                       }
-                      }
-                    );
-                  }
-                });
-              },
-              notification: {
-                poll: pollAsyncJobResult
-              }
-            },
-
-            recurringSnapshot: {
-              label: 'Setup recurring snapshots',
-              action: {
-                custom: cloudStack.uiCustom.recurringSnapshots({
-                  desc: 'You can setup recurring snapshot schedules by selecting from the available options below and applying your policy preference.',
-                  dataProvider: function(args) {
-                    $.ajax({
-                      url: createURL('listSnapshotPolicies'),
-                      data: {
-                        volumeid: args.context.volumes[0].id
-                      },
-                      async: true,
-                      dataType: 'json',
-                      success: function(data) {
-                        args.response.success({
-                          data: $.map(
-                            data.listsnapshotpoliciesresponse.snapshotpolicy ? data.listsnapshotpoliciesresponse.snapshotpolicy : [],
-                            function(snapshot, index) {
-                              return {
-                                id: snapshot.id,
-                                type: snapshot.intervaltype,
-                                time: snapshot.intervaltype > 0 ?
-                                  snapshot.schedule.split(':')[1] + ':' + snapshot.schedule.split(':')[0] :
-                                  snapshot.schedule,
-                                timezone: snapshot.timezone,
-                                keep: snapshot.maxsnaps,
-                                'day-of-week': snapshot.intervaltype == 2 ?
-                                  snapshot.schedule.split(':')[2] : null,
-                                'day-of-month': snapshot.intervaltype == 3 ?
-                                  snapshot.schedule.split(':')[2] : null
-                              };
-                            }
-                          )
-                        });
-                      }
-                    });
-                  },
-                  actions: {
-                    add: function(args) {
-                      var snap = args.snapshot;
-
-                      var data = {
-                        keep: snap.maxsnaps,
-                        timezone: snap.timezone
-                      };
-
-                      var convertTime = function(minute, hour, meridiem, extra) {
-                        var convertedHour = meridiem == 'PM' ?
-                              (hour != 12 ? parseInt(hour) + 12 : 12) : (hour != 12 ? hour : '00');
-                        var time = minute + ':' + convertedHour;
-                        if (extra) time += ':' + extra;
-
-                        return time;
-                      };
-
-                      switch (snap['snapshot-type']) {
-                      case 'hourly': // Hourly
-                        $.extend(data, {
-                          schedule: snap.schedule
-                        }); break;
-
-                      case 'daily': // Daily
-                        $.extend(data, {
-                          schedule: convertTime(
-                            snap['time-minute'],
-                            snap['time-hour'],
-                            snap['time-meridiem']
-                          )
-                        }); break;
-
-                      case 'weekly': // Weekly
-                        $.extend(data, {
-                          schedule: convertTime(
-                            snap['time-minute'],
-                            snap['time-hour'],
-                            snap['time-meridiem'],
-                            snap['day-of-week']
-                          )
-                        }); break;
-
-                      case 'monthly': // Monthly
-                        $.extend(data, {
-                          schedule: convertTime(
-                            snap['time-minute'],
-                            snap['time-hour'],
-                            snap['time-meridiem'],
-                            snap['day-of-month']
-                          )
-                        }); break;
-                      }
-
-                      $.ajax({
-                        url: createURL('createSnapshotPolicy'),
-                        data: {
-                          volumeid: args.context.volumes[0].id,
-                          intervaltype: snap['snapshot-type'],
-                          maxsnaps: snap.maxsnaps,
-                          schedule: data.schedule,
-                          timezone: snap.timezone
-                        },
-                        dataType: 'json',
-                        async: true,
-                        success: function(successData) {
-                          var snapshot = successData.createsnapshotpolicyresponse.snapshotpolicy;
-
-                          args.response.success({
-                            data: {
-                              id: snapshot.id,
-                              type: snapshot.intervaltype,
-                              time: snapshot.intervaltype > 0 ?
-                                snapshot.schedule.split(':')[1] + ':' + snapshot.schedule.split(':')[0] :
-                                snapshot.schedule,
-                              timezone: snapshot.timezone,
-                              keep: snapshot.maxsnaps,
-                              'day-of-week': snapshot.intervaltype == 2 ?
-                                snapshot.schedule.split(':')[2] : null,
-                              'day-of-month': snapshot.intervaltype == 3 ?
-                                snapshot.schedule.split(':')[2] : null
-                            }
-                          });
-                        }
-                      });
-                    },
-                    remove: function(args) {
-                      $.ajax({
-                        url: createURL('deleteSnapshotPolicies'),
-                        data: {
-                          id: args.snapshot.id
-                        },
-                        dataType: 'json',
-                        async: true,
-                        success: function(data) {
-                          args.response.success();
-                        }
-                      });
-                    }
-                  },
-
-                  // Select data
-                  selects: {
-                    schedule: function(args) {
-                      var time = [];
-
-                      for (var i = 1; i <= 59; i++) {
-                        time.push({
-                          id: i,
-                          name: i
-                        });
-                      }
-
-                      args.response.success({
-                        data: time
-                      });
-                    },
-                    timezone: function(args) {
-                      args.response.success({
-                        data: $.map(timezoneMap, function(value, key) {
-                          return {
-                            id: key,
-                            name: value
-                          };
-                        })
-                      });
-                    },
-                    'day-of-week': function(args) {
-                      args.response.success({
-                        data: [
-                          { id: 1, name: 'Sunday' },
-                          { id: 2, name: 'Monday' },
-                          { id: 3, name: 'Tuesday' },
-                          { id: 4, name: 'Wednesday' },
-                          { id: 5, name: 'Thursday' },
-                          { id: 6, name: 'Friday' },
-                          { id: 7, name: 'Saturday' }
-                        ]
-                      });
-                    },
-
-                    'day-of-month': function(args) {
-                      var time = [];
-
-                      for (var i = 1; i <= 31; i++) {
-                        time.push({
-                          id: i,
-                          name: i
-                        });
-                      }
-
-                      args.response.success({
-                        data: time
-                      });
-                    },
-
-                    'time-hour': function(args) {
-                      var time = [];
-
-                      for (var i = 1; i <= 12; i++) {
-                        time.push({
-                          id: i,
-                          name: i
-                        });
-                      }
-
-                      args.response.success({
-                        data: time
-                      });
-                    },
-
-                    'time-minute': function(args) {
-                      var time = [];
-
-                      for (var i = 0; i <= 59; i++) {
-                        time.push({
-                          id: i < 10 ? '0' + i : i,
-                          name: i < 10 ? '0' + i : i
-                        });
-                      }
-
-                      args.response.success({
-                        data: time
-                      });
-                    },
-
-                    'time-meridiem': function(args) {
-                      args.response.success({
-                        data: [
-                          { id: 'AM', name: 'AM' },
-                          { id: 'PM', name: 'PM' }
-                        ]
-                      });
-                    }
-                  }
-                })
-              },
-              messages: {
-                notification: function(args) {
-                  return 'Setup recurring snapshot';
-                }
-              },
-              notification: {
-                poll: testData.notifications.testPoll
-              }
-            },
-
-            attachDisk: {
-              addRow: 'false',
-              label: 'Attach Disk',
-              messages: {
-                notification: function(args) {
-                  return 'Attached disk';
-                }
-              },
-              createForm: {
-                title: 'Attach Disk',
-                desc: 'Attach Disk to Instance',
-                fields: {
-                  virtualMachineId: {
-                    label: 'Instance',
-                    select: function(args) {
-                      var items = [];
-                      var url;
-
-                      if (cloudStack.context.projects && cloudStack.context.projects[0]) {
-                        url = args.context.volumes[0].zoneid;
-                      } else {
-                        url = args.context.volumes[0].zoneid + "&domainid=" + args.context.volumes[0].domainid + "&account=" + args.context.volumes[0].account;
-                      }
-                      $.ajax({
-                        url: createURL("listVirtualMachines&state=Running&zoneid=" + url),
-                        dataType: "json",
-                        async: false,
-                        success: function(json) {
-                          var instanceObjs= json.listvirtualmachinesresponse.virtualmachine;
-                          $(instanceObjs).each(function() {
-                            items.push({id: this.id, description: this.displayname});
-                          });
-                        }
-                      });
-                      $.ajax({
-                        url: createURL("listVirtualMachines&state=Stopped&zoneid=" + url),
-                        dataType: "json",
-                        async: false,
-                        success: function(json) {
-                          var instanceObjs= json.listvirtualmachinesresponse.virtualmachine;
-                          $(instanceObjs).each(function() {
-                            items.push({id: this.id, description: this.displayname});
-                          });
-                        }
-                      });
-                      args.response.success({data: items});
-                    }
-                  }
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("attachVolume&id=" + args.context.volumes[0].id + '&virtualMachineId=' + args.data.virtualMachineId),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var jid = json.attachvolumeresponse.jobid;
-                    args.response.success(
-                      {_custom:
-                       {jobId: jid,
-                        getUpdatedItem: function(json) {
-                          return $.extend(json.queryasyncjobresultresponse.jobresult.volume, {
-                            storagetype: 'shared',
-                            vmstate: 'Running'
-                          });
-                        },
-                        getActionFilter: function() {
-                          return volumeActionfilter;
-                        }
-                       }
-                      }
-                    );
-                  }
-                });
-              },
-              notification: {
-                poll: pollAsyncJobResult
-              }
-            },
-            detachDisk: {
-              label: 'Detach disk',
-              messages: {
-                confirm: function(args) {
-                  return 'Are you sure you want to detach disk ?';
-                },
-                notification: function(args) {
-                  return 'Detach disk';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("detachVolume&id=" + args.context.volumes[0].id),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var jid = json.detachvolumeresponse.jobid;
-                    args.response.success(
-                      {_custom:
-                       {jobId: jid,
-                        getUpdatedItem: function(json) {
-                          return {
-                            virtualmachineid: null,
-                            vmname: null
-                          };
-                        },
-                        getActionFilter: function() {
-                          return volumeActionfilter;
-                        }
-                       }
-                      }
-                    );
-                  }
-                });
-              },
-              notification: {
-                poll: pollAsyncJobResult
-              }
-            },
-
-            'destroy': {
-              label: 'Delete volume',
-              messages: {
-                confirm: function(args) {
-                  return 'Are you sure you want to delete volume?';
-                },
-                notification: function(args) {
-                  return 'Delete volume';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("deleteVolume&id=" + args.context.volumes[0].id),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var jid = json.deletevolumeresponse.jobid;
-                    args.response.success({
-                      data: {
-                        state: 'Destroyed'
-                      }
-                    });
-                  }
-                });
-              }
-            }
+            }  
 
           },
 
@@ -631,9 +204,9 @@
                     return 'Take snapshot';
                   }
                 },
-                action: function(args) {
+                action: function(args) {								  
                   $.ajax({
-                    url: createURL("createSnapshot&volumeid=" + args.data.id),
+                    url: createURL("createSnapshot&volumeid=" + args.context.volumes[0].id),
                     dataType: "json",
                     async: true,
                     success: function(json) {
@@ -657,7 +230,251 @@
                   poll: pollAsyncJobResult
                 }
               },
+							
+							recurringSnapshot: {
+								label: 'Setup recurring snapshots',
+								action: {
+									custom: cloudStack.uiCustom.recurringSnapshots({
+										desc: 'You can setup recurring snapshot schedules by selecting from the available options below and applying your policy preference.',
+										dataProvider: function(args) {
+											$.ajax({
+												url: createURL('listSnapshotPolicies'),
+												data: {
+													volumeid: args.context.volumes[0].id
+												},
+												async: true,
+												dataType: 'json',
+												success: function(data) {
+													args.response.success({
+														data: $.map(
+															data.listsnapshotpoliciesresponse.snapshotpolicy ? data.listsnapshotpoliciesresponse.snapshotpolicy : [],
+															function(snapshot, index) {
+																return {
+																	id: snapshot.id,
+																	type: snapshot.intervaltype,
+																	time: snapshot.intervaltype > 0 ?
+																		snapshot.schedule.split(':')[1] + ':' + snapshot.schedule.split(':')[0] :
+																		snapshot.schedule,
+																	timezone: snapshot.timezone,
+																	keep: snapshot.maxsnaps,
+																	'day-of-week': snapshot.intervaltype == 2 ?
+																		snapshot.schedule.split(':')[2] : null,
+																	'day-of-month': snapshot.intervaltype == 3 ?
+																		snapshot.schedule.split(':')[2] : null
+																};
+															}
+														)
+													});
+												}
+											});
+										},
+										actions: {
+											add: function(args) {
+												var snap = args.snapshot;
 
+												var data = {
+													keep: snap.maxsnaps,
+													timezone: snap.timezone
+												};
+
+												var convertTime = function(minute, hour, meridiem, extra) {
+													var convertedHour = meridiem == 'PM' ?
+																(hour != 12 ? parseInt(hour) + 12 : 12) : (hour != 12 ? hour : '00');
+													var time = minute + ':' + convertedHour;
+													if (extra) time += ':' + extra;
+
+													return time;
+												};
+
+												switch (snap['snapshot-type']) {
+												case 'hourly': // Hourly
+													$.extend(data, {
+														schedule: snap.schedule
+													}); break;
+
+												case 'daily': // Daily
+													$.extend(data, {
+														schedule: convertTime(
+															snap['time-minute'],
+															snap['time-hour'],
+															snap['time-meridiem']
+														)
+													}); break;
+
+												case 'weekly': // Weekly
+													$.extend(data, {
+														schedule: convertTime(
+															snap['time-minute'],
+															snap['time-hour'],
+															snap['time-meridiem'],
+															snap['day-of-week']
+														)
+													}); break;
+
+												case 'monthly': // Monthly
+													$.extend(data, {
+														schedule: convertTime(
+															snap['time-minute'],
+															snap['time-hour'],
+															snap['time-meridiem'],
+															snap['day-of-month']
+														)
+													}); break;
+												}
+
+												$.ajax({
+													url: createURL('createSnapshotPolicy'),
+													data: {
+														volumeid: args.context.volumes[0].id,
+														intervaltype: snap['snapshot-type'],
+														maxsnaps: snap.maxsnaps,
+														schedule: data.schedule,
+														timezone: snap.timezone
+													},
+													dataType: 'json',
+													async: true,
+													success: function(successData) {
+														var snapshot = successData.createsnapshotpolicyresponse.snapshotpolicy;
+
+														args.response.success({
+															data: {
+																id: snapshot.id,
+																type: snapshot.intervaltype,
+																time: snapshot.intervaltype > 0 ?
+																	snapshot.schedule.split(':')[1] + ':' + snapshot.schedule.split(':')[0] :
+																	snapshot.schedule,
+																timezone: snapshot.timezone,
+																keep: snapshot.maxsnaps,
+																'day-of-week': snapshot.intervaltype == 2 ?
+																	snapshot.schedule.split(':')[2] : null,
+																'day-of-month': snapshot.intervaltype == 3 ?
+																	snapshot.schedule.split(':')[2] : null
+															}
+														});
+													}
+												});
+											},
+											remove: function(args) {
+												$.ajax({
+													url: createURL('deleteSnapshotPolicies'),
+													data: {
+														id: args.snapshot.id
+													},
+													dataType: 'json',
+													async: true,
+													success: function(data) {
+														args.response.success();
+													}
+												});
+											}
+										},
+
+										// Select data
+										selects: {
+											schedule: function(args) {
+												var time = [];
+
+												for (var i = 1; i <= 59; i++) {
+													time.push({
+														id: i,
+														name: i
+													});
+												}
+
+												args.response.success({
+													data: time
+												});
+											},
+											timezone: function(args) {
+												args.response.success({
+													data: $.map(timezoneMap, function(value, key) {
+														return {
+															id: key,
+															name: value
+														};
+													})
+												});
+											},
+											'day-of-week': function(args) {
+												args.response.success({
+													data: [
+														{ id: 1, name: 'Sunday' },
+														{ id: 2, name: 'Monday' },
+														{ id: 3, name: 'Tuesday' },
+														{ id: 4, name: 'Wednesday' },
+														{ id: 5, name: 'Thursday' },
+														{ id: 6, name: 'Friday' },
+														{ id: 7, name: 'Saturday' }
+													]
+												});
+											},
+
+											'day-of-month': function(args) {
+												var time = [];
+
+												for (var i = 1; i <= 31; i++) {
+													time.push({
+														id: i,
+														name: i
+													});
+												}
+
+												args.response.success({
+													data: time
+												});
+											},
+
+											'time-hour': function(args) {
+												var time = [];
+
+												for (var i = 1; i <= 12; i++) {
+													time.push({
+														id: i,
+														name: i
+													});
+												}
+
+												args.response.success({
+													data: time
+												});
+											},
+
+											'time-minute': function(args) {
+												var time = [];
+
+												for (var i = 0; i <= 59; i++) {
+													time.push({
+														id: i < 10 ? '0' + i : i,
+														name: i < 10 ? '0' + i : i
+													});
+												}
+
+												args.response.success({
+													data: time
+												});
+											},
+
+											'time-meridiem': function(args) {
+												args.response.success({
+													data: [
+														{ id: 'AM', name: 'AM' },
+														{ id: 'PM', name: 'PM' }
+													]
+												});
+											}
+										}
+									})
+								},
+								messages: {
+									notification: function(args) {
+										return 'Setup recurring snapshot';
+									}
+								},
+								notification: {
+									poll: testData.notifications.testPoll
+								}
+							},            
+													
               attachDisk: {
                 addRow: 'false',
                 label: 'Attach Disk',
@@ -1076,179 +893,7 @@
             intervaltype: { label: 'Interval Type' },
             created: { label: 'Date', converter: cloudStack.converters.toLocalDate },
             state: { label: 'State', indicator: { 'BackedUp': 'on', 'Destroyed': 'off' } }
-          },
-
-          actions: {
-            createTemplate: {
-              addRow: 'false',
-              label: 'Create template',
-              messages: {
-                confirm: function(args) {
-                  return 'Are you sure you want to create template?';
-                },
-                notification: function(args) {
-                  return 'Create template';
-                }
-              },
-              createForm: {
-                title: 'Create Template',
-                desc: '',
-                fields: {
-                  name: { label: 'Name', validation: { required: true }},
-                  displayText: { label: 'Description', validation: { required: true }},
-                  osTypeId: {
-                    label: 'OS Type',
-                    select: function(args) {
-                      $.ajax({
-                        url: createURL("listOsTypes"),
-                        dataType: "json",
-                        async: true,
-                        success: function(json) {
-                          var ostypes = json.listostypesresponse.ostype;
-                          var items = [];
-                          $(ostypes).each(function() {
-                            items.push({id: this.id, description: this.description});
-                          });
-                          args.response.success({data: items});
-                        }
-                      });
-                    }
-                  },
-                  isPublic: { label: 'Public', isBoolean: true },
-                  isPasswordEnabled: { label: 'Password enabled', isBoolean: true }
-                }
-              },
-              action: function(args) {
-                /*
-                 var isValid = true;
-                 isValid &= validateString("Name", $thisDialog.find("#create_template_name"), $thisDialog.find("#create_template_name_errormsg"));
-                 isValid &= validateString("Display Text", $thisDialog.find("#create_template_desc"), $thisDialog.find("#create_template_desc_errormsg"));
-                 if (!isValid)
-                 return;
-                 $thisDialog.dialog("close");
-                 */
-
-                var array1 = [];
-                array1.push("&name=" + todb(args.data.name));
-                array1.push("&displayText=" + todb(args.data.displayText));
-                array1.push("&osTypeId=" + args.data.osTypeId);
-                array1.push("&isPublic=" + (args.data.isPublic=="on"));
-                array1.push("&passwordEnabled=" + (args.data.isPasswordEnabled=="on"));
-
-                $.ajax({
-                  url: createURL("createTemplate&snapshotid=" + args.context.snapshots[0].id + array1.join("")),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var jid = json.createtemplateresponse.jobid;
-                    args.response.success(
-                      {_custom:
-                       {jobId: jid,
-                        getUpdatedItem: function(json) {
-                          return {}; //nothing in this snapshot needs to be updated
-                        },
-                        getActionFilter: function() {
-                          return snapshotActionfilter;
-                        }
-                       }
-                      }
-                    );
-                  }
-                });
-              },
-              notification: {
-                poll: pollAsyncJobResult
-              }
-            },
-
-            createVolume: {
-              label: 'Create volume',
-              addRow: 'false',
-              messages: {
-                confirm: function(args) {
-                  return 'Are you sure you want to create volume?';
-                },
-                notification: function(args) {
-                  return 'Create volume';
-                }
-              },
-              createForm: {
-                title: 'Create volume',
-                desc: 'Please name your volume.',
-                fields: {
-                  name: { label: 'Name', validation: { required: true }}
-                }
-              },
-              action: function(args) {
-                /*
-                 var isValid = true;
-                 isValid &= validateString("Name", $thisDialog.find("#create_volume_name"), $thisDialog.find("#create_volume_name_errormsg"));
-                 if (!isValid)
-                 return;
-                 */
-
-                var array1 = [];
-                array1.push("&name=" + todb(args.data.name));
-
-                $.ajax({
-                  url: createURL("createVolume&snapshotid=" + args.context.snapshots[0].id + array1.join("")),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var jid = json.createvolumeresponse.jobid;
-                    args.response.success(
-                      {_custom:
-                       {jobId: jid,
-                        getUpdatedItem: function(json) {
-                          return {}; //nothing in this snapshot needs to be updated
-                        },
-                        getActionFilter: function() {
-                          return snapshotActionfilter;
-                        }
-                       }
-                      }
-                    );
-                  }
-                });
-              },
-              notification: {
-                poll: pollAsyncJobResult
-              }
-            },
-
-            'destroy': {
-              label: 'Delete snapshot',
-              messages: {
-                confirm: function(args) {
-                  return 'Are you sure you want to delete snapshot?';
-                },
-                notification: function(args) {
-                  return 'Delete snapshot';
-                }
-              },
-              action: function(args) {
-                $.ajax({
-                  url: createURL("deleteSnapshot&id=" + args.context.snapshots[0].id),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var jid = json.deletesnapshotresponse.jobid;
-                    args.response.success(
-                      {_custom:
-                       {jobId: jid
-                       }
-                      }
-                    );
-                  }
-                });
-              },
-              notification: {
-                poll: function(args) {args.complete({
-                  data: { state: 'Destroyed' }
-                });}
-              }
-            }
-          },
+          },         
 
           dataProvider: function(args) {					  
 						var array1 = [];  

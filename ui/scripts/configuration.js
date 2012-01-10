@@ -105,9 +105,9 @@
                   domainId: {
                     label: 'Domain',
                     dependsOn: 'isPublic',
-                    select: function(args) {
+                    select: function(args) {		
                       $.ajax({
-                        url: createURL("listDomains"),
+                        url: createURL("listDomains&listAll=true"),
                         dataType: "json",
                         async: false,
                         success: function(json) {
@@ -416,9 +416,9 @@
                   domainId: {
                     label: 'Domain',
                     dependsOn: 'isPublic',
-                    select: function(args) {
+                    select: function(args) {										
                       $.ajax({
-                        url: createURL("listDomains"),
+                        url: createURL("listDomains&listAll=true"),
                         dataType: "json",
                         async: false,
                         success: function(json) {
@@ -725,9 +725,9 @@
                   domainId: {
                     label: 'Domain',
                     dependsOn: 'isPublic',
-                    select: function(args) {
+                    select: function(args) {										 
                       $.ajax({
-                        url: createURL("listDomains"),
+                        url: createURL("listDomains&listAll=true"),
                         dataType: "json",
                         async: false,
                         success: function(json) {
