@@ -113,7 +113,12 @@
                   label: 'Max. Projects'
                 }
               };
-              return ;
+              return {
+                id: resourceMap[resource.resourcetype].id,
+                label: resourceMap[resource.resourcetype].label,
+                type: resource.resourcetype,
+                value: resource.max
+              };
             }
           )
         });
