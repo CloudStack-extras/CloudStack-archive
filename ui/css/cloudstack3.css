@@ -5601,6 +5601,13 @@ label.error {
   position: relative;
 }
 
+.multi-wizard.zone-wizard .select-container .field .value span {
+  display: block;
+  font-size: 11px;
+  color: #052060;
+  margin: 20px 0 0;
+}
+
 .multi-wizard.zone-wizard .select-container .field .value label.error {
   color: #FF0000;
   font-size: 10px;

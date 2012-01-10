@@ -420,6 +420,7 @@
             <li style="display:none;"></li>
             <li style="display:none;"></li>
             <li style="display:none;"></li>
+            <li style="display:none;"></li>
             <li class="last"><span class="number">5</span><span>Review & Launch</span></li>
           </ul>
         </div>
@@ -514,58 +515,132 @@
 
           <!-- Step 3.2: Configure public traffic -->
           <div class="setup-public-traffic">
-            <form>
-              <div class="main-desc">Configure public traffic</div>
-            </form>
+            <div class="content input-area">
+              <form>
+                <div class="main-desc">Configure public traffic</div>
+                <img src="images/screens/MultiEdit.jpg" />
+              </form>
+            </div>
           </div>
 
           <!-- Step 3.3: Add pod -->
           <div class="add-pod">
             <form>
               <div class="main-desc">Add pod</div>
+              <img src="images/screens/ZoneWizard-StorageTraffic.jpg" />
             </form>
           </div>
 
-          <!-- Step 3.4: Configure guest traffic -->
+          <!-- Step 3.4: Configure guest traffic VLAN range -->
           <div class="setup-guest-traffic">
             <form>
-              <div class="main-desc">Setup guest traffic</div>
+              <div class="main-desc">Setup Guest VLAN range</div>
+              <img src="images/screens/ZoneWizard-SetupGuestTraffic.jpg" />
+            </form>
+          </div>
+          
+          <!-- Step 3.5: Configure guest traffic -->
+          <div class="setup-guest-traffic">
+            <form>
+              <div class="main-desc">Add IP ranges</div>
+              <img src="images/screens/MultiEdit.jpg" />
             </form>
           </div>
 
           <!-- Step 4.1: Add cluster -->
           <div class="add-cluster">
             <form>
-              <div class="main-desc">Add cluster</div>
+              <div class="main-desc">Setup cluster</div>
+              <img src="images/screens/ZoneWizard-AddCluster.jpg" />
             </form>
           </div>
 
           <!-- Step 4.2: Add host -->
-          <div class="add-cluster">
+          <div class="add-host">
             <form>
-              <div class="main-desc">Add host</div>
+              <div class="main-desc">Setup new host</div>
+              <img src="images/screens/ZoneWizard-AddHost.jpg" />
             </form>
           </div>
 
           <!-- Step 4.3: Add primary storage -->
-          <div class="add-cluster">
+          <div class="add-primary-storage">
             <form>
-              <div class="main-desc">Add primary storage</div>
+              <div class="main-desc">Setup new primary storage pool</div>
+              <img src="images/screens/ZoneWizard-AddPrimaryStorage.jpg" />
             </form>
           </div>
 
           <!-- Step 4.4: Add secondary storage -->
-          <div class="add-cluster">
+          <div class="add-secondary-storage">
             <form>
-              <div class="main-desc">Add secondary storage</div>
+              <div class="main-desc">Setup new secondary storage pool</div>
+              <img src="images/screens/ZoneWizard-AddSecondaryStorage.jpg" />
             </form>
           </div>
 
           <!-- Step 5: Review -->
           <div class="add-cluster">
-            <form>
-              <div class="main-desc">Review</div>
-            </form>
+            <div class="main-desc">Please review your zone data before saving.</div>
+            <div class="content input-area">
+              <div class="select-container">
+                <form>
+                  <div class="field">
+                    <div class="name">
+                      <label>Zone Name</label>
+                    </div>
+                    <div class="value">
+                      <span>zone1</span>
+                    </div>
+                  </div>
+
+                  <div class="field odd">
+                    <div class="name">
+                      <label>VLAN Range</label>
+                    </div>
+                    <div class="value">
+                      <span>148 - 159</span>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <div class="name">
+                      <label>Guest IP Range</label>
+                    </div>
+                    <div class="value">
+                      <span>192.168.1.10 - 192.168.1.20</span>
+                    </div>
+                  </div>
+
+                  <div class="field odd">
+                    <div class="name">
+                      <label>Pod name</label>
+                    </div>
+                    <div class="value">
+                      <span>pod1</span>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <div class="name">
+                      <label>System IP Range</label>
+                    </div>
+                    <div class="value">
+                      <span>192.168.1.50 - 192.168.1.60</span>
+                    </div>
+                  </div>
+
+                  <div class="field odd">
+                    <div class="name">
+                      <label>Host IP</label>
+                    </div>
+                    <div class="value">
+                      <span>192.168.1.1</span>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
 
