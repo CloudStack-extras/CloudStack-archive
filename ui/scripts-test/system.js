@@ -775,6 +775,116 @@
               allocationstate: { label: 'State' }
             },
             dataProvider: testData.dataProvider.listView('zones'),
+            actions: {
+              add: {
+                label: 'Add zone',
+                action: {
+                  custom: cloudStack.zoneWizard({
+                    forms: {
+                      addZone: {
+                        preFilter: function(args) {
+                          var $basicFields = $.merge(
+                            args.$form.find('.field[rel=security-groups-enabled]'),
+                            args.$form.find('.field[depends-on=security-groups-enabled]')
+                          );
+
+                          if (args.data['network-model'] == 'Advanced') {
+                            $basicFields.hide()
+                          } else {
+                            $basicFields.show()
+                          }
+                        },
+                        fields: {
+                          name: { label: 'Name', validation: { required: true } },
+                          dns1: { label: 'DNS 1', validation: { required: true } },
+                          dns2: { label: 'DNS 2' },
+                          internaldns1: { label: 'Internal DNS 1', validation: { required: true } },
+                          internaldns2: { label: 'Internal DNS 2' },
+                          networkdomain: { label: 'Network Domain' },
+                          'public': { isBoolean: true, label: 'Public' },
+                          'zone-domain': {
+                            label: 'Domain',
+                            dependsOn: 'public',
+                            isHidden: true,
+                            select: function(args) {
+                              var domainObjs = testData.data.domains;
+                              
+                              args.response.success({
+                                data: $.map(domainObjs, function(domain) {
+                                  return {
+                                    id: domain.id,
+                                    description: domain.name
+                                  };
+                                })
+                              });
+                            }
+                          },
+                          'security-groups-enabled': {
+                            label: 'Security Groups Enabled',
+                            isBoolean: true,
+                            isReverse: true,
+                          },
+
+                          networkOfferingIdWithoutSG: {
+                            label: 'Network Offering',
+                            dependsOn: 'security-groups-enabled',
+                            select: function(args) {
+                              var targetNetworkOfferings = testData.data.networkOfferings;
+                              
+                              args.response.success({
+                                data: $.map(targetNetworkOfferings, function(offering) {
+                                  return {
+                                    id: offering.id,
+                                    description: offering.name
+                                  };
+                                })
+                              });
+                            }
+                          },
+
+                          networkOfferingIdWithSG: {
+                            label: 'Network Offering',
+                            isHidden: true,
+                            select: function(args) {
+                              var $form = args.$select.closest('form');
+
+                              $form.find('input[name=security-groups-enabled]').change(function() {
+                                args.$select.closest('.field').toggle();
+                              });
+                              
+                              var targetNetworkOfferings = testData.data.networkOfferings;
+                              
+                              args.response.success({
+                                data: $.map(targetNetworkOfferings, function(offering) {
+                                  return {
+                                    id: offering.id,
+                                    description: offering.name
+                                  };
+                                })
+                              });
+                            }
+                          }
+                        }
+                      }
+                    },
+                    action: function(args) {
+                      args.response.success({});
+                    }
+                  })
+                },
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to add a zone?';
+                  },
+                  notification: function(args) {
+                    return 'Created new zone';
+                  }
+                },
+                notification: {
+                  poll: testData.notifications.customPoll(testData.data.zones[0])
+                }
+              }
+            },
             detailView: {
               isMaximized: true,
               viewAll: {
