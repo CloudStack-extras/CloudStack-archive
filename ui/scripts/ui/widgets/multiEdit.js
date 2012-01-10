@@ -140,8 +140,8 @@
                 }),
                 response: {
                   success: function(args) {
-                    var notification = args.notification;
-                    var _custom = args._custom;
+                    var notification = args ? args.notification : null;
+                    var _custom = args ? args._custom : null;
                     if (notification) {
                       $('.notifications').notifications('add', {
                         section: 'network',
@@ -174,6 +174,11 @@
                           });
                         }
                       });
+                    } else {
+                      $loading.remove();
+                      if (isDestroy) {
+                        $dataItem.remove();
+                      }
                     }
                   },
                   error: cloudStack.dialog.error
@@ -497,7 +502,7 @@
           itemData: itemData,
           response: {
             success: function(successArgs) {
-              var notification = successArgs.notification;
+              var notification = successArgs ? successArgs.notification : null;
               if (notification) {
                 $('.notifications').notifications('add', {
                   section: 'network',
@@ -525,6 +530,9 @@
                     });
                   }
                 });
+              } else {
+                $loading.remove();
+                getData();
               }
             },
 
