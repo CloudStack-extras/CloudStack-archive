@@ -5262,6 +5262,11 @@ label.error {
   height: 675px;
 }
 
+.multi-wizard.zone-wizard .select-container {
+  height: 421px;
+  overflow: auto;
+}
+
 .multi-wizard.zone-wizard .main-desc {
   width: 516px;
   float: left;
