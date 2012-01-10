@@ -1,6 +1,15 @@
 (function(window) {
   var testRestartPoll;
 
+  // Add dummy globals
+  window.isAdmin = function() {
+    return true;
+  };
+
+  window.g_capabilities = {
+    projectinviterequired: false
+  }
+
   window.testData = {
     actionFilter: function(args) {
       var allowedActions = args.context.actions;
@@ -114,7 +123,7 @@
             var pulledData = $.grep(testData.data[section], function(elem) {
               return elem.id == args.id;
             })[0];
-            
+
             var item = $.extend(true, {}, pulledData, args.jsonObj);
 
             args.response.success({
