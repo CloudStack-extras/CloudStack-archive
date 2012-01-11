@@ -519,17 +519,19 @@
           </div>
 
           <!-- Step 3.3: Add pod -->
-          <div class="add-pod">
-            <form>
-              <div class="main-desc">Add pod</div>
-            </form>
+          <div class="add-pod" zone-wizard-form="addPod">
+            <div class="main-desc">Please specify a pod for this zone.</div>
+            <div class="content input-area">
+              <div class="select-container"></div>
+            </div>
           </div>
 
           <!-- Step 3.4: Configure guest traffic -->
-          <div class="setup-guest-traffic">
-            <form>
-              <div class="main-desc">Setup guest traffic</div>
-            </form>
+          <div class="setup-guest-traffic" zone-wizard-form="setupGuestTraffic">
+            <div class="main-desc">Please this zone's guest traffic network.</div>
+            <div class="content input-area">
+              <div class="select-container"></div>
+            </div>
           </div>
 
           <!-- Step 4.1: Add cluster -->

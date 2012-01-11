@@ -5647,8 +5647,18 @@ label.error {
 .multi-wizard.zone-wizard .select-container .field .value select {
   width: 316px;
   height: 12px;
-  margin: 13px 18px 0;
+  margin: 13px 13px 0 18px;
   float: left;
+}
+
+.multi-wizard.zone-wizard .select-container .field .range-edit .range-item {
+  width: 106px;
+  float: left;
+}
+
+.multi-wizard.zone-wizard .select-container .field .range-edit .range-item input[type=text] {
+  width: 93px;
+  margin: 16px 0 0 17px;
 }
 
 .multi-wizard.zone-wizard .select-container .field .value select {

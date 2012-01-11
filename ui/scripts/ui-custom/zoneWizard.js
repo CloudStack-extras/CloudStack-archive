@@ -32,7 +32,8 @@
         }
         
         cloudStack.dialog.notice({
-          message: 'Please assign all required traffic types to a network.'
+          message: 'Please assign all required traffic types to a network: ' +
+            requiredTrafficTypes.join(', ')
         });
         return false;
       }
