@@ -915,6 +915,206 @@
       } else {
         stepFns.addZone({});
       }
+    },
+
+    // TEMPORARY --
+    // this is just for reference while implementing new zone wizard code
+    //
+    // Please remove this once fully implemented
+    _action: function(args) {
+      var array1 = [];
+
+      //var networktype = $thisWizard.find("#step1").find("input:radio[name=basic_advanced]:checked").val();  //"Basic", "Advanced"
+      var networktype = args.data["network-model"];
+      array1.push("&networktype=" + todb(networktype));
+
+      array1.push("&name=" + todb(args.data.name));
+
+      array1.push("&dns1=" + todb(args.data.dns1));
+
+      var dns2 = args.data.dns2;
+      if (dns2 != null && dns2.length > 0)
+        array1.push("&dns2=" + todb(dns2));
+
+      array1.push("&internaldns1="+todb(args.data.internaldns1));
+
+      var internaldns2 = args.data.internaldns2;
+      if (internaldns2 != null && internaldns2.length > 0)
+        array1.push("&internaldns2=" + todb(internaldns2));
+
+      if(networktype == "Advanced") {
+        array1.push("&securitygroupenabled=false");  
+      }
+
+      if(args.data["public"] == null) //public checkbox is unchecked
+        array1.push("&domainid=" + args.data["zone-domain"]);
+      
+      if(args.data.networkdomain != null && args.data.networkdomain.length > 0)  
+        array1.push("&domain=" + todb(args.data.networkdomain));
+      
+      var newZoneObj; 
+      $.ajax({
+        url: createURL("createZone" + array1.join("")),
+        dataType: "json",
+        async: false,
+        success: function(json) {
+          var newZoneObj = json.createzoneresponse.zone;
+          args.response.success({
+            data: newZoneObj,
+            _custom: { zone: newZoneObj }
+          }); //spinning wheel appears from this moment
+          
+          //NaaS (begin)
+          var newPhysicalnetwork;													
+					$.ajax({
+						url: createURL("createPhysicalNetwork&zoneid=" + newZoneObj.id + "&name=firstPhysicalNetwork"),
+						dataType: "json",														
+						success: function(json) {														 
+							var jobId = json.createphysicalnetworkresponse.jobid;
+							var timerKey = "createPhysicalNetworkJob_" + jobId;
+							$("body").everyTime(2000, timerKey, function(){															  
+								$.ajax({
+									url: createURL("queryAsyncJobResult&jobid=" + jobId),
+									dataType: "json",
+									success: function(json) {
+										var result = json.queryasyncjobresultresponse;																		
+										if (result.jobstatus == 0) {
+											return; //Job has not completed
+										}
+										else {
+											$("body").stopTime(timerKey);
+											if (result.jobstatus == 1) {																				
+												newPhysicalnetwork = result.jobresult.physicalnetwork;
+												
+												var trafficTypeCount = 0;																				
+												$.ajax({
+													url: createURL("addTrafficType&trafficType=Public&physicalnetworkid=" + newPhysicalnetwork.id),
+													dataType: "json",
+													success: function(json) {																					  
+														var jobId = json.addtraffictyperesponse.jobid;
+														var timerKey = "addTrafficTypeJob_" + jobId;
+                            $("body").everyTime(2000, timerKey, function() {																						 
+															$.ajax({
+																url: createURL("queryAsyncJobResult&jobid=" + jobId),
+																dataType: "json", 
+																success: function(json) {
+																	var result = json.queryasyncjobresultresponse;
+																	if (result.jobstatus == 0) {
+																		return; //Job has not completed
+																	}
+																	else {
+																		$("body").stopTime(timerKey);
+																		if (result.jobstatus == 1) {																										  
+																			trafficTypeCount++;
+																			if(trafficTypeCount == 3) //3 traffic types(Public, Management, Guest) have been added to this physical network
+																				afterCreateZonePhysicalNetworkTrafficTypes(args, newZoneObj, newPhysicalnetwork);
+																		}
+																		else if (result.jobstatus == 2) {
+																			alert("addTrafficType&trafficType=Public failed. Error: " + fromdb(result.jobresult.errortext));
+																		}
+																	}	
+																},																								
+																error: function(XMLHttpResponse) {
+																	var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																	alert("addTrafficType&trafficType=Public failed. Error: " + errorMsg);
+																}
+															});																							
+														});	
+													}
+												});			
+
+                        $.ajax({
+													url: createURL("addTrafficType&trafficType=Management&physicalnetworkid=" + newPhysicalnetwork.id),
+													dataType: "json",
+													success: function(json) {																					  
+														var jobId = json.addtraffictyperesponse.jobid;
+														var timerKey = "addTrafficTypeJob_" + jobId;
+                            $("body").everyTime(2000, timerKey, function() {																						  
+															$.ajax({
+																url: createURL("queryAsyncJobResult&jobid=" + jobId),
+																dataType: "json", 
+																success: function(json) {
+																	var result = json.queryasyncjobresultresponse;
+																	if (result.jobstatus == 0) {
+																		return; //Job has not completed
+																	}
+																	else {
+																		$("body").stopTime(timerKey);
+																		if (result.jobstatus == 1) {																										 
+																			trafficTypeCount++;
+																			if(trafficTypeCount == 3) //3 traffic types(Public, Management, Guest) have been added to this physical network
+																				afterCreateZonePhysicalNetworkTrafficTypes(args, newZoneObj, newPhysicalnetwork);
+																		}
+																		else if (result.jobstatus == 2) {
+																			alert("addTrafficType&trafficType=Management failed. Error: " + fromdb(result.jobresult.errortext));
+																		}
+																	}	
+																},																								
+																error: function(XMLHttpResponse) {
+																	var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																	alert("addTrafficType&trafficType=Management failed. Error: " + errorMsg);
+																}
+															});																							
+														});	
+													}
+												});							
+
+                        $.ajax({
+													url: createURL("addTrafficType&trafficType=Guest&physicalnetworkid=" + newPhysicalnetwork.id),
+													dataType: "json",
+													success: function(json) {																					  
+														var jobId = json.addtraffictyperesponse.jobid;
+														var timerKey = "addTrafficTypeJob_" + jobId;
+                            $("body").everyTime(2000, timerKey, function() {																						  
+															$.ajax({
+																url: createURL("queryAsyncJobResult&jobid=" + jobId),
+																dataType: "json", 
+																success: function(json) {
+																	var result = json.queryasyncjobresultresponse;
+																	if (result.jobstatus == 0) {
+																		return; //Job has not completed
+																	}
+																	else {
+																		$("body").stopTime(timerKey);
+																		if (result.jobstatus == 1) {																										  
+																			trafficTypeCount++;
+																			if(trafficTypeCount == 3) //3 traffic types(Public, Management, Guest) have been added to this physical network
+																				afterCreateZonePhysicalNetworkTrafficTypes(args, newZoneObj, newPhysicalnetwork);
+																		}
+																		else if (result.jobstatus == 2) {
+																			alert("addTrafficType&trafficType=Guest failed. Error: " + fromdb(result.jobresult.errortext));
+																		}
+																	}	
+																},																								
+																error: function(XMLHttpResponse) {
+																	var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																	alert("addTrafficType&trafficType=Guest failed. Error: " + errorMsg);
+																}
+															});																							
+														});	
+													}
+												});												
+											}
+											else if (result.jobstatus == 2) {																			  
+												alert("createPhysicalNetwork failed. Error: " + fromdb(result.jobresult.errortext));
+											}
+										}		
+									},																																		
+									error: function(XMLHttpResponse) {
+										var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+										alert("createPhysicalNetwork failed. Error: " + errorMsg);
+									}																			
+								});															
+							});															
+						}
+					});
+          //NaaS (end)
+        },
+        error: function(XMLHttpResponse) {
+          var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+          args.response.error(errorMsg);
+        }
+      });
     }
   };
 }(cloudStack, jQuery));
