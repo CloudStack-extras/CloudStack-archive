@@ -1049,11 +1049,11 @@
 
                       serviceCapabilityMap[serviceData[1]] = serviceData[2];
                     }
-                  } else if (key == 'lbIsolation') {
+                  } else if ((key == 'lbIsolation') && ("Lb" in serviceProviderMap)) {
                     inputData['servicecapabilitylist[0].service'] = 'lb';
                     inputData['servicecapabilitylist[0].capabilitytype'] = 'SupportedLbIsolation';
                     inputData['servicecapabilitylist[0].capabilityvalue'] = value;
-                  } else if (key == 'sourceNatType') {
+                  } else if ((key == 'sourceNatType') && ("SourceNat" in serviceProviderMap)) {
                     inputData['servicecapabilitylist[0].service'] = 'sourcenat';
                     inputData['servicecapabilitylist[0].capabilitytype'] = 'SupportedSourceNatTypes';
                     inputData['servicecapabilitylist[0].capabilityvalue'] = value;
@@ -1073,6 +1073,12 @@
                   inputData['specifyVlan'] = false;
                 }
 
+								if (inputData['conservemode'] == 'on') {
+                  inputData['conservemode'] = true;
+                } else {
+                  inputData['conservemode'] = false;
+                }
+								
                 // Make service provider map
                 var serviceProviderIndex = 0;
                 $.each(serviceProviderMap, function(key, value) {
@@ -1277,6 +1283,8 @@
                     }
                   },
 
+									conservemode: { label: 'Conserve mode', isBoolean: true },
+									
                   tags: { label: 'Tags' }
                 }
               },
@@ -1531,6 +1539,10 @@
                     },
                     specifyvlan: {
                       label: 'Specify VLAN',
+                      converter:cloudStack.converters.toBooleanText
+                    },
+										conservemode: {
+                      label: 'Conserve mode',
                       converter:cloudStack.converters.toBooleanText
                     },
                     networkrate: {

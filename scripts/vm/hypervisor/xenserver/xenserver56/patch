@@ -10,7 +10,6 @@
 # If [source path] starts with '~', then it is path relative to management server home directory.
 # If [source path] does not start with '/' or '~', then it is relative path to the location of the patch file. 
 NFSSR.py=/opt/xensource/sm
-nfs.py=/opt/xensource/sm
 vmops=..,0755,/etc/xapi.d/plugins
 vmopsSnapshot=..,0755,/etc/xapi.d/plugins
 hostvmstats.py=..,0755,/opt/xensource/sm
@@ -32,6 +31,7 @@ call_loadbalancer.sh=../../../../network/domr/,0755,/opt/xensource/bin
 l2tp_vpn.sh=../../../../network/domr/,0755,/opt/xensource/bin
 copy_vhd_to_secondarystorage.sh=..,0755,/opt/xensource/bin
 copy_vhd_from_secondarystorage.sh=..,0755,/opt/xensource/bin
+kill_copy_process.sh=..,0755,/opt/xensource/bin
 setup_heartbeat_sr.sh=..,0755,/opt/xensource/bin
 setup_heartbeat_file.sh=..,0755,/opt/xensource/bin
 check_heartbeat.sh=..,0755,/opt/xensource/bin

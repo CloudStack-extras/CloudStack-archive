@@ -2218,20 +2218,22 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
     private String copy_vhd_to_secondarystorage(Connection conn, String mountpoint, String vdiuuid, String sruuid, int wait) {
         String results = callHostPluginAsync(conn, "vmopspremium", "copy_vhd_to_secondarystorage",
                 wait, "mountpoint", mountpoint, "vdiuuid", vdiuuid, "sruuid", sruuid);
-
+        String errMsg = null;
         if (results == null || results.isEmpty()) {
-            String msg = "copy_vhd_to_secondarystorage return null";
-            s_logger.warn(msg);
-            throw new CloudRuntimeException(msg);
-        }
-        String[] tmp = results.split("#");
-        String status = tmp[0];
-        if (status.equals("0")) {
-            return tmp[1];
+            errMsg = "copy_vhd_to_secondarystorage return null";
         } else {
-            s_logger.warn(tmp[1]);
-            throw new CloudRuntimeException(tmp[1]);
+            String[] tmp = results.split("#");
+            String status = tmp[0];
+            if (status.equals("0")) {
+                return tmp[1];
+            } else {
+                errMsg = tmp[1];
+            }
         }
+        String source = vdiuuid + ".vhd";
+        killCopyProcess(conn, source);
+        s_logger.warn(errMsg);
+        throw new CloudRuntimeException(errMsg);
     }
 
     String upgradeSnapshot(Connection conn, String templatePath, String snapshotPath) {
@@ -2271,24 +2273,59 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             throw new CloudRuntimeException(results);
         }
     }
+    
+    boolean killCopyProcess(Connection conn, String nameLabel) {
+        String results = callHostPluginAsync(conn, "vmops", "kill_copy_process",
+                60, "namelabel", nameLabel);
+        String errMsg = null;
+        if (results == null || results.equals("false")) {
+            errMsg = "kill_copy_process failed";
+            s_logger.warn(errMsg);
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    void destroyVDIbyNameLabel(Connection conn, String nameLabel) {
+        try {
+            Set<VDI> vdis = VDI.getByNameLabel(conn, nameLabel);
+            if ( vdis.size() != 1 ) {
+                s_logger.warn("destoryVDIbyNameLabel failed due to there are " + vdis.size() + " VDIs with name " + nameLabel);
+                return;
+            }
+            for (VDI vdi : vdis) {
+                try {
+                    vdi.destroy(conn);
+                } catch (Exception e) {
+                }
+            }
+        } catch (Exception e){
+        }
+    }
 
     String copy_vhd_from_secondarystorage(Connection conn, String mountpoint, String sruuid, int wait) {
+        String nameLabel = "cloud-" + UUID.randomUUID().toString();
         String results = callHostPluginAsync(conn, "vmopspremium", "copy_vhd_from_secondarystorage",
-                wait, "mountpoint", mountpoint, "sruuid", sruuid);
-
+                wait, "mountpoint", mountpoint, "sruuid", sruuid, "namelabel", nameLabel);
+        String errMsg = null;
         if (results == null || results.isEmpty()) {
-            String msg = "copy_vhd_from_secondarystorage return null";
-            s_logger.warn(msg);
-            throw new CloudRuntimeException(msg);
-        }
-        String[] tmp = results.split("#");
-        String status = tmp[0];
-        if (status.equals("0")) {
-            return tmp[1];
+            errMsg = "copy_vhd_from_secondarystorage return null";
         } else {
-            s_logger.warn(tmp[1]);
-            throw new CloudRuntimeException(tmp[1]);
+            String[] tmp = results.split("#");
+            String status = tmp[0];
+            if (status.equals("0")) {
+                return tmp[1];
+            } else {
+                errMsg = tmp[1];
+            }
         }
+        String source = mountpoint.substring(mountpoint.lastIndexOf('/') + 1);
+        if( killCopyProcess(conn, source) ) {
+            destroyVDIbyNameLabel(conn, nameLabel);
+        }
+        s_logger.warn(errMsg);
+        throw new CloudRuntimeException(errMsg);
     }
 
     public PrimaryStorageDownloadAnswer execute(final PrimaryStorageDownloadCommand cmd) {
@@ -3038,35 +3075,39 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
         // Each argument is put in a separate line for readability.
         // Using more lines does not harm the environment.
+        String backupUuid = UUID.randomUUID().toString();
         String results = callHostPluginAsync(conn, "vmopsSnapshot", "backupSnapshot", wait,
-                "primaryStorageSRUuid", primaryStorageSRUuid, "dcId", dcId.toString(), "accountId", accountId
-                .toString(), "volumeId", volumeId.toString(), "secondaryStorageMountPath",
-                secondaryStorageMountPath, "snapshotUuid", snapshotUuid, "prevBackupUuid", prevBackupUuid, "isISCSI",
-                isISCSI.toString());
-
+                "primaryStorageSRUuid", primaryStorageSRUuid, "dcId", dcId.toString(), "accountId", accountId.toString(),
+                "volumeId", volumeId.toString(), "secondaryStorageMountPath", secondaryStorageMountPath,
+                "snapshotUuid", snapshotUuid, "prevBackupUuid", prevBackupUuid, "backupUuid", backupUuid, "isISCSI", isISCSI.toString());
+        String errMsg = null;
         if (results == null || results.isEmpty()) {
-            // errString is already logged.
-            return null;
-        }
-
-        String[] tmp = results.split("#");
-        String status = tmp[0];
-        backupSnapshotUuid = tmp[1];
-
-        // status == "1" if and only if backupSnapshotUuid != null
-        // So we don't rely on status value but return backupSnapshotUuid as an
-        // indicator of success.
-        String failureString = "Could not copy backupUuid: " + backupSnapshotUuid + " of volumeId: " + volumeId
-                + " from primary storage " + primaryStorageSRUuid + " to secondary storage "
-                + secondaryStorageMountPath;
-        if (status != null && status.equalsIgnoreCase("1") && backupSnapshotUuid != null) {
-            s_logger.debug("Successfully copied backupUuid: " + backupSnapshotUuid + " of volumeId: " + volumeId
-                    + " to secondary storage");
+            errMsg = "Could not copy backupUuid: " + backupSnapshotUuid + " of volumeId: " + volumeId
+                    + " from primary storage " + primaryStorageSRUuid + " to secondary storage "
+                    + secondaryStorageMountPath + " due to null";
         } else {
-            s_logger.debug(failureString + ". Failed with status: " + status);
-            return null;
+
+            String[] tmp = results.split("#");
+            String status = tmp[0];
+            backupSnapshotUuid = tmp[1];
+            // status == "1" if and only if backupSnapshotUuid != null
+            // So we don't rely on status value but return backupSnapshotUuid as an
+            // indicator of success.
+            if (status != null && status.equalsIgnoreCase("1") && backupSnapshotUuid != null) {
+                s_logger.debug("Successfully copied backupUuid: " + backupSnapshotUuid + " of volumeId: " + volumeId
+                        + " to secondary storage");
+                return backupSnapshotUuid;
+            } else {
+                errMsg = "Could not copy backupUuid: " + backupSnapshotUuid + " of volumeId: " + volumeId
+                        + " from primary storage " + primaryStorageSRUuid + " to secondary storage "
+                        + secondaryStorageMountPath + " due to " + tmp[1];
+            }
         }
-        return backupSnapshotUuid;
+        String source = backupUuid + ".vhd";
+        killCopyProcess(conn, source);
+        s_logger.warn(errMsg);
+        return null;
+
     }
 
     protected String callHostPluginAsync(Connection conn, String plugin, String cmd, int wait, String... params) {
@@ -3102,6 +3143,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         } finally {
             if (task != null) {
                 try {
+                    task.cancel(conn);
                     task.destroy(conn);
                 } catch (Exception e1) {
                     s_logger.warn("unable to destroy task(" + task.toString() + ") on host(" + _host.uuid + ") due to ", e1);
