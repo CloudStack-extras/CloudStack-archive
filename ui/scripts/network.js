@@ -218,7 +218,7 @@
 							}
 						}											
             $.ajax({
-              url: createURL("listNetworks&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
+              url: createURL("listNetworks&listAll=true&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
               data: {
                 type: 'isolated',
                 supportedServices: 'SourceNat'
@@ -302,10 +302,31 @@
               },
 
 							'restart': {
-								label: 'Restart network',
-								action: function(args) {
+								label: 'Restart network',								
+								createForm: {
+									title: 'Restart network',
+									desc: 'Please confirm that you want to restart network',
+									fields: {                 
+										cleanup: {
+											label: 'Clean up',
+											isBoolean: true,                   
+											isChecked: false
+										}                  
+									}
+								},										
+								messages: {
+									confirm: function(args) {
+										return 'Please confirm that you want to restart network';
+									},
+									notification: function(args) {
+										return 'Restarting network';
+									}
+								},								
+								action: function(args) {								
+								  var array1 = [];
+						      array1.push("&cleanup=" + (args.data.cleanup == "on"));		
 									$.ajax({
-										url: createURL("restartNetwork&cleanup=true&id=" + args.context.networks[0].id),
+										url: createURL("restartNetwork&id=" + args.context.networks[0].id + array1.join("")),
 										dataType: "json",
 										async: true,
 										success: function(json) {
@@ -321,15 +342,7 @@
 											);
 										}
 									});
-								},
-								messages: {
-									confirm: function(args) {
-										return 'Please confirm that you want to restart network';
-									},
-									notification: function(args) {
-										return 'Restarting network';
-									}
-								},
+								},								
 								notification: {
 									poll: pollAsyncJobResult
 								}
@@ -768,7 +781,7 @@
 							}
 						}												
             $.ajax({
-              url: createURL("listPublicIpAddresses&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
+              url: createURL("listPublicIpAddresses&listAll=true&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
               data: data,
               dataType: "json",
               async: true,
@@ -1979,7 +1992,7 @@
 						}
 					
             $.ajax({
-              url: createURL("listSecurityGroups&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
+              url: createURL("listSecurityGroups&listAll=true&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
               dataType: "json",
               async: true,
               success: function(json) {
