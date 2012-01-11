@@ -12,7 +12,12 @@
       var $forms = $wizard.find('form').filter(function() {
         return !options.all ? !$(this).closest('.multi-edit').size() : true;
       });
-      var $physicalNetworkItems = $wizard.find('.steps .setup-physical-network .select-container.multi');
+      var $physicalNetworkItems = $wizard.find(
+        '.steps .setup-physical-network .select-container.multi'
+      );
+      var $publicTrafficItems = $wizard.find(
+        '.steps .setup-public-traffic .data-body .data-item'
+      );
       var groupedForms = {};
 
       if (options.all) {
@@ -47,6 +52,29 @@
               }
             )
           };
+        }
+      );
+
+      // Get public traffic data (multi-edit)
+      groupedForms.publicTraffic = $.map(
+        $publicTrafficItems,
+        function(publicTrafficItem) {
+          var $publicTrafficItem = $(publicTrafficItem);
+          publicTrafficData = {};
+          var fields = [
+            'gateway',
+            'netmask',
+            'vlan',
+            'startip',
+            'endip'
+          ];
+
+          $(fields).each(function() {
+            publicTrafficData[this] =
+              $publicTrafficItem.find('td.' + this + ' span').html();
+          });
+
+          return publicTrafficData;
         }
       );
 
