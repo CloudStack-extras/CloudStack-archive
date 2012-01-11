@@ -712,18 +712,19 @@
           if(args.filterBy.kind != null) {
             switch(args.filterBy.kind) {
             case "all":
+						  array1.push("&listAll=true");
               break;            
             case "mine":
               array1.push("&domainid=" + g_domainid + "&account=" + g_account);
               break;
             case "running":
-              array1.push("&state=Running");
+              array1.push("&listAll=true&state=Running");
               break;
             case "stopped":
-              array1.push("&state=Stopped");
+              array1.push("&listAll=true&state=Stopped");
               break;
             case "destroyed":
-              array1.push("&state=Destroyed");
+              array1.push("&listAll=true&state=Destroyed");
               break;
             }
           }
