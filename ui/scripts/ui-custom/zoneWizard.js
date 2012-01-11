@@ -308,6 +308,7 @@
               //close();
               $launchStep.find('ul li').removeClass('loading');
               close();
+              $(window).trigger('cloudStack.fullRefresh');
             },
             error: function(message) {
               $wizard.remove();
