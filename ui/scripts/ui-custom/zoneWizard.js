@@ -296,6 +296,24 @@
                 $row.addClass('odd');
               }
             });
+          } else {
+            // Always re-activate selects
+            $targetStep.find('form select').each(function() {
+              var $select = $(this);
+              var selectFn = $select.data('dialog-select-fn');
+              var originalVal = $select.val();
+
+              if (selectFn) {
+                $select.html('');
+                selectFn({
+                  context: {
+                    zones: [formState]
+                  }
+                });
+                $select.val(originalVal);
+                $select.trigger('change');
+              }
+            });
           }
 
           if (args.forms[formID].preFilter) {
