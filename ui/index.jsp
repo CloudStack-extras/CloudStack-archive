@@ -568,8 +568,11 @@
 
           <!-- Step 5: Review & launch -->
           <div class="review">
+            <div class="main-desc">Review & launch</div>
+            <div class="main-desc launch" style="display:none;">
+              Please wait while your zone is being created; this may take a while...
+            </div>
             <form>
-              <div class="main-desc">Review & launch</div>
             </form>
             <div class="launch-container" style="display: none">
               <ul></ul>

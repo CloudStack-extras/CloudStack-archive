@@ -5762,6 +5762,41 @@ label.error {
   background: url(../images/sprites.png) -44px -58px;
 }
 
+/*** Review / launch*/
+.multi-wizard.zone-wizard .review .launch-container {
+  width: 98%;
+  float: left;
+  background: #FFFFFF;
+  margin: 11px 0 0 7px;
+  /*+box-shadow:inset 0px 1px 4px #979797;*/
+  -moz-box-shadow: inset 0px 1px 4px #979797;
+  -webkit-box-shadow: inset 0px 1px 4px #979797;
+  -o-box-shadow: inset 0px 1px 4px #979797;
+  box-shadow: inset 0px 1px 4px #979797;
+  /*+border-radius:4px;*/
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  -khtml-border-radius: 4px;
+  border-radius: 4px 4px 4px 4px;
+}
+
+.multi-wizard.zone-wizard .review .launch-container li {
+  width: 100%;
+  text-align: left;
+  padding: 15px 0 15px 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.multi-wizard.zone-wizard .review .launch-container li .icon {
+  padding: 10px 21px 10px 10px;
+  background: url(../images/icons.png) -2px -217px;
+}
+
+.multi-wizard.zone-wizard .review .launch-container li.loading .icon {
+  background: url(../images/ajax-loader-small.gif) no-repeat 2px 9px;
+}
+
 /*Tree view*/
 .tree-view {
   height: 100%;

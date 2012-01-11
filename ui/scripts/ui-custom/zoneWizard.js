@@ -245,26 +245,34 @@
 
       // Save and close wizard
       var completeAction = function() {
+        var $launchStep = $wizard.find('.steps .review');
         var data = getData($wizard);
+
+        // Convert last step to launch appearance
+        $launchStep.find('.main-desc').hide();
+        $launchStep.find('.main-desc.launch').show();
+        $launchStep.find('.launch-container').show();
+        $launchStep.find('ul').html('');
 
         args.action({
           data: data,
           response: {
             success: function(args) {
-              var $item = $('.list-view').listView('prependItem', {
-                data: [data],
-                actionFilter: function(args) { return []; }
-              });
+              // var $item = $('.list-view').listView('prependItem', {
+              //   data: [data],
+              //   actionFilter: function(args) { return []; }
+              // });
 
-              listViewArgs.complete({
-                _custom: args._custom,
-                $item: $item,
-                messageArgs: {
-                  name: $wizard.find('div.review div.vm-instance-name input').val()
-                }
-              });
+              // listViewArgs.complete({
+              //   _custom: args._custom,
+              //   $item: $item,
+              //   messageArgs: {
+              //     name: $wizard.find('div.review div.vm-instance-name input').val()
+              //   }
+              // });
 
-              close();
+              //close();
+              $launchStep.find('ul li').removeClass('loading');
             },
             error: function(message) {
               $wizard.remove();
@@ -273,6 +281,15 @@
               if (message) {
                 cloudStack.dialog.notice({ message: message });
               }
+            },
+            message: function(message) {
+              var $li = $('<li>').addClass('loading').append(
+                $('<span>').addClass('icon').html('&nbsp;'),
+                $('<span>').addClass('text').html(message)
+              );
+              
+              $launchStep.find('ul').append($li);
+              $li.siblings().removeClass('loading');
             }
           }
         });
@@ -522,7 +539,10 @@
           //     return false;
           // }
 
-          showStep($steps.filter(':visible').index() + 2);
+          if (!$target.closest('.button.next.final').size())
+            showStep($steps.filter(':visible').index() + 2);
+          else
+            completeAction();
 
           return false;
         }

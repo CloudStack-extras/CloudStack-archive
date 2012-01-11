@@ -790,109 +790,129 @@
       var error = args.response.error;
       var message = args.response.message;
       var data = args.data;
+      var startFn = args.startFn;
 
       var stepFns = {
         addZone: function(args) {
           message('Creating zone');
           
           var zone = {};
-          
-          addPhysicalNetworks({
-            data: $.extend(args.data, {
-              zone: zone
-            })
-          });
+
+          setTimeout(function() {
+            stepFns.addPhysicalNetworks({
+              data: $.extend(args.data, {
+                zone: zone
+              })
+            });
+          }, 300);
         },
         
         addPhysicalNetworks: function(args) {
           message('Creating physical network(s)');
           
           var physicalNetworks = [];
-          
-          addPod({
-            data: $.extend(args.data, {
-              physicalNetworks: physicalNetworks
-            })
-          });
+
+          setTimeout(function() {
+            stepFns.addPod({
+              data: $.extend(args.data, {
+                physicalNetworks: physicalNetworks
+              })
+            });
+          }, 400);
         },
         
         addPod: function(args) {
           message('Creating pod');
           
           var pod = {};
-          
-          configurePublicTraffic({
-            data: $.extend(args.data, {
-              pod: pod
-            })
-          });
+
+          setTimeout(function() {
+            stepFns.configurePublicTraffic({
+              data: $.extend(args.data, {
+                pod: pod
+              })
+            });
+          }, 300);
         },
         
         configurePublicTraffic: function(args) {
           message('Configuring public traffic');
-          
-          configureGuestTraffic({
-            data: args.data
-          });
+
+          setTimeout(function() {
+            stepFns.configureGuestTraffic({
+              data: args.data
+            });
+          }, 200);
         },
         
         configureGuestTraffic: function(args) {
           message('Configuring guest traffic');
-          
-          addCluster({
-            data: args.data
-          });
+
+          setTimeout(function() {
+            stepFns.addCluster({
+              data: args.data
+            });
+          }, 200);
         },
         
         addCluster: function(args) {
           message('Creating cluster');
           
           var cluster = {};
-          
-          addHost({
-            data: $.extend(args.data, {
-              cluster: cluster
-            })
-          });
+
+          setTimeout(function() {
+            stepFns.addHost({
+              data: $.extend(args.data, {
+                cluster: cluster
+              })
+            });
+          }, 200);
         },
         
         addHost: function(args) {
           message('Adding host');
           
           var host = {};
-          
-          addPrimaryStorage({
-            data: $.extend(args.data, {
-              host: host
-            })
-          });
+
+          setTimeout(function() {
+            stepFns.addPrimaryStorage({
+              data: $.extend(args.data, {
+                host: host
+              })
+            });
+          }, 400);
         },
         
         addPrimaryStorage: function(args) {
           message('Creating primary storage');
-          
-          addSecondaryStorage({
-            data: args.data
-          });
+
+          setTimeout(function() {
+            stepFns.addSecondaryStorage({
+              data: args.data
+            });
+          }, 300);
         },
         
         addSecondaryStorage: function(args) {
           message('Creating secondary storage');
-          
-          complete({
-            data: data
-          });
+
+          setTimeout(function() {
+            complete({
+              data: data
+            });
+          }, 300);
         }
       };
 
       var complete = function(args) {
+        message('Zone creation complete!');
         success({});
       };
       
       if (startFn) {
         stepFns[startFn.fn](startFn.args);
       } else {
-        stepFns.addZone();
+        stepFns.addZone({});
       }
     }
   };
