@@ -2,7 +2,34 @@
   /**
    * Zone wizard
    */
-  cloudStack.zoneWizard = function(args) {
+  cloudStack.uiCustom.zoneWizard = function(args) {
+    /**
+     * Serialize form data as object
+     */
+    var getData = function($wizard, options) {
+      if (!options) options = {};
+      
+      var $forms = $wizard.find('form').filter(function() {
+        return !options.all ? !$(this).closest('.multi-edit').size() : true;
+      });
+      var groupedForms = {};
+
+      if (options.all) {
+        return cloudStack.serializeForm($forms);
+      }
+
+      $forms.each(function() {
+        var $form = $(this);
+        var id = $form.attr('rel');
+
+        if (!id) return true;
+        
+        groupedForms[id] = cloudStack.serializeForm($form);
+      });
+      
+      return groupedForms;
+    };
+
     /**
      * Handles validation for custom UI components
      */
@@ -195,7 +222,8 @@
 
       // Save and close wizard
       var completeAction = function() {
-        var data = cloudStack.serializeForm($wizard.find('form'));
+        var data = getData($wizard);
+        
         args.action({
           data: data,
           response: {
@@ -247,6 +275,7 @@
         var $form = form.$formContainer.find('form');
 
         // Cleanup form to follow zone wizard CSS naming
+        $form.attr('rel', id);
         $form.find('input[type=submit]').remove();
         $form.find('.form-item').addClass('field').removeClass('form-item');
         $form.find('label.error').hide();
@@ -281,8 +310,7 @@
         $steps.hide();
 
         var $targetStep = $($steps[targetIndex]).show();
-        var formState = cloudStack.serializeForm($wizard.find('form'));
-
+        var formState = getData($wizard, { all: true });
         var formID = $targetStep.attr('zone-wizard-form');
         var $uiCustom = $targetStep.find('[ui-custom]');
 
@@ -365,7 +393,7 @@
           }
         }, 50);
 
-        $targetStep.find('form').validate();
+        $targetStep.find('form').validate()
       };
 
       // Events
@@ -455,11 +483,11 @@
           });
 
           // Handle validation for custom UI components
-          var isCustomValidated = checkCustomValidation($step);
-          if (($form.size() && !$form.valid()) || !isCustomValidated) {
-            if (($form && $form.find('.error:visible').size()) || !isCustomValidated)
-              return false;
-          }
+          // var isCustomValidated = checkCustomValidation($step);
+          // if (($form.size() && !$form.valid()) || !isCustomValidated) {
+          //   if (($form && $form.find('.error:visible').size()) || !isCustomValidated)
+          //     return false;
+          // }
 
           showStep($steps.filter(':visible').index() + 2);
 
