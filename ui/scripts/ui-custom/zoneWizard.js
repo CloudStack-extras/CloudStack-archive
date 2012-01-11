@@ -284,6 +284,12 @@
 
         args.action({
           data: data,
+          uiSteps: $.map(
+            $wizard.find('.steps > div'),
+            function(step) {
+              return $(step).attr('zone-wizard-step-id');
+            }
+          ),
           response: {
             success: function(args) {
               // var $item = $('.list-view').listView('prependItem', {
@@ -301,6 +307,7 @@
 
               //close();
               $launchStep.find('ul li').removeClass('loading');
+              close();
             },
             error: function(message) {
               $wizard.remove();
@@ -367,7 +374,11 @@
 
       // Go to specified step in wizard,
       // updating nav items and diagram
-      var showStep = function(index, goBack) {
+      showStep = function(index, goBack) {
+        if (typeof index == 'string') {
+          index = $wizard.find('[zone-wizard-step-id=' + index + ']').index() + 1;
+        }
+        
         var targetIndex = index - 1;
 
         if (index <= 1) targetIndex = 0;
