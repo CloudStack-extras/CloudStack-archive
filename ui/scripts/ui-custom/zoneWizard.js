@@ -8,25 +8,48 @@
      */
     var getData = function($wizard, options) {
       if (!options) options = {};
-      
+
       var $forms = $wizard.find('form').filter(function() {
         return !options.all ? !$(this).closest('.multi-edit').size() : true;
       });
+      var $physicalNetworkItems = $wizard.find('.steps .setup-physical-network .select-container.multi');
       var groupedForms = {};
 
       if (options.all) {
         return cloudStack.serializeForm($forms);
       }
 
+      // Group form fields together, by form ID
       $forms.each(function() {
         var $form = $(this);
         var id = $form.attr('rel');
 
         if (!id) return true;
-        
+
         groupedForms[id] = cloudStack.serializeForm($form);
       });
-      
+
+      // Get physical network data
+      groupedForms.physicalNetworks = $.map(
+        $physicalNetworkItems,
+        function(network) {
+          var $network = $(network);
+          
+          return {
+            id: $network.index(),
+            name: $network.find('.field.name input[type=text]').val(),
+            trafficTypes: $.map(
+              $network.find('.traffic-type-draggable'),
+              function(trafficType) {
+                var $trafficType = $(trafficType);
+
+                return $trafficType.attr('traffic-type-id');
+              }
+            )
+          };
+        }
+      );
+
       return groupedForms;
     };
 
@@ -57,7 +80,7 @@
         if ($requiredTrafficTypes.size() == requiredTrafficTypes.length) {
           return true;
         }
-        
+
         cloudStack.dialog.notice({
           message: 'Please assign all required traffic types to a network: ' +
             requiredTrafficTypes.join(', ')
@@ -74,7 +97,7 @@
       var $multiEditForm = $step.find('.multi-edit form');
       var $physicalNetworks = $step.find('.select-container.multi');
       var isCustomValidated;
-      
+
       if ($multiEditForm.size()) {
         isCustomValidated = customValidation.networkRanges($multiEditForm);
       } else if ($physicalNetworks.size()) {
@@ -223,7 +246,7 @@
       // Save and close wizard
       var completeAction = function() {
         var data = getData($wizard);
-        
+
         args.action({
           data: data,
           response: {
@@ -299,7 +322,7 @@
 
       // Go to specified step in wizard,
       // updating nav items and diagram
-      var showStep = function(index) {
+      var showStep = function(index, goBack) {
         var targetIndex = index - 1;
 
         if (index <= 1) targetIndex = 0;
@@ -310,9 +333,19 @@
         $steps.hide();
 
         var $targetStep = $($steps[targetIndex]).show();
+        var $uiCustom = $targetStep.find('[ui-custom]');
         var formState = getData($wizard, { all: true });
         var formID = $targetStep.attr('zone-wizard-form');
-        var $uiCustom = $targetStep.find('[ui-custom]');
+        var stepPreFilter = cloudStack.zoneWizard.preFilters[
+          $targetStep.attr('zone-wizard-prefilter')
+        ];
+        
+        // Bypass step check
+        if (stepPreFilter && !stepPreFilter({ data: formState })) {
+          return showStep(
+            !goBack ? index + 1 : index - 1
+          );
+        }
 
         if (formID) {
           if (!$targetStep.find('form').size()) {
@@ -378,7 +411,7 @@
 
         // Show launch button if last step
         if ($targetStep.index() == $steps.size() - 1) {
-          $nextButton.find('span').html('Add zone');
+          $nextButton.find('span').html('Launch zone');
           $nextButton.addClass('final');
         }
 
@@ -496,7 +529,7 @@
 
         // Previous button
         if ($target.closest('div.button.previous').size()) {
-          showStep($steps.filter(':visible').index());
+          showStep($steps.filter(':visible').index(), true);
 
           return false;
         }

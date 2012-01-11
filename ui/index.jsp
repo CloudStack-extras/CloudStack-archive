@@ -513,7 +513,7 @@
           </div>
 
           <!-- Step 3.2: Configure public traffic -->
-          <div class="setup-public-traffic">
+          <div class="setup-public-traffic" zone-wizard-prefilter="addPublicNetwork">
             <div class="main-desc">Configure public traffic</div>
             <div ui-custom="publicTrafficIPRange"></div>
           </div>
@@ -566,11 +566,14 @@
             </div>
           </div>
 
-          <!-- Step 5: Review -->
-          <div class="add-cluster">
+          <!-- Step 5: Review & launch -->
+          <div class="review">
             <form>
-              <div class="main-desc">Review</div>
+              <div class="main-desc">Review & launch</div>
             </form>
+            <div class="launch-container" style="display: none">
+              <ul></ul>
+            </div>
           </div>
         </div>
 

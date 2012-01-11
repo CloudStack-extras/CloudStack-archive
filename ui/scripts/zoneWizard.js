@@ -46,6 +46,13 @@
         });
       }
     },
+    
+    preFilters: {
+      addPublicNetwork: function(args) {
+        return args.data['network-model'] == 'Advanced';
+      }
+    },
+    
     forms: {
       zone: {
         preFilter: function(args) {
@@ -779,8 +786,114 @@
     },
 
     action: function(args) {
-      debugger;
-      args.response.success({});
+      var success = args.response.success;
+      var error = args.response.error;
+      var message = args.response.message;
+      var data = args.data;
+
+      var stepFns = {
+        addZone: function(args) {
+          message('Creating zone');
+          
+          var zone = {};
+          
+          addPhysicalNetworks({
+            data: $.extend(args.data, {
+              zone: zone
+            })
+          });
+        },
+        
+        addPhysicalNetworks: function(args) {
+          message('Creating physical network(s)');
+          
+          var physicalNetworks = [];
+          
+          addPod({
+            data: $.extend(args.data, {
+              physicalNetworks: physicalNetworks
+            })
+          });
+        },
+        
+        addPod: function(args) {
+          message('Creating pod');
+          
+          var pod = {};
+          
+          configurePublicTraffic({
+            data: $.extend(args.data, {
+              pod: pod
+            })
+          });
+        },
+        
+        configurePublicTraffic: function(args) {
+          message('Configuring public traffic');
+          
+          configureGuestTraffic({
+            data: args.data
+          });
+        },
+        
+        configureGuestTraffic: function(args) {
+          message('Configuring guest traffic');
+          
+          addCluster({
+            data: args.data
+          });
+        },
+        
+        addCluster: function(args) {
+          message('Creating cluster');
+          
+          var cluster = {};
+          
+          addHost({
+            data: $.extend(args.data, {
+              cluster: cluster
+            })
+          });
+        },
+        
+        addHost: function(args) {
+          message('Adding host');
+          
+          var host = {};
+          
+          addPrimaryStorage({
+            data: $.extend(args.data, {
+              host: host
+            })
+          });
+        },
+        
+        addPrimaryStorage: function(args) {
+          message('Creating primary storage');
+          
+          addSecondaryStorage({
+            data: args.data
+          });
+        },
+        
+        addSecondaryStorage: function(args) {
+          message('Creating secondary storage');
+          
+          complete({
+            data: data
+          });
+        }
+      };
+
+      var complete = function(args) {
+        success({});
+      };
+      
+      if (startFn) {
+        stepFns[startFn.fn](startFn.args);
+      } else {
+        stepFns.addZone();
+      }
     }
   };
 }(cloudStack, jQuery));
