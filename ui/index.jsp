@@ -535,31 +535,35 @@
           </div>
 
           <!-- Step 4.1: Add cluster -->
-          <div class="add-cluster">
-            <form>
-              <div class="main-desc">Add cluster</div>
-            </form>
+          <div class="add-cluster" zone-wizard-form="addCluster">
+            <div class="main-desc">Please add a cluster for this zone.</div>
+            <div class="content input-area">
+              <div class="select-container"></div>
+            </div>
           </div>
 
           <!-- Step 4.2: Add host -->
-          <div class="add-cluster">
-            <form>
-              <div class="main-desc">Add host</div>
-            </form>
+          <div class="add-cluster" zone-wizard-form="addHost">
+            <div class="main-desc">Please add a host for this zone.</div>
+            <div class="content input-area">
+              <div class="select-container"></div>
+            </div>
           </div>
 
           <!-- Step 4.3: Add primary storage -->
-          <div class="add-cluster">
-            <form>
-              <div class="main-desc">Add primary storage</div>
-            </form>
+          <div class="add-cluster" zone-wizard-form="addPrimaryStorage">
+            <div class="main-desc">Please add a primary storage setup for this zone.</div>
+            <div class="content input-area">
+              <div class="select-container"></div>
+            </div>
           </div>
 
           <!-- Step 4.4: Add secondary storage -->
-          <div class="add-cluster">
-            <form>
-              <div class="main-desc">Add secondary storage</div>
-            </form>
+          <div class="add-cluster" zone-wizard-form="addSecondaryStorage">
+            <div class="main-desc">Please add a secondary storage setup for this zone.</div>
+            <div class="content input-area">
+              <div class="select-container"></div>
+            </div>
           </div>
 
           <!-- Step 5: Review -->
