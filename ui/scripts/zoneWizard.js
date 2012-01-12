@@ -290,7 +290,8 @@
               args.response.success({ data: array1 });
 
               args.$select.change(function() {
-                var $form = $(this).closest('form');
+                var $form = args.$select.closest('form');
+                
                 if($(this).val() == "zone-wide") {
                   $form.find('[rel=domainId]').hide();
                   $form.find('[rel=account]').hide();
@@ -304,6 +305,58 @@
                   $form.find('[rel=account]').show();
                 }
               });
+
+              setTimeout(function() {
+                args.$select.trigger('change');
+              });
+            }
+          },
+          domainId: {
+            label: 'Domain',
+            select: function(args) {
+              var selectedZoneObj = {
+                domainid: args.context.zones[0].domainid
+              };
+              
+              var items = [];
+              if(selectedZoneObj.domainid != null) { //list only domains under selectedZoneObj.domainid
+                $.ajax({
+                  url: createURL("listDomainChildren&id=" + selectedZoneObj.domainid + "&isrecursive=true"),
+                  dataType: "json",
+                  async: false,
+                  success: function(json) {
+                    var domainObjs = json.listdomainchildrenresponse.domain;
+                    $(domainObjs).each(function() {
+                      items.push({id: this.id, description: this.name});
+                    });
+                  }
+                });
+                $.ajax({
+                  url: createURL("listDomains&id=" + selectedZoneObj.domainid),
+                  dataType: "json",
+                  async: false,
+                  success: function(json) {
+                    var domainObjs = json.listdomainsresponse.domain;
+                    $(domainObjs).each(function() {
+                      items.push({id: this.id, description: this.name});
+                    });
+                  }
+                });
+              }
+              else { //list all domains
+                $.ajax({
+                  url: createURL("listDomains&listAll=true"),
+                  dataType: "json",
+                  async: false,
+                  success: function(json) {
+                    var domainObjs = json.listdomainsresponse.domain;
+                    $(domainObjs).each(function() {
+                      items.push({id: this.id, description: this.name});
+                    });
+                  }
+                });
+              }
+              args.response.success({data: items});
             }
           },
           account: { label: 'Account' },
