@@ -79,6 +79,12 @@
 
             $form.find('input[name=security-groups-enabled]:visible').trigger('change');
           }
+
+          setTimeout(function() {
+            if ($form.find('input[name=ispublic]').is(':checked')) {
+              $form.find('[rel=domain]').hide();
+            }
+          });
         },
         fields: {
           name: { label: 'Name', validation: { required: true } },
@@ -87,7 +93,11 @@
           internaldns1: { label: 'Internal DNS 1', validation: { required: true } },
           internaldns2: { label: 'Internal DNS 2' },
           networkdomain: { label: 'Network Domain' },
-          ispublic: { isBoolean: true, label: 'Public' },
+          ispublic: {
+            isReverse: true,
+            isBoolean: true,
+            label: 'Public'
+          },
           domain: {
             label: 'Domain',
             dependsOn: 'ispublic',
@@ -95,6 +105,7 @@
             select: function(args) {
               $.ajax({
                 url: createURL("listDomains"),
+                data: { viewAll: true },
                 dataType: "json",
                 async: false,
                 success: function(json) {
