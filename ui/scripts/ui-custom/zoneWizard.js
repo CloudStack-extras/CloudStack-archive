@@ -16,12 +16,11 @@
         '.steps .setup-physical-network .select-container.multi'
       );
       var $publicTrafficItems = $wizard.find(
-        '.steps .setup-public-traffic .data-body .data-item'
-      );
+        '.steps .setup-public-traffic .data-body .data-item');
       var groupedForms = {};
 
       if (options.all) {
-        return cloudStack.serializeForm($forms);
+        return cloudStack.serializeForm($forms, { escapeSlashes: true });
       }
 
       // Group form fields together, by form ID
@@ -31,7 +30,9 @@
 
         if (!id) return true;
 
-        groupedForms[id] = cloudStack.serializeForm($form);
+        groupedForms[id] = cloudStack.serializeForm($form, { escapeSlashes: true });
+
+        return true;
       });
 
       // Get physical network data
@@ -77,6 +78,15 @@
           return publicTrafficData;
         }
       );
+
+      $.each(groupedForms, function(key1, value1) {
+        $.each(value1, function(key2, value2) {
+          if (typeof value2 == 'string') {
+            groupedForms[key1][key2] = escape(value2.replace(/__forwardSlash__/g,
+                                                             '\/'));
+          }
+        });
+      });
 
       return groupedForms;
     };
