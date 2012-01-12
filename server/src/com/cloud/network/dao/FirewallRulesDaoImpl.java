@@ -33,9 +33,11 @@ import com.cloud.network.rules.FirewallRuleVO;
 import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GenericDaoBase;
+import com.cloud.utils.db.GenericSearchBuilder;
 import com.cloud.utils.db.JoinBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
+import com.cloud.utils.db.SearchCriteria.Func;
 import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.Transaction;
 
@@ -47,7 +49,9 @@ public class FirewallRulesDaoImpl extends GenericDaoBase<FirewallRuleVO, Long> i
     protected final SearchBuilder<FirewallRuleVO> NotRevokedSearch;
     protected final SearchBuilder<FirewallRuleVO> ReleaseSearch;
     protected SearchBuilder<FirewallRuleVO> VmSearch;
-    protected final SearchBuilder<FirewallRuleVO> systemRuleSearch;
+    protected final SearchBuilder<FirewallRuleVO> SystemRuleSearch;
+    protected final GenericSearchBuilder<FirewallRuleVO, Long> RulesByIpCount;
+
     
     protected final FirewallRulesCidrsDaoImpl _firewallRulesCidrsDao = ComponentLocator.inject(FirewallRulesCidrsDaoImpl.class);
     
@@ -83,15 +87,20 @@ public class FirewallRulesDaoImpl extends GenericDaoBase<FirewallRuleVO, Long> i
         ReleaseSearch.and("ports", ReleaseSearch.entity().getSourcePortStart(), Op.IN);
         ReleaseSearch.done();
         
-        systemRuleSearch = createSearchBuilder();
-        systemRuleSearch.and("type", systemRuleSearch.entity().getType(), Op.EQ);
-        systemRuleSearch.and("ipId", systemRuleSearch.entity().getSourceIpAddressId(), Op.NULL);
-        systemRuleSearch.done();
+        SystemRuleSearch = createSearchBuilder();
+        SystemRuleSearch.and("type", SystemRuleSearch.entity().getType(), Op.EQ);
+        SystemRuleSearch.and("ipId", SystemRuleSearch.entity().getSourceIpAddressId(), Op.NULL);
+        SystemRuleSearch.done();
+        
+        RulesByIpCount = createSearchBuilder(Long.class);
+        RulesByIpCount.select(null, Func.COUNT, RulesByIpCount.entity().getId());
+        RulesByIpCount.and("ipAddressId", RulesByIpCount.entity().getSourceIpAddressId(), Op.EQ);
+        RulesByIpCount.done();
     }
     
     @Override
     public List<FirewallRuleVO> listSystemRules() {
-    	SearchCriteria<FirewallRuleVO> sc = systemRuleSearch.create();
+    	SearchCriteria<FirewallRuleVO> sc = SystemRuleSearch.create();
     	sc.setParameters("type", FirewallRuleType.System.toString());
     	return listBy(sc);
     }
@@ -257,5 +266,12 @@ public class FirewallRulesDaoImpl extends GenericDaoBase<FirewallRuleVO, Long> i
         sc.setParameters("state", State.Revoke);
         
         return listBy(sc);
+    }
+    
+    @Override
+    public long countRulesByIpId(long sourceIpId) {
+    	SearchCriteria<Long> sc = RulesByIpCount.create();
+        sc.setParameters("ipAddressId", sourceIpId);
+        return customSearch(sc, null).get(0);
     }
 }
