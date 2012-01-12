@@ -847,23 +847,54 @@
       var startFn = args.startFn;
 
       var stepFns = {
-        addZone: function(args2) {
+        addZone: function() {
           message('Creating zone');
           
-          var zone = {};
-          
-          setTimeout(function() {
-            stepFns.addPhysicalNetworks({
-              data: $.extend(args.data, {
-                zone: zone
-              })
-            });
-          }, 300);
+					var array1 = [];					
+					var networktype = args.data.zone.networktype;  //"Basic", "Advanced"
+					if(networktype == null) networktype = "Advanced"; //delete this line when Brian fixes args.data.zone.networktype to return data			
+					array1.push("&networktype=" + todb(networktype));
+					if(networktype == "Advanced") 
+						array1.push("&securitygroupenabled=false");  					
+
+					array1.push("&name=" + todb(args.data.zone.name));
+
+					array1.push("&dns1=" + todb(args.data.zone.dns1));
+
+					var dns2 = args.data.zone.dns2;
+					if (dns2 != null && dns2.length > 0)
+						array1.push("&dns2=" + todb(dns2));
+
+					array1.push("&internaldns1="+todb(args.data.zone.internaldns1));
+
+					var internaldns2 = args.data.zone.internaldns2;
+					if (internaldns2 != null && internaldns2.length > 0)
+						array1.push("&internaldns2=" + todb(internaldns2));
+						
+					if(args.data.zone.ispublic == null) //public checkbox is unchecked
+						array1.push("&domainid=" + args.data.zone.domain);
+				 
+					if(args.data.zone.networkdomain != null && args.data.zone.networkdomain.length > 0)  
+						array1.push("&domain=" + todb(args.data.zone.networkdomain));
+										
+					$.ajax({
+						url: createURL("createZone" + array1.join("")),
+						dataType: "json",
+						async: false,
+						success: function(json) {	
+							stepFns.addPhysicalNetworks({
+								data: $.extend(args.data, {
+									zone: json.createzoneresponse.zone
+								})
+							});							
+						}
+					});
         },
         
-        addPhysicalNetworks: function(args2) {
+        addPhysicalNetworks: function(args) {
           message('Creating physical network(s)');
           
+					debugger;
           var physicalNetworks = [];
 
           setTimeout(function() {
@@ -875,7 +906,7 @@
           }, 400);
         },
         
-        addPod: function(args2) {
+        addPod: function(args) {
           message('Creating pod');
           
           var pod = {};
@@ -889,7 +920,7 @@
           }, 300);
         },
         
-        configurePublicTraffic: function(args2) {
+        configurePublicTraffic: function(args) {
           message('Configuring public traffic');
 
           setTimeout(function() {
@@ -899,7 +930,7 @@
           }, 200);
         },
         
-        configureGuestTraffic: function(args2) {
+        configureGuestTraffic: function(args) {
           message('Configuring guest traffic');
 
           setTimeout(function() {
@@ -909,7 +940,7 @@
           }, 200);
         },
         
-        addCluster: function(args2) {
+        addCluster: function(args) {
           message('Creating cluster');
           
           var cluster = {};
@@ -923,7 +954,7 @@
           }, 200);
         },
         
-        addHost: function(args2) {
+        addHost: function(args) {
           message('Adding host');
           
           var host = {};
@@ -937,7 +968,7 @@
           }, 400);
         },
         
-        addPrimaryStorage: function(args2) {
+        addPrimaryStorage: function(args) {
           message('Creating primary storage');
 
           setTimeout(function() {
@@ -947,7 +978,7 @@
           }, 300);
         },
         
-        addSecondaryStorage: function(args2) {
+        addSecondaryStorage: function(args) {
           message('Creating secondary storage');
 
           setTimeout(function() {
@@ -958,7 +989,7 @@
         }
       };
 
-      var complete = function(args2) {
+      var complete = function(args) {
         message('Zone creation complete!');
         success({});
       };
