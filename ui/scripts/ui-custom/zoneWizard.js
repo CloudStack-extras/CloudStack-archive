@@ -164,6 +164,22 @@
       });
     };
 
+    var draggableOptions = function($wizard) {
+      return {
+        appendTo: $wizard,
+        helper: 'clone',
+
+        // Events
+        start: function(event, ui) {
+          $(this).addClass('disabled');
+        },
+
+        stop: function(event, ui) {
+          $(this).removeClass('disabled');
+        }
+      };
+    };
+
     /**
      * Physical network step: Generate new network element
      */
@@ -209,9 +225,25 @@
 
         drop: function(event, ui) {
           var $ul = $(this).find('ul');
+          var trafficTypeID = ui.draggable.attr('traffic-type-id');
+          var $originalContainer = $wizard.find('.traffic-types-drag-area ul > li.' +
+                                                ui.draggable.attr('traffic-type-id') +
+                                                ' ul.container');
+          var $draggable = ui.draggable;
+          var $newDraggable = $draggable.clone().removeClass('disabled');
 
           $ul.removeClass('active');
-          ui.draggable.appendTo($ul);
+
+          if ($draggable.hasClass('clone')) {
+            if ($ul.find('li[traffic-type-id=' + trafficTypeID +']').size()) {
+              return false;
+            }
+
+            $newDraggable.appendTo($ul);
+            $newDraggable.draggable(draggableOptions($wizard));
+          } else {
+            $draggable.appendTo($ul);
+          }
 
           $ul.closest('.select-container.multi').siblings().each(function() {
             var $ul = $(this).find('.drop-container ul');
@@ -615,29 +647,24 @@
       });
 
       // Setup traffic type draggables
-      $wizard.find('.traffic-type-draggable').draggable({
-        appendTo: $wizard,
-        helper: 'clone',
-
-        // Events
-        start: function(event, ui) {
-          $(this).addClass('disabled');
-        },
-
-        stop: function(event, ui) {
-          $(this).removeClass('disabled');
-        }
-      });
+      $wizard.find('.traffic-type-draggable').draggable(draggableOptions($wizard));
 
       $wizard.find('.traffic-types-drag-area').droppable({
         drop: function(event, ui) {
+          if (ui.draggable.hasClass('clone')) {
+            ui.draggable.remove();
+
+            return false;
+          }
+
+          var trafficTypeID = ui.draggable.attr('traffic-type-id');
           var $ul = $(this).find('ul').filter(function() {
-            return $(this).parent().hasClass(
-              ui.draggable.attr('traffic-type-id')
-            );
+            return $(this).parent().hasClass(trafficTypeID);
           });
 
           $ul.append(ui.draggable);
+
+          return true;
         }
       });
 

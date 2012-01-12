@@ -489,7 +489,7 @@
                 <li class="guest">
                   <ul class="container">
                     <li traffic-type-id="guest"
-                        class="traffic-type-draggable guest"></li>
+                        class="traffic-type-draggable guest clone"></li>
                   </ul>
                   <div class="info">
                     <div class="title">Guest</div>
