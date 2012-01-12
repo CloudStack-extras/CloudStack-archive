@@ -5395,14 +5395,14 @@ label.error {
 .multi-wizard.zone-wizard .content.input-area {
   width: 727px;
   min-height: inherit;
-  margin: 12px auto auto 4px;
+  margin: 2px auto auto 4px;
   overflow: auto;
 }
 
 /*** Add physical network -- network form items*/
 .multi-wizard.zone-wizard .setup-physical-network .content.input-area {
   width: 627px;
-  height: 425px;
+  height: 438px;
   background: none;
   position: relative;
 }
@@ -5421,7 +5421,7 @@ label.error {
 .multi-wizard.zone-wizard .select-container.multi {
   display: inline-block;
   width: 490px;
-  margin: 11px auto auto;
+  margin: 6px auto auto;
   float: right;
   height: auto;
   border: 1px solid #BFBFBF;
@@ -5463,6 +5463,7 @@ label.error {
 .multi-wizard.zone-wizard .select-container.multi .field {
   width: 176px;
   height: 46px;
+  margin-top: -6px;
 }
 
 .multi-wizard.zone-wizard .select-container.multi .field .name {
@@ -5473,7 +5474,7 @@ label.error {
 .multi-wizard.zone-wizard .select-container.multi .drop-container {
   background: #DAE2EC;
   width: 484px;
-  height: 76px;
+  height: 73px;
   clear: both;
   position: relative;
   /*+border-radius:4px;*/
@@ -5520,7 +5521,7 @@ label.error {
 /*** Add physical network -- traffic type drag area*/
 .multi-wizard.zone-wizard .traffic-types-drag-area {
   width: 96px;
-  height: 413px;
+  height: 434px;
   background: #F0F1F2 none;
   border: 1px solid #DCCACA;
   /*+border-radius:4px;*/
@@ -5531,7 +5532,7 @@ label.error {
   float: left;
   text-align: left;
   padding: 0;
-  margin: 26px 0 0;
+  margin: 13px 0 0;
   /*+placement:shift 3px 0px;*/
   position: relative;
   left: 3px;
@@ -5569,7 +5570,7 @@ label.error {
   width: 100%;
   background: none;
   height: 83px;
-  margin: 12px 13px 0 0;
+  margin: 16px 13px 0 0;
 }
 
 .multi-wizard.zone-wizard .traffic-types-drag-area > ul > li ul.container {
