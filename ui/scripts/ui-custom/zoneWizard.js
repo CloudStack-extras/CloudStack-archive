@@ -235,7 +235,8 @@
           $ul.removeClass('active');
 
           if ($draggable.hasClass('clone')) {
-            if ($ul.find('li[traffic-type-id=' + trafficTypeID +']').size()) {
+            if ($ul.find('li[traffic-type-id=' + trafficTypeID +']').size() ||
+                !$ul.size()) {
               return false;
             }
 
