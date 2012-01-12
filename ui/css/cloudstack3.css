@@ -4721,7 +4721,7 @@ label.error {
   width: 100%;
   position: absolute;
   top: 519px;
-  left: 25px;
+  left: 0px;
 }
 
 .multi-wizard .buttons .button {
@@ -4745,10 +4745,10 @@ label.error {
 }
 
 .multi-wizard .buttons .button.next {
-  /*+placement:float-right 37px 0px;*/
+  /*+placement:float-right 77px 0px;*/
   float: right;
   position: relative;
-  left: 37px;
+  left: 77px;
   top: 0px;
   color: #FFFFFF;
   /*+text-shadow:0px -1px 1px #465259;*/
@@ -4785,10 +4785,10 @@ label.error {
 
 .multi-wizard .buttons .button.cancel {
   border: none;
-  /*+placement:float-right -153px 0px;*/
+  /*+placement:float-right -127px 0px;*/
   float: right;
   position: relative;
-  left: -153px;
+  left: -127px;
   top: 0px;
   color: #808080;
   /*+border-radius:0;*/
@@ -4817,6 +4817,7 @@ label.error {
 .multi-wizard .buttons .button.previous {
   background: #D6D6D6;
   color: #62798E;
+  margin-left: 12px;
 }
 
 .multi-wizard .buttons .button.previous:hover {
@@ -5277,6 +5278,11 @@ label.error {
   margin: 18px 0 0px 6px;
 }
 
+.multi-wizard.zone-wizard .main-desc em {
+  text-decoration: underline;
+  font-weight: bold;
+}
+
 .multi-wizard.zone-wizard .buttons {
   top: 584px;
 }
@@ -5395,13 +5401,28 @@ label.error {
 
 /*** Add physical network -- network form items*/
 .multi-wizard.zone-wizard .setup-physical-network .content.input-area {
-  height: 310px;
+  width: 627px;
+  height: 425px;
+  background: none;
+  position: relative;
+}
+
+.multi-wizard.zone-wizard .setup-physical-network .drag-helper-icon {
+  width: 80px;
+  height: 84px;
+  background: url(../images/sprites.png) no-repeat 0px -1365px;
+  /*+placement:shift 134px 303px;*/
+  position: relative;
+  left: 134px;
+  top: 303px;
+  position: absolute;
 }
 
 .multi-wizard.zone-wizard .select-container.multi {
   display: inline-block;
-  width: 97%;
+  width: 490px;
   margin: 11px auto auto;
+  float: right;
   height: auto;
   border: 1px solid #BFBFBF;
   /*+border-radius:4px;*/
@@ -5409,47 +5430,71 @@ label.error {
   -webkit-border-radius: 4px;
   -khtml-border-radius: 4px;
   border-radius: 4px 4px 4px 4px;
-  /*+box-shadow:0px 2px 7px #DDDCDC;*/
-  -moz-box-shadow: 0px 2px 7px #DDDCDC;
-  -webkit-box-shadow: 0px 2px 7px #DDDCDC;
-  -o-box-shadow: 0px 2px 7px #DDDCDC;
-  box-shadow: 0px 2px 7px #DDDCDC;
+  /*+box-shadow:inset 0px 1px 2px #CBCACA;*/
+  -moz-box-shadow: inset 0px 1px 2px #CBCACA;
+  -webkit-box-shadow: inset 0px 1px 2px #CBCACA;
+  -o-box-shadow: inset 0px 1px 2px #CBCACA;
+  box-shadow: inset 0px 1px 2px #CBCACA;
+  background: #F8F6F6;
+}
+
+.multi-wizard.zone-wizard .select-container.multi.disabled {
+  border: 1px dotted #A7A7A7;
+  /*+opacity:40%;*/
+  filter: alpha(opacity=40);
+  -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=40);
+  -moz-opacity: 0.4;
+  opacity: 0.4;
+}
+
+.multi-wizard.zone-wizard .select-container.multi .physical-network-icon {
+  width: 61px;
+  height: 59px;
+  float: left;
+  border-right: 1px solid #CDCDCD;
+  background: url(../images/sprites.png) -109px -1393px;
+}
+
+.multi-wizard.zone-wizard .select-container.multi input {
+  width: 195px !important;
+  margin: 2px 0 0 17px !important;
 }
 
 .multi-wizard.zone-wizard .select-container.multi .field {
-  width: 100%;
+  width: 176px;
+  height: 46px;
+}
+
+.multi-wizard.zone-wizard .select-container.multi .field .name {
+  width: 93%;
+  margin-left: 17px;
 }
 
 .multi-wizard.zone-wizard .select-container.multi .drop-container {
-  background: #E8ECF0;
-  width: 100%;
-  height: 71px;
+  background: #DAE2EC;
+  width: 484px;
+  height: 63px;
   clear: both;
   position: relative;
-}
-
-.multi-wizard.zone-wizard .select-container.multi .drop-container ul {
-  background: #E8E9E9;
-  /*+border-radius:5px;*/
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -khtml-border-radius: 5px;
-  border-radius: 5px 5px 5px 5px;
-  /*+box-shadow:inset 0px 2px 4px #999696;*/
-  -moz-box-shadow: inset 0px 2px 4px #999696;
-  -webkit-box-shadow: inset 0px 2px 4px #999696;
-  -o-box-shadow: inset 0px 2px 4px #999696;
-  box-shadow: inset 0px 2px 4px #999696;
-  border-bottom: 1px solid #FFFFFF;
-  width: 99%;
-  height: 63px;
-  top: 4px;
-  left: 2px;
   /*+border-radius:4px;*/
   -moz-border-radius: 4px;
   -webkit-border-radius: 4px;
   -khtml-border-radius: 4px;
   border-radius: 4px 4px 4px 4px;
+  border: 3px dashed #BBBFC4;
+}
+
+.multi-wizard.zone-wizard .select-container.multi .drop-container ul {
+  background: #DAE2EC;
+  /*+border-radius:5px;*/
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px 5px 5px 5px;
+  width: 99%;
+  height: 59px;
+  top: 4px;
+  left: 2px;
   position: absolute;
 }
 
@@ -5459,7 +5504,7 @@ label.error {
 
 .multi-wizard.zone-wizard .select-container.multi .drop-container ul li {
   float: left;
-  margin: 7px 0 0 8px;
+  margin: 1px 0 0 8px;
 }
 
 .multi-wizard.zone-wizard .select-container.multi .drop-container span.empty-message {
@@ -5474,14 +5519,27 @@ label.error {
 
 /*** Add physical network -- traffic type drag area*/
 .multi-wizard.zone-wizard .traffic-types-drag-area {
-  width: 100%;
-  height: 106px;
+  width: 96px;
+  height: 413px;
+  background: #F0F1F2 none;
+  border: 1px solid #DCCACA;
+  /*+border-radius:4px;*/
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  -khtml-border-radius: 4px;
+  border-radius: 4px 4px 4px 4px;
   float: left;
   text-align: left;
-  padding: 0 0 0 7px;
+  padding: 0;
+  margin: 26px 0 0;
+  /*+placement:shift 3px 0px;*/
+  position: relative;
+  left: 3px;
+  top: 0px;
 }
 
 .multi-wizard.zone-wizard .traffic-types-drag-area .header {
+  margin: 0;
   font-size: 13px;
   font-weight: bold;
   color: #5C5C5C;
@@ -5490,6 +5548,15 @@ label.error {
   -webkit-text-shadow: 0px 1px 1px #FFFFFF;
   -o-text-shadow: 0px 1px 1px #FFFFFF;
   text-shadow: 0px 1px 1px #FFFFFF;
+  background: #F8F8F8;
+  text-align: center;
+  padding: 8px 0 7px;
+  /*+border-radius:4px 4px 0 0;*/
+  -moz-border-radius: 4px 4px 0 0;
+  -webkit-border-radius: 4px 4px 0 0;
+  -khtml-border-radius: 4px 4px 0 0;
+  border-radius: 4px 4px 0 0;
+  border-bottom: 1px solid #DCCACA;
 }
 
 .multi-wizard.zone-wizard .traffic-types-drag-area > ul {
@@ -5499,8 +5566,9 @@ label.error {
 .multi-wizard.zone-wizard .traffic-types-drag-area > ul > li {
   float: left;
   font-size: 11px;
-  width: 170px;
-  height: 76px;
+  width: 100%;
+  background: none;
+  height: 83px;
   margin: 12px 13px 0 0;
   overflow: hidden;
 }
@@ -5508,7 +5576,7 @@ label.error {
 .multi-wizard.zone-wizard .traffic-types-drag-area > ul > li ul.container {
   width: 60px;
   height: 54px;
-  float: left;
+  margin-left: 16px;
   background: transparent;
   /*+border-radius:5px;*/
   -moz-border-radius: 5px;
@@ -5569,14 +5637,20 @@ label.error {
 }
 
 .multi-wizard.zone-wizard .traffic-types-drag-area > ul > li .info {
-  width: 100px;
-  margin: 0 0 0 8px;
+  width: 100%;
+  margin: 5px 0 0 -2px;
   line-height: 14px;
   float: left;
 }
 
 .multi-wizard.zone-wizard .traffic-types-drag-area > ul > li .info .title {
+  text-align: center;
   font-weight: bold;
+  color: #787879;
+}
+
+.multi-wizard.zone-wizard .traffic-types-drag-area > ul > li .info .desc {
+  display: none;
 }
 
 /*** Multi-edit*/

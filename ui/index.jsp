@@ -459,7 +459,7 @@
           <!-- Step 3.1: Setup Physical Network -->
           <div class="setup-physical-network"
                zone-wizard-step-id="setupPhysicalNetwork">
-            <div class="main-desc"></div>
+            <div class="main-desc"><em>DRAG-AND-DROP</em> different traffic types to your physical networks.</div>
             <div class="button add new-physical-network"><span class="icon">&nbsp;</span><span>Add physical network</span></div>
 
             <!-- Traffic types drag area -->
@@ -508,7 +508,8 @@
                 </li>
               </ul>
             </div>
-          
+
+            <div class="drag-helper-icon"></div>
             <div class="content input-area">
               <form></form>
             </div>

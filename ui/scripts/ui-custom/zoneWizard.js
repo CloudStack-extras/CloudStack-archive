@@ -14,7 +14,7 @@
       });
       var $physicalNetworkItems = $wizard.find(
         '.steps .setup-physical-network .select-container.multi'
-      );
+      ).filter(':not(.disabled)');
       var $publicTrafficItems = $wizard.find(
         '.steps .setup-public-traffic .data-body .data-item');
       var groupedForms = {};
@@ -40,7 +40,7 @@
         $physicalNetworkItems,
         function(network) {
           var $network = $(network);
-          
+
           return {
             id: $network.index(),
             name: $network.find('.field.name input[type=text]').val(),
@@ -164,6 +164,29 @@
       });
     };
 
+    /**
+     * Cleanup physical network containers
+     */
+    var cleanupPhysicalNetworks = function($containers) {
+      $containers.closest('.setup-physical-network')
+        .find('.select-container.multi').each(function() {
+          var $ul = $(this).find('.drop-container ul');
+          
+          if (!$(this).find('li').size()) {
+            $(this).addClass('disabled');
+            $ul.fadeOut();
+          } else {
+            $(this).removeClass('disabled');
+            $ul.show();
+          }
+        });
+
+      return $containers;
+    };
+
+    /**
+     * Default options for initializing traffic type draggables
+     */
     var draggableOptions = function($wizard) {
       return {
         appendTo: $wizard,
@@ -189,6 +212,7 @@
       var $deleteButton = $('<div>').addClass('button remove physical-network')
         .attr({ title: 'Remove this physical network' })
         .append('<span>').addClass('icon').html('&nbsp;');
+      var $icon = $('<div>').addClass('physical-network-icon');
       var $nameField = $('<div>').addClass('field name').append(
         $('<div>').addClass('name').append(
           $('<span>').html('Physical network name')
@@ -205,10 +229,11 @@
       ).droppable({
         over: function(event, ui) {
           var $ul = $(this).find('ul');
-
+          
           $ul.addClass('active');
 
           if (!$ul.find('li').size()) {
+            $(this).closest('.select-container.multi').removeClass('disabled');
             $ul.fadeIn();
           }
         },
@@ -217,10 +242,7 @@
           var $ul = $(this).find('ul');
 
           $ul.removeClass('active');
-
-          if (!$ul.find('li').size()) {
-            $ul.fadeOut();
-          }
+          cleanupPhysicalNetworks($(this).closest('.select-container.multi'));
         },
 
         drop: function(event, ui) {
@@ -231,6 +253,7 @@
                                                 ' ul.container');
           var $draggable = ui.draggable;
           var $newDraggable = $draggable.clone().removeClass('disabled');
+          var $selectContainer = $ul.closest('.select-container.multi');
 
           $ul.removeClass('active');
 
@@ -246,19 +269,16 @@
             $draggable.appendTo($ul);
           }
 
-          $ul.closest('.select-container.multi').siblings().each(function() {
-            var $ul = $(this).find('.drop-container ul');
-
-            if (!$ul.find('li').size()) {
-              $ul.fadeOut();
-            }
-          });
+          cleanupPhysicalNetworks($.merge(
+            $selectContainer, $selectContainer.siblings()
+          ));
         }
       });
 
       // Initialize new default network form elem
       $physicalNetworkItem.append(
         $deleteButton,
+        $icon,
         $nameField,
         $dropContainer
       );
@@ -269,6 +289,10 @@
       $physicalNetworkItem.find('.button.remove.physical-network').click(function() {
         removePhysicalNetwork($physicalNetworkItem);
       });
+
+      $physicalNetworkItem.addClass('disabled'); // Since there are no traffic types yet
+
+      return $physicalNetworkItem;
     };
 
     /**
@@ -352,7 +376,7 @@
                 $('<span>').addClass('icon').html('&nbsp;'),
                 $('<span>').addClass('text').html(message)
               );
-              
+
               $launchStep.find('ul').append($li);
               $li.siblings().removeClass('loading');
             }
@@ -408,7 +432,7 @@
         if (typeof index == 'string') {
           index = $wizard.find('[zone-wizard-step-id=' + index + ']').index() + 1;
         }
-        
+
         var targetIndex = index - 1;
 
         if (index <= 1) targetIndex = 0;
@@ -425,7 +449,7 @@
         var stepPreFilter = cloudStack.zoneWizard.preFilters[
           $targetStep.attr('zone-wizard-prefilter')
         ];
-        
+
         // Bypass step check
         if (stepPreFilter && !stepPreFilter({ data: formState })) {
           return showStep(
@@ -647,30 +671,42 @@
         addPhysicalNetwork($wizard);
       });
 
-      // Setup traffic type draggables
+      // Traffic type draggables
       $wizard.find('.traffic-type-draggable').draggable(draggableOptions($wizard));
 
+      // For removing traffic types from physical network
       $wizard.find('.traffic-types-drag-area').droppable({
         drop: function(event, ui) {
-          if (ui.draggable.hasClass('clone')) {
-            ui.draggable.remove();
+          var $drop = $(this);
+          var $draggable = ui.draggable;
+          var $containers = $drop.closest('.setup-physical-network')
+            .find('.select-container.multi');
+          var trafficTypeID = ui.draggable.attr('traffic-type-id');
+          var $ul = $drop.find('ul.container').filter(function() {
+            return $(this).parent().hasClass(trafficTypeID);
+          });
+
+          // Don't try to add cloned draggables, as they already exist
+          if ($draggable.hasClass('clone')) {
+            $draggable.remove();
+            cleanupPhysicalNetworks($containers);
 
             return false;
           }
 
-          var trafficTypeID = ui.draggable.attr('traffic-type-id');
-          var $ul = $(this).find('ul').filter(function() {
-            return $(this).parent().hasClass(trafficTypeID);
-          });
-
-          $ul.append(ui.draggable);
+          $ul.append($draggable);
+          cleanupPhysicalNetworks($containers);
 
           return true;
         }
       });
 
-      // Initialize first physical network item
-      addPhysicalNetwork($wizard);
+      // Initialize initial physical networks
+      for (var i = 0; i < 3; i++) {
+        (function() {
+          var $physicalNetworkItem = addPhysicalNetwork($wizard);
+        }());
+      }
 
       showStep(1);
 
