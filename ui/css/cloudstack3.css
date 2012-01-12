@@ -5506,7 +5506,7 @@ label.error {
 }
 
 .multi-wizard.zone-wizard .traffic-types-drag-area > ul > li ul.container {
-  width: 55px;
+  width: 60px;
   height: 54px;
   float: left;
   background: transparent;
@@ -5533,8 +5533,8 @@ label.error {
 .multi-wizard.zone-wizard li.traffic-type-draggable {
   display: block;
   background: transparent url(../images/sprites.png) no-repeat 0px -1161px;
-  width: 50px;
-  height: 50px;
+  width: 51px;
+  height: 51px;
   margin: auto;
   cursor: move;
   z-index: 5000;
@@ -5551,10 +5551,13 @@ label.error {
 
 .multi-wizard.zone-wizard li.traffic-type-draggable.management {
   background-position: 0px -1161px;
+  height: 52px;
 }
 
 .multi-wizard.zone-wizard li.traffic-type-draggable.public {
-  background-position: -56px -1161px;
+  width: 53px;
+  height: 53px;
+  background-position: -54px -1160px;
 }
 
 .multi-wizard.zone-wizard li.traffic-type-draggable.guest {
@@ -5562,7 +5565,7 @@ label.error {
 }
 
 .multi-wizard.zone-wizard li.traffic-type-draggable.storage {
-  background-position: -171px -1161px;
+  background-position: -170px -1160px;
 }
 
 .multi-wizard.zone-wizard .traffic-types-drag-area > ul > li .info {
