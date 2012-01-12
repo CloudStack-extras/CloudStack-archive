@@ -839,7 +839,7 @@
     },
 
     action: function(args) {
-      debugger;
+      //debugger;
       var success = args.response.success;
       var error = args.response.error;
       var message = args.response.message;
@@ -847,11 +847,11 @@
       var startFn = args.startFn;
 
       var stepFns = {
-        addZone: function(args) {
+        addZone: function(args2) {
           message('Creating zone');
           
           var zone = {};
-
+          
           setTimeout(function() {
             stepFns.addPhysicalNetworks({
               data: $.extend(args.data, {
@@ -861,7 +861,7 @@
           }, 300);
         },
         
-        addPhysicalNetworks: function(args) {
+        addPhysicalNetworks: function(args2) {
           message('Creating physical network(s)');
           
           var physicalNetworks = [];
@@ -875,7 +875,7 @@
           }, 400);
         },
         
-        addPod: function(args) {
+        addPod: function(args2) {
           message('Creating pod');
           
           var pod = {};
@@ -889,7 +889,7 @@
           }, 300);
         },
         
-        configurePublicTraffic: function(args) {
+        configurePublicTraffic: function(args2) {
           message('Configuring public traffic');
 
           setTimeout(function() {
@@ -899,7 +899,7 @@
           }, 200);
         },
         
-        configureGuestTraffic: function(args) {
+        configureGuestTraffic: function(args2) {
           message('Configuring guest traffic');
 
           setTimeout(function() {
@@ -909,7 +909,7 @@
           }, 200);
         },
         
-        addCluster: function(args) {
+        addCluster: function(args2) {
           message('Creating cluster');
           
           var cluster = {};
@@ -923,7 +923,7 @@
           }, 200);
         },
         
-        addHost: function(args) {
+        addHost: function(args2) {
           message('Adding host');
           
           var host = {};
@@ -937,7 +937,7 @@
           }, 400);
         },
         
-        addPrimaryStorage: function(args) {
+        addPrimaryStorage: function(args2) {
           message('Creating primary storage');
 
           setTimeout(function() {
@@ -947,7 +947,7 @@
           }, 300);
         },
         
-        addSecondaryStorage: function(args) {
+        addSecondaryStorage: function(args2) {
           message('Creating secondary storage');
 
           setTimeout(function() {
@@ -958,7 +958,7 @@
         }
       };
 
-      var complete = function(args) {
+      var complete = function(args2) {
         message('Zone creation complete!');
         success({});
       };
