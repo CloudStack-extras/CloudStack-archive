@@ -5836,6 +5836,7 @@ label.error {
 
 .multi-wizard.zone-wizard .setup-physical-network .button.add.new-physical-network {
   background: #808080 url(../images/bg-gradients.png) 0px -264px;
+  visibility: hidden;
   border: 1px solid #ADA7A7;
   padding: 6px 20px 6px 11px;
   font-size: 12px;
