@@ -90,7 +90,7 @@
           ispublic: { isBoolean: true, label: 'Public' },
           domain: {
             label: 'Domain',
-            dependsOn: 'public',
+            dependsOn: 'ispublic',
             isHidden: true,
             select: function(args) {
               $.ajax({
