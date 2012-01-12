@@ -849,8 +849,7 @@
       }
     },
 
-    action: function(args) {
-      //debugger;
+    action: function(args) {     
       var success = args.response.success;
       var error = args.response.error;
       var message = args.response.message;
@@ -895,7 +894,7 @@
 						success: function(json) {	
 							stepFns.addPhysicalNetworks({
 								data: $.extend(args.data, {
-									zone: json.createzoneresponse.zone
+									returnedZone: json.createzoneresponse.zone
 								})
 							});							
 						}
@@ -904,19 +903,122 @@
         
         addPhysicalNetworks: function(args) {
           message('Creating physical network(s)');
-          
-					debugger;
-          var physicalNetworks = [];
+          					       
+					var returnedPhysicalNetworks = [];
+					$(args.data.physicalNetworks).each(function(){					  	            
+            var thisPhysicalNetwork = this;						
+						$.ajax({
+							url: createURL("createPhysicalNetwork&zoneid=" + args.data.returnedZone.id + "&name=" + thisPhysicalNetwork.name),
+							dataType: "json",														
+							success: function(json) {														 
+								var jobId = json.createphysicalnetworkresponse.jobid;
+								var timerKey = "createPhysicalNetworkJob_" + jobId;
+								$("body").everyTime(2000, timerKey, function(){															  
+									$.ajax({
+										url: createURL("queryAsyncJobResult&jobid=" + jobId),
+										dataType: "json",
+										success: function(json) {
+											var result = json.queryasyncjobresultresponse;																		
+											if (result.jobstatus == 0) {
+												return; //Job has not completed
+											}
+											else {
+												$("body").stopTime(timerKey);
+												if (result.jobstatus == 1) {
+													var returnedPhysicalNetwork = result.jobresult.physicalnetwork;																										
+																										
+													var returnedTrafficTypes = [];													
+													$(thisPhysicalNetwork.trafficTypes).each(function(){													  
+													  var thisTrafficType = this;
+														var apiCmd = "addTrafficType&physicalnetworkid=" + returnedPhysicalNetwork.id;
+														if(thisTrafficType == "public")
+														  apiCmd += "&trafficType=Public";
+														else if(thisTrafficType == "management")
+														  apiCmd += "&trafficType=Management";
+														else if(thisTrafficType == "guest")
+														  apiCmd += "&trafficType=Guest";
+														else if(thisTrafficType == "storage")
+														  apiCmd += "&trafficType=Storage";
+																												
+														$.ajax({
+															url: createURL(apiCmd),
+															dataType: "json",
+															success: function(json) {																					  
+																var jobId = json.addtraffictyperesponse.jobid;
+																var timerKey = "addTrafficTypeJob_" + jobId;
+																$("body").everyTime(2000, timerKey, function() {																						  
+																	$.ajax({
+																		url: createURL("queryAsyncJobResult&jobid=" + jobId),
+																		dataType: "json", 
+																		success: function(json) {
+																			var result = json.queryasyncjobresultresponse;
+																			if (result.jobstatus == 0) {
+																				return; //Job has not completed
+																			}
+																			else {
+																				$("body").stopTime(timerKey);
+																				if (result.jobstatus == 1) {	                                          
+                                          returnedTrafficTypes.push(result.jobresult.traffictype);			
 
-          setTimeout(function() {
-            stepFns.addPod({
-              data: $.extend(args.data, {
-                physicalNetworks: physicalNetworks
-              })
-            });
-          }, 400);
+                                          if(returnedTrafficTypes.length == thisPhysicalNetwork.trafficTypes.length) { //this physical network is complete (specified traffic types are added)
+																					  returnedPhysicalNetwork.returnedTrafficTypes = returnedTrafficTypes;
+																					  returnedPhysicalNetworks.push(returnedPhysicalNetwork);
+																						
+																						if(returnedPhysicalNetworks.length == args.data.physicalNetworks.length) { //all physical networks are complete
+																							stepFns.afterCreateZonePhysicalNetworkTrafficTypes({
+																								data: $.extend(args.data, {
+																									returnedPhysicalNetworks: returnedPhysicalNetworks
+																								})
+																							});
+																						}
+																					}																						
+																				}
+																				else if (result.jobstatus == 2) {
+																					alert(apiCmd + " failed. Error: " + fromdb(result.jobresult.errortext));
+																				}
+																			}	
+																		},																								
+																		error: function(XMLHttpResponse) {
+																			var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																			alert(apiCmd + " failed. Error: " + errorMsg);
+																		}
+																	});																							
+																});	
+															}
+														});								
+													});													
+												}
+												else if (result.jobstatus == 2) {																			  
+													alert("createPhysicalNetwork failed. Error: " + fromdb(result.jobresult.errortext));
+												}
+											}		
+										},																																		
+										error: function(XMLHttpResponse) {
+											var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+											alert("createPhysicalNetwork failed. Error: " + errorMsg);
+										}																			
+									});															
+								});															
+							}
+						});										
+					});					
         },
         
+				afterCreateZonePhysicalNetworkTrafficTypes: function(args) {
+				  debugger;
+					message('Enable physical network');
+					//more to come
+					
+					
+					setTimeout(function() {
+            stepFns.addCluster({
+              data: args.data
+            });
+          }, 200);
+					
+				},
+				
+				/*
         addPod: function(args) {
           message('Creating pod');
           
@@ -929,8 +1031,7 @@
               })
             });
           }, 300);
-        },
-        
+        },        
         configurePublicTraffic: function(args) {
           message('Configuring public traffic');
 
@@ -939,8 +1040,7 @@
               data: args.data
             });
           }, 200);
-        },
-        
+        },        
         configureGuestTraffic: function(args) {
           message('Configuring guest traffic');
 
@@ -950,7 +1050,8 @@
             });
           }, 200);
         },
-        
+        */
+				
         addCluster: function(args) {
           message('Creating cluster');
           
