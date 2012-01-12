@@ -460,7 +460,7 @@
           <div class="setup-physical-network"
                zone-wizard-step-id="setupPhysicalNetwork">
             <div class="main-desc"></div>
-            <div class="button add new-physical-network"><span class="icon">&nbsp;</span><span>Add network</span></div>
+            <div class="button add new-physical-network"><span class="icon">&nbsp;</span><span>Add physical network</span></div>
 
             <!-- Traffic types drag area -->
             <div class="traffic-types-drag-area">

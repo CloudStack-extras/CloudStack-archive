@@ -165,7 +165,7 @@
         .append('<span>').addClass('icon').html('&nbsp;');
       var $nameField = $('<div>').addClass('field name').append(
         $('<div>').addClass('name').append(
-          $('<span>').html('Network Name')
+          $('<span>').html('Physical network name')
         ),
         $('<div>').addClass('value').append(
           $('<input>').attr({ type: 'text' }).addClass('required')
