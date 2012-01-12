@@ -5473,7 +5473,7 @@ label.error {
 .multi-wizard.zone-wizard .select-container.multi .drop-container {
   background: #DAE2EC;
   width: 484px;
-  height: 63px;
+  height: 76px;
   clear: both;
   position: relative;
   /*+border-radius:4px;*/
@@ -5492,7 +5492,7 @@ label.error {
   -khtml-border-radius: 5px;
   border-radius: 5px 5px 5px 5px;
   width: 99%;
-  height: 59px;
+  height: 94%;
   top: 4px;
   left: 2px;
   position: absolute;
@@ -5504,7 +5504,7 @@ label.error {
 
 .multi-wizard.zone-wizard .select-container.multi .drop-container ul li {
   float: left;
-  margin: 1px 0 0 8px;
+  margin: 6px 0 0 16px;
 }
 
 .multi-wizard.zone-wizard .select-container.multi .drop-container span.empty-message {
@@ -5570,7 +5570,6 @@ label.error {
   background: none;
   height: 83px;
   margin: 12px 13px 0 0;
-  overflow: hidden;
 }
 
 .multi-wizard.zone-wizard .traffic-types-drag-area > ul > li ul.container {
@@ -5608,6 +5607,28 @@ label.error {
   z-index: 5000;
 }
 
+.multi-wizard.zone-wizard .traffic-types-drag-area li.traffic-type-draggable:hover,
+.multi-wizard.zone-wizard .select-container.multi li.traffic-type-draggable:hover {
+  width: 69px !important;
+  height: 66px !important;
+}
+
+.multi-wizard.zone-wizard .traffic-types-drag-area li.traffic-type-draggable:hover,
+.multi-wizard.zone-wizard .select-container.multi li.traffic-type-draggable:hover {
+  /*+placement:shift -2px -4px;*/
+  position: relative;
+  left: -2px;
+  top: -4px;
+}
+
+.multi-wizard.zone-wizard .select-container.multi li.traffic-type-draggable:hover {
+  /*+placement:shift -8px -6px;*/
+  position: relative;
+  left: -8px;
+  top: -6px;
+  margin-right: -16px;
+}
+
 .multi-wizard.zone-wizard li.traffic-type-draggable.disabled {
   /*+opacity:50%;*/
   filter: alpha(opacity=50);
@@ -5622,18 +5643,42 @@ label.error {
   height: 52px;
 }
 
+.multi-wizard.zone-wizard .traffic-types-drag-area li.traffic-type-draggable.management:hover,
+.multi-wizard.zone-wizard .select-container.multi li.traffic-type-draggable.management:hover {
+  background-position: -11px -1225px;
+}
+
+.multi-wizard.zone-wizard .select-container.multi li.traffic-type-draggable.management:hover {
+  margin-right: -18px;
+}
+
 .multi-wizard.zone-wizard li.traffic-type-draggable.public {
   width: 53px;
   height: 53px;
   background-position: -54px -1160px;
 }
 
+.multi-wizard.zone-wizard .traffic-types-drag-area li.traffic-type-draggable.public:hover,
+.multi-wizard.zone-wizard .select-container.multi li.traffic-type-draggable.public:hover {
+  background-position: -87px -1225px;
+}
+
 .multi-wizard.zone-wizard li.traffic-type-draggable.guest {
   background-position: -113px -1161px;
 }
 
+.multi-wizard.zone-wizard .traffic-types-drag-area li.traffic-type-draggable.guest:hover,
+.multi-wizard.zone-wizard .select-container.multi li.traffic-type-draggable.guest:hover {
+  background-position: -166px -1227px;
+}
+
 .multi-wizard.zone-wizard li.traffic-type-draggable.storage {
   background-position: -170px -1160px;
+}
+
+.multi-wizard.zone-wizard .traffic-types-drag-area li.traffic-type-draggable.storage:hover,
+.multi-wizard.zone-wizard .select-container.multi li.traffic-type-draggable.storage:hover {
+  background-position: -244px -1224px;
 }
 
 .multi-wizard.zone-wizard .traffic-types-drag-area > ul > li .info {
