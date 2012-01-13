@@ -78,7 +78,8 @@
           return publicTrafficData;
         }
       );
-
+      
+      // Hack to fix forward slash JS error
       $.each(groupedForms, function(key1, value1) {
         $.each(value1, function(key2, value2) {
           if (typeof value2 == 'string') {
@@ -87,6 +88,9 @@
           }
         });
       });
+
+      // Include zone network type
+      groupedForms.zone.networkType = $forms.find('input[name=network-model]').val();
 
       return groupedForms;
     };
@@ -171,7 +175,7 @@
       $containers.closest('.setup-physical-network')
         .find('.select-container.multi').each(function() {
           var $ul = $(this).find('.drop-container ul');
-          
+
           if (!$(this).find('li').size()) {
             $(this).addClass('disabled');
             $ul.fadeOut();
@@ -180,8 +184,33 @@
             $ul.show();
           }
         });
+      
+      $containers.each(function() {
+        var $currentContainer = $(this);
+        if (!$currentContainer.find('li').size() && $containers.size() > 3) {
+          $currentContainer.remove();
+        }
+      });
+
+      $containers = $containers.closest('.setup-physical-network')
+        .find('.select-container.multi');
+
+      if (needNewPhysicalNetwork($containers)) {
+        addPhysicalNetwork($containers.closest('.zone-wizard'));
+      }
 
       return $containers;
+    };
+
+    /**
+     * Returns true if new physical network item needs to be added
+     */
+    var needNewPhysicalNetwork = function($containers) {
+      var $emptyContainers = $containers.filter(function() {
+        return !$(this).find('li').size();
+      });
+
+      return !$emptyContainers.size() ? $containers.size() : false;
     };
 
     /**
@@ -229,7 +258,7 @@
       ).droppable({
         over: function(event, ui) {
           var $ul = $(this).find('ul');
-          
+
           $ul.addClass('active');
 
           if (!$ul.find('li').size()) {
@@ -254,6 +283,9 @@
           var $draggable = ui.draggable;
           var $newDraggable = $draggable.clone().removeClass('disabled');
           var $selectContainer = $ul.closest('.select-container.multi');
+          var $allContainers = $.merge(
+            $selectContainer, $selectContainer.siblings()
+          );
 
           $ul.removeClass('active');
 
@@ -269,9 +301,7 @@
             $draggable.appendTo($ul);
           }
 
-          cleanupPhysicalNetworks($.merge(
-            $selectContainer, $selectContainer.siblings()
-          ));
+          cleanupPhysicalNetworks($allContainers);
         }
       });
 
@@ -283,6 +313,7 @@
         $dropContainer
       );
       $physicalNetworkItem.hide().appendTo($container).fadeIn('fast');
+      $physicalNetworkItem.find('.name input').val('Network ' + parseInt($physicalNetworkItem.index() + 1));
       renumberPhysicalNetworkForm($container);
 
       // Remove network action

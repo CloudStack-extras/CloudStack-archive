@@ -5867,6 +5867,10 @@ label.error {
   margin: -26px 0 0;
 }
 
+.multi-wizard.zone-wizard .setup-physical-network .select-container.disabled .button.remove.physical-network {
+  display: none;
+}
+
 .multi-wizard.zone-wizard .setup-physical-network .button.remove.physical-network:hover {
   background-position: -6px -675px;
 }
