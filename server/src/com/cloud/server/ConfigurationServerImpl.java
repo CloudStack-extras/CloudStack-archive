@@ -873,7 +873,6 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         netscalerServiceProviders.put(Service.Dns, Provider.VirtualRouter);
         netscalerServiceProviders.put(Service.UserData, Provider.VirtualRouter);
         netscalerServiceProviders.put(Service.SecurityGroup, Provider.SecurityGroupProvider);
-        netscalerServiceProviders.put(Service.Firewall, Provider.Netscaler);
         netscalerServiceProviders.put(Service.StaticNat, Provider.Netscaler);
         netscalerServiceProviders.put(Service.Lb, Provider.Netscaler);
 
