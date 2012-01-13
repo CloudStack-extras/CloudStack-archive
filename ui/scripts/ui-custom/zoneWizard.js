@@ -87,7 +87,6 @@
 
     // Include zone network type
     groupedForms.zone.networkType = $forms.find('input[name=network-model]:checked').val();
-    console.log(groupedForms.zone.networkType);
 
     return groupedForms;
   };
