@@ -273,4 +273,8 @@ public interface NetworkManager extends NetworkService {
     public boolean checkIpForService(IPAddressVO ip, Service service);
 
     void checkVirtualNetworkCidrOverlap(Long zoneId, String cidr);
+
+	IpAddress assignElasticIp(long networkId, Account owner,
+			boolean forElasticLb, boolean forElasticIp)
+			throws InsufficientAddressCapacityException;
 }
