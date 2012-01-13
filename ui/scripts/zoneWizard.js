@@ -868,16 +868,17 @@
       var success = args.response.success;
       var error = args.response.error;
       var message = args.response.message;
-      var data = args.data;
+      //var data = args.data; 
       var startFn = args.startFn;
 
+			var addPodFnBeingCalled = false;
+			
       var stepFns = {
         addZone: function() {
           message('Creating zone');
           
 					var array1 = [];					
-					var networkType = args.data.zone.networkType;  //"Basic", "Advanced"				
-          networkType = "Advanced"		; //temporary, before Brian fixes to pass correct networkType					
+					var networkType = args.data.zone.networkType;  //"Basic", "Advanced"			
 					array1.push("&networktype=" + todb(networkType));
 					if(networkType == "Advanced") 
 						array1.push("&securitygroupenabled=false");  					
@@ -1019,6 +1020,7 @@
 					});					
         },
         
+				//enable physical network, enable virtual router element, enable network service provider
 				afterCreateZonePhysicalNetworkTrafficTypes: function(args) {				  
 					message('Enable physical network');
 										
@@ -1172,31 +1174,12 @@
 																																					url: createURL("createNetwork" + array2.join("")),
 																																					dataType: "json",
 																																					async: false,
-																																					success: function(json) {										  
-																																						//create pod                                                                     
-																																						var array3 = [];
-																																						array3.push("&zoneId=" + args.data.returnedZone.id);
-																																						array3.push("&name=" + todb(args.data.pod.name));
-																																						array3.push("&gateway=" + todb(args.data.pod.reservedSystemGateway));
-																																						array3.push("&netmask=" + todb(args.data.pod.reservedSystemNetmask));
-																																						array3.push("&startIp=" + todb(args.data.pod.reservedSystemStartIp));
-
-																																						var endip = args.data.pod.reservedSystemEndIp;      //optional
-																																						if (endip != null && endip.length > 0)
-																																							array3.push("&endIp=" + todb(endip));
-
-																																						$.ajax({
-																																							url: createURL("createPod" + array3.join("")),
-																																							dataType: "json",
-																																							async: false,
-																																							success: function(json) {
-																																							
-																																							},
-																																							error: function(XMLHttpResponse) {
-																																								var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-																																								alert("createPod failed. Error: " + errorMsg);
-																																							}
-																																						}); 	
+																																					success: function(json) {		
+                                                                            if(addPodFnBeingCalled == false) {																																					
+																																							stepFns.addPod({
+																																								data: args.data
+																																							});
+																																						}
 																																					}
 																																				});
 																																			}
@@ -1225,60 +1208,22 @@
 																														url: createURL("createNetwork" + array2.join("")),
 																														dataType: "json",
 																														async: false,
-																														success: function(json) {				
-																															//create pod                                                                     
-																															var array3 = [];
-																															array3.push("&zoneId=" + args.data.returnedZone.id);
-																															array3.push("&name=" + todb(args.data.pod.name));
-																															array3.push("&gateway=" + todb(args.data.pod.reservedSystemGateway));
-																															array3.push("&netmask=" + todb(args.data.pod.reservedSystemNetmask));
-																															array3.push("&startIp=" + todb(args.data.pod.reservedSystemStartIp));
-
-																															var endip = args.data.pod.reservedSystemEndIp;      //optional
-																															if (endip != null && endip.length > 0)
-																																array3.push("&endIp=" + todb(endip));
-
-																															$.ajax({
-																																url: createURL("createPod" + array3.join("")),
-																																dataType: "json",
-																																async: false,
-																																success: function(json) {
-																																
-																																},
-																																error: function(XMLHttpResponse) {
-																																	var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-																																	alert("createPod failed. Error: " + errorMsg);
-																																}
-																															}); 				
+																														success: function(json) {
+																														  if(addPodFnBeingCalled == false) {		
+																																stepFns.addPod({
+																																	data: args.data
+																																});
+                                                              }																																
 																														}
 																													});		
 																												}	
 																											}
-																											else {  //Advanced zone
-																												//create pod                                                                     
-																												var array3 = [];
-																												array3.push("&zoneId=" + args.data.returnedZone.id);
-																												array3.push("&name=" + todb(args.data.pod.reservedSystemName));
-																												array3.push("&gateway=" + todb(args.data.pod.reservedSystemGateway));
-																												array3.push("&netmask=" + todb(args.data.pod.reservedSystemNetmask));
-																												array3.push("&startIp=" + todb(args.data.pod.reservedSystemStartIp));
-
-																												var endip = args.data.pod.reservedSystemEndIp;      //optional
-																												if (endip != null && endip.length > 0)
-																													array3.push("&endIp=" + todb(endip));
-
-																												$.ajax({
-																													url: createURL("createPod" + array3.join("")),
-																													dataType: "json",
-																													async: false,
-																													success: function(json) {
-																													
-																													},
-																													error: function(XMLHttpResponse) {
-																														var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-																														alert("createPod failed. Error: " + errorMsg);
-																													}
-																												}); 
+																											else {  //Advanced zone			
+                                                        if(addPodFnBeingCalled == false) {																													
+																													stepFns.addPod({
+																														data: args.data
+																													});
+																												}
 																											}																																		  
 																										}
 																										else if (result.jobstatus == 2) {
@@ -1322,31 +1267,45 @@
 								});
 							}
 						});							
-					});
-					
-					
-					setTimeout(function() {
-            stepFns.addCluster({
-              data: args.data
-            });
-          }, 200);
-					
+					});					
 				},
 				
-				/*
+				
         addPod: function(args) {
+				  addPodFnBeingCalled = true;
+				
           message('Creating pod');
-          
-          var pod = {};
+                   
+					var array3 = [];
+					array3.push("&zoneId=" + args.data.returnedZone.id);
+					array3.push("&name=" + todb(args.data.pod.name));
+					array3.push("&gateway=" + todb(args.data.pod.reservedSystemGateway));
+					array3.push("&netmask=" + todb(args.data.pod.reservedSystemNetmask));
+					array3.push("&startIp=" + todb(args.data.pod.reservedSystemStartIp));
 
-          setTimeout(function() {
-            stepFns.configurePublicTraffic({
-              data: $.extend(args.data, {
-                pod: pod
-              })
-            });
-          }, 300);
-        },        
+					var endip = args.data.pod.reservedSystemEndIp;      //optional
+					if (endip != null && endip.length > 0)
+						array3.push("&endIp=" + todb(endip));
+
+					$.ajax({
+						url: createURL("createPod" + array3.join("")),
+						dataType: "json",
+						async: false,
+						success: function(json) {						  							
+							stepFns.addCluster({
+								data: $.extend(args.data, {
+									pod: json.createpodresponse.pod
+								})
+							});		
+						},
+						error: function(XMLHttpResponse) {
+							var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+							alert("createPod failed. Error: " + errorMsg);
+						}
+					}); 						
+        },  
+
+        /*				
         configurePublicTraffic: function(args) {
           message('Configuring public traffic');
 
@@ -1410,7 +1369,7 @@
 
           setTimeout(function() {
             complete({
-              data: data
+              data: args.data
             });
           }, 300);
         }
