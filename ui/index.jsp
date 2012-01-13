@@ -458,7 +458,8 @@
 
           <!-- Step 3.1: Setup Physical Network -->
           <div class="setup-physical-network"
-               zone-wizard-step-id="setupPhysicalNetwork">
+               zone-wizard-step-id="setupPhysicalNetwork"
+               zone-wizard-prefilter="setupPhysicalNetwork">
             <div class="main-desc"><em>DRAG-AND-DROP</em> different traffic types to your physical networks.</div>
             <div class="button add new-physical-network"><span class="icon">&nbsp;</span><span>Add physical network</span></div>
 
@@ -512,6 +513,17 @@
             <div class="drag-helper-icon"></div>
             <div class="content input-area">
               <form></form>
+            </div>
+          </div>
+
+          <!-- Step 3.1b: Setup Physical Network (basic zone) -->
+          <div class="setup-physical-network-basic"
+               zone-wizard-step-id="addBasicPhysicalNetwork"
+               zone-wizard-form="basicPhysicalNetwork"
+               zone-wizard-prefilter="addBasicPhysicalNetwork">
+            <div class="main-desc">Please specify your physical network for this zone.</div>
+            <div class="content input-area">
+              <div class="select-container"></div>
             </div>
           </div>
 

@@ -50,6 +50,14 @@
     preFilters: {
       addPublicNetwork: function(args) {
         return args.data['network-model'] == 'Advanced';
+      },
+
+      addBasicPhysicalNetwork: function(args) {
+        return args.data['network-model'] == 'Basic';
+      },
+
+      setupPhysicalNetwork: function(args) {
+        return args.data['network-model'] == 'Advanced';
       }
     },
     
@@ -238,6 +246,13 @@
             label: 'End Reserved system IP',
             validation: { required: false }
           }
+        }
+      },
+
+      basicPhysicalNetwork: {
+        fields: {
+          name: { label: 'Network name', validation: { required: true } },
+          isStorageEnabled: { isBoolean: true, label: 'Storage traffic enabled' }
         }
       },
 
