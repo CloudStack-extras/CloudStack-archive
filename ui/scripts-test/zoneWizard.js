@@ -721,7 +721,6 @@
     },
 
     action: function(args) {
-      debugger;
       var success = args.response.success;
       var error = args.response.error;
       var message = args.response.message;

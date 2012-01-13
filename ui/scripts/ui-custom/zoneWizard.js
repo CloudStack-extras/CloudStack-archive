@@ -86,7 +86,8 @@
     });
 
     // Include zone network type
-    groupedForms.zone.networkType = $forms.find('input[name=network-model]').val();
+    groupedForms.zone.networkType = $forms.find('input[name=network-model]:checked').val();
+    console.log(groupedForms.zone.networkType);
 
     return groupedForms;
   };
@@ -441,7 +442,7 @@
         $dropContainer
       );
       $physicalNetworkItem.hide().appendTo($container).fadeIn('fast');
-      $physicalNetworkItem.find('.name input').val('Network ' + parseInt($physicalNetworkItem.index() + 1));
+      $physicalNetworkItem.find('.name input').val('Physical Network ' + parseInt($physicalNetworkItem.index() + 1));
       physicalNetwork.renumberFormItems($container);
 
       // Remove network action
@@ -489,7 +490,94 @@
       $container.validate('refresh');
     }
   };
-  
+
+  /**
+   * Configure guest traffic UI
+   */
+  var guestTraffic = {
+    init: function($wizard, args) {
+      var $physicalNetworks = physicalNetwork.getPhysicalNetworks($wizard);
+      var $tabs = guestTraffic.makeTabs($physicalNetworks, args);
+      var $container = guestTraffic.getMainContainer($wizard);
+
+      $container.find('.content').hide();
+      $tabs.appendTo($container);
+      $container.tabs();
+    },
+
+    getMainContainer: function($wizard) {
+      return $wizard.find('.steps .setup-guest-traffic');
+    },
+
+    makeTabs: function($physicalNetworks, args) {
+      var $tabs = $('<ul></ul>');
+      var $content = $();
+
+      // Only use networks w/ guest traffic type
+      $physicalNetworks = $physicalNetworks.filter(function() { return true; });
+
+      $physicalNetworks.each(function() {
+        var $network = $(this);
+        var $form = makeForm(args, 'guestTraffic', {});
+        var networkID = 'physical-network-' + $network.index();
+
+        $tabs.append($('<li></li>').append(
+          $('<a></a>')
+            .attr({ href: '#' + networkID })
+            .html($network.find('.field.name input').val())
+        ));
+        $.merge(
+          $content,
+          $('<div></div>').attr({ id: networkID }).append($form)
+        );
+      });
+
+      return $.merge($tabs, $content);
+    }
+  };
+
+  /**
+   * Generate dynamic form, based on ID of form object given
+   */
+  var makeForm = function(args, id, formState) {
+    var form = cloudStack.dialog.createForm({
+      noDialog: true,
+      context: $.extend(true, {}, cloudStack.context, {
+        zones: [formState]
+      }),
+      form: {
+        title: '',
+        desc: '',
+        fields: args.forms[id].fields
+      },
+      after: function(args) {}
+    });
+
+    var $form = form.$formContainer.find('form');
+
+    // Cleanup form to follow zone wizard CSS naming
+    $form.attr('rel', id);
+    $form.find('input[type=submit]').remove();
+    $form.find('.form-item').addClass('field').removeClass('form-item');
+    $form.find('label.error').hide();
+    $form.find('.form-item .name').each(function() {
+      $(this).html($(this).find('label'));
+    });
+
+    $form.find('select, input').change(function() {
+      cloudStack.evenOdd($form, '.field:visible', {
+        even: function($row) {
+          $row.removeClass('odd');
+        },
+        odd: function($row) {
+          $row.addClass('odd');
+        }
+      });
+    });
+
+    return $form;
+  };
+
   cloudStack.uiCustom.zoneWizard = function(args) {
     return function() {
       var $wizard = $('#template').find('div.zone-wizard').clone();
@@ -548,48 +636,6 @@
         });
       };
 
-      /**
-       * Generate dynamic form, based on ID of form object given
-       */
-      var makeForm = function(id, formState) {
-        var form = cloudStack.dialog.createForm({
-          noDialog: true,
-          context: $.extend(true, {}, cloudStack.context, {
-            zones: [formState]
-          }),
-          form: {
-            title: '',
-            desc: '',
-            fields: args.forms[id].fields
-          },
-          after: function(args) {}
-        });
-
-        var $form = form.$formContainer.find('form');
-
-        // Cleanup form to follow zone wizard CSS naming
-        $form.attr('rel', id);
-        $form.find('input[type=submit]').remove();
-        $form.find('.form-item').addClass('field').removeClass('form-item');
-        $form.find('label.error').hide();
-        $form.find('.form-item .name').each(function() {
-          $(this).html($(this).find('label'));
-        });
-
-        $form.find('select, input').change(function() {
-          cloudStack.evenOdd($form, '.field:visible', {
-            even: function($row) {
-              $row.removeClass('odd');
-            },
-            odd: function($row) {
-              $row.addClass('odd');
-            }
-          });
-        });
-
-        return $form;
-      };
-
       // Go to specified step in wizard,
       // updating nav items and diagram
       var showStep = function(index, goBack) {
@@ -623,7 +669,7 @@
 
         if (formID) {
           if (!$targetStep.find('form').size()) {
-            makeForm(formID, formState).appendTo($targetStep.find('.content.input-area .select-container'));
+            makeForm(args, formID, formState).appendTo($targetStep.find('.content.input-area .select-container'));
 
             cloudStack.evenOdd($targetStep, '.field:visible', {
               even: function() {},
@@ -657,6 +703,15 @@
               data: formState
             });
           }
+        }
+
+        // Custom UI manipulations for specific steps
+        switch($targetStep.attr('zone-wizard-step-id')) {
+          case 'configureGuestTraffic':
+            if (formState['network-model'] == 'Advanced') {
+              guestTraffic.init($wizard.clone(), args);
+            }
+            break;
         }
 
         if ($uiCustom.size()) {
@@ -700,7 +755,7 @@
           }
         }, 50);
 
-        $targetStep.find('form').validate()
+        $targetStep.find('form').validate();
       };
 
       // Events

@@ -1244,7 +1244,7 @@ div.list-view td.state.off span {
 }
 
 .ui-tabs .ui-tabs-hide {
-  display: none;
+  display: none !important;
 }
 
 .ui-tabs div.ui-tabs-panel {
@@ -5263,6 +5263,19 @@ label.error {
   height: 675px;
 }
 
+.multi-wizard.zone-wizard .ui-tabs-panel {
+  height: 422px;
+  overflow: auto;
+}
+
+.multi-wizard.zone-wizard ul.ui-tabs-nav {
+  /*+placement:shift -143px 0px;*/
+  position: relative;
+  left: -143px;
+  top: 0px;
+  margin: 6px 0 0;
+}
+
 .multi-wizard.zone-wizard .select-container {
   height: 421px;
   overflow: auto;
@@ -5697,6 +5710,11 @@ label.error {
 
 .multi-wizard.zone-wizard .traffic-types-drag-area > ul > li .info .desc {
   display: none;
+}
+
+/*** Configure guest network -- tabs*/
+.multi-wizard.zone-wizard .setup-guest-traffic .ui-widget-content {
+  height: 247px;
 }
 
 /*** Multi-edit*/
