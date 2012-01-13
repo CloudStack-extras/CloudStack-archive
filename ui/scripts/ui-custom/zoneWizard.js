@@ -107,10 +107,7 @@
     },
 
     trafficTypes: function($form) {
-      var requiredTrafficTypes = [
-        'management',
-        'guest'
-      ];
+      var requiredTrafficTypes = physicalNetwork.requiredTrafficTypes;
       var $requiredTrafficTypes = $form.find('li.traffic-type-draggable').filter(function() {
         return $.inArray($(this).attr('traffic-type-id'), requiredTrafficTypes) > -1
       });
@@ -151,6 +148,29 @@
    * Setup physical network wizard UI
    */
   var physicalNetwork = {
+    init: function($wizard) {
+      // Initialize initial physical networks
+      for (var i = 0; i < 3; i++) {
+        physicalNetwork.add($wizard);
+      }
+
+      // First physical network gets required traffic types
+      $(physicalNetwork.requiredTrafficTypes).each(function () {
+        var $firstPhysicalNetwork = physicalNetwork.getPhysicalNetworks($wizard).filter(':first');
+
+        physicalNetwork.assignTrafficType(this, $firstPhysicalNetwork);
+      });
+    },
+
+    /**
+     * Required traffic type IDs for proper validation
+     */
+    requiredTrafficTypes: [
+      'management',
+      'public',
+      'guest'
+    ],
+
     /**
      * Physical network step: Renumber network form items
      */
@@ -828,12 +848,7 @@
         }
       });
 
-      // Initialize initial physical networks
-      for (var i = 0; i < 3; i++) {
-        (function() {
-          physicalNetwork.add($wizard);
-        }());
-      }
+      physicalNetwork.init($wizard);
 
       showStep(1);
 
