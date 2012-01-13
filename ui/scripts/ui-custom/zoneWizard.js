@@ -424,6 +424,11 @@
           var trafficTypeID = ui.draggable.attr('traffic-type-id');
           var $physicalNetwork = $(this).closest('.select-container.multi');
 
+          if (trafficTypeID == 'guest' &&
+            ui.draggable.closest('.select-container.multi').size()) {
+            ui.draggable.remove();
+          }
+
           physicalNetwork.assignTrafficType(trafficTypeID, $physicalNetwork);
         }
       });
