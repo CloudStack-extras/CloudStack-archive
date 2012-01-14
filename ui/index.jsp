@@ -589,9 +589,9 @@
             </div>
           </div>
 
-          <!-- Step 5: Review & launch -->
+          <!-- Step 5: Launch -->
           <div class="review">
-            <div class="main-desc">Review & launch</div>
+            <div class="main-desc">Launch zone</div>
             <div class="main-desc launch" style="display:none;">
               Please wait while your zone is being created; this may take a while...
             </div>

@@ -79,8 +79,7 @@
     $.each(groupedForms, function(key1, value1) {
       $.each(value1, function(key2, value2) {
         if (typeof value2 == 'string') {
-          groupedForms[key1][key2] = escape(value2.replace(/__forwardSlash__/g,
-                                                           '\/'));
+          groupedForms[key1][key2] = value2.replace(/__forwardSlash__/g, '\/');
         }
       });
     });
@@ -499,9 +498,29 @@
       var $tabs = guestTraffic.makeTabs($physicalNetworks, args);
       var $container = guestTraffic.getMainContainer($wizard);
 
-      $container.find('.content').hide();
-      $tabs.appendTo($container);
+      // Cleanup
+      guestTraffic.remove($wizard);
+
+      $container.find('.content form').hide();
+      $container.find('.content form .field[rel=vlanRange]').clone().appendTo(
+        $('<form></form>')
+          .addClass('physical-network-item')
+          .prependTo($container.find('.content .select-container'))
+      );
+      $tabs.appendTo($container.find('.content .select-container'));
       $container.tabs();
+    },
+
+    /**
+     * Cleanup
+     */
+    remove: function($wizard) {
+      var $container = guestTraffic.getMainContainer($wizard);
+
+      // Cleanup
+      $container.tabs('destroy');
+      $container.find('.physical-network-item').remove();
+      $container.find('.content form').show();
     },
 
     getMainContainer: function($wizard) {
@@ -509,16 +528,22 @@
     },
 
     makeTabs: function($physicalNetworks, args) {
-      var $tabs = $('<ul></ul>');
+      var $tabs = $('<ul></ul>').addClass('physical-network-item');
       var $content = $();
 
       // Only use networks w/ guest traffic type
-      $physicalNetworks = $physicalNetworks.filter(function() { return true; });
+      $physicalNetworks = $physicalNetworks.filter(function() {
+        return $(this).find('li.guest').size();
+
+        return true;
+      });
 
       $physicalNetworks.each(function() {
         var $network = $(this);
         var $form = makeForm(args, 'guestTraffic', {});
         var networkID = 'physical-network-' + $network.index();
+
+        $form.find('.field[rel=vlanRange]').remove();
 
         $tabs.append($('<li></li>').append(
           $('<a></a>')
@@ -527,9 +552,15 @@
         ));
         $.merge(
           $content,
-          $('<div></div>').attr({ id: networkID }).append($form)
+          $('<div></div>')
+            .addClass('physical-network-item')
+            .attr({ id: networkID })
+            .append($form)
         );
       });
+
+      $tabs.find('li:first').addClass('first');
+      $tabs.find('li:last').addClass('last');
 
       return $.merge($tabs, $content);
     }
@@ -709,6 +740,8 @@
           case 'configureGuestTraffic':
             if (formState['network-model'] == 'Advanced') {
               guestTraffic.init($wizard.clone(), args);
+            } else {
+              guestTraffic.remove($wizard.clone());
             }
             break;
         }

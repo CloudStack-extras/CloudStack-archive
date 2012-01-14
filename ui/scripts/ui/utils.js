@@ -10,7 +10,7 @@
       var value = this.value;
 
       if (options.escapeSlashes) {
-        value = escape(value.replace(/\//g, '__forwardSlash__'));
+        value = value.replace(/\//g, '__forwardSlash__');
       }
 
       if (!dataItem) {

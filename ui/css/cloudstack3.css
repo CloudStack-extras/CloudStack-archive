@@ -1,5 +1,5 @@
 /*[fmt]1C20-1C0D-E*/
-/*Base*/
+/*dmin*/
 /*+clearfix {*/
 div.toolbar:after,
 .multi-wizard .progress ul li:after,
@@ -1255,7 +1255,7 @@ div.list-view td.state.off span {
   padding-top: 7px;
   overflow: auto;
   height: 591px;
-  margin: -4px 0 0;
+  margin: -5px 0 0;
 }
 
 .detail-view .main-groups {
@@ -5269,11 +5269,12 @@ label.error {
 }
 
 .multi-wizard.zone-wizard ul.ui-tabs-nav {
-  /*+placement:shift -143px 0px;*/
+  /*+placement:shift 0px 0px;*/
   position: relative;
-  left: -143px;
+  left: 0px;
   top: 0px;
-  margin: 6px 0 0;
+  float: left;
+  margin: 6px 0 3px 3px;
 }
 
 .multi-wizard.zone-wizard .select-container {
@@ -5590,7 +5591,7 @@ label.error {
   width: 60px;
   height: 54px;
   margin-left: 16px;
-  background: transparent;
+  background: #E4E4E4;
   /*+border-radius:5px;*/
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
@@ -5714,7 +5715,14 @@ label.error {
 
 /*** Configure guest network -- tabs*/
 .multi-wizard.zone-wizard .setup-guest-traffic .ui-widget-content {
-  height: 247px;
+  width: 683px;
+  height: 308px;
+  border-bottom: none;
+  border-right: none;
+  /*+placement:shift;*/
+  position: relative;
+  left: 0;
+  top: 0;
 }
 
 /*** Multi-edit*/
