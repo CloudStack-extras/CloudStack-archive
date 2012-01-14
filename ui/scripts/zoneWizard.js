@@ -934,7 +934,7 @@
 					
 					if(args.data.zone.networkType == "Basic") {					  
 						var requestedTrafficTypeCount = 2;
-						if(args.data.basicPhysicalNetwork.isPublicTrafficTypeEnabled = "on")
+						if(args.data.basicPhysicalNetwork.isPublicTrafficTypeEnabled == "on")
 						  requestedTrafficTypeCount++;
 						if(args.data.basicPhysicalNetwork.isStorageTrafficTypeEnabled == "on")
 						  requestedTrafficTypeCount++;
