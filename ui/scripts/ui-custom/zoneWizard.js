@@ -179,9 +179,11 @@
       $items.each(function() {
         var $item = $(this);
         var $networkName = $item.find('.field.name input[type=text]');
+        var $networkId = $item.find('input[name=id]');
         var $networkTypes = $item.find('.field.network-types input');
         var index = $item.index();
 
+        $networkId.val(index);
         $networkName.attr('name', 'physicalNetworks[' + index + ']' + '.name');
         $networkTypes.val(index);
       });
@@ -432,11 +434,18 @@
         }
       });
 
+      var $idField = $('<input>').attr({
+        type: 'hidden',
+        name: 'id',
+        value: 0
+      });
+
       // Initialize new default network form elem
       $physicalNetworkItem.append(
         $deleteButton,
         $icon,
         $nameField,
+        $idField,
         $dropContainer
       );
       $physicalNetworkItem.hide().appendTo($container).fadeIn('fast');
@@ -505,6 +514,7 @@
       $container.find('.content form .field[rel=vlanRange]').clone().appendTo(
         $('<form></form>')
           .addClass('physical-network-item')
+          .attr('rel', 'guestTraffic-multiplePhysicalNetworks')
           .prependTo($container.find('.content .select-container'))
       );
       $tabs.appendTo($container.find('.content .select-container'));
@@ -541,9 +551,11 @@
       $physicalNetworks.each(function() {
         var $network = $(this);
         var $form = makeForm(args, 'guestTraffic', {});
-        var networkID = 'physical-network-' + $network.index();
+        var refID = $network.find('input[name=id]').val();
+        var networkID = 'physical-network-' + refID;
 
         $form.find('.field[rel=vlanRange]').remove();
+        $form.attr('rel', 'guestNetwork[' + refID + ']');
 
         $tabs.append($('<li></li>').append(
           $('<a></a>')
@@ -739,9 +751,9 @@
         switch($targetStep.attr('zone-wizard-step-id')) {
           case 'configureGuestTraffic':
             if (formState['network-model'] == 'Advanced') {
-              guestTraffic.init($wizard.clone(), args);
+              guestTraffic.init($wizard, args);
             } else {
-              guestTraffic.remove($wizard.clone());
+              guestTraffic.remove($wizard);
             }
             break;
         }
