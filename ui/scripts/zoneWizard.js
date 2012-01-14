@@ -1259,11 +1259,10 @@
 				//enable physical network, enable virtual router element, enable network service provider
 				afterCreateZonePhysicalNetworkTrafficTypes: function(args) {				  
 					message('Enable physical network');
-										
-					$(args.data.returnedPhysicalNetworks).each(function(){					 
-						var thisPhysicalNetwork = this;
+					
+					if(args.data.zone.networkType == "Basic") {							  			
 						$.ajax({
-							url: createURL("updatePhysicalNetwork&state=Enabled&id=" + thisPhysicalNetwork.id),
+							url: createURL("updatePhysicalNetwork&state=Enabled&id=" + args.data.returnedBasicPhysicalNetwork.id),
 							dataType: "json",
 							success: function(json) {
 								var jobId = json.updatephysicalnetworkresponse.jobid;
@@ -1285,7 +1284,7 @@
 													// get network service provider ID of Virtual Router
 													var virtualRouterProviderId;
 													$.ajax({
-														url: createURL("listNetworkServiceProviders&name=VirtualRouter&physicalNetworkId=" + thisPhysicalNetwork.id),
+														url: createURL("listNetworkServiceProviders&name=VirtualRouter&physicalNetworkId=" + args.data.returnedBasicPhysicalNetwork.id),
 														dataType: "json",
 														async: false,
 														success: function(json) {
@@ -1359,108 +1358,100 @@
 																										if (result.jobstatus == 1) {
 																											//alert("Virtual Router Provider is enabled");
 																											
-																											if(args.data.returnedZone.networktype == "Basic") {  
-																												if(args.data.zone["security-groups-enabled"] == "on") { //need to Enable security group provider first
-																													// get network service provider ID of Security Group
-																													var securityGroupProviderId;
-																													$.ajax({
-																														url: createURL("listNetworkServiceProviders&name=SecurityGroupProvider&physicalNetworkId=" + thisPhysicalNetwork.id),
-																														dataType: "json",
-																														async: false,
-																														success: function(json) {																																				
-																															var items = json.listnetworkserviceprovidersresponse.networkserviceprovider;
-																															if(items != null && items.length > 0) {
-																																securityGroupProviderId = items[0].id;
-																															}
+																											//???
+																											if(args.data.zone["security-groups-enabled"] == "on") { //need to Enable security group provider first
+																												// get network service provider ID of Security Group
+																												var securityGroupProviderId;
+																												$.ajax({
+																													url: createURL("listNetworkServiceProviders&name=SecurityGroupProvider&physicalNetworkId=" + args.data.returnedBasicPhysicalNetwork.id),
+																													dataType: "json",
+																													async: false,
+																													success: function(json) {																																				
+																														var items = json.listnetworkserviceprovidersresponse.networkserviceprovider;
+																														if(items != null && items.length > 0) {
+																															securityGroupProviderId = items[0].id;
 																														}
-																													});
-																													if(securityGroupProviderId == null) {
-																														alert("error: listNetworkServiceProviders API doesn't return security group provider ID");
-																														return;
-																													}                                      
-																														
-																													$.ajax({
-																														url: createURL("updateNetworkServiceProvider&state=Enabled&id=" + securityGroupProviderId),
-																														dataType: "json",
-																														async: false,
-																														success: function(json) {
-																															var jobId = json.updatenetworkserviceproviderresponse.jobid;
-																															var timerKey = "updateNetworkServiceProviderJob_"+jobId;
-																															$("body").everyTime(2000, timerKey, function() {
-																																$.ajax({
-																																	url: createURL("queryAsyncJobResult&jobId="+jobId),
-																																	dataType: "json",
-																																	success: function(json) {
-																																		var result = json.queryasyncjobresultresponse;
-																																		if (result.jobstatus == 0) {
-																																			return; //Job has not completed
-																																		}
-																																		else {																																										
-																																			$("body").stopTime(timerKey);
-																																			if (result.jobstatus == 1) {
-																																				//alert("Security group provider is enabled");
-
-																																				//create network (for basic zone only)
-																																				var array2 = [];
-																																				array2.push("&zoneid=" + args.data.returnedZone.id);
-																																				array2.push("&name=guestNetworkForBasicZone");
-																																				array2.push("&displaytext=guestNetworkForBasicZone");
-																																				array2.push("&networkofferingid=" + args.data.zone.networkOfferingIdWithSG); 
-																																				$.ajax({
-																																					url: createURL("createNetwork" + array2.join("")),
-																																					dataType: "json",
-																																					async: false,
-																																					success: function(json) {		
-                                                                            if(addPodFnBeingCalled == false) {																																					
-																																							stepFns.addPod({
-																																								data: args.data
-																																							});
-																																						}
-																																					}
-																																				});
-																																			}
-																																			else if (result.jobstatus == 2) {
-																																				alert("failed to enable security group provider. Error: " + fromdb(result.jobresult.errortext));
-																																			}
-																																		}
-																																	},
-																																	error: function(XMLHttpResponse) {
-																																		var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-																																		alert("updateNetworkServiceProvider failed. Error: " + errorMsg);
+																													}
+																												});
+																												if(securityGroupProviderId == null) {
+																													alert("error: listNetworkServiceProviders API doesn't return security group provider ID");
+																													return;
+																												}                                      
+																													
+																												$.ajax({
+																													url: createURL("updateNetworkServiceProvider&state=Enabled&id=" + securityGroupProviderId),
+																													dataType: "json",
+																													async: false,
+																													success: function(json) {
+																														var jobId = json.updatenetworkserviceproviderresponse.jobid;
+																														var timerKey = "updateNetworkServiceProviderJob_"+jobId;
+																														$("body").everyTime(2000, timerKey, function() {
+																															$.ajax({
+																																url: createURL("queryAsyncJobResult&jobId="+jobId),
+																																dataType: "json",
+																																success: function(json) {
+																																	var result = json.queryasyncjobresultresponse;
+																																	if (result.jobstatus == 0) {
+																																		return; //Job has not completed
 																																	}
-																																});
+																																	else {																																										
+																																		$("body").stopTime(timerKey);
+																																		if (result.jobstatus == 1) {
+																																			//alert("Security group provider is enabled");
+
+																																			//create network (for basic zone only)
+																																			var array2 = [];
+																																			array2.push("&zoneid=" + args.data.returnedZone.id);
+																																			array2.push("&name=guestNetworkForBasicZone");
+																																			array2.push("&displaytext=guestNetworkForBasicZone");
+																																			array2.push("&networkofferingid=" + args.data.zone.networkOfferingIdWithSG); 
+																																			$.ajax({
+																																				url: createURL("createNetwork" + array2.join("")),
+																																				dataType: "json",
+																																				async: false,
+																																				success: function(json) {		
+																																					if(addPodFnBeingCalled == false) {																																					
+																																						stepFns.addPod({
+																																							data: args.data
+																																						});
+																																					}
+																																				}
+																																			});
+																																		}
+																																		else if (result.jobstatus == 2) {
+																																			alert("failed to enable security group provider. Error: " + fromdb(result.jobresult.errortext));
+																																		}
+																																	}
+																																},
+																																error: function(XMLHttpResponse) {
+																																	var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																																	alert("updateNetworkServiceProvider failed. Error: " + errorMsg);
+																																}
 																															});
-																														}
-																													});
-																												}					
-																												else { //args.data.zone["security-groups-enabled"] == null
-																													//create network (for basic zone only)
-																													var array2 = [];
-																													array2.push("&zoneid=" + args.data.returnedZone.id);
-																													array2.push("&name=guestNetworkForBasicZone");
-																													array2.push("&displaytext=guestNetworkForBasicZone");
-																													array2.push("&networkofferingid=" + args.data.zone.networkOfferingIdWithoutSG); 
-																													$.ajax({
-																														url: createURL("createNetwork" + array2.join("")),
-																														dataType: "json",
-																														async: false,
-																														success: function(json) {
-																														  if(addPodFnBeingCalled == false) {		
-																																stepFns.addPod({
-																																	data: args.data
-																																});
-                                                              }																																
-																														}
-																													});		
-																												}	
-																											}
-																											else {  //Advanced zone			
-                                                        if(addPodFnBeingCalled == false) {																													
-																													stepFns.addPod({
-																														data: args.data
-																													});
-																												}
-																											}																																		  
+																														});
+																													}
+																												});
+																											}					
+																											else { //args.data.zone["security-groups-enabled"] == null
+																												//create network (for basic zone only)
+																												var array2 = [];
+																												array2.push("&zoneid=" + args.data.returnedZone.id);
+																												array2.push("&name=guestNetworkForBasicZone");
+																												array2.push("&displaytext=guestNetworkForBasicZone");
+																												array2.push("&networkofferingid=" + args.data.zone.networkOfferingIdWithoutSG); 
+																												$.ajax({
+																													url: createURL("createNetwork" + array2.join("")),
+																													dataType: "json",
+																													async: false,
+																													success: function(json) {
+																														if(addPodFnBeingCalled == false) {		
+																															stepFns.addPod({
+																																data: args.data
+																															});
+																														}																																
+																													}
+																												});		
+																											}																															  
 																										}
 																										else if (result.jobstatus == 2) {
 																											alert("failed to enable Virtual Router Provider. Error: " + fromdb(result.jobresult.errortext));
@@ -1502,8 +1493,156 @@
 									});
 								});
 							}
-						});							
-					});					
+						});		
+					}
+          else if(args.data.zone.networkType == "Advanced") {							
+						$(args.data.returnedPhysicalNetworks).each(function(){					 
+							var thisPhysicalNetwork = this;
+							$.ajax({
+								url: createURL("updatePhysicalNetwork&state=Enabled&id=" + thisPhysicalNetwork.id),
+								dataType: "json",
+								success: function(json) {
+									var jobId = json.updatephysicalnetworkresponse.jobid;
+									var timerKey = "updatePhysicalNetworkJob_"+jobId;
+									$("body").everyTime(2000, timerKey, function() {
+										$.ajax({
+											url: createURL("queryAsyncJobResult&jobId="+jobId),
+											dataType: "json",
+											success: function(json) {
+												var result = json.queryasyncjobresultresponse;
+												if (result.jobstatus == 0) {
+													return; //Job has not completed
+												}
+												else {
+													$("body").stopTime(timerKey);
+													if (result.jobstatus == 1) {
+														//alert("updatePhysicalNetwork succeeded.");
+
+														// get network service provider ID of Virtual Router
+														var virtualRouterProviderId;
+														$.ajax({
+															url: createURL("listNetworkServiceProviders&name=VirtualRouter&physicalNetworkId=" + thisPhysicalNetwork.id),
+															dataType: "json",
+															async: false,
+															success: function(json) {
+																var items = json.listnetworkserviceprovidersresponse.networkserviceprovider;
+																if(items != null && items.length > 0) {
+																	virtualRouterProviderId = items[0].id;
+																}
+															}
+														});
+														if(virtualRouterProviderId == null) {
+															alert("error: listNetworkServiceProviders API doesn't return VirtualRouter provider ID");
+															return;
+														}
+
+														var virtualRouterElementId;
+														$.ajax({
+															url: createURL("listVirtualRouterElements&nspid=" + virtualRouterProviderId),
+															dataType: "json",
+															async: false,
+															success: function(json) {
+																var items = json.listvirtualrouterelementsresponse.virtualrouterelement;
+																if(items != null && items.length > 0) {
+																	virtualRouterElementId = items[0].id;
+																}
+															}
+														});
+														if(virtualRouterElementId == null) {
+															alert("error: listVirtualRouterElements API doesn't return Virtual Router Element Id");
+															return;
+														}
+
+														$.ajax({
+															url: createURL("configureVirtualRouterElement&enabled=true&id=" + virtualRouterElementId),
+															dataType: "json",
+															async: false,
+															success: function(json) {
+																var jobId = json.configurevirtualrouterelementresponse.jobid;
+																var timerKey = "configureVirtualRouterElementJob_"+jobId;
+																$("body").everyTime(2000, timerKey, function() {
+																	$.ajax({
+																		url: createURL("queryAsyncJobResult&jobId="+jobId),
+																		dataType: "json",
+																		success: function(json) {
+																			var result = json.queryasyncjobresultresponse;
+																			if (result.jobstatus == 0) {
+																				return; //Job has not completed
+																			}
+																			else {
+																				$("body").stopTime(timerKey);
+																				if (result.jobstatus == 1) {
+																					//alert("configureVirtualRouterElement succeeded.");
+
+																					$.ajax({
+																						url: createURL("updateNetworkServiceProvider&state=Enabled&id=" + virtualRouterProviderId),
+																						dataType: "json",
+																						async: false,
+																						success: function(json) {
+																							var jobId = json.updatenetworkserviceproviderresponse.jobid;
+																							var timerKey = "updateNetworkServiceProviderJob_"+jobId;
+																							$("body").everyTime(2000, timerKey, function() {
+																								$.ajax({
+																									url: createURL("queryAsyncJobResult&jobId="+jobId),
+																									dataType: "json",
+																									success: function(json) {
+																										var result = json.queryasyncjobresultresponse;
+																										if (result.jobstatus == 0) {
+																											return; //Job has not completed
+																										}
+																										else {
+																											$("body").stopTime(timerKey);
+																											if (result.jobstatus == 1) {
+																												//alert("Virtual Router Provider is enabled");																												
+																												if(addPodFnBeingCalled == false) {																													
+																													stepFns.addPod({
+																														data: args.data
+																													});
+																												}																													
+																											}
+																											else if (result.jobstatus == 2) {
+																												alert("failed to enable Virtual Router Provider. Error: " + fromdb(result.jobresult.errortext));
+																											}
+																										}
+																									},
+																									error: function(XMLHttpResponse) {
+																										var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																										alert("updateNetworkServiceProvider failed. Error: " + errorMsg);
+																									}
+																								});
+																							});
+																						}
+																					});
+																				}
+																				else if (result.jobstatus == 2) {
+																					alert("configureVirtualRouterElement failed. Error: " + fromdb(result.jobresult.errortext));
+																				}
+																			}
+																		},
+																		error: function(XMLHttpResponse) {
+																			var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																			alert("configureVirtualRouterElement failed. Error: " + errorMsg);
+																		}
+																	});
+																});
+															}
+														});
+													}
+													else if (result.jobstatus == 2) {
+														alert("updatePhysicalNetwork failed. Error: " + fromdb(result.jobresult.errortext));
+													}
+												}
+											},
+											error: function(XMLHttpResponse) {
+												var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+												alert("updatePhysicalNetwork failed. Error: " + errorMsg);
+											}
+										});
+									});
+								}
+							});							
+						});		
+          }						
 				},
 				
 				
