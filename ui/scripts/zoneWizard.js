@@ -251,8 +251,18 @@
 
       basicPhysicalNetwork: {
         fields: {
-          name: { label: 'Network name', validation: { required: true } },
-          isStorageEnabled: { isBoolean: true, label: 'Storage traffic enabled' }
+          name: { 
+					  label: 'Physical network name', 
+						validation: { required: true } 
+					},
+          isStorageTrafficTypeEnabled: { 
+					  isBoolean: true, 
+						label: 'Storage traffic type enabled' 
+					},
+					isPublicTrafficTypeEnabled: { 
+					  isBoolean: true, 
+						label: 'Public traffic type enabled' 
+					}
         }
       },
 
@@ -919,12 +929,18 @@
         
         addPhysicalNetworks: function(args) {
           message('Creating physical network(s)');
-          					       
-					var returnedPhysicalNetworks = [];
-					$(args.data.physicalNetworks).each(function(){					  	            
-            var thisPhysicalNetwork = this;						
+          	
+          var returnedPhysicalNetworks = [];
+					
+					if(args.data.zone.networkType == "Basic") {					  
+						var requestedTrafficTypeCount = 2;
+						if(args.data.basicPhysicalNetwork.isPublicTrafficTypeEnabled = "on")
+						  requestedTrafficTypeCount++;
+						if(args.data.basicPhysicalNetwork.isStorageTrafficTypeEnabled == "on")
+						  requestedTrafficTypeCount++;
+						
 						$.ajax({
-							url: createURL("createPhysicalNetwork&zoneid=" + args.data.returnedZone.id + "&name=" + thisPhysicalNetwork.name),
+							url: createURL("createPhysicalNetwork&zoneid=" + args.data.returnedZone.id + "&name=" + todb(args.data.basicPhysicalNetwork.name)),
 							dataType: "json",														
 							success: function(json) {														 
 								var jobId = json.createphysicalnetworkresponse.jobid;
@@ -941,23 +957,101 @@
 											else {
 												$("body").stopTime(timerKey);
 												if (result.jobstatus == 1) {
-													var returnedPhysicalNetwork = result.jobresult.physicalnetwork;																										
+													var returnedBasicPhysicalNetwork = result.jobresult.physicalnetwork;																										
 																										
-													var returnedTrafficTypes = [];													
-													$(thisPhysicalNetwork.trafficTypes).each(function(){													  
-													  var thisTrafficType = this;
-														var apiCmd = "addTrafficType&physicalnetworkid=" + returnedPhysicalNetwork.id;
-														if(thisTrafficType == "public")
-														  apiCmd += "&trafficType=Public";
-														else if(thisTrafficType == "management")
-														  apiCmd += "&trafficType=Management";
-														else if(thisTrafficType == "guest")
-														  apiCmd += "&trafficType=Guest";
-														else if(thisTrafficType == "storage")
-														  apiCmd += "&trafficType=Storage";
-																												
+													var returnedTrafficTypes = [];		
+													
+													$.ajax({
+														url: createURL("addTrafficType&trafficType=Guest&physicalnetworkid=" + returnedBasicPhysicalNetwork.id),
+														dataType: "json",
+														success: function(json) {																					  
+															var jobId = json.addtraffictyperesponse.jobid;
+															var timerKey = "addTrafficTypeJob_" + jobId;
+															$("body").everyTime(2000, timerKey, function() {																						  
+																$.ajax({
+																	url: createURL("queryAsyncJobResult&jobid=" + jobId),
+																	dataType: "json", 
+																	success: function(json) {
+																		var result = json.queryasyncjobresultresponse;
+																		if (result.jobstatus == 0) {
+																			return; //Job has not completed
+																		}
+																		else {
+																			$("body").stopTime(timerKey);
+																			if (result.jobstatus == 1) {	                                          
+																				returnedTrafficTypes.push(result.jobresult.traffictype);	
+																				
+																				if(returnedTrafficTypes.length == requestedTrafficTypeCount) { //all requested traffic types have been added
+																				  returnedBasicPhysicalNetwork.returnedTrafficTypes = returnedTrafficTypes;
+																																																													
+																					stepFns.afterCreateZonePhysicalNetworkTrafficTypes({
+																						data: $.extend(args.data, {
+																							returnedBasicPhysicalNetwork: returnedBasicPhysicalNetwork
+																						})
+																					});			
+																				}																				
+																			}
+																			else if (result.jobstatus == 2) {
+																				alert("Failed to add Guest traffic type to basic zone. Error: " + fromdb(result.jobresult.errortext));
+																			}
+																		}	
+																	},																								
+																	error: function(XMLHttpResponse) {
+																		var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																		alert("Failed to add Guest traffic type to basic zone. Error: " + errorMsg);
+																	}
+																});																							
+															});	
+														}
+													});		
+													
+                          $.ajax({
+														url: createURL("addTrafficType&trafficType=Management&physicalnetworkid=" + returnedBasicPhysicalNetwork.id),
+														dataType: "json",
+														success: function(json) {																					  
+															var jobId = json.addtraffictyperesponse.jobid;
+															var timerKey = "addTrafficTypeJob_" + jobId;
+															$("body").everyTime(2000, timerKey, function() {																						  
+																$.ajax({
+																	url: createURL("queryAsyncJobResult&jobid=" + jobId),
+																	dataType: "json", 
+																	success: function(json) {
+																		var result = json.queryasyncjobresultresponse;
+																		if (result.jobstatus == 0) {
+																			return; //Job has not completed
+																		}
+																		else {
+																			$("body").stopTime(timerKey);
+																			if (result.jobstatus == 1) {	                                          
+																				returnedTrafficTypes.push(result.jobresult.traffictype);	
+																				
+																				if(returnedTrafficTypes.length == requestedTrafficTypeCount) { //all requested traffic types have been added
+																				  returnedBasicPhysicalNetwork.returnedTrafficTypes = returnedTrafficTypes;
+																																																													
+																					stepFns.afterCreateZonePhysicalNetworkTrafficTypes({
+																						data: $.extend(args.data, {
+																							returnedBasicPhysicalNetwork: returnedBasicPhysicalNetwork
+																						})
+																					});			
+																				}																									
+																			}
+																			else if (result.jobstatus == 2) {
+																				alert("Failed to add Management traffic type to basic zone. Error: " + fromdb(result.jobresult.errortext));
+																			}
+																		}	
+																	},																								
+																	error: function(XMLHttpResponse) {
+																		var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																		alert("Failed to add Management traffic type to basic zone. Error: " + errorMsg);
+																	}
+																});																							
+															});	
+														}
+													});			
+
+                          if(args.data.basicPhysicalNetwork.isPublicTrafficTypeEnabled == "on") {													
 														$.ajax({
-															url: createURL(apiCmd),
+															url: createURL("addTrafficType&trafficType=Public&physicalnetworkid=" + returnedBasicPhysicalNetwork.id),
 															dataType: "json",
 															success: function(json) {																					  
 																var jobId = json.addtraffictyperesponse.jobid;
@@ -974,35 +1068,78 @@
 																			else {
 																				$("body").stopTime(timerKey);
 																				if (result.jobstatus == 1) {	                                          
-                                          returnedTrafficTypes.push(result.jobresult.traffictype);			
-
-                                          if(returnedTrafficTypes.length == thisPhysicalNetwork.trafficTypes.length) { //this physical network is complete (specified traffic types are added)
-																					  returnedPhysicalNetwork.returnedTrafficTypes = returnedTrafficTypes;
-																					  returnedPhysicalNetworks.push(returnedPhysicalNetwork);
-																						
-																						if(returnedPhysicalNetworks.length == args.data.physicalNetworks.length) { //all physical networks are complete
-																							stepFns.afterCreateZonePhysicalNetworkTrafficTypes({
-																								data: $.extend(args.data, {
-																									returnedPhysicalNetworks: returnedPhysicalNetworks
-																								})
-																							});
-																						}
-																					}																						
+																					returnedTrafficTypes.push(result.jobresult.traffictype);	
+																					
+																					if(returnedTrafficTypes.length == requestedTrafficTypeCount) { //all requested traffic types have been added
+																						returnedBasicPhysicalNetwork.returnedTrafficTypes = returnedTrafficTypes;
+																																																														
+																						stepFns.afterCreateZonePhysicalNetworkTrafficTypes({
+																							data: $.extend(args.data, {
+																								returnedBasicPhysicalNetwork: returnedBasicPhysicalNetwork
+																							})
+																						});			
+																					}		
 																				}
 																				else if (result.jobstatus == 2) {
-																					alert(apiCmd + " failed. Error: " + fromdb(result.jobresult.errortext));
+																					alert("Failed to add Public traffic type to basic zone. Error: " + fromdb(result.jobresult.errortext));
 																				}
 																			}	
 																		},																								
 																		error: function(XMLHttpResponse) {
 																			var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-																			alert(apiCmd + " failed. Error: " + errorMsg);
+																			alert("Failed to add Public traffic type to basic zone. Error: " + errorMsg);
 																		}
 																	});																							
 																});	
 															}
-														});								
-													});													
+														});		
+													}
+													
+													if(args.data.basicPhysicalNetwork.isStorageTrafficTypeEnabled == "on") {													
+														$.ajax({
+															url: createURL("addTrafficType&trafficType=Storage&physicalnetworkid=" + returnedBasicPhysicalNetwork.id),
+															dataType: "json",
+															success: function(json) {																					  
+																var jobId = json.addtraffictyperesponse.jobid;
+																var timerKey = "addTrafficTypeJob_" + jobId;
+																$("body").everyTime(2000, timerKey, function() {																						  
+																	$.ajax({
+																		url: createURL("queryAsyncJobResult&jobid=" + jobId),
+																		dataType: "json", 
+																		success: function(json) {
+																			var result = json.queryasyncjobresultresponse;
+																			if (result.jobstatus == 0) {
+																				return; //Job has not completed
+																			}
+																			else {
+																				$("body").stopTime(timerKey);
+																				if (result.jobstatus == 1) {	                                          
+																					returnedTrafficTypes.push(result.jobresult.traffictype);	
+																					
+																					if(returnedTrafficTypes.length == requestedTrafficTypeCount) { //all requested traffic types have been added
+																						returnedBasicPhysicalNetwork.returnedTrafficTypes = returnedTrafficTypes;
+																																																														
+																						stepFns.afterCreateZonePhysicalNetworkTrafficTypes({
+																							data: $.extend(args.data, {
+																								returnedBasicPhysicalNetwork: returnedBasicPhysicalNetwork
+																							})
+																						});			
+																					}			
+																				}
+																				else if (result.jobstatus == 2) {
+																					alert("Failed to add Storage traffic type to basic zone. Error: " + fromdb(result.jobresult.errortext));
+																				}
+																			}	
+																		},																								
+																		error: function(XMLHttpResponse) {
+																			var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																			alert("Failed to add Storage traffic type to basic zone. Error: " + errorMsg);
+																		}
+																	});																							
+																});	
+															}
+														});		
+													}	                      
 												}
 												else if (result.jobstatus == 2) {																			  
 													alert("createPhysicalNetwork failed. Error: " + fromdb(result.jobresult.errortext));
@@ -1016,8 +1153,107 @@
 									});															
 								});															
 							}
-						});										
-					});					
+						});		
+					}					
+					else if(args.data.zone.networkType == "Advanced") {					  
+						$(args.data.physicalNetworks).each(function(){					  	            
+							var thisPhysicalNetwork = this;						
+							$.ajax({
+								url: createURL("createPhysicalNetwork&zoneid=" + args.data.returnedZone.id + "&name=" + todb(thisPhysicalNetwork.name)),
+								dataType: "json",														
+								success: function(json) {														 
+									var jobId = json.createphysicalnetworkresponse.jobid;
+									var timerKey = "createPhysicalNetworkJob_" + jobId;
+									$("body").everyTime(2000, timerKey, function(){															  
+										$.ajax({
+											url: createURL("queryAsyncJobResult&jobid=" + jobId),
+											dataType: "json",
+											success: function(json) {
+												var result = json.queryasyncjobresultresponse;																		
+												if (result.jobstatus == 0) {
+													return; //Job has not completed
+												}
+												else {
+													$("body").stopTime(timerKey);
+													if (result.jobstatus == 1) {
+														var returnedPhysicalNetwork = result.jobresult.physicalnetwork;																										
+																											
+														var returnedTrafficTypes = [];													
+														$(thisPhysicalNetwork.trafficTypes).each(function(){													  
+															var thisTrafficType = this;
+															var apiCmd = "addTrafficType&physicalnetworkid=" + returnedPhysicalNetwork.id;
+															if(thisTrafficType == "public")
+																apiCmd += "&trafficType=Public";
+															else if(thisTrafficType == "management")
+																apiCmd += "&trafficType=Management";
+															else if(thisTrafficType == "guest")
+																apiCmd += "&trafficType=Guest";
+															else if(thisTrafficType == "storage")
+																apiCmd += "&trafficType=Storage";
+																													
+															$.ajax({
+																url: createURL(apiCmd),
+																dataType: "json",
+																success: function(json) {																					  
+																	var jobId = json.addtraffictyperesponse.jobid;
+																	var timerKey = "addTrafficTypeJob_" + jobId;
+																	$("body").everyTime(2000, timerKey, function() {																						  
+																		$.ajax({
+																			url: createURL("queryAsyncJobResult&jobid=" + jobId),
+																			dataType: "json", 
+																			success: function(json) {
+																				var result = json.queryasyncjobresultresponse;
+																				if (result.jobstatus == 0) {
+																					return; //Job has not completed
+																				}
+																				else {
+																					$("body").stopTime(timerKey);
+																					if (result.jobstatus == 1) {	                                          
+																						returnedTrafficTypes.push(result.jobresult.traffictype);			
+
+																						if(returnedTrafficTypes.length == thisPhysicalNetwork.trafficTypes.length) { //this physical network is complete (specified traffic types are added)
+																							returnedPhysicalNetwork.returnedTrafficTypes = returnedTrafficTypes;
+																							returnedPhysicalNetworks.push(returnedPhysicalNetwork);
+																							
+																							if(returnedPhysicalNetworks.length == args.data.physicalNetworks.length) { //all physical networks are complete
+																								stepFns.afterCreateZonePhysicalNetworkTrafficTypes({
+																									data: $.extend(args.data, {
+																										returnedPhysicalNetworks: returnedPhysicalNetworks
+																									})
+																								});
+																							}
+																						}																						
+																					}
+																					else if (result.jobstatus == 2) {
+																						alert(apiCmd + " failed. Error: " + fromdb(result.jobresult.errortext));
+																					}
+																				}	
+																			},																								
+																			error: function(XMLHttpResponse) {
+																				var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																				alert(apiCmd + " failed. Error: " + errorMsg);
+																			}
+																		});																							
+																	});	
+																}
+															});								
+														});													
+													}
+													else if (result.jobstatus == 2) {																			  
+														alert("createPhysicalNetwork failed. Error: " + fromdb(result.jobresult.errortext));
+													}
+												}		
+											},																																		
+											error: function(XMLHttpResponse) {
+												var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+												alert("createPhysicalNetwork failed. Error: " + errorMsg);
+											}																			
+										});															
+									});															
+								}
+							});										
+						});	
+          }        				
         },
         
 				//enable physical network, enable virtual router element, enable network service provider
