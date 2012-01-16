@@ -642,6 +642,7 @@
       var completeAction = function() {
         var $launchStep = $wizard.find('.steps .review');
         var data = getData($wizard);
+        var enableZoneAction = args.enableZoneAction;
 
         // Convert last step to launch appearance
         $launchStep.find('.main-desc').hide();
@@ -679,8 +680,37 @@
           response: {
             success: function(args) {
               $launchStep.find('ul li').removeClass('loading');
-              close();
-              $(window).trigger('cloudStack.fullRefresh');
+
+              var closeWindow = function() {
+                close();
+                $(window).trigger('cloudStack.fullRefresh');
+              };
+
+              var enableZone = function() {
+                makeMessage('Enabling zone');
+
+                enableZoneAction({
+                  response: {
+                    success: function(args) {
+                      closeWindow();
+                    },
+
+                    error: function(message) {
+                      cloudStack.dialog.notice({ message: 'Could not enable zone:</br>' + message });
+                    }
+                  }
+                });
+              };
+
+              cloudStack.dialog.confirm({
+                message: 'Zone creation complete. Would you like to enable this zone?',
+                action: function() {
+                  enableZone();
+                },
+                cancelAction: function() {
+                  closeWindow();
+                }
+              });
             },
             error: function(stepID, message, start) {
               var goNextOverride = function(event) {

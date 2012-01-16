@@ -851,6 +851,12 @@
       } else {
         stepFns.addZone({});
       }
+    },
+
+    enableZoneAction: function(args) {
+      setTimeout(function() {
+        args.response.success();
+      }, 2000);
     }
   };
 }(cloudStack, jQuery));

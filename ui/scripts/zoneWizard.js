@@ -1760,6 +1760,10 @@
       } else {
         stepFns.addZone({});
       }
+    },
+
+    enableZoneAction: function(args) {
+      args.response.success();
     }
   };
 }(cloudStack, jQuery));

@@ -352,6 +352,7 @@
             click: function() {
               $(this).dialog('destroy');
               $('div.overlay').remove();
+              if (args.cancelAction) { args.cancelAction(); }
             }
           },
           {
