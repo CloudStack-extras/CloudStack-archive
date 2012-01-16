@@ -103,7 +103,6 @@ import com.cloud.host.HostVO;
 import com.cloud.host.Status;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
-import com.cloud.network.IpAddress.AllocatedBy;
 import com.cloud.network.IpAddress.State;
 import com.cloud.network.Network.Capability;
 import com.cloud.network.Network.GuestType;
@@ -339,12 +338,12 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     }
 
     @Override
-    public PublicIp assignPublicIpAddress(long dcId, Long podId, Account owner, VlanType type, Long networkId, String requestedIp, AllocatedBy allocatedBy) throws InsufficientAddressCapacityException {
-        return fetchNewPublicIp(dcId, podId, null, owner, type, networkId, false, true, requestedIp, allocatedBy);
+    public PublicIp assignPublicIpAddress(long dcId, Long podId, Account owner, VlanType type, Long networkId, String requestedIp, boolean isElastic) throws InsufficientAddressCapacityException {
+        return fetchNewPublicIp(dcId, podId, null, owner, type, networkId, false, true, requestedIp, isElastic);
     }
 
     @DB
-    public PublicIp fetchNewPublicIp(long dcId, Long podId, Long vlanDbId, Account owner, VlanType vlanUse, Long networkId, boolean sourceNat, boolean assign, String requestedIp, AllocatedBy allocatedBy)
+    public PublicIp fetchNewPublicIp(long dcId, Long podId, Long vlanDbId, Account owner, VlanType vlanUse, Long networkId, boolean sourceNat, boolean assign, String requestedIp, boolean isElastic)
             throws InsufficientAddressCapacityException {
         StringBuilder errorMessage = new StringBuilder("Unable to get ip adress in ");
         Transaction txn = Transaction.currentTxn();
@@ -400,7 +399,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         addr.setAllocatedTime(new Date());
         addr.setAllocatedInDomainId(owner.getDomainId());
         addr.setAllocatedToAccountId(owner.getId());
-        addr.setAllocatedBy(allocatedBy);
+        addr.setElastic(isElastic);
 
         if (assign) {
             markPublicIpAsAllocated(addr);
@@ -505,7 +504,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                     vlanId = maps.get(0).getVlanDbId();
                 }
 
-                ip = fetchNewPublicIp(dcId, null, vlanId, owner, VlanType.VirtualNetwork, network.getId(), true, false, null, AllocatedBy.ipassoc);
+                ip = fetchNewPublicIp(dcId, null, vlanId, owner, VlanType.VirtualNetwork, network.getId(), true, false, null, false);
                 sourceNat = ip.ip();
 
                 markPublicIpAsAllocated(sourceNat);
@@ -920,7 +919,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     @Override
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_NET_IP_ASSIGN, eventDescription = "allocating Ip", create = true)
-    public IpAddress allocateIP(long networkId, Account ipOwner, AllocatedBy allocatedBy) throws ResourceAllocationException, InsufficientAddressCapacityException, ConcurrentOperationException {
+    public IpAddress allocateIP(long networkId, Account ipOwner, boolean isElastic) throws ResourceAllocationException, InsufficientAddressCapacityException, ConcurrentOperationException {
         Account caller = UserContext.current().getCaller();
         long userId = UserContext.current().getCallerUserId();
 
@@ -1009,7 +1008,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 }
             }
 
-            ip = fetchNewPublicIp(zone.getId(), null, null, ipOwner, vlanType, network.getId(), isSourceNat, assign, null, allocatedBy);
+            ip = fetchNewPublicIp(zone.getId(), null, null, ipOwner, vlanType, network.getId(), isSourceNat, assign, null, isElastic);
 
             if (ip == null) {
                 throw new InsufficientAddressCapacityException("Unable to find available public IP addresses", DataCenter.class, zone.getId());
@@ -3457,7 +3456,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 addr.setAllocatedTime(new Date());
                 addr.setAllocatedInDomainId(owner.getDomainId());
                 addr.setAllocatedToAccountId(owner.getId());
-                addr.setAllocatedBy(AllocatedBy.ipassoc);
+                addr.setElastic(false);
                 addr.setState(IpAddress.State.Allocating);
                 markPublicIpAsAllocated(addr);
             }
@@ -5790,7 +5789,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
 	    	try {
 	    		s_logger.debug("Allocating elastic IP address for load balancer rule...");
 	    		//allocate ip
-	    		ip = allocateIP(networkId, owner, AllocatedBy.elasticip);
+	    		ip = allocateIP(networkId, owner, true);
 	    		//apply ip associations
 	    		ip = associateIP(ip.getId());
 	    	} catch (ResourceAllocationException ex) {
@@ -5816,7 +5815,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
 		if (networkId != null) {
 		    Network guestNetwork = getNetwork(networkId);
 			NetworkOffering offering = _configMgr.getNetworkOffering(guestNetwork.getNetworkOfferingId());
-			if (offering.getElasticIp() && ip.getAllocatedBy() == AllocatedBy.elasticip) {
+			if (offering.getElasticIp() && ip.getElastic() == true) {
 				UserContext ctx = UserContext.current();
 				if (!releasePublicIpAddress(ip.getId(), ctx.getCallerUserId(), ctx.getCaller())) {
 					s_logger.warn("Unable to release elastic ip address id=" + ip.getId());
