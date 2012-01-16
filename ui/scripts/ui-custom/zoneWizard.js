@@ -630,6 +630,8 @@
       var $progress = $wizard.find('div.progress ul li');
       var $steps = $wizard.find('div.steps').children().hide().filter(':not(.disabled)');
 
+      $wizard.data('startfn', null);
+
       // Close wizard
       var close = function() {
         $wizard.dialog('destroy');
@@ -646,9 +648,28 @@
         $launchStep.find('.main-desc.launch').show();
         $launchStep.find('.launch-container').show();
         $launchStep.find('ul').html('');
+        $wizard.find('.buttons').hide();
+
+
+        var makeMessage = function(message, isError) {
+          var $li = $('<li>')
+            .addClass(!isError ? 'loading' : 'info')
+            .append(
+              $('<span>').addClass('icon').html('&nbsp;'),
+              $('<span>').addClass('text').html(message)
+            );
+
+          $launchStep.find('ul').append($li);
+          $li.prev().removeClass('loading');
+
+          if (isError) {
+            $li.prev().addClass('error');
+          }
+        };
 
         args.action({
           data: data,
+          startFn: $wizard.data('startfn'),
           uiSteps: $.map(
             $wizard.find('.steps > div'),
             function(step) {
@@ -661,30 +682,32 @@
               close();
               $(window).trigger('cloudStack.fullRefresh');
             },
-            error: function(message) {
-              $wizard.remove();
-              $('div.overlay').remove();
+            error: function(stepID, message, start) {
+              var goNextOverride = function(event) {
+                $(this).unbind('click', goNextOverride);
+                showStep(stepID, false, { nextStep: 'launch' });
 
-              if (message) {
-                cloudStack.dialog.notice({ message: message });
-              }
+                return false;
+              };
+
+              $wizard.find('.buttons').show();
+              $wizard.find('.buttons .button.next')
+                .removeClass('final')
+                .html('<span>Fix errors</span>')
+                .click(goNextOverride);
+              makeMessage('Something went wrong; please correct the following:<br/>' + message, true);
+              $wizard.data('startfn', start);
             },
-            message: function(message) {
-              var $li = $('<li>').addClass('loading').append(
-                $('<span>').addClass('icon').html('&nbsp;'),
-                $('<span>').addClass('text').html(message)
-              );
-
-              $launchStep.find('ul').append($li);
-              $li.siblings().removeClass('loading');
-            }
+            message: makeMessage
           }
         });
       };
 
       // Go to specified step in wizard,
       // updating nav items and diagram
-      var showStep = function(index, goBack) {
+      var showStep = function(index, goBack, options) {
+        if (!options) options = {};
+
         if (typeof index == 'string') {
           index = $wizard.find('[zone-wizard-step-id=' + index + ']').index() + 1;
         }
@@ -697,6 +720,7 @@
         }
 
         $steps.hide();
+        $wizard.find('.buttons').show();
 
         var $targetStep = $($steps[targetIndex]).show();
         var $uiCustom = $targetStep.find('[ui-custom]');
@@ -717,12 +741,14 @@
           if (!$targetStep.find('form').size()) {
             makeForm(args, formID, formState).appendTo($targetStep.find('.content.input-area .select-container'));
 
-            cloudStack.evenOdd($targetStep, '.field:visible', {
-              even: function() {},
-              odd: function($row) {
-                $row.addClass('odd');
-              }
-            });
+            setTimeout(function() {
+              cloudStack.evenOdd($targetStep, '.field:visible', {
+                even: function() {},
+                odd: function($row) {
+                  $row.addClass('odd');
+                }
+              });
+            }, 50);
           } else {
             // Always re-activate selects
             $targetStep.find('form select').each(function() {
@@ -784,12 +810,14 @@
 
         var $nextButton = $wizard.find('.button.next');
         $nextButton.find('span').html('Next');
-        $nextButton.removeClass('final');
+        $nextButton.removeClass('final post-launch');
 
         // Show launch button if last step
-        if ($targetStep.index() == $steps.size() - 1) {
-          $nextButton.find('span').html('Launch zone');
+        if ($targetStep.index() == $steps.size() - 1 || options.nextStep) {
+          $nextButton.find('span').html(options.nextStep ? 'Save changes' : 'Launch zone');
           $nextButton.addClass('final');
+          
+          if (options.nextStep) { $nextButton.addClass('post-launch'); }
         }
 
         // Update progress bar
@@ -901,8 +929,13 @@
 
           if (!$target.closest('.button.next.final').size())
             showStep($steps.filter(':visible').index() + 2);
-          else
+          else {
+            if ($target.closest('.button.next.final.post-launch').size()) {
+              showStep('launch');
+            }
+
             completeAction();
+          }
 
           return false;
         }

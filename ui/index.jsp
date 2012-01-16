@@ -590,7 +590,7 @@
           </div>
 
           <!-- Step 5: Launch -->
-          <div class="review">
+          <div class="review" zone-wizard-step-id="launch">
             <div class="main-desc">Launch zone</div>
             <div class="main-desc launch" style="display:none;">
               Please wait while your zone is being created; this may take a while...

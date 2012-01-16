@@ -5943,12 +5943,21 @@ label.error {
 }
 
 .multi-wizard.zone-wizard .review .launch-container li .icon {
+  /*[empty]display:;*/
   padding: 10px 21px 10px 10px;
   background: url(../images/icons.png) -2px -217px;
 }
 
 .multi-wizard.zone-wizard .review .launch-container li.loading .icon {
   background: url(../images/ajax-loader-small.gif) no-repeat 2px 9px;
+}
+
+.multi-wizard.zone-wizard .review .launch-container li.error .icon {
+  background-position: -2px -185px;
+}
+
+.multi-wizard.zone-wizard .review .launch-container li.info .icon {
+  display: none;
 }
 
 /*Tree view*/

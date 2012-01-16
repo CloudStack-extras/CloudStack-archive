@@ -762,6 +762,7 @@
           var pod = {};
 
           setTimeout(function() {
+            return error('addPod', 'System error 500', { fn: 'configurePublicTraffic', args: args });
             stepFns.configurePublicTraffic({
               data: $.extend(args.data, {
                 pod: pod
@@ -796,6 +797,7 @@
           var cluster = {};
 
           setTimeout(function() {
+            return error('addCluster', 'System error 500', { fn: 'addHost', args: args });
             stepFns.addHost({
               data: $.extend(args.data, {
                 cluster: cluster
