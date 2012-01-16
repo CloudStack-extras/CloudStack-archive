@@ -149,8 +149,11 @@
   var physicalNetwork = {
     init: function($wizard) {
       // Initialize initial physical networks
-      for (var i = 0; i < 3; i++) {
-        physicalNetwork.add($wizard);
+      for (var i = 0; i < 2; i++) {
+        var $physicalNetwork = physicalNetwork.add($wizard);
+        if (i == 0) {
+          $physicalNetwork.find('.button.remove.physical-network').remove();
+        }
       }
 
       // First physical network gets required traffic types
@@ -345,7 +348,8 @@
 
       $containers.each(function() {
         var $currentContainer = $(this);
-        if (!$currentContainer.find('li').size() && $containers.size() > 3) {
+        if (!$currentContainer.find('li').size() &&
+            $containers.size() > 2) {
           $currentContainer.remove();
         }
       });
