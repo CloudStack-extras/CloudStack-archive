@@ -420,7 +420,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
     		}
     		//unassign old static nat rule
     		s_logger.debug("Disassociating static nat for ip " + oldIP);
-    		if (!disableStaticNat(oldIP.getId(), caller, callerUserId)) {
+    		if (!disableStaticNat(oldIP.getId(), caller, callerUserId, true)) {
     			throw new CloudRuntimeException("Failed to disable old static nat rule for vm id=" + vmId + " and ip " + oldIP);
     		}
         }	
@@ -1006,7 +1006,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
         
         Long vmId = ipAddress.getAssociatedWithVmId();
 
-    	boolean success = disableStaticNat(ipId, caller, ctx.getCallerUserId());
+    	boolean success = disableStaticNat(ipId, caller, ctx.getCallerUserId(), false);
     	if (success && vmId != null) {
     		s_logger.debug("Allocating ip and enabling static nat for vm id=" + vmId + " as a part of disassociateIp command");
     		UserVm vm = _vmDao.findById(vmId);
@@ -1021,8 +1021,8 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
     	return success;
     }
 
-    @Override
-    public boolean disableStaticNat(long ipId, Account caller, long callerUserId) throws ResourceUnavailableException {
+    @Override @DB
+    public boolean disableStaticNat(long ipId, Account caller, long callerUserId, boolean releaseIpIfElastic) throws ResourceUnavailableException {
         boolean success = true;
 
         IPAddressVO ipAddress = _ipAddressDao.findById(ipId);
@@ -1050,12 +1050,16 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
         }
         
         if (success) {
+        	boolean isIpElastic = ipAddress.getElastic();
+        	
             ipAddress.setOneToOneNat(false);
             ipAddress.setAssociatedWithVmId(null);
+            if (isIpElastic && !releaseIpIfElastic) {
+            	ipAddress.setElastic(false);
+            }
             _ipAddressDao.update(ipAddress.getId(), ipAddress);
 
-            
-            if (!_networkMgr.handleElasticIpRelease(ipAddress)) {
+        	if (isIpElastic && releaseIpIfElastic && !_networkMgr.handleElasticIpRelease(ipAddress)) {
             	s_logger.warn("Failed to release elastic ip address " + ipAddress);
             	success = false;
             }
