@@ -3727,27 +3727,27 @@ Dialogs*/
 }
 
 .system-chart.compute ul.resources li.pods {
-  left: 178px;
+  left: 199px;
   top: 112px;
 }
 
 .system-chart.compute ul.resources li.clusters {
-  left: 288px;
+  left: 296px;
   top: 189px;
 }
 
 .system-chart.compute ul.resources li.hosts {
-  left: 402px;
+  left: 407px;
   top: 265px;
 }
 
 .system-chart.compute ul.resources li.primaryStorage {
-  left: 402px;
+  left: 407px;
   top: 375px;
 }
 
 .system-chart.compute ul.resources li.secondaryStorage {
-  left: 178px;
+  left: 199px;
   top: 497px;
 }
 
