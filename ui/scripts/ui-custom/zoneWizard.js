@@ -459,9 +459,13 @@
       // Remove network action
       $physicalNetworkItem.find('.button.remove.physical-network').click(function() {
         $physicalNetworkItem.find('li.traffic-type-draggable').each(function() {
-          physicalNetwork.unassignTrafficType($(this).attr('traffic-type-id'), $wizard, $physicalNetworkItem);
+          var trafficTypeID = $(this).attr('traffic-type-id');
+
+          physicalNetwork.assignTrafficType(trafficTypeID, $physicalNetworkItem.prev());
         });
-        physicalNetwork.update($wizard);
+
+        $physicalNetworkItem.find('li.traffic-type-draggable.clone').remove();
+        physicalNetwork.update($physicalNetworkItem.parent().find('.multi')); 
       });
 
       $physicalNetworkItem.addClass('disabled'); // Since there are no traffic types yet
@@ -492,7 +496,7 @@
               return $(this).hasClass($draggable.attr('traffic-type-id'));
             });
 
-          $draggable.appendTo($originalContainer.find('ul'));
+          $draggable.appendTo($item.prev());
         });
 
         $item.remove();
@@ -1009,11 +1013,14 @@
         drop: function(event, ui) {
           var trafficTypeID = ui.draggable.attr('traffic-type-id');
           
-          physicalNetwork.unassignTrafficType(
-            trafficTypeID,
-            physicalNetwork.getMainContainer(ui.draggable),
-            ui.draggable.closest('.select-container.multi')
-          );
+          if (!physicalNetwork.isTrafficTypeClone(ui.draggable)) {
+            physicalNetwork.assignTrafficType(
+              trafficTypeID,
+              $wizard.find('.select-container.multi:first')
+            );
+          } else {
+            ui.draggable.remove();
+          }
           
           return true;
         }

@@ -5587,6 +5587,11 @@ label.error {
   margin: 16px 13px 0 0;
 }
 
+.multi-wizard.zone-wizard .traffic-types-drag-area > ul > li.management,
+.multi-wizard.zone-wizard .traffic-types-drag-area > ul > li.public {
+  display: none;
+}
+
 .multi-wizard.zone-wizard .traffic-types-drag-area > ul > li ul.container {
   width: 60px;
   height: 54px;
