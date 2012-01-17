@@ -49,7 +49,8 @@
     
     preFilters: {
       addPublicNetwork: function(args) {
-        return args.data['network-model'] == 'Advanced';
+        return args.data['network-model'] == 'Advanced' ||
+               args.data['isPublicTrafficTypeEnabled'];
       },
 
       addBasicPhysicalNetwork: function(args) {
