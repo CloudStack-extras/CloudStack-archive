@@ -511,6 +511,7 @@
    */
   var guestTraffic = {
     init: function($wizard, args) {
+      return;
       var $physicalNetworks = physicalNetwork.getPhysicalNetworks($wizard);
       var $tabs = guestTraffic.makeTabs($physicalNetworks, args);
       var $container = guestTraffic.getMainContainer($wizard);
