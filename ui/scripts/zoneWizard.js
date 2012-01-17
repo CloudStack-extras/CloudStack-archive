@@ -1358,8 +1358,7 @@
 																										$("body").stopTime(timerKey);
 																										if (result.jobstatus == 1) {
 																											//alert("Virtual Router Provider is enabled");
-																											
-																											//???
+																																																						
 																											if(args.data.zone["security-groups-enabled"] == "on") { //need to Enable security group provider first
 																												// get network service provider ID of Security Group
 																												var securityGroupProviderId;
@@ -1668,9 +1667,9 @@
 						dataType: "json",
 						async: false,
 						success: function(json) {						  							
-							stepFns.addCluster({
+							stepFns.configurePublicTraffic({
 								data: $.extend(args.data, {
-									pod: json.createpodresponse.pod
+									returnedpod: json.createpodresponse.pod
 								})
 							});		
 						},
@@ -1680,28 +1679,77 @@
 						}
 					}); 						
         },  
-
-        /*				
+       			
         configurePublicTraffic: function(args) {
-          message('Configuring public traffic');
+				  debugger;					
+					if((args.data.zone.networkType == "Basic" && args.data.basicPhysicalNetwork.isPublicTrafficTypeEnabled == "on")
+					 ||(args.data.zone.networkType == "Advanced")) {	
+					 
+						message('Configuring public traffic');
 
-          setTimeout(function() {
-            stepFns.configureGuestTraffic({
-              data: args.data
-            });
-          }, 200);
-        },        
+						var returnedPublicTraffic = [];
+            $(args.data.publicTraffic).each(function(){
+						  debugger;
+							//???
+							var array1 = [];
+							array1.push("&zoneId=" + args.data.returnedZone.id);
+
+							if (this.vlanid != null && this.vlanid.length > 0)
+								array1.push("&vlan=" + todb(this.vlanid));
+							else
+								array1.push("&vlan=untagged");
+
+							array1.push("&gateway=" + this.gateway);
+							array1.push("&netmask=" + this.netmask);
+							array1.push("&startip=" + this.startip);
+							if(this.endip != null && this.endip.length > 0)
+								array1.push("&endip=" + this.endip);
+
+							if(args.data.returnedZone.securitygroupsenabled == false)
+								array1.push("&forVirtualNetwork=true");
+							else
+								array1.push("&forVirtualNetwork=false");
+
+							$.ajax({
+								url: createURL("createVlanIpRange" + array1.join("")),
+								dataType: "json",
+								success: function(json) {
+								  debugger;
+									var item = json.createvlaniprangeresponse.vlan;
+									returnedPublicTraffic.push(item);
+								},
+								error: function(XMLHttpResponse) {
+									var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+									args.response.error(errorMsg);
+								}
+							});
+							
+							debugger;
+							stepFns.configureGuestTraffic({
+								data: $.extend(args.data, {
+								  returnedPublicTraffic: returnedPublicTraffic
+								})
+							});		
+						});														
+					}
+					else { //basic zone without public traffic type , skip to next step
+					  stepFns.configureGuestTraffic({
+							data: args.data
+						});		
+					}
+        },    
+				
         configureGuestTraffic: function(args) {
           message('Configuring guest traffic');
 
+					debugger;
           setTimeout(function() {
             stepFns.addCluster({
               data: args.data
             });
           }, 200);
         },
-        */
-				
+        				
         addCluster: function(args) {
           message('Creating cluster');
           
