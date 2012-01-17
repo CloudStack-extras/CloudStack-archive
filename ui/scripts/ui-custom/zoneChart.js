@@ -485,9 +485,39 @@
    * Zone details chart
    */
   cloudStack.uiCustom.systemChart = function(chartID) {
+    /**
+     * Make view all button
+     */
+    var viewAllButton = function(args) {
+      var $viewAll = $('<div>').addClass('button view-all');
+      var $label = $('<span>').addClass('view-all-label').html('View all');
+      var $browser = args.$browser;
+      var action = args.action;
+
+      // Launch a list view
+      $viewAll.click(function() {
+        $browser.cloudBrowser('addPanel', {
+          title: args.title,
+          maximizeIfSelected: true,
+          complete: function($newPanel) {
+            action({ $panel: $newPanel });
+          }
+        });
+      });
+
+      $viewAll.append($label);
+
+      return $viewAll;
+    };
+
     var charts = {
       compute: function(args) {
         var $chart = $('<div>');
+        var context = args.context;
+        var $browser = $('#browser .container');
+
+        // Fix zone context naming
+        context.zones = context.physicalResources;
 
         // Resource items
         var computeResources = {
@@ -496,25 +526,40 @@
           },
 
           pods: {
-            label: 'Pods'
+            label: 'Pods',
+            viewAll: {
+              action: function(args) {
+                var listViewArgs = cloudStack.sections.system.subsections.pods.listView;
+
+                args.$panel.listView({
+                  context: context,
+                  listView: listViewArgs
+                });
+              }
+            }
           },
 
           clusters: {
-            label: 'Clusters'
+            label: 'Clusters',
+            viewAll: { $elem: function(args) {} }
           },
 
           hosts: {
-            label: 'Hosts'
+            label: 'Hosts',
+            viewAll: { $elem: function(args) {} }
           },
 
           primaryStorage: {
-            label: 'Primary Storage'
+            label: 'Primary Storage',
+            viewAll: { $elem: function(args) {} }
           },
 
           secondaryStorage: {
-            label: 'Secondary Storage'
+            label: 'Secondary Storage',
+            viewAll: { $elem: function(args) {} }
           }
         };
+
 
         var $computeResources = $('<ul>').addClass('resources');
 
@@ -526,6 +571,15 @@
           $li.addClass(id);
           $label.html(resource.label);
           $label.appendTo($li);
+
+          // View all
+          if (resource.viewAll) {
+            viewAllButton($.extend(resource.viewAll, {
+              title: resource.label,
+              $browser: $browser,
+              context: context
+            })).appendTo($li);
+          }
 
           $li.appendTo($computeResources);
         });

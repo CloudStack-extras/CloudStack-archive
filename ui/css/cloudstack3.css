@@ -1588,6 +1588,7 @@ div.detail-group.actions td {
 .button {
   float: left;
   background: url(../images/buttons.png) no-repeat;
+  cursor: pointer;
 }
 
 #header div.notifications {
@@ -3668,20 +3669,7 @@ Dialogs*/
   overflow: auto;
 }
 
-/** Compute*/
-.system-chart.compute {
-  background: url(../images/bg-system-chart-compute.png) no-repeat center;
-}
-
-/*** Compute resources*/
-.system-chart.compute ul.resources {
-  width: 98%;
-  height: 97%;
-  margin: 0;
-  position: relative;
-}
-
-.system-chart.compute ul.resources li {
+.system-chart ul.resources li {
   background: transparent url(../images/bg-gradients.png) repeat-x 0px -1340px;
   text-align: left;
   width: 100px;
@@ -3693,17 +3681,43 @@ Dialogs*/
   -webkit-border-radius: 4px;
   -khtml-border-radius: 4px;
   border-radius: 4px 4px 4px 4px;
-  /*+box-shadow:0px 0px 1px #CDCDCD;*/
-  -moz-box-shadow: 0px 0px 1px #CDCDCD;
-  -webkit-box-shadow: 0px 0px 1px #CDCDCD;
-  -o-box-shadow: 0px 0px 1px #CDCDCD;
-  box-shadow: 0px 0px 1px #CDCDCD;
+  /*+box-shadow:0px 0px 2px #A6A6A6;*/
+  -moz-box-shadow: 0px 0px 2px #A6A6A6;
+  -webkit-box-shadow: 0px 0px 2px #A6A6A6;
+  -o-box-shadow: 0px 0px 2px #A6A6A6;
+  box-shadow: 0px 0px 2px #A6A6A6;
 }
 
-.system-chart.compute ul.resources li .label {
+.system-chart ul.resources li .button.view-all {
+  width: 65px;
+  height: 25px;
+  background: url(../images/buttons.png) no-repeat -458px -504px;
+  /*+placement:shift 32px 34px;*/
+  position: relative;
+  left: 32px;
+  top: 34px;
   position: absolute;
-  top: 8px;
-  left: 10px;
+}
+
+.system-chart ul.resources li .button.view-all:hover {
+  background-position: -537px -504px;
+}
+
+.system-chart ul.resources li .button.view-all .view-all-label {
+  color: #FFFFFF;
+  font-size: 11px;
+  /*+text-shadow:0px -1px 1px #000000;*/
+  -moz-text-shadow: 0px -1px 1px #000000;
+  -webkit-text-shadow: 0px -1px 1px #000000;
+  -o-text-shadow: 0px -1px 1px #000000;
+  text-shadow: 0px -1px 1px #000000;
+  /*+placement:shift 9px 0px;*/
+  position: relative;
+  left: 9px;
+  top: 0px;
+}
+
+.system-chart ul.resources li .label {
   font-weight: bold;
   font-size: 12px;
   color: #5C7485;
@@ -3712,6 +3726,24 @@ Dialogs*/
   -webkit-text-shadow: 0px 1px #FFFFFF;
   -o-text-shadow: 0px 1px #FFFFFF;
   text-shadow: 0px 1px #FFFFFF;
+  /*+placement:shift 3px 3px;*/
+  position: relative;
+  left: 3px;
+  top: 3px;
+  position: absolute;
+}
+
+/** Compute*/
+.system-chart.compute {
+  background: url(../images/bg-system-chart-compute.png) no-repeat center;
+}
+
+/*** Compute resources*/
+.system-chart.compute ul.resources {
+  width: 98%;
+  height: 97%;
+  margin: 0;
+  position: relative;
 }
 
 .system-chart.compute ul.resources li.zone {
