@@ -211,76 +211,7 @@
             label: 'VLAN Range',
             range: ['vlanRangeStart', 'vlanRangeEnd'],
             validation: { required: true }
-          },
-          name: {
-            label: 'Name',
-            validation: { required: true }
-          },
-          description: {
-            label: 'Description',
-            validation: { required: true }
-          },
-          vlanId: {
-            label: "VLAN ID"
-          },
-          scope: {
-            label: 'Scope',
-            select: function(args) {
-              var array1 = [];
-              var selectedZoneObj = {
-                securitygroupsenabled: args.context.zones[0]['security-groups-enabled']
-              }
-              if(selectedZoneObj.securitygroupsenabled) {
-                array1.push({id: 'account-specific', description: 'Account'});
-              }
-              else {
-                array1.push({id: 'zone-wide', description: 'All'});
-                array1.push({id: 'domain-specific', description: 'Domain'});
-                array1.push({id: 'account-specific', description: 'Account'});
-              }
-              args.response.success({ data: array1 });
-
-              args.$select.change(function() {
-                var $form = args.$select.closest('form');
-
-                if($(this).val() == "zone-wide") {
-                  $form.find('[rel=domainId]').hide();
-                  $form.find('[rel=account]').hide();
-                }
-                else if ($(this).val() == "domain-specific") {
-                  $form.find('[rel=domainId]').show();
-                  $form.find('[rel=account]').hide();
-                }
-                else if($(this).val() == "account-specific") {
-                  $form.find('[rel=domainId]').show();
-                  $form.find('[rel=account]').show();
-                }
-              });
-
-              setTimeout(function() {
-                args.$select.trigger('change');
-              });
-            }
-          },
-          domainId: {
-            label: 'Domain',
-            select: function(args) {
-              args.response.success({
-                data: $.map(testData.data.domains, function(offering) {
-                  return {
-                    id: offering.id,
-                    description: offering.name
-                  };
-                })
-              });
-            }
-          },
-          account: { label: 'Account' },
-          guestGateway: { label: 'Guest gateway' },
-          guestNetmask: { label: 'Guest netmask' },
-          guestStartIp: { label: 'Guest start IP' },
-          guestEndIp: { label: 'Guest end IP' },
-          networkdomain: { label: 'Network domain' }
+          }
         }
       },
       cluster: {
