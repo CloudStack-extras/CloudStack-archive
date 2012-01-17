@@ -1680,8 +1680,7 @@
 					}); 						
         },  
        			
-        configurePublicTraffic: function(args) {
-				  debugger;					
+        configurePublicTraffic: function(args) {					
 					if((args.data.zone.networkType == "Basic" && args.data.basicPhysicalNetwork.isPublicTrafficTypeEnabled == "on")
 					 ||(args.data.zone.networkType == "Advanced")) {	
 					 
@@ -1689,8 +1688,7 @@
 
 						var returnedPublicTraffic = [];
             $(args.data.publicTraffic).each(function(){
-						  debugger;
-							//???
+						  //debugger;							
 							var array1 = [];
 							array1.push("&zoneId=" + args.data.returnedZone.id);
 
@@ -1713,8 +1711,7 @@
 							$.ajax({
 								url: createURL("createVlanIpRange" + array1.join("")),
 								dataType: "json",
-								success: function(json) {
-								  debugger;
+								success: function(json) {								 
 									var item = json.createvlaniprangeresponse.vlan;
 									returnedPublicTraffic.push(item);
 								},
@@ -1722,15 +1719,16 @@
 									var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
 									args.response.error(errorMsg);
 								}
-							});
-							
-							debugger;
-							stepFns.configureGuestTraffic({
-								data: $.extend(args.data, {
-								  returnedPublicTraffic: returnedPublicTraffic
-								})
-							});		
-						});														
+							});							
+						});				
+
+            //debugger;
+						stepFns.configureGuestTraffic({
+							data: $.extend(args.data, {
+								returnedPublicTraffic: returnedPublicTraffic
+							})
+						});		
+						
 					}
 					else { //basic zone without public traffic type , skip to next step
 					  stepFns.configureGuestTraffic({
@@ -1742,7 +1740,7 @@
         configureGuestTraffic: function(args) {
           message('Configuring guest traffic');
 
-					debugger;
+					//debugger;
           setTimeout(function() {
             stepFns.addCluster({
               data: args.data
