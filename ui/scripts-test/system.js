@@ -798,11 +798,6 @@
             },
             detailView: {
               isMaximized: true,
-              viewAll: {
-                path: 'instances',
-                label: 'Configuration',
-                custom: cloudStack.zoneChart()
-              },
               tabs: {
                 details: {
                   title: 'Details',
@@ -829,11 +824,24 @@
                   ],
                   dataProvider: testData.dataProvider.detailView('zones')
                 },
+                compute: {
+                  title: 'Compute',
+                  custom: function(args) {
+                    return $('<p>Compute</p>');
+                  }
+                },
+                network: {
+                  title: 'Network',
+                  custom: function(args) {
+                    return $('<p>Network</p>');
+                  }
+                },
                 systemVMs: {
                   title: 'System VMs',
                   listView: {
                     label: 'System VMs',
                     id: 'systemVMs',
+                    hideToolbar: true,
                     fields: {
                       name: { label: 'Name' },
                       systemvmtype: {

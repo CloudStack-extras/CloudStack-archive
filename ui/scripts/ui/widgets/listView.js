@@ -1063,6 +1063,10 @@
       args.activeSection = listViewData.id;
     }
 
+    if (listViewData.hideToolbar) {
+      $toolbar.hide();
+    }
+
     // Add panel controls
     $('<div class="panel-controls">').append($('<div class="control expand">').attr({
       'ui-id': 'toggle-expand-panel'
