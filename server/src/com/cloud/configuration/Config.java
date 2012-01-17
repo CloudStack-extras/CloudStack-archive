@@ -180,7 +180,7 @@ public enum Config {
 	XapiWait("Advanced", AgentManager.class, Integer.class, "xapiwait", "600", "Time (in seconds) to wait for XAPI to return", null),
 	MigrateWait("Advanced", AgentManager.class, Integer.class, "migratewait", "3600", "Time (in seconds) to wait for VM migrate finish", null),
 	Workers("Advanced", AgentManager.class, Integer.class, "workers", "5", "Number of worker threads.", null),
-	MountParent("Advanced", ManagementServer.class, String.class, "mount.parent", "/var/lib/cloud/mnt", "The mount point on the Management Server for Secondary Storage.", null),
+	MountParent("Advanced", ManagementServer.class, String.class, "mount.parent", "/var/lib/cloud/management/mnt", "The mount point on the Management Server for Secondary Storage.", null),
 //	UpgradeURL("Advanced", ManagementServer.class, String.class, "upgrade.url", "http://example.com:8080/client/agent/update.zip", "The upgrade URL is the URL of the management server that agents will connect to in order to automatically upgrade.", null),
 	SystemVMUseLocalStorage("Advanced", ManagementServer.class, Boolean.class, "system.vm.use.local.storage", "false", "Indicates whether to use local storage pools or shared storage pools for system VMs.", null),
     SystemVMAutoReserveCapacity("Advanced", ManagementServer.class, Boolean.class, "system.vm.auto.reserve.capacity", "true", "Indicates whether or not to automatically reserver system VM standby capacity.", null),
@@ -258,6 +258,7 @@ public enum Config {
     VmwareReserveCpu("Advanced", ManagementServer.class, Boolean.class, "vmware.reserve.cpu", "false", "Specify whether or not to reserve CPU based on CPU overprovisioning factor", null),
     VmwareReserveMem("Advanced", ManagementServer.class, Boolean.class, "vmware.reserve.mem", "false", "Specify whether or not to reserve memory based on memory overprovisioning factor", null),
     VmwareRootDiskControllerType("Advanced", ManagementServer.class, String.class, "vmware.root.disk.controller", "ide", "Specify the default disk controller for root volumes, valid values are scsi, ide", null),
+    VmwareSystemVmNicDeviceType("Advanced", ManagementServer.class, String.class, "vmware.systemvm.nic.device.type", "E1000", "Specify the default network device type for system VMs, valid values are E1000, PCNet32, Vmxnet2, Vmxnet3", null),
     
     // KVM
     KvmPublicNetwork("Advanced", ManagementServer.class, String.class, "kvm.public.network.device", null, "Specify the public bridge on host for public network", null),

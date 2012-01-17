@@ -17,6 +17,7 @@
  */
 package com.cloud.resource;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
@@ -138,6 +139,8 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.net.Ip;
 import com.cloud.utils.net.NetUtils;
+import com.cloud.utils.ssh.SSHCmdHelper;
+import com.cloud.utils.ssh.sshException;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.VirtualMachineManager;
@@ -1040,8 +1043,7 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
         HostVO host = _hostDao.findById(hostId);
         MaintainAnswer answer = (MaintainAnswer) _agentMgr.easySend(hostId, new MaintainCommand());
         if (answer == null || !answer.getResult()) {
-            s_logger.warn("Unable to put host in maintainance mode: " + hostId);
-            return false;
+            s_logger.warn("Unable to send MaintainCommand to host: " + hostId);
         }
         
         try {
@@ -1117,18 +1119,26 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
     }
 
     @Override
-    public Host updateHost(UpdateHostCmd cmd) {
+    public Host updateHost(UpdateHostCmd cmd) throws NoTransitionException {
         Long hostId = cmd.getId();
         Long guestOSCategoryId = cmd.getOsCategoryId();
 
+        // Verify that the host exists
+        HostVO host = _hostDao.findById(hostId);
+        if (host == null) {
+            throw new InvalidParameterValueException("Host with id " + hostId + " doesn't exist");
+        }
+        
+		if (cmd.getAllocationState() != null) {
+			ResourceState.Event resourceEvent = ResourceState.Event.toEvent(cmd.getAllocationState());
+			if (resourceEvent != ResourceState.Event.Enable && resourceEvent != ResourceState.Event.Disable) {
+				throw new CloudRuntimeException("Invalid allocation state:" + cmd.getAllocationState() + ", only Enable/Disable are allowed");
+			}
+			
+			resourceStateTransitTo(host, resourceEvent, _nodeId);
+		}
+        
         if (guestOSCategoryId != null) {
-
-            // Verify that the host exists
-            HostVO host = _hostDao.findById(hostId);
-            if (host == null) {
-                throw new InvalidParameterValueException("Host with id " + hostId + " doesn't exist");
-            }
-
             // Verify that the guest OS Category exists
             if (guestOSCategoryId > 0) {
                 if (_guestOSCategoryDao.findById(guestOSCategoryId) == null) {
@@ -1148,40 +1158,9 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
             }
             _hostDetailsDao.persist(hostId, hostDetails);
         }
-
-        /*
-        String allocationState = cmd.getAllocationState();
-        if (allocationState != null) {
-            // Verify that the host exists
-            HostVO host = _hostDao.findById(hostId);
-            if (host == null) {
-                throw new InvalidParameterValueException("Host with id " + hostId + " doesn't exist");
-            }
-
-            try {
-                HostAllocationState newAllocationState = Host.HostAllocationState.valueOf(allocationState);
-                if (newAllocationState == null) {
-                    s_logger.error("Unable to resolve " + allocationState + " to a valid supported allocation State");
-                    throw new InvalidParameterValueException("Unable to resolve " + allocationState + " to a supported state");
-                } else {
-                    host.setHostAllocationState(newAllocationState);
-                }
-            } catch (IllegalArgumentException ex) {
-                s_logger.error("Unable to resolve " + allocationState + " to a valid supported allocation State");
-                throw new InvalidParameterValueException("Unable to resolve " + allocationState + " to a supported state");
-            }
-
-            _hostDao.update(hostId, host);
-        }
-        */
         
         List<String> hostTags = cmd.getHostTags();
         if (hostTags != null) {
-            // Verify that the host exists
-            HostVO host = _hostDao.findById(hostId);
-            if (host == null) {
-                throw new InvalidParameterValueException("Host with id " + hostId + " doesn't exist");
-            }
             if(s_logger.isDebugEnabled()){
                 s_logger.debug("Updating Host Tags to :"+hostTags);
             }
@@ -1805,6 +1784,29 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
 		try {
 			resourceStateTransitTo(host, ResourceState.Event.AdminCancelMaintenance, _nodeId);
 			_agentMgr.pullAgentOutMaintenance(hostId);
+			
+			//for kvm, need to log into kvm host, restart cloud-agent
+			if (host.getHypervisorType() == HypervisorType.KVM) {
+				_hostDao.loadDetails(host);
+				String password = host.getDetail("password");
+				String username = host.getDetail("username");
+				if (password == null || username == null) {
+					s_logger.debug("Can't find password/username");
+					return false;
+				}
+				com.trilead.ssh2.Connection connection = SSHCmdHelper.acquireAuthorizedConnection(host.getPrivateIpAddress(), 22, username, password);
+				if (connection == null) {
+					s_logger.debug("Failed to connect to host: " + host.getPrivateIpAddress());
+					return false;
+				}
+				
+				try {
+					SSHCmdHelper.sshExecuteCmdOneShot(connection, "service cloud-agent restart");
+				} catch (sshException e) {
+					return false;
+				}
+			}
+			
 			return true;
 		} catch (NoTransitionException e) {
 			s_logger.debug("Cannot transmit host " + host.getId() + "to Enabled state", e);
@@ -1849,6 +1851,10 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
 		if (host == null) {
 			s_logger.debug("Cannot find host " + hostId + ", assuming it has been deleted, skip umanage");
 			return true;
+		}
+		
+		if (host.getHypervisorType() == HypervisorType.KVM) {
+			 MaintainAnswer answer = (MaintainAnswer) _agentMgr.easySend(hostId, new MaintainCommand());
 		}
 
 		_agentMgr.disconnectWithoutInvestigation(hostId, Event.ShutdownRequested);

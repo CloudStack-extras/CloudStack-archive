@@ -207,6 +207,7 @@ import com.cloud.uservm.UserVm;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.Pair;
 import com.cloud.utils.PasswordGenerator;
+import com.cloud.utils.Ternary;
 import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.component.Manager;
@@ -1199,6 +1200,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         ctx.setAccountId(vm.getAccountId());
 
         try {
+        	//expunge the vm
             if (!_itMgr.advanceExpunge(vm, _accountMgr.getSystemUser(), caller)) {
                 s_logger.info("Did not expunge " + vm);
                 return false;
@@ -2891,16 +2893,16 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
     @Override
     public List<UserVmVO> searchForUserVMs(ListVMsCmd cmd) {
     	 Account caller = UserContext.current().getCaller();
-         Long domainId = cmd.getDomainId();
-         boolean isRecursive = cmd.isRecursive();
          List<Long> permittedAccounts = new ArrayList<Long>();
          String hypervisor = cmd.getHypervisor();
-         String accountName = cmd.getAccountName();
-         Long projectId = cmd.getProjectId();
          boolean listAll = cmd.listAll();
          Long id = cmd.getId();
 
-         ListProjectResourcesCriteria listProjectResourcesCriteria =  _accountMgr.buildACLSearchParameters(caller, domainId, isRecursive, accountName, projectId, permittedAccounts, listAll, id);
+         Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean, ListProjectResourcesCriteria>(cmd.getDomainId(), cmd.isRecursive(), null);
+        _accountMgr.buildACLSearchParameters(caller, id, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, listAll);
+        Long domainId = domainIdRecursiveListProject.first();
+        Boolean isRecursive = domainIdRecursiveListProject.second();
+        ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();
 
         Criteria c = new Criteria("id", Boolean.TRUE, cmd.getStartIndex(), cmd.getPageSizeVal());
         c.addCriteria(Criteria.KEYWORD, cmd.getKeyword());
@@ -3357,11 +3359,11 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         	 if (networkIdList != null && !networkIdList.isEmpty()) {
                  throw new InvalidParameterValueException("Can't move vm with network Ids; this is a basic zone VM");
              }
+         	//cleanup the old security groups
+             _securityGroupMgr.removeInstanceFromGroups(cmd.getVmId());
        	 	//cleanup the network for the oldOwner
             _networkMgr.cleanupNics(vmOldProfile);
             _networkMgr.expungeNics(vmOldProfile);
-        	//cleanup the old security groups
-            _securityGroupMgr.removeInstanceFromGroups(cmd.getVmId());
         	//security groups will be recreated for the new account, when the VM is started
             List<NetworkVO> networkList = new ArrayList<NetworkVO>();
 

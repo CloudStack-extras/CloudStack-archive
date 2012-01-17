@@ -55,6 +55,7 @@ import com.cloud.user.AccountManager;
 import com.cloud.user.DomainManager;
 import com.cloud.user.UserContext;
 import com.cloud.uservm.UserVm;
+import com.cloud.utils.Ternary;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.component.Manager;
 import com.cloud.utils.db.DB;
@@ -414,7 +415,10 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
 
         _accountMgr.checkAccess(caller, null, rule);
 
-        return revokePortForwardingRuleInternal(ruleId, caller, ctx.getCallerUserId(), apply);
+        if(!revokePortForwardingRuleInternal(ruleId, caller, ctx.getCallerUserId(), apply)){
+        	throw new CloudRuntimeException("Failed to delete port forwarding rule");
+        }
+        return true;
     }
 
     private boolean revokePortForwardingRuleInternal(long ruleId, Account caller, long userId, boolean apply) {
@@ -446,7 +450,10 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
 
         _accountMgr.checkAccess(caller, null, rule);
 
-        return revokeStaticNatRuleInternal(ruleId, caller, ctx.getCallerUserId(), apply);
+        if(!revokeStaticNatRuleInternal(ruleId, caller, ctx.getCallerUserId(), apply)){
+        	throw new CloudRuntimeException("Failed to revoke forwarding rule");
+        }
+        return true;
     }
 
     private boolean revokeStaticNatRuleInternal(long ruleId, Account caller, long userId, boolean apply) {
@@ -545,8 +552,6 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
         Long id = cmd.getId();
 
         Account caller = UserContext.current().getCaller();
-        Long domainId = cmd.getDomainId();
-        boolean isRecursive = cmd.isRecursive();
         List<Long> permittedAccounts = new ArrayList<Long>();
 
         if (ipId != null) {
@@ -557,7 +562,12 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
             _accountMgr.checkAccess(caller, null, ipAddressVO);
         }
 
-        ListProjectResourcesCriteria listProjectResourcesCriteria =  _accountMgr.buildACLSearchParameters(caller, domainId, isRecursive, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, cmd.listAll(), id);
+        Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean, ListProjectResourcesCriteria>(cmd.getDomainId(), cmd.isRecursive(), null);
+        _accountMgr.buildACLSearchParameters(caller, id, cmd.getAccountName(), cmd.getProjectId(), permittedAccounts, domainIdRecursiveListProject, cmd.listAll());
+        Long domainId = domainIdRecursiveListProject.first();
+        Boolean isRecursive = domainIdRecursiveListProject.second();
+        ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();        
+        
         Filter filter = new Filter(PortForwardingRuleVO.class, "id", false, cmd.getStartIndex(), cmd.getPageSizeVal());
         SearchBuilder<PortForwardingRuleVO> sb = _portForwardingDao.createSearchBuilder();
         _accountMgr.buildACLSearchBuilder(sb, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
@@ -743,7 +753,12 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
             _accountMgr.checkAccess(caller, null, ipAddressVO);
         }
 
-        ListProjectResourcesCriteria listProjectResourcesCriteria =  _accountMgr.buildACLSearchParameters(caller, domainId, isRecursive, accountName, projectId, permittedAccounts, listAll, id);
+        Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean, ListProjectResourcesCriteria>(domainId, isRecursive, null);
+        _accountMgr.buildACLSearchParameters(caller, id, accountName, projectId, permittedAccounts, domainIdRecursiveListProject, listAll);
+        domainId = domainIdRecursiveListProject.first();
+        isRecursive = domainIdRecursiveListProject.second();
+        ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();
+        
         Filter filter = new Filter(PortForwardingRuleVO.class, "id", false, start, size);
         SearchBuilder<FirewallRuleVO> sb = _firewallDao.createSearchBuilder();
         _accountMgr.buildACLSearchBuilder(sb, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
@@ -781,13 +796,19 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_NET_RULE_ADD, eventDescription = "applying port forwarding rule", async = true)
     public boolean applyPortForwardingRules(long ipId, Account caller) throws ResourceUnavailableException {
-        return applyPortForwardingRules(ipId, false, caller);
+        if(!applyPortForwardingRules(ipId, false, caller)){
+        	throw new CloudRuntimeException("Failed to apply port forwarding rule");
+        }
+        return true;
     }
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_NET_RULE_ADD, eventDescription = "applying static nat rule", async = true)
     public boolean applyStaticNatRules(long ipId, Account caller) throws ResourceUnavailableException {
-        return applyStaticNatRules(ipId, false, caller);
+        if(!applyStaticNatRules(ipId, false, caller)){
+        	throw new CloudRuntimeException("Failed to apply static nat rule");
+        }
+        return true;
     }
 
     @Override

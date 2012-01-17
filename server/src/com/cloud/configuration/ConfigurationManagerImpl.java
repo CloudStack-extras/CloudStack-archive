@@ -436,7 +436,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         Long userId = UserContext.current().getCallerUserId();
         String name = cmd.getCfgName();
         String value = cmd.getValue();
-        UserContext.current().setEventDetails(" Name: " + name + " New Value: " + ((value == null) ? "" : value));
+        UserContext.current().setEventDetails(" Name: "+name +" New Value: "+ (((name.toLowerCase()).contains("password")) ? "*****" : 
+        									(((value == null) ? "" : value))));
         // check if config value exists
         ConfigurationVO config = _configDao.findByName(name);
         if (config == null) {
@@ -739,10 +740,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         if (!privateIps.isEmpty()) {
             if (!(_privateIpAddressDao.deleteIpAddressByPod(podId))) {
                 throw new CloudRuntimeException("Failed to cleanup private ip addresses for pod " + podId);
-            }
-
-            // Delete corresponding capacity record
-            _capacityDao.removeBy(Capacity.CAPACITY_TYPE_PRIVATE_IP, null, podId, null, null);
+            }            
         }
 
         // Delete link local ip addresses for the pod
@@ -760,7 +758,10 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
                 _vlanDao.remove(vlan.getId());
             }
         }
-
+        
+        // Delete corresponding capacity records
+        _capacityDao.removeBy(null, null, podId, null, null);
+        
         // Delete the pod
         if (!(_podDao.remove(podId))) {
             throw new CloudRuntimeException("Failed to delete pod " + podId);
@@ -1237,13 +1238,26 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
             String bindDN = cmd.getBindDN();
             String bindPasswd = cmd.getBindPassword();
             
+            if (bindDN != null && bindPasswd == null ){
+            	throw new InvalidParameterValueException("If you specify a bind name then you need to provide bind password too.");
+            }
+            
+            //System.setProperty("javax.net.ssl.keyStore", "/cygdrive/c/citrix/info/cacerts.jks");
+            //System.setProperty("javax.net.ssl.keyStorePassword", "1111_aaaa");
+            
             // check if the info is correct
             Hashtable<String, String> env = new Hashtable<String, String>(11);
             env.put(Context.INITIAL_CONTEXT_FACTORY,"com.sun.jndi.ldap.LdapCtxFactory");
-            env.put(Context.PROVIDER_URL, "ldap://" + hostname + ":" + port + "/");
-            if (useSSL) env.put(Context.SECURITY_PRINCIPAL, "ssl");
-            env.put(Context.SECURITY_PRINCIPAL, bindDN);
-            env.put(Context.SECURITY_CREDENTIALS, bindPasswd);
+            String protocol = "ldap://" ;
+            if (new Boolean(useSSL)){
+            	env.put(Context.SECURITY_PROTOCOL, "ssl");
+                protocol="ldaps://" ;
+            }
+            env.put(Context.PROVIDER_URL, protocol + hostname  + ":" + port);
+            if (bindDN != null && bindPasswd != null){
+            	env.put(Context.SECURITY_PRINCIPAL, bindDN);
+            	env.put(Context.SECURITY_CREDENTIALS, bindPasswd);
+            }
             // Create the initial context
             DirContext ctx = new InitialDirContext(env);
             ctx.close();

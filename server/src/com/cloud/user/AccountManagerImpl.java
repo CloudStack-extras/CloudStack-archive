@@ -105,6 +105,7 @@ import com.cloud.user.dao.UserAccountDao;
 import com.cloud.user.dao.UserDao;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.Pair;
+import com.cloud.utils.Ternary;
 import com.cloud.utils.component.Adapters;
 import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.component.Inject;
@@ -478,13 +479,13 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             // Destroy the account's VMs
             List<UserVmVO> vms = _userVmDao.listByAccountId(accountId);
             if (s_logger.isDebugEnabled()) {
-                s_logger.debug("Destroying # of vms (accountId=" + accountId + "): " + vms.size());
+                s_logger.debug("Expunging # of vms (accountId=" + accountId + "): " + vms.size());
             }
 
             //no need to catch exception at this place as expunging vm should pass in order to perform further cleanup
             for (UserVmVO vm : vms) {
                 if (!_vmMgr.expunge(vm, callerUserId, caller)) {
-                    s_logger.error("Unable to destroy vm: " + vm.getId());
+                    s_logger.error("Unable to expunge vm: " + vm.getId());
                     accountCleanupNeeded = true;
                 }
             }
@@ -1526,7 +1527,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
     public void logoutUser(Long userId) {
         UserAccount userAcct = _userAccountDao.findById(userId);
         if (userAcct != null) {
-            EventUtils.saveEvent(userId, userAcct.getAccountId(), EventTypes.EVENT_USER_LOGOUT, "user has logged out");
+            EventUtils.saveEvent(userId, userAcct.getAccountId(), userAcct.getDomainId(), EventTypes.EVENT_USER_LOGOUT, "user has logged out");
         } // else log some kind of error event? This likely means the user doesn't exist, or has been deleted...
     }
     
@@ -1649,7 +1650,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("User: " + username + " in domain " + domainId + " has successfully logged in");
             }
-            EventUtils.saveEvent(user.getId(), user.getAccountId(), EventTypes.EVENT_USER_LOGIN, "user has logged in");
+            EventUtils.saveEvent(user.getId(), user.getAccountId(), user.getDomainId(), EventTypes.EVENT_USER_LOGIN, "user has logged in");
             return user;
         } else {
             if (s_logger.isDebugEnabled()) {
@@ -1817,6 +1818,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
         if (accountId == null) {
         	if (isAdmin(caller.getType()) && listAll && domainId == null) {
             	listForDomain = true;
+            	isRecursive = true;
             	if (domainId == null) {
             		domainId = caller.getDomainId();
             	}
@@ -2062,8 +2064,9 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
 	}
     
     @Override
-    public ListProjectResourcesCriteria buildACLSearchParameters(Account caller, Long domainId, boolean isRecursive, String accountName, Long projectId, List<Long> permittedAccounts, boolean listAll, Long id) {
-    	ListProjectResourcesCriteria listProjectResourcesCriteria = null;
+    public void buildACLSearchParameters(Account caller, Long id, String accountName, Long projectId, List<Long> permittedAccounts, Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject, boolean listAll) {
+    	Long domainId = domainIdRecursiveListProject.first();
+    	
     	if (domainId != null) {
         	Domain domain = _domainDao.findById(domainId);
         	if (domain == null) {
@@ -2098,7 +2101,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
         		if (caller.getType() == Account.ACCOUNT_TYPE_NORMAL) {
                     permittedAccounts.addAll(_projectMgr.listPermittedProjectAccounts(caller.getId()));
         		} else {
-        			listProjectResourcesCriteria = Project.ListProjectResourcesCriteria.ListProjectResourcesOnly;
+        			domainIdRecursiveListProject.third(Project.ListProjectResourcesCriteria.ListProjectResourcesOnly);
         		}
         	} else {
                 Project project = _projectMgr.getProject(projectId);
@@ -2112,7 +2115,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
         	}
         } else {
         	if (id == null) {
-    			listProjectResourcesCriteria = Project.ListProjectResourcesCriteria.SkipProjectResources;
+        		domainIdRecursiveListProject.third(Project.ListProjectResourcesCriteria.SkipProjectResources);
         	}
 			if (permittedAccounts.isEmpty() && domainId == null) {
 	        	if (caller.getType() == Account.ACCOUNT_TYPE_NORMAL) {
@@ -2121,18 +2124,16 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
 	        		if (id == null) {
 		        		permittedAccounts.add(caller.getId());
 	        		} else if (caller.getType() != Account.ACCOUNT_TYPE_ADMIN) {
-	        			domainId = caller.getDomainId();
-	        			isRecursive = true;
+	        			domainIdRecursiveListProject.first(caller.getDomainId());
+	        			domainIdRecursiveListProject.second(true);
 	        		}
 	        	} else if (domainId == null){
 	        		if (caller.getType() == Account.ACCOUNT_TYPE_DOMAIN_ADMIN){
-	        			domainId = caller.getDomainId();
-	        			isRecursive = true;
+	        			domainIdRecursiveListProject.first(caller.getDomainId());
+	        			domainIdRecursiveListProject.second(true);
 	        		}
 	        	}
 	        }
-        }
-        
-        return listProjectResourcesCriteria;
+        }        
     }
 }

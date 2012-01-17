@@ -441,7 +441,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
              throw new ConfigurationException("Unable to find class " + "com.cloud.storage.JavaStorageLayer");
          }
 		 
-		 _storagePoolMgr = new KVMStoragePoolManager(_storage);
+
          
 		_virtRouterResource = new VirtualRoutingResource();
 		
@@ -659,6 +659,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 		_monitor = new KVMHAMonitor(null, info[0], _heartBeatPath);
 		Thread ha = new Thread(_monitor);
 		ha.start();
+		
+		_storagePoolMgr = new KVMStoragePoolManager(_storage, _monitor);
          
          _sysvmISOPath = (String)params.get("systemvm.iso.path");
  		if (_sysvmISOPath == null) {
@@ -2338,13 +2340,6 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
                     }
                 }
             }
-
-			// Attach each data volume to the VM, if there is a deferred attached disk
-			for (DiskDef disk : vm.getDevices().getDisks()) {
-				if (disk.isAttachDeferred()) {
-					attachOrDetachDevice(conn, true, vmName, disk.toString());
-				}
-			}
 			
 			state = State.Running;
 			return new StartAnswer(cmd);
@@ -2380,6 +2375,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 	}
 
 	protected void createVbd(Connect conn, VirtualMachineTO vmSpec, String vmName, LibvirtVMDef vm) throws InternalErrorException, LibvirtException, URISyntaxException{
+		List<DiskDef> disks = new ArrayList<DiskDef>();
 		for (VolumeTO volume : vmSpec.getDisks()) {
 			KVMPhysicalDisk physicalDisk = null;
 			KVMStoragePool pool = null;
@@ -2414,18 +2410,23 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 				if (pool.getType() == StoragePoolType.CLVM) {
 					disk.defBlockBasedDisk(physicalDisk.getPath(), devId, diskBusType);
 				} else {
-					disk.defFileBasedDisk(physicalDisk.getPath(), devId, diskBusType, DiskDef.diskFmtType.QCOW2);
+					if (volume.getType() == Volume.Type.DATADISK) {
+						disk.defFileBasedDisk(physicalDisk.getPath(), devId, DiskDef.diskBus.VIRTIO, DiskDef.diskFmtType.QCOW2);
+					} else {
+						disk.defFileBasedDisk(physicalDisk.getPath(), devId, diskBusType, DiskDef.diskFmtType.QCOW2);
+					}
 				}
+				
+				disks.add(devId, disk);
+				continue;
 			}
 
-			//Centos doesn't support scsi hotplug. For other host OSes, we attach the disk after the vm is running, so that we can hotplug it.
-			if (volume.getType() == Volume.Type.DATADISK &&  diskBusType != DiskDef.diskBus.VIRTIO) {
-				disk.setAttachDeferred(true);
-			}
-
-			if (!disk.isAttachDeferred()) {
-				vm.getDevices().addDevice(disk);
-			}
+			vm.getDevices().addDevice(disk);
+			
+		}
+		
+		for (DiskDef disk : disks) {
+			vm.getDevices().addDevice(disk);
 		}
 		
 		if (vmSpec.getType() != VirtualMachine.Type.User) {

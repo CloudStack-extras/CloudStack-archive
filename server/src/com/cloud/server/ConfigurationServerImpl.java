@@ -552,12 +552,15 @@ public class ConfigurationServerImpl implements ConfigurationServer {
     protected void updateKeyPairs() {
         // Grab the SSH key pair and insert it into the database, if it is not present
 
-        if (s_logger.isInfoEnabled()) {
-            s_logger.info("Processing updateKeyPairs");
+        String userid = System.getProperty("user.name");
+        if (!userid.startsWith("cloud")){
+            return;
         }
         String already = _configDao.getValue("ssh.privatekey");
         String homeDir = Script.runSimpleBashScript("echo ~");
-        String userid = System.getProperty("user.name");
+        if (s_logger.isInfoEnabled()) {
+            s_logger.info("Processing updateKeyPairs");
+        }
         if (homeDir != null && homeDir.equalsIgnoreCase("~")) {
             s_logger.error("No home directory was detected.  Set the HOME environment variable to point to your user profile or home directory.");
             throw new CloudRuntimeException("No home directory was detected.  Set the HOME environment variable to point to your user profile or home directory.");
@@ -571,7 +574,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
                 s_logger.info("Systemvm keypairs not found in database. Need to store them in the database");
             }
             //FIXME: take a global database lock here for safety. 
-            Script.runSimpleBashScript("if [ -f ~/.ssh/id_rsa ] ; then true ; else yes '' | ssh-keygen -t rsa -q ; fi");
+            Script.runSimpleBashScript("if [ -f ~/.ssh/id_rsa ] ; then rm -f ~/.ssh/id_rsa ; fi; ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa -q");
 
             byte[] arr1 = new byte[4094]; // configuration table column value size
             try {
@@ -629,14 +632,8 @@ public class ConfigurationServerImpl implements ConfigurationServer {
                 s_logger.info("Keypairs already in database, skip updating local copy (not running as cloud user)");
             }
         }
-    
-        
-        if (userid.startsWith("cloud")){
-            s_logger.info("Going to update systemvm iso with generated keypairs if needed");
-            injectSshKeysIntoSystemVmIsoPatch(pubkeyfile.getAbsolutePath(), privkeyfile.getAbsolutePath());
-        } else {
-            s_logger.info("Skip updating keypairs on systemvm iso (not running as cloud user)");
-        }
+        s_logger.info("Going to update systemvm iso with generated keypairs if needed");
+        injectSshKeysIntoSystemVmIsoPatch(pubkeyfile.getAbsolutePath(), privkeyfile.getAbsolutePath());
     }
     
     private void writeKeyToDisk(String key, String keyPath) {
