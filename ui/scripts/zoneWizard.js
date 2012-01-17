@@ -274,21 +274,25 @@
           };
 
           if (selectedZoneObj.networktype == "Basic") {
+            // Update description
+            args.$form.closest('.setup-guest-traffic').find('.main-desc').html('Please add an IP Range to your guest network.');
+
+            args.$form.find('.field').show();
             args.$form.find('[rel=vlanRange]').hide();
             args.$form.find('[rel=vlanId]').hide();
             args.$form.find('[rel=scope]').hide();
             args.$form.find('[rel=domainId]').hide();
             args.$form.find('[rel=account]').hide();
             args.$form.find('[rel=networkdomain]').hide();
-
-            args.$form.find('[rel=podId]').show();
+            args.$form.find('[rel=name]').hide();
+            args.$form.find('[rel=description]').hide();
+            args.$form.find('[rel=podId]').hide();
           } else {  // Advanced
+            // Update description
+            args.$form.closest('.setup-guest-traffic').find('.main-desc').html('Please configure your guest network.');
+
+            args.$form.find('.field').hide();
             args.$form.find('[rel=vlanRange]').show();
-            args.$form.find('[rel=vlanId]').show();
-            args.$form.find('[rel=scope]').show();
-            args.$form.find('[rel=domainId]').show();
-            args.$form.find('[rel=account]').show();
-            args.$form.find('[rel=networkdomain]').show();
           }
         },
 
@@ -297,7 +301,62 @@
             label: 'VLAN Range',
             range: ['vlanRangeStart', 'vlanRangeEnd'],
             validation: { required: true }
-          }
+          },
+          name: {
+            label: 'Name',
+            validation: { required: true }
+          },
+          description: {
+            label: 'Description',
+            validation: { required: true }
+          },
+          vlanId: {
+            label: "VLAN ID"
+          },
+          scope: {
+            label: 'Scope',
+            select: function(args) {
+              var array1 = [];
+              var selectedZoneObj = {
+                securitygroupsenabled: args.context.zones[0]['security-groups-enabled']
+              }
+              if(selectedZoneObj.securitygroupsenabled) {
+                array1.push({id: 'account-specific', description: 'Account'});
+              }
+              else {
+                array1.push({id: 'zone-wide', description: 'All'});
+                array1.push({id: 'domain-specific', description: 'Domain'});
+                array1.push({id: 'account-specific', description: 'Account'});
+              }
+              args.response.success({ data: array1 });
+
+              args.$select.change(function() {
+                var $form = args.$select.closest('form');
+                
+                if($(this).val() == "zone-wide") {
+                  $form.find('[rel=domainId]').hide();
+                  $form.find('[rel=account]').hide();
+                }
+                else if ($(this).val() == "domain-specific") {
+                  $form.find('[rel=domainId]').show();
+                  $form.find('[rel=account]').hide();
+                }
+                else if($(this).val() == "account-specific") {
+                  $form.find('[rel=domainId]').show();
+                  $form.find('[rel=account]').show();
+                }
+              });
+
+              setTimeout(function() {
+                args.$select.trigger('change');
+              });
+            }
+          },
+          guestGateway: { label: 'Guest gateway' },
+          guestNetmask: { label: 'Guest netmask' },
+          guestStartIp: { label: 'Guest start IP' },
+          guestEndIp: { label: 'Guest end IP' },
+          networkdomain: { label: 'Network domain' }
         }
       },
       cluster: {
