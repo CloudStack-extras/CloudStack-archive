@@ -1012,13 +1012,17 @@
       $wizard.find('.traffic-types-drag-area').droppable({
         drop: function(event, ui) {
           var trafficTypeID = ui.draggable.attr('traffic-type-id');
-          
+
           if (!physicalNetwork.isTrafficTypeClone(ui.draggable)) {
-            physicalNetwork.assignTrafficType(
-              trafficTypeID,
-              $wizard.find('.select-container.multi:first')
-            );
-          } else {
+            if ($.inArray(trafficTypeID, physicalNetwork.requiredTrafficTypes) == -1) {
+              physicalNetwork.unassignTrafficType(trafficTypeID, $wizard);
+            } else {
+              physicalNetwork.assignTrafficType(
+                trafficTypeID,
+                $wizard.find('.select-container.multi:first')
+              );
+            }
+          } else if (!ui.draggable.closest('.traffic-types-drag-area').size()) {
             ui.draggable.remove();
           }
           
