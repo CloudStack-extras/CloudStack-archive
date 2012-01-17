@@ -826,15 +826,11 @@
                 },
                 compute: {
                   title: 'Compute',
-                  custom: function(args) {
-                    return $('<p>Compute</p>');
-                  }
+                  custom: cloudStack.uiCustom.zoneChart('compute')
                 },
                 network: {
                   title: 'Network',
-                  custom: function(args) {
-                    return $('<p>Network</p>');
-                  }
+                  custom: cloudStack.uiCustom.zoneChart('network')
                 },
                 systemVMs: {
                   title: 'System VMs',

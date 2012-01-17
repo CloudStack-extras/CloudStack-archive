@@ -479,4 +479,16 @@
       return $charts;
     };
   };
+
+
+  /**
+   * Zone details chart
+   */
+  cloudStack.uiCustom.zoneChart = function(chartID) {
+    return function(args) {
+      var $chart = $('<div>').html(chartID);
+
+      return $chart;
+    };
+  };
 })(jQuery, cloudStack);
