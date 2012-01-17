@@ -3662,484 +3662,98 @@ Dialogs*/
 }
 
 /*System chart*/
-.system-charts .ui-tabs-nav {
-  /*+placement:shift 13px 7px;*/
-  position: relative;
-  left: 13px;
-  top: 7px;
-}
-
-.system-charts .ui-tabs-panel {
-  /*+placement:shift 13px 5px;*/
-  position: relative;
-  left: 13px;
-  top: 5px;
-}
-
-.system-chart-view {
+.system-chart {
   width: 100%;
-  height: 589px;
+  height: 100%;
   overflow: auto;
-  overflow-x: hidden;
-  font-weight: normal;
-  margin-top: 0;
 }
 
-.system-chart-view .add {
-  font-weight: bold;
+/** Compute*/
+.system-chart.compute {
+  background: url(../images/bg-system-chart-compute.png) no-repeat center;
 }
 
-.zone-chart {
-  height: 1061px;
-}
-
-.zone-chart .resources {
-  background: none;
-  border: 4px solid #DFDFE0;
-  /*+border-radius:10px;*/
-  -moz-border-radius: 10px;
-  -webkit-border-radius: 10px;
-  -khtml-border-radius: 10px;
-  border-radius: 10px 10px 10px 10px;
-  width: 515px;
-  margin: 18px auto 0 22px;
-  padding: 0 0 11px;
-  clear: both;
-  display: inline-block;
-  /*+placement:shift;*/
-  position: relative;
-  left: 0;
-  top: 0;
-}
-
-.zone-chart .toolbar {
-}
-
-.zone-chart .resources .head {
-  padding: 14px 0 44px 9px;
-  color: #4A5B6A;
-  /*+text-shadow:0px 1px 1px #FFFFFF;*/
-  -moz-text-shadow: 0px 1px 1px #FFFFFF;
-  -webkit-text-shadow: 0px 1px 1px #FFFFFF;
-  -o-text-shadow: 0px 1px 1px #FFFFFF;
-  text-shadow: 0px 1px 1px #FFFFFF;
-}
-
-.zone-chart .resources .head span {
-  float: left;
-}
-
-.zone-chart .resources .head .add {
-  float: right;
-  background: #AFBDC6 url(../images/bg-gradients.png) repeat-x 0px -810px;
-  border: 1px solid #A2A9AC;
-  padding: 4px 26px;
-  margin: 6px 16px 0 0;
-  cursor: pointer;
-  /*+box-shadow:0px 1px 2px #FFFFFF;*/
-  -moz-box-shadow: 0px 1px 2px #FFFFFF;
-  -webkit-box-shadow: 0px 1px 2px #FFFFFF;
-  -o-box-shadow: 0px 1px 2px #FFFFFF;
-  box-shadow: 0px 1px 2px #FFFFFF;
-  font-size: 12px;
-  /*+border-radius:5px;*/
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -khtml-border-radius: 5px;
-  border-radius: 5px 5px 5px 5px;
-}
-
-.zone-chart .resources .head .add:hover {
-  background-position: 0px -831px;
-  /*+box-shadow:inset 0px 1px 0px #6B6B6B;*/
-  -moz-box-shadow: inset 0px 1px 0px #6B6B6B;
-  -webkit-box-shadow: inset 0px 1px 0px #6B6B6B;
-  -o-box-shadow: inset 0px 1px 0px #6B6B6B;
-  box-shadow: inset 0px 1px 0px #6B6B6B;
-}
-
-.zone-chart ul {
+/*** Compute resources*/
+.system-chart.compute ul.resources {
   width: 98%;
-  margin: 0 0 0 5px;
-  padding: 0px 0 4px;
-  display: inline-block;
-}
-
-.zone-chart li {
-  display: block;
-  float: left;
-  width: 147px;
-  margin: 10px 0px 6px 18px;
-  height: 86px;
-  position: relative;
-  background: url(../images/buttons.png) no-repeat 0px -399px;
-}
-
-.zone-chart li.primary-storage {
-  clear: both;
-  margin-left: 92px;
-}
-
-.zone-chart ul li .name {
-  color: #4E5F6F;
-  width: 130px;
-  /*+text-shadow:0px 1px 1px #FCFCFC;*/
-  -moz-text-shadow: 0px 1px 1px #FCFCFC;
-  -webkit-text-shadow: 0px 1px 1px #FCFCFC;
-  -o-text-shadow: 0px 1px 1px #FCFCFC;
-  text-shadow: 0px 1px 1px #FCFCFC;
-  /*+placement:shift 10px 11px;*/
-  position: relative;
-  left: 10px;
-  top: 11px;
-}
-
-.zone-chart ul li.main.disabled .name {
-  color: #AAAAAA;
-  text-decoration: line-through;
-  margin-top: 10px;
-  /*[empty]background:;*/
-}
-
-.zone-chart ul li .view-all,
-.zone-chart ul li .view-details {
-  /*+placement:anchor-bottom-right 5px 11px;*/
-  position: absolute;
-  right: 5px;
-  bottom: 11px;
-  cursor: pointer;
-  color: #FFFFFF;
-  background: url(../images/buttons.png) no-repeat -457px -503px;
-  font-size: 11px;
-  padding: 6px 24px 6px 9px;
-  /*+text-shadow:0px 1px 1px #395065;*/
-  -moz-text-shadow: 0px 1px 1px #395065;
-  -webkit-text-shadow: 0px 1px 1px #395065;
-  -o-text-shadow: 0px 1px 1px #395065;
-  text-shadow: 0px 1px 1px #395065;
-}
-
-.zone-chart ul li .view-all.enable {
-  display: none;
-}
-
-.zone-chart ul li.disabled .view-all.enable {
-  display: block;
-  font-weight: bold;
-  width: 22px;
-  padding: 4px 22px 3px 6px;
-  /*+placement:shift 182px 9px;*/
-  position: relative;
-  left: 182px;
-  top: 9px;
-  background: url(../images/bg-gradients.png) 0px -734px;
-  border: 1px solid #C8D3DE;
-  /*+border-radius:7px;*/
-  -moz-border-radius: 7px;
-  -webkit-border-radius: 7px;
-  -khtml-border-radius: 7px;
-  border-radius: 7px 7px 7px 7px;
-  /*+box-shadow:inset 0px 0px 3px #030303;*/
-  -moz-box-shadow: inset 0px 0px 3px #030303;
-  -webkit-box-shadow: inset 0px 0px 3px #030303;
-  -o-box-shadow: inset 0px 0px 3px #030303;
-  box-shadow: inset 0px 0px 3px #030303;
-}
-
-.zone-chart ul li.disabled .view-all.enable:hover {
-  background-position: 0px -767px;
-}
-
-.zone-chart ul li .view-all.configure {
-  /*+placement:anchor-bottom-right -1px 11px;*/
-  position: absolute;
-  right: -1px;
-  bottom: 11px;
-  text-indent: -2px;
-}
-
-.zone-chart ul li .view-details {
-  text-indent: 4px;
-}
-
-/*** Info area*/
-.zone-chart .side-info {
-  width: 203px;
-  float: right;
-  display: none;
-  margin: 58px 0 0;
-}
-
-.zone-chart .side-info ul {
-  display: block;
-  height: 904px;
-}
-
-.zone-chart .side-info ul li {
-  width: 185px;
-  height: 98px;
-  margin-left: 0;
-  background: none;
-}
-
-.zone-chart .side-info ul li .icon {
-  width: 29px;
-  height: 30px;
-  background: url(../images/sprites.png) -587px -1107px;
-  float: left;
-}
-
-.zone-chart .side-info ul li .icon span {
-  color: #FFFFFF;
-  /*+placement:shift 9px 6px;*/
-  position: relative;
-  left: 9px;
-  top: 6px;
-  /*+text-shadow:0px 1px 1px #313131;*/
-  -moz-text-shadow: 0px 1px 1px #313131;
-  -webkit-text-shadow: 0px 1px 1px #313131;
-  -o-text-shadow: 0px 1px 1px #313131;
-  text-shadow: 0px 1px 1px #313131;
-}
-
-.zone-chart .side-info ul li .title {
-  color: #9A9A9A;
-  float: left;
-  font-size: 17px;
-  /*+placement:shift 10px 4px;*/
-  position: relative;
-  left: 10px;
-  top: 4px;
-}
-
-.zone-chart .side-info ul li p {
-  max-height: 113px;
-  overflow: hidden;
-  clear: both;
-  font-size: 11px;
-  line-height: 19px;
-  margin: 0 0 0 38px;
-  color: #808080;
-}
-
-/*** NAAS*/
-.zone-chart .resources.naas {
-  border: none;
-}
-
-.zone-chart .resources.naas .tooltip-info {
-  width: 202px;
-  min-height: 226px;
-  left: 520px;
-  top: 48px;
-}
-
-.zone-chart .resources.naas .tooltip-info.public .arrow {
-}
-
-.zone-chart .resources.naas .tooltip-info.management .arrow,
-.zone-chart .resources.naas .tooltip-info.guest .arrow {
-  top: 159px;
-}
-
-.zone-chart .resources.naas .head {
-  background: #E7E7E7;
-  width: 728px;
-  display: inline-block;
-  padding: 1px 0 15px;
-}
-
-.zone-chart .resources.naas .head span {
-  /*+placement:shift 15px 9px;*/
-  position: relative;
-  left: 15px;
-  top: 9px;
-}
-
-.zone-chart .resources.naas ul.system-main {
-  height: 705px;
-  background: transparent url(../images/bg-naas.png) no-repeat 30px 0px;
-  z-index: 12;
+  height: 97%;
+  margin: 0;
   position: relative;
 }
 
-.zone-chart .resources.naas ul.system-main li.main {
-  background: none;
-  height: 63px;
-  text-align: center;
-}
-
-.zone-chart .resources.naas ul.system-main li.main.disabled {
-}
-
-.zone-chart .resources.naas ul.system-main li.main .view-all {
-  /*+placement:shift 65px 29px;*/
-  position: relative;
-  left: 65px;
-  top: 29px;
-  position: absolute;
+.system-chart.compute ul.resources li {
+  background: transparent url(../images/bg-gradients.png) repeat-x 0px -1340px;
   text-align: left;
-  text-indent: -2px;
-}
-
-.zone-chart .resources.naas ul.system-main li.main.disabled .view-all {
-  display: none;
-}
-
-.zone-chart .resources.naas ul.system-main li.main.public {
-  /*+placement:shift 153px 2px;*/
-  position: relative;
-  left: 153px;
-  top: 2px;
+  width: 100px;
+  height: 60px;
   position: absolute;
+  border: 1px solid #99A0A5;
+  /*+border-radius:4px;*/
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  -khtml-border-radius: 4px;
+  border-radius: 4px 4px 4px 4px;
+  /*+box-shadow:0px 0px 1px #CDCDCD;*/
+  -moz-box-shadow: 0px 0px 1px #CDCDCD;
+  -webkit-box-shadow: 0px 0px 1px #CDCDCD;
+  -o-box-shadow: 0px 0px 1px #CDCDCD;
+  box-shadow: 0px 0px 1px #CDCDCD;
 }
 
-.zone-chart .resources.naas ul.system-main li.main.management {
-  /*+placement:shift 0px 153px;*/
-  position: relative;
-  left: 0px;
-  top: 153px;
+.system-chart.compute ul.resources li .label {
   position: absolute;
-}
-
-.zone-chart .resources.naas ul.system-main li.main.system-vms {
-  /*+placement:shift 0px 239px;*/
-  position: relative;
-  left: 0px;
-  top: 239px;
-  position: absolute;
-}
-
-.zone-chart .resources.naas ul.system-main li.main.guest {
-  /*+placement:shift 309px 153px;*/
-  position: relative;
-  left: 309px;
-  top: 153px;
-  position: absolute;
-}
-
-.zone-chart .resources.naas ul.system-main li.network-providers {
-  width: 328px;
-  height: 168px;
-  overflow: visible;
-  /*+placement:shift 213px 220px;*/
-  position: relative;
-  left: 213px;
-  top: 220px;
-  background: none;
-}
-
-.zone-chart .resources.naas ul.system-main li.network-providers ul {
-  height: 458px;
-}
-
-.zone-chart .resources.naas ul.system-main li.network-providers ul li {
-  position: relative;
-  clear: both;
-  width: 256px;
-  height: 83px;
-  background: url(../images/sprites.png) no-repeat -2px -857px;
-  margin-bottom: 0px;
-}
-
-.zone-chart .resources.naas ul.system-main li.network-providers ul li.disabled,
-.zone-chart .resources.naas ul.system-main li.network-providers ul li.not-configured {
-  background-position: -3px -944px;
-}
-
-.zone-chart ul li .tooltip-icon {
-  width: 18px;
-  height: 19px;
-  background: url(../images/sprites.png) no-repeat -592px -1066px;
-  /*+placement:shift 23px 8px;*/
-  position: relative;
-  left: 23px;
   top: 8px;
-  position: absolute;
-  display: none;
-}
-
-.zone-chart .resources.zone ul li .tooltip-icon {
-  position: relative;
-  float: left;
-  left: 6px;
-  display: none;
-}
-
-.zone-chart ul li .tooltip-icon span {
-  color: #FFFFFF;
-  font-size: 11px;
+  left: 10px;
   font-weight: bold;
-  /*+placement:shift 6px 3px;*/
-  position: relative;
-  left: 6px;
-  top: 3px;
-  position: absolute;
-}
-
-.zone-chart .resources.zone ul li .tooltip-icon span {
-  left: 6px;
-  top: 3px;
-  position: absolute;
-}
-
-.zone-chart .resources.naas .system-main .network-providers li .name {
-  /*+placement:shift 96px 12px;*/
-  position: relative;
-  left: 96px;
-  top: 12px;
-}
-
-.zone-chart .resources.naas .system-main .network-providers li .status {
-  width: 70px;
-  height: 21px;
-  /*+placement:shift 94px 34px;*/
-  position: relative;
-  left: 94px;
-  top: 34px;
-  font-size: 11px;
+  font-size: 12px;
+  color: #5C7485;
   /*+text-shadow:0px 1px #FFFFFF;*/
   -moz-text-shadow: 0px 1px #FFFFFF;
   -webkit-text-shadow: 0px 1px #FFFFFF;
   -o-text-shadow: 0px 1px #FFFFFF;
   text-shadow: 0px 1px #FFFFFF;
-  color: #2A4359;
-  font-weight: bold;
-  background: url(../images/sprites.png) -6px -535px;
 }
 
-.zone-chart .resources.naas .system-main .network-providers li.enabled .status {
-  background-position: -6px -459px;
+.system-chart.compute ul.resources li.zone {
+  left: 96px;
 }
 
-.zone-chart .resources.naas .system-main .network-providers li.disabled .status {
-  background-position: -7px -495px;
+.system-chart.compute ul.resources li.zone .label {
+  width: 100%;
+  left: 0px;
+  top: 20px;
+  font-size: 14px;
+  text-align: center;
 }
 
-.zone-chart .resources.naas .system-main .network-providers li .status span {
-  /*+placement:shift 25px 5px;*/
-  position: relative;
-  left: 25px;
-  top: 5px;
+.system-chart.compute ul.resources li.pods {
+  left: 178px;
+  top: 112px;
 }
 
-/*** Zone resources*/
-.zone-chart .resources.zone {
-  width: 519px;
-  margin-top: -15px;
-  z-index: 10;
+.system-chart.compute ul.resources li.clusters {
+  left: 288px;
+  top: 189px;
 }
 
-.zone-chart .resources.zone ul {
-  height: 205px;
+.system-chart.compute ul.resources li.hosts {
+  left: 402px;
+  top: 265px;
 }
 
-.zone-chart li.primary-storage {
-  clear: both;
-  margin-left: 92px;
+.system-chart.compute ul.resources li.primaryStorage {
+  left: 402px;
+  top: 375px;
 }
 
-/*** Add initial resource form*/
+.system-chart.compute ul.resources li.secondaryStorage {
+  left: 178px;
+  top: 497px;
+}
+
+/** Network
+* NAAS
+** Add initial resource form*/
 .panel .add-first-network-resource {
   margin: 37px;
   font-size: 14px;

@@ -484,9 +484,66 @@
   /**
    * Zone details chart
    */
-  cloudStack.uiCustom.zoneChart = function(chartID) {
+  cloudStack.uiCustom.systemChart = function(chartID) {
+    var charts = {
+      compute: function(args) {
+        var $chart = $('<div>');
+
+        // Resource items
+        var computeResources = {
+          zone: {
+            label: 'Zone'
+          },
+
+          pods: {
+            label: 'Pods'
+          },
+
+          clusters: {
+            label: 'Clusters'
+          },
+
+          hosts: {
+            label: 'Hosts'
+          },
+
+          primaryStorage: {
+            label: 'Primary Storage'
+          },
+
+          secondaryStorage: {
+            label: 'Secondary Storage'
+          }
+        };
+
+        var $computeResources = $('<ul>').addClass('resources');
+
+        // Make resource items
+        $.each(computeResources, function(id, resource) {
+          var $li = $('<li>');
+          var $label = $('<span>').addClass('label');
+
+          $li.addClass(id);
+          $label.html(resource.label);
+          $label.appendTo($li);
+
+          $li.appendTo($computeResources);
+        });
+
+        $chart.append($computeResources);
+
+        return $chart;
+      },
+
+      network: function(args) {
+        var $chart = $('<div>').html('Network');
+
+        return $chart;
+      }
+    };
+
     return function(args) {
-      var $chart = $('<div>').html(chartID);
+      var $chart = charts[chartID](args).addClass('system-chart').addClass(chartID);
 
       return $chart;
     };

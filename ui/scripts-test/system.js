@@ -826,11 +826,11 @@
                 },
                 compute: {
                   title: 'Compute',
-                  custom: cloudStack.uiCustom.zoneChart('compute')
+                  custom: cloudStack.uiCustom.systemChart('compute')
                 },
                 network: {
                   title: 'Network',
-                  custom: cloudStack.uiCustom.zoneChart('network')
+                  custom: cloudStack.uiCustom.systemChart('network')
                 },
                 systemVMs: {
                   title: 'System VMs',
