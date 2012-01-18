@@ -303,6 +303,13 @@
               args.$form.find('[rel=' + this + ']').hide();
             }         
           });
+
+          // Update description
+          if (selectedZoneObj.networktype == "Basic") {
+            args.$form.closest('.setup-guest-traffic').find('.main-desc').html('Please add an IP range to your guest network.');
+          } else {
+            args.$form.closest('.setup-guest-traffic').find('.main-desc').html('Please configure guest traffic for your physical network(s)');
+          }
         },
 
         fields: {
