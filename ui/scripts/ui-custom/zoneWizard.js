@@ -511,7 +511,6 @@
    */
   var guestTraffic = {
     init: function($wizard, args) {
-      return;
       var $physicalNetworks = physicalNetwork.getPhysicalNetworks($wizard);
       var $tabs = guestTraffic.makeTabs($physicalNetworks, args);
       var $container = guestTraffic.getMainContainer($wizard);
@@ -520,14 +519,9 @@
       guestTraffic.remove($wizard);
 
       $container.find('.content form').hide();
-      $container.find('.content form .field[rel=vlanRange]').clone().appendTo(
-        $('<form></form>')
-          .addClass('physical-network-item')
-          .attr('rel', 'guestTraffic-multiplePhysicalNetworks')
-          .prependTo($container.find('.content .select-container'))
-      );
       $tabs.appendTo($container.find('.content .select-container'));
       $container.tabs();
+      $container.find('[rel=vlanRange]').show();
     },
 
     /**
@@ -563,7 +557,6 @@
         var refID = $network.find('input[name=id]').val();
         var networkID = 'physical-network-' + refID;
 
-        $form.find('.field[rel=vlanRange]').remove();
         $form.attr('rel', 'guestNetwork[' + refID + ']');
 
         $tabs.append($('<li></li>').append(
@@ -614,6 +607,13 @@
     $form.find('.form-item .name').each(function() {
       $(this).html($(this).find('label'));
     });
+
+    if (args.forms[id].preFilter) {
+      var preFilter = args.forms[id].preFilter({
+        $form: $form,
+        data: formState
+      });
+    }
 
     $form.find('select, input').change(function() {
       cloudStack.evenOdd($form, '.field:visible', {
@@ -801,13 +801,6 @@
                 $select.val(originalVal);
                 $select.trigger('change');
               }
-            });
-          }
-
-          if (args.forms[formID].preFilter) {
-            var preFilter = args.forms[formID].preFilter({
-              $form: $targetStep.find('form'),
-              data: formState
             });
           }
         }
