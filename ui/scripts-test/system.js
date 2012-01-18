@@ -832,6 +832,10 @@
                   title: 'Network',
                   custom: cloudStack.uiCustom.systemChart('network')
                 },
+                resources: {
+                  title: 'Resources',
+                  custom: cloudStack.uiCustom.systemChart('resources')
+                },
                 systemVMs: {
                   title: 'System VMs',
                   listView: {

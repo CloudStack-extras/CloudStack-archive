@@ -561,28 +561,28 @@
           clusters: {
             label: 'Clusters',
             viewAll: {
-              action: actions.listView('clusters', context), 
+              action: actions.listView('clusters', context),
             }
           },
 
           hosts: {
             label: 'Hosts',
             viewAll: {
-              action: actions.listView('hosts', context), 
+              action: actions.listView('hosts', context),
             }
          },
 
           primaryStorage: {
             label: 'Primary Storage',
             viewAll: {
-              action: actions.listView('primary-storage', context), 
+              action: actions.listView('primary-storage', context),
             }
           },
 
           secondaryStorage: {
             label: 'Secondary Storage',
             viewAll: {
-              action: actions.listView('secondary-storage', context), 
+              action: actions.listView('secondary-storage', context),
             }
           }
         };
@@ -618,6 +618,12 @@
 
       network: function(args) {
         var $chart = $('<div>').html('Network');
+
+        return $chart;
+      },
+
+      resources: function(args) {
+        var $chart = $('<div>').html('Resources');
 
         return $chart;
       }
