@@ -416,11 +416,12 @@
             <li style="display:none;"></li>
             <li style="display:none;"></li>
             <li style="display:none;"></li>
+            <li style="display:none;"></li>
             <li><span class="number">4</span><span>Add Resources</span><span class="arrow"></span></li>
             <li style="display:none;"></li>
             <li style="display:none;"></li>
             <li style="display:none;"></li>
-            <li class="last"><span class="number">5</span><span>Review & Launch</span></li>
+            <li class="last"><span class="number">5</span><span>Launch</span></li>
           </ul>
         </div>
         <div class="steps">
@@ -460,6 +461,12 @@
           <div class="setup-physical-network"
                zone-wizard-step-id="setupPhysicalNetwork"
                zone-wizard-prefilter="setupPhysicalNetwork">
+            <ul class="subnav">
+              <li class="physical-network active">Physical Network</li>
+              <li class="public-network">Public traffic</li>
+              <li class="pod">Pod</li>
+              <li class="guest-traffic">Guest Traffic</li>
+            </ul>
             <div class="main-desc"><em>DRAG-AND-DROP</em> different traffic types to your physical networks.</div>
             <div class="button add new-physical-network"><span class="icon">&nbsp;</span><span>Add physical network</span></div>
 
@@ -525,6 +532,13 @@
                zone-wizard-step-id="addBasicPhysicalNetwork"
                zone-wizard-form="basicPhysicalNetwork"
                zone-wizard-prefilter="addBasicPhysicalNetwork">
+            <ul class="subnav">
+              <li class="physical-network active">Physical Network</li>
+              <li class="public-network">Public traffic</li>
+              <li class="pod">Pod</li>
+              <li class="guest-traffic">Guest Traffic</li>
+            </ul>
+
             <div class="main-desc">Please specify your physical network for this zone.</div>
             <div class="content input-area">
               <div class="select-container"></div>
@@ -534,6 +548,13 @@
           <!-- Step 3.2: Configure public traffic -->
           <div class="setup-public-traffic" zone-wizard-prefilter="addPublicNetwork"
                zone-wizard-step-id="configurePublicTraffic">
+            <ul class="subnav">
+              <li class="physical-network">Physical Network</li>
+              <li class="public-network active">Public traffic</li>
+              <li class="pod">Pod</li>
+              <li class="guest-traffic">Guest Traffic</li>
+            </ul>
+
             <div class="main-desc">Configure public traffic</div>
             <div ui-custom="publicTrafficIPRange"></div>
           </div>
@@ -541,6 +562,13 @@
           <!-- Step 3.3: Add pod -->
           <div class="add-pod" zone-wizard-form="pod"
                zone-wizard-step-id="addPod">
+            <ul class="subnav">
+              <li class="physical-network">Physical Network</li>
+              <li class="public-network">Public traffic</li>
+              <li class="pod active">Pod</li>
+              <li class="guest-traffic">Guest Traffic</li>
+            </ul>
+
             <div class="main-desc">Please specify a pod for this zone.</div>
             <div class="content input-area">
               <div class="select-container"></div>
@@ -552,6 +580,13 @@
                zone-wizard-form="guestTraffic"
                zone-wizard-step-id="configureGuestTraffic"
                zone-wizard-prefilter="configureGuestTraffic">
+            <ul class="subnav">
+              <li class="physical-network">Physical Network</li>
+              <li class="public-network">Public traffic</li>
+              <li class="pod">Pod</li>
+              <li class="guest-traffic active">Guest Traffic</li>
+            </ul>
+
             <div class="main-desc">Please configure guest traffic for your physical network(s).</div>
             <div class="content input-area">
               <div class="select-container"></div>
@@ -561,6 +596,13 @@
           <!-- Step 4.1: Add cluster -->
           <div class="add-cluster" zone-wizard-form="cluster"
                zone-wizard-step-id="addCluster">
+            <ul class="subnav">
+              <li class="cluster active">Cluster</li>
+              <li class="host">Host</li>
+              <li class="primary-storage">Primary Storage</li>
+              <li class="secondary-storage">Secondary Storage</li>
+            </ul>
+
             <div class="main-desc">Please add a cluster for this zone.</div>
             <div class="content input-area">
               <div class="select-container"></div>
@@ -570,6 +612,12 @@
           <!-- Step 4.2: Add host -->
           <div class="add-cluster" zone-wizard-form="host"
                zone-wizard-step-id="addHost">
+            <ul class="subnav">
+              <li class="cluster">Cluster</li>
+              <li class="host active">Host</li>
+              <li class="primary-storage">Primary Storage</li>
+              <li class="secondary-storage">Secondary Storage</li>
+            </ul>
             <div class="main-desc">Please add a host for this zone.</div>
             <div class="content input-area">
               <div class="select-container"></div>
@@ -579,6 +627,12 @@
           <!-- Step 4.3: Add primary storage -->
           <div class="add-cluster" zone-wizard-form="primaryStorage"
                zone-wizard-step-id="addPrimaryStorage">
+            <ul class="subnav">
+              <li class="cluster">Cluster</li>
+              <li class="host">Host</li>
+              <li class="primary-storage active">Primary Storage</li>
+              <li class="secondary-storage">Secondary Storage</li>
+            </ul>
             <div class="main-desc">Please add a primary storage setup for this zone.</div>
             <div class="content input-area">
               <div class="select-container"></div>
@@ -588,6 +642,12 @@
           <!-- Step 4.4: Add secondary storage -->
           <div class="add-cluster" zone-wizard-form="secondaryStorage"
                zone-wizard-step-id="addSecondaryStorage">
+            <ul class="subnav">
+              <li class="cluster">Cluster</li>
+              <li class="host">Host</li>
+              <li class="primary-storage">Primary Storage</li>
+              <li class="secondary-storage active">Secondary Storage</li>
+            </ul>
             <div class="main-desc">Please add a secondary storage setup for this zone.</div>
             <div class="content input-area">
               <div class="select-container"></div>
