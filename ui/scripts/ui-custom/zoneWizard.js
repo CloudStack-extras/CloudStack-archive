@@ -36,6 +36,7 @@
       $physicalNetworkItems,
       function(network) {
         var $network = $(network);
+        var $guestForm = $wizard.find('form[guest-network-id=' + $network.index() + ']');
 
         return {
           id: $network.index(),
@@ -47,7 +48,9 @@
 
               return $trafficType.attr('traffic-type-id');
             }
-          )
+          ),
+          guestConfiguration: $guestForm.size() ?
+            cloudStack.serializeForm($guestForm) : null
         };
       }
     );
@@ -560,7 +563,7 @@
         var refID = $network.find('input[name=id]').val();
         var networkID = 'physical-network-' + refID;
 
-        $form.attr('rel', 'guestNetwork[' + refID + ']');
+        $form.attr('guest-network-id', refID);
 
         $tabs.append($('<li></li>').append(
           $('<a></a>')
