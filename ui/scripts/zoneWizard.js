@@ -1747,7 +1747,7 @@
 						success: function(json) {		
 							stepFns.addHost({
 								data: $.extend(args.data, {
-									returnedClusters: json.addclusterresponse.cluster
+									returnedCluster: json.addclusterresponse.cluster[0]
 								})
 							});
 						},
@@ -1760,16 +1760,67 @@
         
         addHost: function(args) {
           message('Adding host');
-          //debugger;
-          var host = {};
+					         		
+					var array1 = [];
+					array1.push("&zoneid=" + args.data.returnedZone.id);
+					array1.push("&podid=" + args.data.returnedPod.id);
+					array1.push("&clusterid=" + args.data.returnedCluster.id);
+					array1.push("&hypervisor=" + todb(args.data.cluster.hypervisor));
+					var clustertype = args.data.returnedCluster.clustertype;
+					array1.push("&clustertype=" + todb(clustertype));
+					array1.push("&hosttags=" + todb(args.data.host.hosttags));
 
-          setTimeout(function() {
-            stepFns.addPrimaryStorage({
-              data: $.extend(args.data, {
-                host: host
-              })
-            });
-          }, 400);
+					if(args.data.cluster.hypervisor == "VMware") {
+						array1.push("&username=");
+						array1.push("&password=");
+						var hostname = args.data.host.vcenterHost;
+						var url;
+						if(hostname.indexOf("http://")==-1)
+							url = "http://" + hostname;
+						else
+							url = hostname;
+						array1.push("&url=" + todb(url));
+					}
+					else {
+						array1.push("&username=" + todb(args.data.host.username));
+						array1.push("&password=" + todb(args.data.host.password));
+
+						var hostname = args.data.host.hostname;
+
+						var url;
+						if(hostname.indexOf("http://")==-1)
+							url = "http://" + hostname;
+						else
+							url = hostname;
+						array1.push("&url="+todb(url));
+
+						if (args.data.cluster.hypervisor == "BareMetal") {
+							array1.push("&cpunumber=" + todb(args.data.host.baremetalCpuCores));
+							array1.push("&cpuspeed=" + todb(args.data.host.baremetalCpu));
+							array1.push("&memory=" + todb(args.data.host.baremetalMemory));
+							array1.push("&hostmac=" + todb(args.data.host.baremetalMAC));
+						}
+						else if(args.data.cluster.hypervisor == "Ovm") {
+							array1.push("&agentusername=" + todb(args.data.host.agentUsername));
+							array1.push("&agentpassword=" + todb(args.data.host.agentPassword));
+						}
+					}
+
+					$.ajax({
+						url: createURL("addHost" + array1.join("")),
+						dataType: "json",
+						success: function(json) {			
+							stepFns.addPrimaryStorage({
+								data: $.extend(args.data, {
+									returnedHost: json.addhostresponse.host[0]
+								})
+							});														
+						},
+						error: function(XMLHttpResponse) {
+							var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+							//args.response.error(errorMsg);
+						}
+					});					    
         },
         
         addPrimaryStorage: function(args) {
