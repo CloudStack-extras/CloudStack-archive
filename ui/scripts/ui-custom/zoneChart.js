@@ -510,7 +510,33 @@
       return $viewAll;
     };
 
+    /**
+     * Chart button action generators
+     */
+    var actions = {
+      /**
+       * Makes a list view from given zone sub-section
+       */
+      listView: function(targetID, context) {
+        return function(args) {
+          var $elem = args.$panel;
+          var listViewArgs = cloudStack.sections.system.subsections[targetID].listView;
+
+          $elem.listView({
+            context: context,
+            listView: listViewArgs
+          });
+        };
+      }
+    };
+
+    /**
+     * Chart generators
+     */
     var charts = {
+      /**
+       * Compute tab
+       */
       compute: function(args) {
         var $chart = $('<div>');
         var context = args.context;
@@ -528,35 +554,36 @@
           pods: {
             label: 'Pods',
             viewAll: {
-              action: function(args) {
-                var listViewArgs = cloudStack.sections.system.subsections.pods.listView;
-
-                args.$panel.listView({
-                  context: context,
-                  listView: listViewArgs
-                });
-              }
+              action: actions.listView('pods', context), 
             }
           },
 
           clusters: {
             label: 'Clusters',
-            viewAll: { $elem: function(args) {} }
+            viewAll: {
+              action: actions.listView('clusters', context), 
+            }
           },
 
           hosts: {
             label: 'Hosts',
-            viewAll: { $elem: function(args) {} }
-          },
+            viewAll: {
+              action: actions.listView('hosts', context), 
+            }
+         },
 
           primaryStorage: {
             label: 'Primary Storage',
-            viewAll: { $elem: function(args) {} }
+            viewAll: {
+              action: actions.listView('primary-storage', context), 
+            }
           },
 
           secondaryStorage: {
             label: 'Secondary Storage',
-            viewAll: { $elem: function(args) {} }
+            viewAll: {
+              action: actions.listView('secondary-storage', context), 
+            }
           }
         };
 

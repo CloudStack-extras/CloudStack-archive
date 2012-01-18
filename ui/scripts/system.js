@@ -2884,11 +2884,6 @@
             
             detailView: {
               isMaximized: true,
-              viewAll: {
-                path: 'instances',
-                label: 'Configuration',
-                custom: cloudStack.zoneChart()
-              },
               actions: {
                 edit: {
                   label: 'Edit',
@@ -2952,6 +2947,16 @@
                     });
                   }
                 },
+
+                compute: {
+                  title: 'Compute',
+                  custom: cloudStack.uiCustom.systemChart('compute')
+                },
+                network: {
+                  title: 'Network',
+                  custom: cloudStack.uiCustom.systemChart('network')
+                },
+
                 systemVMs: {
                   title: 'System VMs',
                   listView: {
@@ -5280,6 +5285,7 @@
         title: 'Primary Storage',
         id: 'primarystorages',
         listView: {
+          id: 'primarystorages',
           section: 'primary-storage',
           fields: {
             name: { label: 'Name' },            
@@ -5958,6 +5964,7 @@
         title: 'Secondary Storage',
         id: 'secondarystorages',
         listView: {
+          id: 'secondarystorages',
           section: 'seconary-storage',
           fields: {
             name: { label: 'Name' },
