@@ -470,6 +470,7 @@
                 <li class="management">
                   <ul class="container">
                     <li traffic-type-id="management"
+                        title="Management traffic type description"
                         class="traffic-type-draggable management"></li>
                   </ul>
                   <div class="info">
@@ -480,6 +481,7 @@
                 <li class="public">
                   <ul class="container">
                     <li traffic-type-id="public"
+                        title="Public traffic type description"
                         class="traffic-type-draggable public"></li>
                   </ul>
                   <div class="info">
@@ -490,6 +492,7 @@
                 <li class="guest">
                   <ul class="container">
                     <li traffic-type-id="guest"
+                        title="Guest traffic type description"
                         class="traffic-type-draggable guest clone"></li>
                   </ul>
                   <div class="info">
@@ -500,6 +503,7 @@
                 <li class="storage">
                   <ul class="container">
                     <li traffic-type-id="storage"
+                        title="Storage traffic type description"
                         class="traffic-type-draggable storage"></li>
                   </ul>
                   <div class="info">
