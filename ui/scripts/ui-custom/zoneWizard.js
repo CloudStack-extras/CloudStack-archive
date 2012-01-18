@@ -85,7 +85,9 @@
     });
 
     // Include zone network type
-    groupedForms.zone.networkType = $forms.find('input[name=network-model]:checked').val();
+    if (groupedForms.zone) {
+      groupedForms.zone.networkType = $forms.find('input[name=network-model]:checked').val();
+    }
 
     return groupedForms;
   };
@@ -754,13 +756,14 @@
         var $targetStep = $($steps[targetIndex]).show();
         var $uiCustom = $targetStep.find('[ui-custom]');
         var formState = getData($wizard, { all: true });
+        var groupedFormState = getData($wizard);
         var formID = $targetStep.attr('zone-wizard-form');
         var stepPreFilter = cloudStack.zoneWizard.preFilters[
           $targetStep.attr('zone-wizard-prefilter')
         ];
 
         // Bypass step check
-        if (stepPreFilter && !stepPreFilter({ data: formState })) {
+        if (stepPreFilter && !stepPreFilter({ data: formState, groupedData: groupedFormState })) {
           return showStep(
             !goBack ? index + 1 : index - 1
           );

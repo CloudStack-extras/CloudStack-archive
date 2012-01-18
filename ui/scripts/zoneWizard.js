@@ -59,6 +59,13 @@
 
       setupPhysicalNetwork: function(args) {
         return args.data['network-model'] == 'Advanced';
+      },
+
+      configureGuestTraffic: function(args) {
+        return args.data['network-model'] == 'Basic' ||
+          $.grep(args.groupedData.physicalNetworks, function(network) {
+            return $.inArray('guest', network.trafficTypes) > -1;
+          }).length;
       }
     },
     
@@ -296,6 +303,13 @@
               args.$form.find('[rel=' + this + ']').hide();
             }         
           });
+
+          // Update description
+          if (selectedZoneObj.networktype == "Basic") {
+            args.$form.closest('.setup-guest-traffic').find('.main-desc').html('Please add an IP range to your guest network.');
+          } else {
+            args.$form.closest('.setup-guest-traffic').find('.main-desc').html('Please configure guest traffic for your physical network(s)');
+          }
         },
 
         fields: {
