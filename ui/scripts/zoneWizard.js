@@ -1684,7 +1684,7 @@
         configureGuestTraffic: function(args) {
           message('Configuring guest traffic');
          
-					if(args.data.returnedZone.networktype == "Basic") {					  
+					if(args.data.returnedZone.networktype == "Basic") {		//create an VlanIpRange for guest network in basic zone			  
 						var array1 = [];												
 						array1.push("&podid=" + args.data.returnedPod.id); 
 						array1.push("&networkid=" + args.data.returnedGuestNetwork.id); 
@@ -1710,16 +1710,52 @@
 							}
 						});						
 					}
-					else if(args.data.zone.networkType == "Advanced") {	 //no creating guest network for advanced zone in AddZoneWizard. Skip to next step.					
-					  stepFns.addCluster({
-              data: args.data
-            });
+					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone            
+						var vlan;
+						if(args.data.guestTraffic.vlanRangeEnd == null || args.data.guestTraffic.vlanRangeEnd.length == 0)
+							vlan = args.data.guestTraffic.vlanRangeStart;
+						else
+							vlan = args.data.guestTraffic.vlanRangeStart + "-" + args.data.guestTraffic.vlanRangeEnd;
+										
+						$.ajax({
+							url: createURL("updatePhysicalNetwork&id=" + args.data.returnedPhysicalNetworks[0].id  + "&vlan=" + todb(vlan)),
+							dataType: "json",
+							success: function(json) {
+								var jobId = json.updatephysicalnetworkresponse.jobid;							
+								var timerKey = "asyncJob_" + jobId;							
+								$("body").everyTime(2000, timerKey, function(){
+									$.ajax({
+										url: createURL("queryAsyncJobResult&jobid=" + jobId),
+										dataType: "json",
+										success: function(json) {									
+											var result = json.queryasyncjobresultresponse;
+											if(result.jobstatus == 0) {
+												return;
+											}
+											else {
+											  $("body").stopTime(timerKey);
+											  if(result.jobstatus == 1) {
+												  args.data.returnedPhysicalNetworks[0] = result.jobresult.physicalnetwork;													
+													stepFns.addCluster({
+														data: args.data
+													});
+												}
+												else if(result.jobstatus == 2){
+												  alert("error: " + fromdb(result.jobresult.errortext));
+												}
+											}										
+										}
+									});
+							  });								
+							}
+						});					 
 					}					
         },
         				
         addCluster: function(args) {
           message('Creating cluster');
           //???
+					//debugger;
           var cluster = {};
 
           setTimeout(function() {
