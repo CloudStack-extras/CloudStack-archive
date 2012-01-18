@@ -623,6 +623,9 @@
                   $form.find('[rel=iqn]').hide();
                   $form.find('[rel=lun]').hide();
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).hide();
                   $form.find('[rel=vCenterDataCenter]').hide();
                   $form.find('[rel=vCenterDataStore]').hide();
@@ -642,6 +645,9 @@
                   $form.find('[rel=iqn]').hide();
                   $form.find('[rel=lun]').hide();
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).hide();
                   $form.find('[rel=vCenterDataCenter]').hide();
                   $form.find('[rel=vCenterDataStore]').hide();
@@ -661,6 +667,9 @@
                   $form.find('[rel=iqn]').hide();
                   $form.find('[rel=lun]').hide();
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();													
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).hide();
                   $form.find('[rel=vCenterDataCenter]').hide();
                   $form.find('[rel=vCenterDataStore]').hide();
@@ -678,10 +687,33 @@
                   $form.find('[rel=iqn]').css('display', 'block');
                   $form.find('[rel=lun]').css('display', 'block');
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).hide();
                   $form.find('[rel=vCenterDataCenter]').hide();
                   $form.find('[rel=vCenterDataStore]').hide();
-                }
+                }			
+								else if($(this).val() == "clvm") {
+									//$("#add_pool_server_container", $dialogAddPool).hide();
+									$form.find('.form-item[rel=server]').hide();
+									//$dialogAddPool.find("#add_pool_nfs_server").val("localhost");
+									$form.find('.form-item[rel=server]').find(".value").find("input").val("localhost");
+									
+									//$('li[input_group="nfs"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=path]').hide();
+									
+									//$('li[input_group="iscsi"]', $dialogAddPool).hide();
+									 $form.find('.form-item[rel=iqn]').hide();
+									$form.find('.form-item[rel=lun]').hide();
+									
+									//$('li[input_group="clvm"]', $dialogAddPool).show();
+									$form.find('.form-item[rel=volumegroup]').css('display', 'inline-block');
+									
+									//$('li[input_group="vmfs"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=vCenterDataCenter]').hide();
+									$form.find('.form-item[rel=vCenterDataStore]').hide();
+								}										
                 else if(protocol == "vmfs") {
                   //$dialogAddPool.find("#add_pool_server_container").show();
                   $form.find('[rel=server]').css('display', 'block');
@@ -695,6 +727,9 @@
                   $form.find('[rel=iqn]').hide();
                   $form.find('[rel=lun]').hide();
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).show();
                   $form.find('[rel=vCenterDataCenter]').css('display', 'block');
                   $form.find('[rel=vCenterDataStore]').css('display', 'block');
@@ -713,6 +748,9 @@
                   $form.find('[rel=iqn]').hide();
                   $form.find('[rel=lun]').hide();
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();													
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).hide();
                   $form.find('[rel=vCenterDataCenter]').hide();
                   $form.find('[rel=vCenterDataStore]').hide();
@@ -727,6 +765,9 @@
                   $form.find('[rel=iqn]').hide();
                   $form.find('[rel=lun]').hide();
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).hide();
                   $form.find('[rel=vCenterDataCenter]').hide();
                   $form.find('[rel=vCenterDataStore]').hide();
@@ -761,6 +802,13 @@
             isHidden: true
           },
 
+					//clvm
+					volumegroup: {
+						label: 'Volume Group',
+						validation: { required: true },
+						isHidden: true
+					},
+					
           //vmfs
           vCenterDataCenter: {
             label: 'vCenter Datacenter',
@@ -1887,18 +1935,15 @@
 						if(path.substring(0,1) != "/")
 							path = "/" + path;
 						url = SharedMountPointURL(server, path);
-					}		
-					/*								
+					}										
 					else if (args.data.primaryStorage.protocol == "clvm") {
-						//var vg = trim($thisDialog.find("#add_pool_clvm_vg").val());
-						//var vg = args.data.volumegroup;
+						//var vg = trim($thisDialog.find("#add_pool_clvm_vg").val());						
 						var vg = args.data.primaryStorage.volumegroup;
 						
 						if(vg.substring(0,1) != "/")
 							vg = "/" + vg;									
 						url = clvmURL(vg);
-					}		
-					*/								
+					}					
 					else if (args.data.primaryStorage.protocol == "vmfs") {
 						//var path = trim($thisDialog.find("#add_pool_vmfs_dc").val());
 						var path = args.data.primaryStorage.vCenterDataCenter;
