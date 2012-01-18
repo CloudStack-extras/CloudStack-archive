@@ -836,9 +836,7 @@
       var message = args.response.message;
       //var data = args.data; 
       var startFn = args.startFn;
-
-			var addPodFnBeingCalled = false;
-			
+					
       var stepFns = {
         addZone: function() {
           message('Creating zone');
@@ -1351,10 +1349,8 @@
 																																	}
 																																	else {																																										
 																																		$("body").stopTime(timerKey);
-																																		if (result.jobstatus == 1) {
-																																			//alert("Security group provider is enabled");
-
-																																			//create network (for basic zone only)
+																																		if (result.jobstatus == 1) { //Security group provider has been enabled successfully																																			
+																																			//create a guest network for basic zone 
 																																			var array2 = [];
 																																			array2.push("&zoneid=" + args.data.returnedZone.id);
 																																			array2.push("&name=guestNetworkForBasicZone");
@@ -1364,12 +1360,12 @@
 																																				url: createURL("createNetwork" + array2.join("")),
 																																				dataType: "json",
 																																				async: false,
-																																				success: function(json) {		
-																																					if(addPodFnBeingCalled == false) {																																					
-																																						stepFns.addPod({
-																																							data: args.data
-																																						});
-																																					}
+																																				success: function(json) {																																						    
+																																					stepFns.addPod({
+																																						data: $.extend(args.data, {
+																																							returnedGuestNetwork: json.createnetworkresponse.network
+																																						})
+																																					});																																					
 																																				}
 																																			});
 																																		}
@@ -1388,7 +1384,7 @@
 																												});
 																											}					
 																											else { //args.data.zone["security-groups-enabled"] == null
-																												//create network (for basic zone only)
+																												//create a guest network for basic zone
 																												var array2 = [];
 																												array2.push("&zoneid=" + args.data.returnedZone.id);
 																												array2.push("&name=guestNetworkForBasicZone");
@@ -1398,12 +1394,12 @@
 																													url: createURL("createNetwork" + array2.join("")),
 																													dataType: "json",
 																													async: false,
-																													success: function(json) {
-																														if(addPodFnBeingCalled == false) {		
-																															stepFns.addPod({
-																																data: args.data
-																															});
-																														}																																
+																													success: function(json) {			
+																														stepFns.addPod({
+																															data: $.extend(args.data, {
+																																returnedGuestNetwork: json.createnetworkresponse.network
+																															})
+																														});																																																												
 																													}
 																												});		
 																											}																															  
@@ -1547,13 +1543,10 @@
 																										}
 																										else {
 																											$("body").stopTime(timerKey);
-																											if (result.jobstatus == 1) {
-																												//alert("Virtual Router Provider is enabled");																												
-																												if(addPodFnBeingCalled == false) {																													
-																													stepFns.addPod({
-																														data: args.data
-																													});
-																												}																													
+																											if (result.jobstatus == 1) { //Virtual Router Provider has been enabled successfully		
+																												stepFns.addPod({
+																													data: args.data
+																												});																																																							
 																											}
 																											else if (result.jobstatus == 2) {
 																												alert("failed to enable Virtual Router Provider. Error: " + fromdb(result.jobresult.errortext));
@@ -1601,9 +1594,7 @@
 				},
 				
 				
-        addPod: function(args) {
-				  addPodFnBeingCalled = true;
-				
+        addPod: function(args) {				  
           message('Creating pod');
                    
 					var array3 = [];
@@ -1621,10 +1612,10 @@
 						url: createURL("createPod" + array3.join("")),
 						dataType: "json",
 						async: false,
-						success: function(json) {						  							
+						success: function(json) {		              					
 							stepFns.configurePublicTraffic({
 								data: $.extend(args.data, {
-									returnedpod: json.createpodresponse.pod
+									returnedPod: json.createpodresponse.pod
 								})
 							});		
 						},
@@ -1635,15 +1626,14 @@
 					}); 						
         },  
        			
-        configurePublicTraffic: function(args) {					
+        configurePublicTraffic: function(args) {		          
 					if((args.data.zone.networkType == "Basic" && args.data.basicPhysicalNetwork.isPublicTrafficTypeEnabled == "on")
 					 ||(args.data.zone.networkType == "Advanced")) {	
 					 
 						message('Configuring public traffic');
 
 						var returnedPublicTraffic = [];
-            $(args.data.publicTraffic).each(function(){
-						  //debugger;							
+            $(args.data.publicTraffic).each(function(){						  			
 							var array1 = [];
 							array1.push("&zoneId=" + args.data.returnedZone.id);
 
@@ -1676,8 +1666,7 @@
 								}
 							});							
 						});				
-
-            //debugger;
+            
 						stepFns.configureGuestTraffic({
 							data: $.extend(args.data, {
 								returnedPublicTraffic: returnedPublicTraffic
@@ -1694,18 +1683,43 @@
 				
         configureGuestTraffic: function(args) {
           message('Configuring guest traffic');
-
-					//debugger;
-          setTimeout(function() {
-            stepFns.addCluster({
+         
+					if(args.data.returnedZone.networktype == "Basic") {					  
+						var array1 = [];												
+						array1.push("&podid=" + args.data.returnedPod.id); 
+						array1.push("&networkid=" + args.data.returnedGuestNetwork.id); 
+						array1.push("&gateway=" + args.data.guestTraffic.guestGateway);
+						array1.push("&netmask=" + args.data.guestTraffic.guestNetmask);
+						array1.push("&startip=" + args.data.guestTraffic.guestStartIp);
+						if(args.data.guestTraffic.guestEndIp != null && args.data.guestTraffic.guestEndIp.length > 0)
+							array1.push("&endip=" + args.data.guestTraffic.guestEndIp);
+						array1.push("&forVirtualNetwork=false"); //indicates this new IP range is for guest network, not public network	
+							
+						$.ajax({
+							url: createURL("createVlanIpRange" + array1.join("")),
+							dataType: "json",
+							success: function(json) {										
+								args.data.returnedGuestNetwork.returnedVlanIpRange = json.createvlaniprangeresponse.vlan;								
+								stepFns.addCluster({
+									data: args.data
+								});								
+							},
+							error: function(XMLHttpResponse) {
+								var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+								args.response.error(errorMsg);
+							}
+						});						
+					}
+					else if(args.data.zone.networkType == "Advanced") {	 //no creating guest network for advanced zone in AddZoneWizard. Skip to next step.					
+					  stepFns.addCluster({
               data: args.data
             });
-          }, 200);
+					}					
         },
         				
         addCluster: function(args) {
           message('Creating cluster');
-          
+          //???
           var cluster = {};
 
           setTimeout(function() {
