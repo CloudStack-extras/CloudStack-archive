@@ -1675,45 +1675,53 @@
 							}
 						});						
 					}
-					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone            
-						var vlan;
-						if(args.data.guestTraffic.vlanRangeEnd == null || args.data.guestTraffic.vlanRangeEnd.length == 0)
-							vlan = args.data.guestTraffic.vlanRangeStart;
-						else
-							vlan = args.data.guestTraffic.vlanRangeStart + "-" + args.data.guestTraffic.vlanRangeEnd;
-										
-						$.ajax({
-							url: createURL("updatePhysicalNetwork&id=" + args.data.returnedPhysicalNetworks[0].id  + "&vlan=" + todb(vlan)),
-							dataType: "json",
-							success: function(json) {
-								var jobId = json.updatephysicalnetworkresponse.jobid;							
-								var timerKey = "asyncJob_" + jobId;							
-								$("body").everyTime(2000, timerKey, function(){
-									$.ajax({
-										url: createURL("queryAsyncJobResult&jobid=" + jobId),
-										dataType: "json",
-										success: function(json) {									
-											var result = json.queryasyncjobresultresponse;
-											if(result.jobstatus == 0) {
-												return;
+					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone         
+            /*					
+							var vlan;
+							if(args.data.guestTraffic.vlanRangeEnd == null || args.data.guestTraffic.vlanRangeEnd.length == 0)
+								vlan = args.data.guestTraffic.vlanRangeStart;
+							else
+								vlan = args.data.guestTraffic.vlanRangeStart + "-" + args.data.guestTraffic.vlanRangeEnd;
+											
+							$.ajax({
+								url: createURL("updatePhysicalNetwork&id=" + args.data.returnedPhysicalNetworks[0].id  + "&vlan=" + todb(vlan)),
+								dataType: "json",
+								success: function(json) {
+									var jobId = json.updatephysicalnetworkresponse.jobid;							
+									var timerKey = "asyncJob_" + jobId;							
+									$("body").everyTime(2000, timerKey, function(){
+										$.ajax({
+											url: createURL("queryAsyncJobResult&jobid=" + jobId),
+											dataType: "json",
+											success: function(json) {									
+												var result = json.queryasyncjobresultresponse;
+												if(result.jobstatus == 0) {
+													return;
+												}
+												else {
+													$("body").stopTime(timerKey);
+													if(result.jobstatus == 1) {
+														args.data.returnedPhysicalNetworks[0] = result.jobresult.physicalnetwork;													
+														stepFns.addCluster({
+															data: args.data
+														});
+													}
+													else if(result.jobstatus == 2){
+														alert("error: " + fromdb(result.jobresult.errortext));
+													}
+												}										
 											}
-											else {
-											  $("body").stopTime(timerKey);
-											  if(result.jobstatus == 1) {
-												  args.data.returnedPhysicalNetworks[0] = result.jobresult.physicalnetwork;													
-													stepFns.addCluster({
-														data: args.data
-													});
-												}
-												else if(result.jobstatus == 2){
-												  alert("error: " + fromdb(result.jobresult.errortext));
-												}
-											}										
-										}
-									});
-							  });								
-							}
-						});					 
+										});
+									});								
+								}
+							});					 
+						*/	
+						
+            //temporary before Brian fixes args.data.guestNetworks data						
+						stepFns.addCluster({
+							data: args.data
+						});	
+							
 					}					
         },
         				
@@ -1839,17 +1847,102 @@
         
         addPrimaryStorage: function(args) {
           message('Creating primary storage');
+					
+					var array1 = [];
+					array1.push("&zoneid=" + args.data.returnedZone.id);
+					array1.push("&podId=" + args.data.returnedPod.id);
+					array1.push("&clusterid=" + args.data.returnedCluster.id);
+					array1.push("&name=" + todb(args.data.primaryStorage.name));
 
-          setTimeout(function() {
-            stepFns.addSecondaryStorage({
-              data: args.data
-            });
-          }, 300);
+					var server = args.data.primaryStorage.server;
+					var url = null;
+					if (args.data.primaryStorage.protocol == "nfs") {
+						//var path = trim($thisDialog.find("#add_pool_path").val());
+						var path = args.data.primaryStorage.path;
+
+						if(path.substring(0,1) != "/")
+							path = "/" + path;
+						url = nfsURL(server, path);
+					}
+					else if (args.data.primaryStorage.protocol == "PreSetup") {
+						//var path = trim($thisDialog.find("#add_pool_path").val());
+						var path = args.data.primaryStorage.path;
+
+						if(path.substring(0,1) != "/")
+							path = "/" + path;
+						url = presetupURL(server, path);
+					}
+					else if (args.data.primaryStorage.protocol == "ocfs2") {
+						//var path = trim($thisDialog.find("#add_pool_path").val());
+						var path = args.data.primaryStorage.path;
+
+						if(path.substring(0,1) != "/")
+							path = "/" + path;
+						url = ocfs2URL(server, path);
+					}
+					else if (args.data.primaryStorage.protocol == "SharedMountPoint") {
+						//var path = trim($thisDialog.find("#add_pool_path").val());
+						var path = args.data.primaryStorage.path;
+
+						if(path.substring(0,1) != "/")
+							path = "/" + path;
+						url = SharedMountPointURL(server, path);
+					}		
+					/*								
+					else if (args.data.primaryStorage.protocol == "clvm") {
+						//var vg = trim($thisDialog.find("#add_pool_clvm_vg").val());
+						//var vg = args.data.volumegroup;
+						var vg = args.data.primaryStorage.volumegroup;
+						
+						if(vg.substring(0,1) != "/")
+							vg = "/" + vg;									
+						url = clvmURL(vg);
+					}		
+					*/								
+					else if (args.data.primaryStorage.protocol == "vmfs") {
+						//var path = trim($thisDialog.find("#add_pool_vmfs_dc").val());
+						var path = args.data.primaryStorage.vCenterDataCenter;
+
+						if(path.substring(0,1) != "/")
+							path = "/" + path;
+						path += "/" + args.data.primaryStorage.vCenterDataStore;
+						url = vmfsURL("dummy", path);
+					}
+					else {
+						//var iqn = trim($thisDialog.find("#add_pool_iqn").val());
+						var iqn = args.data.primaryStorage.iqn;
+
+						if(iqn.substring(0,1) != "/")
+							iqn = "/" + iqn;
+						var lun = args.data.primaryStorage.lun;
+						url = iscsiURL(server, iqn, lun);
+					}
+					array1.push("&url=" + todb(url));
+
+					if(args.data.primaryStorage.storageTags != null && args.data.primaryStorage.storageTags.length > 0)
+						array1.push("&tags=" + todb(args.data.primaryStorage.storageTags));
+
+					$.ajax({
+						url: createURL("createStoragePool" + array1.join("")),
+						dataType: "json",
+						success: function(json) {
+							debugger;							
+							stepFns.addSecondaryStorage({
+								data: $.extend(args.data, {
+								  returnedPrimaryStorage: json.createstoragepoolresponse.storagepool[0]
+								})
+							});
+						},
+						error: function(XMLHttpResponse) {
+							var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+							//args.response.error(errorMsg);
+						}
+					});					
         },
         
         addSecondaryStorage: function(args) {
           message('Creating secondary storage');
-
+          debugger;
           setTimeout(function() {
             complete({
               data: args.data
