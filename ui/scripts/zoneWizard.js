@@ -59,6 +59,13 @@
 
       setupPhysicalNetwork: function(args) {
         return args.data['network-model'] == 'Advanced';
+      },
+
+      configureGuestTraffic: function(args) {
+        return args.data['network-model'] == 'Basic' ||
+          $.grep(args.groupedData.physicalNetworks, function(network) {
+            return $.inArray('guest', network.trafficTypes) > -1;
+          }).length;
       }
     },
     

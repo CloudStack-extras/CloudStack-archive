@@ -546,7 +546,8 @@
           <!-- Step 3.4: Configure guest traffic -->
           <div class="setup-guest-traffic"
                zone-wizard-form="guestTraffic"
-               zone-wizard-step-id="configureGuestTraffic">
+               zone-wizard-step-id="configureGuestTraffic"
+               zone-wizard-prefilter="configureGuestTraffic">
             <div class="main-desc">Please configure guest traffic for your physical network(s).</div>
             <div class="content input-area">
               <div class="select-container"></div>
