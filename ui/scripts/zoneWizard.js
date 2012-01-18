@@ -1970,11 +1970,10 @@
 					$.ajax({
 						url: createURL("createStoragePool" + array1.join("")),
 						dataType: "json",
-						success: function(json) {
-							debugger;							
+						success: function(json) {									
 							stepFns.addSecondaryStorage({
 								data: $.extend(args.data, {
-								  returnedPrimaryStorage: json.createstoragepoolresponse.storagepool[0]
+								  returnedPrimaryStorage: json.createstoragepoolresponse.storagepool
 								})
 							});
 						},
@@ -1987,16 +1986,31 @@
         
         addSecondaryStorage: function(args) {
           message('Creating secondary storage');
-          debugger;
-          setTimeout(function() {
-            complete({
-              data: args.data
-            });
-          }, 300);
+          							
+					var nfs_server = args.data.secondaryStorage.nfsServer;
+					var path = args.data.secondaryStorage.path;
+					var url = nfsURL(nfs_server, path);
+
+					$.ajax({
+						url: createURL("addSecondaryStorage&zoneId=" + args.data.returnedZone.id + "&url=" + todb(url)),
+						dataType: "json",
+						success: function(json) {													
+							complete({
+								data: $.extend(args.data, {
+								  returnedSecondaryStorage: json.addsecondarystorageresponse.secondarystorage
+								})
+							});							
+						},
+						error: function(XMLHttpResponse) {
+							var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+							//args.response.error(errorMsg);
+						}
+					});					
         }
       };
 
       var complete = function(args) {
+			  //debugger;
         message('Zone creation complete!');
         success({});
       };
