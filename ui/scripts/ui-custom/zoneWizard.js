@@ -525,7 +525,9 @@
 
       $container.find('.content form').hide();
       $tabs.appendTo($container.find('.content .select-container'));
+      var $subnav = $container.find('ul.subnav').remove(); // Fix to avoid subnav becoming tab ul
       $container.tabs();
+      $container.prepend($subnav);
       $container.find('.field').hide();
       $container.find('[rel=vlanRange]').show();
     },

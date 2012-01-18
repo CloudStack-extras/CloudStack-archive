@@ -1091,7 +1091,7 @@ div.list-view td.state.off span {
   padding: 0 0 0 14px;
 }
 
-.ui-tabs ul {
+.ui-tabs ul.ui-tabs-nav {
   margin-top: 42px;
   display: block;
   height: 41px;
@@ -1132,7 +1132,7 @@ div.list-view td.state.off span {
   color: #506273;
 }
 
-.ui-tabs li {
+.ui-tabs ul.ui-tabs-subnav li {
   display: block;
   float: left;
 }
@@ -4597,11 +4597,12 @@ label.error {
 }
 
 /*** UI widgets*/
-.multi-wizard .ui-tabs ul {
+.multi-wizard .ui-tabs ul.ui-tabs-nav {
   margin-left: 2px;
   margin-top: 7px;
   display: block;
   height: 41px;
+  /*[empty]background:;*/
   border: none;
   /*+placement:shift -6px 5px;*/
   position: relative;
@@ -5263,6 +5264,39 @@ label.error {
   height: 675px;
 }
 
+.multi-wizard.zone-wizard ul.subnav {
+  text-align: left;
+  /*+placement:shift 13px 87px;*/
+  position: relative;
+  left: 13px;
+  top: 87px;
+  position: absolute;
+  list-style: disc inside;
+}
+
+.multi-wizard.zone-wizard ul.subnav li {
+  float: left;
+  padding: 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  height: 20px;
+  margin-right: 53px;
+  color: #9A9A9A;
+}
+
+.multi-wizard.zone-wizard ul.subnav li:after {
+  content: ">";
+  font-size: 13px;
+  /*+placement:shift 4px -1px;*/
+  position: relative;
+  left: 4px;
+  top: -1px;
+}
+
+.multi-wizard.zone-wizard ul.subnav li.active {
+  color: #0000FF;
+}
+
 .multi-wizard.zone-wizard .ui-tabs-panel {
   height: 422px;
   overflow: auto;
@@ -5278,8 +5312,9 @@ label.error {
 }
 
 .multi-wizard.zone-wizard .select-container {
-  height: 421px;
+  height: 413px;
   overflow: auto;
+  /*[empty]display:;*/
 }
 
 .multi-wizard.zone-wizard .main-desc {
@@ -5289,7 +5324,7 @@ label.error {
   position: relative;
   left: 0;
   top: 0;
-  margin: 18px 0 0px 6px;
+  margin: 23px 0 0px 6px;
 }
 
 .multi-wizard.zone-wizard .main-desc em {
@@ -5407,7 +5442,8 @@ label.error {
 }
 
 .multi-wizard.zone-wizard .content.input-area {
-  width: 727px;
+  width: 721px;
+  /*[empty]height:;*/
   min-height: inherit;
   margin: 2px auto auto 4px;
   overflow: auto;
@@ -5450,6 +5486,7 @@ label.error {
   -o-box-shadow: inset 0px 1px 2px #CBCACA;
   box-shadow: inset 0px 1px 2px #CBCACA;
   background: #F8F6F6;
+  /*[empty]display:;*/
 }
 
 .multi-wizard.zone-wizard .select-container.multi.disabled {
@@ -5535,7 +5572,7 @@ label.error {
 /*** Add physical network -- traffic type drag area*/
 .multi-wizard.zone-wizard .traffic-types-drag-area {
   width: 96px;
-  height: 434px;
+  height: 398px;
   background: #F0F1F2 none;
   border: 1px solid #DCCACA;
   /*+border-radius:4px;*/
@@ -5546,7 +5583,7 @@ label.error {
   float: left;
   text-align: left;
   padding: 0;
-  margin: 13px 0 0;
+  margin: 8px 0 0;
   /*+placement:shift 3px 0px;*/
   position: relative;
   left: 3px;
@@ -5720,14 +5757,32 @@ label.error {
 
 /*** Configure guest network -- tabs*/
 .multi-wizard.zone-wizard .setup-guest-traffic .ui-widget-content {
-  width: 683px;
+  width: 682px;
   height: 308px;
   border-bottom: none;
   border-right: none;
-  /*+placement:shift;*/
+  /*+placement:shift -1px -7px;*/
   position: relative;
-  left: 0;
-  top: 0;
+  left: -1px;
+  top: -7px;
+}
+
+.multi-wizard.zone-wizard .setup-guest-traffic ul.ui-tabs-nav {
+  width: 456px;
+  /*+placement:shift -4px -8px;*/
+  position: relative;
+  left: -4px;
+  top: -8px;
+}
+
+.multi-wizard.zone-wizard .setup-guest-traffic .main-desc {
+  margin-top: 27px;
+  margin-left: -3px;
+}
+
+.multi-wizard.zone-wizard .setup-guest-traffic .content {
+  margin-left: -4px;
+  margin-top: 2px;
 }
 
 /*** Multi-edit*/
