@@ -1754,22 +1754,62 @@
         				
         addCluster: function(args) {
           message('Creating cluster');
-          //???
-					//debugger;
-          var cluster = {};
+          					
+					var array1 = [];
+					array1.push("&zoneId=" + args.data.returnedZone.id);
+					array1.push("&hypervisor=" + args.data.cluster.hypervisor);
 
-          setTimeout(function() {
-            stepFns.addHost({
-              data: $.extend(args.data, {
-                cluster: cluster
-              })
-            });
-          }, 200);
+					var clusterType;
+					if(args.data.cluster.hypervisor == "VMware")
+						clusterType="ExternalManaged";
+					else
+						clusterType="CloudManaged";
+					array1.push("&clustertype=" + clusterType);
+
+					array1.push("&podId=" + args.data.returnedPod.id);
+
+					var clusterName = args.data.cluster.name;
+					
+					if(args.data.cluster.hypervisor == "VMware") {
+						array1.push("&username=" + todb(args.data.cluster.vCenterUsername));
+						array1.push("&password=" + todb(args.data.cluster.vCenterPassword));
+
+						var hostname = args.data.cluster.vCenterHost;
+						var dcName = args.data.cluster.vCenterDatacenter;
+
+						var url;
+						if(hostname.indexOf("http://") == -1)
+							url = "http://" + hostname;
+						else
+							url = hostname;
+						url += "/" + dcName + "/" + clusterName;
+						array1.push("&url=" + todb(url));
+
+						clusterName = hostname + "/" + dcName + "/" + clusterName; //override clusterName
+					}
+					array1.push("&clustername=" + todb(clusterName));
+
+					$.ajax({
+						url: createURL("addCluster" + array1.join("")),
+						dataType: "json",
+						async: true,
+						success: function(json) {		
+							stepFns.addHost({
+								data: $.extend(args.data, {
+									returnedClusters: json.addclusterresponse.cluster
+								})
+							});
+						},
+						error: function(XMLHttpResponse) {
+							var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+							//args.response.error(errorMsg);
+						}
+					});		
         },
         
         addHost: function(args) {
           message('Adding host');
-          
+          //debugger;
           var host = {};
 
           setTimeout(function() {
