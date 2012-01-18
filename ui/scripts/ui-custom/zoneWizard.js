@@ -511,7 +511,6 @@
    */
   var guestTraffic = {
     init: function($wizard, args) {
-      return;
       var $physicalNetworks = physicalNetwork.getPhysicalNetworks($wizard);
       var $tabs = guestTraffic.makeTabs($physicalNetworks, args);
       var $container = guestTraffic.getMainContainer($wizard);
@@ -520,14 +519,10 @@
       guestTraffic.remove($wizard);
 
       $container.find('.content form').hide();
-      $container.find('.content form .field[rel=vlanRange]').clone().appendTo(
-        $('<form></form>')
-          .addClass('physical-network-item')
-          .attr('rel', 'guestTraffic-multiplePhysicalNetworks')
-          .prependTo($container.find('.content .select-container'))
-      );
       $tabs.appendTo($container.find('.content .select-container'));
       $container.tabs();
+      $container.find('.field').hide();
+      $container.find('[rel=vlanRange]').show();
     },
 
     /**
@@ -563,7 +558,6 @@
         var refID = $network.find('input[name=id]').val();
         var networkID = 'physical-network-' + refID;
 
-        $form.find('.field[rel=vlanRange]').remove();
         $form.attr('rel', 'guestNetwork[' + refID + ']');
 
         $tabs.append($('<li></li>').append(
