@@ -36,6 +36,7 @@
       $physicalNetworkItems,
       function(network) {
         var $network = $(network);
+        var $guestForm = $wizard.find('form[guest-network-id=' + $network.index() + ']');
 
         return {
           id: $network.index(),
@@ -47,7 +48,9 @@
 
               return $trafficType.attr('traffic-type-id');
             }
-          )
+          ),
+          guestConfiguration: $guestForm.size() ?
+            cloudStack.serializeForm($guestForm) : null
         };
       }
     );
@@ -522,7 +525,9 @@
 
       $container.find('.content form').hide();
       $tabs.appendTo($container.find('.content .select-container'));
+      var $subnav = $container.find('ul.subnav').remove(); // Fix to avoid subnav becoming tab ul
       $container.tabs();
+      $container.prepend($subnav);
       $container.find('.field').hide();
       $container.find('[rel=vlanRange]').show();
     },
@@ -560,7 +565,7 @@
         var refID = $network.find('input[name=id]').val();
         var networkID = 'physical-network-' + refID;
 
-        $form.attr('rel', 'guestNetwork[' + refID + ']');
+        $form.attr('guest-network-id', refID);
 
         $tabs.append($('<li></li>').append(
           $('<a></a>')
