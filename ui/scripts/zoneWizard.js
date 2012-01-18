@@ -844,6 +844,8 @@
     },
 
     action: function(args) {    
+		  //debugger;
+			var addPodFnBeingCalled = false; //for multiple physical networks in advanced zone
       var success = args.response.success;
       var error = args.response.error;
       var message = args.response.message;
@@ -1144,7 +1146,8 @@
 													$("body").stopTime(timerKey);
 													if (result.jobstatus == 1) {
 														var returnedPhysicalNetwork = result.jobresult.physicalnetwork;																										
-																											
+                            returnedPhysicalNetwork.originalId = thisPhysicalNetwork.id;															
+															
 														var returnedTrafficTypes = [];													
 														$(thisPhysicalNetwork.trafficTypes).each(function(){													  
 															var thisTrafficType = this;
@@ -1373,12 +1376,14 @@
 																																				url: createURL("createNetwork" + array2.join("")),
 																																				dataType: "json",
 																																				async: false,
-																																				success: function(json) {																																						    
-																																					stepFns.addPod({
-																																						data: $.extend(args.data, {
-																																							returnedGuestNetwork: json.createnetworkresponse.network
-																																						})
-																																					});																																					
+																																				success: function(json) {		
+																																				  if(addPodFnBeingCalled == false) {
+																																						stepFns.addPod({
+																																							data: $.extend(args.data, {
+																																								returnedGuestNetwork: json.createnetworkresponse.network
+																																							})
+																																						});		
+																																					}	
 																																				}
 																																			});
 																																		}
@@ -1408,11 +1413,13 @@
 																													dataType: "json",
 																													async: false,
 																													success: function(json) {			
-																														stepFns.addPod({
-																															data: $.extend(args.data, {
-																																returnedGuestNetwork: json.createnetworkresponse.network
-																															})
-																														});																																																												
+																													  if(addPodFnBeingCalled == false) {
+																															stepFns.addPod({
+																																data: $.extend(args.data, {
+																																	returnedGuestNetwork: json.createnetworkresponse.network
+																																})
+																															});		
+																														}	
 																													}
 																												});		
 																											}																															  
@@ -1557,9 +1564,11 @@
 																										else {
 																											$("body").stopTime(timerKey);
 																											if (result.jobstatus == 1) { //Virtual Router Provider has been enabled successfully		
-																												stepFns.addPod({
-																													data: args.data
-																												});																																																							
+																												if(addPodFnBeingCalled == false) {
+																												  stepFns.addPod({
+																														data: args.data
+																													});		
+																												}	
 																											}
 																											else if (result.jobstatus == 2) {
 																												alert("failed to enable Virtual Router Provider. Error: " + fromdb(result.jobresult.errortext));
@@ -1607,7 +1616,8 @@
 				},
 				
 				
-        addPod: function(args) {				  
+        addPod: function(args) {	
+          addPodFnBeingCalled = true;			  
           message('Creating pod');
                    
 					var array3 = [];
@@ -1723,53 +1733,65 @@
 							}
 						});						
 					}
-					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone         
-            /*					
-							var vlan;
-							if(args.data.guestTraffic.vlanRangeEnd == null || args.data.guestTraffic.vlanRangeEnd.length == 0)
-								vlan = args.data.guestTraffic.vlanRangeStart;
-							else
-								vlan = args.data.guestTraffic.vlanRangeStart + "-" + args.data.guestTraffic.vlanRangeEnd;
-											
-							$.ajax({
-								url: createURL("updatePhysicalNetwork&id=" + args.data.returnedPhysicalNetworks[0].id  + "&vlan=" + todb(vlan)),
-								dataType: "json",
-								success: function(json) {
-									var jobId = json.updatephysicalnetworkresponse.jobid;							
-									var timerKey = "asyncJob_" + jobId;							
-									$("body").everyTime(2000, timerKey, function(){
-										$.ajax({
-											url: createURL("queryAsyncJobResult&jobid=" + jobId),
-											dataType: "json",
-											success: function(json) {									
-												var result = json.queryasyncjobresultresponse;
-												if(result.jobstatus == 0) {
-													return;
+					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone    
+					  debugger;
+						var updatedCount = 0;
+            $(args.data.physicalNetworks).each(function(){			
+              debugger;						
+						  if(this.guestConfiguration != null) {		
+								var vlan;
+								if(this.guestConfiguration.vlanRangeEnd == null || this.guestConfiguration.vlanRangeEnd.length == 0)
+									vlan = this.guestConfiguration.vlanRangeStart;
+								else
+									vlan = this.guestConfiguration.vlanRangeStart + "-" + this.guestConfiguration.vlanRangeEnd;
+								
+                var originalId = this.id;
+								var returnedId;
+								$(args.data.returnedPhysicalNetworks).each(function(){
+								  debugger;
+								  if(this.originalId == originalId) {
+									  returnedId = this.id;
+										return false; //break the loop
+									}
+								});
+								debugger;
+								$.ajax({
+									url: createURL("updatePhysicalNetwork&id=" + returnedId  + "&vlan=" + todb(vlan)), 
+									dataType: "json",
+									success: function(json) {
+										var jobId = json.updatephysicalnetworkresponse.jobid;							
+										var timerKey = "asyncJob_" + jobId;							
+										$("body").everyTime(2000, timerKey, function(){
+											$.ajax({
+												url: createURL("queryAsyncJobResult&jobid=" + jobId),
+												dataType: "json",
+												success: function(json) {									
+													var result = json.queryasyncjobresultresponse;
+													debugger;
+													if(result.jobstatus == 0) {
+														return;
+													}
+													else {
+														$("body").stopTime(timerKey);
+														if(result.jobstatus == 1) {	
+                              updatedCount++;
+                              if(updatedCount == args.data.physicalNetworks.length) {															
+																stepFns.addCluster({
+																	data: args.data
+																});
+															}
+														}
+														else if(result.jobstatus == 2){
+															alert("error: " + fromdb(result.jobresult.errortext));
+														}
+													}										
 												}
-												else {
-													$("body").stopTime(timerKey);
-													if(result.jobstatus == 1) {
-														args.data.returnedPhysicalNetworks[0] = result.jobresult.physicalnetwork;													
-														stepFns.addCluster({
-															data: args.data
-														});
-													}
-													else if(result.jobstatus == 2){
-														alert("error: " + fromdb(result.jobresult.errortext));
-													}
-												}										
-											}
-										});
-									});								
-								}
-							});					 
-						*/	
-						
-            //temporary before Brian fixes args.data.guestNetworks data						
-						stepFns.addCluster({
-							data: args.data
-						});	
-							
+											});
+										});								
+									}
+								});	
+							}
+            });			
 					}					
         },
         				
