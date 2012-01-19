@@ -539,8 +539,8 @@
        */
       compute: function(args) {
         var $chart = $('<div>');
-        var context = args.context;
         var $browser = $('#browser .container');
+        var context = args.context;
 
         // Fix zone context naming
         context.zones = context.physicalResources;
@@ -617,8 +617,63 @@
       },
 
       network: function(args) {
-        var $chart = $('<div>').html('Network');
+        var $chart = $('<div>');
+        var $networkChart = $('<div>').addClass('system-network-chart');
+        var $trafficTypes = $('<ul>').addClass('resources traffic-types');
+        var $browser = $('#browser .container');
+        var context = args.context;
 
+        var trafficTypes = {
+          'public': {
+            label: 'Public',
+            configure: {
+              action: function() {}
+            }
+          },
+
+          'guest': {
+            label: 'Guest',
+            configure: {
+              action: function() {}
+            }
+          },
+
+          'management': {
+            label: 'Management',
+            configure: {
+              action: function() {}
+            }
+          },
+
+          'storage': {
+            label: 'Storage',
+            configure: {
+              action: function() {}
+            }
+          }
+        };
+
+        // Make traffic type elems
+        $.each(trafficTypes, function(id, trafficType) {
+          // Make list item
+          var $li = $('<li>').addClass(id);
+          var $label = $('<span>').addClass('label').html(trafficType.label);
+          var $configureButton = viewAllButton($.extend(trafficType.configure, {
+            title: trafficType.label,
+            $browser: $browser,
+            context: context
+          }));
+
+          $li.append($label, $configureButton);
+          $li.appendTo($trafficTypes);
+
+          // Make chart
+          var $chartItem = $('<div>').addClass('network-chart-item').addClass(id);
+          $chartItem.appendTo($networkChart);
+        });
+
+        $chart.append($trafficTypes, $networkChart);
+        
         return $chart;
       },
 
