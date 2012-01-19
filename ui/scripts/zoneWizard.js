@@ -886,12 +886,16 @@
 						url: createURL("createZone" + array1.join("")),
 						dataType: "json",
 						async: false,
-						success: function(json) {	
+						success: function(json) {							
 							stepFns.addPhysicalNetworks({
 								data: $.extend(args.data, {
 									returnedZone: json.createzoneresponse.zone
 								})
 							});							
+						},
+						error: function(XMLHttpResponse) {						  
+							var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+							error('addZone', errorMsg, { fn: 'addZone', args: args });
 						}
 					});
         },
