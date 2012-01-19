@@ -527,6 +527,35 @@
             listView: listViewArgs
           });
         };
+      },
+
+      providerListView: function(context) {
+        return function(args) {
+          var $elem = args.$panel;
+          var listViewArgs = cloudStack.sections.system.naas.providerListView;
+
+          $elem.listView({
+            context: context,
+            listView: $.extend(true, {}, listViewArgs, {
+              detailView: cloudStack.sections.system.naas.networkProviders.types.netscaler
+            })
+          });
+        };
+      },
+
+      /**
+       * Makes details for a given traffic type
+       */
+      trafficTypeDetails: function(targetID, context) {
+        return function(args) {
+          var $elem = args.$panel;
+          var detailViewArgs = cloudStack.sections.system.naas.mainNetworks[targetID].detailView;
+
+          $elem.detailView($.extend(true, {}, detailViewArgs, {
+            $browser: $('#browser .container'),
+            context: context
+          }));
+        };        
       }
     };
 
@@ -627,21 +656,21 @@
           'public': {
             label: 'Public',
             configure: {
-              action: function() {}
+              action: actions.trafficTypeDetails('public', context)
             }
           },
 
           'guest': {
             label: 'Guest',
             configure: {
-              action: function() {}
+              action: actions.trafficTypeDetails('guest', context)
             }
           },
 
           'management': {
             label: 'Management',
             configure: {
-              action: function() {}
+              action: actions.trafficTypeDetails('management', context)
             }
           },
 
@@ -649,6 +678,14 @@
             label: 'Storage',
             configure: {
               action: function() {}
+            }
+          },
+
+          'providers': {
+            label: 'Network Service Providers',
+            ignoreChart: true,
+            configure: {
+              action: actions.providerListView(context)
             }
           }
         };
@@ -668,6 +705,8 @@
           $li.appendTo($trafficTypes);
 
           // Make chart
+          if (trafficType.ignoreChart) return true;
+          
           var $chartItem = $('<div>').addClass('network-chart-item').addClass(id);
           $chartItem.appendTo($networkChart);
         });

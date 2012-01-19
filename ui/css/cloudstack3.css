@@ -3814,13 +3814,13 @@ Dialogs*/
 }
 
 .system-chart.network .base-circle-icon {
-  width: 45px;
-  height: 45px;
-  background: url(../images/bg-system-network-traffic.png) -37px -540px;
-  /*+placement:shift 221px 406px;*/
+  width: 35px;
+  height: 34px;
+  background: url(../images/bg-system-network-traffic.png) 0px -853px;
+  /*+placement:shift 227px 557px;*/
   position: relative;
-  left: 221px;
-  top: 406px;
+  left: 227px;
+  top: 557px;
   position: absolute;
   z-index: 5;
 }
@@ -3886,6 +3886,34 @@ Dialogs*/
   position: absolute;
 }
 
+.system-chart.network ul.resources li.providers {
+  /*+placement:shift 248px 427px;*/
+  position: relative;
+  left: 248px;
+  top: 427px;
+  height: 77px;
+  width: 258px;
+  position: absolute;
+  background: url(../images/bg-system-network-traffic.png) no-repeat -50px -848px;
+}
+
+.system-chart.network ul.resources li.providers span {
+  /*+placement:shift 99px 5px;*/
+  position: relative;
+  left: 99px;
+  top: 5px;
+  position: absolute;
+  font-size: 12px;
+}
+
+.system-chart.network ul.resources li.providers .view-all {
+  /*+placement:shift 186px 48px;*/
+  position: relative;
+  left: 186px;
+  top: 48px;
+  position: absolute;
+}
+
 .system-chart.network .system-network-chart {
   width: 100%;
   height: 100%;
@@ -3896,7 +3924,7 @@ Dialogs*/
 .system-chart.network .system-network-chart .network-chart-item {
   background: url(../images/bg-system-network-traffic.png) no-repeat;
   width: 213px;
-  height: 400px;
+  height: 539px;
 }
 
 .system-chart.network .system-network-chart .network-chart-item.public {

@@ -34,6 +34,39 @@
 
     // Network-as-a-service configuration
     naas: {
+      providerListView: {
+        id: 'networkProviders',
+        fields: {
+          name: { label: 'Name' },
+          state: { label: 'State', indicator: { 'Enabled': 'on', 'Disabled': 'off' } }
+        },
+        dataProvider: function(args) {
+          args.response.success({
+            data: [
+              {
+                name: 'NetScaler',
+                state: 'Enabled'
+              },
+              {
+                name: 'SRX',
+                state: 'Enabled'
+              },
+              {
+                name: 'F5',
+                state: 'Enabled'
+              },
+              {
+                name: 'Virtual Router',
+                state: 'Enabled'
+              },
+              {
+                name: 'Security Groups',
+                state: 'Enabled'
+              }
+            ]
+          })
+        }
+      },
       mainNetworks: {
         'public': {
           detailView: {
