@@ -672,7 +672,12 @@
           $chartItem.appendTo($networkChart);
         });
 
-        $chart.append($trafficTypes, $networkChart);
+        var $switchIcon = $('<div>').addClass('network-switch-icon').append(
+          $('<span>').html('L2/L3 switch')
+        );
+        var $circleIcon = $('<div>').addClass('base-circle-icon');
+
+        $chart.append($trafficTypes, $switchIcon, $networkChart, $circleIcon);
         
         return $chart;
       },
