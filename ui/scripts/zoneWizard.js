@@ -1228,7 +1228,7 @@
         
 				//enable physical network, enable virtual router element, enable network service provider
 				afterCreateZonePhysicalNetworkTrafficTypes: function(args) {				  
-					message('Configure physical network(s)');
+					message('Configuring physical network(s)');
 					
 					if(args.data.zone.networkType == "Basic") {							  			
 						$.ajax({
@@ -2041,18 +2041,15 @@
       }
     },
 
-    enableZoneAction: function(args) {
-		  debugger;		
+    enableZoneAction: function(args) {		 
 		  $.ajax({
 			  url: createURL("updateZone&allocationstate=Enabled&id=" + args.formData.returnedZone.id),
 				dataType: "json",
-				success: function(json) {
-				  debugger;
-					args.data.returnedZone = json.updatezoneresponse.zone;
+				success: function(json) {				  
+					args.formData.returnedZone = json.updatezoneresponse.zone;
 					args.response.success();
 				}			
-			});
-		  debugger;      
+			});		      
     }
   };
 }(cloudStack, jQuery));
