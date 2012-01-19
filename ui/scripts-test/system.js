@@ -44,27 +44,38 @@
           args.response.success({
             data: [
               {
+                id: 'netscaler',
                 name: 'NetScaler',
                 state: 'Enabled'
               },
               {
+                id: 'srx',
                 name: 'SRX',
                 state: 'Enabled'
               },
               {
+                id: 'f5',
                 name: 'F5',
                 state: 'Enabled'
               },
               {
+                id: 'virtualRouter',
                 name: 'Virtual Router',
                 state: 'Enabled'
               },
               {
+                id: 'securityGroups',
                 name: 'Security Groups',
                 state: 'Enabled'
               }
             ]
           })
+        },
+
+        detailView: function(args) {
+          return cloudStack.sections.system.naas.networkProviders.types[
+            args.context.networkProviders[0].id
+          ];
         }
       },
       mainNetworks: {
@@ -325,6 +336,7 @@
         types: {
           // Virtual router list view
           virtualRouter: {
+            isMaximized: true,
             type: 'detailView',
             id: 'virtualRouter-providers',
             label: 'Virtual Router',

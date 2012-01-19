@@ -54,9 +54,7 @@
 
           $elem.listView({
             context: context,
-            listView: $.extend(true, {}, listViewArgs, {
-              detailView: cloudStack.sections.system.naas.networkProviders.types.netscaler
-            })
+            listView: listViewArgs
           });
         };
       },
@@ -172,12 +170,13 @@
 
         var renderChart = function(args) {
           var $targetChart = args.$chart ? args.$chart : $chart;
+          var targetContext = $.extend(true, {}, context, {
+            physicalNetworks: [args.data]
+          });
           
           // Get traffic type data
           trafficTypeDataProvider({
-            context: $.extend(true, {}, context, {
-              physicalNetworks: [args.data]
-            }),
+            targetContext: targetContext,
             response: {
               success: function(args) {
                 var $networkChart = $('<div>').addClass('system-network-chart');
@@ -189,21 +188,21 @@
                   'public': {
                     label: 'Public',
                     configure: {
-                      action: actions.trafficTypeDetails('public', context)
+                      action: actions.trafficTypeDetails('public', targetContext)
                     }
                   },
 
                   'guest': {
                     label: 'Guest',
                     configure: {
-                      action: actions.trafficTypeDetails('guest', context)
+                      action: actions.trafficTypeDetails('guest', targetContext)
                     }
                   },
 
                   'management': {
                     label: 'Management',
                     configure: {
-                      action: actions.trafficTypeDetails('management', context)
+                      action: actions.trafficTypeDetails('management', targetContext)
                     }
                   },
 
@@ -218,7 +217,7 @@
                     label: 'Network Service Providers',
                     ignoreChart: true,
                     configure: {
-                      action: actions.providerListView(context)
+                      action: actions.providerListView(targetContext)
                     }
                   }
                 };
@@ -237,7 +236,7 @@
                   var $configureButton = viewAllButton($.extend(trafficType.configure, {
                     title: trafficType.label,
                     $browser: $browser,
-                    context: context
+                    targetContext: targetContext
                   }));
 
                   $li.append($label, $configureButton);
