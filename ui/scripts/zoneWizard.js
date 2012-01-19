@@ -623,6 +623,9 @@
                   $form.find('[rel=iqn]').hide();
                   $form.find('[rel=lun]').hide();
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).hide();
                   $form.find('[rel=vCenterDataCenter]').hide();
                   $form.find('[rel=vCenterDataStore]').hide();
@@ -642,6 +645,9 @@
                   $form.find('[rel=iqn]').hide();
                   $form.find('[rel=lun]').hide();
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).hide();
                   $form.find('[rel=vCenterDataCenter]').hide();
                   $form.find('[rel=vCenterDataStore]').hide();
@@ -661,6 +667,9 @@
                   $form.find('[rel=iqn]').hide();
                   $form.find('[rel=lun]').hide();
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();													
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).hide();
                   $form.find('[rel=vCenterDataCenter]').hide();
                   $form.find('[rel=vCenterDataStore]').hide();
@@ -678,10 +687,33 @@
                   $form.find('[rel=iqn]').css('display', 'block');
                   $form.find('[rel=lun]').css('display', 'block');
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).hide();
                   $form.find('[rel=vCenterDataCenter]').hide();
                   $form.find('[rel=vCenterDataStore]').hide();
-                }
+                }			
+								else if($(this).val() == "clvm") {
+									//$("#add_pool_server_container", $dialogAddPool).hide();
+									$form.find('.form-item[rel=server]').hide();
+									//$dialogAddPool.find("#add_pool_nfs_server").val("localhost");
+									$form.find('.form-item[rel=server]').find(".value").find("input").val("localhost");
+									
+									//$('li[input_group="nfs"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=path]').hide();
+									
+									//$('li[input_group="iscsi"]', $dialogAddPool).hide();
+									 $form.find('.form-item[rel=iqn]').hide();
+									$form.find('.form-item[rel=lun]').hide();
+									
+									//$('li[input_group="clvm"]', $dialogAddPool).show();
+									$form.find('.form-item[rel=volumegroup]').css('display', 'inline-block');
+									
+									//$('li[input_group="vmfs"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=vCenterDataCenter]').hide();
+									$form.find('.form-item[rel=vCenterDataStore]').hide();
+								}										
                 else if(protocol == "vmfs") {
                   //$dialogAddPool.find("#add_pool_server_container").show();
                   $form.find('[rel=server]').css('display', 'block');
@@ -695,6 +727,9 @@
                   $form.find('[rel=iqn]').hide();
                   $form.find('[rel=lun]').hide();
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).show();
                   $form.find('[rel=vCenterDataCenter]').css('display', 'block');
                   $form.find('[rel=vCenterDataStore]').css('display', 'block');
@@ -713,6 +748,9 @@
                   $form.find('[rel=iqn]').hide();
                   $form.find('[rel=lun]').hide();
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();													
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).hide();
                   $form.find('[rel=vCenterDataCenter]').hide();
                   $form.find('[rel=vCenterDataStore]').hide();
@@ -727,6 +765,9 @@
                   $form.find('[rel=iqn]').hide();
                   $form.find('[rel=lun]').hide();
 
+									//$('li[input_group="clvm"]', $dialogAddPool).hide();
+									$form.find('.form-item[rel=volumegroup]').hide();
+									
                   //$('li[input_group="vmfs"]', $dialogAddPool).hide();
                   $form.find('[rel=vCenterDataCenter]').hide();
                   $form.find('[rel=vCenterDataStore]').hide();
@@ -761,6 +802,13 @@
             isHidden: true
           },
 
+					//clvm
+					volumegroup: {
+						label: 'Volume Group',
+						validation: { required: true },
+						isHidden: true
+					},
+					
           //vmfs
           vCenterDataCenter: {
             label: 'vCenter Datacenter',
@@ -796,6 +844,8 @@
     },
 
     action: function(args) {    
+		  //debugger;
+			var addPodFnBeingCalled = false; //for multiple physical networks in advanced zone
       var success = args.response.success;
       var error = args.response.error;
       var message = args.response.message;
@@ -1096,7 +1146,8 @@
 													$("body").stopTime(timerKey);
 													if (result.jobstatus == 1) {
 														var returnedPhysicalNetwork = result.jobresult.physicalnetwork;																										
-																											
+                            returnedPhysicalNetwork.originalId = thisPhysicalNetwork.id;															
+															
 														var returnedTrafficTypes = [];													
 														$(thisPhysicalNetwork.trafficTypes).each(function(){													  
 															var thisTrafficType = this;
@@ -1325,12 +1376,14 @@
 																																				url: createURL("createNetwork" + array2.join("")),
 																																				dataType: "json",
 																																				async: false,
-																																				success: function(json) {																																						    
-																																					stepFns.addPod({
-																																						data: $.extend(args.data, {
-																																							returnedGuestNetwork: json.createnetworkresponse.network
-																																						})
-																																					});																																					
+																																				success: function(json) {		
+																																				  if(addPodFnBeingCalled == false) {
+																																						stepFns.addPod({
+																																							data: $.extend(args.data, {
+																																								returnedGuestNetwork: json.createnetworkresponse.network
+																																							})
+																																						});		
+																																					}	
 																																				}
 																																			});
 																																		}
@@ -1360,11 +1413,13 @@
 																													dataType: "json",
 																													async: false,
 																													success: function(json) {			
-																														stepFns.addPod({
-																															data: $.extend(args.data, {
-																																returnedGuestNetwork: json.createnetworkresponse.network
-																															})
-																														});																																																												
+																													  if(addPodFnBeingCalled == false) {
+																															stepFns.addPod({
+																																data: $.extend(args.data, {
+																																	returnedGuestNetwork: json.createnetworkresponse.network
+																																})
+																															});		
+																														}	
 																													}
 																												});		
 																											}																															  
@@ -1509,9 +1564,11 @@
 																										else {
 																											$("body").stopTime(timerKey);
 																											if (result.jobstatus == 1) { //Virtual Router Provider has been enabled successfully		
-																												stepFns.addPod({
-																													data: args.data
-																												});																																																							
+																												if(addPodFnBeingCalled == false) {
+																												  stepFns.addPod({
+																														data: args.data
+																													});		
+																												}	
 																											}
 																											else if (result.jobstatus == 2) {
 																												alert("failed to enable Virtual Router Provider. Error: " + fromdb(result.jobresult.errortext));
@@ -1559,7 +1616,8 @@
 				},
 				
 				
-        addPod: function(args) {				  
+        addPod: function(args) {	
+          addPodFnBeingCalled = true;			  
           message('Creating pod');
                    
 					var array3 = [];
@@ -1675,53 +1733,65 @@
 							}
 						});						
 					}
-					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone         
-            /*					
-							var vlan;
-							if(args.data.guestTraffic.vlanRangeEnd == null || args.data.guestTraffic.vlanRangeEnd.length == 0)
-								vlan = args.data.guestTraffic.vlanRangeStart;
-							else
-								vlan = args.data.guestTraffic.vlanRangeStart + "-" + args.data.guestTraffic.vlanRangeEnd;
-											
-							$.ajax({
-								url: createURL("updatePhysicalNetwork&id=" + args.data.returnedPhysicalNetworks[0].id  + "&vlan=" + todb(vlan)),
-								dataType: "json",
-								success: function(json) {
-									var jobId = json.updatephysicalnetworkresponse.jobid;							
-									var timerKey = "asyncJob_" + jobId;							
-									$("body").everyTime(2000, timerKey, function(){
-										$.ajax({
-											url: createURL("queryAsyncJobResult&jobid=" + jobId),
-											dataType: "json",
-											success: function(json) {									
-												var result = json.queryasyncjobresultresponse;
-												if(result.jobstatus == 0) {
-													return;
+					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone    
+					  debugger;
+						var updatedCount = 0;
+            $(args.data.physicalNetworks).each(function(){			
+              debugger;						
+						  if(this.guestConfiguration != null) {		
+								var vlan;
+								if(this.guestConfiguration.vlanRangeEnd == null || this.guestConfiguration.vlanRangeEnd.length == 0)
+									vlan = this.guestConfiguration.vlanRangeStart;
+								else
+									vlan = this.guestConfiguration.vlanRangeStart + "-" + this.guestConfiguration.vlanRangeEnd;
+								
+                var originalId = this.id;
+								var returnedId;
+								$(args.data.returnedPhysicalNetworks).each(function(){
+								  debugger;
+								  if(this.originalId == originalId) {
+									  returnedId = this.id;
+										return false; //break the loop
+									}
+								});
+								debugger;
+								$.ajax({
+									url: createURL("updatePhysicalNetwork&id=" + returnedId  + "&vlan=" + todb(vlan)), 
+									dataType: "json",
+									success: function(json) {
+										var jobId = json.updatephysicalnetworkresponse.jobid;							
+										var timerKey = "asyncJob_" + jobId;							
+										$("body").everyTime(2000, timerKey, function(){
+											$.ajax({
+												url: createURL("queryAsyncJobResult&jobid=" + jobId),
+												dataType: "json",
+												success: function(json) {									
+													var result = json.queryasyncjobresultresponse;
+													debugger;
+													if(result.jobstatus == 0) {
+														return;
+													}
+													else {
+														$("body").stopTime(timerKey);
+														if(result.jobstatus == 1) {	
+                              updatedCount++;
+                              if(updatedCount == args.data.physicalNetworks.length) {															
+																stepFns.addCluster({
+																	data: args.data
+																});
+															}
+														}
+														else if(result.jobstatus == 2){
+															alert("error: " + fromdb(result.jobresult.errortext));
+														}
+													}										
 												}
-												else {
-													$("body").stopTime(timerKey);
-													if(result.jobstatus == 1) {
-														args.data.returnedPhysicalNetworks[0] = result.jobresult.physicalnetwork;													
-														stepFns.addCluster({
-															data: args.data
-														});
-													}
-													else if(result.jobstatus == 2){
-														alert("error: " + fromdb(result.jobresult.errortext));
-													}
-												}										
-											}
-										});
-									});								
-								}
-							});					 
-						*/	
-						
-            //temporary before Brian fixes args.data.guestNetworks data						
-						stepFns.addCluster({
-							data: args.data
-						});	
-							
+											});
+										});								
+									}
+								});	
+							}
+            });			
 					}					
         },
         				
@@ -1887,18 +1957,15 @@
 						if(path.substring(0,1) != "/")
 							path = "/" + path;
 						url = SharedMountPointURL(server, path);
-					}		
-					/*								
+					}										
 					else if (args.data.primaryStorage.protocol == "clvm") {
-						//var vg = trim($thisDialog.find("#add_pool_clvm_vg").val());
-						//var vg = args.data.volumegroup;
+						//var vg = trim($thisDialog.find("#add_pool_clvm_vg").val());						
 						var vg = args.data.primaryStorage.volumegroup;
 						
 						if(vg.substring(0,1) != "/")
 							vg = "/" + vg;									
 						url = clvmURL(vg);
-					}		
-					*/								
+					}					
 					else if (args.data.primaryStorage.protocol == "vmfs") {
 						//var path = trim($thisDialog.find("#add_pool_vmfs_dc").val());
 						var path = args.data.primaryStorage.vCenterDataCenter;
@@ -1925,11 +1992,10 @@
 					$.ajax({
 						url: createURL("createStoragePool" + array1.join("")),
 						dataType: "json",
-						success: function(json) {
-							debugger;							
+						success: function(json) {									
 							stepFns.addSecondaryStorage({
 								data: $.extend(args.data, {
-								  returnedPrimaryStorage: json.createstoragepoolresponse.storagepool[0]
+								  returnedPrimaryStorage: json.createstoragepoolresponse.storagepool
 								})
 							});
 						},
@@ -1942,16 +2008,31 @@
         
         addSecondaryStorage: function(args) {
           message('Creating secondary storage');
-          debugger;
-          setTimeout(function() {
-            complete({
-              data: args.data
-            });
-          }, 300);
+          							
+					var nfs_server = args.data.secondaryStorage.nfsServer;
+					var path = args.data.secondaryStorage.path;
+					var url = nfsURL(nfs_server, path);
+
+					$.ajax({
+						url: createURL("addSecondaryStorage&zoneId=" + args.data.returnedZone.id + "&url=" + todb(url)),
+						dataType: "json",
+						success: function(json) {													
+							complete({
+								data: $.extend(args.data, {
+								  returnedSecondaryStorage: json.addsecondarystorageresponse.secondarystorage
+								})
+							});							
+						},
+						error: function(XMLHttpResponse) {
+							var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+							//args.response.error(errorMsg);
+						}
+					});					
         }
       };
 
       var complete = function(args) {
+			  //debugger;
         message('Zone creation complete!');
         success({});
       };

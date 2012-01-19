@@ -696,6 +696,8 @@
                 makeMessage('Enabling zone');
 
                 enableZoneAction({
+                  formData: data,
+                  launchData: args.data,
                   response: {
                     success: function(args) {
                       closeWindow();
