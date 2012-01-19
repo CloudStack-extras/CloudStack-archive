@@ -1644,7 +1644,7 @@
 						},
 						error: function(XMLHttpResponse) {
 							var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-							alert("createPod failed. Error: " + errorMsg);
+							error('addPod', errorMsg, { fn: 'addPod', args: args });
 						}
 					}); 						
         },  
@@ -1685,7 +1685,7 @@
 								},
 								error: function(XMLHttpResponse) {
 									var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-									args.response.error(errorMsg);
+									error('configurePublicTraffic', errorMsg, { fn: 'configurePublicTraffic', args: args });
 								}
 							});							
 						});				
@@ -1729,12 +1729,11 @@
 							},
 							error: function(XMLHttpResponse) {
 								var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-								args.response.error(errorMsg);
+								error('configureGuestTraffic', errorMsg, { fn: 'configureGuestTraffic', args: args });
 							}
 						});						
 					}
-					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone   					
-												
+					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone   	
 						var physicalNetworksHavingGuest = [];
 						$(args.data.physicalNetworks).each(function(){		
 						  if(this.guestConfiguration != null) {		
@@ -1788,7 +1787,11 @@
 														alert("error: " + fromdb(result.jobresult.errortext));
 													}
 												}										
-											}
+											},	
+											error: function(XMLHttpResponse) {
+												var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+												error('configureGuestTraffic', errorMsg, { fn: 'configureGuestTraffic', args: args });
+											}		
 										});
 									});								
 								}
@@ -1847,7 +1850,7 @@
 						},
 						error: function(XMLHttpResponse) {
 							var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-							//args.response.error(errorMsg);
+							error('addCluster', errorMsg, { fn: 'addCluster', args: args });
 						}
 					});		
         },
@@ -1912,7 +1915,7 @@
 						},
 						error: function(XMLHttpResponse) {
 							var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-							//args.response.error(errorMsg);
+							error('addHost', errorMsg, { fn: 'addHost', args: args });
 						}
 					});					    
         },
@@ -2003,7 +2006,7 @@
 						},
 						error: function(XMLHttpResponse) {
 							var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-							//args.response.error(errorMsg);
+							error('addPrimaryStorage', errorMsg, { fn: 'addPrimaryStorage', args: args });
 						}
 					});					
         },
@@ -2027,7 +2030,7 @@
 						},
 						error: function(XMLHttpResponse) {
 							var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-							//args.response.error(errorMsg);
+							error('addSecondaryStorage', errorMsg, { fn: 'addSecondaryStorage', args: args });
 						}
 					});					
         }
