@@ -843,7 +843,7 @@
 
       var complete = function(args) {
         message('Zone creation complete!');
-        success({});
+        success({ data: { zone: { id: '123-4223' }}});
       };
 
       if (startFn) {
