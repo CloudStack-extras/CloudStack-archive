@@ -128,38 +128,42 @@
         id: 'networkProviders',
         fields: {
           name: { label: 'Name' },
-          state: { label: 'State', indicator: { 'Enabled': 'on', 'Disabled': 'off' } }
+          state: {
+            label: 'State',
+            indicator: { 'Enabled': 'on', 'Disabled': 'off' }
+          }
         },
         dataProvider: function(args) {
           cloudStack.sections.system.naas.networkProviders.statusCheck({
             context: args.context
           });
+
           args.response.success({
             data: [
               {
                 id: 'netscaler',
                 name: 'NetScaler',
-                state: 'Enabled'
+                state: nspMap.netscaler? nspMap.netscaler.state : 'Disabled'
               },
               {
                 id: 'srx',
                 name: 'SRX',
-                state: 'Enabled'
+                state: nspMap.srx ? nspMap.srx.state : 'Disabled'
               },
               {
                 id: 'f5',
                 name: 'F5',
-                state: 'Enabled'
+                state: nspMap.f5 ? nspMap.f5.state : 'Disabled'
               },
               {
                 id: 'virtualRouter',
                 name: 'Virtual Router',
-                state: 'Enabled'
+                state: nspMap.virtualRouter ? nspMap.virtualRouter.state : 'Disabled'
               },
               {
                 id: 'securityGroups',
                 name: 'Security Groups',
-                state: 'Enabled'
+                state: nspMap.securityGroups ? nspMap.securityGroups.state : 'Disabled'
               }
             ]
           })
