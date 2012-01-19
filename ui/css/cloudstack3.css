@@ -3825,6 +3825,30 @@ Dialogs*/
   position: absolute;
 }
 
+.system-chart.network ul.resources li.guest {
+  /*+placement:shift 356px 155px;*/
+  position: relative;
+  left: 356px;
+  top: 155px;
+  position: absolute;
+}
+
+.system-chart.network ul.resources li.management {
+  /*+placement:shift 356px 242px;*/
+  position: relative;
+  left: 356px;
+  top: 242px;
+  position: absolute;
+}
+
+.system-chart.network ul.resources li.storage {
+  /*+placement:shift 356px 333px;*/
+  position: relative;
+  left: 356px;
+  top: 333px;
+  position: absolute;
+}
+
 .system-chart.network .system-network-chart {
   width: 100%;
   height: 100%;
