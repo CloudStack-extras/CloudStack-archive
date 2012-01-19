@@ -8,7 +8,7 @@
      */
     var viewAllButton = function(args) {
       var $viewAll = $('<div>').addClass('button view-all');
-      var $label = $('<span>').addClass('view-all-label').html('View all');
+      var $label = $('<span>').addClass('view-all-label').html(args.label ? args.label : 'View all');
       var $browser = args.$browser;
       var action = args.action;
 
@@ -234,6 +234,7 @@
                   var $li = $('<li>').addClass(id);
                   var $label = $('<span>').addClass('label').html(trafficType.label);
                   var $configureButton = viewAllButton($.extend(trafficType.configure, {
+                    label: 'Configure',
                     title: trafficType.label,
                     $browser: $browser,
                     targetContext: targetContext
