@@ -845,7 +845,7 @@
 
     action: function(args) {    
 		  //debugger;
-			var addPodFnBeingCalled = false; //for multiple physical networks in advanced zone
+			var advZoneConfiguredPhysicalNetworkCount = 0; //for multiple physical networks in advanced zone
       var success = args.response.success;
       var error = args.response.error;
       var message = args.response.message;
@@ -1228,7 +1228,7 @@
         
 				//enable physical network, enable virtual router element, enable network service provider
 				afterCreateZonePhysicalNetworkTrafficTypes: function(args) {				  
-					message('Enable physical network');
+					message('Configure physical network(s)');
 					
 					if(args.data.zone.networkType == "Basic") {							  			
 						$.ajax({
@@ -1376,14 +1376,13 @@
 																																				url: createURL("createNetwork" + array2.join("")),
 																																				dataType: "json",
 																																				async: false,
-																																				success: function(json) {		
-																																				  if(addPodFnBeingCalled == false) {
-																																						stepFns.addPod({
-																																							data: $.extend(args.data, {
-																																								returnedGuestNetwork: json.createnetworkresponse.network
-																																							})
-																																						});		
-																																					}	
+																																				success: function(json) {	
+                                                                          //basic zone has only one physical network => addPod() will be called only once => so don't need to double-check before calling addPod()
+																																					stepFns.addPod({
+																																						data: $.extend(args.data, {
+																																							returnedGuestNetwork: json.createnetworkresponse.network
+																																						})
+																																					});		
 																																				}
 																																			});
 																																		}
@@ -1413,13 +1412,12 @@
 																													dataType: "json",
 																													async: false,
 																													success: function(json) {			
-																													  if(addPodFnBeingCalled == false) {
-																															stepFns.addPod({
-																																data: $.extend(args.data, {
-																																	returnedGuestNetwork: json.createnetworkresponse.network
-																																})
-																															});		
-																														}	
+																														//basic zone has only one physical network => addPod() will be called only once => so don't need to double-check before calling addPod()
+																														stepFns.addPod({
+																															data: $.extend(args.data, {
+																																returnedGuestNetwork: json.createnetworkresponse.network
+																															})
+																														});			
 																													}
 																												});		
 																											}																															  
@@ -1542,9 +1540,7 @@
 																			}
 																			else {
 																				$("body").stopTime(timerKey);
-																				if (result.jobstatus == 1) {
-																					//alert("configureVirtualRouterElement succeeded.");
-
+																				if (result.jobstatus == 1) { //configureVirtualRouterElement succeeded																					
 																					$.ajax({
 																						url: createURL("updateNetworkServiceProvider&state=Enabled&id=" + virtualRouterProviderId),
 																						dataType: "json",
@@ -1564,7 +1560,8 @@
 																										else {
 																											$("body").stopTime(timerKey);
 																											if (result.jobstatus == 1) { //Virtual Router Provider has been enabled successfully		
-																												if(addPodFnBeingCalled == false) {
+																												advZoneConfiguredPhysicalNetworkCount++; 																																																						
+																												if(advZoneConfiguredPhysicalNetworkCount == args.data.returnedPhysicalNetworks.length) { //not call addPod() until all physical networks get configured
 																												  stepFns.addPod({
 																														data: args.data
 																													});		
@@ -1616,8 +1613,7 @@
 				},
 				
 				
-        addPod: function(args) {	
-          addPodFnBeingCalled = true;			  
+        addPod: function(args) {	          	  
           message('Creating pod');
                    
 					var array3 = [];
@@ -1733,11 +1729,9 @@
 							}
 						});						
 					}
-					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone    
-					  debugger;
+					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone   					
 						var updatedCount = 0;
-            $(args.data.physicalNetworks).each(function(){			
-              debugger;						
+            $(args.data.physicalNetworks).each(function(){		
 						  if(this.guestConfiguration != null) {		
 								var vlan;
 								if(this.guestConfiguration.vlanRangeEnd == null || this.guestConfiguration.vlanRangeEnd.length == 0)
@@ -1747,14 +1741,13 @@
 								
                 var originalId = this.id;
 								var returnedId;
-								$(args.data.returnedPhysicalNetworks).each(function(){
-								  debugger;
+								$(args.data.returnedPhysicalNetworks).each(function(){								  
 								  if(this.originalId == originalId) {
 									  returnedId = this.id;
 										return false; //break the loop
 									}
 								});
-								debugger;
+								
 								$.ajax({
 									url: createURL("updatePhysicalNetwork&id=" + returnedId  + "&vlan=" + todb(vlan)), 
 									dataType: "json",
@@ -1766,8 +1759,7 @@
 												url: createURL("queryAsyncJobResult&jobid=" + jobId),
 												dataType: "json",
 												success: function(json) {									
-													var result = json.queryasyncjobresultresponse;
-													debugger;
+													var result = json.queryasyncjobresultresponse;												
 													if(result.jobstatus == 0) {
 														return;
 													}
@@ -2032,7 +2024,7 @@
       };
 
       var complete = function(args) {
-			  //debugger;
+			  debugger;
         message('Zone creation complete!');
         success({});
       };
@@ -2045,7 +2037,17 @@
     },
 
     enableZoneAction: function(args) {
-      args.response.success();
+		  debugger;		
+		  $.ajax({
+			  url: createURL("updateZone&allocationstate=Enabled&id=" + args.data.returnedZone.id),
+				dataType: "json",
+				success: function(json) {
+				  debugger;
+					args.data.returnedZone = json.updatezoneresponse.zone;
+					args.response.success();
+				}			
+			});
+		  debugger;      
     }
   };
 }(cloudStack, jQuery));
