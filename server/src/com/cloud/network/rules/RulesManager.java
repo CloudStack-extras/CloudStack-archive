@@ -19,6 +19,7 @@ package com.cloud.network.rules;
 
 import java.util.List;
 
+import com.cloud.exception.InsufficientAddressCapacityException;
 import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.IpAddress;
@@ -70,5 +71,9 @@ public interface RulesManager extends RulesService {
     boolean applyStaticNatForIp(long sourceIpId, boolean continueOnError, Account caller, boolean forRevoke);
     
     boolean applyStaticNatsForNetwork(long networkId, boolean continueOnError, Account caller);
+
+	void enableElasticIpAndStaticNatForVm(UserVm vm) throws InsufficientAddressCapacityException;
+	
+    boolean disableStaticNat(long ipAddressId, Account caller, long callerUserId, boolean releaseIpIfElastic) throws ResourceUnavailableException;
 
 }

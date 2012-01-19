@@ -52,6 +52,8 @@ import com.cloud.exception.PermissionDeniedException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.projects.Project;
+import com.cloud.projects.ProjectAccount.Role;
+import com.cloud.projects.dao.ProjectAccountDao;
 import com.cloud.projects.dao.ProjectDao;
 import com.cloud.storage.dao.SnapshotDao;
 import com.cloud.storage.dao.VMTemplateDao;
@@ -112,6 +114,9 @@ public class ResourceLimitManagerImpl implements ResourceLimitService, Manager{
     private EntityManager _entityMgr;
     @Inject
     private ProjectDao _projectDao;
+    @Inject
+    private ProjectAccountDao _projectAccountDao;
+    
     
     protected SearchBuilder<ResourceCountVO> ResourceCountSearch;
     ScheduledExecutorService _rcExecutor;
@@ -337,7 +342,7 @@ public class ResourceLimitManagerImpl implements ResourceLimitService, Manager{
                        return limits;
                    }
                    
-                   _accountMgr.checkAccess(caller, null, account);
+                   _accountMgr.checkAccess(caller, null, true, account);
                    domainId = null;
                }
            }
@@ -357,7 +362,7 @@ public class ResourceLimitManagerImpl implements ResourceLimitService, Manager{
        if (id != null) {
            ResourceLimitVO vo = _resourceLimitDao.findById(id);
            if (vo.getAccountId() != null) {
-               _accountMgr.checkAccess(caller, null, _accountDao.findById(vo.getAccountId()));
+               _accountMgr.checkAccess(caller, null, true, _accountDao.findById(vo.getAccountId()));
                limits.add(vo);
            } else if (vo.getDomainId() != null) {
                _accountMgr.checkAccess(caller, _domainDao.findById(vo.getDomainId()));
@@ -486,9 +491,9 @@ public class ResourceLimitManagerImpl implements ResourceLimitService, Manager{
             }
             
             if (account.getType() == Account.ACCOUNT_TYPE_PROJECT) {
-                _accountMgr.checkAccess(caller, AccessType.ModifyProject, account); 
+                _accountMgr.checkAccess(caller, AccessType.ModifyProject, true, account); 
             } else {
-                _accountMgr.checkAccess(caller, null, account);
+                _accountMgr.checkAccess(caller, null, true, account);
             }
             
             ownerType = ResourceOwnerType.Account;
@@ -690,6 +695,8 @@ public class ResourceLimitManagerImpl implements ResourceLimitService, Manager{
             newCount = _ipAddressDao.countAllocatedIPsForAccount(accountId);
         } else if (type == Resource.ResourceType.template) {
             newCount = _vmTemplateDao.countTemplatesForAccount(accountId);
+        } else if (type == Resource.ResourceType.project) {
+        	newCount = _projectAccountDao.countByAccountIdAndRole(accountId, Role.Admin);
         } else {
             throw new InvalidParameterValueException("Unsupported resource type " + type);
         }

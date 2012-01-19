@@ -71,10 +71,11 @@ public interface NetworkManager extends NetworkService {
      * @param type
      * @param networkId
      * @param requestedIp TODO
+     * @param allocatedBy TODO
      * @return
      * @throws InsufficientAddressCapacityException
      */
-    PublicIp assignPublicIpAddress(long dcId, Long podId, Account owner, VlanType type, Long networkId, String requestedIp) throws InsufficientAddressCapacityException;
+    PublicIp assignPublicIpAddress(long dcId, Long podId, Account owner, VlanType type, Long networkId, String requestedIp, boolean isElastic) throws InsufficientAddressCapacityException;
 
     /**
      * assigns a source nat ip address to an account within a network.
@@ -273,4 +274,15 @@ public interface NetworkManager extends NetworkService {
     public boolean checkIpForService(IPAddressVO ip, Service service);
 
     void checkVirtualNetworkCidrOverlap(Long zoneId, String cidr);
+
+	void checkCapabilityForProvider(Set<Provider> providers, Service service,
+			Capability cap, String capValue);
+
+	Provider getDefaultUniqueProviderForService(String serviceName);
+
+	IpAddress assignElasticIp(long networkId, Account owner,
+			boolean forElasticLb, boolean forElasticIp)
+			throws InsufficientAddressCapacityException;
+
+	boolean handleElasticIpRelease(IpAddress ip);
 }

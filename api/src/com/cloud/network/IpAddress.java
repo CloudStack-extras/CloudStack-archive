@@ -77,4 +77,7 @@ public interface IpAddress extends ControlledEntity{
 	Long getAllocatedToAccountId();
 
 	Long getAllocatedInDomainId();
+
+	boolean getElastic();
+
 }

@@ -142,7 +142,6 @@ import com.cloud.utils.component.Inject;
 import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GlobalLock;
-import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.exception.ExecutionException;
@@ -2000,7 +1999,10 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                     } catch (ResourceUnavailableException e) {
                         s_logger.error("Exception during update for running vm: " + vm, e);
                         return null;
-                    } catch (NoTransitionException e) {
+                    }catch (InsufficientAddressCapacityException e) {
+                        s_logger.error("Exception during update for running vm: " + vm, e);
+                        return null;
+                    }catch (NoTransitionException e) {
                         s_logger.warn(e.getMessage());
                     }
                 }
@@ -2017,7 +2019,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         return command;
     }
 
-    private void ensureVmRunningContext(long hostId, VMInstanceVO vm, Event cause) throws OperationTimedoutException, ResourceUnavailableException, NoTransitionException {
+    private void ensureVmRunningContext(long hostId, VMInstanceVO vm, Event cause) throws OperationTimedoutException, ResourceUnavailableException, NoTransitionException, InsufficientAddressCapacityException {
         VirtualMachineGuru<VMInstanceVO> vmGuru = getVmGuru(vm);
 
         s_logger.debug("VM state is starting on full sync so updating it to running");
