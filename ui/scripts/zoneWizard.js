@@ -2023,8 +2023,7 @@
         }
       };
 
-      var complete = function(args) {
-			  debugger;
+      var complete = function(args) {			
         message('Zone creation complete!');
         success({});
       };
@@ -2039,7 +2038,7 @@
     enableZoneAction: function(args) {
 		  debugger;		
 		  $.ajax({
-			  url: createURL("updateZone&allocationstate=Enabled&id=" + args.data.returnedZone.id),
+			  url: createURL("updateZone&allocationstate=Enabled&id=" + args.formData.returnedZone.id),
 				dataType: "json",
 				success: function(json) {
 				  debugger;
