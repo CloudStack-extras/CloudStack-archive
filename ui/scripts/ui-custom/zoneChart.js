@@ -647,76 +647,91 @@
 
       network: function(args) {
         var $chart = $('<div>');
-        var $networkChart = $('<div>').addClass('system-network-chart');
-        var $trafficTypes = $('<ul>').addClass('resources traffic-types');
         var $browser = $('#browser .container');
         var context = args.context;
+        var networkDataProvider = cloudStack.sections.system.naas.networks.dataProvider;
+        var $loading = $('<div>').addClass('loading-overlay');
 
-        var trafficTypes = {
-          'public': {
-            label: 'Public',
-            configure: {
-              action: actions.trafficTypeDetails('public', context)
-            }
-          },
+        $loading.appendTo($chart);
 
-          'guest': {
-            label: 'Guest',
-            configure: {
-              action: actions.trafficTypeDetails('guest', context)
-            }
-          },
+        // Get network data
+        networkDataProvider({
+          context: context,
+          response: {
+            success: function(args) {
+              var $networkChart = $('<div>').addClass('system-network-chart');
+              var $trafficTypes = $('<ul>').addClass('resources traffic-types');
 
-          'management': {
-            label: 'Management',
-            configure: {
-              action: actions.trafficTypeDetails('management', context)
-            }
-          },
+              $loading.remove();
 
-          'storage': {
-            label: 'Storage',
-            configure: {
-              action: function() {}
-            }
-          },
+              var trafficTypes = {
+                'public': {
+                  label: 'Public',
+                  configure: {
+                    action: actions.trafficTypeDetails('public', context)
+                  }
+                },
 
-          'providers': {
-            label: 'Network Service Providers',
-            ignoreChart: true,
-            configure: {
-              action: actions.providerListView(context)
+                'guest': {
+                  label: 'Guest',
+                  configure: {
+                    action: actions.trafficTypeDetails('guest', context)
+                  }
+                },
+
+                'management': {
+                  label: 'Management',
+                  configure: {
+                    action: actions.trafficTypeDetails('management', context)
+                  }
+                },
+
+                'storage': {
+                  label: 'Storage',
+                  configure: {
+                    action: function() {}
+                  }
+                },
+
+                'providers': {
+                  label: 'Network Service Providers',
+                  ignoreChart: true,
+                  configure: {
+                    action: actions.providerListView(context)
+                  }
+                }
+              };
+
+              // Make traffic type elems
+              $.each(trafficTypes, function(id, trafficType) {
+                // Make list item
+                var $li = $('<li>').addClass(id);
+                var $label = $('<span>').addClass('label').html(trafficType.label);
+                var $configureButton = viewAllButton($.extend(trafficType.configure, {
+                  title: trafficType.label,
+                  $browser: $browser,
+                  context: context
+                }));
+
+                $li.append($label, $configureButton);
+                $li.appendTo($trafficTypes);
+
+                // Make chart
+                if (trafficType.ignoreChart) return true;
+                
+                var $chartItem = $('<div>').addClass('network-chart-item').addClass(id);
+                $chartItem.appendTo($networkChart);
+              });
+
+              var $switchIcon = $('<div>').addClass('network-switch-icon').append(
+                $('<span>').html('L2/L3 switch')
+              );
+              var $circleIcon = $('<div>').addClass('base-circle-icon');
+
+              $chart.append($trafficTypes, $switchIcon, $networkChart, $circleIcon);              
             }
           }
-        };
-
-        // Make traffic type elems
-        $.each(trafficTypes, function(id, trafficType) {
-          // Make list item
-          var $li = $('<li>').addClass(id);
-          var $label = $('<span>').addClass('label').html(trafficType.label);
-          var $configureButton = viewAllButton($.extend(trafficType.configure, {
-            title: trafficType.label,
-            $browser: $browser,
-            context: context
-          }));
-
-          $li.append($label, $configureButton);
-          $li.appendTo($trafficTypes);
-
-          // Make chart
-          if (trafficType.ignoreChart) return true;
-          
-          var $chartItem = $('<div>').addClass('network-chart-item').addClass(id);
-          $chartItem.appendTo($networkChart);
         });
-
-        var $switchIcon = $('<div>').addClass('network-switch-icon').append(
-          $('<span>').html('L2/L3 switch')
-        );
-        var $circleIcon = $('<div>').addClass('base-circle-icon');
-
-        $chart.append($trafficTypes, $switchIcon, $networkChart, $circleIcon);
         
         return $chart;
       },
