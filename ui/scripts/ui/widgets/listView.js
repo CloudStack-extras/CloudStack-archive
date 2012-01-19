@@ -1292,6 +1292,12 @@
             listViewActiveSection : detailViewArgs.section
         ] = [jsonObj];
 
+        if ($.isFunction(detailViewArgs.data)) {
+          detailViewArgs.data = detailViewArgs.data({
+            context: detailViewArgs.context
+          });
+        }
+
         createDetailView(detailViewArgs, function($detailView) {
           $detailView.data('list-view', $listView);
         }, $target.closest('tr'));
