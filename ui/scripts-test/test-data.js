@@ -107,7 +107,6 @@
     dataProvider: {
       listView: function(section) {
         return function(args) {
-          console.log(args.context);
           setTimeout(function() {
             var data;
             if (args.page <= 5) data = testData.data[section];
