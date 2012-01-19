@@ -214,8 +214,8 @@ public class ProjectManagerImpl implements ProjectManager, Manager{
             UserContext.current().setEventDetails("Project id=" + project.getId());
         }
         
-        //Increment resource count for the Owner's domain
-        _resourceLimitMgr.incrementResourceCount(owner.getAccountId(), ResourceType.project);
+        //Increment resource count
+        _resourceLimitMgr.incrementResourceCount(owner.getId(), ResourceType.project);
         
         txn.commit();
         
@@ -235,7 +235,7 @@ public class ProjectManagerImpl implements ProjectManager, Manager{
             throw new InvalidParameterValueException("Unable to find project by id " + projectId);
         }
         
-        _accountMgr.checkAccess(caller,AccessType.ModifyProject, _accountMgr.getAccount(project.getProjectAccountId()));
+        _accountMgr.checkAccess(caller,AccessType.ModifyProject, true, _accountMgr.getAccount(project.getProjectAccountId()));
         
         //at this point enabling project doesn't require anything, so just update the state
         project.setState(State.Active);
@@ -258,7 +258,7 @@ public class ProjectManagerImpl implements ProjectManager, Manager{
             throw new InvalidParameterValueException("Unable to find project by id " + projectId);
         }
         
-        _accountMgr.checkAccess(caller,AccessType.ModifyProject, _accountMgr.getAccount(project.getProjectAccountId()));
+        _accountMgr.checkAccess(caller,AccessType.ModifyProject, true, _accountMgr.getAccount(project.getProjectAccountId()));
         
         //mark project as inactive first, so you can't add resources to it
         Transaction txn = Transaction.currentTxn();
@@ -266,7 +266,7 @@ public class ProjectManagerImpl implements ProjectManager, Manager{
         s_logger.debug("Marking project id=" + projectId + " with state " + State.Disabled + " as a part of project delete...");
         project.setState(State.Disabled);
         boolean updateResult = _projectDao.update(projectId, project);
-        _resourceLimitMgr.decrementResourceCount(project.getProjectAccountId(), ResourceType.project);
+        _resourceLimitMgr.decrementResourceCount(getProjectOwner(projectId).getId(), ResourceType.project);
         txn.commit();
         
         if (updateResult) {
@@ -494,7 +494,7 @@ public class ProjectManagerImpl implements ProjectManager, Manager{
     
     @Override @DB
     @ActionEvent(eventType = EventTypes.EVENT_PROJECT_UPDATE, eventDescription = "updating project", async=true)
-    public Project updateProject(long projectId, String displayText, String newOwnerName) {
+    public Project updateProject(long projectId, String displayText, String newOwnerName) throws ResourceAllocationException{
         Account caller = UserContext.current().getCaller();
         
         //check that the project exists
@@ -505,7 +505,7 @@ public class ProjectManagerImpl implements ProjectManager, Manager{
         }
        
         //verify permissions
-        _accountMgr.checkAccess(caller,AccessType.ModifyProject, _accountMgr.getAccount(project.getProjectAccountId()));
+        _accountMgr.checkAccess(caller,AccessType.ModifyProject, true, _accountMgr.getAccount(project.getProjectAccountId()));
         
         Transaction txn = Transaction.currentTxn();
         txn.start();
@@ -527,14 +527,20 @@ public class ProjectManagerImpl implements ProjectManager, Manager{
                     throw new InvalidParameterValueException("Account " + newOwnerName + " doesn't belong to the project. Add it to the project first and then change the project's ownership");
                 }
                 
+                //do resource limit check
+                _resourceLimitMgr.checkResourceLimit(_accountMgr.getAccount(futureOwnerAccount.getId()), ResourceType.project);
+                
                 //unset the role for the old owner
                 ProjectAccountVO currentOwner = _projectAccountDao.findByProjectIdAccountId(projectId, currentOwnerAccount.getId());
                 currentOwner.setAccountRole(Role.Regular);
                 _projectAccountDao.update(currentOwner.getId(), currentOwner);
+                _resourceLimitMgr.decrementResourceCount(currentOwnerAccount.getId(), ResourceType.project);
                 
                 //set new owner
                 futureOwner.setAccountRole(Role.Admin);
                 _projectAccountDao.update(futureOwner.getId(), futureOwner);
+                _resourceLimitMgr.incrementResourceCount(futureOwnerAccount.getId(), ResourceType.project);
+
                 
             } else {
                 s_logger.trace("Future owner " + newOwnerName + "is already the owner of the project id=" + projectId);
@@ -573,7 +579,7 @@ public class ProjectManagerImpl implements ProjectManager, Manager{
             }
             
             //verify permissions - only project owner can assign
-            _accountMgr.checkAccess(caller, AccessType.ModifyProject, _accountMgr.getAccount(project.getProjectAccountId()));
+            _accountMgr.checkAccess(caller, AccessType.ModifyProject, true, _accountMgr.getAccount(project.getProjectAccountId()));
             
             //Check if the account already added to the project
             ProjectAccount projectAccount =  _projectAccountDao.findByProjectIdAccountId(projectId, account.getId());
@@ -641,7 +647,7 @@ public class ProjectManagerImpl implements ProjectManager, Manager{
         }
         
         //verify permissions
-        _accountMgr.checkAccess(caller,AccessType.ModifyProject, _accountMgr.getAccount(project.getProjectAccountId()));
+        _accountMgr.checkAccess(caller,AccessType.ModifyProject, true, _accountMgr.getAccount(project.getProjectAccountId()));
         
         //Check if the account exists in the project
         ProjectAccount projectAccount =  _projectAccountDao.findByProjectIdAccountId(projectId, account.getId());
@@ -840,7 +846,7 @@ public class ProjectManagerImpl implements ProjectManager, Manager{
             }
             
             //verify permissions
-            _accountMgr.checkAccess(caller, null, account);
+            _accountMgr.checkAccess(caller, null, true, account);
             
             accountId = account.getId();
         } else {
@@ -910,7 +916,7 @@ public class ProjectManagerImpl implements ProjectManager, Manager{
         }
        
         //verify permissions
-        _accountMgr.checkAccess(caller,AccessType.ModifyProject, _accountMgr.getAccount(project.getProjectAccountId()));
+        _accountMgr.checkAccess(caller,AccessType.ModifyProject, true, _accountMgr.getAccount(project.getProjectAccountId()));
         
         //allow project activation only when it's in Suspended state
         Project.State currentState = project.getState();
@@ -949,7 +955,7 @@ public class ProjectManagerImpl implements ProjectManager, Manager{
             throw new InvalidParameterValueException("Unable to find project by id " + projectId);
         }
         
-        _accountMgr.checkAccess(caller,AccessType.ModifyProject, _accountMgr.getAccount(project.getProjectAccountId()));
+        _accountMgr.checkAccess(caller,AccessType.ModifyProject, true, _accountMgr.getAccount(project.getProjectAccountId()));
         
         if (suspendProject(project)) {
             s_logger.debug("Successfully suspended project id=" + projectId);
@@ -1088,7 +1094,7 @@ public class ProjectManagerImpl implements ProjectManager, Manager{
         Project project = getProject(invitation.getProjectId());
         
         //check permissions - only project owner can remove the invitations
-        _accountMgr.checkAccess(caller, AccessType.ModifyProject, _accountMgr.getAccount(project.getProjectAccountId()));
+        _accountMgr.checkAccess(caller, AccessType.ModifyProject, true, _accountMgr.getAccount(project.getProjectAccountId()));
         
         if (_projectInvitationDao.remove(id)) {
             s_logger.debug("Project Invitation id=" + id + " is removed");
