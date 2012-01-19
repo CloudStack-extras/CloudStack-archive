@@ -265,21 +265,39 @@
       },
 
       networks: {
-        actions: {
-          add: {
-            label: 'Add Network',
-            action: function(args) {
-              args.response.success();
-            }
+        listView: {
+          id: 'physicalNetworks',
+          hideToolbar: true,
+          fields: {
+            name: { label: 'Name' },
+            state: { label: 'State', indicator: { 'Enabled': 'on', 'Disabled': 'off' }},
+            vlan: { label: 'VLAN Range' }
           }
         },
         dataProvider: function(args) {
           setTimeout(function() {
             args.response.success({
+              data: args.context.zones[0].name == 'San Jose' ? [
+                { id: 1, name: 'Network A', state: 'Enabled', vlan: '1480-1559' },
+                { id: 2, name: 'Network B', state: 'Disabled', vlan: '1222-2000' },
+                { id: 3, name: 'Network C', state: 'Enabeld', vlan: '2333-2455' }
+              ] : [
+                { id: 1, name: 'Network A', state: 'Enabled', vlan: '1480-1559' }
+              ]
+            });
+          }, 300);
+        }
+      },
+
+      trafficTypes: {
+        dataProvider: function(args) {
+          setTimeout(function() {
+            args.response.success({
               data: [
-                { id: 1, name: 'Network A' },
-                { id: 2, name: 'Network B' },
-                { id: 3, name: 'Network C' }
+                { id: 3, name: 'Public' },
+                { id: 1, name: 'Guest' },
+                { id: 2, name: 'Management' },
+                { id: 4, name: 'Storage' }
               ]
             });
           }, 300);

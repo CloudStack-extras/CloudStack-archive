@@ -73,7 +73,7 @@
             $browser: $('#browser .container'),
             context: context
           }));
-        };        
+        };
       }
     };
 
@@ -89,9 +89,6 @@
         var $browser = $('#browser .container');
         var context = args.context;
 
-        // Fix zone context naming
-        context.zones = context.physicalResources;
-
         // Resource items
         var computeResources = {
           zone: {
@@ -101,7 +98,7 @@
           pods: {
             label: 'Pods',
             viewAll: {
-              action: actions.listView('pods', context), 
+              action: actions.listView('pods', context),
             }
           },
 
@@ -166,91 +163,144 @@
       network: function(args) {
         var $chart = $('<div>');
         var $browser = $('#browser .container');
+        var $loading = $('<div>').addClass('loading-overlay');
         var context = args.context;
         var networkDataProvider = cloudStack.sections.system.naas.networks.dataProvider;
-        var $loading = $('<div>').addClass('loading-overlay');
+        var trafficTypeDataProvider = cloudStack.sections.system.naas.trafficTypes.dataProvider;
 
         $loading.appendTo($chart);
+
+        var renderChart = function(args) {
+          var $targetChart = args.$chart ? args.$chart : $chart;
+          
+          // Get traffic type data
+          trafficTypeDataProvider({
+            context: $.extend(true, {}, context, {
+              physicalNetworks: [args.data]
+            }),
+            response: {
+              success: function(args) {
+                var $networkChart = $('<div>').addClass('system-network-chart');
+                var $trafficTypes = $('<ul>').addClass('resources traffic-types');
+
+                $loading.remove();
+
+                var trafficTypes = {
+                  'public': {
+                    label: 'Public',
+                    configure: {
+                      action: actions.trafficTypeDetails('public', context)
+                    }
+                  },
+
+                  'guest': {
+                    label: 'Guest',
+                    configure: {
+                      action: actions.trafficTypeDetails('guest', context)
+                    }
+                  },
+
+                  'management': {
+                    label: 'Management',
+                    configure: {
+                      action: actions.trafficTypeDetails('management', context)
+                    }
+                  },
+
+                  'storage': {
+                    label: 'Storage',
+                    configure: {
+                      action: function() {}
+                    }
+                  },
+
+                  'providers': {
+                    label: 'Network Service Providers',
+                    ignoreChart: true,
+                    configure: {
+                      action: actions.providerListView(context)
+                    }
+                  }
+                };
+
+                var validTrafficTypes = $.map(args.data, function(trafficType) {
+                  return trafficType.name.toLowerCase();
+                });
+
+                // Make traffic type elems
+                $.each(trafficTypes, function(id, trafficType) {
+                  if ($.inArray(id, validTrafficTypes) == -1 && !trafficType.ignoreChart) return true;
+                  
+                  // Make list item
+                  var $li = $('<li>').addClass(id);
+                  var $label = $('<span>').addClass('label').html(trafficType.label);
+                  var $configureButton = viewAllButton($.extend(trafficType.configure, {
+                    title: trafficType.label,
+                    $browser: $browser,
+                    context: context
+                  }));
+
+                  $li.append($label, $configureButton);
+                  $li.appendTo($trafficTypes);
+
+                  // Make chart
+                  if (trafficType.ignoreChart) return true;
+
+                  var $targetChartItem = $('<div>').addClass('network-chart-item').addClass(id);
+                  $targetChartItem.appendTo($networkChart);
+                });
+
+                var $switchIcon = $('<div>').addClass('network-switch-icon').append(
+                  $('<span>').html('L2/L3 switch')
+                );
+                var $circleIcon = $('<div>').addClass('base-circle-icon');
+
+                $targetChart.append($trafficTypes, $switchIcon, $networkChart, $circleIcon);   
+              }
+            }
+          });
+        };
 
         // Get network data
         networkDataProvider({
           context: context,
           response: {
             success: function(args) {
-              var $networkChart = $('<div>').addClass('system-network-chart');
-              var $trafficTypes = $('<ul>').addClass('resources traffic-types');
+              var data = args.data;
+              if (data.length > 1) {
+                // Render list view first
+                $chart.listView({
+                  listView: $.extend(true, {}, cloudStack.sections.system.naas.networks.listView, {
+                    dataProvider: function(args) {
+                      args.response.success({ data: data });
+                    },
+                    detailView: {
+                      tabs: {
+                        network: {
+                          title: 'Network',
+                          custom: function(args) {
+                            var $chart = $('<div>').addClass('system-chart network');
+                            
+                            renderChart({
+                              $chart: $chart,
+                              data: args.context.physicalNetworks[0]
+                            });
 
-              $loading.remove();
-
-              var trafficTypes = {
-                'public': {
-                  label: 'Public',
-                  configure: {
-                    action: actions.trafficTypeDetails('public', context)
-                  }
-                },
-
-                'guest': {
-                  label: 'Guest',
-                  configure: {
-                    action: actions.trafficTypeDetails('guest', context)
-                  }
-                },
-
-                'management': {
-                  label: 'Management',
-                  configure: {
-                    action: actions.trafficTypeDetails('management', context)
-                  }
-                },
-
-                'storage': {
-                  label: 'Storage',
-                  configure: {
-                    action: function() {}
-                  }
-                },
-
-                'providers': {
-                  label: 'Network Service Providers',
-                  ignoreChart: true,
-                  configure: {
-                    action: actions.providerListView(context)
-                  }
-                }
-              };
-
-              // Make traffic type elems
-              $.each(trafficTypes, function(id, trafficType) {
-                // Make list item
-                var $li = $('<li>').addClass(id);
-                var $label = $('<span>').addClass('label').html(trafficType.label);
-                var $configureButton = viewAllButton($.extend(trafficType.configure, {
-                  title: trafficType.label,
-                  $browser: $browser,
-                  context: context
-                }));
-
-                $li.append($label, $configureButton);
-                $li.appendTo($trafficTypes);
-
-                // Make chart
-                if (trafficType.ignoreChart) return true;
-                
-                var $chartItem = $('<div>').addClass('network-chart-item').addClass(id);
-                $chartItem.appendTo($networkChart);
-              });
-
-              var $switchIcon = $('<div>').addClass('network-switch-icon').append(
-                $('<span>').html('L2/L3 switch')
-              );
-              var $circleIcon = $('<div>').addClass('base-circle-icon');
-
-              $chart.append($trafficTypes, $switchIcon, $networkChart, $circleIcon);              
+                            return $chart;
+                          }
+                        }
+                      }
+                    }
+                  })
+                });
+                $loading.remove();
+              } else {
+                renderChart(args);
+              }
             }
           }
         });
-        
+
         return $chart;
       },
 
@@ -262,6 +312,9 @@
     };
 
     return function(args) {
+      // Fix zone context naming
+      args.context.zones = args.context.physicalResources;
+
       var $chart = charts[chartID](args).addClass('system-chart').addClass(chartID);
 
       return $chart;
