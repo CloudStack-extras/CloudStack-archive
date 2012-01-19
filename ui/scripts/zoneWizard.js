@@ -1730,59 +1730,65 @@
 						});						
 					}
 					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone   					
-						var updatedCount = 0;
-            $(args.data.physicalNetworks).each(function(){		
+												
+						var physicalNetworksHavingGuest = [];
+						$(args.data.physicalNetworks).each(function(){		
 						  if(this.guestConfiguration != null) {		
-								var vlan;
-								if(this.guestConfiguration.vlanRangeEnd == null || this.guestConfiguration.vlanRangeEnd.length == 0)
-									vlan = this.guestConfiguration.vlanRangeStart;
-								else
-									vlan = this.guestConfiguration.vlanRangeStart + "-" + this.guestConfiguration.vlanRangeEnd;
-								
-                var originalId = this.id;
-								var returnedId;
-								$(args.data.returnedPhysicalNetworks).each(function(){								  
-								  if(this.originalId == originalId) {
-									  returnedId = this.id;
-										return false; //break the loop
-									}
-								});
-								
-								$.ajax({
-									url: createURL("updatePhysicalNetwork&id=" + returnedId  + "&vlan=" + todb(vlan)), 
-									dataType: "json",
-									success: function(json) {
-										var jobId = json.updatephysicalnetworkresponse.jobid;							
-										var timerKey = "asyncJob_" + jobId;							
-										$("body").everyTime(2000, timerKey, function(){
-											$.ajax({
-												url: createURL("queryAsyncJobResult&jobid=" + jobId),
-												dataType: "json",
-												success: function(json) {									
-													var result = json.queryasyncjobresultresponse;												
-													if(result.jobstatus == 0) {
-														return;
-													}
-													else {
-														$("body").stopTime(timerKey);
-														if(result.jobstatus == 1) {	
-                              updatedCount++;
-                              if(updatedCount == args.data.physicalNetworks.length) {															
-																stepFns.addCluster({
-																	data: args.data
-																});
-															}
-														}
-														else if(result.jobstatus == 2){
-															alert("error: " + fromdb(result.jobresult.errortext));
-														}
-													}										
+						    physicalNetworksHavingGuest.push(this);
+						  }
+						});
+						
+						var updatedCount = 0;
+            $(physicalNetworksHavingGuest).each(function(){
+							var vlan;
+							if(this.guestConfiguration.vlanRangeEnd == null || this.guestConfiguration.vlanRangeEnd.length == 0)
+								vlan = this.guestConfiguration.vlanRangeStart;
+							else
+								vlan = this.guestConfiguration.vlanRangeStart + "-" + this.guestConfiguration.vlanRangeEnd;
+							
+							var originalId = this.id;
+							var returnedId;
+							$(args.data.returnedPhysicalNetworks).each(function(){								  
+								if(this.originalId == originalId) {
+									returnedId = this.id;
+									return false; //break the loop
+								}
+							});
+							
+							$.ajax({
+								url: createURL("updatePhysicalNetwork&id=" + returnedId  + "&vlan=" + todb(vlan)), 
+								dataType: "json",
+								success: function(json) {
+									var jobId = json.updatephysicalnetworkresponse.jobid;							
+									var timerKey = "asyncJob_" + jobId;							
+									$("body").everyTime(2000, timerKey, function(){
+										$.ajax({
+											url: createURL("queryAsyncJobResult&jobid=" + jobId),
+											dataType: "json",
+											success: function(json) {									
+												var result = json.queryasyncjobresultresponse;												
+												if(result.jobstatus == 0) {
+													return;
 												}
-											});
-										});								
-									}
-								});	
-							}
+												else {
+													$("body").stopTime(timerKey);
+													if(result.jobstatus == 1) {	
+														updatedCount++;
+														if(updatedCount == physicalNetworksHavingGuest.length) {															
+															stepFns.addCluster({
+																data: args.data
+															});
+														}
+													}
+													else if(result.jobstatus == 2){
+														alert("error: " + fromdb(result.jobresult.errortext));
+													}
+												}										
+											}
+										});
+									});								
+								}
+							});		
             });			
 					}					
         },
