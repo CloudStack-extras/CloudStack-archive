@@ -176,7 +176,7 @@
           
           // Get traffic type data
           trafficTypeDataProvider({
-            targetContext: targetContext,
+            context: targetContext,
             response: {
               success: function(args) {
                 var $networkChart = $('<div>').addClass('system-network-chart');

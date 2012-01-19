@@ -960,11 +960,11 @@
           });
 
           // Handle validation for custom UI components
-          // var isCustomValidated = checkCustomValidation($step);
-          // if (($form.size() && !$form.valid()) || !isCustomValidated) {
-          //   if (($form && $form.find('.error:visible').size()) || !isCustomValidated)
-          //     return false;
-          // }
+          var isCustomValidated = checkCustomValidation($step);
+          if (($form.size() && !$form.valid()) || !isCustomValidated) {
+            if (($form && $form.find('.error:visible').size()) || !isCustomValidated)
+              return false;
+          }
 
           if (!$target.closest('.button.next.final').size())
             showStep($steps.filter(':visible').index() + 2);

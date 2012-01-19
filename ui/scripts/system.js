@@ -124,14 +124,53 @@
 
     // Network-as-a-service configuration
     naas: {
-      mainNetworksPreFilter: function(args) {
-        if (args.context.physicalResources[0].networktype == 'Basic') {
-          return ['public'];
+      providerListView: {
+        id: 'networkProviders',
+        fields: {
+          name: { label: 'Name' },
+          state: { label: 'State', indicator: { 'Enabled': 'on', 'Disabled': 'off' } }
+        },
+        dataProvider: function(args) {
+          cloudStack.sections.system.naas.networkProviders.statusCheck({
+            context: args.context
+          });
+          args.response.success({
+            data: [
+              {
+                id: 'netscaler',
+                name: 'NetScaler',
+                state: 'Enabled'
+              },
+              {
+                id: 'srx',
+                name: 'SRX',
+                state: 'Enabled'
+              },
+              {
+                id: 'f5',
+                name: 'F5',
+                state: 'Enabled'
+              },
+              {
+                id: 'virtualRouter',
+                name: 'Virtual Router',
+                state: 'Enabled'
+              },
+              {
+                id: 'securityGroups',
+                name: 'Security Groups',
+                state: 'Enabled'
+              }
+            ]
+          })
+        },
+
+        detailView: function(args) {
+          return cloudStack.sections.system.naas.networkProviders.types[
+            args.context.networkProviders[0].id
+          ];
         }
-
-        return [];
       },
-
       mainNetworks: {
         'public': {
           detailView: {
@@ -1243,25 +1282,52 @@
           }
         }
       },
+      
       networks: {
-        actions: {
-          add: {
-            label: 'Add physical network',
-            action: function(args) {
-              args.response.success();
-            }
+        listView: {
+          id: 'physicalNetworks',
+          hideToolbar: true,
+          fields: {
+            name: { label: 'Name' },
+            state: { label: 'State', indicator: { 'Enabled': 'on', 'Disabled': 'off' }},
+            vlan: { label: 'VLAN Range' }
           }
         },
         dataProvider: function(args) {
-          setTimeout(function() {
-            args.response.success({
-              data: [
-                { id: 1, name: 'Network 1' }
-                //{ id: 2, name: 'Network 2' },
-                //{ id: 3, name: 'Network 3' }
-              ]
-            });
-          }, 500);
+          selectedZoneObj = args.context.zones[0];
+
+          $.ajax({
+            url: createURL('listPhysicalNetworks'),
+            zoneid: args.context.zones[0].id,
+            success: function(json) {
+              args.response.success({
+                data: json.listphysicalnetworksresponse.physicalnetwork
+              });
+            }
+          });
+        }
+      },
+
+      trafficTypes: {
+        dataProvider: function(args) {
+          selectedPhysicalNetworkObj = args.context.physicalNetworks[0];
+
+          $.ajax({
+            url: createURL('listTrafficTypes'),
+            data: {
+              physicalnetworkid: selectedPhysicalNetworkObj.id
+            },
+            success: function(json) {
+              args.response.success({
+                data: $.map(json.listtraffictypesresponse.traffictype, function(trafficType) {
+                  return {
+                    id: trafficType.id,
+                    name: trafficType.traffictype
+                  };
+                })
+              });
+            }
+          });
         }
       },
 
@@ -1400,6 +1466,7 @@
           virtualRouter: {
             id: 'virtualRouterProviders',
             label: 'Virtual Router',
+            isMaximized: true,
             type: 'detailView',
             fields: {
               name: { label: 'Name' },
@@ -1892,16 +1959,7 @@
                 dataProvider: function(args) {
                   args.response.success({
                     data: selectedPhysicalNetworkObj,
-                    actionFilter: function(args) {
-                      var allowedActions = [];
-                      var jsonObj = nspMap["netscaler"];
-                      if(jsonObj.state == "Enabled")
-                        allowedActions.push("disable");
-                      else if(jsonObj.state == "Disabled")
-                        allowedActions.push("enable");
-                      allowedActions.push("destroy");
-                      return allowedActions;
-                    }
+                    actionFilter: networkProviderActionFilter('netscaler')
                   });
                 }
               }
@@ -2110,18 +2168,7 @@
                 dataProvider: function(args) {
                   args.response.success({
                     data: selectedPhysicalNetworkObj,
-                    actionFilter: function(args) {
-                      var allowedActions = [];
-                      var jsonObj = nspMap["f5"];
-                      if(jsonObj.state == "Enabled") {
-                        allowedActions.push("disable");
-                      }
-                      else if(jsonObj.state == "Disabled") {
-                        allowedActions.push("enable");
-                      }
-                      allowedActions.push("destroy");
-                      return allowedActions;
-                    }
+                    actionFilter: networkProviderActionFilter('f5')
                   });
                 }
               }
@@ -2329,18 +2376,7 @@
                 dataProvider: function(args) {
                   args.response.success({
                     data: selectedPhysicalNetworkObj,
-                    actionFilter: function(args) {
-                      var allowedActions = [];
-                      var jsonObj = nspMap["srx"];
-                      if(jsonObj.state == "Enabled") {
-                        allowedActions.push("disable");
-                      }
-                      else if(jsonObj.state == "Disabled") {
-                        allowedActions.push("enable");
-                      }
-                      allowedActions.push("destroy");
-                      return allowedActions;
-                    }
+                    actionFilter: networkProviderActionFilter('srx')
                   });
                 }
               }
@@ -7067,5 +7103,25 @@
     return allowedActions;
   }
   //action filters (end)
+
+  var networkProviderActionFilter = function(id) {
+    return function(args) {
+      var allowedActions = [];
+      var jsonObj = nspMap[id] ?
+        nspMap[id] : {};
+      
+      if (jsonObj.state) {
+        if (jsonObj.state == "Enabled")
+          allowedActions.push("disable");
+        else if (jsonObj.state == "Disabled")
+          allowedActions.push("enable");
+        allowedActions.push("destroy");
+      }
+      
+      allowedActions.push('add');
+      
+      return allowedActions;
+    }
+  };
 
 })($, cloudStack, testData);
