@@ -953,7 +953,7 @@
 																				if(returnedTrafficTypes.length == requestedTrafficTypeCount) { //all requested traffic types have been added
 																				  returnedBasicPhysicalNetwork.returnedTrafficTypes = returnedTrafficTypes;
 																																																													
-																					stepFns.afterCreateZonePhysicalNetworkTrafficTypes({
+																					stepFns.configurePhysicalNetwork({
 																						data: $.extend(args.data, {
 																							returnedBasicPhysicalNetwork: returnedBasicPhysicalNetwork
 																						})
@@ -997,7 +997,7 @@
 																				if(returnedTrafficTypes.length == requestedTrafficTypeCount) { //all requested traffic types have been added
 																				  returnedBasicPhysicalNetwork.returnedTrafficTypes = returnedTrafficTypes;
 																																																													
-																					stepFns.afterCreateZonePhysicalNetworkTrafficTypes({
+																					stepFns.configurePhysicalNetwork({
 																						data: $.extend(args.data, {
 																							returnedBasicPhysicalNetwork: returnedBasicPhysicalNetwork
 																						})
@@ -1042,7 +1042,7 @@
 																					if(returnedTrafficTypes.length == requestedTrafficTypeCount) { //all requested traffic types have been added
 																						returnedBasicPhysicalNetwork.returnedTrafficTypes = returnedTrafficTypes;
 																																																														
-																						stepFns.afterCreateZonePhysicalNetworkTrafficTypes({
+																						stepFns.configurePhysicalNetwork({
 																							data: $.extend(args.data, {
 																								returnedBasicPhysicalNetwork: returnedBasicPhysicalNetwork
 																							})
@@ -1088,7 +1088,7 @@
 																					if(returnedTrafficTypes.length == requestedTrafficTypeCount) { //all requested traffic types have been added
 																						returnedBasicPhysicalNetwork.returnedTrafficTypes = returnedTrafficTypes;
 																																																														
-																						stepFns.afterCreateZonePhysicalNetworkTrafficTypes({
+																						stepFns.configurePhysicalNetwork({
 																							data: $.extend(args.data, {
 																								returnedBasicPhysicalNetwork: returnedBasicPhysicalNetwork
 																							})
@@ -1186,7 +1186,7 @@
 																							returnedPhysicalNetworks.push(returnedPhysicalNetwork);
 																							
 																							if(returnedPhysicalNetworks.length == args.data.physicalNetworks.length) { //all physical networks are complete
-																								stepFns.afterCreateZonePhysicalNetworkTrafficTypes({
+																								stepFns.configurePhysicalNetwork({
 																									data: $.extend(args.data, {
 																										returnedPhysicalNetworks: returnedPhysicalNetworks
 																									})
@@ -1226,8 +1226,8 @@
           }        				
         },
         
-				//enable physical network, enable virtual router element, enable network service provider
-				afterCreateZonePhysicalNetworkTrafficTypes: function(args) {				  
+				//afterCreateZonePhysicalNetworkTrafficTypes: enable physical network, enable virtual router element, enable network service provider
+				configurePhysicalNetwork: function(args) {				  
 					message('Configuring physical network(s)');
 					
 					if(args.data.zone.networkType == "Basic") {							  			
