@@ -185,6 +185,112 @@
             }
           }
         },
+        'storage': {
+          detailView: {
+            actions: {
+              edit: {
+                label: 'Edit network details',
+                action: function(args) {
+                  args.response.success();
+                }
+              }
+            },
+            tabs: {
+              details: {
+                title: 'Details',
+                fields: [
+                  {
+                    name: { label: 'name' },
+                    displaytext: { label: 'displaytext' }
+                  },
+                  {
+                    broadcastdomaintype: { label: 'broadcastdomaintype' },
+                    traffictype: { label: 'traffictype' },
+                    gateway: { label: 'gateway' },
+                    netmask: { label: 'netmask' },
+                    startip: { isEditable: true, label: 'startip' },
+                    endip: { isEditable: true, label: 'endip' },
+                    zoneid: { label: 'zoneid' },
+                    networkofferingid: { label: 'networkofferingid' },
+                    networkofferingname: { label: 'networkofferingname' },
+                    networkofferingdisplaytext: { label: 'networkofferingdisplaytext' },
+                    networkofferingavailability: { label: 'networkofferingavailability' },
+                    isshared: { label: 'isshared' },
+                    issystem: { label: 'issystem' },
+                    state: { label: 'state' },
+                    related: { label: 'related' },
+                    broadcasturi: { label: 'broadcasturi' },
+                    dns1: { label: 'dns1' },
+                    type: { label: 'type' }
+                  }
+                ],
+                dataProvider: function(args) {
+                  args.response.success({
+                    data: testData.data.networks[0]
+                  });
+                }
+              },
+              ipAddresses: {
+                title: 'IP Addresses',
+                custom: function(args) {
+                  return $('<div></div>').multiEdit({
+                    context: args.context,
+                    noSelect: true,
+                    fields: {
+                      'gateway': { edit: true, label: 'Gateway' },
+                      'netmask': { edit: true, label: 'Netmask' },
+                      'vlanid': { edit: true, label: 'VLAN', isOptional: true },
+                      'startip': { edit: true, label: 'Start IP' },
+                      'endip': { edit: true, label: 'End IP' },
+                      'add-rule': { label: 'Add', addButton: true }
+                    },
+                    add: {
+                      label: 'Add',
+                      action: function(args) {
+                        setTimeout(function() {
+                          args.response.success({
+                            notification: {
+                              label: 'Added IP address',
+                              poll: testData.notifications.testPoll
+                            }
+                          });
+                        }, 500);
+                      }
+                    },
+                    actions: {
+                      destroy: {
+                        label: 'Remove Rule',
+                        action: function(args) {
+                          setTimeout(function() {
+                            args.response.success({
+                              notification: {
+                                label: 'Removed IP address',
+                                poll: testData.notifications.testPoll
+                              }
+                            });
+                          }, 500);
+                        }
+                      }
+                    },
+                    dataProvider: function(args) {
+                      setTimeout(function() {
+                        args.response.success({
+                          data: [
+                            {
+                              gateway: '10.223.110.223',
+                              netmask: '255.255.255.0',
+                              vlanid: '1480'
+                            }
+                          ]
+                        });
+                      }, 100);
+                    }
+                  });
+                }
+              }
+            }
+          }
+        },
         'management': {
           detailView: {
             viewAll: { path: '_zone.pods', label: 'Pods' },

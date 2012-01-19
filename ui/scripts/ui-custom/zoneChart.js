@@ -209,7 +209,7 @@
                   'storage': {
                     label: 'Storage',
                     configure: {
-                      action: function() {}
+                      action: actions.trafficTypeDetails('storage', targetContext)
                     }
                   },
 
