@@ -294,7 +294,10 @@
                 });
                 $loading.remove();
               } else {
-                renderChart(args);
+                renderChart({
+                  $chart: $chart,
+                  data: data[0]
+                });
               }
             }
           }
