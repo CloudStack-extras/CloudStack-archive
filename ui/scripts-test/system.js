@@ -36,37 +36,37 @@
       setTimeout(function() {
         args.response.success({
           data: {
-            publicIPs: {
+            8: {
               used: 12,
               total: 24,
               percent: 50
             },
 
-            privateIPs: {
+            5: {
               used: 12,
               total: 24,
               percent: 50
             },
 
-            memory: {
+            0: {
               used: '1 GB',
               total: '10 GB',
               percent: 10
             },
 
-            cpu: {
+            1: {
               used: '1 ghZ',
               total: '10 ghz',
               percent: 10
             },
 
-            primaryStorage: {
+            2: {
               used: '25 GB',
               total: '100 GB',
               percent: 25
             },
 
-            secondaryStorage: {
+            6: {
               used: '600 GB',
               total: '1000 GB',
               percent: 60

@@ -126,6 +126,31 @@
       }
     },
 
+    zoneDashboard: function(args) {
+      $.ajax({
+        url: createURL('listCapacity'),
+        data: { zoneid: args.context.zones[0].id },
+        success: function(json) {
+          var capacities = json.listcapacityresponse.capacity;
+          var data = {};
+
+          $(capacities).each(function() {
+            var capacity = this;
+
+            data[capacity.type] = {
+              used: cloudStack.converters.convertByType(capacity.type, capacity.capacityused),
+              total: cloudStack.converters.convertByType(capacity.type, capacity.capacitytotal),
+              percent: parseInt(capacity.percentused)
+            };
+          });
+          
+          args.response.success({
+            data: data
+          });
+        }
+      });
+    },
+
     // Network-as-a-service configuration
     naas: {
       providerListView: {
@@ -3123,6 +3148,10 @@
                 network: {
                   title: 'Network',
                   custom: cloudStack.uiCustom.systemChart('network')
+                },
+                resources: {
+                  title: 'Resources',
+                  custom: cloudStack.uiCustom.systemChart('resources')
                 },
 
                 systemVMs: {

@@ -316,27 +316,28 @@
         var $title = $('<div>').addClass('title').append($('<span>').html('System-wide capacity'))
 
         var chartItems = {
-          publicIPs: {
+          // The keys are based on the internal type ID associated with each capacity
+          8: {
             name: 'Public IPs'
           },
 
-          privateIPs: {
+          5: {
             name: 'Private IPs'
           },
 
-          memory: {
+          0: {
             name: 'Memory Allocated'
           },
 
-          cpu: {
+          1: {
             name: 'CPU Allocated'
           },
 
-          primaryStorage: {
+          2: {
             name: 'Primary Storage'
           },
 
-          secondaryStorage: {
+          6: {
             name: 'Secondary Storage'
           }
         }
