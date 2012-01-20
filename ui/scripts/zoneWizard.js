@@ -90,33 +90,11 @@
       zone: {
         preFilter: function(args) {
           var $form = args.$form;
-
-					/*
-          $form.find('input[name=security-groups-enabled]').change(function() {
-            if ($(this).is(':checked')) {
-              $form.find('[rel=networkOfferingIdWithoutSG]').hide();
-              $form.find('[rel=networkOfferingIdWithSG]').show();
-            } else {
-              $form.find('[rel=networkOfferingIdWithoutSG]').show();
-              $form.find('[rel=networkOfferingIdWithSG]').hide();
-            }
-          });
-          */
 					
-          if (args.data['network-model'] == 'Advanced') {
-            //args.$form.find('[rel=security-groups-enabled]').hide();
-            //args.$form.find('[rel=networkOfferingIdWithoutSG]').hide();
-            //args.$form.find('[rel=networkOfferingIdWithSG]').hide();
-						args.$form.find('[rel=networkOfferingId]').hide();
-          } 
-					else {
-            //args.$form.find('[rel=security-groups-enabled]').show();
-            //args.$form.find('[rel=networkOfferingIdWithoutSG]').show();
-            //args.$form.find('[rel=networkOfferingIdWithSG]').show();
-            args.$form.find('[rel=networkOfferingId]').show();
-						
-            //$form.find('input[name=security-groups-enabled]:visible').trigger('change');
-          }
+          if (args.data['network-model'] == 'Basic')            
+					  args.$form.find('[rel=networkOfferingId]').show();		           
+					else  //args.data['network-model'] == 'Advanced'      
+						args.$form.find('[rel=networkOfferingId]').hide();          
 
           setTimeout(function() {
             if ($form.find('input[name=ispublic]').is(':checked')) {
@@ -218,106 +196,7 @@
                 }
               });
             }
-          }
-					
-					/*
-          'security-groups-enabled': {
-            label: 'Security Groups Enabled',
-            isBoolean: true,
-            isReverse: true,
-          },
-          */
-
-					/*
-          networkOfferingIdWithoutSG: {
-            label: 'Network Offering',
-            dependsOn: 'security-groups-enabled',
-            select: function(args) {
-              var networkOfferingObjsWithSG = [];
-              var networkOfferingObjsWithoutSG = [];
-              $.ajax({
-                url: createURL("listNetworkOfferings&state=Enabled&guestiptype=Shared"),
-                dataType: "json",
-                async: false,
-                success: function(json) {
-                  networkOfferingObjs = json.listnetworkofferingsresponse.networkoffering;
-
-                  $(networkOfferingObjs).each(function() {
-                    var includingSGP = false;
-                    var serviceObjArray = this.service;
-                    for(var k = 0; k < serviceObjArray.length; k++) {
-                      if(serviceObjArray[k].name == "SecurityGroup") {
-                        includingSGP = true;
-                        break;
-                      }
-                    }
-                    if(includingSGP == false) //without SG
-                      networkOfferingObjsWithoutSG.push(this);
-                    else //with SG
-                      networkOfferingObjsWithSG.push(this);
-                  });
-
-                  var targetNetworkOfferings = networkOfferingObjsWithoutSG;
-
-                  args.response.success({
-                    data: $.map(targetNetworkOfferings, function(offering) {
-                      return {
-                        id: offering.id,
-                        description: offering.name
-                      };
-                    })
-                  });
-                }
-              });
-            }
-          },
-          */
-					
-					/*
-          networkOfferingIdWithSG: {
-            label: 'Network Offering',
-            isHidden: true,
-            select: function(args) {
-              var networkOfferingObjsWithSG = [];
-              var networkOfferingObjsWithoutSG = [];
-              $.ajax({
-                url: createURL("listNetworkOfferings&state=Enabled&guestiptype=Shared"),
-                dataType: "json",
-                async: false,
-                success: function(json) {
-                  networkOfferingObjs = json.listnetworkofferingsresponse.networkoffering;
-
-                  $(networkOfferingObjs).each(function() {
-                    var includingSGP = false;
-                    var serviceObjArray = this.service;
-                    for(var k = 0; k < serviceObjArray.length; k++) {
-                      if(serviceObjArray[k].name == "SecurityGroup") {
-                        includingSGP = true;
-                        break;
-                      }
-                    }
-                    if(includingSGP == false) //without SG
-                      networkOfferingObjsWithoutSG.push(this);
-                    else //with SG
-                      networkOfferingObjsWithSG.push(this);
-                  });
-
-                  var targetNetworkOfferings = networkOfferingObjsWithSG;
-
-                  args.response.success({
-                    data: $.map(targetNetworkOfferings, function(offering) {
-                      return {
-                        id: offering.id,
-                        description: offering.name
-                      };
-                    })
-                  });
-                }
-              });
-            }
-          }
-					*/
-					
+          }				
         }
       },
 
