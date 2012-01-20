@@ -735,14 +735,8 @@
                         confirm: function(args) {
                           return 'Are you sure you want to create a network?';
                         },
-                        success: function(args) {
-                          return 'Your new network is being created.';
-                        },
                         notification: function(args) {
                           return 'Creating new network';
-                        },
-                        complete: function(args) {
-                          return 'Network has been created successfully!';
                         }
                       },
 
@@ -1452,6 +1446,9 @@
         },
         dataProvider: function(args) {
           selectedZoneObj = args.context.zones[0];
+          cloudStack.sections.system.naas.networkProviders.statusCheck({
+            context: args.context
+          });
 
           $.ajax({
             url: createURL('listPhysicalNetworks'),
