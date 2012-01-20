@@ -1,4 +1,10 @@
 (function(cloudStack, $) {
+ 
+  var networkOfferingObjs = [];
+	var selectedNetworkOfferingHavingSG = false;
+	var selectedNetworkOfferingHavingEIP = false;
+	var selectedNetworkOfferingHavingELB = false;
+	
   cloudStack.zoneWizard = {
     customUI: {
       publicTrafficIPRange: function(args) {
@@ -48,9 +54,20 @@
     },
     
     preFilters: {
-      addPublicNetwork: function(args) {
-        return args.data['network-model'] == 'Advanced' ||
-               args.data['isPublicTrafficTypeEnabled'];
+      addPublicNetwork: function(args) {			  
+				var isShown; 
+				if(args.data['network-model'] == 'Basic') {
+				  if(selectedNetworkOfferingHavingSG == true && selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true) {
+            isShown = true;
+          }			
+          else {
+            isShown = false;
+          }	
+				}
+				else { //args.data['network-model'] == 'Advanced'
+				  isShown = true; 
+				}
+				return isShown;
       },
 
       addBasicPhysicalNetwork: function(args) {
@@ -74,6 +91,7 @@
         preFilter: function(args) {
           var $form = args.$form;
 
+					/*
           $form.find('input[name=security-groups-enabled]').change(function() {
             if ($(this).is(':checked')) {
               $form.find('[rel=networkOfferingIdWithoutSG]').hide();
@@ -83,17 +101,21 @@
               $form.find('[rel=networkOfferingIdWithSG]').hide();
             }
           });
-
+          */
+					
           if (args.data['network-model'] == 'Advanced') {
-            args.$form.find('[rel=security-groups-enabled]').hide();
-            args.$form.find('[rel=networkOfferingIdWithoutSG]').hide();
-            args.$form.find('[rel=networkOfferingIdWithSG]').hide();
-          } else {
-            args.$form.find('[rel=security-groups-enabled]').show();
-            args.$form.find('[rel=networkOfferingIdWithoutSG]').show();
-            args.$form.find('[rel=networkOfferingIdWithSG]').show();
-
-            $form.find('input[name=security-groups-enabled]:visible').trigger('change');
+            //args.$form.find('[rel=security-groups-enabled]').hide();
+            //args.$form.find('[rel=networkOfferingIdWithoutSG]').hide();
+            //args.$form.find('[rel=networkOfferingIdWithSG]').hide();
+						args.$form.find('[rel=networkOfferingId]').hide();
+          } 
+					else {
+            //args.$form.find('[rel=security-groups-enabled]').show();
+            //args.$form.find('[rel=networkOfferingIdWithoutSG]').show();
+            //args.$form.find('[rel=networkOfferingIdWithSG]').show();
+            args.$form.find('[rel=networkOfferingId]').show();
+						
+            //$form.find('input[name=security-groups-enabled]:visible').trigger('change');
           }
 
           setTimeout(function() {
@@ -107,7 +129,66 @@
           dns1: { label: 'DNS 1', validation: { required: true } },
           dns2: { label: 'DNS 2' },
           internaldns1: { label: 'Internal DNS 1', validation: { required: true } },
-          internaldns2: { label: 'Internal DNS 2' },
+          internaldns2: { label: 'Internal DNS 2' },			
+					networkOfferingId: {
+            label: 'Network Offering',            
+            select: function(args) {             
+              $.ajax({
+                url: createURL("listNetworkOfferings&state=Enabled&guestiptype=Shared"),
+                dataType: "json",
+                async: false,
+                success: function(json) {
+                  networkOfferingObjs = json.listnetworkofferingsresponse.networkoffering;
+                  args.response.success({
+                    data: $.map(networkOfferingObjs, function(offering) {
+                      return {
+                        id: offering.id,
+                        description: offering.name
+                      };
+                    })
+                  });
+                }
+              });
+							args.$select.change(function(){				
+                //reset when different network offering is selected							
+								selectedNetworkOfferingHavingSG = false;  
+								selectedNetworkOfferingHavingEIP = false; 
+								selectedNetworkOfferingHavingELB = false; 
+								
+								var selectedNetworkOfferingId = $(this).val();
+																
+								$(networkOfferingObjs).each(function(){			                  							
+									if(this.id == selectedNetworkOfferingId) {
+										selectedNetworkOfferingObj = this;
+										return false; //break $.each() loop
+									}
+								});
+								
+								$(selectedNetworkOfferingObj.service).each(function(){								 
+								  var thisService = this;									
+								  if(thisService.name == "SecurityGroup") {
+									  selectedNetworkOfferingHavingSG = true;
+									}
+									else if(thisService.name == "StaticNat") {
+									  $(thisService.capability).each(function(){										  
+											if(this.name == "ElasticIp" && this.value == "true") {
+											  selectedNetworkOfferingHavingEIP = true;
+											  return false; //break $.each() loop
+											}											
+										});									
+									}
+									else if(thisService.name == "Lb") {
+									  $(thisService.capability).each(function(){										  
+											if(this.name == "ElasticLb" && this.value == "true") {
+											  selectedNetworkOfferingHavingELB = true;
+											  return false; //break $.each() loop
+											}											
+										});			
+									}
+								});		
+							});							
+            }
+          },	
           networkdomain: { label: 'Network Domain' },
           ispublic: {
             isReverse: true,
@@ -138,12 +219,16 @@
               });
             }
           },
+					
+					/*
           'security-groups-enabled': {
             label: 'Security Groups Enabled',
             isBoolean: true,
             isReverse: true,
           },
+          */
 
+					/*
           networkOfferingIdWithoutSG: {
             label: 'Network Offering',
             dependsOn: 'security-groups-enabled',
@@ -186,7 +271,9 @@
               });
             }
           },
-
+          */
+					
+					/*
           networkOfferingIdWithSG: {
             label: 'Network Offering',
             isHidden: true,
@@ -229,6 +316,8 @@
               });
             }
           }
+					*/
+					
         }
       },
 
