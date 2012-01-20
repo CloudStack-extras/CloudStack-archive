@@ -353,7 +353,11 @@
             success: function(args) {
               $loading.remove();
               $.each(chartItems, function(id, chartItem) {
-                var data = args.data[id];
+                var data = args.data[id] ? args.data[id] : {
+                  used: 0,
+                  total: 0,
+                  percent: 0
+                };
                 var $item = $('<li>');
                 var $name = $('<div>').addClass('name').html(chartItem.name);
                 var $value = $('<div>').addClass('value');
