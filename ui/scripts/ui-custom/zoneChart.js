@@ -173,7 +173,7 @@
           var targetContext = $.extend(true, {}, context, {
             physicalNetworks: [args.data]
           });
-          
+
           // Get traffic type data
           trafficTypeDataProvider({
             context: targetContext,
@@ -229,7 +229,7 @@
                 // Make traffic type elems
                 $.each(trafficTypes, function(id, trafficType) {
                   if ($.inArray(id, validTrafficTypes) == -1 && !trafficType.ignoreChart) return true;
-                  
+
                   // Make list item
                   var $li = $('<li>').addClass(id);
                   var $label = $('<span>').addClass('label').html(trafficType.label);
@@ -255,7 +255,7 @@
                 );
                 var $circleIcon = $('<div>').addClass('base-circle-icon');
 
-                $targetChart.append($trafficTypes, $switchIcon, $networkChart, $circleIcon);   
+                $targetChart.append($trafficTypes, $switchIcon, $networkChart, $circleIcon);
               }
             }
           });
@@ -280,7 +280,7 @@
                           title: 'Network',
                           custom: function(args) {
                             var $chart = $('<div>').addClass('system-chart network');
-                            
+
                             renderChart({
                               $chart: $chart,
                               data: args.context.physicalNetworks[0]
@@ -308,7 +308,62 @@
       },
 
       resources: function(args) {
-        var $chart = $('<div>').html('Resources');
+        var $chart = $('<div>').addClass('dashboard admin');
+        var $chartItems = $('<ul>');
+        var $stats = $('<div>').addClass('stats');
+        var $container = $('<div>').addClass('dashboard-container head');
+        var $top = $('<div>').addClass('top');
+        var $title = $('<div>').addClass('title').append($('<span>').html('System-wide capacity'))
+
+        var chartItems = {
+          publicIPs: {
+            name: 'Public IPs'
+          },
+
+          privateIPs: {
+            name: 'Private IPs'
+          },
+
+          memory: {
+            name: 'Memory Allocated'
+          },
+
+          cpu: {
+            name: 'CPU Allocated'
+          },
+        }
+
+        $top.append($title);
+        $container.append($top, $stats.append($chartItems));
+        $chart.append($container);
+
+        $.each(chartItems, function(id, chartItem) {
+          var $item = $('<li>');
+          var $name = $('<div>').addClass('name').html(chartItem.name);
+          var $value = $('<div>').addClass('value');
+          var $content = $('<div>').addClass('content').html('Allocated: ');
+          var $allocatedValue = $('<span>').addClass('allocated').html('10');
+          var $totalValue = $('<span>').addClass('total').html('20');
+          var $chart = $('<div>').addClass('chart');
+          var $chartLine = $('<div>').addClass('chart-line').css({ width: '50%' });
+          var $percent = $('<div>').addClass('percentage');
+          var $percentValue = $('<soan>').addClass('value').html('50');
+
+          $chartItems.append(
+            $item.append(
+              $name,
+              $value.append(
+                $content.append(
+                  $allocatedValue,
+                  ' / ',
+                  $totalValue
+                )
+              ),
+              $chart.append($chartLine),
+              $percent.append($percentValue, '%')
+            )
+          );
+        });
 
         return $chart;
       }

@@ -3734,6 +3734,38 @@ Dialogs*/
   position: absolute;
 }
 
+/** Resources*/
+.system-chart.dashboard.admin {
+  width: 97%;
+  height: 95%;
+  background: url(no);
+}
+
+.system-chart.dashboard.admin .dashboard-container {
+  width: 740px;
+  border: none;
+}
+
+.system-chart.dashboard.admin .dashboard-container .top {
+  background: none;
+}
+
+.system-chart.dashboard.admin .dashboard-container .top .title {
+  color: #55687A;
+}
+
+.system-chart.dashboard.admin .dashboard-container .top .title span {
+  /*+text-shadow:none;*/
+  -moz-text-shadow: none;
+  -webkit-text-shadow: none;
+  -o-text-shadow: none;
+  text-shadow: none;
+}
+
+.system-chart.dashboard.admin .dashboard-container .stats .chart {
+  width: 286px;
+}
+
 /** Compute*/
 .system-chart.compute {
   background: url(../images/bg-system-chart-compute.png) no-repeat center;
