@@ -240,30 +240,52 @@
             networktype: args.data['network-model']
           };
 
-          var advancedFields = ['vlanRange'];
-          var basicFields = [
+          var advancedFields = ['vlanRange'];          
+          $(advancedFields).each(function() {
+            if (selectedZoneObj.networktype == 'Advanced') {
+              args.$form.find('[rel=' + this + ']').show();
+            } 
+						else {
+              args.$form.find('[rel=' + this + ']').hide();
+            }
+          });
+
+					var basicFields = [
             'guestGateway',
             'guestNetmask',
             'guestStartIp',
             'guestEndIp'
           ];
-
-          $(advancedFields).each(function() {
-            if (selectedZoneObj.networktype == 'Advanced') {
-              args.$form.find('[rel=' + this + ']').show();
-            } else {
-              args.$form.find('[rel=' + this + ']').hide();
-            }
-          });
-
           $(basicFields).each(function() {
              if (selectedZoneObj.networktype == 'Basic') {
-              args.$form.find('[rel=' + this + ']').show();
-            } else {
+              args.$form.find('[rel=' + this + ']').show(); 
+            } 
+						else {
               args.$form.find('[rel=' + this + ']').hide();
             }         
           });
 
+					var basicNetscalerFields = [
+            'ip',
+						'username',
+						'password',
+						'networkdevicetype',
+						'publicinterface',
+						'privateinterface',
+						'numretries',
+						'inline',
+						'capacity',
+						'dedicated'            
+          ];
+          $(basicNetscalerFields).each(function() {
+             if (selectedZoneObj.networktype == 'Basic' && (selectedNetworkOfferingHavingSG == true && selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true)) {
+              args.$form.find('[rel=' + this + ']').show(); 
+            } 
+						else {
+              args.$form.find('[rel=' + this + ']').hide();
+            }         
+          });
+					
           // Update description
           if (selectedZoneObj.networktype == "Basic") {
             args.$form.closest('.setup-guest-traffic').find('.main-desc').html('Please add an IP range to your guest network.');
@@ -273,15 +295,71 @@
         },
 
         fields: {
+				  //Advanced (start)
           vlanRange: {
             label: 'VLAN Range',
             range: ['vlanRangeStart', 'vlanRangeEnd'],
             validation: { required: true }
           },
+					//Advanced (end)
+					
+					//Basic (start)
+					//VLAN IP Range
           guestGateway: { label: 'Guest gateway' },
           guestNetmask: { label: 'Guest netmask' },
           guestStartIp: { label: 'Guest start IP' },
-          guestEndIp: { label: 'Guest end IP' }
+          guestEndIp: { label: 'Guest end IP' },
+					
+					//Netscaler
+					ip: {
+						label: 'Netscaler IP address'
+					},
+					username: {
+						label: 'Username'
+					},
+					password: {
+						label: 'Password',
+						isPassword: true
+					},
+					networkdevicetype: {
+						label: 'Type',
+						select: function(args) {
+							var items = [];
+							items.push({id: "NetscalerMPXLoadBalancer", description: "NetScaler MPX LoadBalancer"});
+							items.push({id: "NetscalerVPXLoadBalancer", description: "NetScaler VPX LoadBalancer"});
+							items.push({id: "NetscalerSDXLoadBalancer", description: "NetScaler SDX LoadBalancer"});
+							args.response.success({data: items});
+						}
+					},
+					publicinterface: {
+						label: 'Public interface'
+					},
+					privateinterface: {
+						label: 'Private interface'
+					},
+					numretries: {
+						label: 'Number of retries',
+						defaultValue: '2'
+					},
+					inline: {
+						label: 'Mode',
+						select: function(args) {
+							var items = [];
+							items.push({id: "false", description: "side by side"});
+							items.push({id: "true", description: "inline"});
+							args.response.success({data: items});
+						}
+					},
+					capacity: {
+						label: 'Capacity',
+						validation: { required: false, number: true }
+					},
+					dedicated: {
+						label: 'Dedicated',
+						isBoolean: true,
+						isChecked: false
+					}					
+					//Basic (end)
         }
       },
       cluster: {
@@ -1287,7 +1365,7 @@
 																																			array2.push("&zoneid=" + args.data.returnedZone.id);
 																																			array2.push("&name=guestNetworkForBasicZone");
 																																			array2.push("&displaytext=guestNetworkForBasicZone");
-																																			array2.push("&networkofferingid=" + args.data.zone.networkOfferingIdWithSG); 
+																																			array2.push("&networkofferingid=" + args.data.zone.networkOfferingId); 
 																																			$.ajax({
 																																				url: createURL("createNetwork" + array2.join("")),
 																																				dataType: "json",
@@ -1322,7 +1400,7 @@
 																												array2.push("&zoneid=" + args.data.returnedZone.id);
 																												array2.push("&name=guestNetworkForBasicZone");
 																												array2.push("&displaytext=guestNetworkForBasicZone");
-																												array2.push("&networkofferingid=" + args.data.zone.networkOfferingIdWithoutSG); 
+																												array2.push("&networkofferingid=" + args.data.zone.networkOfferingId); 
 																												$.ajax({
 																													url: createURL("createNetwork" + array2.join("")),
 																													dataType: "json",
@@ -1620,30 +1698,198 @@
           message('Configuring guest traffic');
          
 					if(args.data.returnedZone.networktype == "Basic") {		//create an VlanIpRange for guest network in basic zone			  
-						var array1 = [];												
-						array1.push("&podid=" + args.data.returnedPod.id); 
-						array1.push("&networkid=" + args.data.returnedGuestNetwork.id); 
-						array1.push("&gateway=" + args.data.guestTraffic.guestGateway);
-						array1.push("&netmask=" + args.data.guestTraffic.guestNetmask);
-						array1.push("&startip=" + args.data.guestTraffic.guestStartIp);
-						if(args.data.guestTraffic.guestEndIp != null && args.data.guestTraffic.guestEndIp.length > 0)
-							array1.push("&endip=" + args.data.guestTraffic.guestEndIp);
-						array1.push("&forVirtualNetwork=false"); //indicates this new IP range is for guest network, not public network	
-							
+            debugger;	
+            if(args.data.returnedGuestNetwork.returnedVlanIpRange == null) { //if returned from addNetworkServiceProvider error or addNetscalerLoadBalancer error, args.data.returnedGuestNetwork.returnedVlanIpRange will not be null and shouldn't call createVlanIpRange	again				
+						  var array1 = [];												
+							array1.push("&podid=" + args.data.returnedPod.id); 
+							array1.push("&networkid=" + args.data.returnedGuestNetwork.id); 
+							array1.push("&gateway=" + args.data.guestTraffic.guestGateway);
+							array1.push("&netmask=" + args.data.guestTraffic.guestNetmask);
+							array1.push("&startip=" + args.data.guestTraffic.guestStartIp);
+							if(args.data.guestTraffic.guestEndIp != null && args.data.guestTraffic.guestEndIp.length > 0)
+								array1.push("&endip=" + args.data.guestTraffic.guestEndIp);
+							array1.push("&forVirtualNetwork=false"); //indicates this new IP range is for guest network, not public network	
+							debugger;						
+							$.ajax({
+								url: createURL("createVlanIpRange" + array1.join("")),
+								dataType: "json",
+								async: false,
+								success: function(json) {			
+									debugger;							
+									args.data.returnedGuestNetwork.returnedVlanIpRange = json.createvlaniprangeresponse.vlan;			
+								},
+								error: function(XMLHttpResponse) {
+									var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+									error('configureGuestTraffic', errorMsg, { fn: 'configureGuestTraffic', args: args });
+								}
+							});	
+            }							
+            debugger;
+						//add netscaler provider
+						debugger;
 						$.ajax({
-							url: createURL("createVlanIpRange" + array1.join("")),
+							url: createURL("addNetworkServiceProvider&name=Netscaler&physicalnetworkid=" + args.data.returnedBasicPhysicalNetwork.id),
 							dataType: "json",
-							success: function(json) {										
-								args.data.returnedGuestNetwork.returnedVlanIpRange = json.createvlaniprangeresponse.vlan;								
-								stepFns.addCluster({
-									data: args.data
-								});								
-							},
-							error: function(XMLHttpResponse) {
-								var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-								error('configureGuestTraffic', errorMsg, { fn: 'configureGuestTraffic', args: args });
+							async: true,
+							success: function(json) {
+								var jobId = json.addnetworkserviceproviderresponse.jobid;
+								var timerKey = "addNetworkServiceProviderJob_"+jobId;
+								$("body").everyTime(2000, timerKey, function() {
+									$.ajax({
+										url: createURL("queryAsyncJobResult&jobId="+jobId),
+										dataType: "json",
+										success: function(json) {
+											var result = json.queryasyncjobresultresponse;
+											debugger;
+											if (result.jobstatus == 0) {
+												return; //Job has not completed
+											}
+											else {
+												$("body").stopTime(timerKey);
+												if (result.jobstatus == 1) {
+												  debugger;
+													args.data.returnedNetscalerProvider = result.jobresult.networkserviceprovider;
+																									
+													//add a netscaler device, addExternalLoadBalancer(), starts here
+												  var array1 = [];
+													array1.push("&physicalnetworkid=" + args.data.returnedBasicPhysicalNetwork.id);
+													array1.push("&username=" + todb(args.data.guestTraffic.username));
+													array1.push("&password=" + todb(args.data.guestTraffic.password));
+													array1.push("&networkdevicetype=" + todb(args.data.guestTraffic.networkdevicetype));
+
+													//construct URL starts here
+													var url = [];
+
+													var ip = args.data.guestTraffic.ip;
+													url.push("https://" + ip);
+
+													var isQuestionMarkAdded = false;
+
+													var publicInterface = args.data.guestTraffic.publicinterface;
+													if(publicInterface != null && publicInterface.length > 0) {
+															if(isQuestionMarkAdded == false) {
+																	url.push("?");
+																	isQuestionMarkAdded = true;
+															}
+															else {
+																	url.push("&");
+															}
+															url.push("publicinterface=" + publicInterface);
+													}
+
+													var privateInterface = args.data.guestTraffic.privateinterface;
+													if(privateInterface != null && privateInterface.length > 0) {
+															if(isQuestionMarkAdded == false) {
+																	url.push("?");
+																	isQuestionMarkAdded = true;
+															}
+															else {
+																	url.push("&");
+															}
+															url.push("privateinterface=" + privateInterface);
+													}
+
+													var numretries = args.data.guestTraffic.numretries;
+													if(numretries != null && numretries.length > 0) {
+															if(isQuestionMarkAdded == false) {
+																	url.push("?");
+																	isQuestionMarkAdded = true;
+															}
+															else {
+																	url.push("&");
+															}
+															url.push("numretries=" + numretries);
+													}
+
+													var isInline = args.data.guestTraffic.inline;
+													if(isInline != null && isInline.length > 0) {
+															if(isQuestionMarkAdded == false) {
+																	url.push("?");
+																	isQuestionMarkAdded = true;
+															}
+															else {
+																	url.push("&");
+															}
+															url.push("inline=" + isInline);
+													}
+
+													var capacity = args.data.guestTraffic.capacity;
+													if(capacity != null && capacity.length > 0) {
+															if(isQuestionMarkAdded == false) {
+																	url.push("?");
+																	isQuestionMarkAdded = true;
+															}
+															else {
+																	url.push("&");
+															}
+															url.push("lbdevicecapacity=" + capacity);
+													}
+
+													var dedicated = (args.data.guestTraffic.dedicated == "on");	//boolean	(true/false)
+													if(isQuestionMarkAdded == false) {
+															url.push("?");
+															isQuestionMarkAdded = true;
+													}
+													else {
+															url.push("&");
+													}
+													url.push("lbdevicededicated=" + dedicated.toString());
+
+
+													array1.push("&url=" + todb(url.join("")));
+													//construct URL ends here
+
+													$.ajax({
+														url: createURL("addNetscalerLoadBalancer" + array1.join("")),
+														dataType: "json",
+														success: function(json) {
+															var jobId = json.addnetscalerloadbalancerresponse.jobid;
+															var timerKey = "asyncJob_" + jobId;
+															
+															$("body").everyTime(2000, timerKey, function() {
+																$.ajax({
+																	url: createURL("queryAsyncJobResult&jobid=" + jobId),
+																	dataType: "json",
+																	success: function(json) {
+																		var result = json.queryasyncjobresultresponse;
+																		debugger;
+																		if(result.jobstatus == 0) {
+																			return;
+																		}
+																		else {
+																			$("body").stopTimer(timerKey);
+																			if(result.jobstatus == 1) {
+																				debugger;
+																				args.data.returnedNetscalerProvider.returnedNetscalerloadbalancer = result.jobresult.netscalerloadbalancer;																				
+																				stepFns.addCluster({
+																					data: args.data
+																				});		
+																			}
+																			else if(result.jobstatus == 2) {
+																			  error('configureGuestTraffic', fromdb(result.jobresult.errortext), { fn: 'configureGuestTraffic', args: args });
+																			}
+																		}							
+																	}																					
+																});
+															});				
+														}
+													});
+													//add a netscaler device, addExternalLoadBalancer(), ends here
+												}
+												else if (result.jobstatus == 2) {
+													alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + fromdb(result.jobresult.errortext));
+												}
+											}
+										},
+										error: function(XMLHttpResponse) {
+											var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+											alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + errorMsg);
+										}
+									});
+								});
 							}
-						});						
+						});					
+						debugger;   
 					}
 					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone   	
 						var physicalNetworksHavingGuest = [];
