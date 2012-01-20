@@ -351,10 +351,6 @@
           name: { 
 					  label: 'Physical network name', 
 						validation: { required: true } 
-					},         
-					isPublicTrafficTypeEnabled: { 
-					  isBoolean: true, 
-						label: 'Public traffic type enabled' 
 					}
         }
       },
@@ -992,7 +988,8 @@
 					
 					if(args.data.zone.networkType == "Basic") {					  
 						var requestedTrafficTypeCount = 2; //guest, management
-						if(args.data.basicPhysicalNetwork.isPublicTrafficTypeEnabled == "on")
+						debugger;
+						if(selectedNetworkOfferingHavingSG == true && selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true) //???
 						  requestedTrafficTypeCount++;
 												
 						$.ajax({
@@ -1104,8 +1101,8 @@
 															});	
 														}
 													});			
-
-                          if(args.data.basicPhysicalNetwork.isPublicTrafficTypeEnabled == "on") {													
+													
+                          if(selectedNetworkOfferingHavingSG == true && selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true) {													
 														$.ajax({
 															url: createURL("addTrafficType&trafficType=Public&physicalnetworkid=" + returnedBasicPhysicalNetwork.id),
 															dataType: "json",
@@ -1687,7 +1684,7 @@
         },  
        			
         configurePublicTraffic: function(args) {		          
-					if((args.data.zone.networkType == "Basic" && args.data.basicPhysicalNetwork.isPublicTrafficTypeEnabled == "on")
+					if((args.data.zone.networkType == "Basic" && (selectedNetworkOfferingHavingSG == true && selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true))
 					 ||(args.data.zone.networkType == "Advanced")) {	
 					 
 						message('Configuring public traffic');
