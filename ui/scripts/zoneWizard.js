@@ -218,7 +218,7 @@
                 }
               });
             }
-          },
+          }
 					
 					/*
           'security-groups-enabled': {
@@ -1366,7 +1366,7 @@
 																										if (result.jobstatus == 1) {
 																											//alert("Virtual Router Provider is enabled");
 																																																						
-																											if(args.data.zone["security-groups-enabled"] == "on") { //need to Enable security group provider first
+																											if(selectedNetworkOfferingHavingSG == true) { //need to Enable security group provider first
 																												// get network service provider ID of Security Group
 																												var securityGroupProviderId;
 																												$.ajax({
@@ -1438,7 +1438,7 @@
 																													}
 																												});
 																											}					
-																											else { //args.data.zone["security-groups-enabled"] == null
+																											else { //selectedNetworkOfferingHavingSG == false
 																												//create a guest network for basic zone
 																												var array2 = [];
 																												array2.push("&zoneid=" + args.data.returnedZone.id);
