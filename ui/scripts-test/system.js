@@ -1855,8 +1855,6 @@
 
                   protocol: {
                     label: 'Protocol',
-                    validation: { required: true },
-                    dependsOn: 'clusterId',
                     select: function(args) {
                       args.response.success({
                         data: [
