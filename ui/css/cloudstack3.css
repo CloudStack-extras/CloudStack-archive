@@ -3738,7 +3738,7 @@ Dialogs*/
 .system-chart.dashboard.admin {
   width: 97%;
   height: 95%;
-  background: url(no);
+  background: none;
 }
 
 .system-chart.dashboard.admin .dashboard-container {
