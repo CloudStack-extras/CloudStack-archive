@@ -513,7 +513,7 @@
                           });
                         }
                       },
-                      'stickiness': {
+                      'sticky': {
                         label: 'Sticky Policy',
                         custom: {
                           buttonLabel: 'Configure',
@@ -537,11 +537,11 @@
                                         description: 'LB-based'
                                       },
                                       {
-                                        id: 'cookiebased',
+                                        id: 'cookie',
                                         description: 'Cookie-based'
                                       },
                                       {
-                                        id: 'sourcebased',
+                                        id: 'source',
                                         description: 'Source-based'
                                       }
                                     ]
@@ -558,10 +558,10 @@
                                     case 'lb':
                                       showFields = ['name', 'mode', 'nocache', 'indirect', 'postonly', 'domain'];
                                       break;
-                                    case 'cookiebased':
+                                    case 'cookie':
                                       showFields = ['name', 'length', 'holdtime', 'request-learn', 'prefix', 'mode'];
                                       break;
-                                    case 'sourcebased':
+                                    case 'source':
                                       showFields = ['tablesize', 'expire'];
                                       break;
                                     }
@@ -606,7 +606,7 @@
                                 var dataItem = args.data[id];
 
                                 if (field.isBoolean) {
-                                  field.isChecked = dataItem == 'on' ? true : false;
+                                  field.isChecked = dataItem ? true : false;
                                 } else {
                                   field.defaultValue = dataItem;
                                 }
@@ -620,8 +620,11 @@
                                 fields: fields
                               },
                               after: function(args) {
+                                var data = cloudStack.serializeForm(args.$form);
                                 success({
-                                  data: cloudStack.serializeForm(args.$form)
+                                  data: $.extend(data, {
+                                    _buttonLabel: data.method.toUpperCase()
+                                  })
                                 });
                               }
                             });
@@ -684,7 +687,17 @@
                                 testData.data.instances[1],
                                 testData.data.instances[2],
                                 testData.data.instances[3]
-                              ]
+                              ],
+                              sticky: {
+                                _buttonLabel: 'lb'.toUpperCase(),
+                                method: 'lb',
+                                name: 'StickyTest',
+                                mode: '123',
+                                nocache: true,
+                                indirect: false,
+                                postonly: true,
+                                domain: false
+                              }
                             }
                           ]
                         });

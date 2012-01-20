@@ -70,6 +70,27 @@
                   _medit.details(itemData[0], $browser, { context: options.context });
                 }
               });
+          } else if (field.custom) {
+            $td.data('multi-custom-data', data[fieldName]);
+            $('<div>').addClass('button add-vm custom-action')
+              .html(data[fieldName]['_buttonLabel'] ?
+                    data[fieldName]['_buttonLabel'] : field.custom.buttonLabel)
+              .click(function() {
+                var $button = $(this);
+                field.custom.action({
+                  context: {},
+                  data: $td.data('multi-custom-data'),
+                  response: {
+                    success: function(args) {
+                      if (args.data['_buttonLabel']) {
+                        $button.html(args.data['_buttonLabel']);
+                      }
+                      $td.data('multi-custom-data', args.data)
+                    }
+                  }
+                })
+              })
+              .appendTo($td);
           }
         };
 
