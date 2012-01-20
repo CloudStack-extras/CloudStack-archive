@@ -344,7 +344,7 @@
 
                 dataProvider: function(args) {
                   $.ajax({
-                    url: createURL("listNetworks&listAll=true&trafficType=Public&isSystem=true&zoneId="+selectedZoneObj.id),
+                    url: createURL("listNetworks&listAll=true&trafficType=Storage&isSystem=true&zoneId="+selectedZoneObj.id),
                     dataType: "json",
                     async: false,
                     success: function(json) {
@@ -393,10 +393,10 @@
                           array1.push("&forVirtualNetwork=false");
 
                         $.ajax({
-                          url: createURL("createVlanIpRange" + array1.join("")),
+                          url: createURL("createStorageNetworkIpRange" + array1.join("")),
                           dataType: "json",
                           success: function(json) {
-                            var item = json.createvlaniprangeresponse.vlan;
+                            var item = json.createstoragenetworkiprange.storageiprange;
                             args.response.success({
                               data: item,
                               notification: {
@@ -419,7 +419,7 @@
                         label: 'Delete',
                         action: function(args) {
                           $.ajax({
-                            url: createURL('deleteVlanIpRange&id=' + args.context.multiRule[0].id),
+                            url: createURL('deleteStorageNetworkIpRange&id=' + args.context.multiRule[0].id),
                             dataType: 'json',
                             async: true,
                             success: function(json) {
@@ -438,10 +438,10 @@
                     },
                     dataProvider: function(args) {
                       $.ajax({
-                        url: createURL("listVlanIpRanges&zoneid=" + args.context.zones[0].id + "&networkId=" + selectedPublicNetworkObj.id),
+                        url: createURL("listStorageNetworkIpRange&zoneid=" + args.context.zones[0].id + "&networkId=" + selectedPublicNetworkObj.id),
                         dataType: "json",
                         success: function(json) {
-                          var items = json.listvlaniprangesresponse.vlaniprange;
+                          var items = json.liststoragenetworkiprangeresponse.storageiprange;
                           args.response.success({data: items});
                         }
                       });
