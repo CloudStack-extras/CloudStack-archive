@@ -32,6 +32,50 @@
       }
     },
 
+    zoneDashboard: function(args) {
+      setTimeout(function() {
+        args.response.success({
+          data: {
+            publicIPs: {
+              used: 12,
+              total: 24,
+              percent: 50
+            },
+
+            privateIPs: {
+              used: 12,
+              total: 24,
+              percent: 50
+            },
+
+            memory: {
+              used: '1 GB',
+              total: '10 GB',
+              percent: 10
+            },
+
+            cpu: {
+              used: '1 ghZ',
+              total: '10 ghz',
+              percent: 10
+            },
+
+            primaryStorage: {
+              used: '25 GB',
+              total: '100 GB',
+              percent: 25
+            },
+
+            secondaryStorage: {
+              used: '600 GB',
+              total: '1000 GB',
+              percent: 60
+            }
+          }
+        });
+      }, 200);
+    },
+
     // Network-as-a-service configuration
     naas: {
       providerListView: {

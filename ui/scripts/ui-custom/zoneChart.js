@@ -344,33 +344,45 @@
         $top.append($title);
         $container.append($top, $stats.append($chartItems));
         $chart.append($container);
+        var $loading = $('<div>').addClass('loading-overlay').prependTo($chart);
 
-        $.each(chartItems, function(id, chartItem) {
-          var $item = $('<li>');
-          var $name = $('<div>').addClass('name').html(chartItem.name);
-          var $value = $('<div>').addClass('value');
-          var $content = $('<div>').addClass('content').html('Allocated: ');
-          var $allocatedValue = $('<span>').addClass('allocated').html('10');
-          var $totalValue = $('<span>').addClass('total').html('20');
-          var $chart = $('<div>').addClass('chart');
-          var $chartLine = $('<div>').addClass('chart-line').css({ width: '50%' });
-          var $percent = $('<div>').addClass('percentage');
-          var $percentValue = $('<soan>').addClass('value').html('50');
+        cloudStack.sections.system.zoneDashboard({
+          context: args.context,
+          response: {
+            success: function(args) {
+              $loading.remove();
+              $.each(chartItems, function(id, chartItem) {
+                var data = args.data[id];
+                var $item = $('<li>');
+                var $name = $('<div>').addClass('name').html(chartItem.name);
+                var $value = $('<div>').addClass('value');
+                var $content = $('<div>').addClass('content').html('Allocated: ');
+                var $allocatedValue = $('<span>').addClass('allocated').html(data.used);
+                var $totalValue = $('<span>').addClass('total').html(data.total);
+                var $chart = $('<div>').addClass('chart');
+                var $chartLine = $('<div>').addClass('chart-line')
+                  .css({ width: '0%' })
+                  .animate({ width: data.percent + '%' });
+                var $percent = $('<div>').addClass('percentage');
+                var $percentValue = $('<soan>').addClass('value').html(data.percent);
 
-          $chartItems.append(
-            $item.append(
-              $name,
-              $value.append(
-                $content.append(
-                  $allocatedValue,
-                  ' / ',
-                  $totalValue
-                )
-              ),
-              $chart.append($chartLine),
-              $percent.append($percentValue, '%')
-            )
-          );
+                $chartItems.append(
+                  $item.append(
+                    $name,
+                    $value.append(
+                      $content.append(
+                        $allocatedValue,
+                        ' / ',
+                        $totalValue
+                      )
+                    ),
+                    $chart.append($chartLine),
+                    $percent.append($percentValue, '%')
+                  )
+                );
+              });              
+            }
+          }
         });
 
         return $chart;
