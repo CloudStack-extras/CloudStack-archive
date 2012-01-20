@@ -866,10 +866,9 @@
           var returnedPhysicalNetworks = [];
 					
 					if(args.data.zone.networkType == "Basic") {					  
-						var requestedTrafficTypeCount = 2; //guest, management
-						debugger;
-						if(selectedNetworkOfferingHavingSG == true && selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true) //???
-						  requestedTrafficTypeCount++;
+						var requestedTrafficTypeCount = 2; //request guest traffic type, management traffic type			
+						if(selectedNetworkOfferingHavingSG == true && selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true) 
+						  requestedTrafficTypeCount++; //request public traffic type
 												
 						$.ajax({
 							url: createURL("createPhysicalNetwork&zoneid=" + args.data.returnedZone.id + "&name=" + todb(args.data.basicPhysicalNetwork.name)),
