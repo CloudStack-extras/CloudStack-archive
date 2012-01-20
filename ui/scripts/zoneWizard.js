@@ -852,7 +852,7 @@
     },
 
     action: function(args) {    
-		  debugger;
+		  //debugger;
 			var advZoneConfiguredPhysicalNetworkCount = 0; //for multiple physical networks in advanced zone
       var success = args.response.success;
       var error = args.response.error;
@@ -1315,10 +1315,8 @@
 																													url: createURL("updateNetworkServiceProvider&state=Enabled&id=" + securityGroupProviderId),
 																													dataType: "json",
 																													async: false,
-																													success: function(json) {
-																														//var jobId = json.updatenetworkserviceproviderresponse.jobid;
-																														var updateNetworkServiceProviderTimer = "asyncJob_" + json.updatenetworkserviceproviderresponse.jobid;
-																														debugger;
+																													success: function(json) {																														
+																														var updateNetworkServiceProviderTimer = "asyncJob_" + json.updatenetworkserviceproviderresponse.jobid;																														
 																														$("body").everyTime(2000, updateNetworkServiceProviderTimer, function() {
 																															$.ajax({
 																																url: createURL("queryAsyncJobResult&jobId=" + json.updatenetworkserviceproviderresponse.jobid),
@@ -1333,24 +1331,18 @@
 																																		if (result.jobstatus == 1) { //Security group provider has been enabled successfully	
                                                                       //"ElasticIP + ElasticLB"																															
 																																			if(selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true) { //inside "selectedNetworkOfferingHavingSG == true" section 
-																																			  debugger;
-																																				//add netscaler (start)																																				
+																																			  //add netscaler (start)																																				
 																																				$.ajax({
 																																					url: createURL("addNetworkServiceProvider&name=Netscaler&physicalnetworkid=" + args.data.returnedBasicPhysicalNetwork.id),
 																																					dataType: "json",
 																																					async: false,
 																																					success: function(json) {
-																																					  debugger;																																						                 
-																																						//var jobId = json.addnetworkserviceproviderresponse.jobid;
-																																						var addNetworkServiceProviderTimer = "asyncJob_" + json.addnetworkserviceproviderresponse.jobid;
-																																						debugger;
+																																						var addNetworkServiceProviderTimer = "asyncJob_" + json.addnetworkserviceproviderresponse.jobid;																																			
 																																						$("body").everyTime(2000, addNetworkServiceProviderTimer, function() {		
-                                                                              debugger;																																						
 																																							$.ajax({
 																																								url: createURL("queryAsyncJobResult&jobId=" + json.addnetworkserviceproviderresponse.jobid),
 																																								dataType: "json",
-																																								success: function(json) {
-																																								  debugger;
+																																								success: function(json) {																																								 
 																																									var result = json.queryasyncjobresultresponse;																																									
 																																									if (result.jobstatus == 0) {
 																																										return; //Job has not completed
@@ -1452,43 +1444,74 @@
 																																											$.ajax({
 																																												url: createURL("addNetscalerLoadBalancer" + array1.join("")),
 																																												dataType: "json",
-																																												success: function(json) {
-																																													//var jobId = json.addnetscalerloadbalancerresponse.jobid;
-																																													var addNetscalerLoadBalancerTimer = "asyncJob_" + json.addnetscalerloadbalancerresponse.jobid;
-																																													
+																																												success: function(json) {																																													
+																																													var addNetscalerLoadBalancerTimer = "asyncJob_" + json.addnetscalerloadbalancerresponse.jobid;																																													
 																																													$("body").everyTime(2000, addNetscalerLoadBalancerTimer, function() {
 																																														$.ajax({
 																																															url: createURL("queryAsyncJobResult&jobid=" + json.addnetscalerloadbalancerresponse.jobid),
 																																															dataType: "json",
 																																															success: function(json) {
-																																																var result = json.queryasyncjobresultresponse;
-																																																debugger;
+																																																var result = json.queryasyncjobresultresponse;																																																
 																																																if(result.jobstatus == 0) {
 																																																	return;
 																																																}
 																																																else {
 																																																	$("body").stopTime(addNetscalerLoadBalancerTimer);
-																																																	if(result.jobstatus == 1) {
-																																																		debugger;
+																																																	if(result.jobstatus == 1) {																																																		
 																																																		args.data.returnedNetscalerProvider.returnedNetscalerloadbalancer = result.jobresult.netscalerloadbalancer;																				
-																																																		
-																																																		//create a guest network for basic zone
-																																																		var array2 = [];
-																																																		array2.push("&zoneid=" + args.data.returnedZone.id);
-																																																		array2.push("&name=guestNetworkForBasicZone");
-																																																		array2.push("&displaytext=guestNetworkForBasicZone");
-																																																		array2.push("&networkofferingid=" + args.data.zone.networkOfferingId); 
+																																																																																																				
 																																																		$.ajax({
-																																																			url: createURL("createNetwork" + array2.join("")),
+																																																			url: createURL("updateNetworkServiceProvider&state=Enabled&id=" + args.data.returnedNetscalerProvider.id),
 																																																			dataType: "json",
-																																																			async: false,
-																																																			success: function(json) {	
-																																																				//basic zone has only one physical network => addPod() will be called only once => so don't need to double-check before calling addPod()
-																																																				stepFns.addPod({
-																																																					data: $.extend(args.data, {
-																																																						returnedGuestNetwork: json.createnetworkresponse.network
-																																																					})
-																																																				});		
+																																																			success: function(json) {
+																																																				var updateNetworkServiceProviderTimer = "asyncJob_" + json.updatenetworkserviceproviderresponse.jobid;
+																																																				
+																																																				$("body").everyTime(2000, updateNetworkServiceProviderTimer, function() {
+																																																					$.ajax({
+																																																						url: createURL("queryAsyncJobResult&jobid=" + json.updatenetworkserviceproviderresponse.jobid),
+																																																						dataType: "json",
+																																																						success: function(json) {
+																																																							var result = json.queryasyncjobresultresponse;
+																																																							if(result.jobstatus == 0) {
+																																																								return;
+																																																							}
+																																																							else {
+																																																								$("body").stopTime(updateNetworkServiceProviderTimer);
+																																																								if(result.jobstatus == 1) {
+																																																																																																																
+																																																									//create a guest network for basic zone
+																																																									var array2 = [];
+																																																									array2.push("&zoneid=" + args.data.returnedZone.id);
+																																																									array2.push("&name=guestNetworkForBasicZone");
+																																																									array2.push("&displaytext=guestNetworkForBasicZone");
+																																																									array2.push("&networkofferingid=" + args.data.zone.networkOfferingId); 
+																																																									$.ajax({
+																																																										url: createURL("createNetwork" + array2.join("")),
+																																																										dataType: "json",
+																																																										async: false,
+																																																										success: function(json) {	
+																																																											//basic zone has only one physical network => addPod() will be called only once => so don't need to double-check before calling addPod()
+																																																											stepFns.addPod({
+																																																												data: $.extend(args.data, {
+																																																													returnedGuestNetwork: json.createnetworkresponse.network
+																																																												})
+																																																											});		
+																																																										}
+																																																									});		
+																																																									
+																																																																																																																
+																																																								}
+																																																								else if(result.jobstatus == 2) {
+																																																								  alert("failed to enable Netscaler provider. Error: " + fromdb(result.jobresult.errortext));
+																																																								}															
+																																																							}													
+																																																						}
+																																																					});											
+																																																				});
+																																																			},
+																																																			error: function(XMLHttpResponse) {
+																																																				var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																																																				alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + errorMsg);
 																																																			}
 																																																		});																																																		
 																																																	}
@@ -1515,9 +1538,7 @@
 																																							});
 																																						});
 																																					}
-																																				});					
-																																				debugger;   
-																																				//???		
+																																				});			
 																																				//add netscaler (end)
 																																			}
 																																			else { //no "ElasticIP + ElasticLB"		
