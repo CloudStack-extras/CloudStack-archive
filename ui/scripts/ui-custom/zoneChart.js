@@ -331,6 +331,14 @@
           cpu: {
             name: 'CPU Allocated'
           },
+
+          primaryStorage: {
+            name: 'Primary Storage'
+          },
+
+          secondaryStorage: {
+            name: 'Secondary Storage'
+          }
         }
 
         $top.append($title);
