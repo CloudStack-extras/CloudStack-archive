@@ -21,7 +21,7 @@
             vlan: { label: 'VLAN' }
           },
           dataProvider: testData.dataProvider.listView('networks'),
-          
+
           detailView: {
             name: 'Network details',
             viewAll: { path: 'network.ipAddresses', label: 'IP Addresses' },
@@ -526,34 +526,76 @@
                                   method: {
                                     label: 'Stickiness method',
                                     select: function(args) {
-                                      setTimeout(function() {
-                                        args.response.success({
-                                          data: [
-                                            {
-                                              id: 'cookiebased',
-                                              description: 'Cookie-based'
-                                            },
-                                            {
-                                              id: 'sourcebased',
-                                              description: 'Source-based'
-                                            }
-                                          ]
+                                      var $select = args.$select;
+                                      var $form = $select.closest('form');
+                                      
+                                      args.response.success({
+                                        data: [
+                                          {
+                                            id: 'none',
+                                            description: 'None'
+                                          },
+                                          {
+                                            id: 'lb',
+                                            description: 'LB-based'
+                                          },
+                                          {
+                                            id: 'cookiebased',
+                                            description: 'Cookie-based'
+                                          },
+                                          {
+                                            id: 'sourcebased',
+                                            description: 'Source-based'
+                                          }
+                                        ]
+                                      }, 500);
+
+                                      $select.change(function() {
+                                        var value = $select.val();
+                                        var showFields = [];
+
+                                        switch (value) {
+                                        case 'none':
+                                          showFields = [];
+                                          break;
+                                        case 'lb':
+                                          showFields = ['name', 'mode', 'nocache', 'indirect', 'postonly', 'domain'];
+                                          break;
+                                        case 'cookiebased':
+                                          showFields = ['name', 'length', 'holdtime', 'request-learn', 'prefix', 'mode'];
+                                          break;
+                                        case 'sourcebased':
+                                          showFields = ['tablesize', 'expire'];
+                                          break;
+                                        }
+
+                                        $select.closest('.form-item').siblings('.form-item').each(function() {
+                                          var $field = $(this);
+                                          var id = $field.attr('rel');
+
+                                          if ($.inArray(id, showFields) > -1) {
+                                            $field.css('display', 'inline-block');
+                                          } else {
+                                            $field.hide();
+                                          }
                                         });
+
+                                        $select.closest(':ui-dialog').dialog('option', 'position', 'center');
                                       });
                                     }
                                   },
-                                  name: { label: 'Name', validation: { required: true }},
-                                  mode: { label: 'Mode' },
-                                  length: { label: 'Length', validation: { required: true } },
-                                  holdtime: { label: 'Hold Time', validation: { required: true } },
-                                  tablesize: { label: 'Table size' },
-                                  expire: { label: 'Expire' },
-                                  requestlearn: { label: 'Request-Learn', isBoolean: true },
-                                  prefix: { label: 'Prefix', isBoolean: true },
-                                  nocache: { label: 'No cache', isBoolean: true },
-                                  indirect: { label: 'Indirect', isBoolean: true },
-                                  postonly: { label: 'Is post-only', isBoolean: true },
-                                  domain: { label: 'Domain', isBoolean: true }
+                                  name: { label: 'Name', validation: { required: true }, isHidden: true },
+                                  mode: { label: 'Mode', isHidden: true },
+                                  length: { label: 'Length', validation: { required: true }, isHidden: true },
+                                  holdtime: { label: 'Hold Time', validation: { required: true }, isHidden: true },
+                                  tablesize: { label: 'Table size', isHidden: true },
+                                  expire: { label: 'Expire', isHidden: true },
+                                  requestlearn: { label: 'Request-Learn', isBoolean: true, isHidden: true },
+                                  prefix: { label: 'Prefix', isBoolean: true, isHidden: true },
+                                  nocache: { label: 'No cache', isBoolean: true, isHidden: true },
+                                  indirect: { label: 'Indirect', isBoolean: true, isHidden: true },
+                                  postonly: { label: 'Is post-only', isBoolean: true, isHidden: true },
+                                  domain: { label: 'Domain', isBoolean: true, isHidden: true }
                                 }
                               },
                               after: function(args) {
@@ -914,9 +956,9 @@
                     'icmptype': { edit: true, label: 'ICMP Type', isHidden: true },
                     'icmpcode': { edit: true, label: 'ICMP Code', isHidden: true },
                     'cidr': { edit: true, label: 'CIDR', isHidden: true },
-                    'accountname': { 
-                      edit: true, 
-                      label: 'Account, Security Group', 
+                    'accountname': {
+                      edit: true,
+                      label: 'Account, Security Group',
                       isHidden: true,
                       range: ['accountname', 'securitygroupname']
                     },
