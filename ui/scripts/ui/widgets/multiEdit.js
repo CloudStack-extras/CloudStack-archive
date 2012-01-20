@@ -419,6 +419,7 @@
           .click(function() {
             field.custom.action({
               context: context,
+              data: $td.data('multi-custom-data'),
               response: {
                 success: function(args) {
                   $td.data('multi-custom-data', args.data);

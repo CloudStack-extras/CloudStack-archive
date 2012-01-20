@@ -131,6 +131,10 @@
                     .html(description);
                 });
 
+                if (field.defaultValue) {
+                  $input.val(field.defaultValue);
+                }
+
                 $input.trigger('change');
               }
             }
