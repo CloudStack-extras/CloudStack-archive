@@ -413,6 +413,14 @@
             .attr('disabled', field.isDisabled ? 'disabled' : false)
             .appendTo($td);
         }
+      } else if (field.custom) {
+        $('<div>').addClass('button add-vm')
+          .html(field.custom.buttonLabel)
+          .click(function() {
+            field.custom.action({
+              context: context
+            })
+          }).appendTo($td);
       } else if (field.addButton) {
         $addVM = $('<div>').addClass('button add-vm').html(
           args.add.label
