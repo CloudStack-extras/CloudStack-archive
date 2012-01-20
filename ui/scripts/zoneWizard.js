@@ -70,8 +70,13 @@
 				return isShown;
       },
 
-      addBasicPhysicalNetwork: function(args) {
-        return args.data['network-model'] == 'Basic';
+      addBasicPhysicalNetwork: function(args) { //add Netscaler
+			  var isShown;
+				if(args.data['network-model'] == 'Basic' && (selectedNetworkOfferingHavingSG == true && selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true))
+				  isShown = true;
+				else
+				  isShown= false;
+				return isShown;				
       },
 
       setupPhysicalNetwork: function(args) {
@@ -225,94 +230,10 @@
         }
       },
 
-      basicPhysicalNetwork: {
-        fields: {
-          name: { 
-					  label: 'Physical network name', 
-						validation: { required: true } 
-					}
-        }
-      },
-
-      guestTraffic: {
-        preFilter: function(args) {
-          var selectedZoneObj = {
-            networktype: args.data['network-model']
-          };
-
-          var advancedFields = ['vlanRange'];          
-          $(advancedFields).each(function() {
-            if (selectedZoneObj.networktype == 'Advanced') {
-              args.$form.find('[rel=' + this + ']').show();
-            } 
-						else {
-              args.$form.find('[rel=' + this + ']').hide();
-            }
-          });
-
-					var basicFields = [
-            'guestGateway',
-            'guestNetmask',
-            'guestStartIp',
-            'guestEndIp'
-          ];
-          $(basicFields).each(function() {
-             if (selectedZoneObj.networktype == 'Basic') {
-              args.$form.find('[rel=' + this + ']').show(); 
-            } 
-						else {
-              args.$form.find('[rel=' + this + ']').hide();
-            }         
-          });
-
-					var basicNetscalerFields = [
-            'ip',
-						'username',
-						'password',
-						'networkdevicetype',
-						'publicinterface',
-						'privateinterface',
-						'numretries',
-						'inline',
-						'capacity',
-						'dedicated'            
-          ];
-          $(basicNetscalerFields).each(function() {
-             if (selectedZoneObj.networktype == 'Basic' && (selectedNetworkOfferingHavingSG == true && selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true)) {
-              args.$form.find('[rel=' + this + ']').show(); 
-            } 
-						else {
-              args.$form.find('[rel=' + this + ']').hide();
-            }         
-          });
-					
-          // Update description
-          if (selectedZoneObj.networktype == "Basic") {
-            args.$form.closest('.setup-guest-traffic').find('.main-desc').html('Please add an IP range to your guest network.');
-          } else {
-            args.$form.closest('.setup-guest-traffic').find('.main-desc').html('Please configure guest traffic for your physical network(s)');
-          }
-        },
-
-        fields: {
-				  //Advanced (start)
-          vlanRange: {
-            label: 'VLAN Range',
-            range: ['vlanRangeStart', 'vlanRangeEnd'],
-            validation: { required: true }
-          },
-					//Advanced (end)
-					
-					//Basic (start)
-					//VLAN IP Range
-          guestGateway: { label: 'Guest gateway' },
-          guestNetmask: { label: 'Guest netmask' },
-          guestStartIp: { label: 'Guest start IP' },
-          guestEndIp: { label: 'Guest end IP' },
-					
-					//Netscaler
-					ip: {
-						label: 'Netscaler IP address'
+      basicPhysicalNetwork: { //"Netscaler" now			
+        fields: {				
+         ip: {
+						label: 'IP address'
 					},
 					username: {
 						label: 'Username'
@@ -358,8 +279,57 @@
 						label: 'Dedicated',
 						isBoolean: true,
 						isChecked: false
-					}					
+					}			
+        }
+      },
+
+      guestTraffic: {
+        preFilter: function(args) {
+          var selectedZoneObj = {
+            networktype: args.data['network-model']
+          };
+
+          var advancedFields = ['vlanRange'];          
+          $(advancedFields).each(function() {
+            if (selectedZoneObj.networktype == 'Advanced') {
+              args.$form.find('[rel=' + this + ']').show();
+            } 
+						else {
+              args.$form.find('[rel=' + this + ']').hide();
+            }
+          });
+
+					var basicFields = [
+            'guestGateway',
+            'guestNetmask',
+            'guestStartIp',
+            'guestEndIp'
+          ];
+          $(basicFields).each(function() {
+             if (selectedZoneObj.networktype == 'Basic') {
+              args.$form.find('[rel=' + this + ']').show(); 
+            } 
+						else {
+              args.$form.find('[rel=' + this + ']').hide();
+            }         
+          });
+        },
+
+        fields: {		
+					//Basic (start)				
+          guestGateway: { label: 'Guest gateway' },
+          guestNetmask: { label: 'Guest netmask' },
+          guestStartIp: { label: 'Guest start IP' },
+          guestEndIp: { label: 'Guest end IP' },		
 					//Basic (end)
+					
+					//Advanced (start)
+          vlanRange: {
+            label: 'VLAN Range',
+            range: ['vlanRangeStart', 'vlanRangeEnd'],
+            validation: { required: true }
+          }
+					//Advanced (end)
         }
       },
       cluster: {
@@ -882,7 +852,7 @@
     },
 
     action: function(args) {    
-		  //debugger;
+		  debugger;
 			var advZoneConfiguredPhysicalNetworkCount = 0; //for multiple physical networks in advanced zone
       var success = args.response.success;
       var error = args.response.error;
@@ -949,7 +919,7 @@
 						  requestedTrafficTypeCount++; //request public traffic type
 												
 						$.ajax({
-							url: createURL("createPhysicalNetwork&zoneid=" + args.data.returnedZone.id + "&name=" + todb(args.data.basicPhysicalNetwork.name)),
+							url: createURL("createPhysicalNetwork&zoneid=" + args.data.returnedZone.id + "&name=PhysicalNetworkInBasicZone"),
 							dataType: "json",														
 							success: function(json) {														 
 								var jobId = json.createphysicalnetworkresponse.jobid;
@@ -1229,11 +1199,11 @@
 							url: createURL("updatePhysicalNetwork&state=Enabled&id=" + args.data.returnedBasicPhysicalNetwork.id),
 							dataType: "json",
 							success: function(json) {
-								var jobId = json.updatephysicalnetworkresponse.jobid;
-								var timerKey = "updatePhysicalNetworkJob_"+jobId;
-								$("body").everyTime(2000, timerKey, function() {
+								//var jobId = json.updatephysicalnetworkresponse.jobid;
+								var updatePhysicalNetworkTimer = "updatePhysicalNetworkJob_" + json.updatephysicalnetworkresponse.jobid;
+								$("body").everyTime(2000, updatePhysicalNetworkTimer, function() {
 									$.ajax({
-										url: createURL("queryAsyncJobResult&jobId="+jobId),
+										url: createURL("queryAsyncJobResult&jobId=" + json.updatephysicalnetworkresponse.jobid),
 										dataType: "json",
 										success: function(json) {
 											var result = json.queryasyncjobresultresponse;
@@ -1241,7 +1211,7 @@
 												return; //Job has not completed
 											}
 											else {
-												$("body").stopTime(timerKey);
+												$("body").stopTime(updatePhysicalNetworkTimer);
 												if (result.jobstatus == 1) {
 													//alert("updatePhysicalNetwork succeeded.");
 
@@ -1285,11 +1255,11 @@
 														dataType: "json",
 														async: false,
 														success: function(json) {
-															var jobId = json.configurevirtualrouterelementresponse.jobid;
-															var timerKey = "configureVirtualRouterElementJob_"+jobId;
-															$("body").everyTime(2000, timerKey, function() {
+															//var jobId = json.configurevirtualrouterelementresponse.jobid;
+															var configureVirtualRouterElementTimer = "configureVirtualRouterElementJob_" + json.configurevirtualrouterelementresponse.jobid;
+															$("body").everyTime(2000, configureVirtualRouterElementTimer, function() {
 																$.ajax({
-																	url: createURL("queryAsyncJobResult&jobId="+jobId),
+																	url: createURL("queryAsyncJobResult&jobId=" + json.configurevirtualrouterelementresponse.jobid),
 																	dataType: "json",
 																	success: function(json) {
 																		var result = json.queryasyncjobresultresponse;
@@ -1297,7 +1267,7 @@
 																			return; //Job has not completed
 																		}
 																		else {
-																			$("body").stopTime(timerKey);
+																			$("body").stopTime(configureVirtualRouterElementTimer);
 																			if (result.jobstatus == 1) {
 																				//alert("configureVirtualRouterElement succeeded.");
 
@@ -1306,11 +1276,11 @@
 																					dataType: "json",
 																					async: false,
 																					success: function(json) {
-																						var jobId = json.updatenetworkserviceproviderresponse.jobid;
-																						var timerKey = "updateNetworkServiceProviderJob_"+jobId;
-																						$("body").everyTime(2000, timerKey, function() {
+																						//var jobId = json.updatenetworkserviceproviderresponse.jobid;
+																						var updateNetworkServiceProviderTimer = "updateNetworkServiceProviderJob_" + json.updatenetworkserviceproviderresponse.jobid;
+																						$("body").everyTime(2000, updateNetworkServiceProviderTimer, function() {
 																							$.ajax({
-																								url: createURL("queryAsyncJobResult&jobId="+jobId),
+																								url: createURL("queryAsyncJobResult&jobId=" + json.updatenetworkserviceproviderresponse.jobid),
 																								dataType: "json",
 																								success: function(json) {
 																									var result = json.queryasyncjobresultresponse;
@@ -1318,7 +1288,7 @@
 																										return; //Job has not completed
 																									}
 																									else {
-																										$("body").stopTime(timerKey);
+																										$("body").stopTime(updateNetworkServiceProviderTimer);
 																										if (result.jobstatus == 1) {
 																											//alert("Virtual Router Provider is enabled");
 																																																						
@@ -1346,11 +1316,12 @@
 																													dataType: "json",
 																													async: false,
 																													success: function(json) {
-																														var jobId = json.updatenetworkserviceproviderresponse.jobid;
-																														var timerKey = "updateNetworkServiceProviderJob_"+jobId;
-																														$("body").everyTime(2000, timerKey, function() {
+																														//var jobId = json.updatenetworkserviceproviderresponse.jobid;
+																														var updateNetworkServiceProviderTimer = "asyncJob_" + json.updatenetworkserviceproviderresponse.jobid;
+																														debugger;
+																														$("body").everyTime(2000, updateNetworkServiceProviderTimer, function() {
 																															$.ajax({
-																																url: createURL("queryAsyncJobResult&jobId="+jobId),
+																																url: createURL("queryAsyncJobResult&jobId=" + json.updatenetworkserviceproviderresponse.jobid),
 																																dataType: "json",
 																																success: function(json) {
 																																	var result = json.queryasyncjobresultresponse;
@@ -1358,27 +1329,218 @@
 																																		return; //Job has not completed
 																																	}
 																																	else {																																										
-																																		$("body").stopTime(timerKey);
-																																		if (result.jobstatus == 1) { //Security group provider has been enabled successfully																																			
-																																			//create a guest network for basic zone 
-																																			var array2 = [];
-																																			array2.push("&zoneid=" + args.data.returnedZone.id);
-																																			array2.push("&name=guestNetworkForBasicZone");
-																																			array2.push("&displaytext=guestNetworkForBasicZone");
-																																			array2.push("&networkofferingid=" + args.data.zone.networkOfferingId); 
-																																			$.ajax({
-																																				url: createURL("createNetwork" + array2.join("")),
-																																				dataType: "json",
-																																				async: false,
-																																				success: function(json) {	
-                                                                          //basic zone has only one physical network => addPod() will be called only once => so don't need to double-check before calling addPod()
-																																					stepFns.addPod({
-																																						data: $.extend(args.data, {
-																																							returnedGuestNetwork: json.createnetworkresponse.network
-																																						})
-																																					});		
-																																				}
-																																			});
+																																		$("body").stopTime(updateNetworkServiceProviderTimer);
+																																		if (result.jobstatus == 1) { //Security group provider has been enabled successfully	
+                                                                      //"ElasticIP + ElasticLB"																															
+																																			if(selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true) { //inside "selectedNetworkOfferingHavingSG == true" section 
+																																			  debugger;
+																																				//add netscaler (start)																																				
+																																				$.ajax({
+																																					url: createURL("addNetworkServiceProvider&name=Netscaler&physicalnetworkid=" + args.data.returnedBasicPhysicalNetwork.id),
+																																					dataType: "json",
+																																					async: false,
+																																					success: function(json) {
+																																					  debugger;																																						                 
+																																						//var jobId = json.addnetworkserviceproviderresponse.jobid;
+																																						var addNetworkServiceProviderTimer = "asyncJob_" + json.addnetworkserviceproviderresponse.jobid;
+																																						debugger;
+																																						$("body").everyTime(2000, addNetworkServiceProviderTimer, function() {		
+                                                                              debugger;																																						
+																																							$.ajax({
+																																								url: createURL("queryAsyncJobResult&jobId=" + json.addnetworkserviceproviderresponse.jobid),
+																																								dataType: "json",
+																																								success: function(json) {
+																																								  debugger;
+																																									var result = json.queryasyncjobresultresponse;																																									
+																																									if (result.jobstatus == 0) {
+																																										return; //Job has not completed
+																																									}
+																																									else {
+																																										$("body").stopTime(addNetworkServiceProviderTimer);
+																																										if (result.jobstatus == 1) {																																											
+																																											args.data.returnedNetscalerProvider = result.jobresult.networkserviceprovider;
+																																																							
+																																											//add a netscaler device, addExternalLoadBalancer(), starts here
+																																											var array1 = [];
+																																											array1.push("&physicalnetworkid=" + args.data.returnedBasicPhysicalNetwork.id);
+																																											array1.push("&username=" + todb(args.data.basicPhysicalNetwork.username));
+																																											array1.push("&password=" + todb(args.data.basicPhysicalNetwork.password));
+																																											array1.push("&networkdevicetype=" + todb(args.data.basicPhysicalNetwork.networkdevicetype));
+
+																																											//construct URL starts here
+																																											var url = [];
+
+																																											var ip = args.data.basicPhysicalNetwork.ip;
+																																											url.push("https://" + ip);
+
+																																											var isQuestionMarkAdded = false;
+
+																																											var publicInterface = args.data.basicPhysicalNetwork.publicinterface;
+																																											if(publicInterface != null && publicInterface.length > 0) {
+																																													if(isQuestionMarkAdded == false) {
+																																															url.push("?");
+																																															isQuestionMarkAdded = true;
+																																													}
+																																													else {
+																																															url.push("&");
+																																													}
+																																													url.push("publicinterface=" + publicInterface);
+																																											}
+
+																																											var privateInterface = args.data.basicPhysicalNetwork.privateinterface;
+																																											if(privateInterface != null && privateInterface.length > 0) {
+																																													if(isQuestionMarkAdded == false) {
+																																															url.push("?");
+																																															isQuestionMarkAdded = true;
+																																													}
+																																													else {
+																																															url.push("&");
+																																													}
+																																													url.push("privateinterface=" + privateInterface);
+																																											}
+
+																																											var numretries = args.data.basicPhysicalNetwork.numretries;
+																																											if(numretries != null && numretries.length > 0) {
+																																													if(isQuestionMarkAdded == false) {
+																																															url.push("?");
+																																															isQuestionMarkAdded = true;
+																																													}
+																																													else {
+																																															url.push("&");
+																																													}
+																																													url.push("numretries=" + numretries);
+																																											}
+
+																																											var isInline = args.data.basicPhysicalNetwork.inline;
+																																											if(isInline != null && isInline.length > 0) {
+																																													if(isQuestionMarkAdded == false) {
+																																															url.push("?");
+																																															isQuestionMarkAdded = true;
+																																													}
+																																													else {
+																																															url.push("&");
+																																													}
+																																													url.push("inline=" + isInline);
+																																											}
+
+																																											var capacity = args.data.basicPhysicalNetwork.capacity;
+																																											if(capacity != null && capacity.length > 0) {
+																																													if(isQuestionMarkAdded == false) {
+																																															url.push("?");
+																																															isQuestionMarkAdded = true;
+																																													}
+																																													else {
+																																															url.push("&");
+																																													}
+																																													url.push("lbdevicecapacity=" + capacity);
+																																											}
+
+																																											var dedicated = (args.data.basicPhysicalNetwork.dedicated == "on");	//boolean	(true/false)
+																																											if(isQuestionMarkAdded == false) {
+																																													url.push("?");
+																																													isQuestionMarkAdded = true;
+																																											}
+																																											else {
+																																													url.push("&");
+																																											}
+																																											url.push("lbdevicededicated=" + dedicated.toString());
+
+
+																																											array1.push("&url=" + todb(url.join("")));
+																																											//construct URL ends here
+
+																																											$.ajax({
+																																												url: createURL("addNetscalerLoadBalancer" + array1.join("")),
+																																												dataType: "json",
+																																												success: function(json) {
+																																													//var jobId = json.addnetscalerloadbalancerresponse.jobid;
+																																													var addNetscalerLoadBalancerTimer = "asyncJob_" + json.addnetscalerloadbalancerresponse.jobid;
+																																													
+																																													$("body").everyTime(2000, addNetscalerLoadBalancerTimer, function() {
+																																														$.ajax({
+																																															url: createURL("queryAsyncJobResult&jobid=" + json.addnetscalerloadbalancerresponse.jobid),
+																																															dataType: "json",
+																																															success: function(json) {
+																																																var result = json.queryasyncjobresultresponse;
+																																																debugger;
+																																																if(result.jobstatus == 0) {
+																																																	return;
+																																																}
+																																																else {
+																																																	$("body").stopTime(addNetscalerLoadBalancerTimer);
+																																																	if(result.jobstatus == 1) {
+																																																		debugger;
+																																																		args.data.returnedNetscalerProvider.returnedNetscalerloadbalancer = result.jobresult.netscalerloadbalancer;																				
+																																																		
+																																																		//create a guest network for basic zone
+																																																		var array2 = [];
+																																																		array2.push("&zoneid=" + args.data.returnedZone.id);
+																																																		array2.push("&name=guestNetworkForBasicZone");
+																																																		array2.push("&displaytext=guestNetworkForBasicZone");
+																																																		array2.push("&networkofferingid=" + args.data.zone.networkOfferingId); 
+																																																		$.ajax({
+																																																			url: createURL("createNetwork" + array2.join("")),
+																																																			dataType: "json",
+																																																			async: false,
+																																																			success: function(json) {	
+																																																				//basic zone has only one physical network => addPod() will be called only once => so don't need to double-check before calling addPod()
+																																																				stepFns.addPod({
+																																																					data: $.extend(args.data, {
+																																																						returnedGuestNetwork: json.createnetworkresponse.network
+																																																					})
+																																																				});		
+																																																			}
+																																																		});																																																		
+																																																	}
+																																																	else if(result.jobstatus == 2) {
+																																																		error('addBasicPhysicalNetwork', fromdb(result.jobresult.errortext), { fn: 'configurePhysicalNetwork', args: args });
+																																																	}
+																																																}							
+																																															}																					
+																																														});
+																																													});				
+																																												}
+																																											});
+																																											//add a netscaler device, addExternalLoadBalancer(), ends here
+																																										}
+																																										else if (result.jobstatus == 2) {
+																																											alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + fromdb(result.jobresult.errortext));
+																																										}
+																																									}
+																																								},
+																																								error: function(XMLHttpResponse) {
+																																									var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																																									alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + errorMsg);
+																																								}
+																																							});
+																																						});
+																																					}
+																																				});					
+																																				debugger;   
+																																				//???		
+																																				//add netscaler (end)
+																																			}
+																																			else { //no "ElasticIP + ElasticLB"		
+																																				//create a guest network for basic zone
+																																				var array2 = [];
+																																				array2.push("&zoneid=" + args.data.returnedZone.id);
+																																				array2.push("&name=guestNetworkForBasicZone");
+																																				array2.push("&displaytext=guestNetworkForBasicZone");
+																																				array2.push("&networkofferingid=" + args.data.zone.networkOfferingId); 
+																																				$.ajax({
+																																					url: createURL("createNetwork" + array2.join("")),
+																																					dataType: "json",
+																																					async: false,
+																																					success: function(json) {	
+																																						//basic zone has only one physical network => addPod() will be called only once => so don't need to double-check before calling addPod()
+																																						stepFns.addPod({
+																																							data: $.extend(args.data, {
+																																								returnedGuestNetwork: json.createnetworkresponse.network
+																																							})
+																																						});		
+																																					}
+																																				});
+																																			}																																			
 																																		}
 																																		else if (result.jobstatus == 2) {
 																																			alert("failed to enable security group provider. Error: " + fromdb(result.jobresult.errortext));
@@ -1696,200 +1858,30 @@
 				
         configureGuestTraffic: function(args) {
           message('Configuring guest traffic');
-         
-					if(args.data.returnedZone.networktype == "Basic") {		//create an VlanIpRange for guest network in basic zone			  
-            debugger;	
-            if(args.data.returnedGuestNetwork.returnedVlanIpRange == null) { //if returned from addNetworkServiceProvider error or addNetscalerLoadBalancer error, args.data.returnedGuestNetwork.returnedVlanIpRange will not be null and shouldn't call createVlanIpRange	again				
-						  var array1 = [];												
-							array1.push("&podid=" + args.data.returnedPod.id); 
-							array1.push("&networkid=" + args.data.returnedGuestNetwork.id); 
-							array1.push("&gateway=" + args.data.guestTraffic.guestGateway);
-							array1.push("&netmask=" + args.data.guestTraffic.guestNetmask);
-							array1.push("&startip=" + args.data.guestTraffic.guestStartIp);
-							if(args.data.guestTraffic.guestEndIp != null && args.data.guestTraffic.guestEndIp.length > 0)
-								array1.push("&endip=" + args.data.guestTraffic.guestEndIp);
-							array1.push("&forVirtualNetwork=false"); //indicates this new IP range is for guest network, not public network	
-							debugger;						
-							$.ajax({
-								url: createURL("createVlanIpRange" + array1.join("")),
-								dataType: "json",
-								async: false,
-								success: function(json) {			
-									debugger;							
-									args.data.returnedGuestNetwork.returnedVlanIpRange = json.createvlaniprangeresponse.vlan;			
-								},
-								error: function(XMLHttpResponse) {
-									var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-									error('configureGuestTraffic', errorMsg, { fn: 'configureGuestTraffic', args: args });
-								}
-							});	
-            }							
-            debugger;
-						//add netscaler provider
-						debugger;
+          debugger;
+					if(args.data.returnedZone.networktype == "Basic") {		//create an VlanIpRange for guest network in basic zone		
+            var array1 = [];												
+						array1.push("&podid=" + args.data.returnedPod.id); 
+						array1.push("&networkid=" + args.data.returnedGuestNetwork.id); 
+						array1.push("&gateway=" + args.data.guestTraffic.guestGateway);
+						array1.push("&netmask=" + args.data.guestTraffic.guestNetmask);
+						array1.push("&startip=" + args.data.guestTraffic.guestStartIp);
+						if(args.data.guestTraffic.guestEndIp != null && args.data.guestTraffic.guestEndIp.length > 0)
+							array1.push("&endip=" + args.data.guestTraffic.guestEndIp);
+						array1.push("&forVirtualNetwork=false"); //indicates this new IP range is for guest network, not public network	
+						
 						$.ajax({
-							url: createURL("addNetworkServiceProvider&name=Netscaler&physicalnetworkid=" + args.data.returnedBasicPhysicalNetwork.id),
+							url: createURL("createVlanIpRange" + array1.join("")),
 							dataType: "json",
-							async: true,
-							success: function(json) {
-								var jobId = json.addnetworkserviceproviderresponse.jobid;
-								var timerKey = "addNetworkServiceProviderJob_"+jobId;
-								$("body").everyTime(2000, timerKey, function() {
-									$.ajax({
-										url: createURL("queryAsyncJobResult&jobId="+jobId),
-										dataType: "json",
-										success: function(json) {
-											var result = json.queryasyncjobresultresponse;
-											debugger;
-											if (result.jobstatus == 0) {
-												return; //Job has not completed
-											}
-											else {
-												$("body").stopTime(timerKey);
-												if (result.jobstatus == 1) {
-												  debugger;
-													args.data.returnedNetscalerProvider = result.jobresult.networkserviceprovider;
-																									
-													//add a netscaler device, addExternalLoadBalancer(), starts here
-												  var array1 = [];
-													array1.push("&physicalnetworkid=" + args.data.returnedBasicPhysicalNetwork.id);
-													array1.push("&username=" + todb(args.data.guestTraffic.username));
-													array1.push("&password=" + todb(args.data.guestTraffic.password));
-													array1.push("&networkdevicetype=" + todb(args.data.guestTraffic.networkdevicetype));
-
-													//construct URL starts here
-													var url = [];
-
-													var ip = args.data.guestTraffic.ip;
-													url.push("https://" + ip);
-
-													var isQuestionMarkAdded = false;
-
-													var publicInterface = args.data.guestTraffic.publicinterface;
-													if(publicInterface != null && publicInterface.length > 0) {
-															if(isQuestionMarkAdded == false) {
-																	url.push("?");
-																	isQuestionMarkAdded = true;
-															}
-															else {
-																	url.push("&");
-															}
-															url.push("publicinterface=" + publicInterface);
-													}
-
-													var privateInterface = args.data.guestTraffic.privateinterface;
-													if(privateInterface != null && privateInterface.length > 0) {
-															if(isQuestionMarkAdded == false) {
-																	url.push("?");
-																	isQuestionMarkAdded = true;
-															}
-															else {
-																	url.push("&");
-															}
-															url.push("privateinterface=" + privateInterface);
-													}
-
-													var numretries = args.data.guestTraffic.numretries;
-													if(numretries != null && numretries.length > 0) {
-															if(isQuestionMarkAdded == false) {
-																	url.push("?");
-																	isQuestionMarkAdded = true;
-															}
-															else {
-																	url.push("&");
-															}
-															url.push("numretries=" + numretries);
-													}
-
-													var isInline = args.data.guestTraffic.inline;
-													if(isInline != null && isInline.length > 0) {
-															if(isQuestionMarkAdded == false) {
-																	url.push("?");
-																	isQuestionMarkAdded = true;
-															}
-															else {
-																	url.push("&");
-															}
-															url.push("inline=" + isInline);
-													}
-
-													var capacity = args.data.guestTraffic.capacity;
-													if(capacity != null && capacity.length > 0) {
-															if(isQuestionMarkAdded == false) {
-																	url.push("?");
-																	isQuestionMarkAdded = true;
-															}
-															else {
-																	url.push("&");
-															}
-															url.push("lbdevicecapacity=" + capacity);
-													}
-
-													var dedicated = (args.data.guestTraffic.dedicated == "on");	//boolean	(true/false)
-													if(isQuestionMarkAdded == false) {
-															url.push("?");
-															isQuestionMarkAdded = true;
-													}
-													else {
-															url.push("&");
-													}
-													url.push("lbdevicededicated=" + dedicated.toString());
-
-
-													array1.push("&url=" + todb(url.join("")));
-													//construct URL ends here
-
-													$.ajax({
-														url: createURL("addNetscalerLoadBalancer" + array1.join("")),
-														dataType: "json",
-														success: function(json) {
-															var jobId = json.addnetscalerloadbalancerresponse.jobid;
-															var timerKey = "asyncJob_" + jobId;
-															
-															$("body").everyTime(2000, timerKey, function() {
-																$.ajax({
-																	url: createURL("queryAsyncJobResult&jobid=" + jobId),
-																	dataType: "json",
-																	success: function(json) {
-																		var result = json.queryasyncjobresultresponse;
-																		debugger;
-																		if(result.jobstatus == 0) {
-																			return;
-																		}
-																		else {
-																			$("body").stopTimer(timerKey);
-																			if(result.jobstatus == 1) {
-																				debugger;
-																				args.data.returnedNetscalerProvider.returnedNetscalerloadbalancer = result.jobresult.netscalerloadbalancer;																				
-																				stepFns.addCluster({
-																					data: args.data
-																				});		
-																			}
-																			else if(result.jobstatus == 2) {
-																			  error('configureGuestTraffic', fromdb(result.jobresult.errortext), { fn: 'configureGuestTraffic', args: args });
-																			}
-																		}							
-																	}																					
-																});
-															});				
-														}
-													});
-													//add a netscaler device, addExternalLoadBalancer(), ends here
-												}
-												else if (result.jobstatus == 2) {
-													alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + fromdb(result.jobresult.errortext));
-												}
-											}
-										},
-										error: function(XMLHttpResponse) {
-											var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-											alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + errorMsg);
-										}
-									});
-								});
+							async: false,
+							success: function(json) {	
+								args.data.returnedGuestNetwork.returnedVlanIpRange = json.createvlaniprangeresponse.vlan;			
+							},
+							error: function(XMLHttpResponse) {
+								var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+								error('configureGuestTraffic', errorMsg, { fn: 'configureGuestTraffic', args: args });
 							}
-						});					
-						debugger;   
+						});	 
 					}
 					else if(args.data.returnedZone.networktype == "Advanced") {	 //update VLAN in physical network(s) in advanced zone   	
 						var physicalNetworksHavingGuest = [];

@@ -533,13 +533,13 @@
                zone-wizard-form="basicPhysicalNetwork"
                zone-wizard-prefilter="addBasicPhysicalNetwork">
             <ul class="subnav">
-              <li class="physical-network active">Physical Network</li>
+              <li class="physical-network active">Netscaler</li>
               <li class="public-network">Public traffic</li>
               <li class="pod">Pod</li>
               <li class="guest-traffic">Guest Traffic</li>
             </ul>
 
-            <div class="main-desc">Please specify your physical network for this zone.</div>
+            <div class="main-desc">Please specify Netscaler info</div>
             <div class="content input-area">
               <div class="select-container"></div>
             </div>
@@ -549,7 +549,7 @@
           <div class="setup-public-traffic" zone-wizard-prefilter="addPublicNetwork"
                zone-wizard-step-id="configurePublicTraffic">
             <ul class="subnav">
-              <li class="physical-network">Physical Network</li>
+              <li class="physical-network">Netscaler</li>
               <li class="public-network active">Public traffic</li>
               <li class="pod">Pod</li>
               <li class="guest-traffic">Guest Traffic</li>
@@ -563,7 +563,7 @@
           <div class="add-pod" zone-wizard-form="pod"
                zone-wizard-step-id="addPod">
             <ul class="subnav">
-              <li class="physical-network">Physical Network</li>
+              <li class="physical-network">Netscaler</li>
               <li class="public-network">Public traffic</li>
               <li class="pod active">Pod</li>
               <li class="guest-traffic">Guest Traffic</li>
@@ -581,7 +581,7 @@
                zone-wizard-step-id="configureGuestTraffic"
                zone-wizard-prefilter="configureGuestTraffic">
             <ul class="subnav">
-              <li class="physical-network">Physical Network</li>
+              <li class="physical-network">Netscaler</li>
               <li class="public-network">Public traffic</li>
               <li class="pod">Pod</li>
               <li class="guest-traffic active">Guest Traffic</li>
