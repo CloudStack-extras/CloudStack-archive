@@ -518,6 +518,7 @@
                         custom: {
                           buttonLabel: 'Configure',
                           action: function(args) {
+                            var success = args.response.success;
                             cloudStack.dialog.createForm({
                               form: {
                                 title: 'Configure Sticky Policy',
@@ -599,7 +600,9 @@
                                 }
                               },
                               after: function(args) {
-                                debugger;
+                                success({
+                                  data: cloudStack.serializeForm(args.$form)
+                                });
                               }
                             });
                           }

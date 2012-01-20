@@ -414,11 +414,16 @@
             .appendTo($td);
         }
       } else if (field.custom) {
-        $('<div>').addClass('button add-vm')
+        $('<div>').addClass('button add-vm custom-action')
           .html(field.custom.buttonLabel)
           .click(function() {
             field.custom.action({
-              context: context
+              context: context,
+              response: {
+                success: function(args) {
+                  $td.data('multi-custom-data', args.data);
+                }
+              }
             })
           }).appendTo($td);
       } else if (field.addButton) {
@@ -489,6 +494,19 @@
           if (value != '') {
             data[key] = value;
           }
+        });
+
+        // Append custom data
+        var $customFields = $multi.find('tbody td').filter(function() {
+          return $(this).data('multi-custom-data');
+        });
+
+        $customFields.each(function() {
+          var $field = $(this);
+          var fieldID = $field.attr('rel');
+          var fieldData = $field.data('multi-custom-data');
+
+          data[fieldID] = fieldData;
         });
 
         // Loading appearance
