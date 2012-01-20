@@ -73,7 +73,7 @@
           } else if (field.custom) {
             $td.data('multi-custom-data', data[fieldName]);
             $('<div>').addClass('button add-vm custom-action')
-              .html(data[fieldName]['_buttonLabel'] ?
+              .html(data && data[fieldName] && data[fieldName]['_buttonLabel'] ?
                     data[fieldName]['_buttonLabel'] : field.custom.buttonLabel)
               .click(function() {
                 var $button = $(this);
