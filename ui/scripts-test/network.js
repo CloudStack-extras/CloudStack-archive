@@ -513,6 +513,56 @@
                           });
                         }
                       },
+                      'stickiness': {
+                        label: 'Sticky Policy',
+                        custom: {
+                          buttonLabel: 'Configure',
+                          action: function(args) {
+                            cloudStack.dialog.createForm({
+                              form: {
+                                title: 'Configure Sticky Policy',
+                                desc: 'Please complete the following fields',
+                                fields: {
+                                  method: {
+                                    label: 'Stickiness method',
+                                    select: function(args) {
+                                      setTimeout(function() {
+                                        args.response.success({
+                                          data: [
+                                            {
+                                              id: 'cookiebased',
+                                              description: 'Cookie-based'
+                                            },
+                                            {
+                                              id: 'sourcebased',
+                                              description: 'Source-based'
+                                            }
+                                          ]
+                                        });
+                                      });
+                                    }
+                                  },
+                                  name: { label: 'Name', validation: { required: true }},
+                                  mode: { label: 'Mode' },
+                                  length: { label: 'Length', validation: { required: true } },
+                                  holdtime: { label: 'Hold Time', validation: { required: true } },
+                                  tablesize: { label: 'Table size' },
+                                  expire: { label: 'Expire' },
+                                  requestlearn: { label: 'Request-Learn', isBoolean: true },
+                                  prefix: { label: 'Prefix', isBoolean: true },
+                                  nocache: { label: 'No cache', isBoolean: true },
+                                  indirect: { label: 'Indirect', isBoolean: true },
+                                  postonly: { label: 'Is post-only', isBoolean: true },
+                                  domain: { label: 'Domain', isBoolean: true }
+                                }
+                              },
+                              after: function(args) {
+                                debugger;
+                              }
+                            });
+                          }
+                        }
+                      },
                       'add-vm': {
                         label: 'Add VMs',
                         addButton: true
