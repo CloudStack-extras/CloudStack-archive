@@ -1528,6 +1528,7 @@
     <script src="scripts/ui-custom/login.js" type="text/javascript"></script>
     <script src="scripts/ui-custom/projects.js" type="text/javascript"></script>
     <script src="scripts/cloudStack.js" type="text/javascript"></script>
+    <script src="scripts/ui-custom/zoneChart.js" type="text/javascript"></script>
     <script src="scripts/ui-custom/dashboard.js" type="text/javascript"></script>
     <script src="scripts/installWizard.js" type="text/javascript"></script>
     <script src="scripts/ui-custom/installWizard.js" type="text/javascript"></script>
@@ -1548,7 +1549,6 @@
     <script src="scripts/globalSettings.js" type="text/javascript"></script>
     <script src="scripts/zoneWizard.js" type="text/javascript"></script>
     <script src="scripts/ui-custom/physicalResources.js" type="text/javascript"></script>
-    <script src="scripts/ui-custom/zoneChart.js" type="text/javascript"></script>
     <script src="scripts/ui-custom/zoneWizard.js" type="text/javascript"></script>
     <script src="scripts/system.js" type="text/javascript"></script>
     <script src="scripts/domains.js" type="text/javascript"></script>
