@@ -1849,6 +1849,7 @@
 							$.ajax({
 								url: createURL("createVlanIpRange" + array1.join("")),
 								dataType: "json",
+								async: false,
 								success: function(json) {								 
 									var item = json.createvlaniprangeresponse.vlan;
 									returnedPublicTraffic.push(item);
@@ -1890,10 +1891,12 @@
 					
 						$.ajax({
 							url: createURL("createVlanIpRange" + array1.join("")),
-							dataType: "json",
-							async: false,
+							dataType: "json",							
 							success: function(json) {	
-								args.data.returnedGuestNetwork.returnedVlanIpRange = json.createvlaniprangeresponse.vlan;			
+								args.data.returnedGuestNetwork.returnedVlanIpRange = json.createvlaniprangeresponse.vlan;
+                stepFns.addCluster({
+									data: args.data
+								});								
 							},
 							error: function(XMLHttpResponse) {							  
 								var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
