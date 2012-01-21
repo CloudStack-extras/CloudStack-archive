@@ -1844,11 +1844,8 @@
 							if(this.endip != null && this.endip.length > 0)
 								array1.push("&endip=" + this.endip);
 
-							if(args.data.returnedZone.securitygroupsenabled == false)
-								array1.push("&forVirtualNetwork=true");
-							else
-								array1.push("&forVirtualNetwork=false");
-
+							array1.push("&forVirtualNetwork=true");
+						
 							$.ajax({
 								url: createURL("createVlanIpRange" + array1.join("")),
 								dataType: "json",
@@ -1856,7 +1853,7 @@
 									var item = json.createvlaniprangeresponse.vlan;
 									returnedPublicTraffic.push(item);
 								},
-								error: function(XMLHttpResponse) {
+								error: function(XMLHttpResponse) {								  
 									var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
 									error('configurePublicTraffic', errorMsg, { fn: 'configurePublicTraffic', args: args });
 								}
@@ -1879,7 +1876,7 @@
 				
         configureGuestTraffic: function(args) {
           message('Configuring guest traffic');
-          debugger;
+      
 					if(args.data.returnedZone.networktype == "Basic") {		//create an VlanIpRange for guest network in basic zone		
             var array1 = [];												
 						array1.push("&podid=" + args.data.returnedPod.id); 
@@ -1890,7 +1887,7 @@
 						if(args.data.guestTraffic.guestEndIp != null && args.data.guestTraffic.guestEndIp.length > 0)
 							array1.push("&endip=" + args.data.guestTraffic.guestEndIp);
 						array1.push("&forVirtualNetwork=false"); //indicates this new IP range is for guest network, not public network	
-						
+					
 						$.ajax({
 							url: createURL("createVlanIpRange" + array1.join("")),
 							dataType: "json",
@@ -1898,7 +1895,7 @@
 							success: function(json) {	
 								args.data.returnedGuestNetwork.returnedVlanIpRange = json.createvlaniprangeresponse.vlan;			
 							},
-							error: function(XMLHttpResponse) {
+							error: function(XMLHttpResponse) {							  
 								var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
 								error('configureGuestTraffic', errorMsg, { fn: 'configureGuestTraffic', args: args });
 							}
