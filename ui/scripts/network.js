@@ -240,7 +240,10 @@
 									break;
 								}
 							}
-						}											
+						}		
+
+            //can't do pagination with 2 API calls ("listNetworjs&type=isolated&~", "listNetworks&type=shared&~")
+						/*						
             $.ajax({
               url: createURL("listNetworks&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
               data: {
@@ -255,11 +258,17 @@
                   data: data.listnetworksresponse.network
                 });
               },
-
               error: function(data) {
                 args.response.error(parseXMLHttpResponse(data));
               }
             });
+						*/
+												
+						var networkObjs = $.extend(isolatedSourceNatNetworkObjs, sharedLbStaticNatNetworkObjs);
+						///debugger;
+						args.response.success({
+							data: networkObjs
+						});		
           },
 
           detailView: {
