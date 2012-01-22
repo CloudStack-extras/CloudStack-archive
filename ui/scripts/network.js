@@ -268,8 +268,7 @@
             });
 						*/
 												
-						var networkObjs = $.extend(isolatedSourceNatNetworkObjs, sharedLbStaticNatNetworkObjs);
-						///debugger;
+						var networkObjs = $.extend(isolatedSourceNatNetworkObjs, sharedLbStaticNatNetworkObjs);						
 						args.response.success({
 							data: networkObjs
 						});		
@@ -1519,12 +1518,25 @@
                           publicport: args.data.publicport
                         };
                         var stickyData = $.extend(true, {}, args.data.sticky);
-
+												
+												var networkHavingLbService = false;
+												$(args.context.networks[0].service).each(function(){												 
+													if(this.name == "Lb") {
+													  networkHavingLbService = true;
+													  return false; //break $.each() loop
+													}
+												});
+																								
+												var apiCmd = "createLoadBalancerRule";
+												if(networkHavingLbService == true) 
+												  apiCmd += "&domainid=" + g_domainid + "&account=" + g_account;
+												else
+												  apiCmd += "&publicipid=" + args.context.ipAddresses[0].id;
+												
                         $.ajax({
-                          url: createURL('createLoadBalancerRule'),
+                          url: createURL(apiCmd),
                           data: $.extend(data, {
-                            openfirewall: openFirewall,
-                            publicipid: args.context.ipAddresses[0].id,
+                            openfirewall: openFirewall,                            
                             networkid: args.context.networks[0].id
                           }),
                           dataType: 'json',
