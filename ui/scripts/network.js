@@ -40,6 +40,10 @@
         disallowedActions.push('disableVPN');
       }
 
+			if(item.iselastic) {
+			  disallowedActions.push('destroy');
+			}
+			
       allowedActions = $.grep(allowedActions, function(item) {
         return $.inArray(item, disallowedActions) == -1;
       });
