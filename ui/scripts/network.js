@@ -62,14 +62,15 @@
     }
   };
 
+	var securityGroupNetworkObjs = [];
+	var isolatedSourceNatNetworkObjs = [];	
+	var sharedLbStaticNatNetworkObjs = [];
+	
   cloudStack.sections.network = {
     title: 'Network',
     id: 'network',
     sectionSelect: {
-      preFilter: function(args) {
-        var isSecurityGroupEnabled = false;
-        var hasIsolatedNetworks = false;
-
+      preFilter: function(args) {       
         $.ajax({
           url: createURL('listNetworks'),
           data: {
@@ -77,35 +78,55 @@
 						listAll: true
           },
           async: false,
-          success: function(data) {
-            $.ajax({
-              url: createURL('listNetworks'),
-              data: {
-                type: 'isolated',
-                supportedServices: 'SourceNat',
-						    listAll: true
-              },
-              async: false,
-              success: function(data) {
-                if (data.listnetworksresponse.network &&
-                    data.listnetworksresponse.network.length) {
-                  hasIsolatedNetworks = true;
-                }
-              }
-            });
-
-            if (data.listnetworksresponse.network &&
-                data.listnetworksresponse.network.length) {
-              isSecurityGroupEnabled = true;
+          success: function(data) {            
+            if (data.listnetworksresponse.network && data.listnetworksresponse.network.length) {
+              securityGroupNetworkObjs = data.listnetworksresponse.network;
             }
           }
         });
-
-        if (isSecurityGroupEnabled && !hasIsolatedNetworks) return ['securityGroups'];
-        if (isSecurityGroupEnabled && hasIsolatedNetworks) return ['securityGroups', 'networks'];
-
-        return ['networks'];
+				
+				$.ajax({
+					url: createURL('listNetworks'),
+					data: {
+						type: 'isolated',
+						supportedServices: 'SourceNat',
+						listAll: true
+					},
+					async: false,
+					success: function(data) {					 
+						if (data.listnetworksresponse.network != null && data.listnetworksresponse.network.length > 0) {
+							isolatedSourceNatNetworkObjs = data.listnetworksresponse.network;
+						}
+					}
+				});
+				
+        $.ajax({
+					url: createURL('listNetworks'),
+					data: {
+						type: 'shared',
+						supportedServices: 'Lb,StaticNat',
+						listAll: true
+					},
+					async: false,
+					success: function(data) {					 
+						if (data.listnetworksresponse.network != null && data.listnetworksresponse.network.length > 0) {
+							sharedLbStaticNatNetworkObjs = data.listnetworksresponse.network;
+						}
+					}
+				});				
+						
+				var sectionsToShow = [];
+				if(securityGroupNetworkObjs.length > 0) //if there is securityGroup networks
+				  sectionsToShow.push('securityGroups'); //show securityGroup section
+					
+				if(isolatedSourceNatNetworkObjs.length > 0 || sharedLbStaticNatNetworkObjs.length > 0) //if there is isolatedSourceNat networks or sharedLbStaticNat networks
+				  sectionsToShow.push('networks');  //show network section
+					
+				if(sectionsToShow.length == 0) //if no securityGroup networks, nor isolatedSourceNat networks, nor sharedLbStaticNat networks
+				  sectionsToShow.push('networks'); // still show network section (no networks in the grid though)
+				return sectionsToShow;					
       },
+			
       label: 'Select view'
     },
     sections: {
