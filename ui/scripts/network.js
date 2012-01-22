@@ -1053,16 +1053,26 @@
               ipRules: {
                 title: 'Configuration',
                 custom: cloudStack.ipRules({
-                  preFilter: function(args) {
-                    if (args.context.ipAddresses[0].isstaticnat) {
-                      return args.items; // All items filtered means static NAT
+                  preFilter: function(args) {									  
+										var networkHavingLbService = false;
+										$(args.context.networks[0].service).each(function(){												 
+											if(this.name == "Lb") {
+												networkHavingLbService = true;
+												return false; //break $.each() loop
+											}
+										});
+										args.context.networks[0].networkHavingLbService = networkHavingLbService;
+																										
+									  var disallowedActions = [];
+                    if (args.context.ipAddresses[0].isstaticnat) { //All items filtered means static NAT
+										  disallowedActions.push("firewall");
+											disallowedActions.push("portForwarding");
+											disallowedActions.push("loadBalancing");										
                     }
-
-                    if (g_firewallRuleUiEnabled != 'true') {
-                      return ['firewall'];
+                    if (g_firewallRuleUiEnabled != 'true') {										  
+                      disallowedActions.push("firewall");
                     }
-
-                    return [];
+                    return disallowedActions;
                   },
 
                   // Firewall rules
@@ -1518,17 +1528,9 @@
                           publicport: args.data.publicport
                         };
                         var stickyData = $.extend(true, {}, args.data.sticky);
-												
-												var networkHavingLbService = false;
-												$(args.context.networks[0].service).each(function(){												 
-													if(this.name == "Lb") {
-													  networkHavingLbService = true;
-													  return false; //break $.each() loop
-													}
-												});
-																								
-												var apiCmd = "createLoadBalancerRule";
-												if(networkHavingLbService == true) 
+																			
+												var apiCmd = "createLoadBalancerRule";												
+												if(args.context.networks[0].networkHavingLbService == true) 
 												  apiCmd += "&domainid=" + g_domainid + "&account=" + g_account;
 												else
 												  apiCmd += "&publicipid=" + args.context.ipAddresses[0].id;
@@ -1682,11 +1684,14 @@
                       }
                     },
                     dataProvider: function(args) {
+										  var apiCmd = "listLoadBalancerRules";										  
+											if(args.context.networks[0].networkHavingLbService == true) 
+												apiCmd += "&domainid=" + g_domainid + "&account=" + g_account;
+											else
+												apiCmd += "&publicipid=" + args.context.ipAddresses[0].id;
+																				
                       $.ajax({
-                        url: createURL('listLoadBalancerRules'),
-                        data: {
-                          publicipid: args.context.ipAddresses[0].id
-                        },
+                        url: createURL(apiCmd),                        
                         dataType: 'json',
                         async: true,
                         success: function(data) {
