@@ -108,23 +108,6 @@
         message: 'Please add at lease one traffic range.'
       });
       return false;
-    },
-
-    trafficTypes: function($form) {
-      var requiredTrafficTypes = physicalNetwork.requiredTrafficTypes;
-      var $requiredTrafficTypes = $form.find('li.traffic-type-draggable').filter(function() {
-        return $.inArray($(this).attr('traffic-type-id'), requiredTrafficTypes) > -1
-      });
-
-      if ($requiredTrafficTypes.size() == requiredTrafficTypes.length) {
-        return true;
-      }
-
-      cloudStack.dialog.notice({
-        message: 'Please assign all required traffic types to a network: ' +
-          requiredTrafficTypes.join(', ')
-      });
-      return false;
     }
   };
 
@@ -139,8 +122,6 @@
 
     if ($multiEditForm.size()) {
       isCustomValidated = customValidation.networkRanges($multiEditForm);
-    } else if ($physicalNetworks.size()) {
-      isCustomValidated = customValidation.trafficTypes($physicalNetworks);
     } else {
       isCustomValidated = true;
     }
