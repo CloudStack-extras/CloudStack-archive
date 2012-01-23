@@ -753,7 +753,8 @@
         // Bypass step check
         if (stepPreFilter && !stepPreFilter({ data: formState, groupedData: groupedFormState })) {
           return showStep(
-            !goBack ? index + 1 : index - 1
+            !goBack ? index + 1 : index - 1,
+            goBack
           );
         }
 
