@@ -1085,8 +1085,7 @@
               }							
 							if(ipAddress.iselastic == true) {
 							  disabledTabs.push('vpn');
-								
-								debugger;
+														
                 if(ipAddress.isstaticnat == true || ipAddress.virtualmachineid != null)								
 								  disabledTabs.push('ipRules');								
 							}			
