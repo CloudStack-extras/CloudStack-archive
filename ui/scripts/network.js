@@ -1247,6 +1247,10 @@
                         isstaticnat: true
                       }
                     });
+
+                    setTimeout(function() {
+                      $(window).trigger('cloudStack.fullRefresh');
+                    }, 500);
                   }
                 }
               },
@@ -1819,6 +1823,8 @@
                               dataType: 'json',
                               async: true,
                               success: function(data) {
+                                var lbCreationComplete = false;
+                                
                                 args.response.success({
 																  fullRefresh: true,
                                   _custom: {
@@ -1832,7 +1838,13 @@
                                       
                                       pollAsyncJobResult({
                                         _custom: args._custom,
-                                        complete: function(args) {                                          
+                                        complete: function(args) {
+                                          if (lbCreationComplete) {
+                                            return;
+                                          }
+                                          
+                                          lbCreationComplete = true;
+                                          
                                           // Create stickiness policy
                                           if (stickyData &&
                                               stickyData.methodname &&
@@ -1980,17 +1992,15 @@
 
                                 if (stickyPolicy && stickyPolicy.length) {
                                   stickyPolicy = stickyPolicy[0];
-                                  
+
+                                  if (!stickyPolicy.methodname) stickyPolicy.methodname = 'None';
+
                                   stickyData = {
-                                    _buttonLabel: 'lb'.toUpperCase(),
-                                    method: 'lb',
-                                    name: 'StickyTest',
-                                    mode: '123',
-                                    nocache: true,
-                                    indirect: false,
-                                    postonly: true,
-                                    domain: false
+                                    _buttonLabel: stickyPolicy.methodname,
+                                    methodname: stickyPolicy.methodname,
+                                    id: stickyPolicy.id
                                   };
+                                  $.extend(stickyData, stickyPolicy.params);
                                 } else {
                                   stickyData = {};
                                 }
