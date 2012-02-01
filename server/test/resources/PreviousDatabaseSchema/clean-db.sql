@@ -1,4 +1,6 @@
 SET foreign_key_checks = 0;
+#drop database if exists cloud_usage;
+#drop database if exists cloud;
 use cloud;
 
 DROP VIEW IF EXISTS `cloud`.`port_forwarding_rules_view`;
