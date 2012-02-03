@@ -18,7 +18,7 @@ Note: Tomcat6.0.35 has some known issue with CloudStack, please avoid it
 
 SSHKEY:
 Run:
-sh-keygen -t rsa -q
+ssh-keygen -t rsa -q
 to create sshkey for your account if you don't have one
 
 Step 2: Configuration
