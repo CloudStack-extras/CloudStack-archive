@@ -3448,4 +3448,7 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
+ALTER TABLE `cloud`.`networks` ADD COLUMN `switch_to_isolated` int(1) unsigned NOT NULL DEFAULT 0 COMMENT '1 if shared direct network has to be switched to isolated';
+update networks set switch_to_isolated=1 where shared=0 and guest_type='Direct';
+
 -- Dump completed on 2011-12-27 16:00:56
