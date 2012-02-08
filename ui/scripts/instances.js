@@ -5,15 +5,15 @@
   var step5ContainerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'
 
   cloudStack.sections.instances = {
-    title: 'Instances',
+    title: 'label.instances',
     id: 'instances',
     listView: {
       section: 'instances',
       filters: {
-	      all: { label: 'All' },
-        mine: { label: 'Mine' },
-        running: { label: 'Running' },
-        stopped: { label: 'Stopped' },
+	      all: { label: 'ui.listView.filters.all' },
+        mine: { label: 'ui.listView.filters.mine' },
+        running: { label: 'ui.listView.filters.running' },
+        stopped: { label: 'ui.listView.filters.stopped' },
         destroyed: { 				  
 					preFilter: function(args) {					  
 						if (isAdmin() || isDomainAdmin())
@@ -21,15 +21,15 @@
 						else						
 						  return false;
 					},
-					label: 'Destroyed'
+					label: 'ui.listView.filters.destroyed'
 				}
       },
       fields: {
-        name: { label: 'Name', editable: true },
+        name: { label: 'label.name', editable: true },
         displayname: { label: 'Display Name' },
         zonename: { label: 'Zone' },
         state: {
-          label: 'Status',
+          label: 'ui.listView.filters.destroyed',
           converter: function(str) {
             // For localization
             return str;

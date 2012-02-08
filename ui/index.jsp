@@ -1580,10 +1580,17 @@
 
 <script language="javascript">
 dictionary = {
-  'instances.actions.reboot.label': '<fmt:message key="instances.actions.reboot.label"/>',
-	'create.template.confirm' : '<fmt:message key="create.template.confirm"/>',
-	'create.template.success' : '<fmt:message key="create.template.success"/>',
-	'create.template.notification' : '<fmt:message key="create.template.notification"/>',
-	'create.template.complete' : '<fmt:message key="create.template.complete"/>'
+'label.name': '<fmt:message key="label.name"/>',
+'ui.listView.filters.destroyed': '<fmt:message key="ui.listView.filters.destroyed"/>',
+'ui.listView.filters.stopped': '<fmt:message key="ui.listView.filters.stopped"/>',
+'ui.listView.filters.running': '<fmt:message key="ui.listView.filters.running"/>',
+'ui.listView.filters.all': '<fmt:message key="ui.listView.filters.all"/>',
+'ui.listView.filters.mine': '<fmt:message key="ui.listView.filters.mine"/>',
+'label.instances': '<fmt:message key="label.instances"/>',
+'instances.actions.reboot.label': '<fmt:message key="instances.actions.reboot.label"/>',
+'create.template.confirm' : '<fmt:message key="create.template.confirm"/>',
+'create.template.success' : '<fmt:message key="create.template.success"/>',
+'create.template.notification' : '<fmt:message key="create.template.notification"/>',
+'create.template.complete' : '<fmt:message key="create.template.complete"/>'
 };	
 </script>
