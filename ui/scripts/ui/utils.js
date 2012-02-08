@@ -49,6 +49,9 @@
    * exists or function isn't present, return string as-is
    */
   cloudStack.localize = window._l = function(str) {
-    return '_L.'.concat(str);
+    var localized = cloudStack.localizationFn ?
+          cloudStack.localizationFn(str) : null;
+
+    return localized ? localized : '_L.'.concat(str);
   };
 })(jQuery, cloudStack);

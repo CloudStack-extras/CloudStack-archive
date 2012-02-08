@@ -590,7 +590,7 @@
           }
         },
         restart: {
-          label: 'Reboot instance',
+          label: 'instances.actions.reboot.label',
           action: function(args) {
             $.ajax({
               url: createURL("rebootVirtualMachine&id=" + args.context.instances[0].id),
