@@ -41,4 +41,14 @@
       }
     });
   };
+
+  /**
+   * Localization -- shortcut _l
+   *
+   * Takes string and runs through localization function -- if no code
+   * exists or function isn't present, return string as-is
+   */
+  cloudStack.localize = window._l = function(str) {
+    return '_L.'.concat(str);
+  };
 })(jQuery, cloudStack);
