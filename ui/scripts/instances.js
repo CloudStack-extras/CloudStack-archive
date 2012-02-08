@@ -21,7 +21,7 @@
 						else						
 						  return false;
 					},
-					label: 'Destroyed',
+					label: 'Destroyed'
 				}
       },
       fields: {
@@ -30,6 +30,10 @@
         zonename: { label: 'Zone' },
         state: {
           label: 'Status',
+          converter: function(str) {
+            // For localization
+            return str;
+          },
           indicator: {
             'Running': 'on',
             'Stopped': 'off',

@@ -207,6 +207,10 @@
           name: { label: 'Name' },
           state: {
             label: 'State',
+            converter: function(str) {
+              // For localization
+              return str;
+            },
             indicator: { 'Enabled': 'on', 'Disabled': 'off' }
           }
         },
@@ -1627,7 +1631,13 @@
           hideToolbar: true,
           fields: {
             name: { label: 'Name' },
-            state: { label: 'State', indicator: { 'Enabled': 'on', 'Disabled': 'off' }},
+            state: {
+              converter: function(str) {
+                // For localization
+                return str;
+              },
+              label: 'State', indicator: { 'Enabled': 'on', 'Disabled': 'off' }
+            },
             vlan: { label: 'VLAN Range' }
           }
         },
@@ -1869,6 +1879,10 @@
                     name: { label: 'Name' },
                     zonename: { label: 'Zone' },
                     state: {
+                      converter: function(str) {
+                        // For localization
+                        return str;
+                      },
                       label: 'Status',
                       indicator: {
                         'Running': 'on',
@@ -3040,10 +3054,17 @@
                     return "No";
                 }
               },
-              allocationstate: { label: 'Allocation State', indicator: { 
-                'Enabled': 'on',
-                'Disabled': 'off'
-              } }
+              allocationstate: {
+                label: 'Allocation State',
+                converter: function(str) {
+                  // For localization
+                  return str;
+                },
+                indicator: { 
+                  'Enabled': 'on',
+                  'Disabled': 'off'
+                }
+              }
             },
             actions: {
               add: {
@@ -3364,6 +3385,10 @@
                       zonename: { label: 'Zone' },
                       state: {
                         label: 'Status',
+                        converter: function(str) {
+                          // For localization
+                          return str;
+                        },
                         indicator: {
                           'Running': 'on',
                           'Stopped': 'off',
@@ -3702,7 +3727,13 @@
           id: 'netscalerProviders',
           fields: {
             ipaddress: { label: 'IP Address' },
-            lbdevicestate: { label: 'Status' }
+            lbdevicestate: {
+              converter: function(str) {
+                // For localization
+                return str;
+              },
+              label: 'Status'
+            }
           },
           dataProvider: function(args) {
             $.ajax({
@@ -3907,7 +3938,13 @@
           id: 'f5Providers',
           fields: {
             ipaddress: { label: 'IP Address' },
-            lbdevicestate: { label: 'Status' }
+            lbdevicestate: {
+              converter: function(str) {
+                // For localization
+                return str;
+              },
+              label: 'Status'
+            }
           },
           actions: {
             add: {
@@ -4106,7 +4143,13 @@
           id: 'srxProviders',
           fields: {
             ipaddress: { label: 'IP Address' },
-            lbdevicestate: { label: 'Status' }
+            lbdevicestate: {
+              converter: function(str) {
+                // For localization
+                return str;
+              },
+              label: 'Status'
+            }
           },
           actions: {
             add: {
@@ -4310,7 +4353,13 @@
             name: { label: 'Name' },
             gateway: { label: 'Gateway' },
             netmask: { label: 'Netmask' },
-            allocationstate: { label: 'Allocation Status' }
+            allocationstate: {
+              converter: function(str) {
+                // For localization
+                return str;
+              },
+              label: 'Allocation Status'
+            }
           },
 
           dataProvider: function(args) {					  
@@ -4573,7 +4622,13 @@
                     startip: { label: 'Start IP Range', isEditable: true },
                     endip: { label: 'End IP Range', isEditable: true },
                     gateway: { label: 'Gateway', isEditable: true },
-                    allocationstate: { label: 'Allocation Status' }
+                    allocationstate: {
+                      converter: function(str) {
+                        // For localization
+                        return str;
+                      },
+                      label: 'Allocation Status'
+                    }
                   }
                 ],
 
@@ -4623,7 +4678,14 @@
             hypervisortype: { label: 'Hypervisor' },
             //allocationstate: { label: 'Allocation State' },
             //managedstate: { label: 'Managed State' },
-						state: { label: 'State', indicator: { 'Enabled': 'on', 'Destroyed': 'off'} }
+						state: {
+              converter: function(str) {
+                // For localization
+                return str;
+              },
+              label: 'State',
+              indicator: { 'Enabled': 'on', 'Destroyed': 'off'}
+            }
           },
 
           dataProvider: function(args) {
