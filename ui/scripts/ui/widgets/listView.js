@@ -550,7 +550,7 @@
     if (actions && renderActionCol(actions)) {
       $thead.find('tr').append(
         $('<th></th>')
-          .html(_l('Actions'))
+          .html(_l('label.actions'))
           .addClass('actions reduced-hide')
       );
     }
@@ -562,7 +562,7 @@
     if (!filters) return false;
 
     var $filters = $('<div></div>').addClass('filters reduced-hide');
-    $filters.append($('<label>').html(_l('Filter by:')));
+    $filters.append($('<label>').html(_l('label.filterBy')));
 
     var $filterSelect = $('<select id="filterBy"></select>').appendTo($filters);
 

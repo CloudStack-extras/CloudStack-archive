@@ -702,7 +702,7 @@
               .attr({ href: '#' })
               .data('detail-view-link-view-all', detailViewArgs.viewAll)
               .append(
-                $('<span>').html(_l('View') + ' ' + _l(detailViewArgs.viewAll.label))
+                $('<span>').html(_l('label.view') + ' ' + _l(detailViewArgs.viewAll.label))
               )
           )
           .append(

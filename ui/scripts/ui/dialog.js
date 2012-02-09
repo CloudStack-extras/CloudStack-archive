@@ -67,7 +67,7 @@
 
         // Tooltip description
         if (field.desc) {
-          $formItem.attr({ title: field.desc });
+          $formItem.attr({ title: _l(field.desc) });
         }
 
         // Input area
@@ -324,7 +324,7 @@
       return $formContainer.dialog({
         dialogClass: 'create-form',
         width: 400,
-        title: args.form.title,
+        title: _l(args.form.title),
         open: function() {
           if (args.form.preFilter) {
             args.form.preFilter({ $form: $form, context: args.context });
@@ -332,7 +332,7 @@
         },
         buttons: [
           {
-            text: createLabel ? createLabel : _l('OK'),
+            text: createLabel ? createLabel : _l('label.ok'),
             'class': 'ok',
             click: function() {
               if (!complete($formContainer)) { return false; }
@@ -345,7 +345,7 @@
             }
           },
           {
-            text: _l('Cancel'),
+            text: _l('label.cancel'),
             'class': 'cancel',
             click: function() {
               $('div.overlay').remove();
