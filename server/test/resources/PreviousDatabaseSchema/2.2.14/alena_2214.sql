@@ -875,7 +875,7 @@ CREATE TABLE `host` (
 
 LOCK TABLES `host` WRITE;
 /*!40000 ALTER TABLE `host` DISABLE KEYS */;
-INSERT INTO `host` VALUES (1,'nfs://10.223.110.231/export/home/alena/secondary','Alert','SecondaryStorage','nfs','255.255.254.0','3c:07:54:3f:e4:50','10.216.133.62','255.255.254.0','3c:07:54:3f:e4:50',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,NULL,'nfs://10.223.110.231/export/home/alena/secondary',NULL,'None',0,NULL,'2.2.8.2012-02-28T19:10:16Z','b65c59d9-5204-353f-b409-ba7af91f7fe6',107374182400,NULL,'nfs://10.223.110.231/export/home/alena/secondary',1,0,0,1299274797,NULL,'2012-02-28 19:29:52','2012-02-28 19:29:52',NULL,'Enabled'),(2,'xenserver-QA-2-1-48','Disconnected','Routing','10.223.48.2','255.255.255.0','bc:30:5b:d4:54:f4','10.223.48.2','255.255.255.0','bc:30:5b:d4:54:f4','10.223.48.2','bc:30:5b:d4:54:f4','255.255.255.0',1,NULL,NULL,NULL,NULL,1,1,4,2260,'iqn.2005-03.org.open-iscsi:51cc05b6b1c',NULL,'XenServer',16190149248,'com.cloud.hypervisor.xen.resource.XenServer56Resource','2.2.8.2012-02-28T19:10:16Z',NULL,NULL,'xen-3.0-x86_64 , xen-3.0-x86_32p , hvm-3.0-x86_32 , hvm-3.0-x86_32p , hvm-3.0-x86_64','ac97f226-f055-42c5-9eca-83c9f3ae7e1d',1,1,0,1299283366,NULL,NULL,'2012-02-28 19:29:53',NULL,'Enabled'),(3,'s-1-TEST','Disconnected','SecondaryStorageVM','10.223.48.115','255.255.255.0','06:d8:c8:00:00:10','10.223.48.115','255.255.255.0','06:d8:c8:00:00:10',NULL,NULL,NULL,NULL,'10.223.120.132','255.255.255.0','06:ed:ec:00:00:86',NULL,1,1,NULL,NULL,'NoIqn',NULL,NULL,0,NULL,'2.2.8.2012-02-28T19:10:16Z',NULL,NULL,NULL,'s-1-TEST-PremiumSecondaryStorageResource',1,0,0,1299283366,NULL,NULL,'2012-02-28 19:33:03',NULL,'Enabled'),(4,'v-2-TEST','Disconnected','ConsoleProxy','10.223.48.167','255.255.255.0','06:69:86:00:00:44','10.223.48.167','255.255.255.0','06:69:86:00:00:44',NULL,NULL,NULL,NULL,'10.223.120.165','255.255.255.0','06:4d:44:00:00:a7',80,1,1,NULL,NULL,'NoIqn',NULL,NULL,0,NULL,'2.2.8.2012-02-28T19:10:16Z',NULL,NULL,NULL,'Proxy.2-ConsoleProxyResource',1,0,0,1299283366,NULL,NULL,'2012-02-28 19:33:45',NULL,'Enabled');
+INSERT INTO `host` VALUES (1,'nfs://10.223.110.231/export/home/alena/secondary','Alert','SecondaryStorage','nfs','255.255.254.0','3c:07:54:3f:e4:50','10.216.133.62','255.255.254.0','3c:07:54:3f:e4:50',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,NULL,'nfs://10.223.110.231/export/home/alena/secondary',NULL,'None',0,NULL,'2.2.14','b65c59d9-5204-353f-b409-ba7af91f7fe6',107374182400,NULL,'nfs://10.223.110.231/export/home/alena/secondary',1,0,0,1299274797,NULL,'2012-02-28 19:29:52','2012-02-28 19:29:52',NULL,'Enabled'),(2,'xenserver-QA-2-1-48','Disconnected','Routing','10.223.48.2','255.255.255.0','bc:30:5b:d4:54:f4','10.223.48.2','255.255.255.0','bc:30:5b:d4:54:f4','10.223.48.2','bc:30:5b:d4:54:f4','255.255.255.0',1,NULL,NULL,NULL,NULL,1,1,4,2260,'iqn.2005-03.org.open-iscsi:51cc05b6b1c',NULL,'XenServer',16190149248,'com.cloud.hypervisor.xen.resource.XenServer56Resource','2.2.14',NULL,NULL,'xen-3.0-x86_64 , xen-3.0-x86_32p , hvm-3.0-x86_32 , hvm-3.0-x86_32p , hvm-3.0-x86_64','ac97f226-f055-42c5-9eca-83c9f3ae7e1d',1,1,0,1299283366,NULL,NULL,'2012-02-28 19:29:53',NULL,'Enabled'),(3,'s-1-TEST','Disconnected','SecondaryStorageVM','10.223.48.115','255.255.255.0','06:d8:c8:00:00:10','10.223.48.115','255.255.255.0','06:d8:c8:00:00:10',NULL,NULL,NULL,NULL,'10.223.120.132','255.255.255.0','06:ed:ec:00:00:86',NULL,1,1,NULL,NULL,'NoIqn',NULL,NULL,0,NULL,'2.2.14',NULL,NULL,NULL,'s-1-TEST-PremiumSecondaryStorageResource',1,0,0,1299283366,NULL,NULL,'2012-02-28 19:33:03',NULL,'Enabled'),(4,'v-2-TEST','Disconnected','ConsoleProxy','10.223.48.167','255.255.255.0','06:69:86:00:00:44','10.223.48.167','255.255.255.0','06:69:86:00:00:44',NULL,NULL,NULL,NULL,'10.223.120.165','255.255.255.0','06:4d:44:00:00:a7',80,1,1,NULL,NULL,'NoIqn',NULL,NULL,0,NULL,'2.2.14',NULL,NULL,NULL,'Proxy.2-ConsoleProxyResource',1,0,0,1299283366,NULL,NULL,'2012-02-28 19:33:45',NULL,'Enabled');
 /*!40000 ALTER TABLE `host` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1200,7 +1200,7 @@ CREATE TABLE `mshost` (
 
 LOCK TABLES `mshost` WRITE;
 /*!40000 ALTER TABLE `mshost` DISABLE KEYS */;
-INSERT INTO `mshost` VALUES (1,1,1330465398083,'macbookpro.citrite.net','Down','2.2.8.2012-02-28T19:10:16Z','127.0.0.1',9090,'2012-02-28 22:06:20',NULL,0);
+INSERT INTO `mshost` VALUES (1,1,1330465398083,'macbookpro.citrite.net','Down','2.2.14','127.0.0.1',9090,'2012-02-28 22:06:20',NULL,0);
 /*!40000 ALTER TABLE `mshost` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -3330,7 +3330,7 @@ CREATE TABLE `version` (
 
 LOCK TABLES `version` WRITE;
 /*!40000 ALTER TABLE `version` DISABLE KEYS */;
-INSERT INTO `version` VALUES (1,'2.2.8.2012-02-28T19:10:16Z','2012-02-28 11:21:35','Complete');
+INSERT INTO `version` VALUES (1,'2.2.14','2012-02-28 11:21:35','Complete');
 /*!40000 ALTER TABLE `version` ENABLE KEYS */;
 UNLOCK TABLES;
 
