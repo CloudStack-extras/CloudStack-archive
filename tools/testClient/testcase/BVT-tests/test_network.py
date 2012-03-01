@@ -1614,20 +1614,39 @@ class TestDeleteAccount(cloudstackTestCase):
                                                     self.account.account.name)
         # ListPortForwardingRules should not
         # list associated rules with deleted account
-        with self.assertRaises(Exception):
-            list_nat_rules(
-                          self.apiclient,
-                          account=self.account.account.name,
-                          domainid=self.account.account.domainid
+        try:
+            list_nat_reponse= list_nat_rules(
+                                    self.apiclient,
+                                    account=self.account.account.name,
+                                    domainid=self.account.account.domainid
                         )
-
+            self.assertEqual(
+                             list_nat_reponse,
+                             None,
+                             "Check load balancing rule is properly deleted."
+                   )
+        except Exception as e:
+            
+            raise Exception(
+                "Exception raised while fetching NAT rules for account: %s" %
+                                                    self.account.account.name)
         #Retrieve router for the user account
-        with self.assertRaises(Exception):
-            list_routers(
+        try:
+            routers = list_routers(
                           self.apiclient,
                           account=self.account.account.name,
                           domainid=self.account.account.domainid
                         )
+            self.assertEqual(
+                             routers,
+                             None,
+                             "Check routers are properly deleted."
+                   )
+        except Exception as e:
+            
+            raise Exception(
+                "Exception raised while fetching routers for account: %s" %
+                                                    self.account.account.name)
         return
 
     def tearDown(self):
