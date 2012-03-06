@@ -736,7 +736,7 @@
                   }
                 },
                 createForm: {
-                  title: 'Migrate volumeto another primary storage',
+                  title: 'Migrate volume to another primary storage',
                   desc: '',
                   fields: {
                     storageId: {
