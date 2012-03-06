@@ -1346,7 +1346,7 @@
               }
             },
             createForm: {
-              title: 'Migrate instanceto another primary storage',
+              title: 'Migrate instance to another primary storage',
               desc: '',
               fields: {
                 storageId: {
