@@ -1,6 +1,12 @@
 This document describes how to set up and configure a single server CloudStack development environment. If you aren't looking for a development environment The easiest way is to deploy CloudStack from RPM package, building CloudStack from source is for developers. This guide is all about building CloudStack from the source and installing directly from there . This guide is suitable for you if you want to develop the CloudStack.
 
-I have tested this procedure on Fedora Core 14 
+I have tested this procedure on Fedora Core 14 and Debian squeeze.
+
+note :  For Debian squeeze I have used this procedure : http://cloud.mindtouch.us/Knowledge_Base/How_to_set_up_a_CloudStack_development_environment
+        Simply : installed http://download.oracle.com/otn-pub/java/jdk/6u29-b11/jdk-6u29-linux-x64.bin, lastest tomcat and ant by sources, mysql-server by apt-get.
+        in order to build with ant, you need : apt-get install genisoimage libmagic1
+        after test JDK, tomcat, mysql and ant correctly installed specified in the first link (cloud.mindtouch.us)
+        and go directly to Step 3 (install git before by apt-get).
 
 Step 1: Install the tools and dependencies: 
 For fedora the package names are ant ant-devel, openjdk, openjdk-devel 
