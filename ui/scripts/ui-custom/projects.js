@@ -554,7 +554,17 @@
           $selector.dialog({
             title: 'Select Project',
             dialogClass: 'project-selector-dialog',
-            width: 420
+            width: 420,
+            button:[
+              {
+                 text: 'Close',
+                 'class': 'close',
+                 click: function() {
+                   $.merge($selector, $('.overlay')).remove();
+                   $('.select.default-view').click();
+                 }
+              }
+            ]
           }).closest('.ui-dialog').overlay();
         }
       });
