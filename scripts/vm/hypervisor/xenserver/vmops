@@ -357,23 +357,28 @@ def networkUsage(session, args):
         txt = '' 
 
     return txt
-    
+
 def get_private_nic(session, args):
-    vms = session.xenapi.VM.get_all()
     host_uuid = args.get('host_uuid')
     host = session.xenapi.host.get_by_uuid(host_uuid)
-    piflist = session.xenapi.host.get_PIFs(host)
-    mgmtnic = 'eth0'
-    for pif in piflist:
-        pifrec = session.xenapi.PIF.get_record(pif)
-        network = pifrec.get('network')
-        nwrec = session.xenapi.network.get_record(network)
-        if nwrec.get('name_label') == 'cloud-guest':
+
+    # First try to find a PIF on the "cloud-guest" network
+    cloudnets = session.xenapi.network.get_by_name_label('cloud-guest')
+    if len(cloudnets) >= 1:
+        query = '(field "host" = "%s") and (field "network" = "%s")' % (host, cloudnets[0])
+        pifs = session.xenapi.PIF.get_all_records_where(query)
+        if len(pifs) >= 1: # should never be more than 1
+            pif, pifrec = pifs.values()[0]
             return pifrec.get('device')
-        if pifrec.get('management'):
-            mgmtnic = pifrec.get('device')
-    
-    return mgmtnic
+
+    # If no such PIF exists, return the management PIF (eth0 is default)
+    query = '(field "host" = "%s") and (field "management" = "true")' % host
+    pifs = session.xenapi.PIF.get_all_records_where(query)
+    if len(pifs) >= 1:
+        pif, pifrec = pifs.values()[0]
+        return pifrec.get('device')
+    else:
+        return 'eth0'
 
 def chain_name(vm_name):
     if vm_name.startswith('i-') or vm_name.startswith('r-'):
