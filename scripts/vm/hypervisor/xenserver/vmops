@@ -405,6 +405,7 @@ def can_bridge_firewall(session, args):
         return 'false'
 
     host_uuid = args.get('host_uuid')
+    host = session.xenapi.host.get_by_uuid(host_uuid)
     try:
         util.pread2(['iptables', '-N', 'BRIDGE-FIREWALL'])
         util.pread2(['iptables', '-I', 'BRIDGE-FIREWALL', '-m', 'state', '--state', 'RELATED,ESTABLISHED', '-j', 'ACCEPT'])
@@ -425,7 +426,7 @@ def can_bridge_firewall(session, args):
         except:
             return 'false'
     default_ebtables_rules()
-    allow_egress_traffic(session)
+    allow_egress_traffic(session, host)
     if not os.path.exists('/var/run/cloud'):
         os.makedirs('/var/run/cloud')
     if not os.path.exists('/var/cache/cloud'):
@@ -463,10 +464,9 @@ def default_ebtables_rules():
 
 
 @echo
-def allow_egress_traffic(session):
+def allow_egress_traffic(session, host):
     devs = []
-    for pif in session.xenapi.PIF.get_all():
-        pif_rec = session.xenapi.PIF.get_record(pif)
+    for pif_rec in session.xenapi.PIF.get_all_records_where('field "host" = "%s"' % host).itervalues():
         vlan = pif_rec.get('VLAN')
         dev = pif_rec.get('device')
         if vlan == '-1':
@@ -733,7 +733,9 @@ def default_network_rules_systemvm(session, args):
     except:
         util.pread2(['iptables', '-F', vmchain])
     
-    allow_egress_traffic(session)
+    host_uuid = args.get('host_uuid')
+    host = session.xenapi.host.get_by_uuid(host_uuid)
+    allow_egress_traffic(session, host)
   
     for vif in vifs:
         try:
