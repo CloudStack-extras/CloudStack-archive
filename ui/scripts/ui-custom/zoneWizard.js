@@ -317,7 +317,7 @@
      * @param trafficTypeID ID of desired traffic type
      * @param $physicalNetwork Physical network elem
      */
-    assignTrafficType: function(trafficTypeID, $physicalNetwork) {
+    assignTrafficType: function(trafficTypeID, $physicalNetwork, data) {
       var $container = physicalNetwork.getMainContainer($physicalNetwork);
       var $trafficType = physicalNetwork.getTrafficType(trafficTypeID, $container);
       var $dropArea = $physicalNetwork.find('.drop-container ul');
@@ -333,6 +333,10 @@
         }
       } else {
         $trafficType.appendTo($dropArea);
+      }
+
+      if (data) {
+        $trafficType.data('traffic-type-data', data);
       }
 
       physicalNetwork.update($.merge($physicalNetwork, $physicalNetwork.siblings()));
@@ -484,13 +488,14 @@
         drop: function(event, ui) {
           var trafficTypeID = ui.draggable.attr('traffic-type-id');
           var $physicalNetwork = $(this).closest('.select-container.multi');
-
+          var trafficTypeData = ui.draggable.data('traffic-type-data');
+          
           if (trafficTypeID == 'guest' &&
             ui.draggable.closest('.select-container.multi').size()) {
             ui.draggable.remove();
           }
 
-          physicalNetwork.assignTrafficType(trafficTypeID, $physicalNetwork);
+          physicalNetwork.assignTrafficType(trafficTypeID, $physicalNetwork, trafficTypeData);
         }
       });
 
