@@ -433,7 +433,9 @@
 
         stop: function(event, ui) {
           $(this).removeClass('disabled');
-        }
+        },
+
+        cancel: '.edit-traffic-type'
       };
     },
 
