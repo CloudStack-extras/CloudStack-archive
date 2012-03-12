@@ -5855,11 +5855,11 @@ label.error {
 }
 
 /*** Traffic type icon -- edit button*/
-.multi-wizard.zone-wizard .traffic-type-draggable .edit {
+.multi-wizard.zone-wizard .traffic-type-draggable .edit-traffic-type {
   display: none;
 }
 
-.multi-wizard.zone-wizard .drop-container .traffic-type-draggable > .edit {
+.multi-wizard.zone-wizard .drop-container .traffic-type-draggable > .edit-traffic-type {
   cursor: pointer;
   display: block;
   width: 59px;
@@ -5879,12 +5879,12 @@ label.error {
   top: 61px;
 }
 
-.multi-wizard.zone-wizard .drop-container .traffic-type-draggable > .edit:hover {
+.multi-wizard.zone-wizard .drop-container .traffic-type-draggable > .edit-traffic-type:hover {
   background-position: 0px 0px;
   color: #FFFFFF;
 }
 
-.multi-wizard.zone-wizard .drop-container .traffic-type-draggable > .edit:hover span {
+.multi-wizard.zone-wizard .drop-container .traffic-type-draggable > .edit-traffic-type:hover span {
   color: #FFFFFF;
   /*+text-shadow:0px 1px 1px #000000;*/
   -moz-text-shadow: 0px 1px 1px #000000;
@@ -5893,14 +5893,14 @@ label.error {
   text-shadow: 0px 1px 1px #000000;
 }
 
-.multi-wizard.zone-wizard .drop-container .traffic-type-draggable:hover > .edit {
+.multi-wizard.zone-wizard .drop-container .traffic-type-draggable:hover > .edit-traffic-type {
   /*+placement:shift -7px 67px;*/
   position: relative;
   left: -7px;
   top: 67px;
 }
 
-.multi-wizard.zone-wizard .drop-container .traffic-type-draggable .edit span {
+.multi-wizard.zone-wizard .drop-container .traffic-type-draggable .edit-traffic-type span {
   text-align: center;
   font-size: 11px;
   font-weight: bold;
@@ -5912,7 +5912,7 @@ label.error {
   text-shadow: 0px 1px #FFFFFF;
 }
 
-.multi-wizard.zone-wizard .drop-container .traffic-type-draggable .edit span.icon {
+.multi-wizard.zone-wizard .drop-container .traffic-type-draggable .edit-traffic-type span.icon {
   float: left;
   background: url(../images/sprites.png) -7px -4px;
   padding: 7px 11px 0 7px;
