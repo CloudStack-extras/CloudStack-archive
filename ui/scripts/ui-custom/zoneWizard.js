@@ -181,9 +181,9 @@
       });
 
       // Edit traffic type button
-      $wizard.find('.drop-container').click(function(event) {
+      $wizard.click(function(event) {
         var $target = $(event.target);
-        var $edit = $target.closest('.traffic-type-draggable .edit-traffic-type');
+        var $edit = $target.closest('.drop-container .traffic-type-draggable .edit-traffic-type');
         var $trafficType = $edit.closest('.traffic-type-draggable');
 
         if ($edit.size()) {
