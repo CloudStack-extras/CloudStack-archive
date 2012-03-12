@@ -93,7 +93,7 @@
         var $storageTrafficItem = $(storageTrafficItem);
         var storageTrafficData = {};
         var fields = [
-				  'gateway',
+          'gateway',
           'netmask',
           'vlanid',
           'startip',
@@ -178,6 +178,43 @@
         var $firstPhysicalNetwork = physicalNetwork.getPhysicalNetworks($wizard).filter(':first');
 
         physicalNetwork.assignTrafficType(this, $firstPhysicalNetwork);
+      });
+
+      // Edit traffic type button
+      $wizard.find('.drop-container').click(function(event) {
+        var $target = $(event.target);
+        var $edit = $target.closest('.traffic-type-draggable .edit-traffic-type');
+        var $trafficType = $edit.closest('.traffic-type-draggable');
+
+        if ($edit.size()) {
+          physicalNetwork.editTrafficTypeDialog($trafficType);
+
+          return false;
+        }
+
+        return true;
+      });
+    },
+
+    /**
+     * Traffic type edit dialog
+     */
+    editTrafficTypeDialog: function($trafficType) {
+      var trafficData = $trafficType.data('traffic-type-data') ?
+            $trafficType.data('traffic-type-data') : {};
+      
+      cloudStack.dialog.createForm({
+        form: {
+          title: 'Edit traffic type',
+          desc: 'Please specify any labels you want associated with this traffic type.',
+          fields: {
+            labels: { label: 'Traffic labels', defaultValue: trafficData.labels }
+          }
+        },
+
+        after: function(args) {
+          $trafficType.data('traffic-type-data', args.data);
+        }
       });
     },
 
@@ -688,7 +725,7 @@
           if (isError) {
             $li.prev().addClass('error');
           }
-          
+
         };
 
         args.action({
