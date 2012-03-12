@@ -231,6 +231,7 @@
           },
           hypervisor: {
             label: 'label.hypervisor',
+            validation: { required: true },
             select: function(args) {
               $.ajax({
                 url: createURL('listHypervisors'),
