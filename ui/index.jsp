@@ -510,7 +510,7 @@
                         title="Traffic between CloudStack's internal resources, including any components that communicate with the Management Server, such as hosts and CloudStack system VMs"
                         class="traffic-type-draggable management">
                       <!-- Edit buttton -->
-                      <div class="edit">
+                      <div class="edit-traffic-type">
                         <span class="icon">&nbsp;</span>
                         <span>Edit</span>
                       </div>
@@ -527,7 +527,7 @@
                         title="Traffic between the internet and virtual machines in the cloud."
                         class="traffic-type-draggable public">
                       <!-- Edit buttton -->
-                      <div class="edit">
+                      <div class="edit-traffic-type">
                         <span class="icon">&nbsp;</span>
                         <span>Edit</span>
                       </div>
@@ -544,7 +544,7 @@
                         title="Traffic between end-user virtual machines"
                         class="traffic-type-draggable guest clone">
                       <!-- Edit buttton -->
-                      <div class="edit">
+                      <div class="edit-traffic-type">
                         <span class="icon">&nbsp;</span>
                         <span>Edit</span>
                       </div>
@@ -561,7 +561,7 @@
                         title="Traffic between primary and secondary storage servers, such as VM templates and snapshots"
                         class="traffic-type-draggable storage">
                       <!-- Edit buttton -->
-                      <div class="edit">
+                      <div class="edit-traffic-type">
                         <span class="icon">&nbsp;</span>
                         <span>Edit</span>
                       </div>
