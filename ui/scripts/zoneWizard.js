@@ -229,6 +229,28 @@
             label: 'label.internal.dns.2',
             desc: 'message.tooltip.internal.dns.2'
           },
+          hypervisor: {
+            label: 'label.hypervisor',
+            select: function(args) {
+              $.ajax({
+                url: createURL('listHypervisors'),
+                data: { listAll: true },
+                success: function(json) {
+                  args.response.success({
+                    data: $.map(
+                      json.listhypervisorsresponse.hypervisor,
+                      function(hypervisor) {
+                        return {
+                          id: hypervisor.name,
+                          description: hypervisor.name
+                        };
+                      }
+                    )
+                  });
+                }
+              });
+            }
+          },
           networkOfferingId: {
             label: 'label.network.offering',
             select: function(args) {
