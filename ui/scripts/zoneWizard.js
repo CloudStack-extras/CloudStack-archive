@@ -487,8 +487,10 @@
         fields: {
           hypervisor: {
             label: 'label.hypervisor',
-            isHidden: true,
             select: function(args) {
+              // Disable select -- selection is made on zone setup step
+              args.$select.attr('disabled', 'disabled');
+
               $.ajax({
                 url: createURL("listHypervisors"),
                 dataType: "json",
