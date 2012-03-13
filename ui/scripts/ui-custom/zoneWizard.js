@@ -45,10 +45,21 @@
       function(network) {
         var $network = $(network);
         var $guestForm = $wizard.find('form[guest-network-id=' + $network.index() + ']');
+        var trafficTypeConfiguration = {};
+        
+        $network.find('.traffic-type-draggable').each(function() {
+          var $trafficType = $(this);
+          var trafficTypeID = $trafficType.attr('traffic-type-id');
+          
+
+          trafficTypeConfiguration[trafficTypeID] = $trafficType.data('traffic-type-data');
+        });
 
         return {
           id: $network.index(),
           name: $network.find('.field.name input[type=text]').val(),
+
+          // Traffic type list
           trafficTypes: $.map(
             $network.find('.traffic-type-draggable'),
             function(trafficType) {
@@ -57,6 +68,10 @@
               return $trafficType.attr('traffic-type-id');
             }
           ),
+
+          // Traffic type configuration data
+          trafficTypeConfiguration: trafficTypeConfiguration,
+          
           guestConfiguration: $guestForm.size() ?
             cloudStack.serializeForm($guestForm) : null
         };
