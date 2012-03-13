@@ -201,6 +201,10 @@
     return isCustomValidated;
   };
 
+  var isAdvancedNetwork = function($wizard) {
+    return getData($wizard, { all: true })['network-model'] == 'Advanced';
+  };
+
   /**
    * Setup physical network wizard UI
    */
