@@ -171,7 +171,7 @@
       if ($enabledPhysicalNetworks.size() > 1 &&
           $configuredTrafficTypes.size() != $trafficTypes.size()) {
         cloudStack.dialog.notice({
-          message: 'You have multiple physical networks; please configure labels for each traffic type by clicking on the \'Edit\' button.'
+          message: _l('message.configure.all.traffic.types')
         });
         
         return false;
@@ -247,10 +247,10 @@
 
       cloudStack.dialog.createForm({
         form: {
-          title: 'Edit traffic type',
-          desc: 'Please specify the traffic label you want associated with this traffic type.',
+          title: _l('label.edit.traffic.type'),
+          desc: _l('message.edit.traffic.type'),
           fields: {
-            label: { label: hypervisor + ' label', defaultValue: trafficData.label }
+            label: { label: hypervisor + ' ' + _l('label.label'), defaultValue: trafficData.label }
           }
         },
 
