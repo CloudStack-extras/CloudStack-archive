@@ -217,13 +217,14 @@
     editTrafficTypeDialog: function($trafficType) {
       var trafficData = $trafficType.data('traffic-type-data') ?
             $trafficType.data('traffic-type-data') : {};
-      
+      var hypervisor = getData($trafficType.closest('.zone-wizard')).zone.hypervisor;
+
       cloudStack.dialog.createForm({
         form: {
           title: 'Edit traffic type',
-          desc: 'Please specify the label you want associated with this traffic type.',
+          desc: 'Please specify the traffic label you want associated with this traffic type.',
           fields: {
-            label: { label: 'Traffic label', defaultValue: trafficData.labels }
+            label: { label: hypervisor + ' label', defaultValue: trafficData.labels }
           }
         },
 
