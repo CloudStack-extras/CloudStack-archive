@@ -139,7 +139,7 @@
       },
 
       setupPhysicalNetwork: function(args) {
-        return args.data['network-model'] == 'Advanced';
+        return true; // Both basic & advanced zones show physical network UI
       },
 
       configureGuestTraffic: function(args) {
@@ -150,10 +150,9 @@
       },
 
       configureStorageTraffic: function(args) {
-        return args.data['network-model'] == 'Advanced' &&
-          $.grep(args.groupedData.physicalNetworks, function(network) {
-            return $.inArray('storage', network.trafficTypes) > -1;
-          }).length;
+        return $.grep(args.groupedData.physicalNetworks, function(network) {
+          return $.inArray('storage', network.trafficTypes) > -1;
+        }).length;
       },
 
       addHost: function(args) {
@@ -488,6 +487,7 @@
         fields: {
           hypervisor: {
             label: 'label.hypervisor',
+            isHidden: true,
             select: function(args) {
               $.ajax({
                 url: createURL("listHypervisors"),
@@ -500,6 +500,8 @@
                     items.push({id: this.name, description: this.name})
                   });
                   args.response.success({data: items});
+                  args.$select.val(args.context.zones[0].hypervisor);
+                  args.$select.change();
                 }
               });
 
@@ -726,11 +728,14 @@
             validation: { required: true }, 
 						select: function(args) {
               var selectedClusterObj = {
-                hypervisortype: args.context.zones[0].hypervisor
+                hypervisortype: $.isArray(args.context.zones[0].hypervisor) ?
+                  // We want the cluster's hypervisor type
+                  args.context.zones[0].hypervisor[1] : args.context.zones[0].hypervisor
               };
 
-              if(selectedClusterObj == null)
+              if(selectedClusterObj == null) {
                 return;
+              }
 
               if(selectedClusterObj.hypervisortype == "KVM") {
                 var items = [];
