@@ -5880,8 +5880,13 @@ label.error {
 }
 
 .multi-wizard.zone-wizard .drop-container .traffic-type-draggable > .edit-traffic-type:hover {
-  background-position: 0px 0px;
+  background-position: 0px -105px;
   color: #FFFFFF;
+  /*+box-shadow:inset 0px 2px 1px #727272;*/
+  -moz-box-shadow: inset 0px 2px 1px #727272;
+  -webkit-box-shadow: inset 0px 2px 1px #727272;
+  -o-box-shadow: inset 0px 2px 1px #727272;
+  box-shadow: inset 0px 2px 1px #727272;
 }
 
 .multi-wizard.zone-wizard .drop-container .traffic-type-draggable > .edit-traffic-type:hover span {
