@@ -2272,7 +2272,10 @@
         },
 
         addCluster: function(args) {
-          message(dictionary['message.creating.cluster']); 
+          message(dictionary['message.creating.cluster']);
+
+          // Have cluster use zone's hypervisor
+          args.data.cluster.hypervisor = args.data.zone.hypervisor;
 
           var array1 = [];
           array1.push("&zoneId=" + args.data.returnedZone.id);
