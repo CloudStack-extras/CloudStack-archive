@@ -154,6 +154,30 @@
         message: dictionary['message.please.add.at.lease.one.traffic.range']
       });
       return false;
+    },
+
+    physicalNetworks: function($form) {
+      var $enabledPhysicalNetworks = $form.filter(':not(.disabled)').filter(function() {
+        return $(this).find('.traffic-type-draggable').size();
+      });
+      var $trafficTypes = $enabledPhysicalNetworks.find('.traffic-type-draggable');
+      var $configuredTrafficTypes = $trafficTypes.filter(function() {
+        var $trafficType = $(this);
+
+        return $trafficType.data('traffic-type-data') &&
+          $trafficType.data('traffic-type-data').label.length >= 1;
+      });
+
+      if ($enabledPhysicalNetworks.size() > 1 &&
+          $configuredTrafficTypes.size() != $trafficTypes.size()) {
+        cloudStack.dialog.notice({
+          message: 'You have multiple physical networks; please configure labels for each traffic type by clicking on the \'Edit\' button.'
+        });
+        
+        return false;
+      }
+
+      return true;
     }
   };
 
@@ -168,6 +192,8 @@
 
     if ($multiEditForm.size()) {
       isCustomValidated = customValidation.networkRanges($multiEditForm);
+    } else if ($physicalNetworks.size()) {
+      isCustomValidated = customValidation.physicalNetworks($physicalNetworks);
     } else {
       isCustomValidated = true;
     }
