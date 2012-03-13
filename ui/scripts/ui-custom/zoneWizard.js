@@ -221,9 +221,9 @@
       cloudStack.dialog.createForm({
         form: {
           title: 'Edit traffic type',
-          desc: 'Please specify any labels you want associated with this traffic type.',
+          desc: 'Please specify the label you want associated with this traffic type.',
           fields: {
-            labels: { label: 'Traffic labels', defaultValue: trafficData.labels }
+            label: { label: 'Traffic label', defaultValue: trafficData.labels }
           }
         },
 
