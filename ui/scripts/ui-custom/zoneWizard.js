@@ -224,7 +224,7 @@
           title: 'Edit traffic type',
           desc: 'Please specify the traffic label you want associated with this traffic type.',
           fields: {
-            label: { label: hypervisor + ' label', defaultValue: trafficData.labels }
+            label: { label: hypervisor + ' label', defaultValue: trafficData.label }
           }
         },
 
