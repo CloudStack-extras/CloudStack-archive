@@ -1645,6 +1645,10 @@
 
 <script language="javascript">
 dictionary = {
+'label.edit.traffic.type': '<fmt:message key="label.edit.traffic.type"/>',
+'message.edit.traffic.type': '<fmt:message key="message.edit.traffic.type"/>',
+'label.label': '<fmt:message key="label.label"/>',
+'message.configure.all.traffic.types': '<fmt:message key="message.configure.all.traffic.types"/>',
 'label.latest.events': '<fmt:message key="label.latest.events"/>',
 'state.Enabled': '<fmt:message key="state.Enabled"/>',
 'label.system.wide.capacity': '<fmt:message key="label.system.wide.capacity"/>',
