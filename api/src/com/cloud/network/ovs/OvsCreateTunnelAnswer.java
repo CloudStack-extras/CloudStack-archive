@@ -24,7 +24,7 @@ import com.cloud.agent.api.Command;
 public class OvsCreateTunnelAnswer extends Answer {
     Long from;
     Long to;
-    long account;
+    long networkId;
     String inPortName;
     
     //for debug info
@@ -38,7 +38,7 @@ public class OvsCreateTunnelAnswer extends Answer {
         OvsCreateTunnelCommand c = (OvsCreateTunnelCommand)cmd;
         from = c.getFrom();
         to = c.getTo();
-        account = c.getAccount();
+        networkId = c.getNetworkId();
         inPortName = "[]";
         fromIp = c.getFromIp();
         toIp = c.getRemoteIp();
@@ -60,8 +60,8 @@ public class OvsCreateTunnelAnswer extends Answer {
         return to;
     }
     
-    public long getAccount() {
-        return account;
+    public long getNetworkId() {
+        return networkId;
     }
     
     public String getInPortName() {
