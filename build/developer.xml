@@ -128,6 +128,7 @@
 
   <target name="clean-tomcat" depends="stop-tomcat">
     <delete dir="${tomcat.home}/webapps/client"/>
+	<delete dir="${tomcat.home}/webapps/bridge" />
     <delete dir="${tomcat.home}/work/Catalina"/>
     <delete dir="${tomcat.home}/temp" />
     <delete dir="${tomcat.home}/logs" />
@@ -154,7 +155,7 @@
       </copy>
   </target>
 
-  <target name="deploy-server" depends="deploy-common, deploy-ovm" >
+  <target name="deploy-server" depends="deploy-common, deploy-ovm, deploy-cloud-bridge" >
       <copy todir="${server.deploy.to.dir}/webapps/client/WEB-INF/lib/vms" file="${dist.dir}/systemvm.iso" />
   </target>
 
