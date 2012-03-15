@@ -1437,10 +1437,32 @@
                       },
 											
 											'restart': { 											  
-												label: 'label.restart.network',
-												action: function(args) {												  
+												label: 'label.restart.network',												
+												createForm: {
+													title: 'label.restart.network',
+													desc: 'message.restart.network',
+													preFilter: function(args) {		
+														if(selectedZoneObj.networktype == "Basic") {										  								
+															args.$form.find('.form-item[rel=cleanup]').find('input').removeAttr('checked'); //unchecked
+															args.$form.find('.form-item[rel=cleanup]').hide(); //hidden
+														}
+														else {										  												
+															args.$form.find('.form-item[rel=cleanup]').find('input').attr('checked', 'checked'); //checked											
+															args.$form.find('.form-item[rel=cleanup]').css('display', 'inline-block'); //shown
+														}											
+													},
+													fields: {
+														cleanup: {
+															label: 'label.clean.up',
+															isBoolean: true   
+														}
+													}
+												},											
+												action: function(args) {	                          
+                          var array1 = [];									
+                          array1.push("&cleanup=" + (args.data.cleanup == "on"));													
 													$.ajax({
-														url: createURL("restartNetwork&cleanup=true&id=" + args.context.networks[0].id),
+														url: createURL("restartNetwork&cleanup=true&id=" + args.context.networks[0].id + array1.join("")),
 														dataType: "json",
 														async: true,
 														success: function(json) {														  
@@ -1457,10 +1479,7 @@
 														}
 													});
 												},
-												messages: {
-													confirm: function(args) {													
-														return 'message.restart.network';
-													},													
+												messages: {																									
 													notification: function(args) {													
 														return 'label.restart.network';
 													}													
@@ -1617,7 +1636,10 @@
                         ],
                         dataProvider: function(args) {    
                           selectedGuestNetworkObj = args.context.networks[0];                        
-                          args.response.success({data: selectedGuestNetworkObj});
+                          args.response.success({
+													  actionFilter: cloudStack.actionFilter.guestNetwork,
+													  data: selectedGuestNetworkObj
+													});
                         }
                       }
                     }
@@ -2419,7 +2441,7 @@
                                   addExternalLoadBalancer(args, selectedPhysicalNetworkObj, "addNetscalerLoadBalancer", "addnetscalerloadbalancerresponse", "netscalerloadbalancer");
                                 }
                                 else if (result.jobstatus == 2) {
-                                  alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + fromdb(result.jobresult.errortext));
+                                  alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + _s(result.jobresult.errortext));
                                 }
                               }
                             },
@@ -2638,7 +2660,7 @@
                                   addExternalLoadBalancer(args, selectedPhysicalNetworkObj, "addF5LoadBalancer", "addf5bigiploadbalancerresponse");
                                 }
                                 else if (result.jobstatus == 2) {
-                                  alert("addNetworkServiceProvider&name=F5BigIp failed. Error: " + fromdb(result.jobresult.errortext));
+                                  alert("addNetworkServiceProvider&name=F5BigIp failed. Error: " + _s(result.jobresult.errortext));
                                 }
                               }
                             },
@@ -2878,7 +2900,7 @@
                                   addExternalFirewall(args, selectedPhysicalNetworkObj, "addSrxFirewall", "addsrxfirewallresponse", "srxfirewall");
                                 }
                                 else if (result.jobstatus == 2) {
-                                  alert("addNetworkServiceProvider&name=JuniperSRX failed. Error: " + fromdb(result.jobresult.errortext));
+                                  alert("addNetworkServiceProvider&name=JuniperSRX failed. Error: " + _s(result.jobresult.errortext));
                                 }
                               }
                             },
@@ -3880,7 +3902,7 @@
                                 addExternalLoadBalancer(args, selectedPhysicalNetworkObj, "addNetscalerLoadBalancer", "addnetscalerloadbalancerresponse", "netscalerloadbalancer");
                               }
                               else if (result.jobstatus == 2) {
-                                alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + fromdb(result.jobresult.errortext));
+                                alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + _s(result.jobresult.errortext));
                               }
                             }
                           },
@@ -4063,7 +4085,7 @@
                                 addExternalLoadBalancer(args, selectedPhysicalNetworkObj, "addF5LoadBalancer", "addf5bigiploadbalancerresponse", "f5loadbalancer");
                               }
                               else if (result.jobstatus == 2) {
-                                alert("addNetworkServiceProvider&name=F5BigIp failed. Error: " + fromdb(result.jobresult.errortext));
+                                alert("addNetworkServiceProvider&name=F5BigIp failed. Error: " + _s(result.jobresult.errortext));
                               }
                             }
                           },
@@ -4268,7 +4290,7 @@
                                 addExternalFirewall(args, selectedPhysicalNetworkObj, "addSrxFirewall", "addsrxfirewallresponse", "srxfirewall");
                               }
                               else if (result.jobstatus == 2) {
-                                alert("addNetworkServiceProvider&name=JuniperSRX failed. Error: " + fromdb(result.jobresult.errortext));
+                                alert("addNetworkServiceProvider&name=JuniperSRX failed. Error: " + _s(result.jobresult.errortext));
                               }
                             }
                           },
@@ -5673,7 +5695,7 @@
 									var jsonObj = args.context.hosts[0];
 									args.response.success({
 										data: {
-											totalCPU: fromdb(jsonObj.cpunumber) + " x " + cloudStack.converters.convertHz(jsonObj.cpuspeed),
+											totalCPU: jsonObj.cpunumber + " x " + cloudStack.converters.convertHz(jsonObj.cpuspeed),
 											cpuused: jsonObj.cpuused,				
 											cpuallocated: (jsonObj.cpuallocated == null || jsonObj.cpuallocated == 0)? "N/A": jsonObj.cpuallocated,
 											memorytotal: (jsonObj.memorytotal == null || jsonObj.memorytotal == 0)? "N/A": cloudStack.converters.convertBytes(jsonObj.memorytotal * 1024),
@@ -7044,7 +7066,7 @@
 																																});
 																															}
 																															else if (result.jobstatus == 2) {
-																																alert("failed to enable security group provider. Error: " + fromdb(result.jobresult.errortext));
+																																alert("failed to enable security group provider. Error: " + _s(result.jobresult.errortext));
 																															}
 																														}
 																													},
@@ -7125,7 +7147,7 @@
 																							}																																		  
 																						}
 																						else if (result.jobstatus == 2) {
-																							alert("failed to enable Virtual Router Provider. Error: " + fromdb(result.jobresult.errortext));
+																							alert("failed to enable Virtual Router Provider. Error: " + _s(result.jobresult.errortext));
 																						}
 																					}
 																				},
@@ -7139,7 +7161,7 @@
 																});
 															}
 															else if (result.jobstatus == 2) {
-																alert("configureVirtualRouterElement failed. Error: " + fromdb(result.jobresult.errortext));
+																alert("configureVirtualRouterElement failed. Error: " + _s(result.jobresult.errortext));
 															}
 														}
 													},
@@ -7153,7 +7175,7 @@
 									});
 								}
 								else if (result.jobstatus == 2) {
-									alert("updatePhysicalNetwork failed. Error: " + fromdb(result.jobresult.errortext));
+									alert("updatePhysicalNetwork failed. Error: " + _s(result.jobresult.errortext));
 								}
 							}
 						},
@@ -7306,13 +7328,6 @@
     var jsonObj = args.context.item;
     var allowedActions = [];
     allowedActions.push("remove");
-    return allowedActions;
-  }
-
-  var publicNetworkActionfilter = function(args) {
-    var jsonObj = args.context.item;
-    var allowedActions = [];
-    allowedActions.push("addIpRange");
     return allowedActions;
   }
   

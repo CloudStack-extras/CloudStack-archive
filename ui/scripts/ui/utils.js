@@ -54,4 +54,47 @@
 
     return localized ? localized : str;
   };
+
+  /**
+   * Sanitize user input (HTML Encoding) -- shortcut _s
+   * 
+   * Strip unwanted characters from user-based input
+   */
+  cloudStack.sanitize = window._s = function(value) {
+	  if(typeof(value) == "number") {		  
+		  //alert("number does not need to be sanitized. Only string needs to be sanitized.");
+			return value;
+		}
+		else if(typeof(value) == "boolean") {		  
+		  //alert("boolean does not need to be sanitized. Only string needs to be sanitized.");
+			return value;
+		}
+		else if(typeof(value) == "object") {		  
+		  //alert("object cant not be sanitized. Only string can be sanitized.");
+			return value;
+		}
+	  else if(typeof(value) == null || typeof(value) == "undefined") {		 
+			return '';
+		}
+           
+    var sanitized = value
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
+    return sanitized;
+  };
+	
+	/**
+   * Reverse sanitization (HTML Decoding)   
+   */
+  cloudStack.sanitizeReverse = function(value) {	  
+    var reversedValue = value
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">");
+
+    return reversedValue;
+  };
+	
 })(jQuery, cloudStack);

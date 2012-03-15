@@ -91,21 +91,26 @@ function createURL(apiName, options) {
   return urlString;
 }
 
+/*
 function fromdb(val) {
   return sanitizeXSS(noNull(val));
 }
+*/
 
 function todb(val) {
   return encodeURIComponent(val);
 }
 
+/*
 function noNull(val) {
   if(val == null)
     return "";
   else
     return val;
 }
+*/
 
+/*
 function sanitizeXSS(val) {  // Prevent cross-site-script(XSS) attack
   if(val == null || typeof(val) != "string")
     return val;
@@ -113,6 +118,7 @@ function sanitizeXSS(val) {  // Prevent cross-site-script(XSS) attack
   val = val.replace(/>/g, "&gt;");  //replace > whose unicode is \u003e
   return unescape(val);
 }
+*/
 
 // Role Functions
 function isAdmin() {
@@ -148,7 +154,7 @@ function handleError(XMLHttpResponse, handleErrorCallback) {
   }
   else {
     var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-    $("#dialog_error").text(fromdb(errorMsg)).dialog("open");
+    $("#dialog_error").text(_s(errorMsg)).dialog("open");
   }
 }
 
@@ -163,7 +169,7 @@ function parseXMLHttpResponse(XMLHttpResponse) {
     var property;
     for(property in json) {}
     var errorObj = json[property];
-    return fromdb(errorObj.errortext);
+    return _s(errorObj.errortext);
   } else {
     return "";
   }
@@ -195,6 +201,22 @@ cloudStack.preFilter = {
       args.$form.find('.form-item[rel=isFeatured]').hide();
     }
   }
+}
+
+cloudStack.actionFilter = {
+  guestNetwork: function(args) {    
+    var jsonObj = args.context.item;
+		var allowedActions = [];
+
+		if(jsonObj.type == 'Isolated') {
+		  allowedActions.push('edit');		//only Isolated network can be upgraded
+		}
+		
+		allowedActions.push('restart');   
+		allowedActions.push('remove');
+		
+		return allowedActions;
+	}
 }
 
 var roleTypeUser = "0";
@@ -423,13 +445,13 @@ function iscsiURL(server, iqn, lun) {
 //VM Instance
 function getVmName(p_vmName, p_vmDisplayname) {
   if(p_vmDisplayname == null)
-    return fromdb(p_vmName);
+    return _s(p_vmName);
 
   var vmName = null;
   if (p_vmDisplayname != p_vmName) {
-    vmName = fromdb(p_vmName) + " (" + fromdb(p_vmDisplayname) + ")";
+    vmName = _s(p_vmName) + " (" + _s(p_vmDisplayname) + ")";
   } else {
-    vmName = fromdb(p_vmName);
+    vmName = _s(p_vmName);
   }
   return vmName;
 }

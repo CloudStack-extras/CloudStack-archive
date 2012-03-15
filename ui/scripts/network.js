@@ -274,8 +274,7 @@
               dataType: 'json',
               async: false,
               success: function(data) {
-                args.response.success({
-								  actionFilter: networkActionfilter,
+                args.response.success({								  
                   data: data.listnetworksresponse.network
                 });
               },
@@ -450,17 +449,19 @@
 											  zoneObj = json.listzonesresponse.zone[0];												
 											}
 										});																				
-										if(zoneObj.networktype == "Basic")
-										  args.$form.find('.form-item[rel=cleanup]').hide();
-										else
-										  args.$form.find('.form-item[rel=cleanup]').css('display', 'inline-block');									
+										if(zoneObj.networktype == "Basic") {										  								
+											args.$form.find('.form-item[rel=cleanup]').find('input').removeAttr('checked'); //unchecked
+											args.$form.find('.form-item[rel=cleanup]').hide(); //hidden
+										}
+										else {										  												
+											args.$form.find('.form-item[rel=cleanup]').find('input').attr('checked', 'checked'); //checked											
+											args.$form.find('.form-item[rel=cleanup]').css('display', 'inline-block'); //shown
+                    }											
 									},
 									fields: {
                     cleanup: {
                       label: 'label.clean.up',
-                      isBoolean: true,
-                      isChecked: false,
-											isHidden: true
+                      isBoolean: true  
                     }
                   }
                 },
@@ -684,14 +685,14 @@
                 ],
                 dataProvider: function(args) {								 					
 								  $.ajax({
-										url: createURL("listNetworks&id=" + args.context.networks[0].id+'&listAll=true'),
+										url: createURL("listNetworks&id=" + args.context.networks[0].id),
 										dataType: "json",
 										async: true,
 										success: function(json) {								  
 											var jsonObj = json.listnetworksresponse.network[0];   
 											args.response.success(
 												{
-													actionFilter: networkActionfilter,
+													actionFilter: cloudStack.actionFilter.guestNetwork,
 													data: jsonObj
 												}
 											);		
@@ -1353,9 +1354,7 @@
                     ipaddress: { label: 'IP' }
                   },
                   {
-                    id: { label: 'label.id' },
-                    networkname: { label: 'label.network' },
-                    networktype: { label: 'label.network.type' },
+                    id: { label: 'label.id' },    
                     networkid: { label: 'label.network.id' },
                     associatednetworkid: { label: 'label.associated.network.id' },
                     state: { label: 'label.state' },
@@ -1399,12 +1398,6 @@
                             item.vpnenabled = true;
                             item.remoteaccessvpn = vpnResponse.listremoteaccessvpnsresponse.remoteaccessvpn[0];
                           };
-
-                          // Check if data retrieval complete
-                          item.network = args.context.networks[0];
-                          item.networkname = item.network.name;
-                          item.networktype = item.network.type;
-
                           args.response.success({
                             actionFilter: actionFilters.ipAddress,
                             data: item
@@ -2903,22 +2896,5 @@
       }
     }
   };
-	
-	 var networkActionfilter = function(args) {
-    var jsonObj = args.context.item;
-		var allowedActions = [];
-
-		allowedActions.push('remove');
 		
-		if (jsonObj.type == 'Shared' ||
-				!$.grep(jsonObj.service, function(service) {
-					return service.name == 'SourceNat';
-				}).length) {
-			 allowedActions.push('edit');
-			 allowedActions.push('restart');                        
-		}
-
-		return allowedActions;
-	}
-	
 })(cloudStack, jQuery);

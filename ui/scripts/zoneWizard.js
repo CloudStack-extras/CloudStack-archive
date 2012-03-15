@@ -1136,7 +1136,7 @@
                                         }
                                       }
                                       else if (result.jobstatus == 2) {
-                                        alert("Failed to add Guest traffic type to basic zone. Error: " + fromdb(result.jobresult.errortext));
+                                        alert("Failed to add Guest traffic type to basic zone. Error: " + _s(result.jobresult.errortext));
                                       }
                                     }
                                   },
@@ -1180,7 +1180,7 @@
                                         }
                                       }
                                       else if (result.jobstatus == 2) {
-                                        alert("Failed to add Management traffic type to basic zone. Error: " + fromdb(result.jobresult.errortext));
+                                        alert("Failed to add Management traffic type to basic zone. Error: " + _s(result.jobresult.errortext));
                                       }
                                     }
                                   },
@@ -1225,7 +1225,7 @@
                                           }
                                         }
                                         else if (result.jobstatus == 2) {
-                                          alert("Failed to add Public traffic type to basic zone. Error: " + fromdb(result.jobresult.errortext));
+                                          alert("Failed to add Public traffic type to basic zone. Error: " + _s(result.jobresult.errortext));
                                         }
                                       }
                                     },
@@ -1240,7 +1240,7 @@
                           }
                         }
                         else if (result.jobstatus == 2) {
-                          alert("createPhysicalNetwork failed. Error: " + fromdb(result.jobresult.errortext));
+                          alert("createPhysicalNetwork failed. Error: " + _s(result.jobresult.errortext));
                         }
                       }
                     },
@@ -1324,7 +1324,7 @@
                                             }
                                           }
                                           else if (result.jobstatus == 2) {
-                                            alert(apiCmd + " failed. Error: " + fromdb(result.jobresult.errortext));
+                                            alert(apiCmd + " failed. Error: " + _s(result.jobresult.errortext));
                                           }
                                         }
                                       },
@@ -1339,7 +1339,7 @@
                             });
                           }
                           else if (result.jobstatus == 2) {
-                            alert("createPhysicalNetwork failed. Error: " + fromdb(result.jobresult.errortext));
+                            alert("createPhysicalNetwork failed. Error: " + _s(result.jobresult.errortext));
                           }
                         }
                       },
@@ -1525,7 +1525,7 @@
                                                                                       });
                                                                                     }
                                                                                     else if (result.jobstatus == 2) {
-                                                                                      alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + fromdb(result.jobresult.errortext));
+                                                                                      alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + _s(result.jobresult.errortext));
                                                                                     }
                                                                                   }
                                                                                 },
@@ -1562,7 +1562,7 @@
                                                                       }
                                                                     }
                                                                     else if (result.jobstatus == 2) {
-                                                                      alert("failed to enable security group provider. Error: " + fromdb(result.jobresult.errortext));
+                                                                      alert("failed to enable security group provider. Error: " + _s(result.jobresult.errortext));
                                                                     }
                                                                   }
                                                                 },
@@ -1598,7 +1598,7 @@
                                                       }
                                                     }
                                                     else if (result.jobstatus == 2) {
-                                                      alert("failed to enable Virtual Router Provider. Error: " + fromdb(result.jobresult.errortext));
+                                                      alert("failed to enable Virtual Router Provider. Error: " + _s(result.jobresult.errortext));
                                                     }
                                                   }
                                                 },
@@ -1612,7 +1612,7 @@
                                         });
                                       }
                                       else if (result.jobstatus == 2) {
-                                        alert("configureVirtualRouterElement failed. Error: " + fromdb(result.jobresult.errortext));
+                                        alert("configureVirtualRouterElement failed. Error: " + _s(result.jobresult.errortext));
                                       }
                                     }
                                   },
@@ -1626,7 +1626,7 @@
                           });
                         }
                         else if (result.jobstatus == 2) {
-                          alert("updatePhysicalNetwork failed. Error: " + fromdb(result.jobresult.errortext));
+                          alert("updatePhysicalNetwork failed. Error: " + _s(result.jobresult.errortext));
                         }
                       }
                     },
@@ -1743,7 +1743,7 @@
                                                         }
                                                       }
                                                       else if (result.jobstatus == 2) {
-                                                        alert("failed to enable Virtual Router Provider. Error: " + fromdb(result.jobresult.errortext));
+                                                        alert("failed to enable Virtual Router Provider. Error: " + _s(result.jobresult.errortext));
                                                       }
                                                     }
                                                   },
@@ -1757,7 +1757,7 @@
                                           });
                                         }
                                         else if (result.jobstatus == 2) {
-                                          alert("configureVirtualRouterElement failed. Error: " + fromdb(result.jobresult.errortext));
+                                          alert("configureVirtualRouterElement failed. Error: " + _s(result.jobresult.errortext));
                                         }
                                       }
                                     },
@@ -1771,7 +1771,7 @@
                             });
                           }
                           else if (result.jobstatus == 2) {
-                            alert("updatePhysicalNetwork failed. Error: " + fromdb(result.jobresult.errortext));
+                            alert("updatePhysicalNetwork failed. Error: " + _s(result.jobresult.errortext));
                           }
                         }
                       },
@@ -1940,7 +1940,7 @@
                                       });
                                     }
                                     else if(result.jobstatus == 2) {
-                                      alert("failed to enable Netscaler provider. Error: " + fromdb(result.jobresult.errortext));
+                                      alert("failed to enable Netscaler provider. Error: " + _s(result.jobresult.errortext));
                                     }
                                   }
                                 }
@@ -1954,7 +1954,7 @@
                         });
                       }
                       else if(result.jobstatus == 2) {  //addNetscalerLoadBalancer failed
-                        error('addNetscalerDevice', fromdb(result.jobresult.errortext), { fn: 'addNetscalerDevice', args: args });
+                        error('addNetscalerDevice', _s(result.jobresult.errortext), { fn: 'addNetscalerDevice', args: args });
                       }
                     }
                   }
@@ -2254,7 +2254,7 @@
                               }
                             }
                             else if(result.jobstatus == 2){
-                              alert("error: " + fromdb(result.jobresult.errortext));
+                              alert("error: " + _s(result.jobresult.errortext));
                             }
                           }
                         },
