@@ -5,8 +5,37 @@
   var selectedNetworkOfferingHavingELB = false;
   var returnedPublicVlanIpRanges = []; //public VlanIpRanges returned by API
   var configurationUseLocalStorage = false;
-	
+
   cloudStack.zoneWizard = {
+    // Return required traffic types, for configure physical network screen
+    requiredTrafficTypes: function(args) {
+      if (args.data.zone.networkType == 'Basic' && (selectedNetworkOfferingHavingEIP ||
+                                                    selectedNetworkOfferingHavingELB)) {
+        return [
+          'management',
+          'guest'
+        ];
+      } else {
+        return [
+          'management',
+          'guest',
+          'public'
+        ]
+      }
+    },
+
+    disabledTrafficTypes: function(args) {
+      if (args.data.zone.networkType == 'Basic' && (selectedNetworkOfferingHavingEIP ||
+                                                    selectedNetworkOfferingHavingELB)) {
+        return [
+          'public'
+        ];
+      } else {
+        return []
+      }
+
+    },
+
     customUI: {
       publicTrafficIPRange: function(args) {
         var multiEditData = [];

@@ -222,10 +222,16 @@
       }
 
       // First physical network gets required traffic types
-      $(physicalNetwork.requiredTrafficTypes).each(function () {
+      $(physicalNetwork.requiredTrafficTypes($wizard)).each(function () {
         var $firstPhysicalNetwork = physicalNetwork.getNetworks($wizard).filter(':first');
 
         physicalNetwork.assignTrafficType(this, $firstPhysicalNetwork);
+      });
+
+      $(physicalNetwork.disabledTrafficTypes($wizard)).each(function() {
+        var $trafficType = physicalNetwork.getTrafficType(this, $wizard);
+
+        physicalNetwork.unassignTrafficType($trafficType);
       });
     },
 
@@ -253,13 +259,22 @@
     },
 
     /**
-     * Required traffic type IDs for proper validation
+     * Get required traffic type IDs for proper validation
      */
-    requiredTrafficTypes: [
-      'management',
-      'public',
-      'guest'
-    ],
+    requiredTrafficTypes: function($wizard) {
+      return cloudStack.zoneWizard.requiredTrafficTypes({
+        data: getData($wizard)
+      });
+    },
+
+    /**
+     * Get required traffic type IDs for proper validation
+     */
+    disabledTrafficTypes: function($wizard) {
+      return cloudStack.zoneWizard.disabledTrafficTypes({
+        data: getData($wizard)
+      });
+    },
 
     /**
      * Physical network step: Renumber network form items
@@ -392,7 +407,7 @@
       var trafficTypeID = $trafficType.attr('traffic-type-id');
 
       if (!physicalNetwork.isTrafficTypeClone($trafficType) &&
-        $.inArray(trafficTypeID, physicalNetwork.requiredTrafficTypes) == -1) {
+        $.inArray(trafficTypeID, physicalNetwork.requiredTrafficTypes($wizard)) == -1) {
         $trafficType.appendTo($originalContainer);
       } else {
         physicalNetwork.assignTrafficType(
@@ -920,6 +935,9 @@
               guestTraffic.remove($wizard);
             }
             break;
+
+          case 'setupPhysicalNetwork':
+            physicalNetwork.init($wizard);
         }
 
         if ($uiCustom.size()) {
@@ -1127,14 +1145,7 @@
         }
       });
 
-      var initPhysicalNetwork = function() {
-        physicalNetwork.init($wizard);
-      };
-
-      $wizard.find('input[name=network-model]').change(initPhysicalNetwork);
-
       showStep(1);
-      initPhysicalNetwork();
 
       return $wizard.dialog({
         title: 'Add zone',
