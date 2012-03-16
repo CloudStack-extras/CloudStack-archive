@@ -542,7 +542,7 @@
                   <ul class="container">
                     <li traffic-type-id="guest"
                         title="Traffic between end-user virtual machines"
-                        class="traffic-type-draggable guest clone">
+                        class="traffic-type-draggable guest">
                       <!-- Edit buttton -->
                       <div class="edit-traffic-type">
                         <span class="icon">&nbsp;</span>

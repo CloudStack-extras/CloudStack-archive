@@ -20,7 +20,7 @@
           'management',
           'guest',
           'public'
-        ]
+        ];
       }
     },
 
@@ -31,9 +31,17 @@
           'public'
         ];
       } else {
-        return []
+        return [];
       }
 
+    },
+
+    cloneTrafficTypes: function(args) {
+      if (args.data.zone.networkType == 'Advanced') {
+        return ['guest'];
+      } else {
+        return [];
+      }
     },
 
     customUI: {

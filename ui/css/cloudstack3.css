@@ -5722,9 +5722,12 @@ label.error {
   margin: 16px 13px 0 0;
 }
 
-.multi-wizard.zone-wizard .traffic-types-drag-area > ul > li.management,
-.multi-wizard.zone-wizard .traffic-types-drag-area > ul > li.public {
+.multi-wizard.zone-wizard .traffic-types-drag-area > ul > li.required {
   display: none;
+}
+
+.multi-wizard.zone-wizard .traffic-types-drag-area > ul > li.required.clone {
+  display: block;
 }
 
 .multi-wizard.zone-wizard .traffic-types-drag-area > ul > li ul.container {
