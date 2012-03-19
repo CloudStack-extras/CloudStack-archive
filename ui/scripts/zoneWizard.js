@@ -6,7 +6,6 @@
   var returnedPublicVlanIpRanges = []; //public VlanIpRanges returned by API
   var configurationUseLocalStorage = false;
 
-
   // Makes URL string for traffic label
   var trafficLabelParam = function(trafficTypeID, data, physicalNetworkID) {
     var zoneType = data.zone.networkType;
@@ -40,6 +39,8 @@
     return trafficLabelStr;
   };
 
+	var selectedNetworkOfferingHavingNetscaler = false;
+	
   cloudStack.zoneWizard = {
     // Return required traffic types, for configure physical network screen
     requiredTrafficTypes: function(args) {
@@ -346,7 +347,8 @@
                 selectedNetworkOfferingHavingSG = false;
                 selectedNetworkOfferingHavingEIP = false;
                 selectedNetworkOfferingHavingELB = false;
-
+                selectedNetworkOfferingHavingNetscaler = false;
+								
                 var selectedNetworkOfferingId = $(this).val();
 
                 $(networkOfferingObjs).each(function(){
@@ -358,6 +360,14 @@
 
                 $(selectedNetworkOfferingObj.service).each(function(){
                   var thisService = this;
+																	
+									$(thisService.provider).each(function(){										
+										if(this.name == "Netscaler") {
+											selectedNetworkOfferingHavingNetscaler = true;
+											return false; //break each loop
+										}
+									});			
+									
                   if(thisService.name == "SecurityGroup") {
                     selectedNetworkOfferingHavingSG = true;
                   }
