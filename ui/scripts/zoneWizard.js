@@ -1276,7 +1276,55 @@
                             }
                           });
 
-                          if(selectedNetworkOfferingHavingSG == true && selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true) {
+                          // Storage traffic
+                          if ($.inArray('storage', data.physicalNetworks[0].trafficTypes) > -1) {
+                            label = trafficLabelParam('storage', data);
+                            $.ajax({
+                              url: createURL('addTrafficType&physicalnetworkid=' + returnedBasicPhysicalNetwork.id + '&trafficType=Storage' + label),
+                              dataType: "json",
+                              success: function(json) {
+                                var jobId = json.addtraffictyperesponse.jobid;
+                                var timerKey = "addTrafficTypeJob_" + jobId;
+                                $("body").everyTime(2000, timerKey, function() {
+                                  $.ajax({
+                                    url: createURL("queryAsyncJobResult&jobid=" + jobId),
+                                    dataType: "json",
+                                    success: function(json) {
+                                      var result = json.queryasyncjobresultresponse;
+                                      if (result.jobstatus == 0) {
+                                        return; //Job has not completed
+                                      }
+                                      else {
+                                        $("body").stopTime(timerKey);
+                                        if (result.jobstatus == 1) {
+                                          returnedTrafficTypes.push(result.jobresult.traffictype);
+
+                                          if(returnedTrafficTypes.length == requestedTrafficTypeCount) { //all requested traffic types have been added
+                                            returnedBasicPhysicalNetwork.returnedTrafficTypes = returnedTrafficTypes;
+
+                                            stepFns.configurePhysicalNetwork({
+                                              data: $.extend(args.data, {
+                                                returnedBasicPhysicalNetwork: returnedBasicPhysicalNetwork
+                                              })
+                                            });
+                                          }
+                                        }
+                                        else if (result.jobstatus == 2) {
+                                          alert("Failed to add Management traffic type to basic zone. Error: " + _s(result.jobresult.errortext));
+                                        }
+                                      }
+                                    },
+                                    error: function(XMLHttpResponse) {
+                                      var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+                                      alert("Failed to add Management traffic type to basic zone. Error: " + errorMsg);
+                                    }
+                                  });
+                                });
+                              }
+                            });
+                          }
+
+                          if (selectedNetworkOfferingHavingSG == true && selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true) {
                             label = trafficLabelParam('public', data);
                             $.ajax({
                               url: createURL("addTrafficType&trafficType=Public&physicalnetworkid=" + returnedBasicPhysicalNetwork.id + label),
