@@ -2207,9 +2207,15 @@
             });
           }
           else { //basic zone without public traffic type , skip to next step
-            stepFns.configureGuestTraffic({
-              data: args.data
-            });
+            if ($.inArray('storage', data.physicalNetworks[0].trafficTypes) > -1) {
+              stepFns.configureStorageTraffic({
+                data: args.data
+              });
+            } else {
+              stepFns.configureGuestTraffic({
+                data: args.data
+              });
+            }
           }
         },
 
@@ -2223,8 +2229,7 @@
           var targetNetwork = $.grep(args.data.physicalNetworks, function(net) {
             return $.inArray('storage', net.trafficTypes) > -1; });
 
-          if (args.data.zone.networkType == 'Basic' ||
-              !targetNetwork.length) {
+          if (!targetNetwork.length) {
             return complete({});
           }
 
