@@ -35,7 +35,7 @@
         break;
     }
 
-    trafficLabelStr = trafficLabel ? '&' + hypervisorAttr + '=' + trafficLabel : null;
+    trafficLabelStr = trafficLabel ? '&' + hypervisorAttr + '=' + trafficLabel : '';
 
     return trafficLabelStr;
   };
