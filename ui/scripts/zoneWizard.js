@@ -1338,7 +1338,7 @@
             });
           }
           else if(args.data.zone.networkType == "Advanced") {
-            $(args.data.physicalNetworks).each(function(){
+            $(args.data.physicalNetworks).each(function(index) {
               var thisPhysicalNetwork = this;
               $.ajax({
                 url: createURL("createPhysicalNetwork&zoneid=" + args.data.returnedZone.id + "&name=" + todb(thisPhysicalNetwork.name)),
@@ -1362,20 +1362,29 @@
                             returnedPhysicalNetwork.originalId = thisPhysicalNetwork.id;
 
                             var returnedTrafficTypes = [];
+                            var label; // Traffic type label
                             $(thisPhysicalNetwork.trafficTypes).each(function(){
                               var thisTrafficType = this;
                               var apiCmd = "addTrafficType&physicalnetworkid=" + returnedPhysicalNetwork.id;
-                              if(thisTrafficType == "public")
+                              if(thisTrafficType == "public") {
                                 apiCmd += "&trafficType=Public";
-                              else if(thisTrafficType == "management")
+                                label = trafficLabelParam('public', data, index);
+                              }
+                              else if(thisTrafficType == "management") {
                                 apiCmd += "&trafficType=Management";
-                              else if(thisTrafficType == "guest")
+                                label = trafficLabelParam('management', data, index);
+                              }
+                              else if(thisTrafficType == "guest") {
                                 apiCmd += "&trafficType=Guest";
-                              else if(thisTrafficType == "storage")
+                                label = trafficLabelParam('guest', data, index);
+                              }
+                              else if(thisTrafficType == "storage") {
                                 apiCmd += "&trafficType=Storage";
+                                label = trafficLabelParam('storage', data, index);
+                              }
 
                               $.ajax({
-                                url: createURL(apiCmd),
+                                url: createURL(apiCmd + label),
                                 dataType: "json",
                                 success: function(json) {
                                   var jobId = json.addtraffictyperesponse.jobid;
