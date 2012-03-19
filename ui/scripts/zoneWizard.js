@@ -11,10 +11,10 @@
   var trafficLabelParam = function(trafficTypeID, data, physicalNetworkID) {
     var zoneType = data.zone.networkType;
     var hypervisor = data.zone.hypervisor;
-    var physicalNetworkID = zoneType == 'Advanced' ? physicalNetworkID : 0;
+    physicalNetworkID = zoneType == 'Advanced' ? physicalNetworkID : 0;
     var physicalNetwork = data.physicalNetworks[physicalNetworkID];
     var trafficConfig = physicalNetwork.trafficTypeConfiguration[trafficTypeID];
-    var trafficLabel = trafficConfig ? trafficConfig[trafficLabel] : null;
+    var trafficLabel = trafficConfig ? trafficConfig.label : null;
     var hypervisorAttr, trafficLabelStr;
 
     switch(hypervisor) {
@@ -36,8 +36,6 @@
     }
 
     trafficLabelStr = trafficLabel ? '&' + hypervisorAttr + '=' + trafficLabel : null;
-
-    debugger;
 
     return trafficLabelStr;
   };
