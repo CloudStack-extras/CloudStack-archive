@@ -6,6 +6,42 @@
   var returnedPublicVlanIpRanges = []; //public VlanIpRanges returned by API
   var configurationUseLocalStorage = false;
 
+
+  // Makes URL string for traffic label
+  var trafficLabelParam = function(trafficTypeID, data, physicalNetworkID) {
+    var zoneType = data.zone.networkType;
+    var hypervisor = data.zone.hypervisor;
+    var physicalNetworkID = zoneType == 'Advanced' ? physicalNetworkID : 0;
+    var physicalNetwork = data.physicalNetworks[physicalNetworkID];
+    var trafficConfig = physicalNetwork.trafficTypeConfiguration[trafficTypeID];
+    var trafficLabel = trafficConfig ? trafficConfig[trafficLabel] : null;
+    var hypervisorAttr, trafficLabelStr;
+
+    switch(hypervisor) {
+      case 'XenServer':
+        hypervisorAttr = 'xennetworklabel';
+        break;
+      case 'KVM':
+        hypervisorAttr = 'kvmnetworklabel';
+        break;
+      case 'VMWare':
+        hypervisorAttr = 'vmwarenetworklabel';
+        break;
+      case 'BareMetal':
+        hypervisorAttr = 'baremetalnetworklabel';
+        break;
+      case 'Ovm':
+        hypervisorAttr = 'ovmnetworklabel';
+        break;
+    }
+
+    trafficLabelStr = trafficLabel ? '&' + hypervisorAttr + '=' + trafficLabel : null;
+
+    debugger;
+
+    return trafficLabelStr;
+  };
+
   cloudStack.zoneWizard = {
     // Return required traffic types, for configure physical network screen
     requiredTrafficTypes: function(args) {
