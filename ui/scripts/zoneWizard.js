@@ -1173,11 +1173,11 @@
                         $("body").stopTime(timerKey);
                         if (result.jobstatus == 1) {
                           var returnedBasicPhysicalNetwork = result.jobresult.physicalnetwork;
-
+                          var label = returnedBasicPhysicalNetwork.id + trafficLabelParam('guest', data);
                           var returnedTrafficTypes = [];
 
                           $.ajax({
-                            url: createURL("addTrafficType&trafficType=Guest&physicalnetworkid=" + returnedBasicPhysicalNetwork.id),
+                            url: createURL("addTrafficType&trafficType=Guest&physicalnetworkid=" + label),
                             dataType: "json",
                             success: function(json) {
                               var jobId = json.addtraffictyperesponse.jobid;
@@ -1220,8 +1220,10 @@
                             }
                           });
 
+                          label = trafficLabelParam('management', data);
+
                           $.ajax({
-                            url: createURL("addTrafficType&trafficType=Management&physicalnetworkid=" + returnedBasicPhysicalNetwork.id),
+                            url: createURL("addTrafficType&trafficType=Management&physicalnetworkid=" + returnedBasicPhysicalNetwork.id + label),
                             dataType: "json",
                             success: function(json) {
                               var jobId = json.addtraffictyperesponse.jobid;
@@ -1265,8 +1267,9 @@
                           });
 
                           if(selectedNetworkOfferingHavingSG == true && selectedNetworkOfferingHavingEIP == true && selectedNetworkOfferingHavingELB == true) {
+                            label = trafficLabelParam('public', data);
                             $.ajax({
-                              url: createURL("addTrafficType&trafficType=Public&physicalnetworkid=" + returnedBasicPhysicalNetwork.id),
+                              url: createURL("addTrafficType&trafficType=Public&physicalnetworkid=" + returnedBasicPhysicalNetwork.id + label),
                               dataType: "json",
                               success: function(json) {
                                 var jobId = json.addtraffictyperesponse.jobid;
