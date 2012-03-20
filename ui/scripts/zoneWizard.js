@@ -2473,7 +2473,7 @@
           array1.push("&zoneid=" + args.data.returnedZone.id);
           array1.push("&podid=" + args.data.returnedPod.id);
           array1.push("&clusterid=" + args.data.returnedCluster.id);
-          array1.push("&hypervisor=" + todb(args.data.cluster.hypervisor));
+          array1.push("&hypervisor=" + todb(args.data.returnedCluster.hypervisortype));
           var clustertype = args.data.returnedCluster.clustertype;
           array1.push("&clustertype=" + todb(clustertype));
           array1.push("&hosttags=" + todb(args.data.host.hosttags));
