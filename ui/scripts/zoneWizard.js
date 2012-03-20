@@ -12,8 +12,8 @@
     var zoneType = data.zone.networkType;
     var hypervisor = data.zone.hypervisor;
     physicalNetworkID = zoneType == 'Advanced' ? physicalNetworkID : 0;
-    var physicalNetwork = data.physicalNetworks[physicalNetworkID];
-    var trafficConfig = physicalNetwork.trafficTypeConfiguration[trafficTypeID];
+    var physicalNetwork = data.physicalNetworks ? data.physicalNetworks[physicalNetworkID] : null;
+    var trafficConfig = physicalNetwork ? physicalNetwork.trafficTypeConfiguration[trafficTypeID] : null;
     var trafficLabel = trafficConfig ? trafficConfig.label : null;
     var hypervisorAttr, trafficLabelStr;
 
@@ -1273,7 +1273,8 @@
                           });
 
                           // Storage traffic
-                          if ($.inArray('storage', data.physicalNetworks[0].trafficTypes) > -1) {
+                          if (data.physicalNetworks &&
+                              $.inArray('storage', data.physicalNetworks[0].trafficTypes) > -1) {
                             label = trafficLabelParam('storage', data);
                             $.ajax({
                               url: createURL('addTrafficType&physicalnetworkid=' + returnedBasicPhysicalNetwork.id + '&trafficType=Storage' + label),
@@ -2251,7 +2252,7 @@
             });
           }
           else { //basic zone without public traffic type , skip to next step
-            if ($.inArray('storage', data.physicalNetworks[0].trafficTypes) > -1) {
+            if (data.physicalNetworks && $.inArray('storage', data.physicalNetworks[0].trafficTypes) > -1) {
               stepFns.configureStorageTraffic({
                 data: args.data
               });
@@ -2462,7 +2463,8 @@
           message(dictionary['message.creating.cluster']);
 
           // Have cluster use zone's hypervisor
-          args.data.cluster.hypervisor = args.data.zone.hypervisor;
+          args.data.cluster.hypervisor = args.data.zone.hypervisor ?
+            args.data.zone.hypervisor : args.data.cluster.hypervisor;
 
           var array1 = [];
           array1.push("&zoneId=" + args.data.returnedZone.id);
