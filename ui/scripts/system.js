@@ -431,6 +431,11 @@
                         if(args.data.endip != null && args.data.endip.length > 0)
                           array1.push("&endip=" + args.data.endip);
 
+                        if (args.data.account) {
+                          array1.push("&account=" + args.data.account.account);
+                          array1.push("&domainid=" + args.data.account.domainid);
+                        }
+
                         array1.push("&forVirtualNetwork=true");  //indicates this new IP range is for public network, not guest network
 
                         $.ajax({
