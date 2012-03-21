@@ -121,10 +121,10 @@ class cloudConnection(object):
         else:
             result = self.make_request_without_auth(commandName, requests)
         
-        if self.logging is not None:
-            self.logging.debug("got result: "  + result)
         if result is None:
             return None
+        if self.logging is not None:
+            self.logging.debug("got result: %s"%result)
         
         result = jsonHelper.getResultObj(result, response)
         if raw or isAsync == "false":
