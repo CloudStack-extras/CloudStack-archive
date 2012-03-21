@@ -106,6 +106,7 @@ import com.cloud.user.DomainManager;
 import com.cloud.user.User;
 import com.cloud.user.UserAccount;
 import com.cloud.user.UserContext;
+import com.cloud.user.UserVO;
 import com.cloud.utils.IdentityProxy;
 import com.cloud.utils.Pair;
 import com.cloud.utils.PropertiesUtil;
@@ -116,6 +117,7 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.encoding.Base64;
 import com.cloud.utils.exception.CSExceptionErrorCode;
+import com.cloud.uuididentity.dao.IdentityDao;
 
 public class ApiServer implements HttpRequestHandler {
     private static final Logger s_logger = Logger.getLogger(ApiServer.class.getName());
@@ -766,6 +768,17 @@ public class ApiServer implements HttpRequestHandler {
         }
         return false;
     }
+    
+    public Long fetchDomainId(String domainUUID){
+        ComponentLocator locator = ComponentLocator.getLocator(ManagementServer.Name);
+        IdentityDao identityDao = locator.getDao(IdentityDao.class);
+        try{
+            Long domainId = identityDao.getIdentityId("domain", domainUUID);
+            return domainId;
+        }catch(InvalidParameterValueException ex){
+            return null;
+        }
+    }
 
     public void loginUser(HttpSession session, String username, String password, Long domainId, String domainPath, Map<String, Object[]> requestParameters) throws CloudAuthenticationException {
         // We will always use domainId first. If that does not exist, we will use domain name. If THAT doesn't exist
@@ -802,12 +815,23 @@ public class ApiServer implements HttpRequestHandler {
 
             // set the userId and account object for everyone
             session.setAttribute("userid", userAcct.getId());
+            UserVO user = (UserVO) _accountMgr.getActiveUser(userAcct.getId());
+            if(user.getUuid() != null){
+                session.setAttribute("user_UUID", user.getUuid());
+            }
+            
             session.setAttribute("username", userAcct.getUsername());
             session.setAttribute("firstname", userAcct.getFirstname());
             session.setAttribute("lastname", userAcct.getLastname());
             session.setAttribute("accountobj", account);
             session.setAttribute("account", account.getAccountName());
+            
             session.setAttribute("domainid", account.getDomainId());
+            DomainVO domain = (DomainVO) _domainMgr.getDomain(account.getDomainId());
+            if(domain.getUuid() != null){
+                session.setAttribute("domain_UUID", domain.getUuid());
+            }
+            
             session.setAttribute("type", Short.valueOf(account.getType()).toString());
             session.setAttribute("registrationtoken", userAcct.getRegistrationToken());
             session.setAttribute("registered", new Boolean(userAcct.isRegistered()).toString());
