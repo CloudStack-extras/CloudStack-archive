@@ -23,6 +23,7 @@ import java.util.Map;
 import com.cloud.agent.api.storage.DownloadAnswer;
 import com.cloud.agent.api.storage.DownloadCommand;
 import com.cloud.agent.api.storage.DownloadCommand.Proxy;
+import com.cloud.agent.api.storage.DownloadCommand.ResourceType;
 import com.cloud.storage.VMTemplateHostVO;
 import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.resource.SecondaryStorageResource;
@@ -47,10 +48,11 @@ public interface DownloadManager extends Manager {
 	 * @param the name if the ISO file if the template being downloaded is an ISO
 	 * @param user username used for authentication to the server
 	 * @param password password used for authentication to the server
-	 * @param maxDownloadSizeInBytes (optional) max download size for the template, in bytes. 
+	 * @param maxDownloadSizeInBytes (optional) max download size for the template, in bytes.
+	 * @param resourceType signifying the type of resource like template, volume etc. 
 	 * @return job-id that can be used to interrogate the status of the download.
 	 */
-	public String downloadPublicTemplate(long id, String url, String name, ImageFormat format, boolean hvm, Long accountId, String descr, String cksum, String installPathPrefix, String userName, String passwd, long maxDownloadSizeInBytes, Proxy proxy);
+	public String downloadPublicTemplate(long id, String url, String name, ImageFormat format, boolean hvm, Long accountId, String descr, String cksum, String installPathPrefix, String userName, String passwd, long maxDownloadSizeInBytes, Proxy proxy, ResourceType resourceType);
 	
 	
 	/**
@@ -93,11 +95,11 @@ public interface DownloadManager extends Manager {
 	 * @return answer representing status of download.
 	 */
 	public DownloadAnswer handleDownloadCommand(SecondaryStorageResource resource, DownloadCommand cmd);
-	
-	
+		
 	/**
 	/**
 	 * @return list of template info for installed templates
 	 */
 	public Map<String, TemplateInfo> gatherTemplateInfo(String templateDir);
+
 }
