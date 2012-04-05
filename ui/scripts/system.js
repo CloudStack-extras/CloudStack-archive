@@ -5343,13 +5343,39 @@
               createForm: {
                 title: 'label.add.host',
                 fields: {
+                  zoneid: {
+                    label: 'Zone',
+                    select: function(args) {
+                      var data = args.context.zones ?
+                        { id: args.context.zones[0].id } : { listAll: true };
+
+                      $.ajax({
+                        url: createURL('listZones'),
+                        data: data,
+                        success: function(json) {
+                          var zones = json.listzonesresponse.zone;
+
+                          args.response.success({
+                            data: $.map(zones, function(zone) {
+                              return {
+                                id: zone.id,
+                                description: zone.name
+                              }
+                            })
+                          })
+                        }
+                      });
+                    }
+                  },
+
                   //always appear (begin)
                   podId: {
                     label: 'label.pod',
                     validation: { required: true },
+                    dependsOn: 'zoneid',
                     select: function(args) {
                       $.ajax({
-                        url: createURL("listPods&zoneid=" + args.context.zones[0].id),
+                        url: createURL("listPods&zoneid=" + args.zoneid),
                         dataType: "json",
                         async: true,
                         success: function(json) {
@@ -5567,7 +5593,7 @@
 
               action: function(args) {
                 var array1 = [];
-                array1.push("&zoneid=" + args.context.zones[0].id);
+                array1.push("&zoneid=" + args.data.zoneid);
                 array1.push("&podid=" + args.data.podId);
                 array1.push("&clusterid=" + args.data.clusterId);
                 array1.push("&hypervisor=" + todb(selectedClusterObj.hypervisortype));
