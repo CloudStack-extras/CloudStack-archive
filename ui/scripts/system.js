@@ -3213,658 +3213,676 @@
           type: 'select',
           title: 'Physical Resources',
           listView: {
-            id: 'physicalResources',
-            label: 'label.menu.physical.resources',
-            fields: {
-              name: { label: 'label.zone' },
-              networktype: { label: 'label.network.type' },
-              domainid: {
-                label: 'label.public',
-                converter: function(args) {
-                  if(args == null)
-                    return "Yes";
-                  else
-                    return "No";
-                }
-              },
-              allocationstate: {
-                label: 'label.allocation.state',
-                converter: function(str) {
-                  // For localization
-                  return str;
-                },
-                indicator: { 
-                  'Enabled': 'on',
-                  'Disabled': 'off'
-                }
-              }
-            },
-            actions: {
-              add: {
-                label: 'label.add.zone',
-                action: {
-                  custom: cloudStack.uiCustom.zoneWizard(
-                    cloudStack.zoneWizard
-                  )
-                },
-                messages: {                  
-                  notification: function(args) {
-                    return 'label.add.zone';
+            zones: {
+              id: 'physicalResources',
+              label: 'label.menu.physical.resources',
+              fields: {
+                name: { label: 'label.zone' },
+                networktype: { label: 'label.network.type' },
+                domainid: {
+                  label: 'label.public',
+                  converter: function(args) {
+                    if(args == null)
+                      return "Yes";
+                    else
+                      return "No";
                   }
                 },
-                notification: {
-                  poll: function(args) {
-                    args.complete({
-                      actionFilter: zoneActionfilter,
-                      data: args._custom.zone
+                allocationstate: {
+                  label: 'label.allocation.state',
+                  converter: function(str) {
+                    // For localization
+                    return str;
+                  },
+                  indicator: { 
+                    'Enabled': 'on',
+                    'Disabled': 'off'
+                  }
+                }
+              },
+              actions: {
+                add: {
+                  label: 'label.add.zone',
+                  action: {
+                    custom: cloudStack.uiCustom.zoneWizard(
+                      cloudStack.zoneWizard
+                    )
+                  },
+                  messages: {                  
+                    notification: function(args) {
+                      return 'label.add.zone';
+                    }
+                  },
+                  notification: {
+                    poll: function(args) {
+                      args.complete({
+                        actionFilter: zoneActionfilter,
+                        data: args._custom.zone
+                      });
+                    }
+                  }
+                },
+
+                // Enable swift
+                enableSwift: {
+                  label: 'label.enable.swift',
+                  isHeader: true,
+                  addRow: false,
+                  preFilter: function(args) {
+                    var swiftEnabled = false;
+                    $.ajax({
+                      url: createURL('listConfigurations'),
+                      data: {
+                        name: 'swift.enable'
+                      },
+                      async: false,
+                      success: function(json) {
+                        swiftEnabled = json.listconfigurationsresponse.configuration[0].value == 'true' && !havingSwift ?
+                          true : false;
+                      },
+
+                      error: function(json) {
+                        cloudStack.dialog.notice({ message: parseXMLHttpResponse(json) });
+                      }
+                    });
+                    
+                    return swiftEnabled;
+                  },
+                  messages: {
+                    notification: function(args) {
+                      return 'label.enable.swift';
+                    }
+                  },
+                  createForm: {
+                    desc: 'confirm.enable.swift',
+                    fields: {
+                      url: { label: 'label.url', validation: { required: true } },
+                      account: { label: 'label.account' },
+                      username: { label: 'label.username' },
+                      key: { label: 'label.key' }
+                    }
+                  },
+                  action: function(args) {
+                    $.ajax({
+                      url: createURL('addSwift'),
+                      data: {
+                        url: args.data.url,
+                        account: args.data.account,
+                        username: args.data.username,
+                        key: args.data.key
+                      },
+                      success: function(json) {
+										    havingSwift = true;
+                        args.response.success();
+                        
+                        cloudStack.dialog.notice({
+                          message: 'message.after.enable.swift'
+                        });
+                      },
+                      error: function(json) {
+                        args.response.error(parseXMLHttpResponse(json));
+                      }
                     });
                   }
+                },
+
+                enable: {
+                  label: 'label.action.enable.zone', 
+                  messages: {
+                    confirm: function(args) {
+                      return 'message.action.enable.zone';
+                    },                 
+                    notification: function(args) {
+                      return 'label.action.enable.zone';
+                    }                  
+                  },
+                  action: function(args) {
+                    $.ajax({
+                      url: createURL("updateZone&id=" + args.context.physicalResources[0].id + "&allocationstate=Enabled"),  //embedded objects in listView is called physicalResources while embedded objects in detailView is called zones
+                      dataType: "json",
+                      async: true,
+                      success: function(json) {
+                        var item = json.updatezoneresponse.zone;
+                        args.response.success({
+                          actionFilter: zoneActionfilter,
+                          data:item
+                        });
+                      }
+                    });
+                  },
+                  notification: {
+                    poll: function(args) {
+                      args.complete();
+                    }
+                  }
+                },
+
+                disable: {
+                  label: 'label.action.disable.zone', 
+                  messages: {
+                    confirm: function(args) {
+                      return 'message.action.disable.zone';
+                    },                 
+                    notification: function(args) {
+                      return 'label.action.disable.zone';
+                    }                 
+                  },
+                  action: function(args) {
+                    $.ajax({
+                      url: createURL("updateZone&id=" + args.context.physicalResources[0].id + "&allocationstate=Disabled"),  //embedded objects in listView is called physicalResources while embedded objects in detailView is called zones
+                      dataType: "json",
+                      async: true,
+                      success: function(json) {
+                        var item = json.updatezoneresponse.zone;
+                        args.response.success({
+                          actionFilter: zoneActionfilter,
+                          data:item
+                        });
+                      }
+                    });
+                  },
+                  notification: {
+                    poll: function(args) {
+                      args.complete();
+                    }
+                  }
+                },
+
+                'remove': {
+                  label: 'label.action.delete.zone',
+                  messages: {
+                    confirm: function(args) {
+                      return 'message.action.delete.zone';
+                    },                 
+                    notification: function(args) {
+                      return 'label.action.delete.zone';
+                    }
+                  },
+                  action: function(args) {
+                    $.ajax({
+                      url: createURL("deleteZone&id=" + args.context.physicalResources[0].id),  //embedded objects in listView is called physicalResources while embedded objects in detailView is called zones
+                      dataType: "json",
+                      async: true,
+                      success: function(json) {
+                        args.response.success({data:{}});
+                      }
+                    });
+                  },
+                  notification: {
+                    poll: function(args) { args.complete(); }
+                  }
                 }
+
               },
 
-              // Enable swift
-              enableSwift: {
-                label: 'label.enable.swift',
-                isHeader: true,
-                addRow: false,
-                preFilter: function(args) {
-                  var swiftEnabled = false;
-                  $.ajax({
-                    url: createURL('listConfigurations'),
-                    data: {
-                      name: 'swift.enable'
-                    },
-                    async: false,
-                    success: function(json) {
-                      swiftEnabled = json.listconfigurationsresponse.configuration[0].value == 'true' && !havingSwift ?
-                        true : false;
-                    },
-
-                    error: function(json) {
-                      cloudStack.dialog.notice({ message: parseXMLHttpResponse(json) });
-                    }
-                  });
-                  
-                  return swiftEnabled;
-                },
-                messages: {
-                  notification: function(args) {
-                    return 'label.enable.swift';
+              dataProvider: function(args) {				  
+							  var array1 = [];  
+							  if(args.filterBy != null) {          
+								  if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+									  switch(args.filterBy.search.by) {
+									  case "name":
+										  if(args.filterBy.search.value.length > 0)
+											  array1.push("&keyword=" + args.filterBy.search.value);
+										  break;
+									  }
+								  }
+							  }
+							  
+                $.ajax({
+                  url: createURL("listZones&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
+                  dataType: "json",
+                  async: true,
+                  success: function(json) {
+                    zoneObjs = json.listzonesresponse.zone;
+                    args.response.success({
+                      actionFilter: zoneActionfilter,
+                      data:zoneObjs
+                    });
                   }
-                },
-                createForm: {
-                  desc: 'confirm.enable.swift',
-                  fields: {
-                    url: { label: 'label.url', validation: { required: true } },
-                    account: { label: 'label.account' },
-                    username: { label: 'label.username' },
-                    key: { label: 'label.key' }
-                  }
-                },
-                action: function(args) {
-                  $.ajax({
-                    url: createURL('addSwift'),
-                    data: {
-                      url: args.data.url,
-                      account: args.data.account,
-                      username: args.data.username,
-                      key: args.data.key
-                    },
-                    success: function(json) {
-										  havingSwift = true;
-                      args.response.success();
-                      
-                      cloudStack.dialog.notice({
-                        message: 'message.after.enable.swift'
+                });
+              },
+              
+              detailView: {
+                isMaximized: true,
+                actions: {
+                  edit: {
+                    label: 'label.edit',
+                    action: function(args) {
+                      var array1 = [];
+                      array1.push("&name="  +todb(args.data.name));
+                      array1.push("&dns1=" + todb(args.data.dns1));
+                      array1.push("&dns2=" + todb(args.data.dns2));  //dns2 can be empty ("") when passed to API
+                      array1.push("&internaldns1=" + todb(args.data.internaldns1));
+                      array1.push("&internaldns2=" + todb(args.data.internaldns2));  //internaldns2 can be empty ("") when passed to API
+                      array1.push("&domain=" + todb(args.data.domain));
+                      $.ajax({
+                        url: createURL("updateZone&id=" + args.context.physicalResources[0].id + array1.join("")),
+                        dataType: "json",
+                        async: false,
+                        success: function(json) {
+                          selectedZoneObj = json.updatezoneresponse.zone; //override selectedZoneObj after update zone
+                          args.response.success({data: selectedZoneObj});
+                        },
+                        error: function(json) {
+                          args.response.error('Could not edit zone information; please ensure all fields are valid.');
+                        }
                       });
+                    }
+                  }
+                },
+                tabs: {
+                  details: {
+                    title: 'label.details',
+									  
+									  preFilter: function(args) {
+										  var hiddenFields = [];		                   
+                      if(selectedZoneObj.networktype == "Basic")										
+										    hiddenFields.push("guestcidraddress");										
+										  return hiddenFields;
+									  },
+									  
+                    fields: [
+                      {
+                        name: { label: 'label.zone', isEditable: true }
+                      },
+                      {
+                        id: { label: 'label.id' },
+                        allocationstate: { label: 'label.allocation.state' },
+                        dns1: { label: 'label.dns.1', isEditable: true },
+                        dns2: { label: 'label.dns.2', isEditable: true },
+                        internaldns1: { label: 'label.internal.dns.1', isEditable: true },
+                        internaldns2: { label: 'label.internal.dns.2', isEditable: true },
+                        domainname: { label: 'label.domain' },
+											  networktype: { label: 'label.network.type' },     
+                        guestcidraddress : { label: 'label.guest.cidr' },											
+                        domain: {
+                          label: 'label.network.domain',
+                          isEditable: true
+                        }
+                      }
+                    ],
+                    dataProvider: function(args) {
+                      $.ajax({
+                        url: createURL('listZones'),
+                        data: {
+                          id: args.context.physicalResources[0].id
+                        },
+                        success: function(json) {
+											    selectedZoneObj = json.listzonesresponse.zone[0];
+                          args.response.success({ data: json.listzonesresponse.zone[0] });
+                        }
+                      });
+                    }
+                  },
+
+                  compute: {
+                    title: 'label.compute.and.storage',
+                    custom: cloudStack.uiCustom.systemChart('compute')
+                  },
+                  network: {
+                    title: 'label.physical.network',
+                    custom: cloudStack.uiCustom.systemChart('network')
+                  },
+                  resources: {
+                    title: 'label.resources',
+                    custom: cloudStack.uiCustom.systemChart('resources')
+                  },
+
+                  systemVMs: {
+                    title: 'label.system.vms',
+                    listView: {
+                      label: 'label.system.vms',
+                      id: 'systemVMs',
+                      fields: {
+                        name: { label: 'label.name' },
+                        systemvmtype: {
+                          label: 'label.type',
+                          converter: function(args) {
+                            if(args == "consoleproxy")
+                              return "Console Proxy VM";
+                            else if(args == "secondarystoragevm")
+                              return "Secondary Storage VM";
+													  else 
+													    return args;
+                          }
+                        },
+                        zonename: { label: 'label.zone' },
+                        state: {
+                          label: 'label.status',
+                          converter: function(str) {
+                            // For localization
+                            return str;
+                          },
+                          indicator: {
+                            'Running': 'on',
+                            'Stopped': 'off',
+                            'Error': 'off',
+                            'Destroyed': 'off'
+                          }
+                        }
+                      },
+                      dataProvider: function(args) {										  
+											  var array1 = [];  
+											  if(args.filterBy != null) {          
+												  if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+													  switch(args.filterBy.search.by) {
+													  case "name":
+														  if(args.filterBy.search.value.length > 0)
+															  array1.push("&keyword=" + args.filterBy.search.value);
+														  break;
+													  }
+												  }
+											  }
+												
+                        var selectedZoneObj = args.context.physicalResources[0];
+                        $.ajax({
+                          url: createURL("listSystemVms&zoneid=" + selectedZoneObj.id + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
+                          dataType: "json",
+                          async: true,
+                          success: function(json) {
+                            var items = json.listsystemvmsresponse.systemvm;
+                            args.response.success({
+                              actionFilter: systemvmActionfilter,
+                              data: items
+                            });
+                          }
+                        });
+                      },
+                      
+                      detailView: {
+                        name: 'System VM details',
+                        actions: {
+                          start: {
+                            label: 'label.action.start.systemvm',
+                            messages: {
+                              confirm: function(args) {
+                                return 'message.action.start.systemvm';
+                              },
+                              notification: function(args) {
+                                return 'label.action.start.systemvm';
+                              }
+                            },
+                            action: function(args) {													
+                              $.ajax({
+                                url: createURL('startSystemVm&id=' + args.context.systemVMs[0].id),
+                                dataType: 'json',
+                                async: true,
+                                success: function(json) {
+                                  var jid = json.startsystemvmresponse.jobid;
+                                  args.response.success({
+                                    _custom: {
+                                      jobId: jid,
+                                      getUpdatedItem: function(json) {
+                                        return json.queryasyncjobresultresponse.jobresult.systemvm;
+                                      },
+                                      getActionFilter: function() {
+                                        return systemvmActionfilter;
+                                      }
+                                    }
+                                  });
+                                }
+                              });
+                            },
+                            notification: {
+                              poll: pollAsyncJobResult
+                            }
+                          },
+
+                          stop: {
+                            label: 'label.action.stop.systemvm',
+                            messages: {
+                              confirm: function(args) {
+                                return 'message.action.stop.systemvm';
+                              },
+                              notification: function(args) {
+                                return 'label.action.stop.systemvm';
+                              }
+                            },
+                            action: function(args) {												
+                              $.ajax({
+                                url: createURL('stopSystemVm&id=' + args.context.systemVMs[0].id),
+                                dataType: 'json',
+                                async: true,
+                                success: function(json) {
+                                  var jid = json.stopsystemvmresponse.jobid;
+                                  args.response.success({
+                                    _custom: {
+                                      jobId: jid,
+                                      getUpdatedItem: function(json) {
+                                        return json.queryasyncjobresultresponse.jobresult.systemvm;
+                                      },
+                                      getActionFilter: function() {
+                                        return systemvmActionfilter;
+                                      }
+                                    }
+                                  });
+                                }
+                              });
+                            },
+                            notification: {
+                              poll: pollAsyncJobResult
+                            }
+                          },
+
+                          restart: {
+                            label: 'label.action.reboot.systemvm',
+                            messages: {
+                              confirm: function(args) {
+                                return 'message.action.reboot.systemvm';
+                              },
+                              notification: function(args) {
+                                return 'label.action.reboot.systemvm';
+                              }
+                            },
+                            action: function(args) {													 
+                              $.ajax({
+                                url: createURL('rebootSystemVm&id=' + args.context.systemVMs[0].id),
+                                dataType: 'json',
+                                async: true,
+                                success: function(json) {
+                                  var jid = json.rebootsystemvmresponse.jobid;
+                                  args.response.success({
+                                    _custom: {
+                                      jobId: jid,
+                                      getUpdatedItem: function(json) {
+                                        return json.queryasyncjobresultresponse.jobresult.systemvm;
+                                      },
+                                      getActionFilter: function() {
+                                        return systemvmActionfilter;
+                                      }
+                                    }
+                                  });
+                                }
+                              });
+                            },
+                            notification: {
+                              poll: pollAsyncJobResult
+                            }
+                          },
+
+                          remove: {
+                            label: 'label.action.destroy.systemvm',
+                            messages: {
+                              confirm: function(args) {
+                                return 'message.action.destroy.systemvm';
+                              },
+                              notification: function(args) {
+                                return 'label.action.destroy.systemvm';
+                              }
+                            },
+                            action: function(args) {												
+                              $.ajax({
+                                url: createURL('destroySystemVm&id=' + args.context.systemVMs[0].id),
+                                dataType: 'json',
+                                async: true,
+                                success: function(json) {
+                                  var jid = json.destroysystemvmresponse.jobid;
+                                  args.response.success({
+                                    _custom: {
+                                      getUpdatedItem: function() {
+                                        return { state: 'Destroyed' };
+                                      },
+                                      jobId: jid
+                                    }
+                                  });
+                                }
+                              });
+                            },
+                            notification: {
+                              poll: pollAsyncJobResult
+                            }
+                          },
+
+                          migrate: {
+                            label: 'label.action.migrate.systemvm',
+                            messages: {                                                   
+                              notification: function(args) {
+                                return 'label.action.migrate.systemvm';
+                              }
+                            },
+                            createForm: {
+                              title: 'label.action.migrate.systemvm',
+                              desc: '',
+                              fields: {
+                                hostId: {
+                                  label: 'label.host',
+                                  validation: { required: true },
+                                  select: function(args) {
+                                    $.ajax({
+                                      url: createURL("listHosts&VirtualMachineId=" + args.context.systemVMs[0].id),
+                                      //url: createURL("listHosts"),	//for testing only, comment it out before checking in.
+                                      dataType: "json",
+                                      async: true,
+                                      success: function(json) {
+                                        var hostObjs = json.listhostsresponse.host;
+                                        var items = [];
+                                        $(hostObjs).each(function() {
+                                          items.push({id: this.id, description: (this.name + ": " +(this.hasEnoughCapacity? "Available" : "Full"))});
+                                        });
+                                        args.response.success({data: items});
+                                      }
+                                    });
+                                  },
+                                  error: function(XMLHttpResponse) {
+                                    var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+                                    args.response.error(errorMsg);
+                                  }
+                                }
+                              }
+                            },
+                            action: function(args) {													                           
+                              $.ajax({
+                                url: createURL("migrateSystemVm&hostid=" + args.data.hostId + "&virtualmachineid=" + args.context.systemVMs[0].id),
+                                dataType: "json",
+                                async: true,
+                                success: function(json) {
+                                  var jid = json.migratesystemvmresponse.jobid;
+                                  args.response.success({
+                                    _custom: {
+                                      jobId: jid,
+                                      getUpdatedItem: function(json) {
+                                        //return json.queryasyncjobresultresponse.jobresult.systemvminstance;    //not all properties returned in systemvminstance
+                                        $.ajax({
+                                          url: createURL("listSystemVms&id=" + json.queryasyncjobresultresponse.jobresult.systemvminstance.id),
+                                          dataType: "json",
+                                          async: false,
+                                          success: function(json) {
+                                            var items = json.listsystemvmsresponse.systemvm;
+                                            if(items != null && items.length > 0) {
+                                              return items[0];
+                                            }
+                                          }
+                                        });
+                                      },
+                                      getActionFilter: function() {
+                                        return systemvmActionfilter;
+                                      }
+                                    }
+                                  });
+                                }
+                              });
+                            },
+                            notification: {
+                              poll: pollAsyncJobResult
+                            }
+                          },
+
+                          viewConsole: {
+                            label: 'label.view.console',  
+                            action: {
+                              externalLink: {
+                                url: function(args) {
+                                  return clientConsoleUrl + '?cmd=access&vm=' + args.context.systemVMs[0].id;
+                                },
+                                title: function(args) {						
+																  return args.context.systemVMs[0].id.substr(0,8);  //title in window.open() can't have space nor longer than 8 characters. Otherwise, IE browser will have error.
+															  },
+                                width: 820,
+                                height: 640
+                              }
+                            }
+                          }
+                        },
+                        tabs: {
+                          details: {
+                            title: 'label.details',
+                            fields: [
+                              {
+                                name: { label: 'label.name' }
+                              },
+                              {
+                                id: { label: 'label.id' },
+                                state: { label: 'label.state' },
+                                systemvmtype: {
+                                  label: 'label.type',
+                                  converter: function(args) {
+                                    if(args == "consoleproxy")
+                                      return "Console Proxy VM";
+                                    else if(args == "secondarystoragevm")
+                                      return "Secondary Storage VM";
+																	  else
+																	    return args;
+                                  }
+                                },
+                                zonename: { label: 'label.zone' },
+                                publicip: { label: 'label.public.ip' },
+                                privateip: { label: 'label.private.ip' },
+                                linklocalip: { label: 'label.linklocal.ip' },
+                                hostname: { label: 'label.host' },
+                                gateway: { label: 'label.gateway' },
+                                created: { label: 'label.created', converter: cloudStack.converters.toLocalDate },
+                                activeviewersessions: { label: 'label.active.sessions' }
+                              }
+                            ],
+                            dataProvider: function(args) {
+                              args.response.success({
+                                actionFilter: systemvmActionfilter,
+                                data: args.jsonObj
+                              });
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              } 
+            },
+            pods: function() {
+              return $.extend(true, {}, cloudStack.sections.system.subsections.pods.listView, {
+                dataProvider: function(args) {
+                  $.ajax({
+                    url:createURL('listPods'),
+                    data:{ listAll:true },
+                    success:function (json) {
+                      args.response.success({ data:json.listpodsresponse.pod });
                     },
-                    error: function(json) {
+                    error:function (json) {
                       args.response.error(parseXMLHttpResponse(json));
                     }
                   });
                 }
-              },
-
-              enable: {
-                label: 'label.action.enable.zone', 
-                messages: {
-                  confirm: function(args) {
-                    return 'message.action.enable.zone';
-                  },                 
-                  notification: function(args) {
-                    return 'label.action.enable.zone';
-                  }                  
-                },
-                action: function(args) {
-                  $.ajax({
-                    url: createURL("updateZone&id=" + args.context.physicalResources[0].id + "&allocationstate=Enabled"),  //embedded objects in listView is called physicalResources while embedded objects in detailView is called zones
-                    dataType: "json",
-                    async: true,
-                    success: function(json) {
-                      var item = json.updatezoneresponse.zone;
-                      args.response.success({
-                        actionFilter: zoneActionfilter,
-                        data:item
-                      });
-                    }
-                  });
-                },
-                notification: {
-                  poll: function(args) {
-                    args.complete();
-                  }
-                }
-              },
-
-              disable: {
-                label: 'label.action.disable.zone', 
-                messages: {
-                  confirm: function(args) {
-                    return 'message.action.disable.zone';
-                  },                 
-                  notification: function(args) {
-                    return 'label.action.disable.zone';
-                  }                 
-                },
-                action: function(args) {
-                  $.ajax({
-                    url: createURL("updateZone&id=" + args.context.physicalResources[0].id + "&allocationstate=Disabled"),  //embedded objects in listView is called physicalResources while embedded objects in detailView is called zones
-                    dataType: "json",
-                    async: true,
-                    success: function(json) {
-                      var item = json.updatezoneresponse.zone;
-                      args.response.success({
-                        actionFilter: zoneActionfilter,
-                        data:item
-                      });
-                    }
-                  });
-                },
-                notification: {
-                  poll: function(args) {
-                    args.complete();
-                  }
-                }
-              },
-
-              'remove': {
-                label: 'label.action.delete.zone',
-                messages: {
-                  confirm: function(args) {
-                    return 'message.action.delete.zone';
-                  },                 
-                  notification: function(args) {
-                    return 'label.action.delete.zone';
-                  }
-                },
-                action: function(args) {
-                  $.ajax({
-                    url: createURL("deleteZone&id=" + args.context.physicalResources[0].id),  //embedded objects in listView is called physicalResources while embedded objects in detailView is called zones
-                    dataType: "json",
-                    async: true,
-                    success: function(json) {
-                      args.response.success({data:{}});
-                    }
-                  });
-                },
-                notification: {
-                  poll: function(args) { args.complete(); }
-                }
-              }
-
-            },
-
-            dataProvider: function(args) {				  
-							var array1 = [];  
-							if(args.filterBy != null) {          
-								if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
-									switch(args.filterBy.search.by) {
-									case "name":
-										if(args.filterBy.search.value.length > 0)
-											array1.push("&keyword=" + args.filterBy.search.value);
-										break;
-									}
-								}
-							}
-							
-              $.ajax({
-                url: createURL("listZones&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
-                dataType: "json",
-                async: true,
-                success: function(json) {
-                  zoneObjs = json.listzonesresponse.zone;
-                  args.response.success({
-                    actionFilter: zoneActionfilter,
-                    data:zoneObjs
-                  });
-                }
               });
-            },
-            
-            detailView: {
-              isMaximized: true,
-              actions: {
-                edit: {
-                  label: 'label.edit',
-                  action: function(args) {
-                    var array1 = [];
-                    array1.push("&name="  +todb(args.data.name));
-                    array1.push("&dns1=" + todb(args.data.dns1));
-                    array1.push("&dns2=" + todb(args.data.dns2));  //dns2 can be empty ("") when passed to API
-                    array1.push("&internaldns1=" + todb(args.data.internaldns1));
-                    array1.push("&internaldns2=" + todb(args.data.internaldns2));  //internaldns2 can be empty ("") when passed to API
-                    array1.push("&domain=" + todb(args.data.domain));
-                    $.ajax({
-                      url: createURL("updateZone&id=" + args.context.physicalResources[0].id + array1.join("")),
-                      dataType: "json",
-                      async: false,
-                      success: function(json) {
-                        selectedZoneObj = json.updatezoneresponse.zone; //override selectedZoneObj after update zone
-                        args.response.success({data: selectedZoneObj});
-                      },
-                      error: function(json) {
-                        args.response.error('Could not edit zone information; please ensure all fields are valid.');
-                      }
-                    });
-                  }
-                }
-              },
-              tabs: {
-                details: {
-                  title: 'label.details',
-									
-									preFilter: function(args) {
-										var hiddenFields = [];		                   
-                    if(selectedZoneObj.networktype == "Basic")										
-										  hiddenFields.push("guestcidraddress");										
-										return hiddenFields;
-									},
-									
-                  fields: [
-                    {
-                      name: { label: 'label.zone', isEditable: true }
-                    },
-                    {
-                      id: { label: 'label.id' },
-                      allocationstate: { label: 'label.allocation.state' },
-                      dns1: { label: 'label.dns.1', isEditable: true },
-                      dns2: { label: 'label.dns.2', isEditable: true },
-                      internaldns1: { label: 'label.internal.dns.1', isEditable: true },
-                      internaldns2: { label: 'label.internal.dns.2', isEditable: true },
-                      domainname: { label: 'label.domain' },
-											networktype: { label: 'label.network.type' },     
-                      guestcidraddress : { label: 'label.guest.cidr' },											
-                      domain: {
-                        label: 'label.network.domain',
-                        isEditable: true
-                      }
-                    }
-                  ],
-                  dataProvider: function(args) {
-                    $.ajax({
-                      url: createURL('listZones'),
-                      data: {
-                        id: args.context.physicalResources[0].id
-                      },
-                      success: function(json) {
-											  selectedZoneObj = json.listzonesresponse.zone[0];
-                        args.response.success({ data: json.listzonesresponse.zone[0] });
-                      }
-                    });
-                  }
-                },
-
-                compute: {
-                  title: 'label.compute.and.storage',
-                  custom: cloudStack.uiCustom.systemChart('compute')
-                },
-                network: {
-                  title: 'label.physical.network',
-                  custom: cloudStack.uiCustom.systemChart('network')
-                },
-                resources: {
-                  title: 'label.resources',
-                  custom: cloudStack.uiCustom.systemChart('resources')
-                },
-
-                systemVMs: {
-                  title: 'label.system.vms',
-                  listView: {
-                    label: 'label.system.vms',
-                    id: 'systemVMs',
-                    fields: {
-                      name: { label: 'label.name' },
-                      systemvmtype: {
-                        label: 'label.type',
-                        converter: function(args) {
-                          if(args == "consoleproxy")
-                            return "Console Proxy VM";
-                          else if(args == "secondarystoragevm")
-                            return "Secondary Storage VM";
-													else 
-													  return args;
-                        }
-                      },
-                      zonename: { label: 'label.zone' },
-                      state: {
-                        label: 'label.status',
-                        converter: function(str) {
-                          // For localization
-                          return str;
-                        },
-                        indicator: {
-                          'Running': 'on',
-                          'Stopped': 'off',
-                          'Error': 'off',
-                          'Destroyed': 'off'
-                        }
-                      }
-                    },
-                    dataProvider: function(args) {										  
-											var array1 = [];  
-											if(args.filterBy != null) {          
-												if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
-													switch(args.filterBy.search.by) {
-													case "name":
-														if(args.filterBy.search.value.length > 0)
-															array1.push("&keyword=" + args.filterBy.search.value);
-														break;
-													}
-												}
-											}
-																					
-                      var selectedZoneObj = args.context.physicalResources[0];
-                      $.ajax({
-                        url: createURL("listSystemVms&zoneid=" + selectedZoneObj.id + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
-                        dataType: "json",
-                        async: true,
-                        success: function(json) {
-                          var items = json.listsystemvmsresponse.systemvm;
-                          args.response.success({
-                            actionFilter: systemvmActionfilter,
-                            data: items
-                          });
-                        }
-                      });
-                    },
-                    
-                    detailView: {
-                      name: 'System VM details',
-                      actions: {
-                        start: {
-                          label: 'label.action.start.systemvm',
-                          messages: {
-                            confirm: function(args) {
-                              return 'message.action.start.systemvm';
-                            },
-                            notification: function(args) {
-                              return 'label.action.start.systemvm';
-                            }
-                          },
-                          action: function(args) {													
-                            $.ajax({
-                              url: createURL('startSystemVm&id=' + args.context.systemVMs[0].id),
-                              dataType: 'json',
-                              async: true,
-                              success: function(json) {
-                                var jid = json.startsystemvmresponse.jobid;
-                                args.response.success({
-                                  _custom: {
-                                    jobId: jid,
-                                    getUpdatedItem: function(json) {
-                                      return json.queryasyncjobresultresponse.jobresult.systemvm;
-                                    },
-                                    getActionFilter: function() {
-                                      return systemvmActionfilter;
-                                    }
-                                  }
-                                });
-                              }
-                            });
-                          },
-                          notification: {
-                            poll: pollAsyncJobResult
-                          }
-                        },
-
-                        stop: {
-                          label: 'label.action.stop.systemvm',
-                          messages: {
-                            confirm: function(args) {
-                              return 'message.action.stop.systemvm';
-                            },
-                            notification: function(args) {
-                              return 'label.action.stop.systemvm';
-                            }
-                          },
-                          action: function(args) {												
-                            $.ajax({
-                              url: createURL('stopSystemVm&id=' + args.context.systemVMs[0].id),
-                              dataType: 'json',
-                              async: true,
-                              success: function(json) {
-                                var jid = json.stopsystemvmresponse.jobid;
-                                args.response.success({
-                                  _custom: {
-                                    jobId: jid,
-                                    getUpdatedItem: function(json) {
-                                      return json.queryasyncjobresultresponse.jobresult.systemvm;
-                                    },
-                                    getActionFilter: function() {
-                                      return systemvmActionfilter;
-                                    }
-                                  }
-                                });
-                              }
-                            });
-                          },
-                          notification: {
-                            poll: pollAsyncJobResult
-                          }
-                        },
-
-                        restart: {
-                          label: 'label.action.reboot.systemvm',
-                          messages: {
-                            confirm: function(args) {
-                              return 'message.action.reboot.systemvm';
-                            },
-                            notification: function(args) {
-                              return 'label.action.reboot.systemvm';
-                            }
-                          },
-                          action: function(args) {													 
-                            $.ajax({
-                              url: createURL('rebootSystemVm&id=' + args.context.systemVMs[0].id),
-                              dataType: 'json',
-                              async: true,
-                              success: function(json) {
-                                var jid = json.rebootsystemvmresponse.jobid;
-                                args.response.success({
-                                  _custom: {
-                                    jobId: jid,
-                                    getUpdatedItem: function(json) {
-                                      return json.queryasyncjobresultresponse.jobresult.systemvm;
-                                    },
-                                    getActionFilter: function() {
-                                      return systemvmActionfilter;
-                                    }
-                                  }
-                                });
-                              }
-                            });
-                          },
-                          notification: {
-                            poll: pollAsyncJobResult
-                          }
-                        },
-
-                        remove: {
-                          label: 'label.action.destroy.systemvm',
-                          messages: {
-                            confirm: function(args) {
-                              return 'message.action.destroy.systemvm';
-                            },
-                            notification: function(args) {
-                              return 'label.action.destroy.systemvm';
-                            }
-                          },
-                          action: function(args) {												
-                            $.ajax({
-                              url: createURL('destroySystemVm&id=' + args.context.systemVMs[0].id),
-                              dataType: 'json',
-                              async: true,
-                              success: function(json) {
-                                var jid = json.destroysystemvmresponse.jobid;
-                                args.response.success({
-                                  _custom: {
-                                    getUpdatedItem: function() {
-                                      return { state: 'Destroyed' };
-                                    },
-                                    jobId: jid
-                                  }
-                                });
-                              }
-                            });
-                          },
-                          notification: {
-                            poll: pollAsyncJobResult
-                          }
-                        },
-
-                        migrate: {
-                          label: 'label.action.migrate.systemvm',
-                          messages: {                                                   
-                            notification: function(args) {
-                              return 'label.action.migrate.systemvm';
-                            }
-                          },
-                          createForm: {
-                            title: 'label.action.migrate.systemvm',
-                            desc: '',
-                            fields: {
-                              hostId: {
-                                label: 'label.host',
-                                validation: { required: true },
-                                select: function(args) {
-                                  $.ajax({
-                                    url: createURL("listHosts&VirtualMachineId=" + args.context.systemVMs[0].id),
-                                    //url: createURL("listHosts"),	//for testing only, comment it out before checking in.
-                                    dataType: "json",
-                                    async: true,
-                                    success: function(json) {
-                                      var hostObjs = json.listhostsresponse.host;
-                                      var items = [];
-                                      $(hostObjs).each(function() {
-                                        items.push({id: this.id, description: (this.name + ": " +(this.hasEnoughCapacity? "Available" : "Full"))});
-                                      });
-                                      args.response.success({data: items});
-                                    }
-                                  });
-                                },
-                                error: function(XMLHttpResponse) {
-                                  var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-                                  args.response.error(errorMsg);
-                                }
-                              }
-                            }
-                          },
-                          action: function(args) {													                           
-                            $.ajax({
-                              url: createURL("migrateSystemVm&hostid=" + args.data.hostId + "&virtualmachineid=" + args.context.systemVMs[0].id),
-                              dataType: "json",
-                              async: true,
-                              success: function(json) {
-                                var jid = json.migratesystemvmresponse.jobid;
-                                args.response.success({
-                                  _custom: {
-                                    jobId: jid,
-                                    getUpdatedItem: function(json) {
-                                      //return json.queryasyncjobresultresponse.jobresult.systemvminstance;    //not all properties returned in systemvminstance
-                                      $.ajax({
-                                        url: createURL("listSystemVms&id=" + json.queryasyncjobresultresponse.jobresult.systemvminstance.id),
-                                        dataType: "json",
-                                        async: false,
-                                        success: function(json) {
-                                          var items = json.listsystemvmsresponse.systemvm;
-                                          if(items != null && items.length > 0) {
-                                            return items[0];
-                                          }
-                                        }
-                                      });
-                                    },
-                                    getActionFilter: function() {
-                                      return systemvmActionfilter;
-                                    }
-                                  }
-                                });
-                              }
-                            });
-                          },
-                          notification: {
-                            poll: pollAsyncJobResult
-                          }
-                        },
-
-                        viewConsole: {
-                          label: 'label.view.console',  
-                          action: {
-                            externalLink: {
-                              url: function(args) {
-                                return clientConsoleUrl + '?cmd=access&vm=' + args.context.systemVMs[0].id;
-                              },
-                              title: function(args) {						
-																return args.context.systemVMs[0].id.substr(0,8);  //title in window.open() can't have space nor longer than 8 characters. Otherwise, IE browser will have error.
-															},
-                              width: 820,
-                              height: 640
-                            }
-                          }
-                        }
-                      },
-                      tabs: {
-                        details: {
-                          title: 'label.details',
-                          fields: [
-                            {
-                              name: { label: 'label.name' }
-                            },
-                            {
-                              id: { label: 'label.id' },
-                              state: { label: 'label.state' },
-                              systemvmtype: {
-                                label: 'label.type',
-                                converter: function(args) {
-                                  if(args == "consoleproxy")
-                                    return "Console Proxy VM";
-                                  else if(args == "secondarystoragevm")
-                                    return "Secondary Storage VM";
-																	else
-																	  return args;
-                                }
-                              },
-                              zonename: { label: 'label.zone' },
-                              publicip: { label: 'label.public.ip' },
-                              privateip: { label: 'label.private.ip' },
-                              linklocalip: { label: 'label.linklocal.ip' },
-                              hostname: { label: 'label.host' },
-                              gateway: { label: 'label.gateway' },
-                              created: { label: 'label.created', converter: cloudStack.converters.toLocalDate },
-                              activeviewersessions: { label: 'label.active.sessions' }
-                            }
-                          ],
-                          dataProvider: function(args) {
-                            args.response.success({
-                              actionFilter: systemvmActionfilter,
-                              data: args.jsonObj
-                            });
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
             }
           }
         }
@@ -4268,7 +4286,7 @@
           fields: {
             ipaddress: { label: 'label.ip.address' },
             fwdevicestate: { label: 'label.status' },
-            fwdevicename: { label: 'label.type' },
+            fwdevicename: { label: 'label.type' }
           },
           actions: {
             add: {
@@ -4754,7 +4772,7 @@
                     dataType: "json",
                     success: function(json) {
                       var items = json.listvlaniprangesresponse.vlaniprange;
-                      args.response.success({data: items});
+                      args.response.success({ data: items });
                     }
                   });
                 }
@@ -4785,7 +4803,7 @@
           },
 
           dataProvider: function(args) {
-            var array1 = [];						
+            var array1 = [];
 						if(args.filterBy != null) {          
 							if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
 								switch(args.filterBy.search.by) {
