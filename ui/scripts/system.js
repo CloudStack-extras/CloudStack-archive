@@ -3869,20 +3869,43 @@
               } 
             },
             pods: function() {
-              return $.extend(true, {}, cloudStack.sections.system.subsections.pods.listView, {
-                dataProvider: function(args) {
+              var listView = $.extend(true, {}, cloudStack.sections.system.subsections.pods.listView, {
+                dataProvider: function (args) {
                   $.ajax({
-                    url:createURL('listPods'),
-                    data:{ listAll:true },
-                    success:function (json) {
-                      args.response.success({ data:json.listpodsresponse.pod });
+                    url: createURL('listPods'),
+                    data: { listAll: true },
+                    success: function (json) {
+                      args.response.success({ data: json.listpodsresponse.pod });
                     },
-                    error:function (json) {
+                    error: function (json) {
                       args.response.error(parseXMLHttpResponse(json));
                     }
                   });
+                },
+
+                detailView: {
+                  updateContext: function (args) {
+                    var zone;
+
+                    $.ajax({
+                      url: createURL('listZones'),
+                      data: { id: args.context.pods[0].zoneid },
+                      async: false,
+                      success: function (json) {
+                        zone = json.listzonesresponse.zone[0];
+                      }
+                    });
+
+                    selectedZoneObj = zone;
+
+                    return {
+                      zones: [zone]
+                    };
+                  }
                 }
               });
+
+              return listView;
             }
           }
         }
