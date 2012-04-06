@@ -4629,6 +4629,30 @@
               createForm: {
                 title: 'label.add.pod',
                 fields: {
+                  zoneid: {
+                    label: 'Zone',
+                    select: function(args) {
+                      var data = args.context.zones ?
+                            { id: args.context.zones[0].id } : { listAll: true };
+
+                      $.ajax({
+                        url: createURL('listZones'),
+                        data: data,
+                        success: function(json) {
+                          var zones = json.listzonesresponse.zone;
+
+                          args.response.success({
+                            data: $.map(zones, function(zone) {
+                              return {
+                                id: zone.id,
+                                description: zone.name
+                              };
+                            })
+                          });
+                        }
+                      });
+                    }
+                  },
                   podname: {
                     label: 'label.pod.name',
                     validation: { required: true }
@@ -4654,7 +4678,8 @@
 
               action: function(args) {
                 var array1 = [];
-                array1.push("&zoneId=" + args.context.zones[0].id);
+                
+                array1.push("&zoneId=" + args.data.zoneid);
                 array1.push("&name=" + todb(args.data.podname));
                 array1.push("&gateway=" + todb(args.data.reservedSystemGateway));
                 array1.push("&netmask=" + todb(args.data.reservedSystemNetmask));
@@ -4947,6 +4972,30 @@
               createForm: {
                 title: 'label.add.cluster',
                 fields: {
+                  zoneid: {
+                    label: 'Zone',
+                    select: function(args) {
+                      var data = args.context.zones ?
+                            { id: args.context.zones[0].id } : { listAll: true };
+
+                      $.ajax({
+                        url: createURL('listZones'),
+                        data: data,
+                        success: function(json) {
+                          var zones = json.listzonesresponse.zone;
+
+                          args.response.success({
+                            data: $.map(zones, function(zone) {
+                              return {
+                                id: zone.id,
+                                description: zone.name
+                              };
+                            })
+                          });
+                        }
+                      });
+                    }
+                  },
                   hypervisor: {
                     label: 'label.hypervisor',
                     select: function(args) {
@@ -4958,7 +5007,7 @@
                           var hypervisors = json.listhypervisorsresponse.hypervisor;
                           var items = [];
                           $(hypervisors).each(function() {
-                            items.push({id: this.name, description: this.name})
+                            items.push({id: this.name, description: this.name});
                           });
                           args.response.success({data: items});
                         }
@@ -4989,9 +5038,10 @@
                   },
                   podId: {
                     label: 'label.pod',
+                    dependsOn: 'zoneid',
                     select: function(args) {
                       $.ajax({
-                        url: createURL("listPods&zoneid=" + args.context.zones[0].id),
+                        url: createURL("listPods&zoneid=" + args.zoneid),
                         dataType: "json",
                         async: true,
                         success: function(json) {
@@ -5037,7 +5087,7 @@
 
               action: function(args) {
                 var array1 = [];
-                array1.push("&zoneId=" + args.context.zones[0].id);
+                array1.push("&zoneId=" + args.data.zoneid);
                 array1.push("&hypervisor=" + args.data.hypervisor);
 
                 var clusterType;
@@ -5360,9 +5410,9 @@
                               return {
                                 id: zone.id,
                                 description: zone.name
-                              }
+                              };
                             })
-                          })
+                          });
                         }
                       });
                     }
