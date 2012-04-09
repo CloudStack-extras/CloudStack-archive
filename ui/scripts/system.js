@@ -4712,6 +4712,7 @@
                 fields: {
                   zoneid: {
                     label: 'Zone',
+                    validation: { required: true },
                     select: function(args) {
                       var data = args.context.zones ?
                             { id: args.context.zones[0].id } : { listAll: true };
@@ -5055,6 +5056,7 @@
                 fields: {
                   zoneid: {
                     label: 'Zone',
+                    validation: { required: true },
                     select: function(args) {
                       var data = args.context.zones ?
                             { id: args.context.zones[0].id } : { listAll: true };
@@ -5476,6 +5478,7 @@
                 fields: {
                   zoneid: {
                     label: 'Zone',
+                    validation: { required: true },
                     select: function(args) {
                       var data = args.context.zones ?
                         { id: args.context.zones[0].id } : { listAll: true };
