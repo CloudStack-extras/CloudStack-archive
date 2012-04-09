@@ -391,7 +391,8 @@ public class S3BucketAction implements ServletAction {
 
 		OutputStream os = response.getOutputStream();
 		response.setStatus(200);	
-	    response.setContentType("text/xml; charset=UTF-8");
+	    response.setContentType("text/xml; charset=UTF-8");  
+	                // TODO - Incompatible with tools -- wrong content type!  Correct this in an XML helper type for responses
 		XMLStreamWriter xmlWriter = xmlOutFactory.createXMLStreamWriter( os );
 		String documentStart = new String( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" );
 		os.write( documentStart.getBytes());

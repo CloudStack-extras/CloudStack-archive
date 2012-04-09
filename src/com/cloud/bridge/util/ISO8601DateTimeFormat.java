@@ -145,12 +145,13 @@ public class ISO8601DateTimeFormat extends DateFormat {
 	    catch (Exception ex) {
 	      pos.setErrorIndex(p);
 	      return null;
-	    }
-	    finally {
+	    } 
+	    finally
+	    {
 	     pos.setIndex(p);
+	    }
 	   // Return the Calendar instance's Date representation of its value
 		return calendar.getTime();
-	    }
 	 }
 
 		  /**

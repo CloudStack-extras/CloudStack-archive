@@ -21,6 +21,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -328,7 +329,7 @@ public class XSerializer {
     		valueContent = valueContent.replace('T', ' ');
     		valueContent = valueContent.replace('.', '\0');
     		
-    		SimpleDateFormat df = DateHelper.getGMTDateFormat("yyyy-MM-dd HH:mm:ss");
+    		DateFormat df = DateHelper.getGMTDateFormat("yyyy-MM-dd HH:mm:ss");
     		try {
 				Date value = df.parse(valueContent);
 				f.set(object, value);
@@ -345,7 +346,7 @@ public class XSerializer {
     		valueContent = valueContent.replace('T', ' ');
     		valueContent = valueContent.replace('.', '\0');
     		
-    		SimpleDateFormat df = DateHelper.getGMTDateFormat("yyyy-MM-dd HH:mm:ss");
+    		DateFormat df = DateHelper.getGMTDateFormat("yyyy-MM-dd HH:mm:ss");
     		try {
 				Date value = df.parse(valueContent);
 				f.set(object, DateHelper.toCalendar(value));
@@ -496,3 +497,4 @@ public class XSerializer {
 		return true;
 	}
 }
+

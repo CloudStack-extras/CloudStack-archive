@@ -20,6 +20,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.text.ParseException;
 import java.util.Date;
 
 import org.hibernate.HibernateException;
@@ -28,9 +29,17 @@ import org.hibernate.usertype.UserType;
 import com.cloud.bridge.util.DateHelper;
 
 /**
- * @author Kelven Yang
+ * @author Kelven Yang, John Zucker
+ * The purpose of this Hibernate user type is to customize the mappings from a MySQL datetime
+ * column to a Java date so as to resemble the AWS datetime datype.  
+ * For this purpose dates are held in UTC-relative form
+ * referenced to the GMT timezone.  To provide accurate encodings all date strings supplied by
+ * the Hibernate mappings (as .hbm.xml files in the persistence model) are encoded through 
+ * conversions using cloud.bridge.util.ISO8601DateFormat.
  * GMTDateTimeUserType implements a Hibernate user type, it deals with GMT date/time conversion
  * between Java Date/Calendar and MySQL DATE types
+ * The business methods nullSafeGet and nullSafeSet define the getters and setters for the datetime
+ * column entries in the cloud.bridge.model ORM.
  */
 public class GMTDateTimeUserType implements UserType {
 	
@@ -66,13 +75,22 @@ public class GMTDateTimeUserType implements UserType {
 	}
 	
 	public Object nullSafeGet(ResultSet resultSet, String[] names, Object owner)
+	throws HibernateException, SQLException {
+	
+	String dateString = resultSet.getString(names[0]);
+	if(dateString != null)
+		return DateHelper.parseDateString(DateHelper.GMT_TIMEZONE, dateString);
+	return null;
+}
+	
+	/* public Object nullSafeGet(ResultSet resultSet, String[] names, Object owner)
 		throws HibernateException, SQLException {
-		
 		String dateString = resultSet.getString(names[0]);
-		if(dateString != null)
-			return DateHelper.parseDateString(DateHelper.GMT_TIMEZONE, dateString);
-		return null;
-	}
+		if (null == dateString)
+			 return null;
+		else return DateHelper.parseISO8601DateString(dateString);
+			// return DateHelper.parseDateString(DateHelper.GMT_TIMEZONE, dateString);
+	} */
 	
 	public void nullSafeSet(PreparedStatement statement, Object value, int index)
 		throws HibernateException, SQLException {
