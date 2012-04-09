@@ -3699,16 +3699,97 @@
                               poll: pollAsyncJobResult
                             }
                           },
-
-                          remove: {
-                            label: 'label.action.destroy.systemvm',
-                            messages: {
-                              confirm: function(args) {
-                                return 'message.action.destroy.systemvm';
-                              },
-                              notification: function(args) {
-                                return 'label.action.destroy.systemvm';
+                          action: function(args) {													 
+                            $.ajax({
+                              url: createURL('rebootSystemVm&id=' + args.context.systemVMs[0].id),
+                              dataType: 'json',
+                              async: true,
+                              success: function(json) {
+                                var jid = json.rebootsystemvmresponse.jobid;
+                                args.response.success({
+                                  _custom: {
+                                    jobId: jid,
+                                    getUpdatedItem: function(json) {
+                                      return json.queryasyncjobresultresponse.jobresult.systemvm;
+                                    },
+                                    getActionFilter: function() {
+                                      return systemvmActionfilter;
+                                    }
+                                  }
+                                });
                               }
+                            });
+                          },
+                          notification: {
+                            poll: pollAsyncJobResult
+                          }
+                        },
+																																	
+												changeService: {
+													label: 'label.change.service.offering',                       
+													createForm: {
+														title: 'label.change.service.offering',
+														desc: '',
+														fields: {
+															serviceOfferingId: {
+																label: 'label.compute.offering',
+																select: function(args) {																  
+																	var apiCmd = "listServiceOfferings&issystem=true";
+																	if(args.context.systemVMs[0].systemvmtype == "secondarystoragevm")
+																	  apiCmd += "&systemvmtype=secondarystoragevm";		
+                                  else if(args.context.systemVMs[0].systemvmtype == "consoleproxy")
+																	  apiCmd += "&systemvmtype=consoleproxy";																				
+																	$.ajax({
+																		url: createURL(apiCmd),
+																		dataType: "json",
+																		async: true,
+																		success: function(json) {
+																			var serviceofferings = json.listserviceofferingsresponse.serviceoffering;
+																			var items = [];
+																			$(serviceofferings).each(function() {
+																				if(this.id != args.context.systemVMs[0].serviceofferingid) {
+																					items.push({id: this.id, description: this.displaytext});
+																				}
+																			});
+																			args.response.success({data: items});
+																		}
+																	});
+																}
+															}
+														}
+													},
+													messages: {                                                
+														notification: function(args) {
+															return 'label.change.service.offering';
+														}
+													},
+													action: function(args) {
+														$.ajax({
+															url: createURL("changeServiceForSystemVm&id=" + args.context.systemVMs[0].id + "&serviceofferingid=" + args.data.serviceOfferingId),
+															dataType: "json",
+															async: true,
+															success: function(json) {													
+																var jsonObj = json.changeserviceforsystemvmresponse.systemvm;
+																args.response.success({data: jsonObj});
+															},
+															error: function(XMLHttpResponse) {
+																var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+																args.response.error(errorMsg);
+															}
+														});
+													},
+													notification: {
+														poll: function(args) {
+															args.complete();
+														}
+													}
+												},	
+																							
+                        remove: {
+                          label: 'label.action.destroy.systemvm',
+                          messages: {
+                            confirm: function(args) {
+                              return 'message.action.destroy.systemvm';
                             },
                             action: function(args) {
                               $.ajax({
@@ -7643,14 +7724,14 @@
     if (jsonObj.state == 'Running') {
       allowedActions.push("stop");
       allowedActions.push("restart");
-      allowedActions.push("remove");
+      allowedActions.push("remove");  
       allowedActions.push("viewConsole");
       if (isAdmin())
         allowedActions.push("migrate");
     }
     else if (jsonObj.state == 'Stopped') {
       allowedActions.push("start");
-      allowedActions.push("remove");
+      allowedActions.push("remove");  
     }
     else if (jsonObj.state == 'Error') {
       allowedActions.push("remove");
