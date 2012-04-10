@@ -60,7 +60,7 @@ import com.cloud.bridge.util.RestAuth;
 import com.cloud.bridge.util.S3SoapAuth;
 
 /**
- * @author Kelven Yang, Mark Joseph
+ * @author Kelven Yang, Mark Joseph, John Zucker
  */
 public class S3RestServlet extends HttpServlet {
 	private static final long serialVersionUID = -6168996266762804877L;
@@ -107,6 +107,10 @@ public class S3RestServlet extends HttpServlet {
         	logRequest(request);
         	
         	// Our extensions to the S3 REST API for simple management actions
+        	// are conveyed with Request parameter CloudAction.
+        	// The present extensions are either to set up the user credentials
+        	// (see the cloud-bridge-register script for more detail) or
+        	// to report our version of this capability.
         	// -> unauthenticated calls, should still be done over HTTPS
         	String cloudAction = request.getParameter( "CloudAction" );
             if (null != cloudAction) 
@@ -321,7 +325,9 @@ public class S3RestServlet extends HttpServlet {
     }
     
     
-    private ServletAction routeRequest(HttpServletRequest request) 
+    /*
+    
+    private ServletAction routeRequest(HttpServletRequest request, String method) 
     {
     	// Simple URL routing for S3 REST calls.
     	String pathInfo = request.getPathInfo();
@@ -334,10 +340,10 @@ public class S3RestServlet extends HttpServlet {
     		String host            = request.getHeader("Host");
     		
     		// -> a request of "/" on the service endpoint means do a list all my buckets command
-    		if (serviceEndpoint.equalsIgnoreCase( host )) {
-    			request.setAttribute(S3Constants.BUCKET_ATTR_KEY, "/");
-    			return new S3BucketAction();
-    		}
+//    		if (serviceEndpoint.equalsIgnoreCase( host )) {
+//    			request.setAttribute(S3Constants.BUCKET_ATTR_KEY, "/");
+//    			return new S3BucketAction();
+//    		}
     		
     		// -> verify the format of the bucket name
     		int endPos = host.indexOf( ServiceProvider.getInstance().getMasterDomain());
@@ -360,6 +366,90 @@ public class S3RestServlet extends HttpServlet {
     		}
     	} 
     	else 
+    	{
+    		if(pathInfo == null || pathInfo.equalsIgnoreCase("/")) {
+    			if ("GET".equalsIgnoreCase(method)) {
+    				//list all my buckets
+    				request.setAttribute(S3Constants.BUCKET_ATTR_KEY, "/");
+        			return new S3BucketAction();
+    			}
+    			logger.warn("Invalid REST request URI " + pathInfo);
+    			return null;
+    		}
+    		
+    		int endPos = pathInfo.indexOf('/', 1);
+    		if ( endPos > 0 ) 
+    		{
+    			 bucketName = pathInfo.substring(1, endPos);
+    		     key        = pathInfo.substring(endPos + 1);			
+   			     S3Engine.verifyBucketName( bucketName, false );
+   			
+    			 if (!key.isEmpty()) 
+    			 {
+	    		 	  request.setAttribute(S3Constants.BUCKET_ATTR_KEY, bucketName);
+	    			  request.setAttribute(S3Constants.OBJECT_ATTR_KEY, pathInfo.substring(endPos + 1));
+	    			  return new S3ObjectAction();
+    			 } 
+    			 else {
+        			  request.setAttribute(S3Constants.BUCKET_ATTR_KEY, bucketName);
+        			  return new S3BucketAction();
+    			 }
+    		} 
+    		else {
+    			 String bucket = pathInfo.substring(1);
+    			 request.setAttribute(S3Constants.BUCKET_ATTR_KEY, bucket);
+    			 return new S3BucketAction();
+    		}
+    	}
+    }
+    */
+    
+    private ServletAction routeRequest(HttpServletRequest request) 
+    {
+    	// Simple URL routing for S3 REST calls.
+    	String pathInfo = request.getPathInfo();
+    	String bucketName = null;
+    	String key = null;
+    	
+    	String serviceEndpoint = ServiceProvider.getInstance().getServiceEndpoint();
+    	String host            = request.getHeader("Host");
+		
+    	
+    	// Irrespective of whether the requester is using subdomain or full host naming of path expressions
+    	// to buckets, wherever the request is made up of a service endpoint followed by a /, in AWS S3 this always
+    	// conveys a ListAllMyBuckets command
+    		
+    	if (serviceEndpoint.equalsIgnoreCase( host )) 
+    	{
+    			request.setAttribute(S3Constants.BUCKET_ATTR_KEY, "/");
+    			return new S3BucketAction();   // for ListAllMyBuckets
+    	}
+    			
+    	if (ServiceProvider.getInstance().getUseSubDomain()) 
+    		
+    	    {   		
+    		// -> verify the format of the bucket name
+    		int endPos = host.indexOf( ServiceProvider.getInstance().getMasterDomain());
+    		if ( endPos > 0 ) 
+    		{
+    			 bucketName = host.substring(0, endPos);
+    			 S3Engine.verifyBucketName( bucketName, false );
+    			 request.setAttribute(S3Constants.BUCKET_ATTR_KEY, bucketName);
+    		}
+    		else request.setAttribute(S3Constants.BUCKET_ATTR_KEY, "");
+    		
+    		if (pathInfo == null || pathInfo.equalsIgnoreCase("/")) 
+    		{
+    			return new S3BucketAction();
+    		} 
+    		else {
+    			String objectKey = pathInfo.substring(1);
+    			request.setAttribute(S3Constants.OBJECT_ATTR_KEY, objectKey);
+    			return new S3ObjectAction();
+    		}
+    	} 
+    	else 
+    		
     	{
     		if(pathInfo == null || pathInfo.equalsIgnoreCase("/")) {
     			logger.warn("Invalid REST request URI " + pathInfo);
@@ -390,7 +480,9 @@ public class S3RestServlet extends HttpServlet {
     			 return new S3BucketAction();
     		}
     	}
+    	
     }
+    
     
     public static void endResponse(HttpServletResponse response, String content) {
     	try {
