@@ -1,12 +1,16 @@
 build/replace.properties
 build/build.number
 bin/
+cloud-bridge.properties
 cloudstack-proprietary/
+s3local.cfg
 premium/
+.veryold/
 .lock-wscript
 artifacts/
 .waf-*
 waf-*
+*.pem
 target/
 override/
 .metadata
