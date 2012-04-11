@@ -28,6 +28,8 @@ import java.util.Calendar;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
+
+// TODO - Remove begin
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -38,6 +40,8 @@ import javax.xml.stream.XMLStreamWriter;
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMFactory;
 import org.apache.axis2.databinding.utils.writer.MTOMAwareXMLSerializer;
+// TODO - Remove end
+
 import org.apache.log4j.Logger;
 import org.json.simple.parser.ParseException;
 import org.w3c.dom.Document;
@@ -87,12 +91,13 @@ import com.cloud.bridge.util.Converter;
 import com.cloud.bridge.util.PolicyParser;
 import com.cloud.bridge.util.StringHelper;
 import com.cloud.bridge.util.Tuple;
+import com.cloud.bridge.util.XMLAppender;
 import com.cloud.bridge.util.XSerializer;
 import com.cloud.bridge.util.XSerializerXmlAdapter;
 
 
 /**
- * @author Kelven Yang
+ * @author Kelven Yang, John Zucker
  */
 public class S3BucketAction implements ServletAction {
     protected final static Logger logger = Logger.getLogger(S3BucketAction.class);
@@ -377,8 +382,8 @@ public class S3BucketAction implements ServletAction {
 	public void executeGetAllBuckets(HttpServletRequest request, HttpServletResponse response) 
 	    throws IOException, XMLStreamException 
 	{
-		Calendar cal = Calendar.getInstance();
-		cal.set( 1970, 1, 1 ); 
+		Calendar cal = Calendar.getInstance();    
+		cal.set( 1970, 1, 1 );    
 		S3ListAllMyBucketsRequest engineRequest = new S3ListAllMyBucketsRequest();
 		engineRequest.setAccessKey(UserContext.current().getAccessKey());
 		engineRequest.setRequestTimestamp( cal );
@@ -387,11 +392,20 @@ public class S3BucketAction implements ServletAction {
 		S3ListAllMyBucketsResponse engineResponse = ServiceProvider.getInstance().getS3Engine().handleRequest(engineRequest);
 		
 		// -> serialize using the apache's Axiom classes
+		// TOD0 - jz - Simplify after collecting a walkthrough test
+		// TODO - Test, generalize, simplify
 		ListAllMyBucketsResponse allBuckets = S3SoapServiceImpl.toListAllMyBucketsResponse( engineResponse );
+		
 
 		OutputStream os = response.getOutputStream();
 		response.setStatus(200);	
-	    response.setContentType("text/xml; charset=UTF-8");
+	    response.setContentType("application/xml; charset=UTF-8");
+	    
+	    // TODO -  Test !!!! *******
+	    XMLAppender xmlAppender = new XMLAppender(os,"http://s3.amazonaws.com/doc/2006-03-01/");
+	    
+	    
+	    
 		XMLStreamWriter xmlWriter = xmlOutFactory.createXMLStreamWriter( os );
 		String documentStart = new String( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" );
 		os.write( documentStart.getBytes());
