@@ -38,16 +38,19 @@ import com.cloud.agent.api.StartupStorageCommand;
 import com.cloud.agent.api.storage.DownloadAnswer;
 import com.cloud.agent.api.storage.DownloadCommand;
 import com.cloud.agent.api.storage.DownloadProgressCommand;
+import com.cloud.agent.api.storage.DownloadCommand.ResourceType;
 import com.cloud.agent.api.storage.DownloadProgressCommand.RequestType;
 import com.cloud.exception.AgentUnavailableException;
 import com.cloud.exception.ConnectionException;
 import com.cloud.host.HostVO;
 
 import com.cloud.storage.Storage;
+import com.cloud.storage.StorageManager;
 import com.cloud.storage.VMTemplateHostVO;
 import com.cloud.storage.VolumeHostVO;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.VMTemplateStorageResourceAssoc.Status;
+import com.cloud.storage.Volume.Event;
 import com.cloud.storage.VMTemplateVO;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VMTemplateHostDao;
@@ -55,6 +58,7 @@ import com.cloud.storage.dao.VolumeDao;
 import com.cloud.storage.dao.VolumeHostDao;
 import com.cloud.storage.download.DownloadState.DownloadEvent;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.fsm.NoTransitionException;
 
 /**
  * Monitor progress of template download to a single storage server
@@ -113,7 +117,8 @@ public class DownloadListener implements Listener {
 	private boolean downloadActive = true;
 
 	private VolumeHostDao volumeHostDao;
-	private VolumeDao _volumeDao;	
+	private VolumeDao _volumeDao;
+	private StorageManager _storageMgr;
 	private VMTemplateHostDao vmTemplateHostDao;
 	private VMTemplateDao _vmTemplateDao;
 
@@ -151,7 +156,7 @@ public class DownloadListener implements Listener {
 		updateDatabase(Status.NOT_DOWNLOADED, "");
 	}
 	
-	public DownloadListener(HostVO ssAgent, HostVO host, VolumeVO volume, Timer _timer, VolumeHostDao dao, Long volHostId, DownloadMonitorImpl downloadMonitor, DownloadCommand cmd, VolumeDao volumeDao) {
+	public DownloadListener(HostVO ssAgent, HostVO host, VolumeVO volume, Timer _timer, VolumeHostDao dao, Long volHostId, DownloadMonitorImpl downloadMonitor, DownloadCommand cmd, VolumeDao volumeDao, StorageManager storageMgr) {
 	    this.ssAgent = ssAgent;
         this.sserver = host;
 		this.volume = volume;
@@ -165,6 +170,7 @@ public class DownloadListener implements Listener {
 		this.timeoutTask = new TimeoutTask(this);
 		this.timer.schedule(timeoutTask, 3*STATUS_POLL_INTERVAL);
 		this._volumeDao = volumeDao;
+		this._storageMgr = storageMgr;
 		updateDatabase(Status.NOT_DOWNLOADED, "");
 	}
 	
@@ -191,7 +197,11 @@ public class DownloadListener implements Listener {
 				log("Sending progress command ", Level.TRACE);
 			}
 			try {
-	            downloadMonitor.send(ssAgent.getId(), new DownloadProgressCommand(getCommand(), getJobId(), reqType), this);
+				DownloadProgressCommand dcmd = new DownloadProgressCommand(getCommand(), getJobId(), reqType);
+				if (template == null){
+					dcmd.setResourceType(ResourceType.VOLUME);
+				}
+	            downloadMonitor.send(ssAgent.getId(), dcmd, this);
             } catch (AgentUnavailableException e) {
             	s_logger.debug("Send command failed", e);
 				setDisconnected();
@@ -333,6 +343,12 @@ public class DownloadListener implements Listener {
 			updateBuilder.setPhysicalSize(answer.getTemplatePhySicalSize());
 			
 			volumeHostDao.update(getVolumeHostId(), updateBuilder);
+			try {
+				_storageMgr.stateTransitTo(volume, Event.UploadSucceeded);
+			} catch (NoTransitionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 			/*if (answer.getCheckSum() != null) {
 				VMTemplateVO templateDaoBuilder = _vmTemplateDao.createForUpdate();

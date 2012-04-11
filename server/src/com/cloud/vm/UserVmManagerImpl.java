@@ -163,6 +163,7 @@ import com.cloud.storage.GuestOSVO;
 import com.cloud.storage.Snapshot;
 import com.cloud.storage.SnapshotVO;
 import com.cloud.storage.Storage;
+import com.cloud.storage.VolumeHostVO;
 import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.storage.Storage.TemplateType;
@@ -187,6 +188,7 @@ import com.cloud.storage.dao.VMTemplateDetailsDao;
 import com.cloud.storage.dao.VMTemplateHostDao;
 import com.cloud.storage.dao.VMTemplateZoneDao;
 import com.cloud.storage.dao.VolumeDao;
+import com.cloud.storage.dao.VolumeHostDao;
 import com.cloud.storage.snapshot.SnapshotManager;
 import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.template.VirtualMachineTemplate.BootloaderType;
@@ -368,6 +370,8 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
     protected NetworkServiceMapDao _ntwkSrvcDao;
     @Inject
     SecurityGroupVMMapDao _securityGroupVMMapDao;
+    @Inject
+    VolumeHostDao _volumeHostDao;
 
     protected ScheduledExecutorService _executor = null;
     protected int _expungeInterval;
@@ -580,14 +584,20 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         //permission check
         _accountMgr.checkAccess(caller, null, true, volume, vm);
         
+        //Check if volume is stored on secondary Storage.
+        boolean volumeOnSec = false;
+        VolumeHostVO  volHostVO = _volumeHostDao.findByVolumeId(volume.getId());
+        if (volHostVO != null){
+        	volumeOnSec = true;       	
+        }
 
         // Check that the volume is stored on shared storage
-        if (!(Volume.State.Allocated.equals(volume.getState())) && !_storageMgr.volumeOnSharedStoragePool(volume)) {
+        if (!(Volume.State.Allocated.equals(volume.getState()) || Volume.State.Uploaded.equals(volume.getState())) && !_storageMgr.volumeOnSharedStoragePool(volume)) {
             throw new InvalidParameterValueException("Please specify a volume that has been created on a shared storage pool.");
         }
 
-        if (!(Volume.State.Allocated.equals(volume.getState()) || Volume.State.Ready.equals(volume.getState()))) {
-            throw new InvalidParameterValueException("Volume state must be in Allocated or Ready state");
+        if ( !(Volume.State.Allocated.equals(volume.getState()) || Volume.State.Ready.equals(volume.getState()) || Volume.State.Uploaded.equals(volume.getState())) ) {
+            throw new InvalidParameterValueException("Volume state must be in Allocated, Ready or Uploaded state");
         }
 
         VolumeVO rootVolumeOfVm = null;
@@ -600,7 +610,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
 
         HypervisorType rootDiskHyperType = _volsDao.getHypervisorType(rootVolumeOfVm.getId());
 
-        if (volume.getState().equals(Volume.State.Allocated)) {
+        if (volume.getState().equals(Volume.State.Allocated) || volume.getState().equals(Volume.State.Uploaded)) {
             /* Need to create the volume */
             VMTemplateVO rootDiskTmplt = _templateDao.findById(vm.getTemplateId());
             DataCenterVO dcVO = _dcDao.findById(vm.getDataCenterIdToDeployIn());
@@ -608,8 +618,15 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             StoragePoolVO rootDiskPool = _storagePoolDao.findById(rootVolumeOfVm.getPoolId());
             ServiceOfferingVO svo = _serviceOfferingDao.findById(vm.getServiceOfferingId());
             DiskOfferingVO diskVO = _diskOfferingDao.findById(volume.getDiskOfferingId());
-
-            volume = _storageMgr.createVolume(volume, vm, rootDiskTmplt, dcVO, pod, rootDiskPool.getClusterId(), svo, diskVO, new ArrayList<StoragePoolVO>(), volume.getSize(), rootDiskHyperType);
+            if (!volumeOnSec){
+            	volume = _storageMgr.createVolume(volume, vm, rootDiskTmplt, dcVO, pod, rootDiskPool.getClusterId(), svo, diskVO, new ArrayList<StoragePoolVO>(), volume.getSize(), rootDiskHyperType);
+            }else {
+            	try {
+					volume = _storageMgr.copyVolumeFromSecToPrimary(volume, vm, rootDiskTmplt, dcVO, pod, rootDiskPool.getClusterId(), svo, diskVO, new ArrayList<StoragePoolVO>(), volume.getSize(), rootDiskHyperType);
+				} catch (NoTransitionException e) {				
+					e.printStackTrace();
+				}
+            }
 
             if (volume == null) {
                 throw new CloudRuntimeException("Failed to create volume when attaching it to VM: " + vm.getHostName());
