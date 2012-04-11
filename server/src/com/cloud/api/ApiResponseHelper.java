@@ -2927,10 +2927,8 @@ public class ApiResponseHelper implements ResponseGenerator {
         userVmData.setDomainId(userVm.getDomainId());
 
         Account caller = UserContext.current().getCaller();
-        if (caller.getType() == Account.ACCOUNT_TYPE_ADMIN || caller.getType() == Account.ACCOUNT_TYPE_RESOURCE_DOMAIN_ADMIN) {
-            if (userVm.getHypervisorType() != null) {
-                userVmData.setHypervisor(userVm.getHypervisorType().toString());
-            }
+        if (userVm.getHypervisorType() != null) {
+            userVmData.setHypervisor(userVm.getHypervisorType().toString());
         }
 
         if (userVm.getPassword() != null) {
