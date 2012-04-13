@@ -41,6 +41,7 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.Network;
 import com.cloud.network.element.CiscoNexusVSMElementService;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.network.PortProfile;
 
 @Implementation(responseObject=NetworkResponse.class, description="lists network that are configured on a Cisco 1000v VSM device")
 public class ListCiscoNexusVSMNetworksCmd extends BaseListCmd {
@@ -61,7 +62,7 @@ public class ListCiscoNexusVSMNetworksCmd extends BaseListCmd {
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
 
-    public Long getLoadBalancerDeviceId() {
+    public Long getvsmDeviceId() {
         return vsmDeviceId;
     }
 
@@ -71,9 +72,10 @@ public class ListCiscoNexusVSMNetworksCmd extends BaseListCmd {
 
     @Override
     public void execute() throws ResourceUnavailableException, InsufficientCapacityException, ServerApiException, ConcurrentOperationException, ResourceAllocationException {
+    	/**
         try {
         	// may need to change Network to something else.
-            List<? extends Network> networks  = _ciscoNexusVSMService.listNetworks(this);
+            List<? extends PortProfile> networks  = _ciscoNexusVSMService.listNetworks(this);
             ListResponse<NetworkResponse> response = new ListResponse<NetworkResponse>();
             List<NetworkResponse> networkResponses = new ArrayList<NetworkResponse>();
 
@@ -91,7 +93,7 @@ public class ListCiscoNexusVSMNetworksCmd extends BaseListCmd {
             throw new ServerApiException(BaseCmd.PARAM_ERROR, invalidParamExcp.getMessage());
         } catch (CloudRuntimeException runtimeExcp) {
             throw new ServerApiException(BaseCmd.INTERNAL_ERROR, runtimeExcp.getMessage());
-        }
+        } **/
     }
 
     @Override
