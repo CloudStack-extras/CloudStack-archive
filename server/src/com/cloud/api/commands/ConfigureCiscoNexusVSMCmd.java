@@ -77,6 +77,7 @@ public class ConfigureCiscoNexusVSMCmd extends BaseAsyncCmd {
 
     @Override
     public void execute() throws ResourceUnavailableException, InsufficientCapacityException, ServerApiException, ConcurrentOperationException, ResourceAllocationException {
+    	/**
         try { 
             CiscoNexusVSMDeviceVO ciscoNexusVSMDeviceVO = _ciscoNexusVSMService.configureCiscoNexusVSM(this);
             if (ciscoNexusVSMDeviceVO != null) {
@@ -91,7 +92,7 @@ public class ConfigureCiscoNexusVSMCmd extends BaseAsyncCmd {
             throw new ServerApiException(BaseCmd.PARAM_ERROR, invalidParamExcp.getMessage());
         } catch (CloudRuntimeException runtimeExcp) {
             throw new ServerApiException(BaseCmd.INTERNAL_ERROR, runtimeExcp.getMessage());
-        }
+        } **/
     }
 
     @Override
