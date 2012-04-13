@@ -52,47 +52,92 @@ public class CiscoNexusVSMDeviceVO {
     @Column(name = "host_id")
     private long hostId;
 
+    @Column(name = "username")
+    private String vsmUserName;
+    
+    @Column(name = "password")
+    private String vsmPassword;
+
+    @Column(name = "vmsmgmtipaddr")
+    private String vsmMgmtIPAddr;
+    
+    @Column(name = "vcenteripaddr")
+    private String vCenterIPAddr;
+    
+    // Name of the DataCenter (as seen in vCenter) that this VSM manages.
+    @Column(name = "vcenterdcname")
+    private String vCenterDCName;
+    
     @Column(name = "management_vlan")
     private int managementVlan;
 
-    @Column(name = "data_vlan")
-    private int dataVlan;
+    @Column(name = "control_vlan")
+    private int controlVlan;
     
     @Column(name = "packet_vlan")
     private int packetVlan;
     
-    @Column(name="is_managed")
-    private boolean isManagedDevice;
-
-    @Column(name="is_inline")
-    private boolean isInlineMode;
-
-    @Column(name = "parent_host_id")
-    private long parentHostId;
+    @Column(name = "storage_vlan")
+    private int storageVlan;
     
-    // We probably should have a field to put the VSM in a maintenance state for upgrades, or to
-    // not manage it for a while, etc. See ExternalLoadBalancerDeviceVO.java'sLBDeviceAllocationState.
+    @Column(name = "vsmDomainId")
+    private long vsmDomainId;
+    
+    @Column(name = "vsmvCenterDomainId")
+    private long vsmvCenterDomainId;
+    
+    @Column(name = "config_mode")
+    private VSMConfigMode vsmConfigMode;
+    
+    @Column(name = "ConfigState")
+    private VSMConfigState vsmConfigState;
+    
+    @Column(name = "vsmDeviceState")
+    private VSMDeviceState vsmDeviceState;    
+    
+    // ********** The ones below could be removed...
+    
+    // Id of the DataCenter (as seen in vCenter) that this VSM manages.
+    // We can probably remove this.
+    @Column(name = "vcenteredcid")
+    private long vCenterDCId;
+    
+    // Name of the DVS that gets created on vCenter to represent this VSM.
+    // Can be queried and hence can be most probably removed.
+    @Column(name = "dvsname")
+    private String dvsName;
+        
+    // Number of VEMs being currently managed by this VSM.
+    // Again, queriable/removable.
+    @Column(name = "num_of_vems")
+    private int numVEMS;
+    
+    // ******** End of removable candidates.
+    
     
 
-    public CiscoNexusVSMDeviceVO(long hostId, int mgmtVlan, int packetVlan, int dataVlan, long capacity, boolean inline) {
-    	
-    	// Set all the VSM's properties here.
-    	
-        this.managementVlan = mgmtVlan;
-        this.dataVlan = dataVlan;
-        this.packetVlan = packetVlan;
-        this.hostId = hostId;
-        this.isInlineMode = inline;
-        this.isManagedDevice = false;
-        this.uuid = UUID.randomUUID().toString();
+    // This tells us whether the VSM is currently enabled or disabled. We may
+    // need this if we would like to carry out any sort of maintenance on the
+    // VSM or CS.
+    public enum VSMDeviceState {
+    	Enabled,
+    	Disabled
+    }    
+    
+    // This tells us whether the VSM is currently configured with a standby (HA)
+    // or does not have any standby (Standalone).
+    public enum VSMConfigMode {
+        Standalone,
+        HA
+    }
+    
+    // This tells us whether the VSM is currently a primary or a standby VSM.
+    public enum VSMConfigState {
+        Primary,
+        Standby
     }
 
-    public CiscoNexusVSMDeviceVO() {
-        this.uuid = UUID.randomUUID().toString();
-    }
-
-    // Put all the get/set methods for the VSM properties here.
-    
+    // Accessor methods
     public long getId() {
         return id;
     }
@@ -100,60 +145,142 @@ public class CiscoNexusVSMDeviceVO {
     public long getHostId() {
         return hostId;
     }
-
-    public long getParentHostId() {
-        return parentHostId;
-    }
-
-    public void setParentHostId(long parentHostId) {
-        this.parentHostId = parentHostId;
-    }
- 
-    public void setPacketVlan(int packetVlan) {
-    	this.packetVlan = packetVlan;
+    
+    public String getUserName() {
+    	return vsmUserName;
     }
     
-    public int getPacketVlan() {
-    	return this.packetVlan;
+    public String getPassword() {
+    	return vsmPassword;
+    }
+
+    public String getMgmtIpAddr() {
+    	return vsmMgmtIPAddr;
     }
     
-    public void setManagementVlan(int managementVlan) {
-    	this.managementVlan = managementVlan;
+    public String getvCenterIPAddr() {
+    	return vCenterIPAddr;
+    }
+    
+    public String getvCenterDCName() {
+    	return vCenterDCName;
     }
     
     public int getManagementVlan() {
-    	return this.managementVlan;
+    	return managementVlan;
     }
     
-    public void setDataVlan(int dataVlan) {
-    	this.dataVlan = dataVlan;
+    public int getControlVlan() {
+    	return controlVlan;
     }
     
-    public int getDataVlan() {
-    	return this.dataVlan;
+    public int getPacketVlan() {
+    	return packetVlan;
+    }  
+
+    public int getStorageVlan() {
+    	return storageVlan;
     }
     
-    public boolean getIsManagedDevice() {
-        return isManagedDevice;
+    public long getvsmDomainId() {
+    	return vsmDomainId;
     }
-
-    public void setIsManagedDevice(boolean managed) {
-        this.isManagedDevice = managed;
+    
+    public long getvsmvCenterDomainId() {
+    	return vsmvCenterDomainId;
+    }    
+    
+    public VSMConfigMode getvsmConfigMode() {
+    	return vsmConfigMode;
     }
-
-    public boolean getIsInLineMode () {
-        return isInlineMode;
+    
+    public VSMConfigState getvsmConfigState() {
+    	return vsmConfigState;
     }
-
-    public void  setIsInlineMode(boolean inline) {
-        this.isInlineMode = inline;
+    
+    public VSMDeviceState getvsmDeviceState() {
+    	return vsmDeviceState;
     }
     
     public String getUuid() {
         return uuid;
     }
+    
+    
+    // Setter methods
 
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
+    public void setHostId(long hostid) {
+        this.hostId = hostid;
     }
+    
+    public void getUserName(String username) {
+    	this.vsmUserName = username;
+    }
+    
+    public void setPassword(String password) {
+    	this.vsmPassword = password;
+    }
+
+    public void setMgmtIpAddr(String ipaddr) {
+    	this.vsmMgmtIPAddr = ipaddr;
+    }
+    
+    public void setvCenterIPAddr(String ipaddr) {
+    	this.vCenterIPAddr = ipaddr;
+    }
+    
+    public void setvCenterDCName(String dcname) {
+    	this.vCenterDCName = dcname;
+    }
+    
+    public void setManagementVlan(int vlan) {
+    	this.managementVlan = vlan;
+    }
+    
+    public void setControlVlan(int vlan) {
+    	this.controlVlan = vlan;
+    }
+    
+    public void setPacketVlan(int vlan) {
+    	this.packetVlan = vlan;
+    }  
+
+    public void setStorageVlan(int vlan) {
+    	this.storageVlan = vlan;
+    }
+    
+    public void setvsmDomainId(long id) {
+    	this.vsmDomainId = id;
+    }
+    
+    public void setvsmvCenterDomainId(long id) {
+    	this.vsmvCenterDomainId = id;
+    }    
+    
+    public void setvsmConfigMode(VSMConfigMode mode) {
+    	this.vsmConfigMode = mode;
+    }
+    
+    public void setvsmConfigState(VSMConfigState state) {
+    	this.vsmConfigState = state;
+    }
+    
+    public void setvsmDeviceState(VSMDeviceState devState) {
+    	this.vsmDeviceState = devState;
+    }
+ 
+        
+    // Constructor methods.
+    
+    public CiscoNexusVSMDeviceVO(String vsmIpAddr, String username, String password) {    	
+    	// Set all the VSM's properties here.       
+        this.uuid = UUID.randomUUID().toString();
+        this.vsmMgmtIPAddr = vsmIpAddr;
+        this.vsmUserName = username;
+        this.vsmPassword = password;        
+    }
+
+    public CiscoNexusVSMDeviceVO() {
+        this.uuid = UUID.randomUUID().toString();
+    }    
 }
