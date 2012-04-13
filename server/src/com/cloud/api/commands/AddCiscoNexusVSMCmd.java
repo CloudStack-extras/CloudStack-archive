@@ -51,25 +51,21 @@ public class AddCiscoNexusVSMCmd extends BaseAsyncCmd {
     /////////////////////////////////////////////////////
 
     @IdentityMapper(entityTableName="external_virtual_switch_management_devices")
-    @Parameter(name=ApiConstants.URL, type=CommandType.STRING, required = true, description="URL of the Cisco Nexus 1000v VSM appliance.")
-    private String url;
+    @Parameter(name=ApiConstants.IP_ADDRESS, type=CommandType.STRING, required = true, description="IP Address of the Cisco Nexus 1000v VSM appliance.")
+    private String ipaddr;
 
-    @Parameter(name=ApiConstants.USERNAME, type=CommandType.STRING, required = true, description="Credentials to reach the Cisco Nexus 1000v VSM device")
+    @Parameter(name=ApiConstants.USERNAME, type=CommandType.STRING, required = true, description="username to reach the Cisco Nexus 1000v VSM device")
     private String username;
     
-    @Parameter(name=ApiConstants.PASSWORD, type=CommandType.STRING, required = true, description="Credentials to reach the Cisco Nexus 1000v VSM device")
+    @Parameter(name=ApiConstants.PASSWORD, type=CommandType.STRING, required = true, description="password to reach the Cisco Nexus 1000v VSM device")
     private String password;
-
-    // We may not need this at all. Or we may need a new device type for Switching management devices like the Cisco N1KV VSM.
-    @Parameter(name = ApiConstants.NETWORK_DEVICE_TYPE, type = CommandType.STRING, required = true, description = "Cisco Nexus 1000v VSM supports physical and virtual types")
-    private String deviceType;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
 
-    public String getUrl() {
-        return url;
+    public String getIpAddr() {
+        return ipaddr;
     }
 
     public String getUsername() {
@@ -80,9 +76,7 @@ public class AddCiscoNexusVSMCmd extends BaseAsyncCmd {
         return password;
     }
 
-    public String getDeviceType() {
-        return deviceType;
-    }
+
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
