@@ -27,44 +27,38 @@ import com.cloud.api.commands.ListCiscoNexusVSMCmd;
 import com.cloud.api.response.CiscoNexusVSMResponse;
 import com.cloud.network.CiscoNexusVSMDeviceVO;
 import com.cloud.network.Network;
+import com.cloud.network.PortProfile;
 import com.cloud.utils.component.PluggableService;
 
 public interface CiscoNexusVSMElementService extends PluggableService {
 
     /**
-     * adds a Netscaler load balancer device in to a physical network
-     * @param AddNetscalerLoadBalancerCmd 
-     * @return ExternalLoadBalancerDeviceVO object for the device added
+     * adds a Cisco Nexus VSM
+     * @param AddCiscoNexusVSMCmd 
+     * @return CiscoNexusVSMDeviceVO object for the device added
      */
     public CiscoNexusVSMDeviceVO addCiscoNexusVSM(AddCiscoNexusVSMCmd cmd);
 
     /**
-     * removes a Netscaler load balancer device from a physical network
-     * @param DeleteNetscalerLoadBalancerCmd 
-     * @return true if Netscaler device is deleted successfully
+     * removes a Cisco Nexus VSM
+     * @param DeleteCiscoNexusVSMCmd 
+     * @return true if VSM is deleted successfully
      */
     public boolean deleteCiscoNexusVSM(DeleteCiscoNexusVSMCmd cmd);
 
     /**
-     * configures a Netscaler load balancer device added in a physical network
-     * @param ConfigureNetscalerLoadBalancerCmd
-     * @return ExternalLoadBalancerDeviceVO for the device configured
-     */
-    public CiscoNexusVSMDeviceVO configureCiscoNexusVSM(ConfigureCiscoNexusVSMCmd cmd);
-
-    /**
-     * lists all the load balancer devices added in to a physical network
-     * @param ListNetscalerLoadBalancersCmd
-     * @return list of ExternalLoadBalancerDeviceVO for the devices in the physical network.
+     * lists all the VSMs the Mgmt Server knows of.
+     * @param ListCiscoNexusVSMCmd
+     * @return list of CiscoNexusVSMDeviceVO for the VSMs the mgmt server knows of.
      */
     public List<CiscoNexusVSMDeviceVO> listCiscoNexusVSMs(ListCiscoNexusVSMCmd cmd);
 
     /**
-     * lists all the guest networks using a Netscaler load balancer device
-     * @param ListNetscalerLoadBalancerNetworksCmd
+     * lists all the networks (port profiles) configured on the VSM.
+     * @param ListCiscoNexusVSMCmd
      * @return list of the guest networks that are using this Netscaler load balancer
      */
-    public List<? extends Network> listNetworks(ListCiscoNexusVSMNetworksCmd cmd);
+    public List<? extends PortProfile> listNetworks(ListCiscoNexusVSMNetworksCmd cmd);
 
     /**
      * creates API response object for netscaler load balancers
