@@ -46,10 +46,12 @@ public interface DownloadMonitor extends Manager{
 	/*When new host added, take a look at if there are templates needed to be downloaded for the same hypervisor as the host*/
     void handleSysTemplateDownload(HostVO hostId);
 
-    void handleTemplateSync(Long dcId);
+    void handleSync(Long dcId);
 
     void addSystemVMTemplatesToHost(HostVO host, Map<String, TemplateInfo> templateInfos);
 
 	boolean downloadVolumeToStorage(VolumeVO volume, Long zoneId, String url, String checkSum);
+
+	void handleVolumeSync(HostVO ssHost);
 
 }

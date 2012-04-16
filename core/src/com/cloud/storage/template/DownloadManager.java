@@ -106,6 +106,7 @@ public interface DownloadManager extends Manager {
 	/**
 	 * @return list of volume info for installed volumes
 	 */
-	public Map<String, TemplateInfo> gatherVolumeInfo(String volumeDir);
+	public Map<Long, TemplateInfo> gatherVolumeInfo(String volumeDir);
+
 
 }
