@@ -54,11 +54,17 @@ public class AddCiscoNexusVSMCmd extends BaseAsyncCmd {
     @Parameter(name=ApiConstants.IP_ADDRESS, type=CommandType.STRING, required = true, description="IP Address of the Cisco Nexus 1000v VSM appliance.")
     private String ipaddr;
 
+    @Parameter(name=ApiConstants.ZONE_ID, type=CommandType.STRING, required = true, description="Id of the zone in which the Cisco Nexus 1000v VSM appliance.")
+    private long zoneId;
+    
     @Parameter(name=ApiConstants.USERNAME, type=CommandType.STRING, required = true, description="username to reach the Cisco Nexus 1000v VSM device")
     private String username;
     
     @Parameter(name=ApiConstants.PASSWORD, type=CommandType.STRING, required = true, description="password to reach the Cisco Nexus 1000v VSM device")
     private String password;
+    
+    @Parameter(name=ApiConstants.NAME, type=CommandType.STRING, required = false, description="name of Cisco Nexus 1000v VSM device")
+    private String vsmName;
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -76,7 +82,13 @@ public class AddCiscoNexusVSMCmd extends BaseAsyncCmd {
         return password;
     }
 
-
+    public String getVSMName() {
+    	return vsmName;
+    }
+    
+    public long getZoneId() {
+    	return zoneId;
+    }
 
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////

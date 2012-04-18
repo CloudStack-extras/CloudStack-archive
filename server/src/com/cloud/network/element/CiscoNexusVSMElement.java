@@ -94,33 +94,13 @@ public class CiscoNexusVSMElement extends CiscoNexusVSMDeviceManagerImpl impleme
         String vsmipaddress = cmd.getIpAddr();
         String vsmusername = cmd.getUsername();
         String vsmpassword = cmd.getPassword();
-        
-        // First, connect to the VSM. Then, issue a hello to it. Then, when
-        // we're happy that the VSM has responded return success. Return exception
-        // if failure is encountered.
-        
-           
-        // do we need this parsing of the URL???
-        // UrlUtil.parseQueryParameters(uri.getQuery(), false, configParams);
-        
-
-        // Call the XML RPC calling routine here! Define it in CiscoNexusVSMDeviceManagerImpl.java
-        // In this function, we'll connect to the VSM, then absorb all its information, and populate
-        // our database with the params we need.
-        
-        // We may want to pull the port profile info from the VSM, and their corresponding port group info from vCenter,
-        // and then call a func like addPortProfile() that would write this info out to the CS db. We could have
-        // similar functions like delPortProfile()/ modifyPortProfile(). We should probably also expose APIs to call
-        // those functions explicitly. We could also make the pulling of port groups' info from vCenter a separate command.
-        
-        //CiscoNexusVSMDeviceVO vsmDeviceVO = addCiscoNexusVSM(cmd.getPhysicalNetworkId(), cmd.getUrl(), cmd.getUsername(), cmd.getPassword(), deviceName, (ServerResource) new NetscalerResource());
-        
-        //ExternalLoadBalancerDeviceVO lbDeviceVO = addExternalLoadBalancer(cmd.getPhysicalNetworkId(), cmd.getUrl(), cmd.getUsername(), cmd.getPassword(), deviceName, (ServerResource) new NetscalerResource());
-        //return lbDeviceVO;
+        // We probably need to get rid of this vsmName!
+        String vsmName = cmd.getVSMName();
+        long zoneId = cmd.getZoneId();
         
         // Invoke the addCiscoNexusVSM() function defined in the upper layer (DeviceMgrImpl).
         // The  upper layer function will create a resource of type "host" to represent this VSM. It will add this VSM to the db.
-        CiscoNexusVSMDeviceVO vsmDeviceVO = addCiscoNexusVSM(cmd.getIpAddr(), cmd.getUsername(), cmd.getPassword(), (ServerResource) new CiscoNexusVSMResource());
+        CiscoNexusVSMDeviceVO vsmDeviceVO = addCiscoNexusVSM(zoneId, vsmipaddress, vsmusername, vsmpassword, (ServerResource) new CiscoNexusVSMResource(), vsmName);
         return vsmDeviceVO;
     }
 

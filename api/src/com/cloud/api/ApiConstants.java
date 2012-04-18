@@ -330,6 +330,7 @@ public class ApiConstants {
     public static final String INSTANCE_NAME = "instancename";
     public static final String START_VM = "startvm";
     public static final String HA_HOST = "hahost";
+    public static final String GUID = "guid";
 
     public static final String EXTERNAL_SWITCH_MGMT_DEVICE_ID = "vsmdeviceid";
     public static final String EXTERNAL_SWITCH_MGMT_DEVICE_NAME = "vsmdevicename";
