@@ -20,6 +20,7 @@ import com.cloud.agent.api.Command;
 import com.cloud.agent.api.PingCommand;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupExternalLoadBalancerCommand;
+import com.cloud.api.ApiConstants;
 import com.cloud.host.Host;
 import com.cloud.host.Host.Type;
 import com.cloud.resource.ServerResource;
@@ -42,7 +43,7 @@ public class CiscoNexusVSMResource implements ServerResource {
 
     // deployment configuration
     private String _name;
-    private String _zoneId;
+    //private String _zoneId;
     private String _ip;
     private String _username;
     private String _password;
@@ -64,25 +65,31 @@ public class CiscoNexusVSMResource implements ServerResource {
         _gson = GsonHelper.getGsonLogger();
     }
 
-    @Override
+
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
         try {
+        	// What is this name?! Is it a name for the VSM device? What do we set this to??
+        	// Can't understand why the "Manager" interface needs a String name parameter for
+        	// configure().
+        	
+        	// Do we need this zone id???? We may need to add other info also, like a/c id etc.
+        	/**
             _zoneId = (String) params.get("zoneId");
             if (_zoneId == null) {
                 throw new ConfigurationException("Unable to find zone Id  in the configuration parameters");
-            }
+            } **/
 
-            _ip = (String) params.get("ip");
+            _ip = (String) params.get(ApiConstants.IP_ADDRESS);
             if (_ip == null) {
                 throw new ConfigurationException("Unable to find IP address in the configuration parameters");
             }
 
-            _username = (String) params.get("username");
+            _username = (String) params.get(ApiConstants.USERNAME);
             if (_username == null) {
                 throw new ConfigurationException("Unable to find username in the configuration parameters");
             }
 
-            _password = (String) params.get("password");
+            _password = (String) params.get(ApiConstants.PASSWORD);
             if (_password == null) {
                 throw new ConfigurationException("Unable to find password in the configuration parameters");
             }
@@ -129,7 +136,7 @@ public class CiscoNexusVSMResource implements ServerResource {
     public StartupCommand[] initialize() {
         StartupExternalLoadBalancerCommand cmd = new StartupExternalLoadBalancerCommand();
         cmd.setName(_name);
-        cmd.setDataCenter(_zoneId);
+        //cmd.setDataCenter(_zoneId);
         cmd.setPod("");
         cmd.setPrivateIpAddress(_ip);
         cmd.setStorageIpAddress("");

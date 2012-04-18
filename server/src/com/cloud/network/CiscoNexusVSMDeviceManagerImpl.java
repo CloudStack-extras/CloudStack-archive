@@ -112,12 +112,14 @@ import com.cloud.vm.Nic.State;
 import com.cloud.vm.NicVO;
 import com.cloud.vm.dao.DomainRouterDao;
 import com.cloud.vm.dao.NicDao;
+import com.cloud.network.dao.CiscoNexusVSMDeviceDao;
+
 //public abstract class CiscoNexusVSMDeviceManagerImpl extends AdapterBase implements CiscoNexusVSMDeviceManager, ResourceStateAdapter {
 public abstract class CiscoNexusVSMDeviceManagerImpl extends AdapterBase {
 
 	// We need a CiscoNexusVSMDeviceDao interface and a CiscoNexusVSMDeviceDaoImpl that extends GenericDaoBase<NetworkExternalLoadBalancerVO, Long> and implements this interface.
     @Inject
-    CiscoNexusVSMDeviceDao _externalLoadBalancerDeviceDao;    
+    CiscoNexusVSMDeviceDao _ciscoNexusVSMDeviceDao;    
     @Inject
     HostDao _hostDao;
     @Inject
@@ -174,77 +176,54 @@ public abstract class CiscoNexusVSMDeviceManagerImpl extends AdapterBase {
     private long _defaultLbCapacity;
     private static final org.apache.log4j.Logger s_logger = Logger.getLogger(ExternalLoadBalancerDeviceManagerImpl.class);
 
-    @Override
     @DB
-    public CiscoNexusVSMDeviceVO addCiscoNexusVSM(String url, String username, String password, ServerResource resource) {
+    public CiscoNexusVSMDeviceVO addCiscoNexusVSM(long zoneId, String ipaddress, String username, String password, ServerResource resource, String vsmName) {
 
-        PhysicalNetworkVO pNetwork = null;
-        NetworkDevice ntwkDevice = NetworkDevice.getNetworkDevice(deviceName);
-        long zoneId;
-
-        if ((ntwkDevice == null) || (url == null) || (username == null) || (resource == null) || (password == null)) {
-            throw new InvalidParameterValueException("Atleast one of the required parameters (url, username, password," +
-                    " server resource, zone id/physical network id) is not specified or a valid parameter.");
-        }
-
-        pNetwork = _physicalNetworkDao.findById(physicalNetworkId);
-        if (pNetwork == null) {
-            throw new InvalidParameterValueException("Could not find phyical network with ID: " + physicalNetworkId);
-        }
-        zoneId = pNetwork.getDataCenterId();
-
-        PhysicalNetworkServiceProviderVO ntwkSvcProvider = _physicalNetworkServiceProviderDao.findByServiceProvider(pNetwork.getId(), ntwkDevice.getNetworkServiceProvder());
-        if (ntwkSvcProvider == null) {
-            throw new CloudRuntimeException("Network Service Provider: " + ntwkDevice.getNetworkServiceProvder() +
-                    " is not enabled in the physical network: " + physicalNetworkId + "to add this device");
-        } else if (ntwkSvcProvider.getState() == PhysicalNetworkServiceProvider.State.Shutdown) {
-            throw new CloudRuntimeException("Network Service Provider: " + ntwkSvcProvider.getProviderName() +
-                    " is in shutdown state in the physical network: " + physicalNetworkId + "to add this device");
-        }
-
-        URI uri;
-        try {
-            uri = new URI(url);
-        } catch (Exception e) {
-            s_logger.debug(e);
-            throw new InvalidParameterValueException(e.getMessage());
-        }
-
-        String ipAddress = uri.getHost();
+    	// In this function, we create a record for this Cisco Nexus VSM, in the database.
+    	// We also hand off interaction with the actual Cisco Nexus VSM via XML-RPC, to the
+    	// Resource Manager. The resource manager invokes the CiscoNexusVSMResource class's
+    	// functionality to talk to the VSM via Java bindings for the VSM's XML-RPC commands.
+    	
         Map hostDetails = new HashMap<String, String>();
-        String hostName = getExternalLoadBalancerResourceGuid(pNetwork.getId(), deviceName, ipAddress);
-        hostDetails.put("name", hostName);
-        hostDetails.put("guid", UUID.randomUUID().toString());
-        hostDetails.put("zoneId", String.valueOf(pNetwork.getDataCenterId()));
-        hostDetails.put("ip", ipAddress);
-        hostDetails.put("physicalNetworkId", String.valueOf(pNetwork.getId()));
-        hostDetails.put("username", username);
-        hostDetails.put("password", password);
-        hostDetails.put("deviceName", deviceName);
+        // Do we need guid, zone id, account id, etc???
+        hostDetails.put(ApiConstants.IP_ADDRESS, ipaddress);
+        hostDetails.put(ApiConstants.USERNAME, username);
+        hostDetails.put(ApiConstants.PASSWORD, password);
+        // Q1) Do we need a zoneUuid to dbzoneId translation? How will the user send in the zoneId?
+        // We get the zoneId as a uuid, so we need to look up the db zoneId.
+        // Ask Frank how to do this lookup.
+        long dbZoneId = zoneId;
+        
+        // Q2) Do we need to have the user send in a "DedicatedUse" parameter? What is it's use
+        // for Netscaler?
+        
+        hostDetails.put(ApiConstants.ZONE_ID, dbZoneId);
+        hostDetails.put(ApiConstants.GUID, UUID.randomUUID().toString());
 
-        // leave parameter validation to be part server resource configure
+        // leave parameter validation to be part of server resource configure
         Map<String, String> configParams = new HashMap<String, String>();
-        UrlUtil.parseQueryParameters(uri.getQuery(), false, configParams);
         hostDetails.putAll(configParams);
 
         Transaction txn = Transaction.currentTxn();
         try {
-            resource.configure(hostName, hostDetails);
+        	// We don't really use this vsmName! We're currently just passing this parameter
+        	// to keep the Manager interface's configure() method happy.
+            resource.configure(vsmName, hostDetails);
 
-            Host host = _resourceMgr.addHost(zoneId, resource, Host.Type.ExternalLoadBalancer, hostDetails);
+            // we get a hostVO object.
+            Host host = _resourceMgr.addHost(dbZoneId, resource, Host.Type.ExternalVirtualSwitchSupervisor, hostDetails);
             if (host != null) {
-
-                boolean dedicatedUse = (configParams.get(ApiConstants.LOAD_BALANCER_DEVICE_DEDICATED) != null) ? Boolean.parseBoolean(configParams.get(ApiConstants.LOAD_BALANCER_DEVICE_DEDICATED)) : false;
-                boolean inline = (configParams.get(ApiConstants.INLINE) != null) ? Boolean.parseBoolean(configParams.get(ApiConstants.INLINE)) : false;
+            	/**
+                boolean dedicatedUse = (configParams.get(ApiConstants.LOAD_BALANCER_DEVICE_DEDICATED) != null) ? Boolean.parseBoolean(configParams.get(ApiConstants.LOAD_BALANCER_DEVICE_DEDICATED)) : false;               
                 long capacity = NumbersUtil.parseLong((String) configParams.get(ApiConstants.LOAD_BALANCER_DEVICE_CAPACITY), 0);
                 if (capacity == 0) {
                     capacity = _defaultLbCapacity;
-                }
+                } **/
 
                 txn.start();
-                ExternalLoadBalancerDeviceVO lbDeviceVO = new ExternalLoadBalancerDeviceVO(host.getId(), pNetwork.getId(), ntwkSvcProvider.getProviderName(),
-                        deviceName, capacity, dedicatedUse, inline);
-                _externalLoadBalancerDeviceDao.persist(lbDeviceVO);
+                // host.getId() = zoneId
+                CiscoNexusVSMDeviceVO vsmDeviceVO = new CiscoNexusVSMDeviceVO(host.getId(), ipaddress, username, password);
+                _ciscoNexusVSMDeviceDao.persist(vsmDeviceVO);
 
                 DetailVO hostDetail = new DetailVO(host.getId(), ApiConstants.LOAD_BALANCER_DEVICE_ID, String.valueOf(lbDeviceVO.getId()));
                 _hostDetailDao.persist(hostDetail);
@@ -260,7 +239,7 @@ public abstract class CiscoNexusVSMDeviceManagerImpl extends AdapterBase {
         }
     }
 
-    @Override
+
     public boolean deleteExternalLoadBalancer(long hostId) {
         HostVO externalLoadBalancer = _hostDao.findById(hostId);
         if (externalLoadBalancer == null) {
@@ -305,7 +284,7 @@ public abstract class CiscoNexusVSMDeviceManagerImpl extends AdapterBase {
         }
     }
 
-    @Override
+
     public List<Host> listExternalLoadBalancers(long physicalNetworkId, String deviceName) {
         List<Host> lbHosts = new ArrayList<Host>();
         NetworkDevice lbNetworkDevice = NetworkDevice.getNetworkDevice(deviceName);
@@ -348,7 +327,7 @@ public abstract class CiscoNexusVSMDeviceManagerImpl extends AdapterBase {
         return physicalNetworkId + "-" + deviceName + "-" + ip;
     }
 
-    @Override
+
     public ExternalLoadBalancerDeviceVO getExternalLoadBalancerForNetwork(Network network) {
         NetworkExternalLoadBalancerVO lbDeviceForNetwork = _networkExternalLBDao.findByNetworkId(network.getId());
         if (lbDeviceForNetwork != null) {
@@ -528,7 +507,7 @@ public abstract class CiscoNexusVSMDeviceManagerImpl extends AdapterBase {
         return lbDevice;
     }
 
-    @Override
+
     public ExternalLoadBalancerDeviceVO findSuitableLoadBalancerForNetwork(Network network, boolean dedicatedLb) throws InsufficientCapacityException {
         long physicalNetworkId = network.getPhysicalNetworkId();
         List<ExternalLoadBalancerDeviceVO> lbDevices = null;
@@ -756,7 +735,7 @@ public abstract class CiscoNexusVSMDeviceManagerImpl extends AdapterBase {
         }
     }
 
-    @Override
+
     public boolean applyLoadBalancerRules(Network network, List<? extends FirewallRule> rules) throws ResourceUnavailableException {
         // Find the external load balancer in this zone
         long zoneId = network.getDataCenterId();
@@ -885,7 +864,7 @@ public abstract class CiscoNexusVSMDeviceManagerImpl extends AdapterBase {
         return true;
     }
 
-    @Override
+
     public boolean manageGuestNetworkWithExternalLoadBalancer(boolean add, Network guestConfig) throws ResourceUnavailableException, InsufficientCapacityException {
         if (guestConfig.getTrafficType() != TrafficType.Guest) {
             s_logger.trace("External load balancer can only be used for guest networks.");
@@ -1000,13 +979,13 @@ public abstract class CiscoNexusVSMDeviceManagerImpl extends AdapterBase {
         return true;
     }
 
-    @Override
+
     public HostVO createHostVOForConnectedAgent(HostVO host, StartupCommand[] cmd) {
         // TODO Auto-generated method stub
         return null;
     }
 
-    @Override
+
     public HostVO createHostVOForDirectConnectAgent(HostVO host, StartupCommand[] startup, ServerResource resource,
             Map<String, String> details, List<String> hostTags) {
         if (!(startup[0] instanceof StartupExternalLoadBalancerCommand)) {
@@ -1016,7 +995,7 @@ public abstract class CiscoNexusVSMDeviceManagerImpl extends AdapterBase {
         return host;
     }
 
-    @Override
+
     public DeleteHostAnswer deleteHost(HostVO host, boolean isForced, boolean isForceDeleteStorage) throws UnableDeleteHostException {
         if (host.getType() != com.cloud.host.Host.Type.ExternalLoadBalancer) {
             return null;
