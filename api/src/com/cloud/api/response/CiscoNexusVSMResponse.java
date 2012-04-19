@@ -47,21 +47,17 @@ public class CiscoNexusVSMResponse extends BaseResponse {
     //private String privateInterface;
 
     @SerializedName(ApiConstants.IP_ADDRESS) @Param(description="the management IP address of the external Cisco Nexus 1000v Virtual Supervisor Module")
-    private String ipAddress;
+    private String mgmtIpAddress;
 
-    public void setId(long lbDeviceId) {
-        this.id.setValue(lbDeviceId);
+    public void setId(long vsmDeviceId) {
+        this.id.setValue(vsmDeviceId);
     }
 
     public void setDeviceName(String deviceName) {
         this.deviceName = deviceName;
     }
 
-    public void setDeviceState(String deviceState) {
-        this.deviceState = deviceState;
-    }
-
-    public void setIpAddress(String ipAddress) {
-        this.ipAddress = ipAddress;
+    public void setMgmtIpAddress(String ipAddress) {
+        this.mgmtIpAddress = ipAddress;
     }
 }
