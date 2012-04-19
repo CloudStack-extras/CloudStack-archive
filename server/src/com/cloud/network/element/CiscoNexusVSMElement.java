@@ -59,11 +59,8 @@ public class CiscoNexusVSMElement extends CiscoNexusVSMDeviceManagerImpl impleme
     HostDao _hostDao;
     @Inject
     DataCenterDao _dcDao;
-    
-    
-    //@Inject
-    //CiscoNexusVSMDeviceDao _vsmDeviceDao;
-    
+    @Inject
+    HostDetailsDao _hostDetailDao;    
     @Inject
     PhysicalNetworkDao _physicalNetworkDao;
     @Inject
@@ -83,34 +80,22 @@ public class CiscoNexusVSMElement extends CiscoNexusVSMDeviceManagerImpl impleme
     	// to address multiple versions of Cisco Nexus Switches in future. This is the
     	// function/layer that will parse multiple versions and accordingly prepare
     	// different parameters to pass to to the CiscoNexusVSMDeviceManagerImpl functions
-    	// which will inturn talk to the right resource via the appropriate manager.
-    	
-    	
-    	// Check if we have already added this device.
-    	// Throw exception saying already added.
-    	
-    	// Put any checks here, return error/null if you find any.
+    	// which will in turn talk to the right resource via the appropriate manager.
 
         String vsmipaddress = cmd.getIpAddr();
         String vsmusername = cmd.getUsername();
         String vsmpassword = cmd.getPassword();
-        // We probably need to get rid of this vsmName!
         String vsmName = cmd.getVSMName();
         long zoneId = cmd.getZoneId();
         
         // Invoke the addCiscoNexusVSM() function defined in the upper layer (DeviceMgrImpl).
-        // The  upper layer function will create a resource of type "host" to represent this VSM. It will add this VSM to the db.
+        // The  upper layer function will create a resource of type "host" to represent this VSM.
+        // It will add this VSM to the db.
         CiscoNexusVSMDeviceVO vsmDeviceVO = addCiscoNexusVSM(zoneId, vsmipaddress, vsmusername, vsmpassword, (ServerResource) new CiscoNexusVSMResource(), vsmName);
         return vsmDeviceVO;
     }
 
-    public boolean deleteCiscoNexusVSM(DeleteCiscoNexusVSMCmd cmd) {    
-        
-    	// Call the XML RPC calling routine here! Define it in CiscoNexusVSMDeviceManagerImpl.java 
-        //return deleteExternalLoadBalancer(lbDeviceVo.getHostId());
-    	// We have to clean up our db, remove any resources allocated, any threads listening etc..
-    	// We may have to raise events to notify other components too that this VSM has been cleanly
-    	// deleted, so no HA kicks in in case we are in control.
+    public boolean deleteCiscoNexusVSM(DeleteCiscoNexusVSMCmd cmd) {
     	return true;
     }
     
@@ -142,9 +127,13 @@ public class CiscoNexusVSMElement extends CiscoNexusVSMDeviceManagerImpl impleme
     	
     }
 
-    public CiscoNexusVSMResponse createCiscoNexusVSMResponse(CiscoNexusVSMDeviceVO lbDeviceVO) {
-    	return null;
-    }
+    public CiscoNexusVSMResponse createCiscoNexusVSMResponse(CiscoNexusVSMDeviceVO vsmDeviceVO) {    		
+            CiscoNexusVSMResponse response = new CiscoNexusVSMResponse();
+            response.setId(vsmDeviceVO.getId());
+            response.setMgmtIpAddress(vsmDeviceVO.getMgmtIpAddr());
+            return response;
+        }
+
     
     public String getPropertiesFile() {
     	return null;
