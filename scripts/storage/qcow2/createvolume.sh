@@ -19,8 +19,8 @@
 
  
 
-# $Id: createtmplt.sh 11601 2010-08-11 17:26:15Z kris $ $HeadURL: svn://svn.lab.vmops.com/repos/branches/2.1.refactor/java/scripts/storage/qcow2/createtmplt.sh $
-# createtmplt.sh -- install a volume
+# $Id: createvol.sh 11601 2010-08-11 17:26:15Z kris $ $HeadURL: svn://svn.lab.vmops.com/repos/branches/2.1.refactor/java/scripts/storage/qcow2/createvol.sh $
+# createvol.sh -- install a volume
 
 usage() {
   printf "Usage: %s: -t <volume-fs> -n <volumename> -f <root disk file> -s <size in Gigabytes> -c <md5 cksum> -d <descr> -h  [-u]\n" $(basename $0) >&2
@@ -96,36 +96,36 @@ uncompress() {
 }
 
 create_from_file() {
-  local tmpltfs=$1
-  local tmpltimg="$2"
-  local tmpltname=$3
-  if [ -b $tmpltimg ]; then
-      $qemu-img convert -f raw -O qcow2 "$tmpltimg" /$tmpltfs/$tmpltname
+  local volfs=$1
+  local volimg="$2"
+  local volname=$3
+  if [ -b $volimg ]; then
+      $qemu-img convert -f raw -O qcow2 "$volimg" /$volfs/$volname
   else
-      $qemu_img convert -f qcow2 -O qcow2 "$tmpltimg" /$tmpltfs/$tmpltname >& /dev/null
+      $qemu_img convert -f qcow2 -O qcow2 "$volimg" /$volfs/$volname >& /dev/null
   fi
   
   if [ "$cleanup" == "true" ]
   then
-    rm -f "$tmpltimg"
+    rm -f "$volimg"
   fi
-  chmod a+r /$tmpltfs/$tmpltname
+  chmod a+r /$volfs/$volname
 }
 
 create_from_snapshot() {
-  local tmpltImg="$1"
+  local volImg="$1"
   local snapshotName="$2"
-  local tmpltfs=$3
-  local tmpltname=$4
+  local volfs=$3
+  local volname=$4
 
-  $qemu_img convert -f qcow2 -O qcow2 -s "$snapshotName" "$tmpltImg" /$tmpltfs/$tmpltname >& /dev/null
+  $qemu_img convert -f qcow2 -O qcow2 -s "$snapshotName" "$volImg" /$volfs/$volname >& /dev/null
   if [ $? -gt 0 ]
   then
-     printf "Failed to create volume /$tmplfs/$tmpltname from snapshot $snapshotName on disk $tmpltImg "
+     printf "Failed to create volume /$tmplfs/$volname from snapshot $snapshotName on disk $volImg "
      exit 2
   fi
 
-  chmod a+r /$tmpltfs/$tmpltname
+  chmod a+r /$volfs/$volname
 }
 
 tflag=
@@ -143,13 +143,13 @@ while getopts 'uht:n:f:sc:d:' OPTION
 do
   case $OPTION in
   t)	tflag=1
-		tmpltfs="$OPTARG"
+		volfs="$OPTARG"
 		;;
   n)	nflag=1
-		tmpltname="$OPTARG"
+		volname="$OPTARG"
 		;;
   f)	fflag=1
-		tmpltimg="$OPTARG"
+		volimg="$OPTARG"
 		;;
   s)	sflag=1
 		sflag=1
@@ -169,47 +169,47 @@ do
 done
 
 
-if [ ! -d /$tmpltfs ] 
+if [ ! -d /$volfs ] 
 then
-  mkdir -p /$tmpltfs
+  mkdir -p /$volfs
   if [ $? -gt 0 ] 
   then
-    printf "Failed to create user fs $tmpltfs\n" >&2
+    printf "Failed to create user fs $volfs\n" >&2
     exit 1
   fi
 fi
 
-if [ ! -f $tmpltimg -a ! -b $tmpltimg ] 
+if [ ! -f $volimg -a ! -b $volimg ] 
 then
-  printf "root disk file $tmpltimg doesn't exist\n"
+  printf "root disk file $volimg doesn't exist\n"
   exit 3
 fi
 
-tmpltimg=$(uncompress "$tmpltimg")
+volimg=$(uncompress "$volimg")
 if [ $? -ne 0 ]
 then
-  printf "failed to uncompress $tmpltimg\n"
+  printf "failed to uncompress $volimg\n"
 fi
 
 if [ "$sflag" == "1" ]
 then
-   create_from_snapshot  "$tmpltimg" "$snapshotName" $tmpltfs $tmpltname
+   create_from_snapshot  "$volimg" "$snapshotName" $volfs $volname
 else
-   create_from_file $tmpltfs "$tmpltimg" $tmpltname
+   create_from_file $volfs "$volimg" $volname
 fi
 
-touch /$tmpltfs/volume.properties
-chmod a+r /$tmpltfs/volume.properties
-echo -n "" > /$tmpltfs/volume.properties
+touch /$volfs/volume.properties
+chmod a+r /$volfs/volume.properties
+echo -n "" > /$volfs/volume.properties
 
 today=$(date '+%m_%d_%Y')
-echo "filename=$tmpltname" > /$tmpltfs/volume.properties
-echo "snapshot.name=$today" >> /$tmpltfs/volume.properties
-echo "description=$descr" >> /$tmpltfs/volume.properties
+echo "filename=$volname" > /$volfs/volume.properties
+echo "snapshot.name=$today" >> /$volfs/volume.properties
+echo "description=$descr" >> /$volfs/volume.properties
 
 if [ "$cleanup" == "true" ]
 then
-  rm -f "$tmpltimg"
+  rm -f "$volimg"
 fi
 
 exit 0
