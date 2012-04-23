@@ -26,3 +26,26 @@ ALTER TABLE `cloud`.`user_vm` ADD COLUMN `update_parameters` tinyint(1) NOT NULL
 UPDATE `cloud`.`user_vm` SET update_parameters=0 where id>0;
 
 INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Advanced', 'DEFAULT', 'management-server', 'ha.tag', NULL, 'HA tag defining that the host marked with this tag can be used for HA purposes only');
+
+# Changes for OVS tunnel manager
+
+CREATE TABLE `cloud`.`ovs_tunnel_interface` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `ip` varchar(16) DEFAULT NULL,
+  `netmask` varchar(16) DEFAULT NULL,
+  `mac` varchar(18) DEFAULT NULL,
+  `host_id` bigint(20) DEFAULT NULL,
+  `label` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `cloud`.`ovs_tunnel_network`(
+  `id` bigint unsigned NOT NULL UNIQUE AUTO_INCREMENT,
+  `from` bigint unsigned COMMENT 'from host id',
+  `to` bigint unsigned COMMENT 'to host id',
+  `network_id` bigint unsigned COMMENT 'network identifier',
+  `key` int unsigned COMMENT 'gre key',
+  `port_name` varchar(32) COMMENT 'in port on open vswitch',
+  `state` varchar(16) default 'FAILED' COMMENT 'result of tunnel creatation',
+  PRIMARY KEY(`from`, `to`, `network_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
