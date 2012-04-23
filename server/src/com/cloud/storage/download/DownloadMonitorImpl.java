@@ -70,6 +70,7 @@ import com.cloud.storage.StorageManager;
 import com.cloud.storage.SwiftVO;
 import com.cloud.storage.VMTemplateHostVO;
 import com.cloud.storage.VMTemplateStorageResourceAssoc;
+import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeHostVO;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.VMTemplateStorageResourceAssoc.Status;
@@ -90,6 +91,7 @@ import com.cloud.storage.swift.SwiftManager;
 import com.cloud.storage.template.TemplateConstants;
 import com.cloud.storage.template.TemplateInfo;
 import com.cloud.user.Account;
+import com.cloud.user.ResourceLimitService;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.JoinBuilder;
@@ -103,7 +105,6 @@ import com.cloud.vm.SecondaryStorageVmVO;
 import com.cloud.vm.UserVmManager;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.dao.SecondaryStorageVmDao;
-
 import edu.emory.mathcs.backport.java.util.Collections;
 
 
@@ -165,6 +166,8 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
     private ResourceManager _resourceMgr;
     @Inject
     private SwiftDao _swiftDao;
+    @Inject
+    protected ResourceLimitService _resourceLimitMgr;
 
 	private String _name;
 	private Boolean _sslCopy = new Boolean(false);
@@ -544,6 +547,15 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
         txn.start();		
 
         if (dnldStatus == Status.DOWNLOADED) {
+        	
+        	// Do the volume state transition
+			try {
+				_storageMgr.stateTransitTo(volume, Event.UploadSucceeded);			
+			} catch (NoTransitionException e) {
+				e.printStackTrace();
+			}
+			
+			//Create usage event
             long size = -1;
             if(volumeHost!=null){
                 size = volumeHost.getPhysicalSize();
@@ -556,6 +568,15 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
                UsageEventVO usageEvent = new UsageEventVO(eventType, volume.getAccountId(), host.getDataCenterId(), volume.getId(), volume.getName(), null, 0l , size);
                _usageEventDao.persist(usageEvent);
             }
+        }else if (dnldStatus == Status.DOWNLOAD_ERROR){
+        	//Transistion the volume state
+        	try {
+                _storageMgr.stateTransitTo(volume, Volume.Event.OperationFailed);
+            } catch (NoTransitionException e) {
+                throw new CloudRuntimeException("Unable to update the failure on a volume: " + volume, e);
+            }
+            //Decrement the volume count
+        	_resourceLimitMgr.decrementResourceCount(volume.getAccountId(), com.cloud.configuration.Resource.ResourceType.volume);
         }
         txn.commit();		
 	}
