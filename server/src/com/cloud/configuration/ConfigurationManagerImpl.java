@@ -38,6 +38,7 @@ import org.apache.log4j.Logger;
 
 import com.cloud.acl.SecurityChecker;
 import com.cloud.alert.AlertManager;
+import com.cloud.api.ApiDBUtils;
 import com.cloud.api.ApiConstants.LDAPParams;
 import com.cloud.api.commands.CreateDiskOfferingCmd;
 import com.cloud.api.commands.CreateNetworkOfferingCmd;
@@ -123,6 +124,7 @@ import com.cloud.offerings.NetworkOfferingVO;
 import com.cloud.offerings.dao.NetworkOfferingDao;
 import com.cloud.offerings.dao.NetworkOfferingServiceMapDao;
 import com.cloud.org.Grouping;
+import com.cloud.org.Grouping.AllocationState;
 import com.cloud.projects.Project;
 import com.cloud.projects.ProjectManager;
 import com.cloud.service.ServiceOfferingVO;
@@ -1260,14 +1262,14 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
             if (cvo == null) {
                 cvo = new ConfigurationVO("Hidden", "DEFAULT", "management-server", LDAPParams.hostname.toString(), null, "Hostname or ip address of the ldap server eg: my.ldap.com");
             }
-            cvo.setValue(hostname);
+            cvo.setValue(DBEncryptionUtil.encrypt(hostname));
             _configDao.persist(cvo);
 
             cvo = _configDao.findByName(LDAPParams.port.toString());
             if (cvo == null) {
                 cvo = new ConfigurationVO("Hidden", "DEFAULT", "management-server", LDAPParams.port.toString(), null, "Specify the LDAP port if required, default is 389");
             }
-            cvo.setValue(port.toString());
+            cvo.setValue(DBEncryptionUtil.encrypt(port.toString()));
             _configDao.persist(cvo);
 
             cvo = _configDao.findByName(LDAPParams.queryfilter.toString());
@@ -1275,7 +1277,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
                 cvo = new ConfigurationVO("Hidden", "DEFAULT", "management-server", LDAPParams.queryfilter.toString(), null,
                         "You specify a query filter here, which narrows down the users, who can be part of this domain");
             }
-            cvo.setValue(queryFilter);
+            cvo.setValue(DBEncryptionUtil.encrypt(queryFilter));
             _configDao.persist(cvo);
 
             cvo = _configDao.findByName(LDAPParams.searchbase.toString());
@@ -1283,21 +1285,21 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
                 cvo = new ConfigurationVO("Hidden", "DEFAULT", "management-server", LDAPParams.searchbase.toString(), null,
                         "The search base defines the starting point for the search in the directory tree Example:  dc=cloud,dc=com.");
             }
-            cvo.setValue(searchBase);
+            cvo.setValue(DBEncryptionUtil.encrypt(searchBase));
             _configDao.persist(cvo);
 
             cvo = _configDao.findByName(LDAPParams.usessl.toString());
             if (cvo == null) {
                 cvo = new ConfigurationVO("Hidden", "DEFAULT", "management-server", LDAPParams.usessl.toString(), null, "Check Use SSL if the external LDAP server is configured for LDAP over SSL.");
             }
-            cvo.setValue(useSSL.toString());
+            cvo.setValue(DBEncryptionUtil.encrypt(useSSL.toString()));
             _configDao.persist(cvo);
 
             cvo = _configDao.findByName(LDAPParams.dn.toString());
             if (cvo == null) {
                 cvo = new ConfigurationVO("Hidden", "DEFAULT", "management-server", LDAPParams.dn.toString(), null, "Specify the distinguished name of a user with the search permission on the directory");
             }
-            cvo.setValue(bindDN);
+            cvo.setValue(DBEncryptionUtil.encrypt(bindDN));
             _configDao.persist(cvo);
 
             cvo = _configDao.findByName(LDAPParams.passwd.toString());
@@ -1311,7 +1313,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
             if (cvo == null) {
                 cvo = new ConfigurationVO("Hidden", "DEFAULT", "management-server", LDAPParams.truststore.toString(), null, "Enter the path to trusted keystore");
             }
-            cvo.setValue(trustStore);
+            cvo.setValue(DBEncryptionUtil.encrypt(trustStore));
             _configDao.persist(cvo);
 
             cvo = _configDao.findByName(LDAPParams.truststorepass.toString());
@@ -2706,7 +2708,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         }
 
     }
-
+    
     private boolean validPod(long podId) {
         return (_podDao.findById(podId) != null);
     }
@@ -3642,7 +3644,31 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
     public ClusterVO getCluster(long id) {
         return _clusterDao.findById(id);
     }
+    
+    @Override
+    public AllocationState findClusterAllocationState(ClusterVO cluster){
+    	
+    	if(cluster.getAllocationState() == AllocationState.Disabled){
+    		return AllocationState.Disabled;
+    	}else if(ApiDBUtils.findPodById(cluster.getPodId()).getAllocationState() == AllocationState.Disabled){
+    		return AllocationState.Disabled;
+    	}else {
+    		DataCenterVO zone = ApiDBUtils.findZoneById(cluster.getDataCenterId());
+    		return zone.getAllocationState();
+    	}    	
+    }    
 
+    @Override
+    public AllocationState findPodAllocationState(HostPodVO pod){
+    	
+    	if(pod.getAllocationState() == AllocationState.Disabled){
+    		return AllocationState.Disabled;
+    	}else {
+    		DataCenterVO zone = ApiDBUtils.findZoneById(pod.getDataCenterId());
+    		return zone.getAllocationState();
+    	}    	
+    }
+    
     private boolean allowIpRangeOverlap(VlanVO vlan, boolean forVirtualNetwork, long networkId) {
         // FIXME - delete restriction for virtual network in the future
         if (vlan.getVlanType() == VlanType.DirectAttached && !forVirtualNetwork) {

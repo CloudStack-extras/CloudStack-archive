@@ -28,6 +28,8 @@ import org.apache.log4j.Logger;
 
 import com.cloud.offering.NetworkOffering;
 import com.cloud.utils.crypt.DBEncryptionUtil;
+import com.cloud.utils.crypt.EncryptionSecretKeyChecker;
+
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.Script;
 
@@ -61,6 +63,11 @@ public class Upgrade2214to30 implements DbUpgrade {
 
     @Override
     public void performDataMigration(Connection conn) {
+    	// Fail upgrade if encryption is not enabled
+    	if(!EncryptionSecretKeyChecker.useEncryption()){
+    		throw new CloudRuntimeException("Encryption is not enabled. Please Run cloud-setup-encryption to enable encryption");
+    	}
+    	
     	// physical network setup
         setupPhysicalNetworks(conn);
         // encrypt data
@@ -351,6 +358,7 @@ public class Upgrade2214to30 implements DbUpgrade {
                 if(rsTags.next()){
                     boolean isFirstPhysicalNtwk = true;
                     do{
+                        s_logger.debug("Network tags are not empty, might have to create more than one physical network...");
                         //create one physical network per tag
                         String guestNetworkTag = rsTags.getString(1);
                         long physicalNetworkId = addPhysicalNetworkToZone(conn, zoneId, zoneName, networkType, (isFirstPhysicalNtwk) ? vnet : null, domainId);
@@ -483,13 +491,16 @@ public class Upgrade2214to30 implements DbUpgrade {
     }
 
     private void encryptData(Connection conn) {
+        s_logger.debug("Encrypting the data...");
         encryptConfigValues(conn);
         encryptHostDetails(conn);
         encryptVNCPassword(conn);
         encryptUserCredentials(conn);
+        s_logger.debug("Done encrypting the data");
     }
 
     private void encryptConfigValues(Connection conn) {
+        s_logger.debug("Encrypting Config values");
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
@@ -523,9 +534,11 @@ public class Upgrade2214to30 implements DbUpgrade {
             } catch (SQLException e) {
             }
         }
+        s_logger.debug("Done encrypting Config values");
     }
 
     private void encryptHostDetails(Connection conn) {
+    	s_logger.debug("Encrypting host details");
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
@@ -559,25 +572,41 @@ public class Upgrade2214to30 implements DbUpgrade {
             } catch (SQLException e) {
             }
         }
+        s_logger.debug("Done encrypting host details");
     }
 
     private void encryptVNCPassword(Connection conn) {
+    	s_logger.debug("Encrypting vm_instance vnc_password");
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
-            pstmt = conn.prepareStatement("select id, vnc_password from `cloud`.`vm_instance`");
+        	int numRows = 0;
+        	pstmt = conn.prepareStatement("select count(id) from `cloud`.`vm_instance` where removed is null");
             rs = pstmt.executeQuery();
-            while (rs.next()) {
-                long id = rs.getLong(1);
-                String value = rs.getString(2);
-                if (value == null) {
-                    continue;
-                }
-                String encryptedValue = DBEncryptionUtil.encrypt(value);
-                pstmt = conn.prepareStatement("update `cloud`.`vm_instance` set vnc_password=? where id=?");
-                pstmt.setBytes(1, encryptedValue.getBytes("UTF-8"));
-                pstmt.setLong(2, id);
-                pstmt.executeUpdate();
+            if(rs.next()){
+            	numRows = rs.getInt(1);
+            }
+            rs.close();
+            pstmt.close();
+            int offset = 0;
+            while(offset < numRows){
+            	pstmt = conn.prepareStatement("select id, vnc_password from `cloud`.`vm_instance` where removed is null limit "+offset+", 500");
+            	rs = pstmt.executeQuery();
+            	while (rs.next()) {
+            		long id = rs.getLong(1);
+            		String value = rs.getString(2);
+            		if (value == null) {
+            			continue;
+            		}
+            		String encryptedValue = DBEncryptionUtil.encrypt(value);
+            		pstmt = conn.prepareStatement("update `cloud`.`vm_instance` set vnc_password=? where id=?");
+            		pstmt.setBytes(1, encryptedValue.getBytes("UTF-8"));
+            		pstmt.setLong(2, id);
+            		pstmt.executeUpdate();
+            		pstmt.close();
+            	}
+            	rs.close();
+            	offset+=500;
             }
         } catch (SQLException e) {
             throw new CloudRuntimeException("Unable encrypt vm_instance vnc_password ", e);
@@ -595,9 +624,11 @@ public class Upgrade2214to30 implements DbUpgrade {
             } catch (SQLException e) {
             }
         }
+        s_logger.debug("Done encrypting vm_instance vnc_password");
     }
 
     private void encryptUserCredentials(Connection conn) {
+    	s_logger.debug("Encrypting user keys");
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
@@ -632,6 +663,7 @@ public class Upgrade2214to30 implements DbUpgrade {
             } catch (SQLException e) {
             }
         }
+        s_logger.debug("Done encrypting user keys");
     }
 
     private void dropKeysIfExist(Connection conn) {
