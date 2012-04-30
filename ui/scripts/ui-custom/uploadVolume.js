@@ -4,8 +4,22 @@
     var action = args.action;
 
     return function(args) {
+      var $uploadVolume = $('<div>').addClass('upload-volume');
       var context = args.context;
+      var topFields = function() {
+        var $form = $('<form>').addClass('top-fields');
+        var $urlLabel = $('<label>').html(_l('label.url') + ':');
+        var $urlField = $('<div>').addClass('field select-url');
+        var $urlInput = $('<input>').attr({
+          type: 'text',
+          name: 'url'
+        }).addClass('required');
 
+        $urlField.append($urlLabel, $urlInput);
+        $form.append($urlField);
+
+        return $form;
+      };
       var vmList = function(args) {
         // Create a listing of instances, based on limited information
         // from main instances list view
@@ -46,18 +60,23 @@
         return $listView;
       };
 
-      var $dataList = vmList({
-        listView: listView
-      }).dialog({
+      $uploadVolume.append(
+        topFields,
+        $('<div>').addClass('desc').html('Select instance to attach volume to:'),
+        $('<div>').addClass('listView-container').append(
+          vmList({ listView: listView }) 
+        )
+      );
+      $uploadVolume.dialog({
         dialogClass: 'multi-edit-add-list panel',
-        width: 825,
+        width: 900,
         title: _l('label.upload.volume'),
         buttons: [
           {
             text: _l('label.apply'),
             'class': 'ok',
             click: function() {
-              if (!$dataList.find(
+              if (!$uploadVolume.find(
                 'input[type=radio]:checked, input[type=checkbox]:checked'
               ).size()) {
                 cloudStack.dialog.notice({ message: _l('message.select.instance')});
@@ -68,22 +87,22 @@
               var complete = args.complete;
               var $loading = $('<div>').addClass('loading-overlay');
 
-              $loading.appendTo($dataList);
+              $loading.appendTo($uploadVolume);
               action({
                 context: $.extend(true, {}, context, {
                   instances: [
-                    $dataList.find('tr.multi-edit-selected').data('json-obj')
+                    $uploadVolume.find('tr.multi-edit-selected').data('json-obj')
                   ]
                 }),
                 response: {
                   success: function(args) {
-                    $dataList.fadeOut(function() {
-                      $dataList.remove();
+                    $uploadVolume.fadeOut(function() {
+                      $uploadVolume.remove();
                       $(window).trigger('cloudStack.fullRefresh');
                     });
                     $('div.overlay').fadeOut(function() {
                       $('div.overlay').remove();
-                    }); 
+                    });
                     complete({
                       $item: $('<div>'),
                       _custom: args._custom
@@ -93,15 +112,15 @@
                     cloudStack.dialog.notice({ message: args });
                   }
                 }
-              }); 
+              });
             }
           },
           {
             text: _l('label.cancel'),
             'class': 'cancel',
             click: function() {
-              $dataList.fadeOut(function() {
-                $dataList.remove();
+              $uploadVolume.fadeOut(function() {
+                $uploadVolume.remove();
               });
               $('div.overlay').fadeOut(function() {
                 $('div.overlay').remove();
@@ -109,7 +128,7 @@
             }
           }
         ]
-      }).parent('.ui-dialog').overlay();
+      }).closest('.ui-dialog').overlay();
     };
   };
-}(cloudStack, jQuery)); 
+}(cloudStack, jQuery));
