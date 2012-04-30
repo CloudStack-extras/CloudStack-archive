@@ -181,7 +181,42 @@
               notification: { poll: function(args) { args.complete(); } },
               action: {
                 custom: cloudStack.uiCustom.uploadVolume({
-                  listView: cloudStack.sections.instances,
+                  listView: $.extend(true, {}, cloudStack.sections.instances, {
+                    listView: {
+                      filters: false,
+                      dataProvider: function(args) {
+                        var searchByArgs = args.filterBy.search.value.length ?
+                              '&name=' + args.filterBy.search.value : '';
+
+                        $.ajax({
+                          url: createURL('listVirtualMachines' + searchByArgs),
+                          data: {
+                            page: args.page,
+                            pageSize: pageSize,
+                            listAll: true
+                          },
+                          dataType: 'json',
+                          async: true,
+                          success: function(data) {
+                            args.response.success({
+                              data: $.grep(
+                                data.listvirtualmachinesresponse.virtualmachine ?
+                                  data.listvirtualmachinesresponse.virtualmachine : [],
+                                function(instance) {
+                                  return $.inArray(instance.state, [
+                                    'Destroyed', 'Error'
+                                  ]) == -1;
+                                }
+                              )
+                            });
+                          },
+                          error: function(data) {
+                            args.response.error(parseXMLHttpResponse(data));
+                          }
+                        });
+                      }
+                    }
+                  }),
                   action: function(args) {
                     setTimeout(function() {
                       args.response.success({
@@ -189,7 +224,7 @@
                       });
                     }, 1000);
                   }
-                }),
+                })
               }
             }
           },
