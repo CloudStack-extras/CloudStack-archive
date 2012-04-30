@@ -204,7 +204,7 @@
                                   data.listvirtualmachinesresponse.virtualmachine : [],
                                 function(instance) {
                                   return $.inArray(instance.state, [
-                                    'Destroyed', 'Error'
+                                    'Destroyed', 'Error', 'Stopping', 'Starting'
                                   ]) == -1;
                                 }
                               )
