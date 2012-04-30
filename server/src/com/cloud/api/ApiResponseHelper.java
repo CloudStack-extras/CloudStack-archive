@@ -240,7 +240,8 @@ public class ApiResponseHelper implements ResponseGenerator {
         accountResponse.setDomainName(ApiDBUtils.findDomainById(account.getDomainId()).getName());
         accountResponse.setState(account.getState().toString());
         accountResponse.setNetworkDomain(account.getNetworkDomain());
-
+        accountResponse.setDefaultZone(account.getDefaultZoneId());
+        
         // get network stat
         List<UserStatisticsVO> stats = ApiDBUtils.listUserStatsBy(account.getId());
         if (stats == null) {
