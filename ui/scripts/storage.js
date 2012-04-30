@@ -180,7 +180,16 @@
               },
               notification: { poll: function(args) { args.complete(); } },
               action: {
-                custom: cloudStack.uiCustom.uploadVolume({}),
+                custom: cloudStack.uiCustom.uploadVolume({
+                  listView: cloudStack.sections.instances,
+                  action: function(args) {
+                    setTimeout(function() {
+                      args.response.success({
+                        _custom: { jobId: 1232 }
+                      });
+                    }, 1000);
+                  }
+                }),
               }
             }
           },
