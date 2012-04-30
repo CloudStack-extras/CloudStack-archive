@@ -114,7 +114,6 @@ import com.cloud.host.HostVO;
 import com.cloud.host.Status;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
-import com.cloud.hypervisor.vmware.manager.VmwareManager;
 import com.cloud.network.IPAddressVO;
 import com.cloud.network.IpAddress;
 import com.cloud.network.LoadBalancerVO;
@@ -2182,6 +2181,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             IpAddressTO[] ipsToSend = new IpAddressTO[ipAddrList.size()];
             int i = 0;
             boolean firstIP = true;
+            List<String> oldVlanNetmasks = new ArrayList<String>();
             for (final PublicIpAddress ipAddr : ipAddrList) {
 
                 boolean add = (ipAddr.getState() == IpAddress.State.Releasing ? false : true);
@@ -2196,7 +2196,10 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                 String vifMacAddress = ipAddr.getMacAddress();
 
                 String vmGuestAddress = null;
-
+                if (!oldVlanNetmasks.contains(vlanNetmask)) {
+                    oldVlanNetmasks.add(vlanNetmask);
+                    firstIP = true;
+                }
                 IpAddressTO ip = new IpAddressTO(ipAddr.getAccountId(), ipAddr.getAddress().addr(), add, firstIP, sourceNat, vlanId, vlanGateway, vlanNetmask, vifMacAddress, vmGuestAddress, networkRate, ipAddr.isOneToOneNat());
                 ip.setTrafficType(network.getTrafficType());
                 ip.setNetworkTags(network.getTags());
