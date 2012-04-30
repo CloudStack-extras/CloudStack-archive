@@ -171,8 +171,18 @@
               notification: {
                 poll: pollAsyncJobResult
               }
+            },
+            uploadVolume: {
+              isHeader: true,
+              label: 'label.upload.volume',
+              messages: {
+                notification: function() { return 'label.upload.volume'; }
+              },
+              notification: { poll: function(args) { args.complete(); } },
+              action: {
+                custom: cloudStack.uiCustom.uploadVolume({}),
+              }
             }
-
           },
 
           dataProvider: function(args) {
