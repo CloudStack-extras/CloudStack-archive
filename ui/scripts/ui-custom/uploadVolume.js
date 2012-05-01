@@ -102,8 +102,8 @@
                 }),
                 response: {
                   success: function(args) {
-                    $uploadVolume.fadeOut(function() {
-                      $uploadVolume.remove();
+                    $('.ui-dialog').fadeOut(function() {
+                      $('.ui-dialog').remove();
                       $(window).trigger('cloudStack.fullRefresh');
                     });
                     $('div.overlay').fadeOut(function() {
@@ -125,8 +125,8 @@
             text: _l('label.cancel'),
             'class': 'cancel',
             click: function() {
-              $uploadVolume.fadeOut(function() {
-                $uploadVolume.remove();
+              $('.ui-dialog').fadeOut(function() {
+                $('.ui-dialog').remove();
               });
               $('div.overlay').fadeOut(function() {
                 $('div.overlay').remove();
