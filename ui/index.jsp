@@ -1669,6 +1669,7 @@
 
 <script language="javascript">
 dictionary = {
+'label.upload': '<fmt:message key="label.upload"/>',
 'label.upload.volume': '<fmt:message key="label.upload.volume"/>',
 'label.virtual.routers': '<fmt:message key="label.virtual.routers"/>',
 'label.primary.storage.count': '<fmt:message key="label.primary.storage.count"/>',

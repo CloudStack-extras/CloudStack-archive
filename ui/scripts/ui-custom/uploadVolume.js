@@ -73,7 +73,7 @@
         title: _l('label.upload.volume'),
         buttons: [
           {
-            text: _l('label.upload.volume'),
+            text: _l('label.upload'),
             'class': 'ok',
             click: function() {
               if (!$uploadVolume.find(
