@@ -8965,3 +8965,11 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   cursor: move !important;
 }
 
+.uploadVolume .icon {
+  background-position: -232px -34px;
+}
+
+.uploadVolume:hover .icon {
+  background-position: -230px -615px;
+}
+
