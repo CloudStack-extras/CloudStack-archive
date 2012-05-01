@@ -14,6 +14,7 @@ package com.cloud.agent.api.storage;
 
 import java.net.URI;
 
+import com.cloud.storage.Volume;
 import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.template.VirtualMachineTemplate;
 
@@ -40,6 +41,10 @@ public class DownloadCommand extends AbstractDownloadCommand {
 			return password;
 		}
 	}
+	
+    public static enum ResourceType {
+        VOLUME, TEMPLATE
+    }
 	
 	public static class Proxy {
 		private String _host;
@@ -97,6 +102,7 @@ public class DownloadCommand extends AbstractDownloadCommand {
 	private Proxy _proxy;
 	private Long maxDownloadSizeInBytes = null;
 	private long id;
+	private ResourceType resourceType = ResourceType.TEMPLATE;
 	
 	protected DownloadCommand() {
 	}
@@ -111,6 +117,7 @@ public class DownloadCommand extends AbstractDownloadCommand {
 	    this.auth = that.getAuth();
 	    this.setSecUrl(that.getSecUrl());
 	    this.maxDownloadSizeInBytes = that.getMaxDownloadSizeInBytes();
+	    this.resourceType = that.resourceType;
 	}
 	
 	public DownloadCommand(String secUrl, VirtualMachineTemplate template, Long maxDownloadSizeInBytes) {
@@ -121,6 +128,17 @@ public class DownloadCommand extends AbstractDownloadCommand {
 	    this.description = template.getDisplayText();
 	    this.setSecUrl(secUrl);
 	    this.maxDownloadSizeInBytes = maxDownloadSizeInBytes;
+	}
+	
+	public DownloadCommand(String secUrl, Volume volume, Long maxDownloadSizeInBytes, String checkSum, String url, ImageFormat format) {
+	    super(volume.getName(), url, format, volume.getAccountId());
+	    //this.hvm = volume.isRequiresHvm();
+	    this.checksum = checkSum;
+	    this.id = volume.getId();
+	    //this.description = volume.get;
+	    this.setSecUrl(secUrl);
+	    this.maxDownloadSizeInBytes = maxDownloadSizeInBytes;
+	    this.resourceType = ResourceType.VOLUME;
 	}
 
 	public DownloadCommand(String secUrl, String url, VirtualMachineTemplate template, String user, String passwd, Long maxDownloadSizeInBytes) {
@@ -186,5 +204,15 @@ public class DownloadCommand extends AbstractDownloadCommand {
 	
 	public Long getMaxDownloadSizeInBytes() {
 		return maxDownloadSizeInBytes;
+	}
+
+
+	public ResourceType getResourceType() {
+		return resourceType;
+	}
+
+
+	public void setResourceType(ResourceType resourceType) {
+		this.resourceType = resourceType;
 	}
 }

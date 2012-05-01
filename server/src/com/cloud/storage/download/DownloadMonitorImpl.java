@@ -32,8 +32,12 @@ import com.cloud.agent.Listener;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.Command;
 import com.cloud.agent.api.storage.DeleteTemplateCommand;
+import com.cloud.agent.api.storage.DeleteVolumeCommand;
 import com.cloud.agent.api.storage.DownloadCommand;
+import com.cloud.agent.api.storage.ListVolumeAnswer;
+import com.cloud.agent.api.storage.ListVolumeCommand;
 import com.cloud.agent.api.storage.DownloadCommand.Proxy;
+import com.cloud.agent.api.storage.DownloadCommand.ResourceType;
 import com.cloud.agent.api.storage.DownloadProgressCommand;
 import com.cloud.agent.api.storage.DownloadProgressCommand.RequestType;
 import com.cloud.agent.api.storage.ListTemplateAnswer;
@@ -57,10 +61,15 @@ import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.resource.ResourceManager;
 import com.cloud.storage.Storage.ImageFormat;
+import com.cloud.storage.StorageManager;
 import com.cloud.storage.SwiftVO;
 import com.cloud.storage.VMTemplateHostVO;
 import com.cloud.storage.VMTemplateStorageResourceAssoc;
+import com.cloud.storage.Volume;
+import com.cloud.storage.VolumeHostVO;
+import com.cloud.storage.VolumeVO;
 import com.cloud.storage.VMTemplateStorageResourceAssoc.Status;
+import com.cloud.storage.Volume.Event;
 import com.cloud.storage.VMTemplateVO;
 import com.cloud.storage.VMTemplateZoneVO;
 import com.cloud.storage.dao.StoragePoolHostDao;
@@ -70,11 +79,14 @@ import com.cloud.storage.dao.VMTemplateHostDao;
 import com.cloud.storage.dao.VMTemplatePoolDao;
 import com.cloud.storage.dao.VMTemplateSwiftDao;
 import com.cloud.storage.dao.VMTemplateZoneDao;
+import com.cloud.storage.dao.VolumeDao;
+import com.cloud.storage.dao.VolumeHostDao;
 import com.cloud.storage.secondary.SecondaryStorageVmManager;
 import com.cloud.storage.swift.SwiftManager;
 import com.cloud.storage.template.TemplateConstants;
 import com.cloud.storage.template.TemplateInfo;
 import com.cloud.user.Account;
+import com.cloud.user.ResourceLimitService;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.JoinBuilder;
@@ -82,11 +94,13 @@ import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.vm.SecondaryStorageVm;
 import com.cloud.vm.SecondaryStorageVmVO;
 import com.cloud.vm.UserVmManager;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.dao.SecondaryStorageVmDao;
+import edu.emory.mathcs.backport.java.util.Collections;
 
 
 
@@ -111,11 +125,17 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
     @Inject
     SecondaryStorageVmDao _secStorageVmDao;
     @Inject
+    VolumeDao _volumeDao;
+    @Inject
+    VolumeHostDao _volumeHostDao;
+    @Inject
     AlertManager _alertMgr;
     @Inject
     protected SwiftManager _swiftMgr;
     @Inject
     SecondaryStorageVmManager _ssvmMgr;
+    @Inject
+    StorageManager _storageMgr ;
     
     @Inject
     private final DataCenterDao _dcDao = null;
@@ -141,6 +161,8 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
     private ResourceManager _resourceMgr;
     @Inject
     private SwiftDao _swiftDao;
+    @Inject
+    protected ResourceLimitService _resourceLimitMgr;
 
 	private String _name;
 	private Boolean _sslCopy = new Boolean(false);
@@ -151,6 +173,7 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
 	Timer _timer;
 
 	final Map<VMTemplateHostVO, DownloadListener> _listenerMap = new ConcurrentHashMap<VMTemplateHostVO, DownloadListener>();
+	final Map<VolumeHostVO, DownloadListener> _listenerVolumeMap = new ConcurrentHashMap<VolumeHostVO, DownloadListener>();
 
 
 	public void send(Long hostId, Command cmd, Listener listener) throws AgentUnavailableException {
@@ -395,6 +418,71 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
 	    }
 	    return true;
 	}
+	
+	@Override
+	public boolean downloadVolumeToStorage(VolumeVO volume, Long zoneId, String url, String checkSum, ImageFormat format) {
+                                
+	    List<HostVO> ssHosts = _ssvmMgr.listAllTypesSecondaryStorageHostsInOneZone(zoneId);
+	    Collections.shuffle(ssHosts);
+	    HostVO ssHost = ssHosts.get(0);
+	    downloadVolumeToStorage(volume, ssHost, url, checkSum, format);
+	    return true;
+	}
+	
+	private void downloadVolumeToStorage(VolumeVO volume, HostVO sserver, String url, String checkSum, ImageFormat format) {
+		boolean downloadJobExists = false;
+        VolumeHostVO volumeHost = null;
+
+        volumeHost = _volumeHostDao.findByHostVolume(sserver.getId(), volume.getId());
+        if (volumeHost == null) {
+            volumeHost = new VolumeHostVO(sserver.getId(), volume.getId(), new Date(), 0, VMTemplateStorageResourceAssoc.Status.NOT_DOWNLOADED, null, null,
+            		"jobid0000", null, url, checkSum);
+            _volumeHostDao.persist(volumeHost);
+        } else if ((volumeHost.getJobId() != null) && (volumeHost.getJobId().length() > 2)) {
+            downloadJobExists = true;
+        }
+        
+
+        Long maxVolumeSizeInBytes = getMaxVolumeSizeInBytes();
+        String secUrl = sserver.getStorageUrl();
+		if(volumeHost != null) {
+		    start();
+			DownloadCommand dcmd = new DownloadCommand(secUrl, volume, maxVolumeSizeInBytes, checkSum, url, format);
+			dcmd.setProxy(getHttpProxy());
+	        if (downloadJobExists) {
+	            dcmd = new DownloadProgressCommand(dcmd, volumeHost.getJobId(), RequestType.GET_OR_RESTART);
+	            dcmd.setResourceType(ResourceType.VOLUME);
+	        }
+			
+			HostVO ssvm = _ssvmMgr.pickSsvmHost(sserver);
+			if( ssvm == null ) {
+	             s_logger.warn("There is no secondary storage VM for secondary storage host " + sserver.getName());
+	             return;
+			}
+			DownloadListener dl = new DownloadListener(ssvm, sserver, volume, _timer, _volumeHostDao, volumeHost.getId(),
+					this, dcmd, _volumeDao, _storageMgr);
+			
+			if (downloadJobExists) {
+				dl.setCurrState(volumeHost.getDownloadState());
+	 		}
+            DownloadListener old = null;
+            synchronized (_listenerVolumeMap) {
+                old = _listenerVolumeMap.put(volumeHost, dl);
+            }
+            if( old != null ) {
+                old.abandon();
+            }
+
+			try {
+	            send(ssvm.getId(), dcmd, dl);
+            } catch (AgentUnavailableException e) {
+				s_logger.warn("Unable to start /resume download of volume " + volume.getName() + " to " + sserver.getName(), e);
+				dl.setDisconnected();
+				dl.scheduleStatusCheck(RequestType.GET_OR_RESTART);
+            }
+		}
+	}
+
 
 	private void initiateTemplateDownload(Long templateId, HostVO ssHost) {
 		VMTemplateVO template = _templateDao.findById(templateId);
@@ -437,6 +525,55 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
             }
         }
         txn.commit();
+	}
+
+	@DB
+	public void handleDownloadEvent(HostVO host, VolumeVO volume, Status dnldStatus) {
+		if ((dnldStatus == VMTemplateStorageResourceAssoc.Status.DOWNLOADED) || (dnldStatus==Status.ABANDONED)){
+			VolumeHostVO volumeHost = new VolumeHostVO(host.getId(), volume.getId());
+	        synchronized (_listenerVolumeMap) {
+	        	_listenerVolumeMap.remove(volumeHost);
+	        }
+		}
+		
+		VolumeHostVO volumeHost = _volumeHostDao.findByHostVolume(host.getId(), volume.getId());
+		
+		Transaction txn = Transaction.currentTxn();
+        txn.start();		
+
+        if (dnldStatus == Status.DOWNLOADED) {
+        	
+        	// Do the volume state transition
+			try {
+				_storageMgr.stateTransitTo(volume, Event.UploadSucceeded);			
+			} catch (NoTransitionException e) {
+				e.printStackTrace();
+			}
+			
+			//Create usage event
+            long size = -1;
+            if(volumeHost!=null){
+                size = volumeHost.getPhysicalSize();
+            }
+            else{
+                s_logger.warn("Failed to get size for volume" + volume.getName());
+            }
+            String eventType = EventTypes.EVENT_VOLUME_UPLOAD;            
+            if(volume.getAccountId() != Account.ACCOUNT_ID_SYSTEM){
+               UsageEventVO usageEvent = new UsageEventVO(eventType, volume.getAccountId(), host.getDataCenterId(), volume.getId(), volume.getName(), null, 0l , size);
+               _usageEventDao.persist(usageEvent);
+            }
+        }else if (dnldStatus == Status.DOWNLOAD_ERROR){
+        	//Transistion the volume state
+        	try {
+                _storageMgr.stateTransitTo(volume, Volume.Event.OperationFailed);
+            } catch (NoTransitionException e) {
+                throw new CloudRuntimeException("Unable to update the failure on a volume: " + volume, e);
+            }
+            //Decrement the volume count
+        	_resourceLimitMgr.decrementResourceCount(volume.getAccountId(), com.cloud.configuration.Resource.ResourceType.volume);
+        }
+        txn.commit();		
 	}
 	
 	@Override
@@ -502,11 +639,12 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
 	}
 	
     @Override
-    public void handleTemplateSync(Long dcId) {
+    public void handleSync(Long dcId) {
         if (dcId != null) {
             List<HostVO> ssHosts = _ssvmMgr.listSecondaryStorageHostsInOneZone(dcId);
             for (HostVO ssHost : ssHosts) {
                 handleTemplateSync(ssHost);
+                handleVolumeSync(ssHost);
             }
         }
     }
@@ -520,6 +658,21 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
         } else {
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("can not list template for secondary storage host " + ssHost.getId());
+            }
+        } 
+        
+        return null;
+    }
+    
+    private Map<Long, TemplateInfo> listVolume(HostVO ssHost) {
+    	ListVolumeCommand cmd = new ListVolumeCommand(ssHost.getStorageUrl());
+        Answer answer = _agentMgr.sendToSecStorage(ssHost, cmd);
+        if (answer != null && answer.getResult()) {
+        	ListVolumeAnswer tanswer = (ListVolumeAnswer)answer;
+            return tanswer.getTemplateInfo();
+        } else {
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug("Can not list volumes for secondary storage host " + ssHost.getId());
             }
         } 
         
@@ -542,7 +695,88 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
         }
         return null;
     }
+    
+    @Override
+    public void handleVolumeSync(HostVO ssHost) {
+        if (ssHost == null) {
+            s_logger.warn("Huh? ssHost is null");
+            return;
+        }
+        long sserverId = ssHost.getId();        
+        if (!(ssHost.getType() == Host.Type.SecondaryStorage || ssHost.getType() == Host.Type.LocalSecondaryStorage)) {
+            s_logger.warn("Huh? Agent id " + sserverId + " is not secondary storage host");
+            return;
+        }
 
+        Map<Long, TemplateInfo> volumeInfos = listVolume(ssHost);
+        if (volumeInfos == null) {
+            return;
+        }
+        
+        List<VolumeHostVO> dbVolumes = _volumeHostDao.listBySecStorage(sserverId);
+        List<VolumeHostVO> toBeDownloaded = new ArrayList<VolumeHostVO>(dbVolumes);
+        for (VolumeHostVO volumeHost : dbVolumes){
+        	VolumeVO volume = _volumeDao.findById(volumeHost.getVolumeId());
+        	//Exists then don't download
+        	if (volumeInfos.containsKey(volume.getId())){
+                TemplateInfo volInfo = volumeInfos.remove(volume.getId());
+                toBeDownloaded.remove(volumeHost);                
+                s_logger.info("Volume Sync found " + volume.getUuid() + " already in the volume host table");
+                if (volumeHost.getDownloadState() != Status.DOWNLOADED) {
+                	volumeHost.setErrorString("");
+                }
+                if (volInfo.isCorrupted()) {
+                	volumeHost.setDownloadState(Status.DOWNLOAD_ERROR);
+                    String msg = "Volume " + volume.getUuid() + " is corrupted on secondary storage ";
+                    volumeHost.setErrorString(msg);
+                    s_logger.info("msg");
+                    if (volumeHost.getDownloadUrl() == null) {
+                        msg = "Volume (" + volume.getUuid() + ") with install path " + volInfo.getInstallPath() + "is corrupted, please check in secondary storage: " + volumeHost.getHostId();
+                        s_logger.warn(msg);
+                    } else {
+                        toBeDownloaded.add(volumeHost);
+                    }
+
+                } else {
+                	volumeHost.setDownloadPercent(100);
+                	volumeHost.setDownloadState(Status.DOWNLOADED);
+                	volumeHost.setInstallPath(volInfo.getInstallPath());
+                	volumeHost.setSize(volInfo.getSize());
+                	volumeHost.setPhysicalSize(volInfo.getPhysicalSize());
+                	volumeHost.setLastUpdated(new Date());
+                }
+                _volumeHostDao.update(volumeHost.getId(), volumeHost);                
+        	}
+        }
+        
+        //Download volumes which havent been downloaded yet.
+        if (toBeDownloaded.size() > 0) {
+            for (VolumeHostVO volumeHost : toBeDownloaded) {
+                if (volumeHost.getDownloadUrl() == null) { // If url is null we can't initiate the download
+                    continue;
+                }                                  
+                s_logger.debug("Volume " + volumeHost.getVolumeId() + " needs to be downloaded to " + ssHost.getName());
+                downloadVolumeToStorage(_volumeDao.findById(volumeHost.getVolumeId()), ssHost,  volumeHost.getDownloadUrl(), volumeHost.getChecksum(), volumeHost.getFormat());                
+            }
+        }
+
+        //Delete volumes which are not present on DB.
+        for (Long uniqueName : volumeInfos.keySet()) {
+            TemplateInfo vInfo = volumeInfos.get(uniqueName);
+            DeleteVolumeCommand dtCommand = new DeleteVolumeCommand(ssHost.getStorageUrl(), vInfo.getInstallPath());
+            try {
+	            _agentMgr.sendToSecStorage(ssHost, dtCommand, null);
+            } catch (AgentUnavailableException e) {
+                String err = "Failed to delete " + vInfo.getTemplateName() + " on secondary storage " + sserverId + " which isn't in the database";
+                s_logger.error(err);
+                return;
+            }
+            
+            String description = "Deleted volume " + vInfo.getTemplateName() + " on secondary storage " + sserverId + " since it isn't in the database";
+            s_logger.info(description);
+        }
+    }
+    
 	@Override
     public void handleTemplateSync(HostVO ssHost) {
         if (ssHost == null) {
@@ -752,6 +986,14 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
 		}
 	}
 	
+	private Long getMaxVolumeSizeInBytes() {
+		try {
+			return Long.parseLong(_configDao.getValue("storage.max.volume.upload.size")) * 1024L * 1024L * 1024L;
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}
+	
 	private Proxy getHttpProxy() {
 		if (_proxy == null) {
 			return null;
@@ -763,7 +1005,7 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
 		} catch (URISyntaxException e) {
 			return null;
 		}
-	}
+	}	
 	
 }
 	

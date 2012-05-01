@@ -152,6 +152,7 @@ import com.cloud.storage.GuestOSVO;
 import com.cloud.storage.Snapshot;
 import com.cloud.storage.SnapshotVO;
 import com.cloud.storage.Storage;
+import com.cloud.storage.VolumeHostVO;
 import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.storage.Storage.TemplateType;
@@ -175,6 +176,7 @@ import com.cloud.storage.dao.VMTemplateDetailsDao;
 import com.cloud.storage.dao.VMTemplateHostDao;
 import com.cloud.storage.dao.VMTemplateZoneDao;
 import com.cloud.storage.dao.VolumeDao;
+import com.cloud.storage.dao.VolumeHostDao;
 import com.cloud.storage.snapshot.SnapshotManager;
 import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.template.VirtualMachineTemplate.BootloaderType;
@@ -335,6 +337,8 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
     SecurityGroupVMMapDao _securityGroupVMMapDao;
     @Inject
     protected ItWorkDao _workDao;
+    @Inject
+    VolumeHostDao _volumeHostDao;
 
     protected ScheduledExecutorService _executor = null;
     protected int _expungeInterval;
@@ -506,15 +510,6 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             throw new InvalidParameterValueException("Please specify a valid data volume.");
         }
 
-        // Check that the volume is stored on shared storage
-        if (!(Volume.State.Allocated.equals(volume.getState())) && !_storageMgr.volumeOnSharedStoragePool(volume)) {
-            throw new InvalidParameterValueException("Please specify a volume that has been created on a shared storage pool.");
-        }
-
-        if (!(Volume.State.Allocated.equals(volume.getState()) || Volume.State.Ready.equals(volume.getState()))) {
-            throw new InvalidParameterValueException("Volume state must be in Allocated or Ready state");
-        }
-
         // Check that the volume is not currently attached to any VM
         if (volume.getInstanceId() != null) {
             throw new InvalidParameterValueException("Please specify a volume that is not attached to any VM.");
@@ -556,6 +551,22 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
 
         //permission check
         _accountMgr.checkAccess(caller, null, true, volume, vm);
+        
+        //Check if volume is stored on secondary Storage.
+        boolean volumeOnSec = false;
+        VolumeHostVO  volHostVO = _volumeHostDao.findByVolumeId(volume.getId());
+        if (volHostVO != null){
+        	volumeOnSec = true;       	
+        }
+
+        // Check that the volume is stored on shared storage
+        if (!(Volume.State.Allocated.equals(volume.getState()) || Volume.State.Uploaded.equals(volume.getState())) && !_storageMgr.volumeOnSharedStoragePool(volume)) {
+            throw new InvalidParameterValueException("Please specify a volume that has been created on a shared storage pool.");
+        }
+
+        if ( !(Volume.State.Allocated.equals(volume.getState()) || Volume.State.Ready.equals(volume.getState()) || Volume.State.Uploaded.equals(volume.getState())) ) {
+            throw new InvalidParameterValueException("Volume state must be in Allocated, Ready or Uploaded state");
+        }
 
         VolumeVO rootVolumeOfVm = null;
         List<VolumeVO> rootVolumesOfVm = _volsDao.findByInstanceAndType(vmId, Volume.Type.ROOT);
@@ -566,7 +577,30 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         }
 
         HypervisorType rootDiskHyperType = vm.getHypervisorType();
-        
+
+        if (volume.getState().equals(Volume.State.Allocated) || volume.getState().equals(Volume.State.Uploaded)) {
+            /* Need to create the volume */
+            VMTemplateVO rootDiskTmplt = _templateDao.findById(vm.getTemplateId());
+            DataCenterVO dcVO = _dcDao.findById(vm.getDataCenterIdToDeployIn());
+            HostPodVO pod = _podDao.findById(vm.getPodIdToDeployIn());
+            StoragePoolVO rootDiskPool = _storagePoolDao.findById(rootVolumeOfVm.getPoolId());
+            ServiceOfferingVO svo = _serviceOfferingDao.findById(vm.getServiceOfferingId());
+            DiskOfferingVO diskVO = _diskOfferingDao.findById(volume.getDiskOfferingId());
+            if (!volumeOnSec){
+            	volume = _storageMgr.createVolume(volume, vm, rootDiskTmplt, dcVO, pod, rootDiskPool.getClusterId(), svo, diskVO, new ArrayList<StoragePoolVO>(), volume.getSize(), rootDiskHyperType);
+            }else {
+            	try {
+					volume = _storageMgr.copyVolumeFromSecToPrimary(volume, vm, rootDiskTmplt, dcVO, pod, rootDiskPool.getClusterId(), svo, diskVO, new ArrayList<StoragePoolVO>(), volume.getSize(), rootDiskHyperType);
+				} catch (NoTransitionException e) {				
+					e.printStackTrace();
+				}
+            }
+
+            if (volume == null) {
+                throw new CloudRuntimeException("Failed to create volume when attaching it to VM: " + vm.getHostName());
+            }
+        }
+
         HypervisorType dataDiskHyperType = _volsDao.getHypervisorType(volume.getId());
         if (dataDiskHyperType != HypervisorType.None && rootDiskHyperType != dataDiskHyperType) {
             throw new InvalidParameterValueException("Can't attach a volume created by: " + dataDiskHyperType + " to a " + rootDiskHyperType + " vm");
@@ -2027,31 +2061,22 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         if (securityGroupIdList != null && isVmWare) {
             throw new InvalidParameterValueException("Security group feature is not supported for vmWare hypervisor");
         } else if (!isVmWare && _networkMgr.isSecurityGroupSupportedInNetwork(defaultNetwork) && _networkMgr.canAddDefaultSecurityGroup()) {
-            if (securityGroupIdList == null) {
-                securityGroupIdList = new ArrayList<Long>();
-            }
-            SecurityGroup defaultGroup = _securityGroupMgr.getDefaultSecurityGroup(owner.getId());
-            if (defaultGroup != null) {
-                //check if security group id list already contains Default security group, and if not - add it
-                boolean defaultGroupPresent = false;
-                for (Long securityGroupId : securityGroupIdList) {
-                    if (securityGroupId.longValue() == defaultGroup.getId()) {
-                        defaultGroupPresent = true;
-                        break;
-                    }
+            //add the default securityGroup only if no security group is specified
+            if(securityGroupIdList == null || securityGroupIdList.isEmpty()){
+                if (securityGroupIdList == null) {
+                    securityGroupIdList = new ArrayList<Long>();
                 }
-
-                if (!defaultGroupPresent) {
+                SecurityGroup defaultGroup = _securityGroupMgr.getDefaultSecurityGroup(owner.getId());
+                if (defaultGroup != null) {
+                    securityGroupIdList.add(defaultGroup.getId());
+                } else {
+                    //create default security group for the account
+                    if (s_logger.isDebugEnabled()) {
+                        s_logger.debug("Couldn't find default security group for the account " + owner + " so creating a new one");
+                    }
+                    defaultGroup = _securityGroupMgr.createSecurityGroup(SecurityGroupManager.DEFAULT_GROUP_NAME, SecurityGroupManager.DEFAULT_GROUP_DESCRIPTION, owner.getDomainId(), owner.getId(), owner.getAccountName());
                     securityGroupIdList.add(defaultGroup.getId());
                 }
-
-            } else {
-                //create default security group for the account
-                if (s_logger.isDebugEnabled()) {
-                    s_logger.debug("Couldn't find default security group for the account " + owner + " so creating a new one");
-                }
-                defaultGroup = _securityGroupMgr.createSecurityGroup(SecurityGroupManager.DEFAULT_GROUP_NAME, SecurityGroupManager.DEFAULT_GROUP_DESCRIPTION, owner.getDomainId(), owner.getId(), owner.getAccountName());
-                securityGroupIdList.add(defaultGroup.getId());
             }
         }
 

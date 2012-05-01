@@ -17,6 +17,8 @@ import java.util.Map;
 import com.cloud.exception.StorageUnavailableException;
 import com.cloud.host.HostVO;
 import com.cloud.storage.VMTemplateVO;
+import com.cloud.storage.VolumeVO;
+import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.template.TemplateInfo;
 import com.cloud.utils.component.Manager;
 
@@ -38,8 +40,12 @@ public interface DownloadMonitor extends Manager{
 
     void handleSysTemplateDownload(HostVO hostId);
 
-    void handleTemplateSync(Long dcId);
+    void handleSync(Long dcId);
 
     void addSystemVMTemplatesToHost(HostVO host, Map<String, TemplateInfo> templateInfos);
+
+	boolean downloadVolumeToStorage(VolumeVO volume, Long zoneId, String url, String checkSum, ImageFormat format);
+
+	void handleVolumeSync(HostVO ssHost);	
 
 }
