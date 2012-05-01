@@ -62,7 +62,7 @@
 
       $uploadVolume.append(
         topFields,
-        $('<div>').addClass('desc').html('Select instance to attach volume to:'),
+        $('<div>').addClass('desc').html(_l('label.select.instance.to.attach.volume.to') + ':'),
         $('<div>').addClass('listView-container').append(
           vmList({ listView: listView }) 
         )
@@ -76,6 +76,12 @@
             text: _l('label.upload'),
             'class': 'ok',
             click: function() {
+              if (!$uploadVolume.find('input[type=text]').val()) {
+                cloudStack.dialog.notice({ message: _l('message.specify.url')});
+
+                return false;
+              }
+              
               if (!$uploadVolume.find(
                 'input[type=radio]:checked, input[type=checkbox]:checked'
               ).size()) {

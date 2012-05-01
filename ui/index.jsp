@@ -1669,6 +1669,8 @@
 
 <script language="javascript">
 dictionary = {
+'message.specify.url': '<fmt:message key="message.specify.url"/>',
+'label.select.instance.to.attach.volume.to': '<fmt:message key="label.select.instance.to.attach.volume.to"/>',
 'label.upload': '<fmt:message key="label.upload"/>',
 'label.upload.volume': '<fmt:message key="label.upload.volume"/>',
 'label.virtual.routers': '<fmt:message key="label.virtual.routers"/>',
