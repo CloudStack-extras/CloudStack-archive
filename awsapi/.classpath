@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/deps"/>
+	<classpathentry kind="lib" path="modules/rahas-1.5.mar"/>
+	<classpathentry kind="lib" path="modules/rampart-1.5.mar"/>
+	<classpathentry kind="lib" path="modules/axis2-adb-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-adb-codegen-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-ant-plugin-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-clustering-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-codegen-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-corba-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-fastinfoset-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-java2wsdl-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-jaxbri-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-jaxws-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-jibx-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-json-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-kernel-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-metadata-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-mtompolicy-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-saaj-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-soapmonitor-servlet-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-spring-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-transport-http-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-transport-local-1.6.2.jar"/>
+	<classpathentry kind="lib" path="modules/axis2-xmlbeans-1.6.2.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
