@@ -219,11 +219,21 @@
                     }
                   }),
                   action: function(args) {
-                    setTimeout(function() {
-                      args.response.success({
-                        _custom: { jobId: 1232 }
-                      });
-                    }, 1000);
+                    $.ajax({
+                      url: createURL('uploadVolume'),
+                      data: {
+                        hypervisor: 'XenServer',
+                        format: 'VHD',
+                        url: args.data.url,
+                        zoneid: 1
+                      },
+                      success: function(json) {
+                        args.response.success();
+                      },
+                      error: function(json) {
+                        args.response.error(parseXMLHttpResponse(json));
+                      }
+                    });
                   }
                 })
               }
