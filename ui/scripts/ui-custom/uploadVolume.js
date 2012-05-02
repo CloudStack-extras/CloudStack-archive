@@ -3,6 +3,24 @@
     var listView = args.listView;
     var action = args.action;
 
+    var validate = function($uploadVolume) {
+      if (!$uploadVolume.find('input[type=text]').val()) {
+        cloudStack.dialog.notice({ message: _l('message.specify.url')});
+
+        return false;
+      }
+      
+      if (!$uploadVolume.find(
+        'input[type=radio]:checked, input[type=checkbox]:checked'
+      ).size()) {
+        cloudStack.dialog.notice({ message: _l('message.select.instance')});
+
+        return false;
+      }
+
+      return true;
+    };
+
     return function(args) {
       var $uploadVolume = $('<div>').addClass('upload-volume');
       var context = args.context;
@@ -76,25 +94,16 @@
             text: _l('label.upload'),
             'class': 'ok',
             click: function() {
-              if (!$uploadVolume.find('input[type=text]').val()) {
-                cloudStack.dialog.notice({ message: _l('message.specify.url')});
-
-                return false;
-              }
-              
-              if (!$uploadVolume.find(
-                'input[type=radio]:checked, input[type=checkbox]:checked'
-              ).size()) {
-                cloudStack.dialog.notice({ message: _l('message.select.instance')});
-
-                return false;
-              }
+              if (!validate($uploadVolume)) return false;
 
               var complete = args.complete;
               var $loading = $('<div>').addClass('loading-overlay');
 
               $loading.appendTo($uploadVolume);
               action({
+                data: {
+                  url: $uploadVolume.find('input[type=text]').val()
+                },
                 context: $.extend(true, {}, context, {
                   instances: [
                     $uploadVolume.find('tr.multi-edit-selected').data('json-obj')
