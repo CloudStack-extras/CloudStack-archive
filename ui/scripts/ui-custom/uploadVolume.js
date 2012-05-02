@@ -124,6 +124,7 @@
                     });
                   },
                   error: function(args) {
+                    $loading.remove();
                     cloudStack.dialog.notice({ message: args });
                   }
                 }
