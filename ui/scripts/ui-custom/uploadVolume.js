@@ -27,14 +27,21 @@
       var topFields = function() {
         var $form = $('<form>').addClass('top-fields');
         var $urlLabel = $('<label>').html(_l('label.url') + ':');
-        var $urlField = $('<div>').addClass('field select-url');
+        var $urlField = $('<div>').addClass('field url');
+        var $nameLabel = $('<label>').html(_l('label.name') + ':');
+        var $nameField = $('<div>').addClass('field name');
         var $urlInput = $('<input>').attr({
           type: 'text',
           name: 'url'
         }).addClass('required');
+        var $nameInput = $('<input>').attr({
+          type: 'text',
+          name: 'name'
+        }).addClass('required');
 
         $urlField.append($urlLabel, $urlInput);
-        $form.append($urlField);
+        $nameField.append($nameLabel, $nameInput);
+        $form.append($nameField, $urlField);
 
         return $form;
       };
@@ -101,9 +108,7 @@
 
               $loading.appendTo($uploadVolume);
               action({
-                data: {
-                  url: $uploadVolume.find('input[type=text]').val()
-                },
+                data: cloudStack.serializeForm($uploadVolume.find('form')),
                 context: $.extend(true, {}, context, {
                   instances: [
                     $uploadVolume.find('tr.multi-edit-selected').data('json-obj')

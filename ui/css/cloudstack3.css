@@ -7124,6 +7124,11 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   margin-left: 24px;
 }
 
+.upload-volume .top-fields .field {
+  float: left;
+  margin-right: 50px;
+}
+
 .upload-volume .top-fields input {
   float: right;
   /*+border-radius:3px;*/
