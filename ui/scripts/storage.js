@@ -222,10 +222,11 @@
                     $.ajax({
                       url: createURL('uploadVolume'),
                       data: {
-                        hypervisor: 'XenServer',
-                        format: 'VHD',
+                        hypervisor: 'XenServer', // Replace with instances' hypervisor
+                        format: 'VHD', // Replace with format of uploaded volume
+                        name: args.data.name,
                         url: args.data.url,
-                        zoneid: 1
+                        zoneid: 1 // Replace with instances' zone ID
                       },
                       success: function(json) {
                         args.response.success();
