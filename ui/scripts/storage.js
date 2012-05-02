@@ -185,7 +185,8 @@
                     listView: {
                       filters: false,
                       dataProvider: function(args) {
-                        var searchByArgs = args.filterBy.search.value.length ?
+                        var searchByArgs = args.filterBy.search.value &&
+                              args.filterBy.search.value.length ?
                               '&name=' + args.filterBy.search.value : '';
 
                         $.ajax({
