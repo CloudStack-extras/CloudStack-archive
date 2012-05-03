@@ -1586,13 +1586,10 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             } 
             if (firstIP) {
             	args += " -f";
-            	args += " -l ";
-                args += publicIpAddress + "/" + cidrSize;
-            } else {
-              	args += " -l ";
-                args += publicIpAddress;
             }
-            
+            args += " -l ";
+            args += publicIpAddress + "/" + cidrSize;
+
             args += " -c ";
             args += "eth" + correctVif.getDevice(conn);
             
