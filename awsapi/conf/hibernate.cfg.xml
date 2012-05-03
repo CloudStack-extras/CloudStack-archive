@@ -4,6 +4,9 @@
 <hibernate-configuration>
 <session-factory>
 	<property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+	<property name="hibernate.connection.url">jdbc:mysql://localhost/cloudbridge</property>
+	<property name="hibernate.connection.username">cloud</property>
+    <property name="hibernate.connection.password">cloud</property>
     <property name="hibernate.connection.pool_size">20</property>
 	<property name="hibernate.connection.autocommit">false</property>
 	
@@ -20,7 +23,6 @@
     <property name="show_sql">true</property>
     <property name="hibernate.format_sql">true</property>
     -->
-    
 	<!-- Mapping files -->
 	<mapping resource="com/cloud/bridge/model/UserCredentials.hbm.xml"/>
     <mapping resource="com/cloud/bridge/model/SHost.hbm.xml"/>

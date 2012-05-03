@@ -171,8 +171,94 @@
               notification: {
                 poll: pollAsyncJobResult
               }
-            }
+            },
+						            					
+						//???
+						uploadVolume: {
+              isHeader: true,							
+              label: 'label.upload.volume',							
+              messages: {
+                notification: function() { 
+								  return 'label.upload.volume'; 
+								}
+              },
+              createForm: {
+                title: 'label.upload.volume',                
+                fields: {
+                  name: {
+                    label: 'label.name',
+                    validation: { required: true }
+                  },
+                  availabilityZone: {
+                    label: 'label.availability.zone',
+                    select: function(args) {
+                      $.ajax({
+                        url: createURL("listZones&available=true"),
+                        dataType: "json",
+                        async: true,
+                        success: function(json) {
+                          var items = json.listzonesresponse.zone;
+                          args.response.success({descriptionField: 'name', data: items});
+                        }
+                      });
+                    }
+                  },
+                  format: {
+									  label: 'label.format',
+										select: function(args) {
+										  var items = [];
+											items.push({ id: 'VHD', description: 'VHD' });
+											items.push({ id: 'OVA', description: 'OVA' });
+											items.push({ id: 'QCOW2', description: 'QCOW2' });
+											args.response.success({ data: items });
+										}
+									},
+									url: {
+									  label: 'label.url',
+										validation: { required: true }
+									}                  
+                }
+              },
 
+              action: function(args) {
+                var array1 = [];
+                array1.push("&name=" + todb(args.data.name));
+                array1.push("&zoneId=" + args.data.availabilityZone);
+								array1.push("&format=" + args.data.format);
+								array1.push("&url=" + todb(args.data.url));
+                
+                $.ajax({
+                  url: createURL("uploadVolume" + array1.join("")),
+                  dataType: "json",
+                  async: true,
+                  success: function(json) {
+									  debugger;
+                    var jid = json.uploadvolumeresponse.jobid;
+                    args.response.success(
+                      {_custom:
+                       {jobId: jid,
+                        getUpdatedItem: function(json) {
+                          return json.queryasyncjobresultresponse.jobresult.volume;
+                        },
+                        getActionFilter: function() {
+                          return volumeActionfilter;
+                        }
+                       }
+                      }
+                    );
+                  },
+                  error: function(json) {
+                    args.response.error(parseXMLHttpResponse(json));
+                  }
+                });
+              },
+
+              notification: {
+                poll: pollAsyncJobResult
+              }
+            }
+						//???					
+						
           },
 
           dataProvider: function(args) {

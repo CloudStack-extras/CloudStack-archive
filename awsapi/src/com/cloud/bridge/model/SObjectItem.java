@@ -19,7 +19,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * @author Kelven Yang
+ * @author Kelven Yang, John Zucker
  */
 public class SObjectItem implements Serializable {
 	private static final long serialVersionUID = -7351173256185687851L;
@@ -76,7 +76,7 @@ public class SObjectItem implements Serializable {
 	}
 	
 	public void setStoredPath(String storedPath) {
-		this.storedPath = storedPath;
+		this.storedPath = storedPath;   // TODO - storedpath holds integer, called from S3Engine.allocObjectItem
 	}
 	
 	public long getStoredSize() {

@@ -39,6 +39,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.json.simple.parser.ParseException;
 
+import com.cloud.bridge.io.S3FileSystemBucketAdapter;
 import com.cloud.bridge.model.MHost;
 import com.cloud.bridge.model.MHostMount;
 import com.cloud.bridge.model.SAcl;
@@ -58,10 +59,9 @@ import com.cloud.bridge.persist.dao.SHostDao;
 import com.cloud.bridge.persist.dao.SMetaDao;
 import com.cloud.bridge.persist.dao.SObjectDao;
 import com.cloud.bridge.persist.dao.SObjectItemDao;
-import com.cloud.bridge.service.S3BucketAdapter;
-import com.cloud.bridge.service.S3FileSystemBucketAdapter;
-import com.cloud.bridge.service.ServiceProvider;
+import com.cloud.bridge.service.S3Constants;
 import com.cloud.bridge.service.UserContext;
+import com.cloud.bridge.service.controller.s3.ServiceProvider;
 import com.cloud.bridge.service.core.s3.S3BucketPolicy.PolicyAccess;
 import com.cloud.bridge.service.core.s3.S3CopyObjectRequest.MetadataDirective;
 import com.cloud.bridge.service.core.s3.S3PolicyAction.PolicyActions;
@@ -78,10 +78,12 @@ import com.cloud.bridge.service.exception.UnsupportedException;
 import com.cloud.bridge.util.DateHelper;
 import com.cloud.bridge.util.PolicyParser;
 import com.cloud.bridge.util.StringHelper;
-import com.cloud.bridge.util.Tuple;
+import com.cloud.bridge.util.OrderedPair;
+import com.cloud.bridge.util.Triple;
 
 /**
- * @author Kelven Yang
+ * @author Kelven Yang, John Zucker
+ * The CRUD control actions to be invoked from S3BucketAction or S3ObjectAction.
  */
 public class S3Engine {
     protected final static Logger logger = Logger.getLogger(S3Engine.class);
@@ -94,9 +96,14 @@ public class S3Engine {
     	bucketAdapters.put(SHost.STORAGE_HOST_TYPE_LOCAL, new S3FileSystemBucketAdapter());
     }
     
+    
     /**
-     * We treat this simply as first a get and then a put of the object the user wants to copy.
+     * Return a S3CopyObjectResponse which represents an object being copied from source
+     * to destination bucket.    
+     * Called from S3ObjectAction when copying an object.
+     * This can be treated as first a GET followed by a PUT of the object the user wants to copy.
      */
+    
 	public S3CopyObjectResponse handleRequest(S3CopyObjectRequest request) 
 	{
 		S3CopyObjectResponse response = new S3CopyObjectResponse();
@@ -172,7 +179,7 @@ public class S3Engine {
    	
 		if (PersistContext.acquireNamedLock("bucket.creation", LOCK_ACQUIRING_TIMEOUT_SECONDS)) 
 		{
-			Tuple<SHost, String> shostTuple = null;
+			OrderedPair<SHost, String> shost_storagelocation_pair = null;
 			boolean success = false;
 			try {
 				SBucketDao bucketDao = new SBucketDao();
@@ -181,14 +188,14 @@ public class S3Engine {
 				if (bucketDao.getByName(request.getBucketName()) != null)
 					throw new ObjectAlreadyExistsException("Bucket already exists"); 
 					
-				shostTuple = allocBucketStorageHost(request.getBucketName(), null);
+				shost_storagelocation_pair = allocBucketStorageHost(request.getBucketName(), null);
 				
 				SBucket sbucket = new SBucket();
 				sbucket.setName(request.getBucketName());
 				sbucket.setCreateTime(DateHelper.currentGMTTime());
 				sbucket.setOwnerCanonicalId( UserContext.current().getCanonicalUserId());
-				sbucket.setShost(shostTuple.getFirst());
-				shostTuple.getFirst().getBuckets().add(sbucket);
+				sbucket.setShost(shost_storagelocation_pair.getFirst());
+				shost_storagelocation_pair.getFirst().getBuckets().add(sbucket);
 				bucketDao.save(sbucket);
 
 				S3AccessControlList acl = request.getAcl();
@@ -205,9 +212,9 @@ public class S3Engine {
 			} 
 			finally 
 			{
-				if(!success && shostTuple != null) {
-					S3BucketAdapter bucketAdapter =  getStorageHostBucketAdapter(shostTuple.getFirst());
-					bucketAdapter.deleteContainer(shostTuple.getSecond(), request.getBucketName());
+				if(!success && shost_storagelocation_pair != null) {
+					S3BucketAdapter bucketAdapter =  getStorageHostBucketAdapter(shost_storagelocation_pair.getFirst());
+					bucketAdapter.deleteContainer(shost_storagelocation_pair.getSecond(), request.getBucketName());
 				}
 				PersistContext.releaseNamedLock("bucket.creation");
 			}
@@ -219,6 +226,11 @@ public class S3Engine {
 		return response;
     }
     
+    /**
+     * Return a S3Response which represents the effect of an object being deleted from its bucket.    
+     * Called from S3BucketAction when deleting an object.
+     */
+    
     public S3Response handleRequest( S3DeleteBucketRequest request ) 
     {
     	S3Response response  = new S3Response();   	
@@ -229,9 +241,10 @@ public class S3Engine {
 		if ( sbucket != null ) 
 		{			 
 			 S3PolicyContext context = new S3PolicyContext( PolicyActions.DeleteBucket, bucketName );
-			 switch( verifyPolicy( context )) {
+			 switch( verifyPolicy( context ))
+			 {
 			 case ALLOW:
-				  // -> bucket policy can give users permission to delete a bucket while ACLs cannot
+				  // The bucket policy can give users permission to delete a bucket whereas ACLs cannot
 				  break;
 				  
 			 case DENY:
@@ -239,7 +252,7 @@ public class S3Engine {
 				  
 			 case DEFAULT_DENY:
 			 default:
-				  // -> does not matter what the ACLs say only the owner can delete a bucket
+				  // Irrespective of what the ACLs say, only the owner can delete a bucket
 				  String client = UserContext.current().getCanonicalUserId();
 				  if (!client.equals( sbucket.getOwnerCanonicalId())) {
 				      throw new PermissionDeniedException( "Access Denied - only the owner can delete a bucket" );
@@ -248,21 +261,23 @@ public class S3Engine {
 			 }
 
 			 
-			 // -> delete the file
-			 Tuple<SHost, String> tupleBucketHost = getBucketStorageHost(sbucket);
-			 S3BucketAdapter bucketAdapter = getStorageHostBucketAdapter(tupleBucketHost.getFirst());			
-			 bucketAdapter.deleteContainer(tupleBucketHost.getSecond(), request.getBucketName());
+			 // Delete the file from its storage location
+			 OrderedPair<SHost, String> host_storagelocation_pair = getBucketStorageHost(sbucket);
+			 S3BucketAdapter bucketAdapter = getStorageHostBucketAdapter(host_storagelocation_pair.getFirst());			
+			 bucketAdapter.deleteContainer(host_storagelocation_pair.getSecond(), request.getBucketName());
 			
-			 // -> cascade-deleting can delete related SObject/SObjectItem objects, but not SAcl, SMeta and policy objects. We
-			 //    need to perform deletion of these objects related to bucket manually.
-			 //    Delete SMeta & SAcl objects: (1)Get all the objects in the bucket, (2)then all the items in each object, (3) then all meta & acl data for each item
+			 // Cascade-deleting can delete related SObject/SObjectItem objects, but not SAcl, SMeta and policy objects.
+			 // To delete SMeta & SAcl objects: 
+			 // (1)Get all the objects in the bucket, 
+			 // (2)then all the items in each object, 
+			 // (3) then all meta & acl data for each item
 			 Set<SObject> objectsInBucket = sbucket.getObjectsInBucket();
-			 Iterator it = objectsInBucket.iterator();
+			 Iterator<SObject> it = objectsInBucket.iterator();
 			 while( it.hasNext()) 
 			 {
 			 	SObject oneObject = (SObject)it.next();
 				Set<SObjectItem> itemsInObject = oneObject.getItems();
-				Iterator is = itemsInObject.iterator();
+				Iterator<SObjectItem> is = itemsInObject.iterator();
 				while( is.hasNext()) 
 				{
 					SObjectItem oneItem = (SObjectItem)is.next();
@@ -271,7 +286,7 @@ public class S3Engine {
 				}				
 			 }
 			 	
-			 // -> delete all the policy state associated with the bucket
+			 // Delete all the policy state associated with the bucket
 			 try {
 	   	         ServiceProvider.getInstance().deleteBucketPolicy( bucketName );
 		         BucketPolicyDao policyDao = new BucketPolicyDao();
@@ -292,6 +307,11 @@ public class S3Engine {
 		}
     	return response;
     }
+    
+    /**
+     * Return a S3ListBucketResponse which represents a list of up to 1000 objects contained ins  the bucket.    
+     * Called from S3BucketAction for GETting objects and for GETting object versions.
+     */
     
     public S3ListBucketResponse listBucketContents(S3ListBucketRequest request, boolean includeVersions) 
     {
@@ -318,7 +338,7 @@ public class S3Engine {
 		verifyAccess( context, "SBucket", sbucket.getId(), SAcl.PERMISSION_READ ); 
 
 		
-		// when we query, request one more item so that we know how to set isTruncated flag 
+		// Wen execting the query, request one more item so that we know how to set isTruncated flag 
 		SObjectDao sobjectDao = new SObjectDao();
 		List<SObject> l = null;
 		
@@ -336,25 +356,24 @@ public class S3Engine {
 			response.setNextMarker(l.get(l.size() - 1).getNameKey());
 		}
 
-		// SOAP response does not support versioning
+		// If needed - SOAP response does not support versioning
 		response.setContents( composeListBucketContentEntries(l, prefix, delimiter, maxKeys, includeVersions, request.getVersionIdMarker()));
 		response.setCommonPrefixes( composeListBucketPrefixEntries(l, prefix, delimiter, maxKeys));
 		return response;
     }
     
     /**
+     * Return a S3ListAllMyBucketResponse which represents a list of all buckets owned by the requester.    
+     * Called from S3BucketAction for GETting all buckets.
      * To check on bucket policies defined we have to (look for and) evaluate the policy on each
      * bucket the user owns.
-     * 
-     * @param request
-     * @return
      */
     public S3ListAllMyBucketsResponse handleRequest(S3ListAllMyBucketsRequest request) 
     {
     	S3ListAllMyBucketsResponse response = new S3ListAllMyBucketsResponse();   	
     	SBucketDao bucketDao = new SBucketDao();
     	
-    	// -> "...you can only list buckets for which you are the owner."
+    	// "...you can only list buckets for which you are the owner."
     	List<SBucket> buckets = bucketDao.listBuckets(UserContext.current().getCanonicalUserId());
     	S3CanonicalUser owner = new S3CanonicalUser();
     	owner.setID(UserContext.current().getCanonicalUserId());
@@ -381,8 +400,13 @@ public class S3Engine {
     	return response;
     }
     
+    /**
+     * Return an S3Response representing the result of PUTTING the ACL of a given bucket.
+     * Called from S3BucketAction to PUT its ACL.
+     */
+    
     public S3Response handleRequest(S3SetBucketAccessControlPolicyRequest request) 
-    {
+    { 
     	S3Response response = new S3Response();	
     	SBucketDao bucketDao = new SBucketDao();
     	String bucketName = request.getBucketName();
@@ -392,7 +416,7 @@ public class S3Engine {
     		response.setResultDescription("Bucket does not exist");
     		return response;
     	}
- 
+    	
 	    S3PolicyContext context = new S3PolicyContext( PolicyActions.PutBucketAcl, bucketName );
     	verifyAccess( context, "SBucket", sbucket.getId(), SAcl.PERMISSION_WRITE_ACL ); 
 
@@ -403,6 +427,12 @@ public class S3Engine {
     	response.setResultDescription("OK");
     	return response;
     }
+    
+    
+    /**
+     * Return a S3AccessControlPolicy representing the ACL of a given bucket.
+     * Called from S3BucketAction to GET its ACL.
+     */
     
     public S3AccessControlPolicy handleRequest(S3GetBucketAccessControlPolicyRequest request) 
     {
@@ -428,13 +458,12 @@ public class S3Engine {
     }
     
     /**
-     * This function should be called if a multipart upload is aborted OR has completed successfully and
+     * This method should be called if a multipart upload is aborted OR has completed successfully and
      * the individual parts have to be cleaned up.
-     * 
+     * Called from S3ObjectAction when executing at completion or when aborting multipart upload.
      * @param bucketName
      * @param uploadId
-     * @param verifyPermission - if false then don't check the user's permission to clean up the state
-     * @return
+     * @param verifyPermission - If false then do not check the user's permission to clean up the state
      */
     public int freeUploadParts(String bucketName, int uploadId, boolean verifyPermission)
     {
@@ -446,12 +475,12 @@ public class S3Engine {
 			return 404;
 		}
 	
-		Tuple<SHost, String> tupleBucketHost = getBucketStorageHost(bucket);		
-		S3BucketAdapter bucketAdapter = getStorageHostBucketAdapter(tupleBucketHost.getFirst());
+		OrderedPair<SHost, String> host_storagelocation_pair = getBucketStorageHost(bucket);		
+		S3BucketAdapter bucketAdapter = getStorageHostBucketAdapter(host_storagelocation_pair.getFirst());
 
 		try {
     	    MultipartLoadDao uploadDao = new MultipartLoadDao();
-    	    Tuple<String,String> exists = uploadDao.multipartExits( uploadId );
+    	    OrderedPair<String,String> exists = uploadDao.multipartExits( uploadId );
     	    if (null == exists) {
     			logger.error( "initiateMultipartUpload failed since multipart upload" + uploadId + " does not exist" );
     	    	return 404;
@@ -474,7 +503,7 @@ public class S3Engine {
 	        S3MultipartPart[] parts = uploadDao.getParts( uploadId, 10000, 0 );
 	        for( int i=0; i < parts.length; i++ )
 	        {    
-    	        bucketAdapter.deleteObject( tupleBucketHost.getSecond(), ServiceProvider.getInstance().getMultipartDir(), parts[i].getPath());
+    	        bucketAdapter.deleteObject( host_storagelocation_pair.getSecond(), ServiceProvider.getInstance().getMultipartDir(), parts[i].getPath());
 	        }
 	        
 	        uploadDao.deleteUpload( uploadId );
@@ -495,8 +524,7 @@ public class S3Engine {
      * The initiator must have permission to write to the bucket in question in order to initiate
      * a multipart upload.  Also check to make sure the special folder used to store parts of 
      * a multipart exists for this bucket.
-     *  
-     * @param request
+     * Called from S3ObjectAction during many stages of multipart upload.
      */
     public S3PutObjectInlineResponse initiateMultipartUpload(S3PutObjectInlineRequest request)
     {
@@ -536,7 +564,7 @@ public class S3Engine {
     /**
      * Save the object fragment in a special (i.e., hidden) directory inside the same mount point as 
      * the bucket location that the final object will be stored in.
-     * 
+     * Called from S3ObjectAction during many stages of multipart upload.
      * @param request
      * @param uploadId
      * @param partNumber
@@ -558,14 +586,14 @@ public class S3Engine {
 		context.setKeyName( request.getKey());
 		verifyAccess( context, "SBucket", bucket.getId(), SAcl.PERMISSION_WRITE );
 		
-		Tuple<SHost, String> tupleBucketHost = getBucketStorageHost(bucket);		
-		S3BucketAdapter bucketAdapter = getStorageHostBucketAdapter(tupleBucketHost.getFirst());
+		OrderedPair<SHost, String> host_storagelocation_pair = getBucketStorageHost(bucket);		
+		S3BucketAdapter bucketAdapter = getStorageHostBucketAdapter(host_storagelocation_pair.getFirst());
 		String itemFileName = new String( uploadId + "-" + partNumber );
 		InputStream is = null;
 
 		try {
 			is = request.getDataInputStream();
-			String md5Checksum = bucketAdapter.saveObject(is, tupleBucketHost.getSecond(), ServiceProvider.getInstance().getMultipartDir(), itemFileName);
+			String md5Checksum = bucketAdapter.saveObject(is, host_storagelocation_pair.getSecond(), ServiceProvider.getInstance().getMultipartDir(), itemFileName);
 			response.setETag(md5Checksum);	
 			
     	    MultipartLoadDao uploadDao = new MultipartLoadDao();
@@ -596,16 +624,16 @@ public class S3Engine {
     
     /**
      * Create the real object represented by all the parts of the multipart upload.       
-     * 
-     * @param httpResp - servelet response handle to return the headers of the response (including version header) 
-     * @param request - normal parameters need to create a new object (e.g., meta data)
-     * @param parts - list of files that make up the multipart
-     * @param os - response outputstream, this function can take a long time and we are required to
-     *        keep the connection alive by returning whitespace characters back periodically.
-     * @return
-     * @throws IOException 
+     * Called from S3ObjectAction at completion of multipart upload.
+     * @param httpResp - Servlet response handle to return the headers of the response (including version header) 
+     * @param request - Normal parameters needed to create a new object (including metadata)
+     * @param parts - List of files that make up the multipart
+     * @param outputStream - Response output stream
+     * N.B. - This method can be long-lasting 
+     * We are required to keep the connection alive by returning whitespace characters back periodically.
      */
-    public S3PutObjectInlineResponse concatentateMultipartUploads(HttpServletResponse httpResp, S3PutObjectInlineRequest request, S3MultipartPart[] parts, OutputStream os) throws IOException
+    
+    public S3PutObjectInlineResponse concatentateMultipartUploads(HttpServletResponse httpResp, S3PutObjectInlineRequest request, S3MultipartPart[] parts, OutputStream outputStream) throws IOException
     {
     	// [A] Set up and initial error checking
     	S3PutObjectInlineResponse response = new S3PutObjectInlineResponse();	
@@ -622,17 +650,17 @@ public class S3Engine {
 
 		// [B] Now we need to create the final re-assembled object
 		//  -> the allocObjectItem checks for the bucket policy PutObject permissions
-		Tuple<SObject, SObjectItem> tupleObjectItem = allocObjectItem(bucket, key, meta, null, request.getCannedAccess());
-		Tuple<SHost, String> tupleBucketHost = getBucketStorageHost(bucket);		
+		OrderedPair<SObject, SObjectItem> object_objectitem_pair = allocObjectItem(bucket, key, meta, null, request.getCannedAccess());
+		OrderedPair<SHost, String> host_storagelocation_pair = getBucketStorageHost(bucket);		
 		
-		S3BucketAdapter bucketAdapter = getStorageHostBucketAdapter(tupleBucketHost.getFirst());
-		String itemFileName = tupleObjectItem.getSecond().getStoredPath();
+		S3BucketAdapter bucketAdapter = getStorageHostBucketAdapter(host_storagelocation_pair.getFirst());
+		String itemFileName = object_objectitem_pair.getSecond().getStoredPath();
 		
 		// -> Amazon defines that we must return a 200 response immediately to the client, but
 		// -> we don't know the version header until we hit here
 		httpResp.setStatus(200);
 	    httpResp.setContentType("text/xml; charset=UTF-8");
-		String version = tupleObjectItem.getSecond().getVersion();
+		String version = object_objectitem_pair.getSecond().getVersion();
 		if (null != version) httpResp.addHeader( "x-amz-version-id", version );	
         httpResp.flushBuffer();
 		
@@ -642,12 +670,19 @@ public class S3Engine {
 			// explicit transaction control to avoid holding transaction during long file concatenation process
 			PersistContext.commitTransaction();
 			
-			Tuple<String, Long> result = bucketAdapter.concatentateObjects( tupleBucketHost.getSecond(), bucket.getName(), itemFileName, ServiceProvider.getInstance().getMultipartDir(), parts, os );
+			OrderedPair<String, Long> result = bucketAdapter.
+					concatentateObjects
+					( host_storagelocation_pair.getSecond(), 
+							bucket.getName(), 
+							itemFileName, 
+							ServiceProvider.getInstance().getMultipartDir(), 
+							parts, 
+							outputStream );
 			response.setETag(result.getFirst());
-			response.setLastModified(DateHelper.toCalendar( tupleObjectItem.getSecond().getLastModifiedTime()));
+			response.setLastModified(DateHelper.toCalendar( object_objectitem_pair.getSecond().getLastModifiedTime()));
 		
 			SObjectItemDao itemDao = new SObjectItemDao();
-			SObjectItem item = itemDao.get( tupleObjectItem.getSecond().getId());
+			SObjectItem item = itemDao.get( object_objectitem_pair.getSecond().getId());
 			item.setMd5(result.getFirst());
 			item.setStoredSize(result.getSecond().longValue());
 			response.setResultCode(200);
@@ -659,6 +694,11 @@ public class S3Engine {
 		}
     	return response;	
     }
+    
+    /**
+     * Return a S3PutObjectInlineResponse which represents an object being created into a bucket      
+     * Called from S3ObjectAction when PUTting or POTing an object.
+     */
     
     public S3PutObjectInlineResponse handleRequest(S3PutObjectInlineRequest request) 
     {
@@ -674,13 +714,13 @@ public class S3Engine {
 		if (bucket == null) throw new NoSuchObjectException("Bucket " + bucketName + " does not exist");
 		
 
-		// -> is the caller allowed to write the object?
-		//  -> the allocObjectItem checks for the bucket policy PutObject permissions
-		Tuple<SObject, SObjectItem> tupleObjectItem = allocObjectItem(bucket, key, meta, acl, request.getCannedAccess());
-		Tuple<SHost, String> tupleBucketHost = getBucketStorageHost(bucket);		
+		// Is the caller allowed to write the object?
+		// The allocObjectItem checks for the bucket policy PutObject permissions
+		OrderedPair<SObject, SObjectItem> object_objectitem_pair = allocObjectItem(bucket, key, meta, acl, request.getCannedAccess());
+		OrderedPair<SHost, String> host_storagelocation_pair = getBucketStorageHost(bucket);		
 		
-		S3BucketAdapter bucketAdapter = getStorageHostBucketAdapter(tupleBucketHost.getFirst());
-		String itemFileName = tupleObjectItem.getSecond().getStoredPath();
+		S3BucketAdapter bucketAdapter = getStorageHostBucketAdapter(host_storagelocation_pair.getFirst());
+		String itemFileName = object_objectitem_pair.getSecond().getStoredPath();
 		InputStream is = null;
 
 		try {
@@ -688,13 +728,13 @@ public class S3Engine {
 			PersistContext.commitTransaction();
 			
 			is = request.getDataInputStream();
-			String md5Checksum = bucketAdapter.saveObject(is, tupleBucketHost.getSecond(), bucket.getName(), itemFileName);
+			String md5Checksum = bucketAdapter.saveObject(is, host_storagelocation_pair.getSecond(), bucket.getName(), itemFileName);
 			response.setETag(md5Checksum);
-			response.setLastModified(DateHelper.toCalendar( tupleObjectItem.getSecond().getLastModifiedTime()));
-	        response.setVersion( tupleObjectItem.getSecond().getVersion());
+			response.setLastModified(DateHelper.toCalendar( object_objectitem_pair.getSecond().getLastModifiedTime()));
+	        response.setVersion( object_objectitem_pair.getSecond().getVersion());
 		
 			SObjectItemDao itemDao = new SObjectItemDao();
-			SObjectItem item = itemDao.get( tupleObjectItem.getSecond().getId());
+			SObjectItem item = itemDao.get( object_objectitem_pair.getSecond().getId());
 			item.setMd5(md5Checksum);
 			item.setStoredSize(contentLength);
 			PersistContext.getSession().save(item);
@@ -715,6 +755,11 @@ public class S3Engine {
     	
     	return response;
     }
+    
+    /**
+     * Return a S3PutObjectResponse which represents an object being created into a bucket      
+     * Called from S3RestServlet when processing a DIME request.
+     */
 
     public S3PutObjectResponse handleRequest(S3PutObjectRequest request)  
     {
@@ -729,25 +774,25 @@ public class S3Engine {
 		SBucket bucket = bucketDao.getByName(bucketName);
 		if(bucket == null) throw new NoSuchObjectException("Bucket " + bucketName + " does not exist");
 		
-		// -> is the caller allowed to write the object?	
-		//  -> the allocObjectItem checks for the bucket policy PutObject permissions
-		Tuple<SObject, SObjectItem> tupleObjectItem = allocObjectItem(bucket, key, meta, acl, null);
-		Tuple<SHost, String> tupleBucketHost = getBucketStorageHost(bucket);
+		// Is the caller allowed to write the object?	
+		// The allocObjectItem checks for the bucket policy PutObject permissions
+		OrderedPair<SObject, SObjectItem> object_objectitem_pair = allocObjectItem(bucket, key, meta, acl, null);
+		OrderedPair<SHost, String> host_storagelocation_pair = getBucketStorageHost(bucket);
     	
-		S3BucketAdapter bucketAdapter =  getStorageHostBucketAdapter(tupleBucketHost.getFirst());
-		String itemFileName = tupleObjectItem.getSecond().getStoredPath();
+		S3BucketAdapter bucketAdapter =  getStorageHostBucketAdapter(host_storagelocation_pair.getFirst());
+		String itemFileName = object_objectitem_pair.getSecond().getStoredPath();
 		InputStream is = null;
 		try {
 			// explicit transaction control to avoid holding transaction during file-copy process
 			PersistContext.commitTransaction();
 			
 			is = request.getInputStream();
-			String md5Checksum = bucketAdapter.saveObject(is, tupleBucketHost.getSecond(), bucket.getName(), itemFileName);
+			String md5Checksum = bucketAdapter.saveObject(is, host_storagelocation_pair.getSecond(), bucket.getName(), itemFileName);
 			response.setETag(md5Checksum);
-			response.setLastModified(DateHelper.toCalendar( tupleObjectItem.getSecond().getLastModifiedTime()));
+			response.setLastModified(DateHelper.toCalendar( object_objectitem_pair.getSecond().getLastModifiedTime()));
 			
 			SObjectItemDao itemDao = new SObjectItemDao();
-			SObjectItem item = itemDao.get( tupleObjectItem.getSecond().getId());
+			SObjectItem item = itemDao.get( object_objectitem_pair.getSecond().getId());
 			item.setMd5(md5Checksum);
 			item.setStoredSize(contentLength);
 			PersistContext.getSession().save(item);
@@ -769,11 +814,10 @@ public class S3Engine {
 
     /**
      * The ACL of an object is set at the object version level. By default, PUT sets the ACL of the latest 
-     * version of an object. To set the ACL of a different version, use the versionId subresource. 
-     * 
-     * @param request
-     * @return
+     * version of an object. To set the ACL of a different version, using the versionId subresource. 
+     * Called from S3ObjectAction to PUT an object's ACL.
      */
+    
     public S3Response handleRequest(S3SetObjectAccessControlPolicyRequest request) 
     {
     	S3PolicyContext context = null;
@@ -841,10 +885,9 @@ public class S3Engine {
     /**
      * By default, GET returns ACL information about the latest version of an object. To return ACL 
      * information about a different version, use the versionId subresource
-     * 
-     * @param request
-     * @return
+     * Called from S3ObjectAction to get an object's ACL.
      */
+    
     public S3AccessControlPolicy handleRequest(S3GetObjectAccessControlPolicyRequest request) 
     {
     	S3PolicyContext context = null;
@@ -909,11 +952,10 @@ public class S3Engine {
     }
     
     /**
-     * Implements both GetObject and GetObjectExtended.
-     * 
-     * @param request
-     * @return
+     * Handle requests for GET object and HEAD "get object extended"
+     * Called from S3ObjectAction for GET and HEAD of an object.
      */
+    
     public S3GetObjectResponse handleRequest(S3GetObjectRequest request) 
     {
     	S3GetObjectResponse response = new S3GetObjectResponse();
@@ -1000,7 +1042,7 @@ public class S3Engine {
 		{
 			int i = 0;
 			S3MetaDataEntry[] metaEntries = new S3MetaDataEntry[ itemMetaData.size() ];
-		    ListIterator it = itemMetaData.listIterator();
+		    ListIterator<SMeta> it = itemMetaData.listIterator();
 		    while( it.hasNext()) {
 		    	SMeta oneTag = (SMeta)it.next();
 		    	S3MetaDataEntry oneEntry = new S3MetaDataEntry();
@@ -1025,7 +1067,7 @@ public class S3Engine {
     		response.setVersion( item.getVersion());
     		if (request.isInlineData()) 
     		{
-    			Tuple<SHost, String> tupleSHostInfo = getBucketStorageHost(sbucket);
+    			OrderedPair<SHost, String> tupleSHostInfo = getBucketStorageHost(sbucket);
 				S3BucketAdapter bucketAdapter = getStorageHostBucketAdapter(tupleSHostInfo.getFirst());
 				
 				if ( 0 <= bytesStart && 0 <= bytesEnd )
@@ -1041,18 +1083,19 @@ public class S3Engine {
     }
     
     /**
-     * In one place we handle both versioning and non-versioning delete requests.
+     * Handle object deletion requests, both versioning and non-versioning requirements.
+     * Called from S3ObjectAction for deletion.
      */
 	public S3Response handleRequest(S3DeleteObjectRequest request) 
 	{		
-		// -> verify that the bucket and object exist
+		// Verify that the bucket and object exist
 		S3Response response  = new S3Response();
 		SBucketDao bucketDao = new SBucketDao();
 		String bucketName = request.getBucketName();
 		SBucket sbucket = bucketDao.getByName( bucketName );
 		if (sbucket == null) {
 			response.setResultCode(404);
-			response.setResultDescription("Bucket does not exist");
+			response.setResultDescription("Bucket " + bucketName + " does not exist");
 			return response;
 		}
 		
@@ -1061,12 +1104,12 @@ public class S3Engine {
 		SObject sobject = objectDao.getByNameKey( sbucket, nameKey );
 		if (sobject == null) {
 			response.setResultCode(404);
-			response.setResultDescription("Bucket does not exist");
+			response.setResultDescription("No object with key " +  nameKey + " exists in bucket " + bucketName);
 			return response;
 		}
 		
 				
-		// -> versioning controls what delete means
+		// Discover whether versioning is enabled.  If so versioning requires the setting of a deletion marker.
 		String storedPath = null;
 		SObjectItem item = null;
         int versioningStatus = sbucket.getVersioningStatus();
@@ -1079,12 +1122,12 @@ public class S3Engine {
 			 verifyAccess( context, "SBucket", sbucket.getId(), SAcl.PERMISSION_WRITE );
 
 			 if (null == wantVersion) {
-				 // -> if versioning is on and no versionId is given then we just write a deletion marker
+				 // If versioning is on and no versionId is given then we just write a deletion marker
 				 sobject.setDeletionMark( UUID.randomUUID().toString());
 				 objectDao.update( sobject );
 			 }
 			 else {	
-				  // -> are we removing the delete marker?
+				  // Otherwise remove the deletion marker if this has been set
 				  String deletionMarker = sobject.getDeletionMark();
 				  if (null != deletionMarker && wantVersion.equalsIgnoreCase( deletionMarker )) {
 					  sobject.setDeletionMark( null );  
@@ -1093,13 +1136,13 @@ public class S3Engine {
 					  return response;
 	              }
 				  
-				  // -> if versioning is on and the versionId is given then we delete the object matching that version
+				  // If versioning is on and the versionId is given (non-null) then delete the object matching that version
 			      if ( null == (item = sobject.getVersion( wantVersion ))) {
 			    	   response.setResultCode(404);
 			    	   return response;
 			      }
 			      else {
-			    	   // -> just delete the one item that matches the versionId from the database
+			    	   // Providing versionId is non-null, then just delete the one item that matches the versionId from the database
 			    	   storedPath = item.getStoredPath();
 			    	   sobject.deleteItem( item.getId());
 			    	   objectDao.update( sobject );	    	   
@@ -1107,7 +1150,7 @@ public class S3Engine {
 			 }
 	    }
 		else 
-		{	 // -> if versioning is off then we do delete the null object
+		{	 // If versioning is off then we do delete the null object
 			 S3PolicyContext context = new S3PolicyContext( PolicyActions.DeleteObject, bucketName );
 			 context.setKeyName( nameKey );
 			 verifyAccess( context, "SBucket", sbucket.getId(), SAcl.PERMISSION_WRITE );
@@ -1117,10 +1160,10 @@ public class S3Engine {
 		    	  return response;
 		     }
 		     else {
-		    	  // -> if no item with a null version then we are done
+		    	  // If there is no item with a null version then we are done
 		    	  if (null == item.getVersion()) {
-		    	      // -> remove the entire object 
-		    	      // -> cascade-deleting can delete related SObject/SObjectItem objects, but not SAcl and SMeta objects.
+		    	      // Otherwiswe remove the entire object 
+		    	      // Cascade-deleting can delete related SObject/SObjectItem objects, but not SAcl and SMeta objects.
 		    	      storedPath = item.getStoredPath();
 		    		  deleteMetaData( item.getId());
 		    		  deleteObjectAcls( "SObjectItem", item.getId());
@@ -1129,12 +1172,12 @@ public class S3Engine {
 		     }
 		}
 		
-		// -> delete the file holding the object
+		// Delete the file holding the object
 		if (null != storedPath) 
 		{
-			 Tuple<SHost, String> tupleBucketHost = getBucketStorageHost( sbucket );
-			 S3BucketAdapter bucketAdapter =  getStorageHostBucketAdapter( tupleBucketHost.getFirst());		 
-			 bucketAdapter.deleteObject( tupleBucketHost.getSecond(), bucketName, storedPath );		
+			 OrderedPair<SHost, String> host_storagelocation_pair = getBucketStorageHost( sbucket );
+			 S3BucketAdapter bucketAdapter =  getStorageHostBucketAdapter( host_storagelocation_pair.getFirst());		 
+			 bucketAdapter.deleteObject( host_storagelocation_pair.getSecond(), bucketName, storedPath );		
 		}
 		
 		response.setResultCode(204);
@@ -1147,7 +1190,7 @@ public class S3Engine {
 	    List<SMeta> itemMetaData = metaDao.getByTarget( "SObjectItem", itemId );
 	    if (null != itemMetaData) 
 	    {
-	        ListIterator it = itemMetaData.listIterator();
+	        ListIterator<SMeta> it = itemMetaData.listIterator();
 		    while( it.hasNext()) {
 		       SMeta oneTag = (SMeta)it.next();
 		       metaDao.delete( oneTag );
@@ -1160,7 +1203,7 @@ public class S3Engine {
 	    List<SAcl> itemAclData = aclDao.listGrants( target, itemId );
 	    if (null != itemAclData) 
 	    {
-	        ListIterator it = itemAclData.listIterator();
+	        ListIterator<SAcl> it = itemAclData.listIterator();
 		    while( it.hasNext()) {
 		       SAcl oneTag = (SAcl)it.next();
 		       aclDao.delete( oneTag );
@@ -1173,7 +1216,7 @@ public class S3Engine {
 	    List<SAcl> bucketAclData = aclDao.listGrants( "SBucket", bucketId );
 	    if (null != bucketAclData) 
 	    {
-	        ListIterator it = bucketAclData.listIterator();
+	        ListIterator<SAcl> it = bucketAclData.listIterator();
 		    while( it.hasNext()) {
 		       SAcl oneTag = (SAcl)it.next();
 		       aclDao.delete( oneTag );
@@ -1234,11 +1277,11 @@ public class S3Engine {
 			{
 				hitIdMarker = (null == versionIdMarker ? true : false);
 
-				// -> this supports the REST call GET /?versions
+				// This supports GET REST calls with /?versions
 				String deletionMarker = sobject.getDeletionMark();
                 if ( null != deletionMarker ) 
                 {
-                	 // -> TODO we don't save the timestamp when something is deleted
+                	 // TODO we should also save the timestamp when something is deleted
                 	 S3ListBucketObjectEntry entry = new S3ListBucketObjectEntry();
             		 entry.setKey(sobject.getNameKey());
             		 entry.setVersion( deletionMarker );
@@ -1318,18 +1361,18 @@ public class S3Engine {
 		return entry;
 	}
     
-	public Tuple<SHost, String> getBucketStorageHost(SBucket bucket) 
+	private OrderedPair<SHost, String> getBucketStorageHost(SBucket bucket) 
 	{
 		MHostMountDao mountDao = new MHostMountDao();
 		
 		SHost shost = bucket.getShost();
 		if(shost.getHostType() == SHost.STORAGE_HOST_TYPE_LOCAL) {
-			return new Tuple<SHost, String>(shost, shost.getExportRoot());
+			return new OrderedPair<SHost, String>(shost, shost.getExportRoot());
 		}
 		
 		MHostMount mount = mountDao.getHostMount(ServiceProvider.getInstance().getManagementHostId(), shost.getId());
 		if(mount != null) {
-			return new Tuple<SHost, String>(shost, mount.getMountPath());
+			return new OrderedPair<SHost, String>(shost, mount.getMountPath());
 		}
 
 		// need to redirect request to other node
@@ -1364,7 +1407,7 @@ public class S3Engine {
 	 * @param overrideName
 	 * @return
 	 */
-	private Tuple<SHost, String> allocBucketStorageHost(String bucketName, String overrideName) 
+	private OrderedPair<SHost, String> allocBucketStorageHost(String bucketName, String overrideName) 
 	{
 		MHostDao mhostDao = new MHostDao();
 		SHostDao shostDao = new SHostDao();
@@ -1379,10 +1422,10 @@ public class S3Engine {
 			MHostMount mount = mounts[random.nextInt(mounts.length)];
 			S3BucketAdapter bucketAdapter =  getStorageHostBucketAdapter(mount.getShost());
 			bucketAdapter.createContainer(mount.getMountPath(), (null != overrideName ? overrideName : bucketName));
-			return new Tuple<SHost, String>(mount.getShost(), mount.getMountPath());
+			return new OrderedPair<SHost, String>(mount.getShost(), mount.getMountPath());
 		}
 		
-		// To make things simple, only allow one local mounted storage root
+		// To make things simple, only allow one local mounted storage root TODO - Change in the future
 		String localStorageRoot = ServiceProvider.getInstance().getStartupProperties().getProperty("storage.root");
 		if(localStorageRoot != null) {
 			SHost localSHost = shostDao.getLocalStorageHost(mhost.getId(), localStorageRoot);
@@ -1391,7 +1434,7 @@ public class S3Engine {
 			
 			S3BucketAdapter bucketAdapter =  getStorageHostBucketAdapter(localSHost);
 			bucketAdapter.createContainer(localSHost.getExportRoot(),(null != overrideName ? overrideName : bucketName));
-			return new Tuple<SHost, String>(localSHost, localStorageRoot);
+			return new OrderedPair<SHost, String>(localSHost, localStorageRoot);
 		}
 		
 		throw new OutOfStorageException("No storage host is available");
@@ -1415,7 +1458,7 @@ public class S3Engine {
 	 * @throws IOException 
 	 */
 	@SuppressWarnings("deprecation")
-	public Tuple<SObject, SObjectItem> allocObjectItem(SBucket bucket, String nameKey, S3MetaDataEntry[] meta, S3AccessControlList acl, String cannedAccessPolicy) 
+	public OrderedPair<SObject, SObjectItem> allocObjectItem(SBucket bucket, String nameKey, S3MetaDataEntry[] meta, S3AccessControlList acl, String cannedAccessPolicy) 
 	{
 		SObjectDao     objectDao     = new SObjectDao();
 		SObjectItemDao objectItemDao = new SObjectItemDao();
@@ -1431,9 +1474,10 @@ public class S3Engine {
 		S3PolicyContext context = new S3PolicyContext( PolicyActions.PutObject, bucket.getName());
 		context.setKeyName( nameKey );
 		context.setEvalParam( ConditionKeys.Acl, cannedAccessPolicy);
-		verifyAccess( context, "SBucket", bucket.getId(), SAcl.PERMISSION_WRITE );
 
-		// [A] If versioning is off them we over write a null object item
+		verifyAccess( context, "SBucket", bucket.getId(), SAcl.PERMISSION_WRITE );  // TODO - check this validates plain POSTs
+
+		// [B] If versioning is off them we over write a null object item
 		SObject object = objectDao.getByNameKey(bucket, nameKey);
 		if ( object != null ) 
 		{
@@ -1521,7 +1565,7 @@ public class S3Engine {
 		}
 		
 		session.update(item);		
-		return new Tuple<SObject, SObjectItem>(object, item);
+		return new OrderedPair<SObject, SObjectItem>(object, item);
 	}
 	
 	
@@ -1529,45 +1573,21 @@ public class S3Engine {
 	 * Access controls that are specified via the "x-amz-acl:" headers in REST requests.
 	 * Note that canned policies can be set when the object's contents are set
 	 */
-	private void setCannedAccessControls( String cannedAccessPolicy, String target, long objectId, SBucket bucket )
+	public void setCannedAccessControls( String cannedAccessPolicy, String target, long objectId, SBucket bucket )
 	{
-	    if ( cannedAccessPolicy.equalsIgnoreCase( "public-read" )) 
-	    {
-             // -> owner gets FULL_CONTROL  and the anonymous principal (the 'A' symbol here) is granted READ access.
-	    	 setDefaultAcls( target, objectId, SAcl.PERMISSION_FULL, SAcl.PERMISSION_READ, "A" );
+       // Find the permission and symbol for the principal corresponding to the requested cannedAccessPolicy	
+	    Triple<Integer,Integer,String> permission_permission_symbol_triple = 
+	    		  SAcl.getCannedAccessControls(cannedAccessPolicy, target, bucket.getOwnerCanonicalId());
+	    if ( null == permission_permission_symbol_triple.getThird() )
+	    	setSingleAcl(target, objectId, permission_permission_symbol_triple.getFirst());
+	    else 
+	    {    setDefaultAcls( target, 
+	    		objectId, 
+	    		permission_permission_symbol_triple.getFirst(),    // permission according to ownership of object
+	    		permission_permission_symbol_triple.getSecond(),   // permission according to ownership of bucket
+	    		permission_permission_symbol_triple.getThird() );  // "symbol" to indicate principal or otherwise name of owner
+	    	  
 	    }
-	    else if (cannedAccessPolicy.equalsIgnoreCase( "public-read-write" )) 
-	    {
-	    	 // -> owner gets FULL_CONTROL and the anonymous principal (the 'A' symbol here) is granted READ and WRITE access
-	    	 setDefaultAcls( target, objectId, SAcl.PERMISSION_FULL, (SAcl.PERMISSION_READ | SAcl.PERMISSION_WRITE), "A" );
-	    }
-	    else if (cannedAccessPolicy.equalsIgnoreCase( "authenticated-read" )) 
-	    {
-		     // -> Owner gets FULL_CONTROL and ANY principal authenticated as a registered S3 user (the '*' symbol here) is granted READ access
-	    	 setDefaultAcls( target, objectId, SAcl.PERMISSION_FULL, SAcl.PERMISSION_READ, "*" );
-	    }
-	    else if (cannedAccessPolicy.equalsIgnoreCase( "private" )) 
-	    {
-		     // -> this is termed the "private" or default ACL, "Owner gets FULL_CONTROL"
-		     setSingleAcl( target, objectId, SAcl.PERMISSION_FULL ); 
-	    }
-	    else if (cannedAccessPolicy.equalsIgnoreCase( "bucket-owner-read" )) 
-	    {
-	    	 // -> Object Owner gets FULL_CONTROL, Bucket Owner gets READ
-	    	 // -> is equivalent to private when used with PUT Bucket
-	    	 if ( target.equalsIgnoreCase( "SBucket" ))  
-			      setSingleAcl( target, objectId, SAcl.PERMISSION_FULL );     		 
-	    	 else setDefaultAcls( target, objectId, SAcl.PERMISSION_FULL, SAcl.PERMISSION_READ, bucket.getOwnerCanonicalId());
-	    }
-	    else if (cannedAccessPolicy.equalsIgnoreCase( "bucket-owner-full-control" )) 
-	    {
-	    	 // -> Object Owner gets FULL_CONTROL, Bucket Owner gets FULL_CONTROL
-	    	 // -> is equivalent to private when used with PUT Bucket
-	    	 if ( target.equalsIgnoreCase( "SBucket" ))   
-			      setSingleAcl( target, objectId, SAcl.PERMISSION_FULL );     		 
-	    	 else setDefaultAcls( target, objectId, SAcl.PERMISSION_FULL, SAcl.PERMISSION_FULL, bucket.getOwnerCanonicalId());
-	    }
-	    else throw new UnsupportedException( "Unknown Canned Access Policy: " + cannedAccessPolicy + " is not supported" );
 	}
 
 	
@@ -1588,10 +1608,10 @@ public class S3Engine {
             aclDao.save( target, targetId, defaultAcl );
         }
 	}
+	
 
 	/**
-	 * Note that we use the Cloud Stack API Access key for the Canonical User Id everywhere
-	 * (i.e., for buckets, and objects).   
+	 * The Cloud Stack API Access key is used for for the Canonical User Id everywhere (buckets and objects).   
 	 * 
 	 * @param owner - this can be the Cloud Access Key for a bucket owner or one of the
 	 *                following special symbols:
@@ -1623,7 +1643,11 @@ public class S3Engine {
 	{
 		S3BucketPolicy policy = null;
 		
-		// -> on error of getting a policy ignore it
+		// Ordinarily a REST request will pass in an S3PolicyContext for a given bucket by this stage.  The HttpServletRequest object
+		// should be held in the UserContext ready for extraction of the S3BucketPolicy.
+		// If there is an error in obtaining the request object or in loading the policy then log the failure and return a S3PolicyContext
+		// which indicates DEFAULT_DENY.  Where there is no failure, the policy returned should be specific to the Canonical User ID of the requester.
+		
 		try {
 			// -> in SOAP the HttpServletRequest object is hidden and not passed around
 		    if (null != context) {
@@ -1669,14 +1693,14 @@ public class S3Engine {
 	}
 	
 	/**
-	 * This function verifies that the accessing client has the requested
-	 * permission on the object/bucket/Acl represented by the tuble: <target, targetId>
+	 * This method verifies that the accessing client has the requested
+	 * permission on the object/bucket/Acl represented by the tuple: <target, targetId>
 	 * 
 	 * For cases where an ACL is meant for any authenticated user we place a "*" for the
-	 * Canonical User Id ("*" is not a legal Cloud Stack Access key).   
+	 * Canonical User Id.  N.B. - "*" is not a legal Cloud (Bridge) Access key.   
 	 * 
 	 * For cases where an ACL is meant for any anonymous user (or 'AllUsers') we place a "A" for the 
-	 * Canonical User Id ("A" is not a legal Cloud Stack Access key).
+	 * Canonical User Id.  N.B. - "A" is not a legal Cloud (Bridge) Access key. 
 	 */
 	public static void accessAllowed( String target, long targetId, int requestedPermission ) 
 	{
@@ -1684,25 +1708,25 @@ public class S3Engine {
 			
 		SAclDao aclDao = new SAclDao();
 		
-		// -> if an annoymous request, then canonicalUserId is an empty string
+		// If an annoymous request, then canonicalUserId is an empty string
 		String userId = UserContext.current().getCanonicalUserId();
         if ( 0 == userId.length())
         {
-             // -> is an anonymous principal ACL set for this <target, targetId>?
+             // Is an anonymous principal ACL set for this <target, targetId>?
 		     if (hasPermission( aclDao.listGrants( target, targetId, "A" ), requestedPermission )) return;
         }
         else
-        {    // -> no priviledges means no access allowed		
+        {    	
 		     if (hasPermission( aclDao.listGrants( target, targetId, userId ), requestedPermission )) return;
-
-		     // -> or maybe there is any principal authenticated ACL set for this <target, targetId>?
+		     // Or alternatively is there is any principal authenticated ACL set for this <target, targetId>?
 		     if (hasPermission( aclDao.listGrants( target, targetId, "*" ), requestedPermission )) return;
         }
+        // No privileges implies that no access is allowed	in the case of an anonymous user
         throw new PermissionDeniedException( "Access Denied - ACLs do not give user the required permission" );
 	}
 	
 	/**
-	 * This function assumes that the bucket has been tested to make sure it exists before
+	 * This method assumes that the bucket has been tested to make sure it exists before
 	 * it is called.
 	 * 
 	 * @param context 
@@ -1712,7 +1736,7 @@ public class S3Engine {
 	public static S3BucketPolicy loadPolicy( S3PolicyContext context ) 
 	    throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException, ParseException
 	{
-		Tuple<S3BucketPolicy,Integer> result = ServiceProvider.getInstance().getBucketPolicy( context.getBucketName());
+		OrderedPair<S3BucketPolicy,Integer> result = ServiceProvider.getInstance().getBucketPolicy( context.getBucketName());
 		S3BucketPolicy policy = result.getFirst();
 		if ( null == policy )
 		{
@@ -1772,7 +1796,8 @@ public class S3Engine {
 				 int fourth = Integer.parseInt( parts[3] );
 				 throw new InvalidBucketName( bucketName + " is formatted as an IP address" );
 			 }
-			 catch( NumberFormatException e ) {}
+			 catch( NumberFormatException e ) 
+			 {throw new InvalidBucketName( bucketName);}
 		 }
 	
 		 
@@ -1804,12 +1829,12 @@ public class S3Engine {
 		 }
 	}
 	
-	private static boolean hasPermission( List<SAcl> priviledges, int requestedPermission ) 
+	private static boolean hasPermission( List<SAcl> privileges, int requestedPermission ) 
 	{
-        ListIterator it = priviledges.listIterator();
+        ListIterator<SAcl> it = privileges.listIterator();
         while( it.hasNext()) 
         {
-           // -> is the requested permission "contained" in one or the granted rights for this user
+           // True providing the requested permission is contained in one or the granted rights for this user.  False otherwise.
            SAcl rights = (SAcl)it.next();
            int permission = rights.getPermission();
            if (requestedPermission == (permission & requestedPermission)) return true;
@@ -1818,13 +1843,13 @@ public class S3Engine {
 	}
 	
 	/**
-	 * ifRange is true and IfUnmodifiedSince or IfMatch fails then we return the entire object (indicated by
+	 * ifRange is true and ifUnmodifiedSince or IfMatch fails then we return the entire object (indicated by
 	 * returning a -1 as the function result.
 	 * 
 	 * @param ifCond - conditional get defined by these tests
 	 * @param lastModified - value used on ifModifiedSince or ifUnmodifiedSince
 	 * @param ETag - value used on ifMatch and ifNoneMatch
-	 * @param ifRange - using an If-Range HTTP functionality 
+	 * @param ifRange - using an if-Range HTTP functionality 
 	 * @return -1 means return the entire object with an HTTP 200 (not a subrange)
 	 */
 	private int conditionPassed( S3ConditionalHeaders ifCond, Date lastModified, String ETag, boolean ifRange ) 

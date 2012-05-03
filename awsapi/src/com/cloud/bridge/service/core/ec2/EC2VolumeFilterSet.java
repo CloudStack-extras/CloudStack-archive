@@ -167,8 +167,8 @@ public class EC2VolumeFilterSet {
 
 	private boolean containsDevice(String deviceId, String[] set )
 	{
-            if (deviceId == null)
-	        return false;
+        if (deviceId == null)
+        	return false;
 	    Integer devId = new Integer(deviceId);
 		for (String s : set) {
 			switch( devId ) {

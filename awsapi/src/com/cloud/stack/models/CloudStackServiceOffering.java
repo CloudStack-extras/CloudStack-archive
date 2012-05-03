@@ -167,7 +167,7 @@ public class CloudStackServiceOffering {
 	public void setName(String name) {
         this.name = name;
     }
-	
+
 	/**
 	 * @return the offerHa
 	 */

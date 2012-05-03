@@ -37,7 +37,7 @@ import com.cloud.bridge.service.core.s3.S3MetaDataEntry;
 import com.cloud.bridge.service.core.s3.S3MultipartPart;
 import com.cloud.bridge.service.core.s3.S3MultipartUpload;
 import com.cloud.bridge.util.ConfigurationHelper;
-import com.cloud.bridge.util.Tuple;
+import com.cloud.bridge.util.OrderedPair;
 
 public class MultipartLoadDao {
 	public static final Logger logger = Logger.getLogger(MultipartLoadDao.class);
@@ -78,7 +78,7 @@ public class MultipartLoadDao {
 	 * @return creator of the multipart upload, and NameKey of upload
 	 * @throws SQLException, ClassNotFoundException, IllegalAccessException, InstantiationException 
 	 */
-	public Tuple<String,String> multipartExits( int uploadId ) 
+	public OrderedPair<String,String> multipartExits( int uploadId ) 
 	    throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException
 	{
 	    PreparedStatement statement = null;
@@ -93,7 +93,7 @@ public class MultipartLoadDao {
 		    if ( rs.next()) {
 		    	 accessKey = rs.getString( "AccessKey" );
 		    	 nameKey = rs.getString( "NameKey" );
-		    	 return new Tuple<String,String>( accessKey, nameKey );
+		    	 return new OrderedPair<String,String>( accessKey, nameKey );
 		    }
 		    else return null;
         
@@ -338,10 +338,10 @@ public class MultipartLoadDao {
 	 * @param prefix - can be null
 	 * @param keyMarker - can be null
 	 * @param uploadIdMarker - can be null, should only be defined if keyMarker is not-null
-	 * @return Tuple<S3MultipartUpload[], isTruncated>
+	 * @return OrderedPair<S3MultipartUpload[], isTruncated>
 	 * @throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException
 	 */
-	public Tuple<S3MultipartUpload[],Boolean> getInitiatedUploads( String bucketName, int maxParts, String prefix, String keyMarker, String uploadIdMarker )
+	public OrderedPair<S3MultipartUpload[],Boolean> getInitiatedUploads( String bucketName, int maxParts, String prefix, String keyMarker, String uploadIdMarker )
         throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException
 	{
 		S3MultipartUpload[] inProgress = new S3MultipartUpload[maxParts];
@@ -387,7 +387,7 @@ public class MultipartLoadDao {
             statement.close();		
             
             if (i < maxParts) inProgress = (S3MultipartUpload[])resizeArray(inProgress,i);
-            return new Tuple<S3MultipartUpload[], Boolean>(inProgress, isTruncated);
+            return new OrderedPair<S3MultipartUpload[], Boolean>(inProgress, isTruncated);
         
         } finally {
             closeConnection();
@@ -432,7 +432,7 @@ public class MultipartLoadDao {
 		    	
 		    	parts[i] = new S3MultipartPart();
 		    	parts[i].setPartNumber( rs.getInt( "partNumber" )); 
-		    	parts[i].setEtag( rs.getString( "MD5" ));
+		    	parts[i].setEtag( rs.getString( "MD5" ).toLowerCase());
 		    	parts[i].setLastModified( tod );
 		    	parts[i].setSize( rs.getInt( "StoredSize" ));
 		    	parts[i].setPath( rs.getString( "StoredPath" ));

@@ -38,11 +38,14 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.cloud.bridge.io.MultiPartDimeInputStream;
 import com.cloud.bridge.model.SAcl;
 import com.cloud.bridge.persist.PersistContext;
 import com.cloud.bridge.persist.dao.UserCredentialsDao;
 import com.cloud.bridge.service.controller.s3.S3BucketAction;
 import com.cloud.bridge.service.controller.s3.S3ObjectAction;
+import com.cloud.bridge.service.controller.s3.ServiceProvider;
+import com.cloud.bridge.service.controller.s3.ServletAction;
 import com.cloud.bridge.service.core.s3.S3AccessControlList;
 import com.cloud.bridge.service.core.s3.S3AuthParams;
 import com.cloud.bridge.service.core.s3.S3Engine;
@@ -50,17 +53,17 @@ import com.cloud.bridge.service.core.s3.S3Grant;
 import com.cloud.bridge.service.core.s3.S3MetaDataEntry;
 import com.cloud.bridge.service.core.s3.S3PutObjectRequest;
 import com.cloud.bridge.service.core.s3.S3PutObjectResponse;
+import com.cloud.bridge.service.exception.InternalErrorException;
 import com.cloud.bridge.service.exception.InvalidBucketName;
 import com.cloud.bridge.service.exception.NoSuchObjectException;
 import com.cloud.bridge.service.exception.PermissionDeniedException;
 import com.cloud.bridge.util.AuthenticationUtils;
 import com.cloud.bridge.util.HeaderParam;
-import com.cloud.bridge.util.MultiPartDimeInputStream;
 import com.cloud.bridge.util.RestAuth;
 import com.cloud.bridge.util.S3SoapAuth;
 
 /**
- * @author Kelven Yang, Mark Joseph
+ * @author Kelven Yang, Mark Joseph, John Zucker
  */
 public class S3RestServlet extends HttpServlet {
 	private static final long serialVersionUID = -6168996266762804877L;
@@ -107,6 +110,10 @@ public class S3RestServlet extends HttpServlet {
         	logRequest(request);
         	
         	// Our extensions to the S3 REST API for simple management actions
+        	// are conveyed with Request parameter CloudAction.
+        	// The present extensions are either to set up the user credentials
+        	// (see the cloud-bridge-register script for more detail) or
+        	// to report our version of this capability.
         	// -> unauthenticated calls, should still be done over HTTPS
         	String cloudAction = request.getParameter( "CloudAction" );
             if (null != cloudAction) 
@@ -115,6 +122,10 @@ public class S3RestServlet extends HttpServlet {
     	            setUserKeys(request, response);
     	            return;
     	        }
+    	        
+    	        if (cloudAction.equalsIgnoreCase( "SetCertificate" ))
+    	        	// At present a noop
+    	        	return;
 
     	        if (cloudAction.equalsIgnoreCase( "CloudS3Version" )) {
     	            cloudS3Version(request, response);
@@ -153,8 +164,8 @@ public class S3RestServlet extends HttpServlet {
         } 
         catch(Throwable e) {
     		logger.error("Unexpected exception " + e.getMessage(), e);
-    		response.setStatus(500);
-        	endResponse(response, "Internal server error");
+    		response.setStatus(400);
+        	endResponse(response, "Bad request");
         	
         } finally {
         	try {
@@ -200,7 +211,7 @@ public class S3RestServlet extends HttpServlet {
     	String[] secretKey = null;
     	
     	try {
-		    // -> all these parameters are required
+		    // -> both these parameters are required
             accessKey = request.getParameterValues( "accesskey" );
 		    if ( null == accessKey || 0 == accessKey.length ) { 
 		         response.sendError(530, "Missing accesskey parameter" ); 
@@ -287,7 +298,7 @@ public class S3RestServlet extends HttpServlet {
     	auth.setHostHeader( request.getHeader( "Host" ));
     	auth.setQueryString( request.getQueryString());
     	auth.addUriPath( request.getRequestURI());
-    	
+
     	// -> are their any Amazon specific (i.e. 'x-amz-' ) headers?
     	HeaderParam[] headers = params.getHeaders();
     	for( int i=0; null != headers && i < headers.length; i++ )
@@ -302,14 +313,11 @@ public class S3RestServlet extends HttpServlet {
 		if (info == null) throw new PermissionDeniedException("Unable to authenticate access key: " + AWSAccessKey);
 		
     	try {
-			if (auth.verifySignature( request.getMethod(), info.getSecretKey(), signature )) {
+    		if (auth.verifySignature( request.getMethod(), info.getSecretKey(), signature )) {
 				UserContext.current().initContext(AWSAccessKey, info.getSecretKey(), AWSAccessKey, info.getDescription(), request);
 				return;
 			}
 		
-			// -> turn off auth - just for testing
-			//UserContext.current().initContext("Mark", "123", "Mark", "testing", request);
-            //return;
        
 		} catch (SignatureException e) {
 			throw new PermissionDeniedException(e);
@@ -321,24 +329,43 @@ public class S3RestServlet extends HttpServlet {
     }
     
     
+    
     private ServletAction routeRequest(HttpServletRequest request) 
     {
-    	// Simple URL routing for S3 REST calls.
+    	//  URL routing for S3 REST calls.
     	String pathInfo = request.getPathInfo();
     	String bucketName = null;
     	String key = null;
     	
+    	String serviceEndpoint = ServiceProvider.getInstance().getServiceEndpoint();
+    	String host            = request.getHeader("Host");
+    	
+    	// Check for unrecognized forms of URI information in request
+    	
+    	if ( ( pathInfo == null ) || ( pathInfo.indexOf('/') != 0 ) )
+        	if ( "POST".equalsIgnoreCase(request.getMethod()) )
+        		// Case where request is POST operation with no pathinfo
+        		// This is the POST alternative to PUT described at s3.amazonaws.com API doc page 141
+        	{ 
+        		return routePlainPostRequest (request);       	
+		    }
+    	
+    	
+    	// Irrespective of whether the requester is using subdomain or full host naming of path expressions
+    	// to buckets, wherever the request is made up of a service endpoint followed by a /, in AWS S3 this always
+    	// conveys a ListAllMyBuckets command
+    	
+		if  ( (serviceEndpoint.equalsIgnoreCase( host )) && (pathInfo.equalsIgnoreCase("/")) ) {
+			request.setAttribute(S3Constants.BUCKET_ATTR_KEY, "/");
+			return new S3BucketAction();   // for ListAllMyBuckets
+		}
+
+		// Because there is a leading / at position 0 of pathInfo, now subtract this to process the remainder	
+		pathInfo = pathInfo.substring(1); 
+    			
     	if (ServiceProvider.getInstance().getUseSubDomain()) 
-    	{
-        	String serviceEndpoint = ServiceProvider.getInstance().getServiceEndpoint();
-    		String host            = request.getHeader("Host");
     		
-    		// -> a request of "/" on the service endpoint means do a list all my buckets command
-    		if (serviceEndpoint.equalsIgnoreCase( host )) {
-    			request.setAttribute(S3Constants.BUCKET_ATTR_KEY, "/");
-    			return new S3BucketAction();
-    		}
-    		
+    	    {   		
     		// -> verify the format of the bucket name
     		int endPos = host.indexOf( ServiceProvider.getInstance().getMasterDomain());
     		if ( endPos > 0 ) 
@@ -358,18 +385,24 @@ public class S3RestServlet extends HttpServlet {
     			request.setAttribute(S3Constants.OBJECT_ATTR_KEY, objectKey);
     			return new S3ObjectAction();
     		}
-    	} 
+    	}
+    	
     	else 
-    	{
-    		if(pathInfo == null || pathInfo.equalsIgnoreCase("/")) {
-    			logger.warn("Invalid REST request URI " + pathInfo);
-    			return null;
-    		}
     		
-    		int endPos = pathInfo.indexOf('/', 1);
-    		if ( endPos > 0 ) 
+    	{
+    		 		
+    		int endPos = pathInfo.indexOf('/');  // Subsequent / character?
+    		
+    	    if (endPos < 1)
+    	    {
+    	    	 bucketName = pathInfo;
+    	    	 S3Engine.verifyBucketName( bucketName, false );
+   			     request.setAttribute(S3Constants.BUCKET_ATTR_KEY, bucketName);
+   			     return new S3BucketAction();
+   		    }
+    	    else
     		{
-    			 bucketName = pathInfo.substring(1, endPos);
+    			 bucketName = pathInfo.substring(0, endPos);
     		     key        = pathInfo.substring(endPos + 1);			
    			     S3Engine.verifyBucketName( bucketName, false );
    			
@@ -383,14 +416,10 @@ public class S3RestServlet extends HttpServlet {
         			  request.setAttribute(S3Constants.BUCKET_ATTR_KEY, bucketName);
         			  return new S3BucketAction();
     			 }
-    		} 
-    		else {
-    			 String bucket = pathInfo.substring(1);
-    			 request.setAttribute(S3Constants.BUCKET_ATTR_KEY, bucket);
-    			 return new S3BucketAction();
     		}
     	}
     }
+    
     
     public static void endResponse(HttpServletResponse response, String content) {
     	try {
@@ -417,6 +446,52 @@ public class S3RestServlet extends HttpServlet {
     		response.getOutputStream().write(data, 0, length);
     	}
     }
+
+    // Route for the case where request is POST operation with no pathinfo
+    // This is the POST alternative to PUT described at s3.amazonaws.com API doc, Amazon Simple
+    // Storage Service API Reference API Version 2006-03-01 page 141.
+    // The purpose of the plain POST operation is to add an object to a specified bucket using HTML forms.
+    
+private S3ObjectAction routePlainPostRequest (HttpServletRequest request)    
+    {	
+	// TODO - Remove the unnecessary fields below    
+	// Obtain the mandatory fields from the HTML form or otherwise fail with a logger message
+	  String keyString = request.getParameter("key");
+	  String metatagString = request.getParameter("x-amz-meta-tag");
+	  String bucketString = request.getParameter("Bucket");
+	  String aclString = request.getParameter("acl");
+	  String fileString = request.getParameter("file");
+	  
+	  String accessKeyString = request.getParameter("AWSAccessKeyId");
+	  String signatureString = request.getParameter("Signature");
+
+	  // Obtain the discretionary fields from the HTML form 
+	  String policyKeyString = request.getParameter("Policy");
+	  String metauuidString = request.getParameter("x-amz-meta-uuid");
+	  String redirectString = request.getParameter("redirect");  
+	  
+	  // if none of the above are null then ...
+	  request.setAttribute(S3Constants.BUCKET_ATTR_KEY, bucketString);
+	  request.setAttribute(S3Constants.OBJECT_ATTR_KEY, keyString);
+	  request.setAttribute(S3Constants.PLAIN_POST_ACCESS_KEY, accessKeyString);
+	  request.setAttribute(S3Constants.PLAIN_POST_SIGNATURE, signatureString);
+	  
+	    // -> authenticated calls
+		try {
+		    // S3AuthParams params = extractRequestHeaders( request );
+			S3AuthParams params = new S3AuthParams();
+			HeaderParam headerParam1 = new HeaderParam("accessKey", accessKeyString);
+			params.addHeader(headerParam1);
+			HeaderParam headerParam2 = new HeaderParam("secretKey", signatureString);
+			params.addHeader(headerParam2);
+			authenticateRequest( request, params );
+		    }
+		catch (Exception e)
+		{ logger.warn("Authentication details insufficient"); }
+
+	  return new S3ObjectAction();
+	  
+	}
     
     /**
      * A DIME request is really a SOAP request that we are dealing with, and so its

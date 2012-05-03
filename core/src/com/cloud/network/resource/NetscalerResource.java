@@ -61,8 +61,11 @@ import com.citrix.netscaler.nitro.resource.config.network.*;
 import com.citrix.netscaler.nitro.resource.config.ns.*;
 import com.citrix.netscaler.nitro.resource.config.basic.server_service_binding;
 import com.citrix.netscaler.nitro.resource.stat.lb.lbvserver_stats;
+import com.citrix.sdx.nitro.resource.config.device_profile;
 import com.citrix.sdx.nitro.resource.config.ns;
 import com.citrix.sdx.nitro.resource.config.mps;
+import com.citrix.sdx.nitro.resource.config.xen_vpx_image;
+
 import org.apache.log4j.Logger;
 
 class NitroError {
@@ -179,7 +182,7 @@ public class NetscalerResource implements ServerResource {
             login();
             validateDeviceType(_deviceName);
             validateInterfaces(_publicInterface, _privateInterface);
-
+            
             //enable load balancing feature 
             enableLoadBalancingFeature();
 
@@ -189,7 +192,13 @@ public class NetscalerResource implements ServerResource {
                 _publicIPGateway = (String) params.get("publicipgateway");
                 _publicIPNetmask = (String) params.get("publicipnetmask");
                 _publicIPVlan = (String) params.get("publicipvlan");
-                addGuestVlanAndSubnet(Long.parseLong(_publicIPVlan), _publicIP, _publicIPNetmask, false);
+                if ("untagged".equalsIgnoreCase(_publicIPVlan)) {
+                	// if public network is un-tagged just add subnet IP
+                    addSubnetIP(_publicIP, _publicIPNetmask);
+                } else {
+                	// if public network is tagged then add vlan and bind subnet IP to the vlan
+                    addGuestVlanAndSubnet(Long.parseLong(_publicIPVlan), _publicIP, _publicIPNetmask, false);
+                }
             }
 
             return true;
@@ -597,9 +606,26 @@ public class NetscalerResource implements ServerResource {
             ns_obj.set_memory_total(new Double(2048));
             ns_obj.set_throughput(new Double(1000));
             ns_obj.set_pps(new Double(1000000));
-            ns_obj.set_nsroot_profile("NS_nsroot_profile");
             ns_obj.set_number_of_ssl_cores(0);
-            ns_obj.set_image_name("NSVPX-XEN-9.3-52.4_nc.xva");
+
+            // use the first device profile available on the SDX to create an instance of VPX
+            device_profile[] profiles = device_profile.get(_netscalerSdxService);
+            if (!(profiles != null && profiles.length >= 1)) {
+            	new Answer(cmd, new ExecutionException("Failed to create VPX instance on the netscaler SDX device " + _ip +
+            			" as there are no admin profile to use for creating VPX."));
+            }
+            String profileName = profiles[0].get_name();
+            ns_obj.set_nsroot_profile(profileName);
+
+            // use the first VPX image of the available VPX images on the SDX to create an instance of VPX
+            // TODO: should enable the option to choose the template while adding the SDX device in to CloudStack
+            xen_vpx_image[] vpxImages = xen_vpx_image.get(_netscalerSdxService);
+            if (!(vpxImages != null && vpxImages.length >= 1)) {
+            	new Answer(cmd, new ExecutionException("Failed to create VPX instance on the netscaler SDX device " + _ip +
+            			" as there are no VPX images on SDX to use for creating VPX."));
+            }
+            String imageName = vpxImages[0].get_file_name();
+            ns_obj.set_image_name(imageName);
 
             String publicIf = _publicInterface;
             String privateIf = _privateInterface;
@@ -895,6 +921,23 @@ public class NetscalerResource implements ServerResource {
             } else {
                 return new ExternalNetworkResourceUsageAnswer(cmd, e);
             }
+        }
+    }
+
+    private void addSubnetIP(String snip, String netmask)  throws ExecutionException {
+        try {
+            nsip selfIp = new nsip();
+            selfIp.set_ipaddress(snip);
+            selfIp.set_netmask(netmask);
+            selfIp.set_type("SNIP");
+            apiCallResult = nsip.add(_netscalerService, selfIp);
+            if (apiCallResult.errorcode != 0) {
+                throw new ExecutionException("Failed to add SNIP object on the Netscaler device due to "+ apiCallResult.message);
+            }
+        } catch (nitro_exception e) {
+            throw new ExecutionException("Failed to add SNIP object on the Netscaler device due to " + e.getMessage());
+        } catch (Exception e) {
+            throw new ExecutionException("Failed to add SNIP object on the Netscaler device due to " + e.getMessage());
         }
     }
 

@@ -100,6 +100,7 @@ import com.cloud.user.User;
 import com.cloud.user.UserAccount;
 import com.cloud.user.UserContext;
 import com.cloud.user.UserVO;
+import com.cloud.utils.IdentityProxy;
 import com.cloud.utils.Pair;
 import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.component.ComponentLocator;
@@ -109,6 +110,8 @@ import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.encoding.Base64;
 import com.cloud.uuididentity.dao.IdentityDao;
+import com.cloud.utils.exception.CSExceptionErrorCode;
+
 
 public class ApiServer implements HttpRequestHandler {
     private static final Logger s_logger = Logger.getLogger(ApiServer.class.getName());
@@ -348,7 +351,7 @@ public class ApiServer implements HttpRequestHandler {
 
                 writeResponse(response, responseText, HttpStatus.SC_OK, responseType, null);
             } catch (ServerApiException se) {
-                String responseText = getSerializedApiError(se.getErrorCode(), se.getDescription(), parameterMap, responseType);
+                String responseText = getSerializedApiError(se.getErrorCode(), se.getDescription(), parameterMap, responseType, se);                
                 writeResponse(response, responseText, se.getErrorCode(), responseType, se.getDescription());
                 sb.append(" " + se.getErrorCode() + " " + se.getDescription());
             } catch (RuntimeException e) {
@@ -426,14 +429,41 @@ public class ApiServer implements HttpRequestHandler {
             }
         } catch (Exception ex) {
             if (ex instanceof InvalidParameterValueException) {
-                throw new ServerApiException(BaseCmd.PARAM_ERROR, ex.getMessage());
+            	InvalidParameterValueException ref = (InvalidParameterValueException)ex;
+            	ServerApiException e = new ServerApiException(BaseCmd.PARAM_ERROR, ex.getMessage());            	
+                // copy over the IdentityProxy information as well and throw the serverapiexception.
+                ArrayList<IdentityProxy> idList = ref.getIdProxyList();
+                if (idList != null) {
+                	// Iterate through entire arraylist and copy over each proxy id.
+                	for (int i = 0 ; i < idList.size(); i++) {
+                		IdentityProxy obj = idList.get(i);
+                		e.addProxyObject(obj.getTableName(), obj.getValue(), obj.getidFieldName());
+                	}
+                }
+                // Also copy over the cserror code and the function/layer in which it was thrown.
+            	e.setCSErrorCode(ref.getCSErrorCode());
+                throw e;
             } else if (ex instanceof PermissionDeniedException) {
-                throw new ServerApiException(BaseCmd.ACCOUNT_ERROR, ex.getMessage());
+            	PermissionDeniedException ref = (PermissionDeniedException)ex;
+            	ServerApiException e = new ServerApiException(BaseCmd.ACCOUNT_ERROR, ex.getMessage());
+                // copy over the IdentityProxy information as well and throw the serverapiexception.
+            	ArrayList<IdentityProxy> idList = ref.getIdProxyList();
+                if (idList != null) {
+                	// Iterate through entire arraylist and copy over each proxy id.
+                	for (int i = 0 ; i < idList.size(); i++) {
+                		IdentityProxy obj = idList.get(i);
+                		e.addProxyObject(obj.getTableName(), obj.getValue(), obj.getidFieldName());
+                	}
+                }
+                e.setCSErrorCode(ref.getCSErrorCode());
+                throw e;
             } else if (ex instanceof ServerApiException) {
                 throw (ServerApiException) ex;
             } else {
                 s_logger.error("unhandled exception executing api command: " + ((command == null) ? "null" : command[0]), ex);
-                throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Internal server error, unable to execute request.");
+                ServerApiException e = new ServerApiException(BaseCmd.INTERNAL_ERROR, "Internal server error, unable to execute request.");
+                e.setCSErrorCode(CSExceptionErrorCode.getCSErrCode("ServerApiException"));
+                throw e;
             }
         }
         return response;
@@ -987,7 +1017,7 @@ public class ApiServer implements HttpRequestHandler {
         }
     }
 
-    public String getSerializedApiError(int errorCode, String errorText, Map<String, Object[]> apiCommandParams, String responseType) {
+    public String getSerializedApiError(int errorCode, String errorText, Map<String, Object[]> apiCommandParams, String responseType, Exception ex) {
         String responseName = null;
         String cmdClassName = null;
 
@@ -1010,17 +1040,60 @@ public class ApiServer implements HttpRequestHandler {
                     }
                 }
             }
-
             ExceptionResponse apiResponse = new ExceptionResponse();
             apiResponse.setErrorCode(errorCode);
             apiResponse.setErrorText(errorText);
             apiResponse.setResponseName(responseName);
-
+            // Also copy over the IdentityProxy object List into this new apiResponse, from
+            // the exception caught. When invoked from handle(), the exception here can
+            // be either ServerApiException, PermissionDeniedException or InvalidParameterValue
+            // Exception. When invoked from ApiServlet's processRequest(), this can be
+            // a standard exception like NumberFormatException. We'll leave the standard ones alone.
+            if (ex != null) {
+            	if (ex instanceof ServerApiException || ex instanceof PermissionDeniedException
+            			|| ex instanceof InvalidParameterValueException) {
+            		// Cast the exception appropriately and retrieve the IdentityProxy
+            		if (ex instanceof ServerApiException) {
+            			ServerApiException ref = (ServerApiException) ex;
+            			ArrayList<IdentityProxy> idList = ref.getIdProxyList();
+            			if (idList != null) {
+            				for (int i=0; i < idList.size(); i++) {
+            					IdentityProxy id = idList.get(i);
+            					apiResponse.addProxyObject(id.getTableName(), id.getValue(), id.getidFieldName());
+            				}            				
+            			}
+            			// Also copy over the cserror code and the function/layer in which it was thrown.
+            			apiResponse.setCSErrorCode(ref.getCSErrorCode());
+            		} else if (ex instanceof PermissionDeniedException) {
+            			PermissionDeniedException ref = (PermissionDeniedException) ex;
+            			ArrayList<IdentityProxy> idList = ref.getIdProxyList();
+            			if (idList != null) {
+            				for (int i=0; i < idList.size(); i++) {
+            					IdentityProxy id = idList.get(i);
+            					apiResponse.addProxyObject(id.getTableName(), id.getValue(), id.getidFieldName());
+            				}            				
+            			}
+            			// Also copy over the cserror code and the function/layer in which it was thrown.
+            			apiResponse.setCSErrorCode(ref.getCSErrorCode());
+            		} else if (ex instanceof InvalidParameterValueException) {
+            			InvalidParameterValueException ref = (InvalidParameterValueException) ex;
+            			ArrayList<IdentityProxy> idList = ref.getIdProxyList();
+            			if (idList != null) {
+            				for (int i=0; i < idList.size(); i++) {
+            					IdentityProxy id = idList.get(i);
+            					apiResponse.addProxyObject(id.getTableName(), id.getValue(), id.getidFieldName());
+            				}            				
+            			}
+            			// Also copy over the cserror code and the function/layer in which it was thrown.
+            			apiResponse.setCSErrorCode(ref.getCSErrorCode());
+            		}
+            	}
+            }
             SerializationContext.current().setUuidTranslation(true);
             responseText = ApiResponseSerializer.toSerializedString(apiResponse, responseType);
 
         } catch (Exception e) {
-            s_logger.error("Exception responding to http request", e);
+            s_logger.error("Exception responding to http request", e);            
         }
         return responseText;
     }

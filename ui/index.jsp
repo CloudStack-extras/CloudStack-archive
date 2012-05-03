@@ -951,9 +951,6 @@
         <div class="system-dashboard zone">
           <div class="head">
             <span><fmt:message key="label.menu.infrastructure"/></span>
-            <div class="view-all zones"
-                 view-all-title="Zones"
-                 view-all-target="zones"><span><fmt:message key="label.view.all"/></span></div>
           </div>
           <ul class="status_box good">
             <li class="block">
@@ -1642,6 +1639,7 @@
     <script src="scripts/ui-custom/securityRules.js" type="text/javascript"></script>
     <script src="scripts/network.js" type="text/javascript"></script>
     <script src="scripts/ui-custom/recurringSnapshots.js" type="text/javascript"></script>
+    <script src="scripts/ui-custom/uploadVolume.js" type="text/javascript"></script>
     <script src="scripts/storage.js" type="text/javascript"></script>
     <script src="scripts/templates.js" type="text/javascript"></script>
     <script src="scripts/accounts.js" type="text/javascript"></script>
@@ -1678,6 +1676,10 @@ dictionary = {
 'message.edit.traffic.type': '<fmt:message key="message.edit.traffic.type"/>',
 'label.label': '<fmt:message key="label.label"/>',
 'message.configure.all.traffic.types': '<fmt:message key="message.configure.all.traffic.types"/>',
+'message.specify.url': '<fmt:message key="message.specify.url"/>',
+'label.select.instance.to.attach.volume.to': '<fmt:message key="label.select.instance.to.attach.volume.to"/>',
+'label.upload': '<fmt:message key="label.upload"/>',
+'label.upload.volume': '<fmt:message key="label.upload.volume"/>',
 'label.virtual.routers': '<fmt:message key="label.virtual.routers"/>',
 'label.primary.storage.count': '<fmt:message key="label.primary.storage.count"/>',
 'label.secondary.storage.count': '<fmt:message key="label.secondary.storage.count"/>',

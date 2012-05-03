@@ -219,6 +219,7 @@ import com.xensource.xenapi.Session;
 import com.xensource.xenapi.Task;
 import com.xensource.xenapi.Types;
 import com.xensource.xenapi.Types.BadServerResponse;
+import com.xensource.xenapi.Types.ConsoleProtocol;
 import com.xensource.xenapi.Types.IpConfigurationMode;
 import com.xensource.xenapi.Types.VmPowerState;
 import com.xensource.xenapi.Types.XenAPIException;
@@ -2729,17 +2730,20 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
     protected String getVncUrl(Connection conn, VM vm) {
         VM.Record record;
         Console c;
-        String consoleurl;
         try {
             record = vm.getRecord(conn);
             Set<Console> consoles = record.consoles;
+            
             if (consoles.isEmpty()) {
             	s_logger.warn("There are no Consoles available to the vm : " + record.nameDescription);
             	return null;
             }
             Iterator<Console> i = consoles.iterator();
-            c = i.next();
-            consoleurl = c.getLocation(conn); 
+            while(i.hasNext()) {
+	            c = i.next();
+	            if(c.getProtocol(conn) == ConsoleProtocol.RFB)
+	            	return c.getLocation(conn);
+            }
         } catch (XenAPIException e) {
             String msg = "Unable to get console url due to " + e.toString();
             s_logger.warn(msg, e);
@@ -2749,18 +2753,8 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             s_logger.warn(msg, e);
             return null;
         }
-        
-        if (consoleurl.isEmpty())
-        	return null;
-        else 
-        	return consoleurl;
-        
-        
-        
+    	return null;
     }
-    
-    
-    
 
     @Override
     public RebootAnswer execute(RebootCommand cmd) {
@@ -4945,22 +4939,23 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
     private OvsFetchInterfaceAnswer execute(OvsFetchInterfaceCommand cmd) {
         
     	String label = cmd.getLabel();
-    	s_logger.debug("### Will look for network with name-label:" + label + " on host " + _host.ip);
+    	s_logger.debug("Will look for network with name-label:" + label + " on host " + _host.ip);
         Connection conn = getConnection();
         try {
             XsLocalNetwork nw = this.getNetworkByName(conn, label);
-            s_logger.debug("### Network object:" + nw.getNetwork().getUuid(conn));
+            s_logger.debug("Network object:" + nw.getNetwork().getUuid(conn));
             PIF pif = nw.getPif(conn);
             Record pifRec = pif.getRecord(conn);
-            s_logger.debug("### PIF object:" + pifRec.uuid + "(" + pifRec.device + ")");
+            s_logger.debug("PIF object:" + pifRec.uuid + "(" + pifRec.device + ")");
             return new OvsFetchInterfaceAnswer(cmd, true, "Interface " + pifRec.device + " retrieved successfully", 
             		pifRec.IP, pifRec.netmask, pifRec.MAC);
         } catch (Exception e) {
             e.printStackTrace();
+            s_logger.error("An error occurred while fetching the interface for " +
+            				label + " on host " + _host.ip + ":" + e.toString() + 
+            				"(" + e.getClass() + ")");
             return new OvsFetchInterfaceAnswer(cmd, false, "EXCEPTION:" + e.getMessage());
         }
-
-        
     }
 
     
@@ -4985,6 +4980,10 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             }
         } catch (Exception e) {
             e.printStackTrace();
+            s_logger.error("An error occurred while creating a GRE tunnel to " +
+    				cmd.getRemoteIp() + " on host " + _host.ip + ":" + e.getMessage() + 
+    				"(" + e.getClass() + ")");
+            
         }
 
         return new OvsCreateGreTunnelAnswer(cmd, false, "EXCEPTION", _host.ip, bridge);

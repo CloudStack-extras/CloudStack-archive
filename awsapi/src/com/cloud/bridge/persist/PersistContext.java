@@ -29,7 +29,7 @@ import org.hibernate.Transaction;
 
 import com.cloud.bridge.util.CloudSessionFactory;
 import com.cloud.bridge.util.CloudStackSessionFactory;
-import com.cloud.bridge.util.Tuple;
+import com.cloud.bridge.util.OrderedPair;
 
 /**
  * @author Kelven Yang
@@ -49,7 +49,7 @@ public class PersistContext {
     protected final static Logger logger = Logger.getLogger(PersistContext.class);
 	
 	private static final CloudSessionFactory sessionFactory;
-
+	
 	private static final ThreadLocal<Session> threadSession = new ThreadLocal<Session>();
 	private static final ThreadLocal<Transaction> threadTransaction = new ThreadLocal<Transaction>();
 	private static final ThreadLocal<Map<String, Object>> threadStore = new ThreadLocal<Map<String, Object>>(); 
@@ -216,15 +216,15 @@ public class PersistContext {
   	 * @return
   	 */
   	public static boolean acquireNamedLock(String name, int timeoutSeconds) {
-  		Connection conn = getJDBCConnection(name, true);
-  		if(conn == null) {
+  		Connection jdbcConnection = getJDBCConnection(name, true);
+  		if(jdbcConnection == null) {
   			logger.warn("Unable to acquire named lock connection for named lock: " + name);
   			return false;
   		}
   		
         PreparedStatement pstmt = null;
         try {
-            pstmt = conn.prepareStatement("SELECT COALESCE(GET_LOCK(?, ?),0)");
+            pstmt = jdbcConnection.prepareStatement("SELECT COALESCE(GET_LOCK(?, ?),0)");
 
             pstmt.setString(1, name);
             pstmt.setInt(2, timeoutSeconds);
@@ -256,15 +256,15 @@ public class PersistContext {
   	}
   	
     public static boolean releaseNamedLock(String name) {
-        Connection conn = getJDBCConnection(name, false);
-        if(conn == null) {
+        Connection jdbcConnection = getJDBCConnection(name, false);
+        if(jdbcConnection == null) {
             logger.error("Unable to acquire DB connection for global lock system");
         	return false;
         }
         
         PreparedStatement pstmt = null;
         try {
-            pstmt = conn.prepareStatement("SELECT COALESCE(RELEASE_LOCK(?), 0)");
+            pstmt = jdbcConnection.prepareStatement("SELECT COALESCE(RELEASE_LOCK(?), 0)");
             pstmt.setString(1, name);
             ResultSet rs = pstmt.executeQuery();
             if(rs != null && rs.first())
@@ -283,7 +283,7 @@ public class PersistContext {
   	@SuppressWarnings("deprecation")
 	private static Connection getJDBCConnection(String name, boolean allocNew) {
   		String registryKey = "JDBC-Connection." + name;
-  		Tuple<Session, Connection> info = (Tuple<Session, Connection>)getThreadStoreObject(registryKey);
+  		OrderedPair<Session, Connection> info = (OrderedPair<Session, Connection>)getThreadStoreObject(registryKey);
   		if(info == null && allocNew) {
   			Session session = sessionFactory.openSession();
   			Connection connection = session.connection();
@@ -305,7 +305,7 @@ public class PersistContext {
 				return null;
   			}
   			
-  			registerThreadStoreObject(registryKey, new Tuple<Session, Connection>(session, connection));
+  			registerThreadStoreObject(registryKey, new OrderedPair<Session, Connection>(session, connection));
   			return connection;
   		}
   		
@@ -317,7 +317,7 @@ public class PersistContext {
   	
   	private static void releaseJDBCConnection(String name) {
   		String registryKey = "JDBC-Connection." + name;
-  		Tuple<Session, Connection> info = (Tuple<Session, Connection>)unregisterThreadStoreObject(registryKey);
+  		OrderedPair<Session, Connection> info = (OrderedPair<Session, Connection>)unregisterThreadStoreObject(registryKey);
   		if(info != null) {
   			try {
   				info.getSecond().close();

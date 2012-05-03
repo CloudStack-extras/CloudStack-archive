@@ -28,16 +28,11 @@ import java.util.Calendar;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.bind.DatatypeConverter;
-import javax.xml.namespace.QName;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 
-import org.apache.axiom.om.OMAbstractFactory;
-import org.apache.axiom.om.OMFactory;
-import org.apache.axis2.databinding.utils.writer.MTOMAwareXMLSerializer;
 import org.apache.log4j.Logger;
 import org.json.simple.parser.ParseException;
 import org.w3c.dom.Document;
@@ -47,18 +42,21 @@ import org.w3c.dom.NodeList;
 import com.amazon.s3.GetBucketAccessControlPolicyResponse;
 import com.amazon.s3.ListAllMyBucketsResponse;
 import com.amazon.s3.ListBucketResponse;
+import com.cloud.bridge.io.MTOMAwareResultStreamWriter;
 import com.cloud.bridge.model.SAcl;
 import com.cloud.bridge.model.SBucket;
+import com.cloud.bridge.model.SHost;
+import com.cloud.bridge.persist.PersistContext;
 import com.cloud.bridge.persist.dao.BucketPolicyDao;
 import com.cloud.bridge.persist.dao.MultipartLoadDao;
+import com.cloud.bridge.persist.dao.SAclDao;
 import com.cloud.bridge.persist.dao.SBucketDao;
 import com.cloud.bridge.service.S3Constants;
 import com.cloud.bridge.service.S3RestServlet;
-import com.cloud.bridge.service.S3SoapServiceImpl;
-import com.cloud.bridge.service.ServiceProvider;
-import com.cloud.bridge.service.ServletAction;
 import com.cloud.bridge.service.UserContext;
+import com.cloud.bridge.service.core.s3.S3AccessControlList;
 import com.cloud.bridge.service.core.s3.S3AccessControlPolicy;
+import com.cloud.bridge.service.core.s3.S3BucketAdapter;
 import com.cloud.bridge.service.core.s3.S3BucketPolicy;
 import com.cloud.bridge.service.core.s3.S3CanonicalUser;
 import com.cloud.bridge.service.core.s3.S3CreateBucketConfiguration;
@@ -67,6 +65,7 @@ import com.cloud.bridge.service.core.s3.S3CreateBucketResponse;
 import com.cloud.bridge.service.core.s3.S3DeleteBucketRequest;
 import com.cloud.bridge.service.core.s3.S3Engine;
 import com.cloud.bridge.service.core.s3.S3GetBucketAccessControlPolicyRequest;
+import com.cloud.bridge.service.core.s3.S3Grant;
 import com.cloud.bridge.service.core.s3.S3ListAllMyBucketsRequest;
 import com.cloud.bridge.service.core.s3.S3ListAllMyBucketsResponse;
 import com.cloud.bridge.service.core.s3.S3ListBucketObjectEntry;
@@ -80,27 +79,30 @@ import com.cloud.bridge.service.core.s3.S3SetBucketAccessControlPolicyRequest;
 import com.cloud.bridge.service.core.s3.S3BucketPolicy.PolicyAccess;
 import com.cloud.bridge.service.core.s3.S3PolicyAction.PolicyActions;
 import com.cloud.bridge.service.core.s3.S3PolicyCondition.ConditionKeys;
+import com.cloud.bridge.service.exception.InternalErrorException;
+import com.cloud.bridge.service.exception.InvalidBucketName;
 import com.cloud.bridge.service.exception.InvalidRequestContentException;
 import com.cloud.bridge.service.exception.NetworkIOException;
+import com.cloud.bridge.service.exception.ObjectAlreadyExistsException;
+import com.cloud.bridge.service.exception.OutOfServiceException;
 import com.cloud.bridge.service.exception.PermissionDeniedException;
 import com.cloud.bridge.util.Converter;
+import com.cloud.bridge.util.DateHelper;
 import com.cloud.bridge.util.PolicyParser;
 import com.cloud.bridge.util.StringHelper;
-import com.cloud.bridge.util.Tuple;
+import com.cloud.bridge.util.OrderedPair;
+import com.cloud.bridge.util.Triple;
 import com.cloud.bridge.util.XSerializer;
 import com.cloud.bridge.util.XSerializerXmlAdapter;
 
 
 /**
- * @author Kelven Yang
+ * @author Kelven Yang, John Zucker
  */
 public class S3BucketAction implements ServletAction {
     protected final static Logger logger = Logger.getLogger(S3BucketAction.class);
     
     private DocumentBuilderFactory dbf = null;
-	private OMFactory factory = OMAbstractFactory.getOMFactory();
-	private XMLOutputFactory xmlOutFactory = XMLOutputFactory.newInstance();
-    
 	public S3BucketAction() {
 		dbf = DocumentBuilderFactory.newInstance();
 		dbf.setNamespaceAware( true );
@@ -198,7 +200,12 @@ public class S3BucketAction implements ServletAction {
 
 			 }
 			 executeDeleteBucket(request, response);
-		} 
+		}
+		else if ( (method.equalsIgnoreCase("POST")) && (queryString.equalsIgnoreCase("delete")) )
+		{
+			// TODO - Hi Pri - Implement multi-object delete in a single command
+			throw new InternalErrorException("Multi-object delete in a single command not yet implemented");
+		}
 		else throw new IllegalArgumentException("Unsupported method in REST request");
 	}
 	
@@ -378,28 +385,31 @@ public class S3BucketAction implements ServletAction {
 	    throws IOException, XMLStreamException 
 	{
 		Calendar cal = Calendar.getInstance();
-		cal.set( 1970, 1, 1 ); 
+		cal.set( 1970, 1, 1 );    
 		S3ListAllMyBucketsRequest engineRequest = new S3ListAllMyBucketsRequest();
 		engineRequest.setAccessKey(UserContext.current().getAccessKey());
 		engineRequest.setRequestTimestamp( cal );
 		engineRequest.setSignature( "" );
+		
+		
+
 
 		S3ListAllMyBucketsResponse engineResponse = ServiceProvider.getInstance().getS3Engine().handleRequest(engineRequest);
 		
-		// -> serialize using the apache's Axiom classes
-		ListAllMyBucketsResponse allBuckets = S3SoapServiceImpl.toListAllMyBucketsResponse( engineResponse );
-
-		OutputStream os = response.getOutputStream();
+		// To allow the all buckets list to be serialized via Axiom classes
+		ListAllMyBucketsResponse allBuckets = S3SerializableServiceImplementation.toListAllMyBucketsResponse( engineResponse );
+		
+		OutputStream outputStream = response.getOutputStream();
 		response.setStatus(200);	
-	    response.setContentType("text/xml; charset=UTF-8");
-		XMLStreamWriter xmlWriter = xmlOutFactory.createXMLStreamWriter( os );
-		String documentStart = new String( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" );
-		os.write( documentStart.getBytes());
-		MTOMAwareXMLSerializer MTOMWriter = new MTOMAwareXMLSerializer( xmlWriter );
-        allBuckets.serialize( new QName( "http://s3.amazonaws.com/doc/2006-03-01/", "ListAllMyBucketsResponse", "ns1" ), factory, MTOMWriter );
-        xmlWriter.flush();
-        xmlWriter.close();
-        os.close();
+	    response.setContentType("application/xml");   
+	         // The content-type literally should be "application/xml; charset=UTF-8" 
+	         // but any compliant JVM supplies utf-8 by default
+		
+		MTOMAwareResultStreamWriter resultWriter = new MTOMAwareResultStreamWriter ("ListAllMyBucketsResult", outputStream );
+		resultWriter.startWrite();
+		resultWriter.writeout(allBuckets);
+		resultWriter.stopWrite();
+		
 	}
 
 	public void executeGetBucket(HttpServletRequest request, HttpServletResponse response) 
@@ -415,20 +425,20 @@ public class S3BucketAction implements ServletAction {
 		engineRequest.setMaxKeys(maxKeys);
 		S3ListBucketResponse engineResponse = ServiceProvider.getInstance().getS3Engine().listBucketContents( engineRequest, false );
 		
-		// -> serialize using the apache's Axiom classes
-		ListBucketResponse oneBucket = S3SoapServiceImpl.toListBucketResponse( engineResponse );
+		// To allow the all list buckets result to be serialized via Axiom classes
+		ListBucketResponse oneBucket = S3SerializableServiceImplementation.toListBucketResponse( engineResponse );
 	
-		OutputStream os = response.getOutputStream();
+		OutputStream outputStream = response.getOutputStream();
 		response.setStatus(200);	
-	    response.setContentType("text/xml; charset=UTF-8");
-		XMLStreamWriter xmlWriter = xmlOutFactory.createXMLStreamWriter( os );
-		String documentStart = new String( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" );
-		os.write( documentStart.getBytes());
-		MTOMAwareXMLSerializer MTOMWriter = new MTOMAwareXMLSerializer( xmlWriter );
-        oneBucket.serialize( new QName( "http://s3.amazonaws.com/doc/2006-03-01/", "ListBucketResponse", "ns1" ), factory, MTOMWriter );
-        xmlWriter.flush();
-        xmlWriter.close();
-        os.close();
+	    response.setContentType("application/xml");   
+	         // The content-type literally should be "application/xml; charset=UTF-8" 
+	         // but any compliant JVM supplies utf-8 by default;
+	    
+		MTOMAwareResultStreamWriter resultWriter = new MTOMAwareResultStreamWriter ("ListBucketResult", outputStream );
+		resultWriter.startWrite();
+		resultWriter.writeout(oneBucket);
+		resultWriter.stopWrite();
+
 	}
 	
 	public void executeGetBucketAcl(HttpServletRequest request, HttpServletResponse response) 
@@ -439,25 +449,26 @@ public class S3BucketAction implements ServletAction {
 		cal.set( 1970, 1, 1 ); 
 		engineRequest.setAccessKey(UserContext.current().getAccessKey());
 		engineRequest.setRequestTimestamp( cal );
-		engineRequest.setSignature( "" );
+		engineRequest.setSignature( "" );   // TODO - Consider providing signature in a future release which allows additional user description
 		engineRequest.setBucketName((String)request.getAttribute(S3Constants.BUCKET_ATTR_KEY));
 
 		S3AccessControlPolicy engineResponse = ServiceProvider.getInstance().getS3Engine().handleRequest(engineRequest);
 		
-		// -> serialize using the apache's Axiom classes
-		GetBucketAccessControlPolicyResponse onePolicy = S3SoapServiceImpl.toGetBucketAccessControlPolicyResponse( engineResponse );
-	
-		OutputStream os = response.getOutputStream();
+		// To allow the bucket acl policy result to be serialized via Axiom classes
+		GetBucketAccessControlPolicyResponse onePolicy = S3SerializableServiceImplementation.toGetBucketAccessControlPolicyResponse( engineResponse );
+
+		OutputStream outputStream = response.getOutputStream();
 		response.setStatus(200);	
-	    response.setContentType("text/xml; charset=UTF-8");
-		XMLStreamWriter xmlWriter = xmlOutFactory.createXMLStreamWriter( os );
-		String documentStart = new String( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" );
-		os.write( documentStart.getBytes());
-		MTOMAwareXMLSerializer MTOMWriter = new MTOMAwareXMLSerializer( xmlWriter );
-        onePolicy.serialize( new QName( "http://s3.amazonaws.com/doc/2006-03-01/", "GetBucketAccessControlPolicyResponse", "ns1" ), factory, MTOMWriter );
-        xmlWriter.flush();
-        xmlWriter.close();
-        os.close();
+	    response.setContentType("application/xml");   
+	         // The content-type literally should be "application/xml; charset=UTF-8" 
+	         // but any compliant JVM supplies utf-8 by default;
+	    
+		MTOMAwareResultStreamWriter resultWriter = new MTOMAwareResultStreamWriter ("GetBucketAccessControlPolicyResult", outputStream );
+		resultWriter.startWrite();
+		resultWriter.writeout(onePolicy);
+		resultWriter.stopWrite();
+
+		
 	}
 	
 	public void executeGetBucketVersioning(HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -589,20 +600,20 @@ public class S3BucketAction implements ServletAction {
 	}
 	
 	public void executeGetBucketLogging(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		// TODO -- this is a beta feature of S3
-		response.setStatus(501);
+		// TODO -- Review this in future.  Currently this is a beta feature of S3
+		response.setStatus(405);
 	}
 	
 	public void executeGetBucketLocation(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		response.setStatus(501);
+		response.setStatus(405);
 	}
 
 	public void executeGetBucketWebsite(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		response.setStatus(501);
+		response.setStatus(405);
 	}
 
 	public void executeDeleteBucketWebsite(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		response.setStatus(501);
+		response.setStatus(405);
 	}
 
 	public void executePutBucket(HttpServletRequest request, HttpServletResponse response) throws IOException 
@@ -619,7 +630,7 @@ public class S3BucketAction implements ServletAction {
 				XSerializer serializer = new XSerializer(new XSerializerXmlAdapter()); 
 				objectInContent = serializer.serializeFrom(xml);
 				if(objectInContent != null && !(objectInContent instanceof S3CreateBucketConfiguration)) {
-					throw new InvalidRequestContentException("Invalid rquest content in create-bucket: " + xml);
+					throw new InvalidRequestContentException("Invalid request content in create-bucket: " + xml);
 				}
 				is.close();
 				
@@ -644,25 +655,41 @@ public class S3BucketAction implements ServletAction {
 	}
 	
 	public void executePutBucketAcl(HttpServletRequest request, HttpServletResponse response) throws IOException 
-	{
-		S3PutObjectRequest putRequest = null;
+	{ 
+		// [A] Determine that there is an applicable bucket which might have an ACL set
 		
-		// -> reuse the Access Control List parsing code that was added to support DIME
-		String bucketName = (String)request.getAttribute(S3Constants.BUCKET_ATTR_KEY);
-		try {
-		    putRequest = S3RestServlet.toEnginePutObjectRequest( request.getInputStream());
-		}
-		catch( Exception e ) {
-			throw new IOException( e.toString());
-		}
-		
-		// -> reuse the SOAP code to save the passed in ACLs
+		String bucketName = (String)request.getAttribute(S3Constants.BUCKET_ATTR_KEY);	
+		SBucketDao bucketDao = new SBucketDao();
+		SBucket bucket = bucketDao.getByName( bucketName );
+		String owner = null;        
+        if ( null != bucket ) 
+        	 owner = bucket.getOwnerCanonicalId();
+        if (null == owner)
+                {
+            	   logger.error( "ACL update failed since " + bucketName + " does not exist" );
+                   throw new IOException("ACL update failed");
+                 }
+        
+        // [B] Obtain the grant request which applies to the acl request string.  This latter is supplied as the value of the x-amz-acl header.
+        
 		S3SetBucketAccessControlPolicyRequest engineRequest = new S3SetBucketAccessControlPolicyRequest();
-		engineRequest.setBucketName( bucketName );
-		engineRequest.setAcl( putRequest.getAcl());
+		S3Grant grantRequest = new S3Grant();
+		S3AccessControlList aclRequest = new S3AccessControlList();
 		
+		String aclRequestString = request.getHeader("x-amz-acl");
+		OrderedPair <Integer,Integer> accessControlsForBucketOwner = SAcl.getCannedAccessControls(aclRequestString,"SBucket");
+		grantRequest.setPermission(accessControlsForBucketOwner.getFirst());
+		grantRequest.setGrantee(accessControlsForBucketOwner.getSecond());
+		grantRequest.setCanonicalUserID(owner);
+		aclRequest.addGrant(grantRequest);
+		engineRequest.setAcl(aclRequest);
+		engineRequest.setBucketName(bucketName);
+		
+		
+		// [C] Allow an S3Engine to handle the S3SetBucketAccessControlPolicyRequest
 	    S3Response engineResponse = ServiceProvider.getInstance().getS3Engine().handleRequest(engineRequest);	
 	    response.setStatus( engineResponse.getResultCode());
+
 	}
 	
 	public void executePutBucketVersioning(HttpServletRequest request, HttpServletResponse response) throws IOException 
@@ -700,8 +727,8 @@ public class S3BucketAction implements ServletAction {
 		}
 	     
 	    try {
-			// -> does not matter what the ACLs say only the owner can turn on versioning on a bucket
-	        // -> the bucket owner may want to restrict the IP address from which this can occur
+			// Irrespective of what the ACLs say only the owner can turn on versioning on a bucket.
+	        // The bucket owner may want to restrict the IP address from which this can occur.
 			SBucketDao bucketDao = new SBucketDao();
 			SBucket sbucket = bucketDao.getByName( bucketName );
 		
@@ -738,12 +765,16 @@ public class S3BucketAction implements ServletAction {
 	}
 	
 	public void executePutBucketLogging(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		// TODO -- this is a S3 beta feature
+		// TODO -- Review this in future.  Currently this is a S3 beta feature
 		response.setStatus(501);
 	}
 	
 	public void executePutBucketWebsite(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		response.setStatus(501);
+		// TODO -- LoPri - Undertake checks on Put Bucket Website
+		// Tested using configuration <Directory /Users/john1/S3-Mount>\nAllowOverride FileInfo AuthConfig Limit...</Directory> in httpd.conf
+        // Need some way of using  AllowOverride to allow use of .htaccess and then pushing .httaccess file to bucket subdirectory of mount point
+		// Currently has noop effect in the sense that a running apachectl process sees the directory contents without further action
+		response.setStatus(200);
 	}
 
 	public void executeDeleteBucket(HttpServletRequest request, HttpServletResponse response) throws IOException 
@@ -756,7 +787,7 @@ public class S3BucketAction implements ServletAction {
 	}
 	
 	/**
-	 * This is a very complex function with all the options defined by Amazon.   Part of the functionality is 
+	 * Multipart upload is a complex operation with all the options defined by Amazon.   Part of the functionality is 
 	 * provided by the query done against the database.  The CommonPrefixes functionality is done the same way 
 	 * as done in the listBucketContents function (i.e., by iterating though the list to decide which output 
 	 * element each key is placed).
@@ -807,7 +838,7 @@ public class S3BucketAction implements ServletAction {
 		// [B] Query the multipart table to get the list of current uploads
     	try {
 	        MultipartLoadDao uploadDao = new MultipartLoadDao();
-	        Tuple<S3MultipartUpload[],Boolean> result = uploadDao.getInitiatedUploads( bucketName, maxUploads, prefix, keyMarker, uploadIdMarker );
+	        OrderedPair<S3MultipartUpload[],Boolean> result = uploadDao.getInitiatedUploads( bucketName, maxUploads, prefix, keyMarker, uploadIdMarker );
     	    uploads = result.getFirst();
     	    isTruncated = result.getSecond().booleanValue();
     	}

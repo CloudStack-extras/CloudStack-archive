@@ -10,6 +10,11 @@ public class HeaderParam {
 		value = null;
 	}
 	
+	public HeaderParam (String name, String value) {
+         this.name = name;
+         this.name = value;     
+	}
+	
 	public void setName( String name ) {
 		this.name = name;
 	}
