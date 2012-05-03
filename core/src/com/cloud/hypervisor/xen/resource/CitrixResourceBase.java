@@ -168,6 +168,7 @@ import com.cloud.agent.api.to.VolumeTO;
 import com.cloud.exception.InternalErrorException;
 import com.cloud.host.Host.Type;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.hypervisor.xen.resource.CitrixResourceBase.SRType;
 import com.cloud.network.HAProxyConfigurator;
 import com.cloud.network.LoadBalancerConfigurator;
 import com.cloud.network.Networks;
@@ -1551,10 +1552,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             boolean removeVif = false;
             if (add && correctVif == null) {
                 addVif = true;
-            } else if (!add && firstIP) {
-                removeVif = true;
             }
-
             if (addVif) {
                 // Add a new VIF to DomR
                 String vifDeviceNum = getLowestAvailableVIFDeviceNum(conn, router);

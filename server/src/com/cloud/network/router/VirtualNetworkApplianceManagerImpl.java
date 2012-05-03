@@ -2181,7 +2181,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             IpAddressTO[] ipsToSend = new IpAddressTO[ipAddrList.size()];
             int i = 0;
             boolean firstIP = true;
-            List<String> oldVlanNetmasks = new ArrayList<String>();
+            List<String> oldVlanGateways = new ArrayList<String>();
             for (final PublicIpAddress ipAddr : ipAddrList) {
 
                 boolean add = (ipAddr.getState() == IpAddress.State.Releasing ? false : true);
@@ -2192,8 +2192,8 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                 String vifMacAddress = ipAddr.getMacAddress();
 
                 String vmGuestAddress = null;
-                if (!oldVlanNetmasks.contains(vlanNetmask)) {
-                    oldVlanNetmasks.add(vlanNetmask);
+                if (!oldVlanGateways.contains(vlanGateway)) {
+                    oldVlanGateways.add(vlanGateway);
                     firstIP = true;
                 }
                 IpAddressTO ip = new IpAddressTO(ipAddr.getAccountId(), ipAddr.getAddress().addr(), add, firstIP, sourceNat, vlanId, vlanGateway, vlanNetmask, vifMacAddress, vmGuestAddress, networkRate, ipAddr.isOneToOneNat());

@@ -236,7 +236,7 @@ add_first_ip() {
   sudo ip link show $ethDev | grep "state DOWN" > /dev/null
   local old_state=$?
   
-  convert_primary_to_32 $pubIp
+  #convert_primary_to_32 $pubIp
   sudo ip addr add dev $ethDev $pubIp
   if [ "$mask" != "32" ] && [ "$mask" != "" ]
   then
