@@ -1549,7 +1549,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             // to remove a VIF
             boolean addVif = false;
             boolean removeVif = false;
-            if (add && firstIP ) {
+            if (add && correctVif == null) {
                 addVif = true;
             } else if (!add && firstIP) {
                 removeVif = true;
