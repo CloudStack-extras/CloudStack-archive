@@ -717,27 +717,30 @@ public class EC2Engine {
 	
 			if (keyPairs != null) {
 				// Let's trim the list of keypairs to only the ones listed in keyNames
+			    List<CloudStackKeyPair> matchedKeyPairs = new ArrayList<CloudStackKeyPair>();
 				if (keyNames != null && keyNames.length > 0) {
 					for (CloudStackKeyPair keyPair : keyPairs) {
 						boolean matched = false;
 						for (String keyName : keyNames) {
-							if (keyPair.getName().contains(keyName)) {
+							if (keyPair.getName().equalsIgnoreCase(keyName)) {
 								matched = true;
 								break;
 							}
 						}
-						if (matched == false) {
-							keyPairs.remove(keyPair);
+						if (matched) {
+						    matchedKeyPairs.add(keyPair);
 						}
 					}
+	                if (matchedKeyPairs.isEmpty()) {
+	                    throw new EC2ServiceException(ServerError.InternalError, "No matching keypairs found");
+	                }
+				}else{
+				    matchedKeyPairs = keyPairs;
 				}
 	
-				if (keyPairs.isEmpty() == true) {
-					throw new EC2ServiceException(ServerError.InternalError, "No keypairs left!");
-				}
 	
 				// this should be reworked... converting from CloudStackKeyPairResponse to EC2SSHKeyPair is dumb
-				for (CloudStackKeyPair respKeyPair: keyPairs) {
+				for (CloudStackKeyPair respKeyPair: matchedKeyPairs) {
 					EC2SSHKeyPair ec2KeyPair = new EC2SSHKeyPair();
 					ec2KeyPair.setFingerprint(respKeyPair.getFingerprint());
 					ec2KeyPair.setKeyName(respKeyPair.getName());
@@ -1646,7 +1649,13 @@ public class EC2Engine {
 		if ( null != zoneName) {
 			interestedZones = new String[1];
 			interestedZones[0] = zoneName;
+		}else {
+		    CloudStackZone zone = findZone();
+		    if(zone != null){
+		        return zone.getId();
+		    }
 		}
+
 		zones = listZones(interestedZones, domainId);
 
 		if (zones == null || zones.getZoneIdAt( 0 ) == null) 
