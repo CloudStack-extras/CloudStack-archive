@@ -45,10 +45,7 @@ ipaddr=$1
 
 device=$(ip addr | grep $1 | head -1 | awk '{print $NF}')
 defaultdev=$(ip route | grep default | awk '{print $NF}')
-if [ "$device" == "$defaultdev" ]
-then
-  gateway=$(ip route | grep default | awk '{print $3}')
-fi
+gateway=$(ip route | grep default | awk '{print $3}')
 
 [ -n "$gflag" ] && echo $gateway && exit 0
 
