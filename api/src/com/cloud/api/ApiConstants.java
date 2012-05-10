@@ -328,6 +328,7 @@ public class ApiConstants {
     public static final String PURPOSE = "purpose";
     public static final String IS_TAGGED = "istagged";
     public static final String INSTANCE_NAME = "instancename";
+    public static final String CAN_USE_FOR_DEPLOY = "canusefordeploy";
     
     public enum HostDetails {
         all, capacity, events, stats, min;

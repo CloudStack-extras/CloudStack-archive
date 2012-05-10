@@ -48,6 +48,7 @@ import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.IPAddressVO;
 import com.cloud.network.IpAddress;
 import com.cloud.network.LoadBalancerVO;
+import com.cloud.network.Network;
 import com.cloud.network.Network.Capability;
 import com.cloud.network.Network.Provider;
 import com.cloud.network.Network.Service;
@@ -718,7 +719,7 @@ public class ApiDBUtils {
     }
     
     public static long countFreePublicIps() {
-    	return _ipAddressDao.countFreeIPs();
+    	return _ipAddressDao.countFreePublicIPs();
     }
     
     public static long findDefaultRouterServiceOffering() {
@@ -728,5 +729,9 @@ public class ApiDBUtils {
     
     public static IpAddress findIpByAssociatedVmId(long vmId) {
         return _ipAddressDao.findByAssociatedVmId(vmId);
+    }
+    
+    public static boolean canUseForDeploy(Network network) {
+        return _networkMgr.canUseForDeploy(network);
     }
 }

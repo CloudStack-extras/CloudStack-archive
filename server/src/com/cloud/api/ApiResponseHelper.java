@@ -2838,7 +2838,8 @@ public class ApiResponseHelper implements ResponseGenerator {
             response.setDomainName(domain.getName());
         }
 
-        response.setSpecifyIpRanges(network.getSpecifyIpRanges());
+        response.setSpecifyIpRanges(network.getSpecifyIpRanges()); 
+        response.setCanUseForDeploy(ApiDBUtils.canUseForDeploy(network));
 
         response.setObjectName("network");
         return response;
