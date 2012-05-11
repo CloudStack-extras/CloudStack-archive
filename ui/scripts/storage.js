@@ -1254,8 +1254,11 @@
     var jsonObj = args.context.item;
     var allowedActions = [];
 
-    if (jsonObj.state == 'Destroyed' || jsonObj.state == 'Migrating') {
+    if (jsonObj.state == 'Destroyed' || jsonObj.state == 'Migrating' || jsonObj.state == 'Uploading') {
       return [];
+    }
+		if (jsonObj.state == 'UploadError') {
+      return ["remove"];
     }
 
     if(jsonObj.hypervisor != "Ovm" && jsonObj.state == "Ready") {
@@ -1273,7 +1276,7 @@
           allowedActions.push("createTemplate");
         }
       }
-      else {
+      else { //jsonObj.type == "DATADISK"
         if (jsonObj.virtualmachineid != null) {
           if (jsonObj.storagetype == "shared" && (jsonObj.vmstate == "Running" || jsonObj.vmstate == "Stopped" || jsonObj.vmstate == "Destroyed")) {
             allowedActions.push("detachDisk");
@@ -1281,7 +1284,7 @@
         }
         else { // Disk not attached
           allowedActions.push("remove");		
-					if(isAdmin()) {
+					if(jsonObj.state == "Ready" && isAdmin()) {
             allowedActions.push("migrateToAnotherStorage");
 					}
           if (jsonObj.storagetype == "shared") {

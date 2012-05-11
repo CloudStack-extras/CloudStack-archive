@@ -31,7 +31,6 @@ body {
   font-family: sans-serif;
   height: 769px !important;
   overflow: auto;
-  overflow-x: hidden;
   background: #FFFFFF;
 }
 
@@ -4560,6 +4559,10 @@ label.error {
   border-radius: 4px 4px 4px 4px;
   display: inline-block;
   float: left;
+}
+
+.multi-wizard .select-security-group .content {
+  height: 366px;
 }
 
 .multi-wizard .content .section {

@@ -618,7 +618,9 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 		// -> we can only support one group per instance
 		if (null != gst) {
 			GroupItemType[] items = gst.getItem();
-			if (null != items && 0 < items.length) request.setGroupId( items[0].getGroupId());
+			if (null != items) {
+				for( int i=0; i < items.length; i++ ) request.addGroupName(items[i].getGroupId());
+		    }
 		}
 		return toRunInstancesResponse( engine.runInstances( request ), engine);
 	}
@@ -1468,12 +1470,6 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 	    
 	    param1.setReservationId( "" );
 	    
-		GroupSetType  param2 = new GroupSetType();
-		GroupItemType param3 = new GroupItemType();
-		param3.setGroupId( "" );
-		param2.addItem( param3 );
-	    param1.setGroupSet( param2 );
-	    
 	    RunningInstancesSetType param6 = new RunningInstancesSetType();
 		EC2Instance[] instances = engineResponse.getInstanceSet();
 		for (EC2Instance inst : instances) {
@@ -1486,6 +1482,21 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 			String ownerId = domainId + ":" + accountName;
 		
 	        param1.setOwnerId(ownerId);
+			
+            String[] groups = inst.getGroupSet();
+            GroupSetType  param2 = new GroupSetType();
+            if (null == groups || 0 == groups.length) {
+                GroupItemType param3 = new GroupItemType();
+                param3.setGroupId("");
+                param2.addItem( param3 );
+            } else {
+                for (String group : groups) {
+                    GroupItemType param3 = new GroupItemType();
+                    param3.setGroupId(group);
+                    param2.addItem( param3 );   
+                }
+            }
+            param1.setGroupSet(param2);
 			
 	        InstanceStateType param8 = new InstanceStateType();
 	        param8.setCode( toAmazonCode( inst.getState()));
@@ -1528,7 +1539,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
             param7.setVpcId( "" );
             String ipAddr = inst.getPrivateIpAddress();
             param7.setPrivateIpAddress((null != ipAddr ? ipAddr : ""));
-	        param7.setIpAddress( inst.getIpAddress());
+	        param7.setIpAddress(inst.getIpAddress());
 
 	        StateReasonType param13 = new StateReasonType();
 	        param13.setCode( "" );
@@ -1570,7 +1581,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 		}
 		param1.setInstancesSet( param6 );
 		param1.setRequesterId( "" );
-	    
+		
 	    param1.setRequestId( UUID.randomUUID().toString());
 	    response.setRunInstancesResponse( param1 );
 		return response;
@@ -1802,8 +1813,13 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 					continue;
 				IpPermissionType param5 = new IpPermissionType();
 				param5.setIpProtocol(perm.getProtocol());
-				param5.setFromPort(perm.getFromPort());
-				param5.setToPort(perm.getToPort());
+                if (perm.getProtocol().equalsIgnoreCase("icmp")) {
+                    param5.setFromPort(Integer.parseInt(perm.getIcmpType()));
+                    param5.setToPort(Integer.parseInt(perm.getIcmpCode()));
+                } else {			
+                    param5.setFromPort(perm.getFromPort());
+                    param5.setToPort(perm.getToPort());
+                }
 
 				// -> user groups
 				EC2SecurityGroup[] userSet = perm.getUserSet();
@@ -1829,14 +1845,13 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 				} else {
 					for (String range : rangeSet) {
 						// TODO: This needs further attention...
-						if (range == null) {
-							range = "";
-						}
-						IpRangeSetType param6 = new IpRangeSetType();
-						IpRangeItemType param7 = new IpRangeItemType();
-						param7.setCidrIp(range);
-						param6.addItem(param7);
-						param5.setIpRanges(param6);
+                        IpRangeSetType param6 = new IpRangeSetType();
+                        if (range != null) {
+                            IpRangeItemType param7 = new IpRangeItemType();
+                            param7.setCidrIp(range);
+                            param6.addItem(param7);
+                        }
+                        param5.setIpRanges(param6);
 					}
 				}
 				param4.addItem(param5);

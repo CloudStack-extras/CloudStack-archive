@@ -330,11 +330,11 @@ public class EC2Engine {
 				}
 				CloudStackSecurityGroupIngress resp = null;
 				if (ipPerm.getProtocol().equalsIgnoreCase("icmp")) {
-					resp = getApi().authorizeSecurityGroupIngress(null, constructCIDRList(ipPerm.getIpRangeSet()), null, null, 
+					resp = getApi().authorizeSecurityGroupIngress(null, constructList(ipPerm.getIpRangeSet()), null, null, 
 							ipPerm.getToPort().toString(), ipPerm.getFromPort().toString(), ipPerm.getProtocol(), null, 
 							request.getName(), null, secGroupList);
 				} else {
-					resp = getApi().authorizeSecurityGroupIngress(null, constructCIDRList(ipPerm.getIpRangeSet()), null, 
+					resp = getApi().authorizeSecurityGroupIngress(null, constructList(ipPerm.getIpRangeSet()), null, 
 							ipPerm.getToPort().longValue(), null, null, ipPerm.getProtocol(), null, request.getName(), 
 							ipPerm.getFromPort().longValue(), secGroupList);
 				}
@@ -408,25 +408,7 @@ public class EC2Engine {
 			return null;
 		else return permRight.getRuleId();
 	}
-
-
-	/**
-	 * Cloud Stack API takes a comma separated list of IP ranges as one parameter.
-	 * 
-	 * @throws UnsupportedEncodingException 
-	 */
-	private String constructCIDRList( String[] ipRanges ) throws UnsupportedEncodingException 
-	{
-		if (null == ipRanges || 0 == ipRanges.length) return null;  	
-		StringBuffer cidrList = new StringBuffer();
-
-		for( int i=0; i < ipRanges.length; i++ ) {
-			if (0 < i) cidrList.append( "," );
-			cidrList.append( ipRanges[i] );
-		}
-		return cidrList.toString();
-	}
-
+	
 	/**
 	 * Returns a list of all snapshots
 	 * 
@@ -908,7 +890,7 @@ public class EC2Engine {
 	public boolean disassociateAddress( EC2DisassociateAddress request ) {
 		try {
 			CloudStackIpAddress cloudIp = getApi().listPublicIpAddresses(null, null, null, null, null, request.getPublicIp(), null, null, null).get(0);
-			CloudStackInfoResponse resp = getApi().disassociateIpAddress(cloudIp.getId());
+			CloudStackInfoResponse resp = getApi().disableStaticNat(cloudIp.getId());
 			if (resp != null) {
 				return resp.getSuccess();
 			}
@@ -935,8 +917,9 @@ public class EC2Engine {
             CloudStackZone zone = findZone();
             CloudStackNetwork net = findNetwork(zone);
 //			CloudStackIpAddress resp = getApi().associateIpAddress(null, null, null, "0036952d-48df-4422-9fd0-94b0885e18cb");
-            CloudStackIpAddress resp = getApi().associateIpAddress(null, null, null, net.getId());
+            CloudStackIpAddress resp = getApi().associateIpAddress(zone.getId(), caller.getName(), caller.getDomainId(), net != null ? net.getId():null);
 			ec2Address.setAssociatedInstanceId(resp.getId());
+			
 			if (resp.getIpAddress() == null) {
 			    List<CloudStackIpAddress> addrList = getApi().listPublicIpAddresses(null, null, null, null, null, null, null, null, null);
 			    if (addrList != null && addrList.size() > 0) {
@@ -1415,7 +1398,7 @@ public class EC2Engine {
 				CloudStackUserVm resp = getApi().deployVirtualMachine(svcOffering.getId(), 
 						request.getTemplateId(), zoneId, null, null, null, null, 
 						null, null, null, request.getKeyName(), null, (network != null ? network.getId() : null), 
-						null, null, request.getSize().longValue(), request.getUserData());
+						null, constructList(request.getGroupSet()), request.getSize().longValue(), request.getUserData());
 				EC2Instance vm = new EC2Instance();
 				vm.setId(resp.getId().toString());
 				vm.setName(resp.getName());
@@ -1423,12 +1406,21 @@ public class EC2Engine {
 				vm.setTemplateId(resp.getTemplateId().toString());
 				if (resp.getSecurityGroupList() != null && resp.getSecurityGroupList().size() > 0) {
 					// TODO, we have a list of security groups, just return the first one?
-					CloudStackSecurityGroup securityGroup = resp.getSecurityGroupList().get(0);
-					vm.setGroup(securityGroup.getName());
-				}
+                    List<CloudStackSecurityGroup> securityGroupList = resp.getSecurityGroupList();
+                    for (CloudStackSecurityGroup securityGroup : securityGroupList) {
+                        vm.addGroupName(securityGroup.getName());
+                    }
+                }
 				vm.setState(resp.getState());
 				vm.setCreated(resp.getCreated());
-				vm.setIpAddress(resp.getIpAddress());
+                List <CloudStackNic> nicList = resp.getNics();
+                for (CloudStackNic nic : nicList) {
+                    if (nic.getIsDefault()) {
+                        vm.setPrivateIpAddress(nic.getIpaddress());
+                        break;
+                    }
+                }
+                vm.setIpAddress(resp.getIpAddress());
 				vm.setAccountName(resp.getAccountName());
 				vm.setDomainId(resp.getDomainId());
 				vm.setHypervisor(resp.getHypervisor());
@@ -2265,4 +2257,20 @@ public class EC2Engine {
 			throw new EC2ServiceException(ServerError.InternalError, e.getMessage() != null ? e.getMessage() : "An unexpected error occurred.");
 		}
 	}
+	
+    /**
+     * Cloud Stack API takes a comma separated list as a parameter.
+     * 
+     * @throws UnsupportedEncodingException 
+     */
+    private String constructList( String[] elements ) throws UnsupportedEncodingException {
+        if (null == elements || 0 == elements.length) return null;  	
+        StringBuffer elementList = new StringBuffer();
+
+        for( int i=0; i < elements.length; i++ ) {
+            if (0 < i) elementList.append( "," );
+            elementList.append( elements[i] );
+        }
+        return elementList.toString();
+    }
 }
