@@ -1461,7 +1461,10 @@ public class EC2Engine {
 				vm.setPreviousState(vm.getState());
 
 				// -> if its already running then we don't care
-				if (vm.getState().equalsIgnoreCase( "Running" ) || vm.getState().equalsIgnoreCase( "Destroyed" )) continue;
+				if (vm.getState().equalsIgnoreCase( "Running" ) || vm.getState().equalsIgnoreCase( "Destroyed" )) {
+				    instances.addInstance(vm);
+				    continue;
+				}
 
 				CloudStackUserVm resp = getApi().startVirtualMachine(vm.getId());
 				if(resp != null){
@@ -1500,12 +1503,18 @@ public class EC2Engine {
 				vm.setPreviousState( vm.getState());
 				CloudStackUserVm resp = null;
 				if (request.getDestroyInstances()) {
-					if (vm.getState().equalsIgnoreCase( "Destroyed" )) continue;
+					if (vm.getState().equalsIgnoreCase( "Destroyed" )) {
+					    instances.addInstance(vm);
+					    continue;
+					}
 					resp = getApi().destroyVirtualMachine(vm.getId());
 					if(logger.isDebugEnabled())
 						logger.debug("Destroying VM " + vm.getId() + " job " + resp.getJobId());
 				} else {
-					if (vm.getState().equalsIgnoreCase("Stopped") || vm.getState().equalsIgnoreCase("Destroyed")) continue;
+					if (vm.getState().equalsIgnoreCase("Stopped") || vm.getState().equalsIgnoreCase("Destroyed")) {
+					    instances.addInstance(vm);
+					    continue;
+					}
 					resp = getApi().stopVirtualMachine(vm.getId(), false);
 					if(logger.isDebugEnabled())
 						logger.debug("Stopping VM " + vm.getId() + " job " + resp.getJobId());
@@ -1518,7 +1527,7 @@ public class EC2Engine {
 			return instances;
 		} catch( Exception e ) {
 			logger.error( "EC2 StopInstances - ", e);
-			throw new EC2ServiceException(ServerError.InternalError, e.getMessage() != null ? e.getMessage() : "An unexpected error occurred.");
+			throw new EC2ServiceException(ServerError.InternalError, e.getMessage() != null ? e.getMessage() + ", might already be destroyed" : "An unexpected error occurred.");
 		}
 	}
 
@@ -1795,6 +1804,15 @@ public class EC2Engine {
     					break;
     				}
     			}
+    			
+                if (cloudVm.getSecurityGroupList() != null && cloudVm.getSecurityGroupList().size() > 0) {
+                    // TODO, we have a list of security groups, just return the first one?
+                    List<CloudStackSecurityGroup> securityGroupList = cloudVm.getSecurityGroupList();
+                    for (CloudStackSecurityGroup securityGroup : securityGroupList) {
+                        ec2Vm.addGroupName(securityGroup.getName());
+                    }
+                }
+    			
     			instances.addInstance(ec2Vm);
     		}
 		}else{
