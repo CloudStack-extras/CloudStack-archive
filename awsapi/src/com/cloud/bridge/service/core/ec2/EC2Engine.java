@@ -290,6 +290,7 @@ public class EC2Engine {
 				EC2IpPermission[] perms = group.getIpPermissionSet();
 				for (EC2IpPermission perm : perms) {
 					ruleId = doesRuleMatch( items[0], perm );
+					if (ruleId != null) break;
 				}
 			}
 
@@ -331,7 +332,7 @@ public class EC2Engine {
 				CloudStackSecurityGroupIngress resp = null;
 				if (ipPerm.getProtocol().equalsIgnoreCase("icmp")) {
 					resp = getApi().authorizeSecurityGroupIngress(null, constructList(ipPerm.getIpRangeSet()), null, null, 
-							ipPerm.getToPort().toString(), ipPerm.getFromPort().toString(), ipPerm.getProtocol(), null, 
+							ipPerm.getIcmpCode(), ipPerm.getIcmpType(), ipPerm.getProtocol(), null, 
 							request.getName(), null, secGroupList);
 				} else {
 					resp = getApi().authorizeSecurityGroupIngress(null, constructList(ipPerm.getIpRangeSet()), null, 

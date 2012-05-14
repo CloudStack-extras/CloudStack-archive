@@ -8,14 +8,9 @@ from sys import version
 
 if version < "2.7":
     print "Marvin needs at least python 2.7, found : \n%s"%version
-else:
-    try:
-        import paramiko
-    except ImportError:
-        print "Marvin requires paramiko to be installed"
-        raise
-    
-    setup(name="Marvin",
+    raise
+
+setup(name="Marvin",
       version="0.1.0",
       description="Marvin - Python client for testing cloudstack",
       author="Edison Su",
@@ -28,8 +23,8 @@ else:
       packages=["marvin", "marvin.cloudstackAPI", "marvin.sandbox", "marvin.pymysql", "marvin.pymysql.constants", "marvin.pymysql.tests"],
       license="LICENSE.txt",
       install_requires=[
-                "Python>=2.7",
-                "paramiko",
-                "nose"
-                ],         
+          "Python>=2.7",
+          "paramiko",
+          "nose"
+      ],         
      )
