@@ -394,11 +394,8 @@ public class Agent implements HandlerFactory, IAgentControl {
             _shell.getBackoffAlgorithm().waitBeforeRetry();
         }
 
-        try {
-            _client.cleanUp();
-        } catch (IOException e) {
-            s_logger.warn("Fail to clean up old connection. " + e);
-        }
+        _client.cleanUp();
+        
         _client = new NettyClient("Agent", _shell.getHost(), _shell.getPort(), _shell.getWorkers(), this);
         do {
             s_logger.info("Reconnecting...");
@@ -536,11 +533,7 @@ public class Agent implements HandlerFactory, IAgentControl {
             }
 
             if (response != null) {
-                try {
-                    link.send(ChannelBuffers.wrappedBuffer(response.toBytes()));
-                } catch (final ClosedChannelException e) {
-                    s_logger.warn("Unable to send response: " + response.toString());
-                }
+                link.send(ChannelBuffers.wrappedBuffer(response.toBytes())); 
             }
         }
     }
@@ -581,13 +574,10 @@ public class Agent implements HandlerFactory, IAgentControl {
                 s_logger.debug("Sending ping: " + request.toString());
             }
 
-            try {
-                task.getLink().send(ChannelBuffers.wrappedBuffer(request.toBytes()));
-                //if i can send pingcommand out, means the link is ok
-                setLastPingResponseTime();
-            } catch (final ClosedChannelException e) {
-                s_logger.warn("Unable to send request: " + request.toString());
-            }
+            task.getLink().send(ChannelBuffers.wrappedBuffer(request.toBytes()));
+            //if i can send pingcommand out, means the link is ok
+            setLastPingResponseTime();
+           
         } else if (obj instanceof Request) {
             final Request req = (Request) obj;
             final Command command = req.getCommand();
@@ -604,11 +594,7 @@ public class Agent implements HandlerFactory, IAgentControl {
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Watch Sent: " + response.toString());
                 }
-                try {
-                    task.getLink().send(ChannelBuffers.wrappedBuffer(response.toBytes()));
-                } catch (final ClosedChannelException e) {
-                    s_logger.warn("Unable to send response: " + response.toString());
-                }
+                task.getLink().send(ChannelBuffers.wrappedBuffer(response.toBytes()));
             }
         } else {
             s_logger.warn("Ignoring an unknown task");
@@ -689,12 +675,8 @@ public class Agent implements HandlerFactory, IAgentControl {
 
     private void postRequest(Request request) throws AgentControlChannelException {
         if (_link != null) {
-            try {
-                _link.send(ChannelBuffers.wrappedBuffer(request.toBytes()));
-            } catch (final ClosedChannelException e) {
-                s_logger.warn("Unable to post agent control reques: " + request.toString());
-                throw new AgentControlChannelException("Unable to post agent control request due to " + e.getMessage());
-            }
+            _link.send(ChannelBuffers.wrappedBuffer(request.toBytes()));
+          
         } else {
             throw new AgentControlChannelException("Unable to post agent control request as link is not available");
         }
@@ -759,14 +741,10 @@ public class Agent implements HandlerFactory, IAgentControl {
             if (s_logger.isTraceEnabled()) {
                 s_logger.trace("Scheduling " + (_request instanceof Response ? "Ping" : "Watch Task"));
             }
-            try {
-                if (_request instanceof Response) {
-                    _ugentTaskPool.submit(new ServerHandler(Task.Type.OTHER, _link, _request));
-                } else {
-                    _link.schedule(new ServerHandler(Task.Type.OTHER, _link, _request));
-                }
-            } catch (final ClosedChannelException e) {
-                s_logger.warn("Unable to schedule task because channel is closed");
+            if (_request instanceof Response) {
+                _ugentTaskPool.submit(new AgentHandler(Task.Type.OTHER, _link, _request));
+            } else {
+            	_client.schedule(new AgentHandler(Task.Type.OTHER, _link, _request));
             }
         }
     }
