@@ -333,28 +333,7 @@ public class ApiConstants {
     public static final String GUID = "guid";
     public static final String CUSTOM_DISK_OFF_MAX_SIZE = "customdiskofferingmaxsize";
     public static final String DEFAULT_ZONE_ID = "defaultzoneid";
-    public static final String GUID = "guid";
 
-    public static final String EXTERNAL_SWITCH_MGMT_DEVICE_ID = "vsmdeviceid";
-    public static final String EXTERNAL_SWITCH_MGMT_DEVICE_NAME = "vsmdevicename";
-    public static final String EXTERNAL_SWITCH_MGMT_DEVICE_STATE = "vsmdevicestate";
-    // Would we need to have a capacity field for Cisco N1KV VSM? Max hosts managed by it perhaps? May remove this later.
-    public static final String EXTERNAL_SWITCH_MGMT_DEVICE_CAPACITY = "vsmdevicecapacity";
-    public static final String VCENTER_IP_ADDRESS = "vcenteripaddr";
-    public static final String VCENTER_DC_NAME = "vcenterdcname";
-    public static final String CISCO_NEXUS_VSM_NAME = "vsmname";
-    public static final String VSM_USERNAME = "vsmusername";
-    public static final String VSM_PASSWORD = "vsmpassword";
-    public static final String VSM_IPADDRESS = "vsmipaddress";
-    public static final String VSM_MGMT_VLAN_ID = "vsmmgmtvlanid";
-    public static final String VSM_PKT_VLAN_ID = "vsmpktvlanid";
-    public static final String VSM_CTRL_VLAN_ID = "vsmctrlvlanid";
-    public static final String VSM_STORAGE_VLAN_ID = "vsmstoragevlanid";
-    public static final String VSM_DOMAIN_ID = "vsmdomainid";
-    public static final String VSM_CONFIG_MODE = "vsmconfigmode";
-    public static final String VSM_CONFIG_STATE = "vsmconfigstate";
-    public static final String VSM_DEVICE_STATE = "vsmdevicestate";
-    
     public static final String EXTERNAL_SWITCH_MGMT_DEVICE_ID = "vsmdeviceid";
     public static final String EXTERNAL_SWITCH_MGMT_DEVICE_NAME = "vsmdevicename";
     public static final String EXTERNAL_SWITCH_MGMT_DEVICE_STATE = "vsmdevicestate";
