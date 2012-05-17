@@ -46,5 +46,6 @@
 	<classpathentry exported="true" kind="lib" path="cloud-netscaler-sdx.jar"/>
 	<classpathentry exported="true" kind="lib" path="cloud-commons-configuration-1.8.jar"/>
 	<classpathentry exported="true" kind="lib" path="cloud-commons-lang-2.6.jar"/>
+	<classpathentry exported="true" kind="lib" path="netty-3.2.5.Final.jar" sourcepath="/home/kaka11/Programs/netty-3.2.5.Final/jar/netty-3.2.5.Final-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
