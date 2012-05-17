@@ -1133,12 +1133,8 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, Manager {
         	response = new Response(request, answers[0], _nodeId, -1); 
         }
         
-        try {
-        	link.send(ChannelBuffers.wrappedBuffer(response.toBytes()));
-        } catch (ClosedChannelException e) {
-        	s_logger.debug("Failed to send startupanswer: " + e.toString());
-        	return null;
-        }        
+        link.send(ChannelBuffers.wrappedBuffer(response.toBytes()));
+   
         if (attache == null) {
         	return null;
         }
@@ -1372,7 +1368,6 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, Manager {
                     } else {
                         s_logger.info("Connection from " + link.getIpAddress() + " closed but no cleanup was done.");
                         link.close();
-                        link.terminated();
                     }
                 }
             } finally {

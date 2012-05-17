@@ -436,7 +436,7 @@ public class VmmAgentShell implements IAgentShell, HandlerFactory {
 	 }
 
 	@Override
-	public Task create(com.cloud.utils.nio.Task.Type type, Link link,
+	public Task create(Task.Type type, Link link,
 			byte[] data) {
 		return new AgentBootStrapHandler(type, link, data);
 	} 
