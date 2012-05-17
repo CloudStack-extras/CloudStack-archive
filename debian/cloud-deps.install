@@ -28,3 +28,4 @@
 /usr/share/java/jetty-6.1.26.jar
 /usr/share/java/jetty-util-6.1.26.jar
 /usr/share/java/vmware*.jar
+/usr/share/java/netty-3.2.5.Final.jar
