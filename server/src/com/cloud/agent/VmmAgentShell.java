@@ -45,11 +45,10 @@ import com.cloud.utils.component.Adapters;
 import com.cloud.utils.component.ComponentLocator;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.MacAddress;
-import com.cloud.utils.nio.HandlerFactory;
-import com.cloud.utils.nio.Link;
-import com.cloud.utils.nio.NioServer;
-import com.cloud.utils.nio.Task;
-import com.cloud.utils.nio.Task.Type;
+import com.cloud.utils.netty.HandlerFactory;
+import com.cloud.utils.netty.Link;
+import com.cloud.utils.netty.NettyServer;
+import com.cloud.utils.netty.Task;
 
 /**
  * Implementation of agent shell to run the agents on System Center Virtual Machine manager
@@ -72,7 +71,7 @@ public class VmmAgentShell implements IAgentShell, HandlerFactory {
     private int _proxyPort;
     private int _workers;
     private String _guid;
-	static private NioServer _connection;
+	static private NettyServer _connection;
 	static private int _listenerPort=9000;    
     private int _nextAgentId = 1;
     private volatile boolean _exit = false;
@@ -421,7 +420,7 @@ public class VmmAgentShell implements IAgentShell, HandlerFactory {
             // FIXME get rid of this approach of agent listening for boot strap commands from the management server
 
 			// now listen for bootstrap request from the management server and launch agents 
-			_connection = new NioServer("VmmAgentShell", _listenerPort, 1, this);
+			_connection = new NettyServer("VmmAgentShell", _listenerPort, 1, this);
 			_connection.start();
 			s_logger.info("SCVMM agent is listening on port " +_listenerPort + " for bootstrap command from management server");
 			while(_connection.isRunning());

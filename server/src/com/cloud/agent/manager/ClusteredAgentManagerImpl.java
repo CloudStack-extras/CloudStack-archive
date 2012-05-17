@@ -39,6 +39,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
 import org.apache.log4j.Logger;
+import org.jboss.netty.buffer.ChannelBuffers;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -81,8 +82,11 @@ import com.cloud.utils.db.SearchCriteria2;
 import com.cloud.utils.db.SearchCriteriaService;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.nio.Link;
-import com.cloud.utils.nio.Task;
+import com.cloud.utils.netty.HandlerFactory;
+import com.cloud.utils.netty.Link;
+import com.cloud.utils.netty.NettyClient;
+import com.cloud.utils.netty.Task;
+import com.cloud.utils.netty.Task.Type;
 
 @Local(value = { AgentManager.class, ClusteredAgentRebalanceService.class })
 public class ClusteredAgentManagerImpl extends AgentManagerImpl implements ClusterManagerListener, ClusteredAgentRebalanceService {
@@ -99,8 +103,8 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
     @Inject
     protected ClusterManager _clusterMgr = null;
 
-    protected HashMap<String, SocketChannel> _peers;
-    protected HashMap<String, SSLEngine> _sslEngines;
+    protected HashMap<String, Link> _peers;
+    
     private final Timer _timer = new Timer("ClusteredAgentManager Timer");
 
     @Inject
@@ -113,6 +117,9 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
     
     @Inject
     protected AgentManager _agentMgr;
+    
+	private Object _peer_lock = new Object();
+	private Link _peer_link;
 
     protected ClusteredAgentManagerImpl() {
         super();
@@ -120,8 +127,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
 
     @Override
     public boolean configure(String name, Map<String, Object> xmlParams) throws ConfigurationException {
-        _peers = new HashMap<String, SocketChannel>(7);
-        _sslEngines = new HashMap<String, SSLEngine>(7);
+        _peers = new HashMap<String, Link>(7);
         _nodeId = _clusterMgr.getManagementNodeId();
         
         s_logger.info("Configuring ClusterAgentManagerImpl. management server node id(msid): " + _nodeId);
@@ -347,46 +353,31 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
                 + (Request.isRequest(bytes) ? "Req: " : "Resp: ") + msg);
     }
 
-    public boolean routeToPeer(String peer, byte[] bytes) {
-        int i = 0;
-        SocketChannel ch = null;
-        SSLEngine sslEngine = null;
-        while (i++ < 5) {
-            ch = connectToPeer(peer, ch);
-            if (ch == null) {
-                try {
-                    logD(bytes, "Unable to route to peer: " + Request.parse(bytes).toString());
-                } catch (Exception e) {
-                }
-                return false;
-            }
-            sslEngine = getSSLEngine(peer);
-            if (sslEngine == null) {
-                logD(bytes, "Unable to get SSLEngine of peer: " + peer);
-                return false;
-            }
-            try {
-                if (s_logger.isDebugEnabled()) {
-                    logD(bytes, "Routing to peer");
-                }
-                Link.write(ch, new ByteBuffer[] { ByteBuffer.wrap(bytes) }, sslEngine);
-                return true;
-            } catch (IOException e) {
-                try {
-                    logI(bytes, "Unable to route to peer: " + Request.parse(bytes).toString() + " due to " + e.getMessage());
-                } catch (Exception ex) {
-                }
-            }
-        }
-        return false;
-    }
+	public boolean routeToPeer(String peer, byte[] bytes) {
+		int i = 0;
+		Link link = null;
+		while (i++ < 5) {
+			link = connectToPeer(peer, link);
+			if (link == null) {
+				try {
+					logD(bytes,
+							"Unable to route to peer: "
+									+ Request.parse(bytes).toString());
+				} catch (Exception e) {
+				}
+				return false;
+			}
+			if (s_logger.isDebugEnabled()) {
+				logD(bytes, "Routing to peer");
+			}
+            link.send(ChannelBuffers.wrappedBuffer(bytes));
+			return true;
+		}
+		return false;
+	}
 
     public String findPeer(long hostId) {
         return _clusterMgr.getPeerName(hostId);
-    }
-    
-    public SSLEngine getSSLEngine(String peerName) {
-        return _sslEngines.get(peerName);
     }
 
     public void cancel(String peerName, long hostId, long sequence, String reason) {
@@ -398,82 +389,100 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
 
     public void closePeer(String peerName) {
         synchronized (_peers) {
-            SocketChannel ch = _peers.get(peerName);
-            if (ch != null) {
-                try {
-                    ch.close();
-                } catch (IOException e) {
-                    s_logger.warn("Unable to close peer socket connection to " + peerName);
-                }
-            }
-            _peers.remove(peerName);
-            _sslEngines.remove(peerName);
+			Link link = _peers.get(peerName);
+			if (link != null) {
+				link.close();
+			}
+			_peers.remove(peerName);
         }
     }
 
-    public SocketChannel connectToPeer(String peerName, SocketChannel prevCh) {
-        synchronized (_peers) {
-            SocketChannel ch = _peers.get(peerName);
-            SSLEngine sslEngine = null;
-            if (prevCh != null) {
-                try {
-                    prevCh.close();
-                } catch (Exception e) {
-                }
-            }
-            if (ch == null || ch == prevCh) {
-                ManagementServerHostVO ms = _clusterMgr.getPeer(peerName);
-                if (ms == null) {
-                    s_logger.info("Unable to find peer: " + peerName);
-                    return null;
-                }
-                String ip = ms.getServiceIP();
-                InetAddress addr;
-                try {
-                    addr = InetAddress.getByName(ip);
-                } catch (UnknownHostException e) {
-                    throw new CloudRuntimeException("Unable to resolve " + ip);
-                }
-                try {
-                    ch = SocketChannel.open(new InetSocketAddress(addr, _port));
-                    ch.configureBlocking(true); // make sure we are working at blocking mode
-                    ch.socket().setKeepAlive(true);
-                    ch.socket().setSoTimeout(60 * 1000);
-                    try {
-                        SSLContext sslContext = Link.initSSLContext(true);
-                        sslEngine = sslContext.createSSLEngine(ip, _port);
-                        sslEngine.setUseClientMode(true);
+    public Link connectToPeer(String peerName, Link prevLink) {
+    	synchronized (_peers) {
+			_peer_link = null;
+			Link link = _peers.get(peerName);
+			if (prevLink != null) {
+				prevLink.close();
+			}
+			if (link == null || link == prevLink) {
+				ManagementServerHostVO ms = _clusterMgr.getPeer(peerName);
+				if (ms == null) {
+					s_logger.info("Unable to find peer: " + peerName);
+					return null;
+				}
+				String ip = ms.getServiceIP();
+				InetAddress addr;
+				try {
+					addr = InetAddress.getByName(ip);
+				} catch (UnknownHostException e) {
+					throw new CloudRuntimeException("Unable to resolve " + ip);
+				}
+				// try {
+				// ch = SocketChannel.open(new InetSocketAddress(addr, _port));
+				// ch.configureBlocking(true); // make sure we are working at
+				// blocking mode
+				// ch.socket().setKeepAlive(true);
+				// ch.socket().setSoTimeout(60 * 1000);
+				// try {
+				// SSLContext sslContext =
+				// com.cloud.utils.nio.Link.initSSLContext(true);
+				// sslEngine = sslContext.createSSLEngine(ip, _port);
+				// sslEngine.setUseClientMode(true);
+				//
+				// com.cloud.utils.nio.Link.doHandshake(ch, sslEngine, true);
+				// s_logger.info("SSL: Handshake done");
+				// } catch (Exception e) {
+				// throw new IOException("SSL: Fail to init SSL! " + e);
+				// }
+				// if (s_logger.isDebugEnabled()) {
+				// s_logger.debug("Connection to peer opened: " + peerName +
+				// ", ip: " + ip);
+				// }
+				// _peers.put(peerName, ch);
+				// _sslEngines.put(peerName, sslEngine);
+				// } catch (IOException e) {
+				// s_logger.warn("Unable to connect to peer management server: "
+				// + peerName + ", ip: " + ip + " due to " + e.getMessage(), e);
+				// return null;
+				// }
+				NettyClient client = new NettyClient("Agent",
+						new InetSocketAddress(addr, _port), 1,
+						new HandlerFactory() {
+							@Override
+							public Task create(Type type, Link link, byte[] data) {
+								return new ClusteredPeerHandler(type, link,
+										data);
 
-                        Link.doHandshake(ch, sslEngine, true);
-                        s_logger.info("SSL: Handshake done");
-                    } catch (Exception e) {
-                        throw new IOException("SSL: Fail to init SSL! " + e);
-                    }
-                    if (s_logger.isDebugEnabled()) {
-                        s_logger.debug("Connection to peer opened: " + peerName + ", ip: " + ip);
-                    }
-                    _peers.put(peerName, ch);
-                    _sslEngines.put(peerName, sslEngine);
-                } catch (IOException e) {
-                    s_logger.warn("Unable to connect to peer management server: " + peerName + ", ip: " + ip + " due to " + e.getMessage(), e);
-                    return null;
-                }
-            }
+							}
+						});
+				client.start();
+				try {
+					synchronized(_peer_lock) {
+						while (_peer_link == null) {
+					    _peer_lock.wait();
+						}
+					}
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+				link = _peer_link;
+			}
+			
 
-            if (s_logger.isTraceEnabled()) {
-                s_logger.trace("Found open channel for peer: " + peerName);
-            }
-            return ch;
-        }
+			if (s_logger.isTraceEnabled()) {
+				s_logger.trace("Found open channel for peer: " + peerName);
+			}
+			return link;
+		}
     }
 
-    public SocketChannel connectToPeer(long hostId, SocketChannel prevCh) {
+    public Link connectToPeer(long hostId, Link prevLink) {
         String peerName = _clusterMgr.getPeerName(hostId);
         if (peerName == null) {
             return null;
         }
 
-        return connectToPeer(peerName, prevCh);
+        return connectToPeer(peerName, prevLink);
     }
 
     @Override
@@ -501,22 +510,19 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
 
     @Override
     public boolean stop() {
-        if (_peers != null) {
-            for (SocketChannel ch : _peers.values()) {
-                try {
-                    s_logger.info("Closing: " + ch.toString());
-                    ch.close();
-                } catch (IOException e) {
-                }
-            }
-        }
-        _timer.cancel();
-        
-        //cancel all transfer tasks
-        s_transferExecutor.shutdownNow();
-        cleanupTransferMap(_nodeId);
-        
-        return super.stop();
+		if (_peers != null) {
+			for (Link link : _peers.values()) {
+				s_logger.info("Closing: " + link.toString());
+				link.close();
+			}
+		}
+		_timer.cancel();
+
+		// cancel all transfer tasks
+		s_transferExecutor.shutdownNow();
+		cleanupTransferMap(_nodeId);
+
+		return super.stop();
     }
 
     @Override
@@ -632,6 +638,32 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
             }
         }
     }
+    
+    public class ClusteredPeerHandler extends Task {
+
+		public ClusteredPeerHandler(Task.Type type, Link link, byte[] data) {
+			super(type, link, data);
+		}
+
+		@Override
+		protected void doTask(final Task task) throws Exception {
+			if (task.getType() == Task.Type.CONNECT) {
+				String peerName = (String) task.getLink().attachment();
+				_peers.put(peerName, task.getLink());
+				synchronized(_peer_lock) {
+					_peer_link = task.getLink();
+					_peer_lock.notify();
+				}
+			} else if (task.getType() == Task.Type.DATA) {
+				s_logger.debug("Server: Received DISCONNECT task");
+			} else if (task.getType() == Task.Type.DISCONNECT) {
+				s_logger.debug("Server: Received DISCONNECT task");
+
+			} else if (task.getType() == Task.Type.OTHER) {
+				s_logger.debug("Server: Received OTHER task");
+			}
+		}
+	}
 
     @Override
     public void onManagementNodeJoined(List<ManagementServerHostVO> nodeList, long selfNodeId) {

@@ -14,7 +14,6 @@ package com.cloud.agent.manager;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.channels.ClosedChannelException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -33,7 +32,7 @@ import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
-
+import org.jboss.netty.buffer.ChannelBuffers;
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.Listener;
 import com.cloud.agent.StartupCommandProcessor;
@@ -111,10 +110,10 @@ import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.exception.HypervisorVersionChangedException;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.fsm.StateMachine2;
-import com.cloud.utils.nio.HandlerFactory;
-import com.cloud.utils.nio.Link;
-import com.cloud.utils.nio.NioServer;
-import com.cloud.utils.nio.Task;
+import com.cloud.utils.netty.HandlerFactory;
+import com.cloud.utils.netty.Link;
+import com.cloud.utils.netty.NettyServer;
+import com.cloud.utils.netty.Task;
 import com.cloud.vm.VirtualMachineManager;
 import com.cloud.vm.dao.VMInstanceDao;
 
@@ -147,7 +146,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, Manager {
     protected int _monitorId = 0;
     private Lock _agentStatusLock = new ReentrantLock();
 
-    protected NioServer _connection;
+    protected NettyServer _server;
     @Inject
     protected HostDao _hostDao = null;
     @Inject
@@ -271,7 +270,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, Manager {
 
         _executor = new ThreadPoolExecutor(threads, threads, 60l, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("AgentTaskPool"));
 
-        _connection = new NioServer("AgentManager", _port, workers + 10, this);
+        _server= new NettyServer("AgentManager", _port, workers + 10, this);
 
         s_logger.info("Listening on " + _port + " with " + workers + " workers");
         return true;
@@ -660,8 +659,8 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, Manager {
         if (_monitor != null) {
             _monitor.start();
         }
-        if (_connection != null) {
-            _connection.start();
+        if (_server != null) {
+            _server.start();
         }
 
         return true;
@@ -805,8 +804,8 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, Manager {
         if (_monitor != null) {
             _monitor.signalStop();
         }
-        if (_connection != null) {
-            _connection.stop();
+        if (_server != null) {
+            _server.stop();
         }
 
         s_logger.info("Disconnecting agents: " + _agents.size());
@@ -1135,7 +1134,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, Manager {
         }
         
         try {
-        	link.send(response.toBytes());
+        	link.send(ChannelBuffers.wrappedBuffer(response.toBytes()));
         } catch (ClosedChannelException e) {
         	s_logger.debug("Failed to send startupanswer: " + e.toString());
         	return null;
@@ -1332,11 +1331,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, Manager {
                     s_logger.trace("SeqA " + attache.getId() + "-" + response.getSequence() + ": Sending " + response);
                 }
             }
-            try {
-                link.send(response.toBytes());
-            } catch (final ClosedChannelException e) {
-                s_logger.warn("Unable to send response because connection is closed: " + response);
-            }
+            link.send(ChannelBuffers.wrappedBuffer(response.toBytes()));
         }
 
         protected void processResponse(final Link link, final Response response) {
