@@ -817,11 +817,26 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
     protected VDI mount(Connection conn, String vmName, VolumeTO volume) throws XmlRpcException, XenAPIException {
         if (volume.getType() == Volume.Type.ISO) {
+        	String isopath = volume.getPath();
+        	if (isopath == null) {
+        		return null;
+        	}
+        	if (isopath.startsWith("xs-tools")) {
+        		try {
+        			Set<VDI> vdis = VDI.getByNameLabel(conn, isopath);
+        			if (vdis.isEmpty()) {
+        				throw new CloudRuntimeException("Could not find ISO with URL: " + isopath);
+        			}
+        			return vdis.iterator().next();
 
-            String isopath = volume.getPath();
-            if (isopath == null) {
-                return null;
-            }
+        		} catch (XenAPIException e) {
+        			throw new CloudRuntimeException("Unable to get pv iso: " + isopath + " due to " + e.toString());
+        		} catch (Exception e) {
+        			throw new CloudRuntimeException("Unable to get pv iso: " + isopath + " due to " + e.toString());
+        		}
+        	}
+
+          
             int index = isopath.lastIndexOf("/");
 
             String mountpoint = isopath.substring(0, index);
@@ -1680,10 +1695,6 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             boolean removeVif = false;
             if (add && correctVif == null) {
                 addVif = true;
-            } else if (!add && firstIP) {
-                /* FIXME: This is incorrect. Because you can only tell if it's the first IP in this bundle of ip address which send to the router,
-                 * but don't know if it's the only IP left in the router - because we didn't send all the related vlan's IPs to the router now. */
-                removeVif = true;
             }
 
             if (addVif) {
@@ -1713,18 +1724,17 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             } else {
                 args += " -D ";
             }
-            String cidrSize = Long.toString(NetUtils.getCidrSize(vlanNetmask));
+
             if (sourceNat) {
                 args += " -s";
-            } 
+            }
             if (firstIP) {
                 args += " -f";
-                args += " -l ";
-                args += publicIpAddress + "/" + cidrSize;
-            } else {
-                args += " -l ";
-                args += publicIpAddress;
             }
+
+            String cidrSize = Long.toString(NetUtils.getCidrSize(vlanNetmask));
+            args += " -l ";
+            args += publicIpAddress + "/" + cidrSize;
 
             args += " -c ";
             args += "eth" + correctVif.getDevice(conn);

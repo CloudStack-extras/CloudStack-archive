@@ -33,11 +33,7 @@
       var allowedActions = args.context.actions;
       var disallowedActions = [];
       var item = args.context.item;
-      var status = item.state;
-
-      if (status == 'Released') {
-        return [];
-      }
+      var status = item.state;   
 
       if (status == 'Destroyed' ||
           status == 'Releasing' ||
@@ -46,9 +42,73 @@
           status == 'Allocating' ||
           item.account == 'system' ||
           item.issystem == true ) {
-        disallowedActions = allowedActions;
+        return [];
       }
-
+				
+			if(item.networkOfferingConserveMode == false) {			 
+				/*
+				(1) If IP is SourceNat, no StaticNat/VPN/PortForwarding/LoadBalancer can be enabled/added. 
+				*/
+	      if (item.issourcenat == true){
+					disallowedActions.push('enableStaticNAT');
+					disallowedActions.push('enableVPN');
+				}			
+				
+				/*
+				(2) If IP is non-SourceNat, show StaticNat/VPN/PortForwarding/LoadBalancer at first.
+				1. Once StaticNat is enabled, hide VPN/PortForwarding/LoadBalancer.
+				2. Once VPN is enabled, hide StaticNat/PortForwarding/LoadBalancer.
+				3. Once a PortForwarding rule is added, hide StaticNat/VPN/LoadBalancer.
+				4. Once a LoadBalancer rule is added, hide StaticNat/VPN/PortForwarding.
+				*/
+				else { //item.issourcenat == false				   
+					if (item.isstaticnat) { //1. Once StaticNat is enabled, hide VPN/PortForwarding/LoadBalancer.
+					  disallowedActions.push('enableVPN');
+					}
+					if (item.vpnenabled) { //2. Once VPN is enabled, hide StaticNat/PortForwarding/LoadBalancer.
+					  disallowedActions.push('enableStaticNAT');
+					}
+								 
+					//3. Once a PortForwarding rule is added, hide StaticNat/VPN/LoadBalancer.
+					$.ajax({
+						url: createURL('listLoadBalancerRules'),
+						data: {
+							publicipid: item.id,
+							listAll: true
+						},
+						dataType: 'json',
+						async: false,
+						success: function(json) {
+							var rules = json.listloadbalancerrulesresponse.loadbalancerrule;
+							if(rules != null && rules.length > 0) {
+							  disallowedActions.push('enableVPN');
+								disallowedActions.push('enableStaticNAT'); 
+							}
+						}
+					});						
+					
+					//4. Once a LoadBalancer rule is added, hide StaticNat/VPN/PortForwarding.
+					$.ajax({
+						url: createURL('listPortForwardingRules'),
+						data: {
+							ipaddressid: item.id,
+							listAll: true
+						},
+						dataType: 'json',
+						async: false,
+						success: function(json) {
+							// Get instance
+							var rules = json.listportforwardingrulesresponse.portforwardingrule;
+							if(rules != null && rules.length > 0) {
+							  disallowedActions.push('enableVPN');
+								disallowedActions.push('enableStaticNAT'); 
+							}
+						}
+					});	
+					 
+				}			  				
+			}			
+			
       if (item.isstaticnat) {
         disallowedActions.push('enableStaticNAT');
       } else {
@@ -1399,33 +1459,46 @@
                   $.ajax({
                     url: createURL('listPublicIpAddresses'),
                     data: {                      
-                      id: args.id
+                      id: args.context.ipAddresses[0].id
                     },
                     dataType: "json",
                     async: true,
                     success: function(json) {
-                      var item = items[0];
-                      // Get VPN data
-                      $.ajax({
-                        url: createURL('listRemoteAccessVpns'),
-                        data: {
-                          listAll: true,
-                          publicipid: item.id
-                        },
-                        dataType: 'json',
-                        async: true,
-                        success: function(vpnResponse) {
-                          var isVPNEnabled = vpnResponse.listremoteaccessvpnsresponse.count;
-                          if (isVPNEnabled) {
-                            item.vpnenabled = true;
-                            item.remoteaccessvpn = vpnResponse.listremoteaccessvpnsresponse.remoteaccessvpn[0];
-                          };
-                          args.response.success({
-                            actionFilter: actionFilters.ipAddress,
-                            data: item
-                          });
-                        }
-                      });
+                      var ipObj = items[0];	
+											$.ajax({
+												url: createURL('listNetworkOfferings'),
+												data: {
+													id: args.context.networks[0].networkofferingid
+												},
+												dataType: 'json',
+												async: true,
+												success: function(json) {		
+													var networkOfferingObj = json.listnetworkofferingsresponse.networkoffering[0];
+													ipObj.networkOfferingConserveMode= networkOfferingObj.conservemode; 
+																									
+													// Get VPN data
+													$.ajax({
+														url: createURL('listRemoteAccessVpns'),
+														data: {
+															listAll: true,
+															publicipid: ipObj.id
+														},
+														dataType: 'json',
+														async: true,
+														success: function(vpnResponse) {
+															var isVPNEnabled = vpnResponse.listremoteaccessvpnsresponse.count;
+															if (isVPNEnabled) {
+																ipObj.vpnenabled = true;
+																ipObj.remoteaccessvpn = vpnResponse.listremoteaccessvpnsresponse.remoteaccessvpn[0];
+															};
+															args.response.success({
+																actionFilter: actionFilters.ipAddress,
+																data: ipObj
+															});
+														}
+													});													
+												}
+											});					
                     },
                     error: function(data) {
                       args.response.error(parseXMLHttpResponse(data));
@@ -1433,7 +1506,8 @@
                   });
                 }
               },
-              ipRules: {
+
+              ipRules: { //Configuration tab
                 title: 'label.configuration',
                 custom: cloudStack.ipRules({
                   preFilter: function(args) {
@@ -1462,6 +1536,35 @@
                         });
                       }
                     });
+																				
+										if(args.context.ipAddresses[0].networkOfferingConserveMode == false) {			 
+											/*
+											(1) If IP is SourceNat, no StaticNat/VPN/PortForwarding/LoadBalancer can be enabled/added. 
+											*/
+											if (args.context.ipAddresses[0].issourcenat){
+											  disallowedActions.push("portForwarding");			
+											  disallowedActions.push("loadBalancing");											  									
+											}
+											
+											/*
+											(2) If IP is non-SourceNat, show StaticNat/VPN/PortForwarding/LoadBalancer at first.
+											1. Once StaticNat is enabled, hide VPN/PortForwarding/LoadBalancer.
+											2. Once VPN is enabled, hide StaticNat/PortForwarding/LoadBalancer.
+											3. Once a PortForwarding rule is added, hide StaticNat/VPN/LoadBalancer.
+											4. Once a LoadBalancer rule is added, hide StaticNat/VPN/PortForwarding.
+											*/
+											else { //args.context.ipAddresses[0].issourcenat == false				   
+												if (args.context.ipAddresses[0].isstaticnat) { //1. Once StaticNat is enabled, hide VPN/PortForwarding/LoadBalancer.
+												  disallowedActions.push("portForwarding");
+													disallowedActions.push("loadBalancing");
+												}
+												if (args.context.ipAddresses[0].vpnenabled) { //2. Once VPN is enabled, hide StaticNat/PortForwarding/LoadBalancer.
+													disallowedActions.push("portForwarding");
+													disallowedActions.push("loadBalancing"); 
+												}
+											}						
+										}
+																				
                     if(networkOfferingHavingFirewallService == false)
                       disallowedActions.push("firewall");
                     if(networkOfferingHavingPortForwardingService == false)
@@ -2038,15 +2141,13 @@
                         }
                       }
                     },
-                    dataProvider: function(args) {
-                      var apiCmd = "listLoadBalancerRules&listAll=true";
-                      //if(args.context.networks[0].type == "Shared")
-                      //	apiCmd += "&domainid=" + g_domainid + "&account=" + g_account;
-                      //else //args.context.networks[0].type == "Isolated"
-                        apiCmd += "&publicipid=" + args.context.ipAddresses[0].id;
-
+                    dataProvider: function(args) {   
                       $.ajax({
-                        url: createURL(apiCmd),
+                        url: createURL('listLoadBalancerRules'),
+												data: {
+												  publicipid: args.context.ipAddresses[0].id,
+													listAll: true
+												},
                         dataType: 'json',
                         async: true,
                         success: function(data) {

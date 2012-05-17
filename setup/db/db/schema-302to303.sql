@@ -59,7 +59,7 @@ CREATE TABLE  `cloud`.`volume_host_ref` (
   INDEX `i_volume_host_ref__volume_id`(`volume_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-INSERT IGNORE INTO `cloud`.`disk_offering` (name, display_text, customized, unique_name, disk_size, system_use) VALUES ( 'Custom', 'Custom Disk', 1, 'Cloud.com-Custom', 0, 0);
+INSERT IGNORE INTO `cloud`.`disk_offering` (name, display_text, customized, unique_name, disk_size, system_use, type) VALUES ( 'Custom', 'Custom Disk', 1, 'Cloud.com-Custom', 0, 0, 'Disk');
 INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Storage', 'DEFAULT', 'management-server', 'storage.max.volume.upload.size', 500, 'The maximum size for a uploaded volume(in GB).');
 # Changes for OVS tunnel manager
 
@@ -108,6 +108,7 @@ UPDATE `cloud`.`configuration` set category='Advanced ' where name='use.local.st
 UPDATE `cloud`.`configuration` set category='Hidden ' where name='router.ram.size';
 UPDATE `cloud`.`configuration` set category='Hidden ' where name='secondary.storage.vm';
 UPDATE `cloud`.`configuration` set category='Hidden ' where name='security.hash.key';
+UPDATE `cloud`.`configuration` set description = 'Percentage (as a value between 0 and 1) of local storage utilization above which alerts will be sent about low local storage available.' where name = 'cluster.localStorage.capacity.notificationthreshold';
 
 DELETE FROM `cloud`.`configuration` WHERE name='direct.agent.pool.size';
 DELETE FROM `cloud`.`configuration` WHERE name='xen.max.product.version';

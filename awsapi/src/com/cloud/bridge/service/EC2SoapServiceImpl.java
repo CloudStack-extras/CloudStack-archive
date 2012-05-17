@@ -155,8 +155,10 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
     	   IpRangeSetType ranges = ipPerm.getIpRanges();
     	   if (ranges != null && ranges.getItem() != null) {
     		   IpRangeItemType[] rangeItems = ranges.getItem();
-    		   for (IpRangeItemType ipRange: rangeItems) 
-    			  perm.addIpRange( ipRange.getCidrIp() );
+                for (IpRangeItemType ipRange: rangeItems) {
+                    perm.addIpRange( ipRange.getCidrIp() );
+                    perm.setCIDR(ipRange.getCidrIp());
+                }
     	   }  
    
     	   request.addIpPermission( perm );
@@ -1562,20 +1564,6 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
             param7.setArchitecture( "" );
             param7.setRootDeviceType( "" );
             param7.setRootDeviceName( "" );
-            
-            InstanceBlockDeviceMappingResponseType param14 = new InstanceBlockDeviceMappingResponseType();
-            InstanceBlockDeviceMappingResponseItemType param15 = new InstanceBlockDeviceMappingResponseItemType();
-            InstanceBlockDeviceMappingResponseItemTypeChoice_type0 param16 = new InstanceBlockDeviceMappingResponseItemTypeChoice_type0();
-            param15.setDeviceName( "" );           
-            EbsInstanceBlockDeviceMappingResponseType param17 = new EbsInstanceBlockDeviceMappingResponseType();
-            param17.setVolumeId( "" );
-            param17.setStatus( "" );
-            param17.setAttachTime( cal );
-            param17.setDeleteOnTermination( true );
-            param16.setEbs( param17 );
-            param15.setInstanceBlockDeviceMappingResponseItemTypeChoice_type0( param16 );
-            param14.addItem( param15 );
-            param7.setBlockDeviceMapping( param14 );
             
             param7.setInstanceLifecycle( "" );
             param7.setSpotInstanceRequestId( "" );

@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 
@@ -72,6 +74,7 @@ import com.cloud.bridge.service.core.s3.S3DeleteObjectRequest;
 import com.cloud.bridge.service.core.s3.S3Engine;
 import com.cloud.bridge.service.core.s3.S3GetBucketAccessControlPolicyRequest;
 import com.cloud.bridge.service.core.s3.S3Grant;
+import com.cloud.bridge.service.core.s3.S3ListAllMyBucketsEntry;
 import com.cloud.bridge.service.core.s3.S3ListAllMyBucketsRequest;
 import com.cloud.bridge.service.core.s3.S3ListAllMyBucketsResponse;
 import com.cloud.bridge.service.core.s3.S3ListBucketObjectEntry;
@@ -90,6 +93,7 @@ import com.cloud.bridge.service.exception.InternalErrorException;
 import com.cloud.bridge.service.exception.InvalidBucketName;
 import com.cloud.bridge.service.exception.InvalidRequestContentException;
 import com.cloud.bridge.service.exception.NetworkIOException;
+import com.cloud.bridge.service.exception.NoSuchObjectException;
 import com.cloud.bridge.service.exception.ObjectAlreadyExistsException;
 import com.cloud.bridge.service.exception.OutOfServiceException;
 import com.cloud.bridge.service.exception.PermissionDeniedException;
@@ -151,7 +155,7 @@ public class S3BucketAction implements ServletAction {
 			 }
 			 executePutBucket(request, response);
 		} 
-		else if(method.equalsIgnoreCase("GET")) 
+		else if(method.equalsIgnoreCase("GET") || method.equalsIgnoreCase("HEAD")) 
 		{
 			 if (queryString != null && queryString.length() > 0) 
 			 {
@@ -527,10 +531,27 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
 	         // The content-type literally should be "application/xml; charset=UTF-8" 
 	         // but any compliant JVM supplies utf-8 by default
 		
-		MTOMAwareResultStreamWriter resultWriter = new MTOMAwareResultStreamWriter ("ListAllMyBucketsResult", outputStream );
-		resultWriter.startWrite();
-		resultWriter.writeout(allBuckets);
-		resultWriter.stopWrite();
+//		MTOMAwareResultStreamWriter resultWriter = new MTOMAwareResultStreamWriter ("ListAllMyBucketsResult", outputStream );
+//		resultWriter.startWrite();
+//		resultWriter.writeout(allBuckets);
+//		resultWriter.stopWrite();
+	    StringBuffer xml = new StringBuffer();
+        xml.append( "<?xml version=\"1.0\" encoding=\"utf-8\"?>" );
+        xml.append("<ListAllMyBucketsResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">");
+        xml.append("<Owner><ID>");
+        xml.append(engineResponse.getOwner().getID()).append("</ID>");
+        xml.append("<DisplayName>").append(engineResponse.getOwner().getDisplayName()).append("</DisplayName>");
+        xml.append("</Owner>").append("<Buckets>");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        for (S3ListAllMyBucketsEntry entry :engineResponse.getBuckets()) {
+            xml.append("<Bucket>").append("<Name>").append(entry.getName()).append("</Name>");
+            xml.append("<CreationDate>").append(sdf.format(entry.getCreationDate().getTime())).append("</CreationDate>");
+            xml.append("</Bucket>");
+        }
+        xml.append("</Buckets>").append("</ListAllMyBucketsResult>");
+        response.setStatus(200);
+        response.setContentType("text/xml; charset=UTF-8");
+        S3RestServlet.endResponse(response, xml.toString());
 		
 	}
 
@@ -545,6 +566,7 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
 		
 		int maxKeys = Converter.toInt(request.getParameter("max-keys"), 1000);
 		engineRequest.setMaxKeys(maxKeys);
+		try {
 		S3ListBucketResponse engineResponse = ServiceProvider.getInstance().getS3Engine().listBucketContents( engineRequest, false );
 		
 		// To allow the all list buckets result to be serialized via Axiom classes
@@ -560,6 +582,21 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
 		resultWriter.startWrite();
 		resultWriter.writeout(oneBucket);
 		resultWriter.stopWrite();
+		} catch (NoSuchObjectException nsoe) {
+		    response.setStatus(404);
+		    response.setContentType("application/xml");   
+
+		    StringBuffer xmlError = new StringBuffer();
+		    xmlError.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+		    .append("<Error><Code>NoSuchBucket</Code><Message>The specified bucket does not exist</Message>")
+		    .append("<BucketName>").append((String)request.getAttribute(S3Constants.BUCKET_ATTR_KEY))
+		    .append("</BucketName>")
+		    .append("<RequestId>1DEADBEEF9</RequestId>") //TODO
+		    .append("<HostId>abCdeFgHiJ1k2LmN3op4q56r7st89</HostId>") //TODO
+		    .append("</Error>");
+	        S3RestServlet.endResponse(response, xmlError.toString());
+
+		}
 
 	}
 	
@@ -727,7 +764,16 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
 	}
 	
 	public void executeGetBucketLocation(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		response.setStatus(405);
+              // TODO - This is a fakery! We don't actually store location in backend
+                  StringBuffer xml = new StringBuffer();
+                      xml.append( "<?xml version=\"1.0\" encoding=\"utf-8\"?>" );
+                      xml.append( "<LocationConstraint xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">" );
+                      // This is the real fakery
+                     xml.append( "us-west-2" );
+                      xml.append( "</LocationConstraint>" );
+                  response.setStatus(200);
+                    response.setContentType("text/xml; charset=UTF-8");
+                    S3RestServlet.endResponse(response, xml.toString());
 	}
 
 	public void executeGetBucketWebsite(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -749,6 +795,7 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
 			try {
 				is = request.getInputStream();
 				String xml = StringHelper.stringFromStream(is);
+                                Class.forName("com.cloud.bridge.service.core.s3.S3CreateBucketConfiguration");
 				XSerializer serializer = new XSerializer(new XSerializerXmlAdapter()); 
 				objectInContent = serializer.serializeFrom(xml);
 				if(objectInContent != null && !(objectInContent instanceof S3CreateBucketConfiguration)) {
@@ -760,7 +807,11 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
 				logger.error("Unable to read request data due to " + e.getMessage(), e);
 				throw new NetworkIOException(e);
 				
-			} finally {
+			}  catch (ClassNotFoundException e) {
+                           logger.error("In a normal world this should never never happen:" + e.getMessage(), e);
+                           throw new RuntimeException("A required class was not found in the classpath:" + e.getMessage());
+                        }
+                        finally {
 				if(is != null) is.close();
 			}
 		}
@@ -768,12 +819,18 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
 		S3CreateBucketRequest engineRequest = new S3CreateBucketRequest();
 		engineRequest.setBucketName((String)request.getAttribute(S3Constants.BUCKET_ATTR_KEY));
 		engineRequest.setConfig((S3CreateBucketConfiguration)objectInContent);
-		
+		try {
 		S3CreateBucketResponse engineResponse = ServiceProvider.getInstance().getS3Engine().handleRequest(engineRequest);
 		response.addHeader("Location", "/" + engineResponse.getBucketName());
 		response.setContentLength(0);
 		response.setStatus(200);
 		response.flushBuffer();
+		} catch (ObjectAlreadyExistsException oaee) {
+		    response.setStatus(409);
+		    String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <Error><Code>OperationAborted</Code><Message>A conflicting conditional operation is currently in progress against this resource. Please try again..</Message>";
+		    response.setContentType("text/xml; charset=UTF-8");
+	        S3RestServlet.endResponse(response, xml.toString());
+		}
 	}
 	
 	public void executePutBucketAcl(HttpServletRequest request, HttpServletResponse response) throws IOException 

@@ -115,10 +115,10 @@ public class S3RestServlet extends HttpServlet {
     		if(value != null) {
     		    isS3APIEnabled = Boolean.valueOf(value);
     		}
-    		
-		}finally {
-		    PersistContext.commitTransaction(true);
+    		PersistContext.commitTransaction(true);
             PersistContext.closeSession(true);
+		}catch(Exception e){
+		    throw new ServletException("Error initializing awsapi: " + e.getMessage());
         }
 		
 	}
@@ -185,18 +185,21 @@ public class S3RestServlet extends HttpServlet {
 			
         } 
         catch( InvalidBucketName e) {
+            PersistContext.rollbackTransaction();
     		logger.error("Unexpected exception " + e.getMessage(), e);
     		response.setStatus(400);
         	endResponse(response, "Invalid Bucket Name - " + e.toString());    	
         } 
         catch(PermissionDeniedException e) {
+            PersistContext.rollbackTransaction();
     		logger.error("Unexpected exception " + e.getMessage(), e);
     		response.setStatus(403);
         	endResponse(response, "Access denied - " + e.toString());
         } 
         catch(Throwable e) {
+            PersistContext.rollbackTransaction();
     		logger.error("Unexpected exception " + e.getMessage(), e);
-    		response.setStatus(400);
+    		response.setStatus(404);
         	endResponse(response, "Bad request");
         	
         } finally {

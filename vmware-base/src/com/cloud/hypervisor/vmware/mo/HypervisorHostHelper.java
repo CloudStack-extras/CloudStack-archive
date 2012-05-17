@@ -125,7 +125,7 @@ public class HypervisorHostHelper {
 		if(vsmCredentials == null || vsmCredentials.size() != 3) {
 			msg = "Failed to retrieve required credentials of Nexus VSM from database.";
 			s_logger.error(msg);
-            throw new Exception(msg);
+			throw new Exception(msg);
 		}
 		
 		String vsmIp = vsmCredentials.containsKey("vsmip") ? vsmCredentials.get("vsmip") : null;
@@ -183,10 +183,14 @@ public class HypervisorHostHelper {
         } catch (CloudRuntimeException e) {
             msg = "Failed to add vEthernet port profile " + networkName + ". Exception: " + e.toString();
 			s_logger.error(msg);
+<<<<<<< HEAD
 			if(vlanId == null) {
                 s_logger.warn("Ignoring exception : " + e.toString());
                 // throw new CloudRuntimeException(msg);
 			}
+=======
+			throw new CloudRuntimeException(msg);
+>>>>>>> 3.0.x
 		}
 	}
 	
@@ -223,6 +227,7 @@ public class HypervisorHostHelper {
 			throw new CloudRuntimeException(msg);
 		}
 	}	
+<<<<<<< HEAD
 	
 	/**
 	 * @param ethPortProfileName
@@ -337,6 +342,122 @@ public class HypervisorHostHelper {
 		return new Pair<ManagedObjectReference, String>(morNetwork, networkName);
 	}
 	
+=======
+	
+	/**
+	 * @param ethPortProfileName
+	 * @param namePrefix
+	 * @param hostMo
+	 * @param vlanId
+	 * @param networkRateMbps
+	 * @param networkRateMulticastMbps
+	 * @param timeOutMs
+	 * @return
+	 * @throws Exception
+	 */
+	public static Pair<ManagedObjectReference, String> prepareNetwork(String ethPortProfileName, String namePrefix,
+            HostMO hostMo, String vlanId, Integer networkRateMbps, Integer networkRateMulticastMbps, 
+            long timeOutMs) throws Exception {
+		ManagedObjectReference morNetwork = null;
+		VmwareContext context = hostMo.getContext();
+		ManagedObjectReference dcMor = hostMo.getHyperHostDatacenter();
+		DatacenterMO dataCenterMo = new DatacenterMO(context, dcMor);
+
+		ManagedObjectReference morEthernetPortProfile = dataCenterMo.getDvPortGroupMor(ethPortProfileName);
+
+        if (morEthernetPortProfile == null) {
+            String msg = "Unable to find Ethernet port profile " + ethPortProfileName;
+            s_logger.error(msg);
+            throw new Exception(msg);
+        }
+        else {
+            s_logger.info("Found Ethernet port profile  " + ethPortProfileName);
+        }
+
+        boolean createGCTag = false;
+        String networkName;
+        Integer vid = null;
+        
+        if(vlanId != null && !UNTAGGED_VLAN_NAME.equalsIgnoreCase(vlanId)) {
+            createGCTag = true;
+            vid = Integer.parseInt(vlanId);
+        }
+		
+		networkName = composeCloudNetworkName(namePrefix, vlanId, networkRateMbps, ethPortProfileName);
+
+        // TODO(sateesh): Enable this for VMware DVS.
+		/*DVSTrafficShapingPolicy shapingPolicy = null;		
+		if(networkRateMbps != null && networkRateMbps.intValue() > 0) {
+			shapingPolicy = new DVSTrafficShapingPolicy();
+			BoolPolicy isEnabled = new BoolPolicy();			
+			LongPolicy averageBandwidth = new LongPolicy();
+			LongPolicy peakBandwidth = new LongPolicy();
+			LongPolicy burstSize = new LongPolicy(); 
+			
+			isEnabled.setValue(true);
+			averageBandwidth.setValue((long)networkRateMbps.intValue()*1024L*1024L);
+			// We chose 50% higher allocation than average bandwidth.
+			// TODO(sateesh): Also let user specify the peak coefficient
+			peakBandwidth.setValue((long)(averageBandwidth.getValue()*1.5));
+			// TODO(sateesh): Also let user specify the burst coefficient
+			burstSize.setValue((long)(5*averageBandwidth.getValue()/8));
+			
+			shapingPolicy.setEnabled(isEnabled);
+			shapingPolicy.setAverageBandwidth(averageBandwidth);
+			shapingPolicy.setPeakBandwidth(peakBandwidth);
+			shapingPolicy.setBurstSize(burstSize);
+		}
+		DVPortgroupConfigInfo spec = dataCenterMo.getDvPortGroupSpec(networkName);*/
+        long averageBandwidth = 0L;
+        if (networkRateMbps != null && networkRateMbps.intValue() > 0) {
+            averageBandwidth = (long) (networkRateMbps.intValue() * 1024L * 1024L);
+        }
+		//We chose 50% higher allocation than average bandwidth.
+		//TODO(sateesh): Also let user specify the peak coefficient
+        long peakBandwidth = (long) (averageBandwidth * 1.5);
+		//TODO(sateesh): Also let user specify the burst coefficient
+		long burstSize = 5 * averageBandwidth / 8;
+		
+		boolean bWaitPortGroupReady = false;
+        if (!dataCenterMo.hasDvPortGroup(networkName)) {
+            s_logger.info("Port profile " + networkName + " not found.");
+            createPortProfile(context, ethPortProfileName, networkName, vid, networkRateMbps);
+            bWaitPortGroupReady = true;
+        } else {
+            s_logger.info("Port profile " + networkName + " found.");
+            updatePortProfile(context, ethPortProfileName, vid, networkRateMbps);
+            bWaitPortGroupReady = true;
+            // TODO(sateesh): Enable port profile policy configuration
+            // PortProfile portProfile;
+            // try {
+            // portProfile = getPortProfileByName(networkName);
+            // if (portProfile.vlanId != vlanId ||
+            //        portProfile.policy.getAverageBandwidth() != averageBandwidth ||
+            //        portProfile.policy.getPeakBandwidth() != peakBandwidth ||
+            // portProfile.policy.getBurstRate() != burstRate) {
+            // updatePortProfile(context, ethPortProfileName, vlanId, averageBandwidth, peakBandwidth, burstSize);
+            // }
+        }
+		//Wait for dvPortGroup on vCenter		
+        if(bWaitPortGroupReady) 
+            morNetwork = waitForDvPortGroupReady(dataCenterMo, networkName, timeOutMs);
+        else
+            morNetwork = dataCenterMo.getDvPortGroupMor(networkName);
+        if (morNetwork == null) {
+            String msg = "Failed to create guest network " + networkName;
+            s_logger.error(msg);
+            throw new Exception(msg);
+        }
+        
+        if(createGCTag) {
+            NetworkMO networkMo = new NetworkMO(hostMo.getContext(), morNetwork);
+            networkMo.setCustomFieldValue(CustomFieldConstants.CLOUD_GC, "true");
+        }
+				
+		return new Pair<ManagedObjectReference, String>(morNetwork, networkName);
+	}
+	
+>>>>>>> 3.0.x
     private static ManagedObjectReference waitForDvPortGroupReady(
 			DatacenterMO dataCenterMo, String dvPortGroupName, long timeOutMs) throws Exception {
 		ManagedObjectReference morDvPortGroup = null;
