@@ -70,6 +70,7 @@
         <include name="cloud-cglib.jar" />
         <include name="jetty-6.1.26.jar" />
         <include name="jetty-util-6.1.26.jar"/>
+        <include name="netty-3.2.5.Final.jar" />
       </zipfileset>
       <zipfileset dir="${jar.dir}">
         <include name="${agent.jar}" />
