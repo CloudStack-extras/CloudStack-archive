@@ -26,6 +26,10 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +38,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.apache.axis2.AxisFault;
+import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.hibernate.SessionException;
@@ -233,7 +238,12 @@ public class ServiceProvider {
 		PersistContext.flush();
 
 		String localStorageRoot = properties.getProperty("storage.root");
-		if (localStorageRoot != null) setupLocalStorage(localStorageRoot);
+		if (localStorageRoot != null) {
+		    if (localStorageRoot.startsWith("hdfs"))
+		            setupHdfsStorage(localStorageRoot); 
+		    else
+		        setupLocalStorage(localStorageRoot);
+		}
 
 		multipartDir = properties.getProperty("storage.multipartDir");
 
@@ -243,7 +253,29 @@ public class ServiceProvider {
 			logger.info("ServiceProvider initialized");
 	}
 
-	private void loadStartupProperties() {
+	private void setupHdfsStorage(String storageRoot) {
+	    URI uri;
+        try {
+            uri = new URI(storageRoot);
+        } catch (URISyntaxException e) {
+           throw new ConfigurationException("Invalid hdfs URI: " + storageRoot + " should be hdfs://host/path");
+        }
+	    SHostDao shostDao = new SHostDao();
+        SHost shost = shostDao.getLocalStorageHost(mhost.getId(), storageRoot);
+        if(shost == null) {
+            shost = new SHost();
+            shost.setMhost(mhost);
+            mhost.getLocalSHosts().add(shost);
+            shost.setHostType(SHost.STORAGE_HOST_TYPE_HDFS);
+            shost.setHost(uri.getHost());
+            //shost.setExportRoot(url.getPath());
+            shost.setExportRoot(storageRoot);
+            PersistContext.getSession().save(shost);
+        }
+        
+    }
+
+    private void loadStartupProperties() {
 		File propertiesFile = ConfigurationHelper.findConfigurationFile("cloud-bridge.properties");
 		properties = new Properties(); 
 		if(propertiesFile != null) {

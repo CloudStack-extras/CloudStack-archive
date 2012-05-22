@@ -27,6 +27,8 @@ public class SHost implements Serializable {
 	
 	public static final int STORAGE_HOST_TYPE_LOCAL = 0;
 	public static final int STORAGE_HOST_TYPE_NFS = 1;
+	public static final int STORAGE_HOST_TYPE_HDFS = 2;
+
 
 	private Long id;
 	

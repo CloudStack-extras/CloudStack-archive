@@ -61,5 +61,11 @@
 	<classpathentry exported="true" kind="lib" path="awsapi-lib/neethi-2.0.4.jar"/>
 	<classpathentry exported="true" kind="lib" path="awsapi-lib/rampart-lib/wss4j-1.5.8.jar"/>
 	<classpathentry exported="true" kind="lib" path="awsapi-lib/json_simple-1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="awsapi-lib/hadoop-hdfs-0.23.1.jar" sourcepath="/Users/chiradeep/source/hadoop-hdfs-0.23.1-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/chiradeep/source/hadoop-hdfs-0.23.1-sources.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="awsapi-lib/hadoop-common-0.23.1.jar" sourcepath="/Users/chiradeep/source/hadoop-common-0.23.1-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

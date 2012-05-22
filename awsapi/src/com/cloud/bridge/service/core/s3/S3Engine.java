@@ -18,6 +18,8 @@ package com.cloud.bridge.service.core.s3;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -39,6 +41,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.json.simple.parser.ParseException;
 
+import com.cloud.bridge.io.HdfsBucketAdapter;
 import com.cloud.bridge.io.S3FileSystemBucketAdapter;
 import com.cloud.bridge.model.MHost;
 import com.cloud.bridge.model.MHostMount;
@@ -94,6 +97,14 @@ public class S3Engine {
     
     public S3Engine() {
     	bucketAdapters.put(SHost.STORAGE_HOST_TYPE_LOCAL, new S3FileSystemBucketAdapter());
+    	HdfsBucketAdapter hdfsAdapter = new HdfsBucketAdapter();
+    	try {
+    	    hdfsAdapter.initialize();
+            bucketAdapters.put(SHost.STORAGE_HOST_TYPE_HDFS, hdfsAdapter);
+    	}catch (IOException e ){
+    	    return;
+    	}
+
     }
     
     
@@ -1375,7 +1386,16 @@ public class S3Engine {
 		if(shost.getHostType() == SHost.STORAGE_HOST_TYPE_LOCAL) {
 			return new OrderedPair<SHost, String>(shost, shost.getExportRoot());
 		}
-		
+
+		if(shost.getHostType() == SHost.STORAGE_HOST_TYPE_HDFS ) {
+		    try {
+		        URI uri = new URI(shost.getExportRoot());
+		        return new OrderedPair<SHost, String>(shost, uri.getPath());
+		    } catch (URISyntaxException use) {
+		        throw new InternalErrorException("Could not determine storage path for HDFS");
+		    }
+		}
+
 		MHostMount mount = mountDao.getHostMount(ServiceProvider.getInstance().getManagementHostId(), shost.getId());
 		if(mount != null) {
 			return new OrderedPair<SHost, String>(shost, mount.getMountPath());
