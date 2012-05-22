@@ -133,11 +133,26 @@
                     dataType: "json",
                     async: false,
                     success: function(json) {
-                      templates = $.grep(json.listtemplatesresponse.template, function(iso) {
-                        return iso.bootable;
-                      });
+                      isos = json.listisosresponse.iso ?
+                        $.grep(json.listisosresponse.iso, function(iso) {
+                          return iso.bootable;
+                        }) : [];
                     }
                   });
+
+                  featuredTemplateObjs = $.grep(templates, function(tmpl) {
+                    return tmpl.isfeatured;
+                  });
+                  communityTemplateObjs = templates;
+                  myTemplateObjs = $.grep(templates, function(tmpl) {
+                    return tmpl.account == cloudStack.context.users[0].account &&
+                      tmpl.domainid == cloudStack.context.users[0].domainid;
+                  });
+                  featuredIsoObjs = $.grep(isos, function(iso) {
+                    return iso.isfeatured;
+                  });;
+                  communityIsoObjs = isos;
+                  myIsoObjs = isos;
 
                   args.response.success({
                     hypervisor: {
@@ -146,19 +161,12 @@
                     },
                     data: {
                       templates: {
-                        featuredtemplates: $.grep(templates, function(tmpl) {
-                          return tmpl.isfeatured;
-                        }),
+                        featuredtemplates: featuredTemplateObjs,
                         communitytemplates: templates,
-                        mytemplates: $.grep(templates, function(tmpl) {
-                          return tmpl.account == cloudStack.context.users[0].account &&
-                            tmpl.domainid == cloudStack.context.users[0].domainid;
-                        }),
-                        featuredisos: $.grep(isos, function(iso) {
-                          return iso.isfeatured;
-                        }),
-                        communityisos: isos,
-                        myisos: isos
+                        mytemplates: myTemplateObjs,
+                        featuredisos: featuredIsoObjs,
+                        communityisos: communityIsoObjs,
+                        myisos: myIsoObjs
                       },
                       hypervisors: hypervisorObjs
                     }
