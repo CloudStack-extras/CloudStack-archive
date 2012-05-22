@@ -85,6 +85,8 @@
 
                 // Step 2: Select template
                 function(args) {
+                  var templates, isos;
+                  
                   $(zoneObjs).each(function(){
                     if(this.id == args.currentData.zoneid) {
                       selectedZoneObj = this;
@@ -105,57 +107,38 @@
                     }
                   });
 
+                  // Get templates
                   $.ajax({
-                    url: createURL("listTemplates&templatefilter=featured&zoneid="+args.currentData.zoneid),
+                    url: createURL('listTemplates'),
+                    data: {
+                      templatefilter: 'all',
+                      zoneid: args.currentData.zoneid
+                    },
                     dataType: "json",
                     async: false,
                     success: function(json) {
-                      featuredTemplateObjs = json.listtemplatesresponse.template;
-                    }
-                  });
-                  $.ajax({
-                    url: createURL("listTemplates&templatefilter=community&zoneid="+args.currentData.zoneid),
-                    dataType: "json",
-                    async: false,
-                    success: function(json) {
-                      communityTemplateObjs = json.listtemplatesresponse.template;
-                    }
-                  });
-                  $.ajax({
-                    url: createURL("listTemplates&templatefilter=selfexecutable&zoneid="+args.currentData.zoneid),
-                    dataType: "json",
-                    async: false,
-                    success: function(json) {
-                      myTemplateObjs = json.listtemplatesresponse.template;
+                      templates = $.grep(json.listtemplatesresponse.template, function(tmpl) {
+                        return tmpl.templatetype != 'SYSTEM';
+                      });
                     }
                   });
 
-									
-									$.ajax({
-                    url: createURL("listIsos&isofilter=featured&zoneid=" + args.currentData.zoneid + "&bootable=true"),
+                  // Get ISOs
+                  $.ajax({
+                    url: createURL('listIsos'),
+                    data: {
+                      isofilter: 'all',
+                      zoneid: args.currentData.zoneid
+                    },
                     dataType: "json",
                     async: false,
                     success: function(json) {
-                      featuredIsoObjs = json.listisosresponse.iso;
+                      templates = $.grep(json.listtemplatesresponse.template, function(iso) {
+                        return iso.bootable;
+                      });
                     }
                   });
-                  $.ajax({
-                    url: createURL("listIsos&isofilter=community&zoneid=" + args.currentData.zoneid + "&bootable=true"),
-                    dataType: "json",
-                    async: false,
-                    success: function(json) {
-                      communityIsoObjs = json.listisosresponse.iso;
-                    }
-                  });
-                  $.ajax({
-                    url: createURL("listIsos&isofilter=selfexecutable&zoneid=" + args.currentData.zoneid + "&bootable=true"),
-                    dataType: "json",
-                    async: false,
-                    success: function(json) {
-                      myIsoObjs = json.listisosresponse.iso;
-                    }
-                  });		
-																		
+
                   args.response.success({
                     hypervisor: {
                       idField: 'name',
@@ -163,13 +146,19 @@
                     },
                     data: {
                       templates: {
-                        featuredtemplates: featuredTemplateObjs,
-                        communitytemplates: communityTemplateObjs,
-                        mytemplates: myTemplateObjs,
-                        
-												featuredisos: featuredIsoObjs,
-                        communityisos: communityIsoObjs,
-                        myisos: myIsoObjs 										
+                        featuredtemplates: $.grep(templates, function(tmpl) {
+                          return tmpl.isfeatured;
+                        }),
+                        communitytemplates: templates,
+                        mytemplates: $.grep(templates, function(tmpl) {
+                          return tmpl.account == cloudStack.context.users[0].account &&
+                            tmpl.domainid == cloudStack.context.users[0].domainid;
+                        }),
+                        featuredisos: $.grep(isos, function(iso) {
+                          return iso.isfeatured;
+                        }),
+                        communityisos: isos,
+                        myisos: isos
                       },
                       hypervisors: hypervisorObjs
                     }
