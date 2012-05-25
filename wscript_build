@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-"""builds the entire stack"""
 #For every matching build change here, that produces new installable
 #files, the cloud.spec file and the Debian control files must be
 #revised and tested.
