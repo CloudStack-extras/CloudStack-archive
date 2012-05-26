@@ -203,14 +203,14 @@ then
 fi
 
 
-$(dirname $0)/createtmplt.sh -s 2 -d 'DomR Template' -n $localfilert -t $destdirrt/ -f $tmpfilert -u  &> /dev/null
+$(dirname $0)/createtmplt.sh -d 'DomR Template' -n $localfilert -t $destdirrt/ -f $tmpfilert -u  &> /dev/null
 
 if [ $? -ne 0 ]
 then
   echo "Failed to install routing template $rttmplt to $destdirrt"
 fi
 
-$(dirname $0)/createtmplt.sh -s 2 -d 'CentOS 5.5(x86_64) no GUI' -n $localfilevm -t $destdirvm/ -f $tmpfilevm -u  &> /dev/null
+$(dirname $0)/createtmplt.sh -d 'CentOS 5.5(x86_64) no GUI' -n $localfilevm -t $destdirvm/ -f $tmpfilevm -u  &> /dev/null
 
 if [ $? -ne 0 ]
 then
