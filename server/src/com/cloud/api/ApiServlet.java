@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
 import com.cloud.cluster.StackMaid;
 import com.cloud.exception.CloudAuthenticationException;
 import com.cloud.server.ManagementServer;
+import com.cloud.server.ManagementService;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.UserContext;
@@ -48,6 +49,8 @@ public class ApiServlet extends HttpServlet {
 
     private ApiServer _apiServer = null;
     private AccountService _accountMgr = null;
+    public static ManagementService _mgr;
+    public static ComponentLocator s_locator;
 
     public ApiServlet() {
         super();
@@ -410,10 +413,14 @@ public class ApiServlet extends HttpServlet {
 
     private String getLogoutSuccessResponse(String responseType) {
         StringBuffer sb = new StringBuffer();
+        _mgr = (ManagementService) ComponentLocator.getComponent(ManagementService.Name);
         if (BaseCmd.RESPONSE_TYPE_JSON.equalsIgnoreCase(responseType)) {
             sb.append("{ \"logoutresponse\" : { \"description\" : \"success\" } }");
         } else {
-            sb.append("<logoutresponse><description>success</description></logoutresponse>");
+		sb.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>");
+		sb.append("<logoutresponse cloud-stack-version=\"" + _mgr.getVersion() + "\">");
+		sb.append("<description>success</description>");
+		sb.append("</logoutresponse>");
         }
         return sb.toString();
     }
