@@ -190,28 +190,7 @@
         listView: {
           actions: {
             add: {
-              label: 'label.add.guest.network',
-
-              preFilter: function(args) {
-                var basicZoneExists = false;
-                $.ajax({
-                  url: createURL("listZones"),
-                  dataType: "json",
-                  async: false,
-                  success: function(json) {
-                    if(json.listzonesresponse.zone != null && json.listzonesresponse.zone.length > 0) {
-                      zoneObjs = json.listzonesresponse.zone;
-                      $(zoneObjs).each(function() {
-                        if(this.networktype == "Basic") {
-                          basicZoneExists = true;
-                          return false; //break each loop
-                        }
-                      });
-                    }
-                  }
-                })
-                return !basicZoneExists; //hide Add guest network button if any basic zone exists
-              },
+              label: 'label.add.guest.network',             
 
               createForm: {
                 title: 'label.add.guest.network',
