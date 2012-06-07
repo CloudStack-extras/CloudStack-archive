@@ -359,7 +359,7 @@
           })
         },
 
-        detailView: function(args) {
+        detailView: function(args) {				  
           return cloudStack.sections.system.naas.networkProviders.types[
             args.context.networkProviders[0].id
           ];
@@ -3215,7 +3215,513 @@
               name: { label: 'label.name' }//,
               //state: { label: 'label.status' } //comment it for now, since dataProvider below doesn't get called by widget code after action is done
             }
-          }
+          },
+					
+					//????
+					// BaremetalDHCP provider detailView
+          BaremetalDHCP: {
+            type: 'detailView',
+            id: 'BaremetalDHCPProvider',
+            label: 'label.BaremetalDHCP',
+            //viewAll: { label: 'label.devices', path: '_zone.BaremetalDHCPDevices' },
+            tabs: {
+              details: {
+                title: 'label.details',
+                fields: [
+                  {
+                    name: { label: 'label.name' }
+                  },
+                  {
+									  state: { label: 'label.state' }
+                  }
+                ],
+                dataProvider: function(args) {            
+								  refreshNspData("BaremetalDHCP");
+									var providerObj;
+									$(nspHardcodingArray).each(function(){
+										if(this.id == "BaremetalDHCP") {
+											providerObj = this;
+											return false; //break each loop
+										}
+									});
+                  args.response.success({
+                    data: providerObj,
+                    actionFilter: networkProviderActionFilter('BaremetalDHCP')
+                  });
+                }
+              }
+            },
+						/*
+            actions: {
+              add: {
+                label: 'label.add.BaremetalDHCP.device',
+                createForm: {
+                  title: 'label.add.BaremetalDHCP.device',
+                  fields: {
+                    ip: {
+                      label: 'label.ip.address'
+                    },
+                    username: {
+                      label: 'label.username'
+                    },
+                    password: {
+                      label: 'label.password',
+                      isPassword: true
+                    },
+                    networkdevicetype: {
+                      label: 'label.type',
+                      select: function(args) {
+                        var items = [];
+                        items.push({id: "JuniperSRXFirewall", description: "Juniper SRX Firewall"});
+                        args.response.success({data: items});
+                      }
+                    },
+                    publicinterface: {
+                      label: 'label.public.interface'
+                    },
+                    privateinterface: {
+                      label: 'label.private.interface'
+                    },
+                    usageinterface: {
+                      label: 'Usage interface'
+                    },
+                    numretries: {
+                      label: 'label.numretries',
+                      defaultValue: '2'
+                    },
+                    timeout: {
+                      label: 'label.timeout',
+                      defaultValue: '300'
+                    },
+                    // inline: {
+                    //   label: 'Mode',
+                    //   select: function(args) {
+                    //     var items = [];
+                    //     items.push({id: "false", description: "side by side"});
+                    //     items.push({id: "true", description: "inline"});
+                    //     args.response.success({data: items});
+                    //   }
+                    // },
+                    publicnetwork: {
+                      label: 'label.public.network',
+                      defaultValue: 'untrusted'
+                    },
+                    privatenetwork: {
+                      label: 'label.private.network',
+                      defaultValue: 'trusted'
+                    },
+                    capacity: {
+                      label: 'label.capacity',
+                      validation: { required: false, number: true }
+                    },
+                    dedicated: {
+                      label: 'label.dedicated',
+                      isBoolean: true,
+                      isChecked: false
+                    }
+                  }
+                },
+                action: function(args) {
+                  if(nspMap["BaremetalDHCP"] == null) {
+                    $.ajax({
+                      url: createURL("addNetworkServiceProvider&name=BaremetalDHCP&physicalnetworkid=" + selectedPhysicalNetworkObj.id),
+                      dataType: "json",
+                      async: true,
+                      success: function(json) {
+                        var jobId = json.addnetworkserviceproviderresponse.jobid;
+                        var timerKey = "addNetworkServiceProviderJob_"+jobId;
+                        $("body").everyTime(2000, timerKey, function() {
+                          $.ajax({
+                            url: createURL("queryAsyncJobResult&jobId="+jobId),
+                            dataType: "json",
+                            success: function(json) {
+                              var result = json.queryasyncjobresultresponse;
+                              if (result.jobstatus == 0) {
+                                return; //Job has not completed
+                              }
+                              else {
+                                $("body").stopTime(timerKey);
+                                if (result.jobstatus == 1) {
+                                  nspMap["BaremetalDHCP"] = json.queryasyncjobresultresponse.jobresult.networkserviceprovider;
+                                  addExternalFirewall(args, selectedPhysicalNetworkObj, "addSrxFirewall", "addsrxfirewallresponse", "srxfirewall");
+                                }
+                                else if (result.jobstatus == 2) {
+                                  alert("addNetworkServiceProvider&name=JuniperSRX failed. Error: " + _s(result.jobresult.errortext));
+                                }
+                              }
+                            },
+                            error: function(XMLHttpResponse) {
+                              var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+                              alert("addNetworkServiceProvider&name=JuniperSRX failed. Error: " + errorMsg);
+                            }
+                          });
+                        });
+                      }
+                    });
+                  }
+                  else {
+                    addExternalFirewall(args, selectedPhysicalNetworkObj, "addSrxFirewall", "addsrxfirewallresponse", "srxfirewall");
+                  }
+                },
+                messages: {
+                  notification: function(args) {
+                    return 'label.add.BaremetalDHCP.device';
+                  }
+                },
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              },
+              enable: {
+                label: 'label.enable.provider',
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("updateNetworkServiceProvider&id=" + nspMap["BaremetalDHCP"].id + "&state=Enabled"),
+                    dataType: "json",
+                    success: function(json) {
+                      var jid = json.updatenetworkserviceproviderresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+                            jobId: jid,
+														getUpdatedItem: function(json) {
+															$(window).trigger('cloudStack.fullRefresh');
+														}
+                          }
+                        }
+                      );
+                    }
+                  });
+                },
+                messages: {
+								  confirm: function(args) {
+									  return 'message.confirm.enable.provider';
+									},
+                  notification: function() {
+									  return 'label.enable.provider';
+									}
+                },
+                notification: { poll: pollAsyncJobResult }
+              },
+              disable: {
+                label: 'label.disable.provider',
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("updateNetworkServiceProvider&id=" + nspMap["BaremetalDHCP"].id + "&state=Disabled"),
+                    dataType: "json",
+                    success: function(json) {
+                      var jid = json.updatenetworkserviceproviderresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+                            jobId: jid,
+														getUpdatedItem: function(json) {
+															$(window).trigger('cloudStack.fullRefresh');
+														}
+                          }
+                        }
+                      );
+                    }
+                  });
+                },
+                messages: {
+								  confirm: function(args) {
+									  return 'message.confirm.disable.provider';
+									},
+                  notification: function() {
+									  return 'label.disable.provider';
+									}
+                },
+                notification: { poll: pollAsyncJobResult }
+              },
+              destroy: {
+                label: 'label.shutdown.provider',
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("deleteNetworkServiceProvider&id=" + nspMap["BaremetalDHCP"].id),
+                    dataType: "json",
+                    success: function(json) {
+                      var jid = json.deletenetworkserviceproviderresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+                            jobId: jid
+                          }
+                        }
+                      );
+
+                      $(window).trigger('cloudStack.fullRefresh');
+                    }
+                  });
+                },
+                messages: {
+								  confirm: function(args) {
+									  return 'message.confirm.shutdown.provider';
+									},
+                  notification: function(args) {
+									  return 'label.shutdown.provider';
+									}
+                },
+                notification: { poll: pollAsyncJobResult }
+              }
+            }
+						*/
+          },
+					//????
+					
+					
+					//?????
+					// BaremetalPxePing provider detailView
+          BaremetalPxePing: {
+            type: 'detailView',
+            id: 'BaremetalPxePingProvider',
+            label: 'label.BaremetalPxePing',
+            //viewAll: { label: 'label.devices', path: '_zone.BaremetalPxePingDevices' },
+            tabs: {
+              details: {
+                title: 'label.details',
+                fields: [
+                  {
+                    name: { label: 'label.name' }
+                  },
+                  {
+									  state: { label: 'label.state' }
+                  }
+                ],
+                dataProvider: function(args) {            
+								  refreshNspData("BaremetalPxePing");
+									var providerObj;
+									$(nspHardcodingArray).each(function(){
+										if(this.id == "BaremetalPxePing") {
+											providerObj = this;
+											return false; //break each loop
+										}
+									});
+                  args.response.success({
+                    data: providerObj,
+                    actionFilter: networkProviderActionFilter('BaremetalPxePing')
+                  });
+                }
+              }
+            },
+						/*
+            actions: {
+              add: {
+                label: 'label.add.BaremetalPxePing.device',
+                createForm: {
+                  title: 'label.add.BaremetalPxePing.device',
+                  fields: {
+                    ip: {
+                      label: 'label.ip.address'
+                    },
+                    username: {
+                      label: 'label.username'
+                    },
+                    password: {
+                      label: 'label.password',
+                      isPassword: true
+                    },
+                    networkdevicetype: {
+                      label: 'label.type',
+                      select: function(args) {
+                        var items = [];
+                        items.push({id: "JuniperSRXFirewall", description: "Juniper SRX Firewall"});
+                        args.response.success({data: items});
+                      }
+                    },
+                    publicinterface: {
+                      label: 'label.public.interface'
+                    },
+                    privateinterface: {
+                      label: 'label.private.interface'
+                    },
+                    usageinterface: {
+                      label: 'Usage interface'
+                    },
+                    numretries: {
+                      label: 'label.numretries',
+                      defaultValue: '2'
+                    },
+                    timeout: {
+                      label: 'label.timeout',
+                      defaultValue: '300'
+                    },
+                    // inline: {
+                    //   label: 'Mode',
+                    //   select: function(args) {
+                    //     var items = [];
+                    //     items.push({id: "false", description: "side by side"});
+                    //     items.push({id: "true", description: "inline"});
+                    //     args.response.success({data: items});
+                    //   }
+                    // },
+                    publicnetwork: {
+                      label: 'label.public.network',
+                      defaultValue: 'untrusted'
+                    },
+                    privatenetwork: {
+                      label: 'label.private.network',
+                      defaultValue: 'trusted'
+                    },
+                    capacity: {
+                      label: 'label.capacity',
+                      validation: { required: false, number: true }
+                    },
+                    dedicated: {
+                      label: 'label.dedicated',
+                      isBoolean: true,
+                      isChecked: false
+                    }
+                  }
+                },
+                action: function(args) {
+                  if(nspMap["BaremetalPxePing"] == null) {
+                    $.ajax({
+                      url: createURL("addNetworkServiceProvider&name=BaremetalPxePing&physicalnetworkid=" + selectedPhysicalNetworkObj.id),
+                      dataType: "json",
+                      async: true,
+                      success: function(json) {
+                        var jobId = json.addnetworkserviceproviderresponse.jobid;
+                        var timerKey = "addNetworkServiceProviderJob_"+jobId;
+                        $("body").everyTime(2000, timerKey, function() {
+                          $.ajax({
+                            url: createURL("queryAsyncJobResult&jobId="+jobId),
+                            dataType: "json",
+                            success: function(json) {
+                              var result = json.queryasyncjobresultresponse;
+                              if (result.jobstatus == 0) {
+                                return; //Job has not completed
+                              }
+                              else {
+                                $("body").stopTime(timerKey);
+                                if (result.jobstatus == 1) {
+                                  nspMap["BaremetalPxePing"] = json.queryasyncjobresultresponse.jobresult.networkserviceprovider;
+                                  addExternalFirewall(args, selectedPhysicalNetworkObj, "addSrxFirewall", "addsrxfirewallresponse", "srxfirewall");
+                                }
+                                else if (result.jobstatus == 2) {
+                                  alert("addNetworkServiceProvider&name=JuniperSRX failed. Error: " + _s(result.jobresult.errortext));
+                                }
+                              }
+                            },
+                            error: function(XMLHttpResponse) {
+                              var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
+                              alert("addNetworkServiceProvider&name=JuniperSRX failed. Error: " + errorMsg);
+                            }
+                          });
+                        });
+                      }
+                    });
+                  }
+                  else {
+                    addExternalFirewall(args, selectedPhysicalNetworkObj, "addSrxFirewall", "addsrxfirewallresponse", "srxfirewall");
+                  }
+                },
+                messages: {
+                  notification: function(args) {
+                    return 'label.add.BaremetalPxePing.device';
+                  }
+                },
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              },
+              enable: {
+                label: 'label.enable.provider',
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("updateNetworkServiceProvider&id=" + nspMap["BaremetalPxePing"].id + "&state=Enabled"),
+                    dataType: "json",
+                    success: function(json) {
+                      var jid = json.updatenetworkserviceproviderresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+                            jobId: jid,
+														getUpdatedItem: function(json) {
+															$(window).trigger('cloudStack.fullRefresh');
+														}
+                          }
+                        }
+                      );
+                    }
+                  });
+                },
+                messages: {
+								  confirm: function(args) {
+									  return 'message.confirm.enable.provider';
+									},
+                  notification: function() {
+									  return 'label.enable.provider';
+									}
+                },
+                notification: { poll: pollAsyncJobResult }
+              },
+              disable: {
+                label: 'label.disable.provider',
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("updateNetworkServiceProvider&id=" + nspMap["BaremetalPxePing"].id + "&state=Disabled"),
+                    dataType: "json",
+                    success: function(json) {
+                      var jid = json.updatenetworkserviceproviderresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+                            jobId: jid,
+														getUpdatedItem: function(json) {
+															$(window).trigger('cloudStack.fullRefresh');
+														}
+                          }
+                        }
+                      );
+                    }
+                  });
+                },
+                messages: {
+								  confirm: function(args) {
+									  return 'message.confirm.disable.provider';
+									},
+                  notification: function() {
+									  return 'label.disable.provider';
+									}
+                },
+                notification: { poll: pollAsyncJobResult }
+              },
+              destroy: {
+                label: 'label.shutdown.provider',
+                action: function(args) {
+                  $.ajax({
+                    url: createURL("deleteNetworkServiceProvider&id=" + nspMap["BaremetalPxePing"].id),
+                    dataType: "json",
+                    success: function(json) {
+                      var jid = json.deletenetworkserviceproviderresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+                            jobId: jid
+                          }
+                        }
+                      );
+
+                      $(window).trigger('cloudStack.fullRefresh');
+                    }
+                  });
+                },
+                messages: {
+								  confirm: function(args) {
+									  return 'message.confirm.shutdown.provider';
+									},
+                  notification: function(args) {
+									  return 'label.shutdown.provider';
+									}
+                },
+                notification: { poll: pollAsyncJobResult }
+              }
+            }
+						*/
+          },
+					//?????	
+					
         }
       }
     },
@@ -9164,6 +9670,15 @@
 							case "SecurityGroupProvider":
 								nspMap["securityGroups"] = items[i];
 								break;
+								
+							//???	
+							case "BaremetalDHCP":
+								nspMap["BaremetalDHCP"] = items[i];
+								break;
+              case "BaremetalPxePing":
+								nspMap["BaremetalPxePing"] = items[i];
+								break;	
+              //???								
 						}
 					}
 				}
@@ -9182,7 +9697,7 @@
 				state: nspMap.virtualRouter ? nspMap.virtualRouter.state : 'Disabled'
 			}
 		];
-
+		
 		if(selectedZoneObj.networktype == "Basic") {
 			nspHardcodingArray.push(
 				{
@@ -9208,6 +9723,59 @@
 				}
 			);
 		}
+		
+		//???		
+		var includingBareMetal = false;
+		$.ajax({
+		  url: createURL("listPods&zoneid="+selectedZoneObj.id),
+			dataType: "json",
+			async: false,
+			success: function(json) {			  
+				var pods = json.listpodsresponse.pod;
+				if(pods != null && pods.length > 0) {
+				  for(var i = 0; i < pods.length; i++) {
+					  var pod = pods[i];
+						$.ajax({
+						  url: createURL("listClusters&podid=" + pod.id),
+							dataType: "json",
+							async: false,
+							success: function(json) {
+							  var clusters = json.listclustersresponse.cluster;								
+								if(clusters != null && clusters.length > 0) {
+								  for(var k = 0; k < clusters.length; k++) {
+									  var cluster = clusters[k];
+										if(cluster.hypervisortype == "BareMetal") {
+										  includingBareMetal = true;
+											break;
+										}
+									}
+								}
+							}						
+						})		
+            if(includingBareMetal == true)
+              break;						
+					}
+				}
+			}
+		});	
+		if(includingBareMetal == true) {
+		  nspHardcodingArray.push(
+				{
+					id: 'BaremetalDHCP',
+					name: 'Baremetal DHCP',
+					state: nspMap.BaremetalDHCP ? nspMap.BaremetalDHCP.state : 'Disabled'
+				}
+			);
+			nspHardcodingArray.push(
+				{
+					id: 'BaremetalPxePing',
+					name: 'Baremetal Pxe Ping',
+					state: nspMap.BaremetalPxePing ? nspMap.BaremetalPxePing.state : 'Disabled'
+				}
+			);
+		}
+		//???
+		
 	}
 	
 	
