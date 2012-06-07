@@ -11,6 +11,8 @@ import com.cloud.api.PlugService;
 import com.cloud.api.ServerApiException;
 import com.cloud.api.BaseCmd.CommandType;
 import com.cloud.baremetal.database.BaremetalPxeVO;
+import com.cloud.baremetal.networkservice.BaremetalPxeManager;
+import com.cloud.baremetal.networkservice.BaremetalPxePingResponse;
 import com.cloud.event.EventTypes;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
@@ -62,6 +64,10 @@ public class AddBaremetalPxeCmd extends BaseAsyncCmd {
             ResourceAllocationException, NetworkRuleConflictException {
         try {
             BaremetalPxeVO vo = pxeMgr.addPxeServer(this);
+            BaremetalPxePingResponse response = (BaremetalPxePingResponse)pxeMgr.getApiResponse(vo);
+            response.setObjectName(s_name);
+            response.setResponseName(getCommandName());
+            this.setResponseObject(response);
         } catch (Exception e) {
             s_logger.warn("Unable to add external pxe server with url: " + getUrl(), e);
             throw new ServerApiException(BaseCmd.INTERNAL_ERROR, e.getMessage()); 

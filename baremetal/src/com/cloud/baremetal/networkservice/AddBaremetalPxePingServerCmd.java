@@ -3,6 +3,7 @@ package com.cloud.baremetal.networkservice;
 import com.cloud.api.ApiConstants;
 import com.cloud.api.Parameter;
 import com.cloud.api.BaseCmd.CommandType;
+import com.cloud.baremetal.networkservice.AddBaremetalPxeCmd;
 
 public class AddBaremetalPxePingServerCmd extends AddBaremetalPxeCmd {
 
