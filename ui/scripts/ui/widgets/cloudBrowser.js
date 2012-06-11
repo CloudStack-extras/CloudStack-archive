@@ -394,8 +394,10 @@
         var  $hiddenPanels = data.panel.siblings().filter(function(){
         return $(this).index() > data.panel.index();
           });
-        $hiddenPanels.addClass('mouseover-hidden').hide();
-
+        $hiddenPanels.addClass('mouseover-hidden');
+        setTimeout(function() {
+              $('.mouseover-hidden').hide("slow");
+           } ,2000);
       }
     }
   ));
