@@ -73,6 +73,7 @@ public class ListBaremetalDhcpCmd extends BaseListCmd {
             List<BaremetalDhcpResponse> dhcpResponses = _dhcpMgr.listBaremetalDhcps(this);
             response.setResponses(dhcpResponses);
             response.setResponseName(getCommandName());
+            response.setObjectName(s_name);
             this.setResponseObject(response);
     	} catch (Exception e) {
     		s_logger.debug("Exception happend while executing ListBaremetalDhcpCmd");

@@ -64,6 +64,7 @@ public class ListBaremetalPxePingServersCmd extends BaseListCmd {
             List<BaremetalPxeResponse> pxeResponses = _pxeMgr.listPxeServers(this);
             response.setResponses(pxeResponses);
             response.setResponseName(getCommandName());
+            response.setObjectName(s_name);
             this.setResponseObject(response);
         } catch (Exception e) {
             s_logger.debug("Exception happend while executing ListPingPxeServersCmd" ,e);
