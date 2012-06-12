@@ -3217,7 +3217,7 @@
             }
           },
 					
-					//????
+					//?????
 					// BaremetalDHCP provider detailView
           BaremetalDHCP: {
             type: 'detailView',
@@ -3467,8 +3467,7 @@
             }
 						*/
           },
-					//????
-					
+					//?????
 					
 					//?????
 					// BaremetalPxePing provider detailView
@@ -3476,7 +3475,7 @@
             type: 'detailView',
             id: 'BaremetalPxePingProvider',
             label: 'label.BaremetalPxePing',
-            //viewAll: { label: 'label.devices', path: '_zone.BaremetalPxePingDevices' },
+            viewAll: { label: 'label.devices', path: '_zone.BaremetalPxePingDevices' },
             tabs: {
               details: {
                 title: 'label.details',
@@ -6278,7 +6277,8 @@
                 fields: [
                   {
 									  id: { label: 'label.id' },
-									  provider: { label: 'label.provider' },
+										podname: { label: 'label.pod' },
+										url: { label: 'label.url' },									  
 										dhcpservertype: { label: 'label.dhcpservertype' }                    								
                   }
                 ],
@@ -6289,6 +6289,166 @@
 										async: true,
 										success: function(json) {										  
 											var item = json.listexternaldhcpresponse.externaldhcp[0];
+											args.response.success({data: item});
+										}
+									});											
+                }
+              }
+            }
+          }
+        }
+      },
+			
+			//BaremetalPxePing devices listView
+      BaremetalPxePingDevices: {
+        id: 'BaremetalPxePingDevices',
+        title: 'label.devices',
+        listView: {
+          id: 'BaremetalPxePingDevices',
+          fields: {					  
+						podname: { label: 'label.pod' },
+						pingstorageserverip: { label: 'label.ping.storage.server.ip' },
+						pingdir: { label: 'label.ping.dir' },
+						tftpdir: { label: 'label.tftp.dir' }
+          },
+          actions: {
+            add: {
+              label: 'label.add.BaremetalPxePing.device',
+              createForm: {
+                title: 'label.add.BaremetalPxePing.device',
+                fields: {
+								  podid: {
+										label: 'label.pod',
+										select: function(args) {
+											$.ajax({
+												url: createURL("listPods&zoneid=" + selectedZoneObj.id),
+												dataType: "json",
+												success: function(json) {
+													var items = [];
+													var pods = json.listpodsresponse.pod;
+													$(pods).each(function(){
+														items.push({name: this.id, description: this.name}); 
+													});
+													args.response.success({	data: items });
+												}
+											});
+										}
+									},
+								  pxeservertype: {
+                    label: 'label.pxe.server.type',
+                    select: function(args) {
+                      var items = [];
+                      items.push({id: "PING", description: "PING"});
+                      args.response.success({data: items});
+                    }
+                  },
+								  url: {
+                    label: 'label.url'
+                  },								
+                  username: {
+                    label: 'label.username'
+                  },
+                  password: {
+                    label: 'label.password',
+                    isPassword: true
+                  },
+                  pingstorageserverip: {
+                    label: 'label.ping.storage.server.ip'
+                  },	
+                  pingdir: {
+                    label: 'label.ping.dir'
+                  },		
+                  tftpdir: {
+                    label: 'label.tftp.dir'
+                  }		
+                }
+              },
+              action: function(args) {
+                if(nspMap["BaremetalPxePing"] == null) {
+                  $.ajax({
+                    url: createURL("addNetworkServiceProvider&name=BaremetalPxePing&physicalnetworkid=" + selectedPhysicalNetworkObj.id),
+                    dataType: "json",
+                    async: true,
+                    success: function(json) {
+                      var jobId = json.addnetworkserviceproviderresponse.jobid;
+                      var timerKey = "addNetworkServiceProviderJob_"+jobId;
+                      $("body").everyTime(2000, timerKey, function() {
+                        $.ajax({
+                          url: createURL("queryAsyncJobResult&jobId="+jobId),
+                          dataType: "json",
+                          success: function(json) {
+                            var result = json.queryasyncjobresultresponse;
+                            if (result.jobstatus == 0) {
+                              return; //Job has not completed
+                            }
+                            else {
+                              $("body").stopTime(timerKey);
+                              if (result.jobstatus == 1) {
+                                nspMap["BaremetalPxePing"] = json.queryasyncjobresultresponse.jobresult.networkserviceprovider;
+																
+																addBaremetalPxePingDevice(args, selectedPhysicalNetworkObj);
+                                //addExternalFirewall(args, selectedPhysicalNetworkObj, "addSrxFirewall", "addsrxfirewallresponse", "srxfirewall");
+                              }
+                              else if (result.jobstatus == 2) {
+                                alert("addNetworkServiceProvider&name=BaremetalPxePing failed. Error: " + _s(result.jobresult.errortext));
+                              }
+                            }
+                          }
+                        });
+                      });
+                    }
+                  });
+                }
+                else {
+								  addBaremetalPxePingDevice(args, selectedPhysicalNetworkObj);
+                  //addExternalFirewall(args, selectedPhysicalNetworkObj, "addSrxFirewall", "addsrxfirewallresponse", "srxfirewall");
+                }
+              },
+              messages: {
+                notification: function(args) {
+                  return 'label.add.BaremetalPxePing.device';
+                }
+              },
+              notification: {
+                poll: pollAsyncJobResult
+              }
+            }
+          },
+          dataProvider: function(args) {
+            $.ajax({
+              url: createURL("listBaremetalPxePingServer&physicalnetworkid=" + selectedPhysicalNetworkObj.id),
+              data: { page: args.page, pageSize: pageSize },
+              dataType: "json",
+              async: false,
+              success: function(json) {
+                var items = json.listpingpxeserverresponse.baremetalpxeping;
+                args.response.success({data: items});
+              }
+            });
+          },
+          detailView: {
+            name: 'BaremetalPxePing details',           
+            tabs: {
+              details: {
+                title: 'label.details',
+                fields: [
+                  {
+									  id: { label: 'label.id' },
+										podname: { label: 'label.pod' },
+										url: { label: 'label.url' },
+										pxeservertype: { label: 'pxe.server.type' },
+									  pingstorageserverip: { label: 'label.ping.storage.server.ip' },
+										pingdir: { label: 'label.ping.dir' },
+										tftpdir: { label: 'label.tftp.dir' }
+                  }
+                ],
+                dataProvider: function(args) {	
+									$.ajax({
+										url: createURL("listBaremetalPxePingServer&id=" + args.context.BaremetalPxePingDevices[0].id),										
+										dataType: "json",
+										async: true,
+										success: function(json) {										  
+											var item = json.listpingpxeserverresponse.baremetalpxeping[0];
 											args.response.success({data: item});
 										}
 									});											
@@ -9228,11 +9388,12 @@
 	function addBaremetalDHCPDevice(args, physicalNetworkObj){
     var array1 = [];
     array1.push("&physicalnetworkid=" + physicalNetworkObj.id);
-		array1.push("&podid=" + todb(podid));
-    array1.push("&dhcpservertype=" + todb(dhcpservertype));
+		array1.push("&podid=" + todb(podid));    
 		array1.push("&url=" + todb(url));
     array1.push("&username=" + todb(args.data.username));
     array1.push("&password=" + todb(args.data.password));
+		
+		array1.push("&dhcpservertype=" + todb(dhcpservertype));
         
     $.ajax({
       url: createURL("addBaremetalDhcp" + array1.join("")),
@@ -9244,6 +9405,38 @@
            {jobId: jid,
             getUpdatedItem: function(json) {
               var item = json.queryasyncjobresultresponse.jobresult.baremetaldhcp;
+              return item;
+            }
+           }
+          }
+        );
+      }
+    });
+  }
+	
+	function addBaremetalPxePingDevice(args, physicalNetworkObj){
+    var array1 = [];
+    array1.push("&physicalnetworkid=" + physicalNetworkObj.id);
+		array1.push("&podid=" + todb(podid));   
+		array1.push("&url=" + todb(url));
+    array1.push("&username=" + todb(args.data.username));
+    array1.push("&password=" + todb(args.data.password));
+		
+		array1.push("&pxeservertype=" + todb(pxeservertype));
+		array1.push("&pingstorageserverip=" + todb(pingstorageserverip));
+		array1.push("&pingdir=" + todb(pingdir));
+		array1.push("&tftpdir=" + todb(tftpdir));
+        
+    $.ajax({
+      url: createURL("addBaremetalPxePingServer" + array1.join("")),
+      dataType: "json",
+      success: function(json) {
+        var jid = json.addexternalpxeresponse.jobid;
+        args.response.success(
+          {_custom:
+           {jobId: jid,
+            getUpdatedItem: function(json) {
+              var item = json.queryasyncjobresultresponse.jobresult.baremetalpxe;
               return item;
             }
            }
