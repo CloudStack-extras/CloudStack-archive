@@ -100,7 +100,7 @@ def suite(testsuite="all"):
         tests.addTest(unittest.makeSuite(S3BucketTest))
         tests.addTest(unittest.makeSuite(S3KeyTest))
         tests.addTest(unittest.makeSuite(S3MultiPartUploadTest))
-        #tests.addTest(unittest.makeSuite(S3VersionTest))
+        tests.addTest(unittest.makeSuite(S3VersionTest))
         #tests.addTest(unittest.makeSuite(S3EncryptionTest))
         tests.addTest(unittest.makeSuite(S3MultiDeleteTest))
     elif testsuite == "ssl":
