@@ -113,9 +113,9 @@ def suite(testsuite="all"):
         tests.addTest(unittest.makeSuite(SQSConnectionTest))
     elif testsuite == "ec2":
         tests.addTest(unittest.makeSuite(EC2ConnectionTest))
-        tests.addTest(unittest.makeSuite(AutoscaleConnectionTest))
-        tests.addTest(unittest.makeSuite(ELBConnectionTest))
-        tests.addTest(unittest.makeSuite(CloudWatchConnectionTest))
+        #tests.addTest(unittest.makeSuite(AutoscaleConnectionTest))
+        #tests.addTest(unittest.makeSuite(ELBConnectionTest))
+        #tests.addTest(unittest.makeSuite(CloudWatchConnectionTest))
     elif testsuite == "autoscale":
         tests.addTest(unittest.makeSuite(AutoscaleConnectionTest))
     elif testsuite == "sdb":
