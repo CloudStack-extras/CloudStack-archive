@@ -386,29 +386,30 @@
   ));
  
   // Breadcrumb hovering 
- $('#breadcrumbs li').live('mouseover', cloudStack.ui.event.bind(
+  $('#breadcrumbs li').live('mouseover', cloudStack.ui.event.bind(
     'cloudBrowser',
     {
       'breadcrumb': function($target, $browser, data) {
-
         var  $hiddenPanels = data.panel.siblings().filter(function(){
-        return $(this).index() > data.panel.index();
-          });
+          return $(this).index() > data.panel.index();
+        });
+        
         $hiddenPanels.addClass('mouseover-hidden');
         setTimeout(function() {
-              $('.mouseover-hidden').hide("slow");
-           } ,2000);
+          $('.mouseover-hidden').fadeOut('fast');
+        }, 1000);
       }
     }
   ));
 
   $('#breadcrumbs li').live('mouseout',cloudStack.ui.event.bind(
-     'cloudBrowser',
-       {
-           'breadcrumb':function($target,$browser,data) {
-            var  $getHiddenPanels = $browser.find('.panel.mouseover-hidden');
-            $getHiddenPanels.removeClass('mouseover-hidden').show();
-             }
-        }
-    ));
+    'cloudBrowser',
+    {
+      'breadcrumb': function($target, $browser, data) {
+        var  $getHiddenPanels = $browser.find('.panel.mouseover-hidden');
+        
+        $getHiddenPanels.removeClass('mouseover-hidden').show();
+      }
+    }
+  ));
 })(jQuery, cloudStack);
