@@ -3251,127 +3251,101 @@
                 }
               }
             },
-						/*
+						
             actions: {
               add: {
-                label: 'label.add.BaremetalDHCP.device',
-                createForm: {
-                  title: 'label.add.BaremetalDHCP.device',
-                  fields: {
-                    ip: {
-                      label: 'label.ip.address'
-                    },
-                    username: {
-                      label: 'label.username'
-                    },
-                    password: {
-                      label: 'label.password',
-                      isPassword: true
-                    },
-                    networkdevicetype: {
-                      label: 'label.type',
-                      select: function(args) {
-                        var items = [];
-                        items.push({id: "JuniperSRXFirewall", description: "Juniper SRX Firewall"});
-                        args.response.success({data: items});
-                      }
-                    },
-                    publicinterface: {
-                      label: 'label.public.interface'
-                    },
-                    privateinterface: {
-                      label: 'label.private.interface'
-                    },
-                    usageinterface: {
-                      label: 'Usage interface'
-                    },
-                    numretries: {
-                      label: 'label.numretries',
-                      defaultValue: '2'
-                    },
-                    timeout: {
-                      label: 'label.timeout',
-                      defaultValue: '300'
-                    },
-                    // inline: {
-                    //   label: 'Mode',
-                    //   select: function(args) {
-                    //     var items = [];
-                    //     items.push({id: "false", description: "side by side"});
-                    //     items.push({id: "true", description: "inline"});
-                    //     args.response.success({data: items});
-                    //   }
-                    // },
-                    publicnetwork: {
-                      label: 'label.public.network',
-                      defaultValue: 'untrusted'
-                    },
-                    privatenetwork: {
-                      label: 'label.private.network',
-                      defaultValue: 'trusted'
-                    },
-                    capacity: {
-                      label: 'label.capacity',
-                      validation: { required: false, number: true }
-                    },
-                    dedicated: {
-                      label: 'label.dedicated',
-                      isBoolean: true,
-                      isChecked: false
-                    }
-                  }
-                },
-                action: function(args) {
-                  if(nspMap["BaremetalDHCP"] == null) {
-                    $.ajax({
-                      url: createURL("addNetworkServiceProvider&name=BaremetalDHCP&physicalnetworkid=" + selectedPhysicalNetworkObj.id),
-                      dataType: "json",
-                      async: true,
-                      success: function(json) {
-                        var jobId = json.addnetworkserviceproviderresponse.jobid;
-                        var timerKey = "addNetworkServiceProviderJob_"+jobId;
-                        $("body").everyTime(2000, timerKey, function() {
-                          $.ajax({
-                            url: createURL("queryAsyncJobResult&jobId="+jobId),
-                            dataType: "json",
-                            success: function(json) {
-                              var result = json.queryasyncjobresultresponse;
-                              if (result.jobstatus == 0) {
-                                return; //Job has not completed
-                              }
-                              else {
-                                $("body").stopTime(timerKey);
-                                if (result.jobstatus == 1) {
-                                  nspMap["BaremetalDHCP"] = json.queryasyncjobresultresponse.jobresult.networkserviceprovider;
-                                  addExternalFirewall(args, selectedPhysicalNetworkObj, "addSrxFirewall", "addsrxfirewallresponse", "srxfirewall");
-                                }
-                                else if (result.jobstatus == 2) {
-                                  alert("addNetworkServiceProvider&name=JuniperSRX failed. Error: " + _s(result.jobresult.errortext));
-                                }
-                              }
-                            },
-                            error: function(XMLHttpResponse) {
-                              var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
-                              alert("addNetworkServiceProvider&name=JuniperSRX failed. Error: " + errorMsg);
-                            }
-                          });
-                        });
-                      }
-                    });
-                  }
-                  else {
-                    addExternalFirewall(args, selectedPhysicalNetworkObj, "addSrxFirewall", "addsrxfirewallresponse", "srxfirewall");
-                  }
-                },
-                messages: {
-                  notification: function(args) {
-                    return 'label.add.BaremetalDHCP.device';
-                  }
-                },
-                notification: {
-                  poll: pollAsyncJobResult
-                }
-              },
+								label: 'label.add.BaremetalDHCP.device',
+								createForm: {
+									title: 'label.add.BaremetalDHCP.device',
+									fields: {
+										podid: {
+											label: 'label.pod',
+											select: function(args) {
+												$.ajax({
+													url: createURL("listPods&zoneid=" + selectedZoneObj.id),
+													dataType: "json",
+													success: function(json) {
+														var items = [];
+														var pods = json.listpodsresponse.pod;
+														$(pods).each(function(){
+															items.push({name: this.id, description: this.name}); 
+														});
+														args.response.success({	data: items });
+													}
+												});
+											}
+										},
+										dhcpservertype: {
+											label: 'label.dhcp.server.type',
+											select: function(args) {
+												var items = [];
+												items.push({id: "DHCPD", description: "DHCPD"});
+												args.response.success({data: items});
+											}
+										},
+										url: {
+											label: 'label.url'
+										},								
+										username: {
+											label: 'label.username'
+										},
+										password: {
+											label: 'label.password',
+											isPassword: true
+										}  
+									}
+								},
+								action: function(args) {
+									if(nspMap["BaremetalDHCP"] == null) {
+										$.ajax({
+											url: createURL("addNetworkServiceProvider&name=BaremetalDHCP&physicalnetworkid=" + selectedPhysicalNetworkObj.id),
+											dataType: "json",
+											async: true,
+											success: function(json) {
+												var jobId = json.addnetworkserviceproviderresponse.jobid;
+												var timerKey = "addNetworkServiceProviderJob_"+jobId;
+												$("body").everyTime(2000, timerKey, function() {
+													$.ajax({
+														url: createURL("queryAsyncJobResult&jobId="+jobId),
+														dataType: "json",
+														success: function(json) {
+															var result = json.queryasyncjobresultresponse;
+															if (result.jobstatus == 0) {
+																return; //Job has not completed
+															}
+															else {
+																$("body").stopTime(timerKey);
+																if (result.jobstatus == 1) {
+																	nspMap["BaremetalDHCP"] = json.queryasyncjobresultresponse.jobresult.networkserviceprovider;
+																	
+																	addBaremetalDHCPDevice(args, selectedPhysicalNetworkObj);
+																	//addExternalFirewall(args, selectedPhysicalNetworkObj, "addSrxFirewall", "addsrxfirewallresponse", "srxfirewall");
+																}
+																else if (result.jobstatus == 2) {
+																	alert("addNetworkServiceProvider&name=BaremetalDHCP failed. Error: " + _s(result.jobresult.errortext));
+																}
+															}
+														}
+													});
+												});
+											}
+										});
+									}
+									else {
+										addBaremetalDHCPDevice(args, selectedPhysicalNetworkObj);
+										//addExternalFirewall(args, selectedPhysicalNetworkObj, "addSrxFirewall", "addsrxfirewallresponse", "srxfirewall");
+									}
+								},
+								messages: {
+									notification: function(args) {
+										return 'label.add.BaremetalDHCP.device';
+									}
+								},
+								notification: {
+									poll: pollAsyncJobResult
+								}
+							},					 
+							
               enable: {
                 label: 'label.enable.provider',
                 action: function(args) {
@@ -3464,8 +3438,7 @@
                 },
                 notification: { poll: pollAsyncJobResult }
               }
-            }
-						*/
+            }						
           },
 					//?????
 					
