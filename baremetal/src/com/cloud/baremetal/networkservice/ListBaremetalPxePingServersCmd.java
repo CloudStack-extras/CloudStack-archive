@@ -63,7 +63,7 @@ public class ListBaremetalPxePingServersCmd extends BaseListCmd {
             ListResponse<BaremetalPxeResponse> response = new ListResponse<BaremetalPxeResponse>();
             List<BaremetalPxeResponse> pxeResponses = _pxeMgr.listPxeServers(this);
             for (BaremetalPxeResponse r : pxeResponses) {
-            	r.setObjectName(s_name);
+            	r.setObjectName("baremetalpxe");
             }
             response.setResponses(pxeResponses);
             response.setResponseName(getCommandName());

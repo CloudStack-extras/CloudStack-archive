@@ -22,7 +22,7 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.UserContext;
 
 public class AddBaremetalPxeCmd extends BaseAsyncCmd {
-    private static final String s_name = "addexternalpxeresponse";
+    private static final String s_name = "addbaremetalpxeresponse";
     public static final Logger s_logger = Logger.getLogger(AddBaremetalPxeCmd.class);
     
     @PlugService BaremetalPxeManager pxeMgr;
@@ -65,7 +65,7 @@ public class AddBaremetalPxeCmd extends BaseAsyncCmd {
         try {
             BaremetalPxeVO vo = pxeMgr.addPxeServer(this);
             BaremetalPxePingResponse response = (BaremetalPxePingResponse)pxeMgr.getApiResponse(vo);
-            response.setObjectName(s_name);
+            response.setObjectName("baremetalpxe");
             response.setResponseName(getCommandName());
             this.setResponseObject(response);
         } catch (Exception e) {

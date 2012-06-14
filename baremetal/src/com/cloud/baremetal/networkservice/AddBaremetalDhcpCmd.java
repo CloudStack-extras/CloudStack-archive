@@ -20,7 +20,7 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.user.UserContext;
 
 public class AddBaremetalDhcpCmd extends BaseAsyncCmd {
-    private static final String s_name = "addexternaldhcpresponse";
+    private static final String s_name = "addbaremetaldhcpresponse";
     public static final Logger s_logger = Logger.getLogger(AddBaremetalDhcpCmd.class);
     
     @PlugService BaremetalDhcpManager mgr;
@@ -64,7 +64,7 @@ public class AddBaremetalDhcpCmd extends BaseAsyncCmd {
         try {
             BaremetalDhcpVO vo = mgr.addDchpServer(this);
             BaremetalDhcpResponse response = mgr.generateApiResponse(vo);
-            response.setObjectName(s_name);
+            response.setObjectName("baremetaldhcp");
             response.setResponseName(getCommandName());
             this.setResponseObject(response);
         } catch (Exception e) {
