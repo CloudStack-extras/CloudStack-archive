@@ -468,6 +468,7 @@ fi
 %files server
 %defattr(0644,root,root,0755)
 %{_javadir}/%{name}-server.jar
+%{_javadir}/%{name}-zbaremetal.jar
 %{_javadir}/%{name}-vmware-base.jar
 %{_javadir}/%{name}-ovm.jar
 %config(noreplace) %{_sysconfdir}/%{name}/server/*
