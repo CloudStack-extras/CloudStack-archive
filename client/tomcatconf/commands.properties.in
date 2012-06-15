@@ -135,6 +135,14 @@ listLBStickinessPolicies=com.cloud.api.commands.ListLBStickinessPoliciesCmd;15
 listLoadBalancerRuleInstances=com.cloud.api.commands.ListLoadBalancerRuleInstancesCmd;15
 updateLoadBalancerRule=com.cloud.api.commands.UpdateLoadBalancerRuleCmd;15
 
+#### auto scaling commands
+addCounter = com.cloud.api.commands.AddCounterCmd;1
+deleteCounter = com.cloud.api.commands.DeleteCounterCmd;1
+listCounters = com.cloud.api.commands.ListCountersCmd;15
+addCondition = com.cloud.api.commands.AddConditionCmd;15
+deleteCondition = com.cloud.api.commands.DeleteConditionCmd;15
+listConditions = com.cloud.api.commands.ListConditionsCmd;15
+
 #### router commands
 startRouter=com.cloud.api.commands.StartRouterCmd;7
 rebootRouter=com.cloud.api.commands.RebootRouterCmd;7
