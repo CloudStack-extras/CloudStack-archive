@@ -140,6 +140,9 @@ DROP TABLE IF EXISTS `cloud`.`port_profile`;
 DROP TABLE IF EXISTS `cloud`.`s2s_customer_gateway`;
 DROP TABLE IF EXISTS `cloud`.`s2s_vpn_gateway`;
 DROP TABLE IF EXISTS `cloud`.`s2s_vpn_connection`;
+DROP TABLE IF EXISTS `cloud`.`counter`;
+DROP TABLE IF EXISTS `cloud`.`conditions`;
+
 
 CREATE TABLE `cloud`.`version` (
   `id` bigint unsigned NOT NULL UNIQUE AUTO_INCREMENT COMMENT 'id',
@@ -2304,6 +2307,39 @@ CREATE TABLE `cloud`.`static_routes` (
   CONSTRAINT `fk_static_routes__account_id` FOREIGN KEY(`account_id`) REFERENCES `account`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_static_routes__domain_id` FOREIGN KEY(`domain_id`) REFERENCES `domain`(`id`) ON DELETE CASCADE,
   CONSTRAINT `uc_static_routes__uuid` UNIQUE (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `cloud`.`counter` (
+  `id` bigint unsigned NOT NULL UNIQUE AUTO_INCREMENT COMMENT 'id',
+  `uuid` varchar(40),
+  `source` varchar(255) NOT NULL COMMENT 'source e.g. netscaler, snmp',
+  `name` varchar(255) NOT NULL COMMENT 'Counter name',
+  `value` varchar(255) NOT NULL COMMENT 'Value in case of source=snmp',
+  `zone_id` bigint unsigned NOT NULL COMMENT 'id of the availability zone',
+  `removed` datetime COMMENT 'date removed if not null',
+  `created` datetime NOT NULL COMMENT 'date created',
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_counter__zone_id` FOREIGN KEY `fk_counter__zone_id`(`zone_id`) REFERENCES `data_center`(`id`),
+  CONSTRAINT `uc_counter__uuid` UNIQUE (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `cloud`.`conditions` (
+  `id` bigint unsigned NOT NULL UNIQUE AUTO_INCREMENT COMMENT 'id',
+  `uuid` varchar(40),
+  `counter_id` bigint unsigned NOT NULL COMMENT 'Counter Id',
+  `threshold` bigint unsigned NOT NULL COMMENT 'threshold value for the given counter',
+  `relational_operator` char(2) COMMENT 'relational operator to be used upon the counter and condition',
+  `domain_id` bigint unsigned NOT NULL COMMENT 'domain the Condition belongs to',
+  `account_id` bigint unsigned NOT NULL COMMENT 'owner of this Condition',
+  `zone_id` bigint unsigned NOT NULL COMMENT 'id of the availability zone',
+  `removed` datetime COMMENT 'date removed if not null',
+  `created` datetime NOT NULL COMMENT 'date created',
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_conditions__counter_id` FOREIGN KEY `fk_condition__counter_id`(`counter_id`) REFERENCES `counter`(`id`),
+  CONSTRAINT `fk_conditions__account_id` FOREIGN KEY `fk_condition__account_id` (`account_id`) REFERENCES `account`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_conditions__domain_id` FOREIGN KEY `fk_condition__domain_id` (`domain_id`) REFERENCES `domain`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_conditions__zone_id` FOREIGN KEY `fk_conditions__zone_id`(`zone_id`) REFERENCES `data_center`(`id`),
+  CONSTRAINT `uc_conditions__uuid` UNIQUE (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 

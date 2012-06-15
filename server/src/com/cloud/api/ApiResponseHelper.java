@@ -38,8 +38,10 @@ import com.cloud.api.response.AsyncJobResponse;
 import com.cloud.api.response.CapabilityResponse;
 import com.cloud.api.response.CapacityResponse;
 import com.cloud.api.response.ClusterResponse;
+import com.cloud.api.response.ConditionResponse;
 import com.cloud.api.response.ConfigurationResponse;
 import com.cloud.api.response.ControlledEntityResponse;
+import com.cloud.api.response.CounterResponse;
 import com.cloud.api.response.CreateCmdResponse;
 import com.cloud.api.response.DiskOfferingResponse;
 import com.cloud.api.response.DomainResponse;
@@ -146,6 +148,8 @@ import com.cloud.network.Site2SiteVpnGateway;
 import com.cloud.network.Site2SiteVpnGatewayVO;
 import com.cloud.network.VirtualRouterProvider;
 import com.cloud.network.VpnUser;
+import com.cloud.network.as.Condition;
+import com.cloud.network.as.Counter;
 import com.cloud.network.router.VirtualRouter;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.LoadBalancer;
@@ -866,7 +870,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         lbResponse.setState(stateToSet);
         populateOwner(lbResponse, loadBalancer);
         lbResponse.setZoneId(publicIp.getDataCenterId());
-        
+
         //set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.UserVm, loadBalancer.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
@@ -1158,7 +1162,8 @@ public class ApiResponseHelper implements ResponseGenerator {
         boolean isExtractable = true;
         if (volume.getVolumeType() != Volume.Type.DATADISK) { // Datadisk dont have any template dependence.
             VMTemplateVO template = ApiDBUtils.findTemplateById(volume.getTemplateId());
-            if (template != null) { // For ISO based volumes template = null and we allow extraction of all ISO based volumes
+            if (template != null) { // For ISO based volumes template = null and we allow extraction of all ISO based
+// volumes
                 isExtractable = template.isExtractable() && template.getTemplateType() != Storage.TemplateType.SYSTEM;                
             }
         }
@@ -1406,7 +1411,6 @@ public class ApiResponseHelper implements ResponseGenerator {
                 userVmResponse.setInstanceName(userVm.getInstanceName());
             }
             
- 
             if (userVm.getPassword() != null) {
                 userVmResponse.setPassword(userVm.getPassword());
             }
@@ -1891,7 +1895,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         Account owner = ApiDBUtils.findAccountById(result.getAccountId());
         populateAccount(response, owner.getId());
         populateDomain(response, owner.getDomainId());
-        
+
         //set tag information
         List<? extends ResourceTag> tags = null;
         if (result.getFormat() == ImageFormat.ISO) {
@@ -2092,7 +2096,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         templateResponse.setChecksum(template.getChecksum());
 
         templateResponse.setTemplateTag(template.getTemplateTag());
-        
+
         //set tag information
         List<? extends ResourceTag> tags = null;
         if (template.getFormat() == ImageFormat.ISO) {
@@ -2360,7 +2364,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             netGrpResponse.setObjectName("securitygroup");
             netGrpResponses.add(netGrpResponse);
         }
-        
+
         response.setResponses(netGrpResponses);
         return response;
     }
@@ -3008,7 +3012,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setSpecifyIpRanges(network.getSpecifyIpRanges());
         response.setCanUseForDeploy(ApiDBUtils.canUseForDeploy(network));
         response.setVpcId(network.getVpcId());
-        
+
         //set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.Network, network.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
@@ -3079,7 +3083,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         response.setIcmpCode(fwRule.getIcmpCode());
         response.setIcmpType(fwRule.getIcmpType());
-        
+
         //set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.FirewallRule, fwRule.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
@@ -3243,7 +3247,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         userVmResponse.setNics(new ArrayList<NicResponse>(nicResponses));
         userVmResponse.setPublicIpId(userVmData.getPublicIpId());
         userVmResponse.setPublicIp(userVmData.getPublicIp());
-        
+
         //set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.UserVm, userVmData.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
@@ -3590,29 +3594,29 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setValue(resourceTag.getValue());
         
         if (!keyValueOnly) {
-            response.setResourceType(resourceTag.getResourceType().toString());        
-            response.setId(ApiDBUtils.getUuid(String.valueOf(resourceTag.getResourceId()),resourceTag.getResourceType()));
-            Long accountId = resourceTag.getAccountId();
-            Long domainId = resourceTag.getDomainId();
-            if (accountId != null) {
-                Account account = ApiDBUtils.findAccountByIdIncludingRemoved(resourceTag.getAccountId());
+        response.setResourceType(resourceTag.getResourceType().toString());        
+        response.setId(ApiDBUtils.getUuid(String.valueOf(resourceTag.getResourceId()),resourceTag.getResourceType()));
+        Long accountId = resourceTag.getAccountId();
+        Long domainId = resourceTag.getDomainId();
+        if (accountId != null) {
+            Account account = ApiDBUtils.findAccountByIdIncludingRemoved(resourceTag.getAccountId());
 
-                if (account.getType() == Account.ACCOUNT_TYPE_PROJECT) {
-                    // find the project
-                    Project project = ApiDBUtils.findProjectByProjectAccountId(account.getId());
-                    response.setProjectId(project.getId());
-                    response.setProjectName(project.getName());
-                } else {
-                    response.setAccountName(account.getAccountName());
-                }
+            if (account.getType() == Account.ACCOUNT_TYPE_PROJECT) {
+                // find the project
+                Project project = ApiDBUtils.findProjectByProjectAccountId(account.getId());
+                response.setProjectId(project.getId());
+                response.setProjectName(project.getName());
+            } else {
+                response.setAccountName(account.getAccountName());
             }
-            
-            if (domainId != null) {
-                response.setDomainId(domainId);
-                response.setDomainName(ApiDBUtils.findDomainById(domainId).getName());
-            }
-            
-            response.setCustomer(resourceTag.getCustomer());
+        }
+        
+        if (domainId != null) {
+            response.setDomainId(domainId);
+            response.setDomainName(ApiDBUtils.findDomainById(domainId).getName());
+        }
+        
+        response.setCustomer(resourceTag.getCustomer());
         }
         
         response.setObjectName("tag");
@@ -3654,7 +3658,6 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setObjectName("vpcoffering");
         return response;
     }
-    
     
     @Override
     public VpcResponse createVpcResponse(Vpc vpc) {
@@ -3725,7 +3728,6 @@ public class ApiResponseHelper implements ResponseGenerator {
         populateDomain(response, result.getDomainId());
         
         response.setObjectName("privategateway");
-        
         return response;
     }
     
@@ -3745,10 +3747,9 @@ public class ApiResponseHelper implements ResponseGenerator {
         populateAccount(response, result.getAccountId());
         populateDomain(response, result.getDomainId());
         response.setObjectName("staticroute");
-        
         return response;
     }
-  
+    
     @Override
     public Site2SiteVpnGatewayResponse createSite2SiteVpnGatewayResponse(Site2SiteVpnGateway result) {
         Site2SiteVpnGatewayResponse response = new Site2SiteVpnGatewayResponse();
@@ -3772,11 +3773,23 @@ public class ApiResponseHelper implements ResponseGenerator {
     }
 
     @Override
+    public CounterResponse createCounterResponse(Counter counter) {
+        CounterResponse response = new CounterResponse();
+        response.setId(counter.getId());
+        response.setSource(counter.getSource().toString());
+        response.setName(counter.getName());
+        response.setValue(counter.getValue());
+        response.setZoneId(counter.getZoneId());
+        response.setObjectName("counter");
+        return response;
+    }
+
+    @Override
     public Site2SiteVpnConnectionResponse createSite2SiteVpnConnectionResponse(Site2SiteVpnConnection result) {
         Site2SiteVpnConnectionResponse response = new Site2SiteVpnConnectionResponse();
         response.setId(result.getId());
         
-        response.setVpnGatewayId(result.getVpnGatewayId()); 
+        response.setVpnGatewayId(result.getVpnGatewayId());
         Long vpnGatewayId = result.getVpnGatewayId();
         if(vpnGatewayId != null) {
         	Site2SiteVpnGatewayVO vpnGateway = ApiDBUtils.findVpnGatewayById(vpnGatewayId);
@@ -3786,7 +3799,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         	response.setIp(ipObj.getAddress().addr());  
         }
         
-        response.setCustomerGatewayId(result.getCustomerGatewayId()); 
+        response.setCustomerGatewayId(result.getCustomerGatewayId());
         Long customerGatewayId = result.getCustomerGatewayId();
         if(customerGatewayId != null) {
         	Site2SiteCustomerGatewayVO customerGateway = ApiDBUtils.findCustomerGatewayById(customerGatewayId);
@@ -3801,6 +3814,21 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setCreated(result.getCreated());
         response.setRemoved(result.getRemoved());
         response.setObjectName("vpnconnection");
+        return response;
+    }
+
+    @Override
+    public ConditionResponse createConditionResponse(Condition condition) {
+        ConditionResponse response = new ConditionResponse();
+        response.setId(condition.getId());
+        response.setThreshold(condition.getThreshold());
+        response.setRelationalOperator(condition.getRelationalOperator().toString());
+        response.setCounterId(condition.getCounterid());
+        Account account = ApiDBUtils.findAccountById(condition.getAccountId());
+        response.setAccountName(account.getAccountName());
+        response.setDomainId(condition.getDomainId());
+        response.setZoneId(condition.getZoneId());
+        response.setObjectName("condition");
         return response;
     }
 }

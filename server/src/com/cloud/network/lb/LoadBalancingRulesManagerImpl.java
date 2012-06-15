@@ -27,8 +27,12 @@ import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 
+import com.cloud.api.commands.AddConditionCmd;
+import com.cloud.api.commands.AddCounterCmd;
 import com.cloud.api.commands.CreateLBStickinessPolicyCmd;
 import com.cloud.api.commands.CreateLoadBalancerRuleCmd;
+import com.cloud.api.commands.ListConditionsCmd;
+import com.cloud.api.commands.ListCountersCmd;
 import com.cloud.api.commands.ListLBStickinessPoliciesCmd;
 import com.cloud.api.commands.ListLoadBalancerRuleInstancesCmd;
 import com.cloud.api.commands.ListLoadBalancerRulesCmd;
@@ -46,6 +50,7 @@ import com.cloud.exception.InsufficientAddressCapacityException;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.PermissionDeniedException;
+import com.cloud.exception.ResourceInUseException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.ExternalLoadBalancerUsageManager;
 import com.cloud.network.IPAddressVO;
@@ -59,6 +64,12 @@ import com.cloud.network.Network.Provider;
 import com.cloud.network.Network.Service;
 import com.cloud.network.NetworkManager;
 import com.cloud.network.NetworkVO;
+import com.cloud.network.as.Condition;
+import com.cloud.network.as.ConditionVO;
+import com.cloud.network.as.Counter;
+import com.cloud.network.as.CounterVO;
+import com.cloud.network.as.dao.ConditionDao;
+import com.cloud.network.as.dao.CounterDao;
 import com.cloud.network.dao.FirewallRulesCidrsDao;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
@@ -163,6 +174,9 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     NetworkServiceMapDao _ntwkSrvcDao;
     @Inject
     ResourceTagDao _resourceTagDao;
+    CounterDao _counterDao;
+    @Inject
+    ConditionDao _conditionDao;
 
     private String getLBStickinessCapability(long networkid) {
         Map<Service, Map<Capability, String>> serviceCapabilitiesMap = _networkMgr.getNetworkCapabilities(networkid);
@@ -346,7 +360,6 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         FirewallRule.State backupState = loadBalancer.getState();
         _accountMgr.checkAccess(caller.getCaller(), null, true, loadBalancer);
 
-
         if (apply) {
             if (loadBalancer.getState() == FirewallRule.State.Active) {
                 loadBalancer.setState(FirewallRule.State.Add);
@@ -386,6 +399,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         Provider provider = Network.Provider.Netscaler;
         return _ntwkSrvcDao.canProviderSupportServiceInNetwork(network.getId(), Service.Lb, provider);
     }
+
     @Override
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_ASSIGN_TO_LOAD_BALANCER_RULE, eventDescription = "assigning to load balancer", async = true)
@@ -771,8 +785,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                     if (ip != null && ip.getVpcId() != null && _firewallDao.listByIp(ip.getId()).isEmpty()) {
                         s_logger.debug("Releasing VPC ip address " + ip + " as LB rule failed to create");
                         _networkMgr.unassignIPFromVpcNetwork(ip.getId());
-                    }
-                }
+            }
+        }
             }
         }
 
@@ -783,6 +797,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         return result;
     }
 
+    @Override
     @DB
     public LoadBalancer createLoadBalancer(CreateLoadBalancerRuleCmd lb, boolean openFirewall) throws NetworkRuleConflictException {
         UserContext caller = UserContext.current();
@@ -1112,7 +1127,9 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                 applyLoadBalancerConfig(lbRuleId);
             } catch (ResourceUnavailableException e) {
                 if (isRollBackAllowedForProvider(lb)) {
-                    /* NOTE : We use lb object to update db instead of lbBackup object since db layer will fail to update if there is no change in the object.  
+                    /*
+                     * NOTE : We use lb object to update db instead of lbBackup object since db layer will fail to
+                     * update if there is no change in the object.
                      */
                     if (lbBackup.getName() != null) {
                         lb.setName(lbBackup.getName()); 
@@ -1259,7 +1276,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             ipSearch.and("zoneId", ipSearch.entity().getDataCenterId(), SearchCriteria.Op.EQ);
             sb.join("ipSearch", ipSearch, sb.entity().getSourceIpAddressId(), ipSearch.entity().getId(), JoinBuilder.JoinType.INNER);
         }
-        
+
         if (tags != null && !tags.isEmpty()) {
             SearchBuilder<ResourceTagVO> tagSearch = _resourceTagDao.createSearchBuilder();
             for (int count=0; count < tags.size(); count++) {
@@ -1301,7 +1318,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         if (zoneId != null) {
             sc.setJoinParameters("ipSearch", "zoneId", zoneId);
         }
-        
+
 
         if (tags != null && !tags.isEmpty()) {
             int count = 0;
@@ -1346,5 +1363,150 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         }
         
         txn.commit();
+    }
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_COUNTER_CREATE, eventDescription = "Counter", create = true)
+    @DB
+    public Counter createCounter(AddCounterCmd cmd) {
+        String source = cmd.getSource().toLowerCase();
+        String name = cmd.getName();
+        long zoneId = cmd.getZoneId();
+        Counter.Source src;
+        // Validate Source
+        try {
+            src = Counter.Source.valueOf(source);
+        } catch (Exception ex) {
+            throw new InvalidParameterValueException("The Source " + source + " does not exist; Unable to create Counter");
+        }
+
+        CounterVO counter = null;
+        Transaction txn = Transaction.currentTxn();
+        txn.start();
+
+        s_logger.debug("Adding Counter " + name);
+        counter = _counterDao.persist(new CounterVO(zoneId, src, name, cmd.getValue()));
+
+        txn.commit();
+        UserContext.current().setEventDetails(" Id: " + counter.getId() + " Name: " + name);
+        return counter;
+    }
+
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_CONDITION_CREATE, eventDescription = "Condition", create = true)
+    @DB
+    public Condition createCondition(AddConditionCmd cmd) {
+        String opr = cmd.getRelationalOperator();
+        long cid = cmd.getCounterId();
+        long threshold = cmd.getThreshold();
+        long zoneId = cmd.getZoneId();
+        Condition.Operator op;
+        Account owner = _accountMgr.getAccount(cmd.getEntityOwnerId());
+        // Validate Relational Operator
+        try {
+            op = Condition.Operator.valueOf(opr);
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidParameterValueException("The Operator " + opr + " does not exist; Unable to create Condition.");
+        }
+        // TODO - Validate threshold
+
+        // Validate counter-id
+        if (_counterDao.findById(cid) == null) {
+            throw new InvalidParameterValueException("Invalid Counter-Id. " + cid + ". Unable to create Condition.");
+        }
+
+        ConditionVO condition = null;
+        Transaction txn = Transaction.currentTxn();
+        txn.start();
+
+        s_logger.debug("Adding Condition ");
+        condition = _conditionDao.persist(new ConditionVO(zoneId, cid, threshold, owner.getId(), owner.getDomainId(), op));
+
+        txn.commit();
+        UserContext.current().setEventDetails(" Id: " + condition.getId());
+        return condition;
+    }
+
+    @Override
+    public List<? extends Counter> listCounters(ListCountersCmd cmd) {
+        String name = cmd.getName();
+        Long id = cmd.getId();
+        String source = cmd.getSource();
+
+        Filter searchFilter = new Filter(CounterVO.class, "created", false, cmd.getStartIndex(), cmd.getPageSizeVal());
+
+        List<CounterVO> counters = _counterDao.listCounters(id, name, source, searchFilter);
+
+        return counters;
+    }
+
+    @Override
+    public List<? extends Condition> listConditions(ListConditionsCmd cmd) {
+        Long id = cmd.getId();
+        Long counterId = cmd.getCounterId();
+
+        Filter searchFilter = new Filter(ConditionVO.class, "created", false, cmd.getStartIndex(), cmd.getPageSizeVal());
+
+        SearchBuilder<ConditionVO> sb = _conditionDao.createSearchBuilder();
+        sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
+        sb.and("counterId", sb.entity().getCounterid(), SearchCriteria.Op.EQ);
+
+        // now set the SC criteria...
+        SearchCriteria<ConditionVO> sc = sb.create();
+
+        if (id != null) {
+            sc.addAnd("id", SearchCriteria.Op.EQ, id);
+        }
+
+        if (counterId != null) {
+            sc.addAnd("counterId", SearchCriteria.Op.EQ, counterId);
+        }
+
+        List<ConditionVO> conditions = _conditionDao.search(sc, searchFilter);
+
+        return conditions;
+    }
+
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_COUNTER_DELETE, eventDescription = "counter")
+    public boolean deleteCounter(long counterId) throws ResourceInUseException {
+        // Verify Counter id
+        CounterVO counter = _counterDao.findById(counterId);
+        if (counter == null) {
+            throw new InvalidParameterValueException("Unable to find Counter with Id " + counterId);
+        }
+
+        // Verify if it is used in any Condition
+
+        ConditionVO condition = _conditionDao.findByCounterId(counterId);
+        if (condition != null) {
+            s_logger.info("Cannot delete counter " + counter.getName() + " as it is being used in a condition.");
+            throw new ResourceInUseException("Counter with Id " + counterId + " is in use.");
+        }
+
+        s_logger.debug("Deleting Counter " + counter.getName());
+        if (_counterDao.remove(counterId)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_COUNTER_DELETE, eventDescription = "condition")
+    public boolean deleteCondition(long conditionId) {
+        // Verify Counter id
+        ConditionVO condition = _conditionDao.findById(conditionId);
+        if (condition == null) {
+            throw new InvalidParameterValueException("Unable to find Condition with Id " + conditionId);
+        }
+
+        // TODO - Verify if it is used in any auto-scale profile
+
+        s_logger.debug("Deleting Condition " + condition.getId());
+        if (_conditionDao.remove(conditionId)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
