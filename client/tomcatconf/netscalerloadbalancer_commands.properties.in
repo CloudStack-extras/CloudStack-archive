@@ -7,3 +7,10 @@ deleteNetscalerLoadBalancer = com.cloud.api.commands.DeleteNetscalerLoadBalancer
 configureNetscalerLoadBalancer = com.cloud.api.commands.ConfigureNetscalerLoadBalancerCmd;1
 listNetscalerLoadBalancers = com.cloud.api.commands.ListNetscalerLoadBalancersCmd;1
 listNetscalerLoadBalancerNetworks = com.cloud.api.commands.ListNetscalerLoadBalancerNetworksCmd;1
+
+addCounter = com.cloud.api.commands.AddCounterCmd;1
+deleteCounter = com.cloud.api.commands.DeleteCounterCmd;1
+listCounters = com.cloud.api.commands.ListCountersCmd;15
+addCondition = com.cloud.api.commands.AddConditionCmd;15
+deleteCondition = com.cloud.api.commands.DeleteConditionCmd;1
+listConditions = com.cloud.api.commands.ListConditionsCmd;15

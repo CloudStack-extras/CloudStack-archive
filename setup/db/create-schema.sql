@@ -137,6 +137,8 @@ DROP TABLE IF EXISTS `cloud`.`op_dc_storage_network_ip_address`;
 DROP TABLE IF EXISTS `cloud`.`cluster_vsm_map`;
 DROP TABLE IF EXISTS `cloud`.`virtual_supervisor_module`;
 DROP TABLE IF EXISTS `cloud`.`port_profile`;
+DROP TABLE IF EXISTS `cloud`.`counter`;
+DROP TABLE IF EXISTS `cloud`.`condition`;
 
 CREATE TABLE `cloud`.`version` (
   `id` bigint unsigned NOT NULL UNIQUE AUTO_INCREMENT COMMENT 'id',
@@ -2234,6 +2236,40 @@ CREATE TABLE `cloud`.`private_ip_address` (
   `taken` datetime COMMENT 'Date taken',
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_private_ip_address__network_id` FOREIGN KEY (`network_id`) REFERENCES `networks` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `cloud`.`counter` (
+  `id` bigint unsigned NOT NULL UNIQUE AUTO_INCREMENT COMMENT 'id',
+  `uuid` varchar(40),
+  `source` varchar(255) NOT NULL COMMENT 'source e.g. netscaler, snmp',
+  `name` varchar(255) NOT NULL COMMENT 'Counter name',
+  `value` bigint unsigned COMMENT 'Value in case of source=snmp',
+  `removed` datetime COMMENT 'date removed if not null',
+  `created` datetime NOT NULL COMMENT 'date created',
+  PRIMARY KEY (`id`),
+  CONSTRAINT `uc_counter__uuid` UNIQUE (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `cloud`.`conditions` (
+  `id` bigint unsigned NOT NULL UNIQUE AUTO_INCREMENT COMMENT 'id',
+  `uuid` varchar(40),
+  `name` varchar(255) NOT NULL COMMENT 'Condition name',
+  `counter_id` bigint unsigned NOT NULL COMMENT 'Counter Id',
+  `threshold` bigint unsigned NOT NULL COMMENT 'threshold value for the given counter',
+  `relational_operator` char(2) COMMENT 'relational operator to be used upon the counter and condition',
+  `aggr_function` char(40) COMMENT 'aggregate function',
+  `aggr_operator` char(2) COMMENT 'aggregate operator',
+  `aggr_value` bigint unsigned COMMENT 'aggregate value',
+  `domain_id` bigint unsigned NOT NULL COMMENT 'domain the Condition belongs to',
+  `account_id` bigint unsigned NOT NULL COMMENT 'owner of this Condition',
+  `removed` datetime COMMENT 'date removed if not null',
+  `created` datetime NOT NULL COMMENT 'date created',
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_condition__counter_id` FOREIGN KEY `fk_condition__counter_id`(`counter_id`) REFERENCES `counter`(`id`),
+  CONSTRAINT `fk_condition__account_id` FOREIGN KEY `fk_condition__account_id` (`account_id`) REFERENCES `account`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_condition__domain_id` FOREIGN KEY `fk_condition__domain_id` (`domain_id`) REFERENCES `domain`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `uc_condition__uuid` UNIQUE (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 

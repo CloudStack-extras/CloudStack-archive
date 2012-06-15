@@ -360,6 +360,13 @@ public class ApiConstants {
     public static final String NETWORK = "network";
     public static final String VPC_ID = "vpcid";
     public static final String CAN_USE_FOR_DEPLOY = "canusefordeploy";
+    public static final String SOURCE = "source";
+    public static final String COUNTER_ID = "counterid";
+    public static final String AGGR_OPERATOR = "aggroperator";
+    public static final String AGGR_FUNCTION = "aggrfunction";
+    public static final String AGGR_VALUE = "aggrvalue";
+    public static final String THRESHOLD = "threshold";    
+    public static final String RELATIONAL_OPERATOR = "relationaloperator"; 
     
     public enum HostDetails {
         all, capacity, events, stats, min;
