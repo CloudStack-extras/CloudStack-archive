@@ -50,6 +50,7 @@ getVMPassword=com.cloud.api.commands.GetVMPasswordCmd;15
 migrateVirtualMachine=com.cloud.api.commands.MigrateVMCmd;1
 assignVirtualMachine=com.cloud.api.commands.AssignVMCmd;1
 restoreVirtualMachine=com.cloud.api.commands.RestoreVMCmd;15
+modifyVirtualMachine=com.cloud.api.commands.ModifyVMCmd;15
 
 #### snapshot commands
 createSnapshot=com.cloud.api.commands.CreateSnapshotCmd;15

@@ -18,6 +18,7 @@ public class EventTypes {
     public static final String EVENT_VM_DESTROY = "VM.DESTROY";
     public static final String EVENT_VM_START = "VM.START";
     public static final String EVENT_VM_STOP = "VM.STOP";
+    public static final String EVENT_VM_MODIFY = "VM.MODIFY";
     public static final String EVENT_VM_REBOOT = "VM.REBOOT";
     public static final String EVENT_VM_UPDATE = "VM.UPDATE";
     public static final String EVENT_VM_UPGRADE = "VM.UPGRADE";
