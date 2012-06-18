@@ -365,6 +365,8 @@ public interface UserVmService {
 
     UserVm stopVirtualMachine(long vmId, boolean forced) throws ConcurrentOperationException;
 
+    UserVm modifyVirtualMachine(long vmId,int vCpu) throws ConcurrentOperationexception;
+
     void deletePrivateTemplateRecord(Long templateId);
 
     /**

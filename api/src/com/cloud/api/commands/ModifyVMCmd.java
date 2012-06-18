@@ -27,6 +27,7 @@ public class ModifyVMCmd extends BaseAsyncCmd {
        @IdentityMapper(entityTableName = "vm_instance")
        @Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = true, description = "The ID of the virtual machine")
        private Long id;
+       private int vCpu;
        //accessor method
        public Long getId() {
           return id;
@@ -75,8 +76,32 @@ public class ModifyVMCmd extends BaseAsyncCmd {
              return getId();
           }
 
+         @Override
+         public int getvCpu(){
+          return vCpu;
 
+         }
          @Override
          public void execute() throws ServerApiException,ConcurrentOperationException {
 
-         
+        UserContext.current().setEventDetails("Vm Id: " + getId());
+        UserVm result;
+
+        if (_userVmService.getHypervisorTypeOfUserVM(getId()) == HypervisorType.BareMetal) {
+            result = _bareMetalVmService.modifyVirtualMachine(getId(),getvCpu());
+        } 
+
+         else {
+            result = _userVmService.modifyVirtualMachine(getId(), getvCpu());
+        }
+        
+
+        if (result != null) {
+            UserVmResponse response = _responseGenerator.createUserVmResponse("virtualmachine", result).get(0);
+            response.setResponseName(getCommandName());
+            this.setResponseObject(response);
+        } else {
+            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to stop vm");
+        }
+    }
+}
