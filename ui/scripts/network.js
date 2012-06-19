@@ -173,7 +173,7 @@
           }
         });
 
-        var sectionsToShow = ['networks'];
+        var sectionsToShow = ['networks', 'vpc'];
         if(havingSecurityGroupNetwork == true)
           sectionsToShow.push('securityGroups');
 
@@ -3097,6 +3097,97 @@
                     });
                   }
                 }
+              }
+            }
+          }
+        }
+      },
+      vpc: {
+        type: 'select',
+        title: 'VPC',
+        id: 'vpc',
+        listView: {
+          id: 'vpc',
+          label: 'VPC',
+          fields: {
+            name: { label: 'Name' },
+            zone: { label: 'Zone' },
+            cidr: { label: 'CIDR' }
+          },
+          dataProvider: function(args) {
+            args.response.success({
+              data: [
+                {
+                  name: 'VPC 1',
+                  zone: 'San Jose',
+                  cidr: '0.0.0.0/0',
+                  networkdomain: 'testdomain',
+                  accountdomain: 'testdomain'
+                },
+                {
+                  name: 'VPC 2',
+                  zone: 'San Jose',
+                  cidr: '0.0.0.0/0',
+                  networkdomain: 'testdomain',
+                  accountdomain: 'testdomain'
+                },
+                {
+                  name: 'VPC 3',
+                  zone: 'Cupertino',
+                  cidr: '0.0.0.0/0',
+                  networkdomain: 'testdomain',
+                  accountdomain: 'testdomain'
+                },
+                {
+                  name: 'VPC 4',
+                  zone: 'San Jose',
+                  cidr: '0.0.0.0/0',
+                  networkdomain: 'testdomain',
+                  accountdomain: 'testdomain'
+                }
+              ]
+            });
+          },
+          actions: {
+            add: {
+              label: 'Add VPC',
+              createForm: {
+                title: 'Add new VPC',
+                fields: {
+                  name: { label: 'Name', validation: { required: true } },
+                  zone: {
+                    label: 'Zone',
+                    validation: { required: true },
+                    select: function(args) {
+                      $.ajax({
+                        url: createURL('listZones'),
+                        success: function(json) {
+                          args.response.success({
+                            data: $.map(json.listzonesresponse.zone, function(zone) {
+                              return {
+                                id: zone.id,
+                                description: zone.name
+                              };
+                            })
+                          });
+                        }
+                      });
+                    }
+                  }
+                }
+              },
+              messages: {
+                notification: function(args) { return 'Add new VPC'; }
+              },
+              action: function(args) {
+                args.response.success();
+              },
+              notification: { poll: function(args) { args.complete(); } }
+            },
+            editVpc: {
+              label: 'Edit VPC',
+              action: {
+                custom: function() {}
               }
             }
           }
