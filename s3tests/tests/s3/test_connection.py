@@ -35,6 +35,7 @@ from boto.exception import S3PermissionsError, S3ResponseError
 class S3ConnectionTest (unittest.TestCase):
 
     def test_1_basic(self):
+        self.runner = xml
         print '--- running S3Connection tests ---'
         c = S3Connection(aws_access_key_id="admin",
                            aws_secret_access_key="admin",

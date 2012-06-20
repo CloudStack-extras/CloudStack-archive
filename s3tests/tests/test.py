@@ -27,6 +27,7 @@ do the unit tests!
 import logging
 import sys
 import unittest
+import xmlrunner
 import getopt
 
 from sqs.test_connection import SQSConnectionTest
@@ -56,6 +57,9 @@ def usage():
     print "    -v   verbosity (0|1|2)"
 
 def main():
+    """
+
+    """
     try:
         opts, args = getopt.getopt(sys.argv[1:], "ht:v:",
                                    ["help", "testsuite", "verbosity"])
@@ -82,7 +86,8 @@ def main():
         sys.exit()
     if verbosity > 1:
         logging.basicConfig(level=logging.DEBUG)
-    unittest.TextTestRunner(verbosity=verbosity).run(tests)
+    #unittest.TextTestRunner(verbosity=verbosity).run(tests)
+    xmlrunner.XMLTestRunner(output='.').run(tests)
 
 def suite(testsuite="all"):
     tests = unittest.TestSuite()
