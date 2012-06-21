@@ -137,7 +137,9 @@ public class Agent implements HandlerFactory, IAgentControl {
 
         Runtime.getRuntime().addShutdownHook(new ShutdownThread(this));
         
-        _ugentTaskPool = new ThreadPoolExecutor(shell.getPingRetries(), 2 * shell.getPingRetries(), 10, TimeUnit.MINUTES, 
+        // use thread-unbound (direct hand-off thread-pool) for urgent tasks, thread will be reclaimed by keep-alive recycling
+        // to core thread pool size
+        _ugentTaskPool = new ThreadPoolExecutor(shell.getPingRetries(), Integer.MAX_VALUE, 10, TimeUnit.MINUTES, 
                                                 new SynchronousQueue<Runnable>(), new NamedThreadFactory("UgentTask")
                                                 );
         
@@ -598,13 +600,19 @@ public class Agent implements HandlerFactory, IAgentControl {
     public void processOtherTask(Task task) {
         final Object obj = task.get();
         if (obj instanceof Response) {
+            
             if ((System.currentTimeMillis() - _lastPingResponseTime) > _pingInterval * _shell.getPingRetries()) {
+/*
                 s_logger.error("Ping Interval has gone past " + _pingInterval * _shell.getPingRetries() + ".  Attempting to reconnect.");
                 final Link link = task.getLink();
                 reconnect(link);
                 return;
+*/
+                // we don't reconnect ourselves just because of slow responding of management server, it creates
+                // premature disconnects when system is under overloaded situation
+                s_logger.warn("Ping Interval has gone past " + _pingInterval * _shell.getPingRetries() + ". management server is non-responsive for too long");
             }
-
+            
             final PingCommand ping = _resource.getCurrentStatus(getId());
             final Request request = new Request(_id, -1, ping, false);
             request.setSequence(getNextSequence());
