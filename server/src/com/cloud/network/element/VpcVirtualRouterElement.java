@@ -34,7 +34,10 @@ import com.cloud.network.Network.Service;
 import com.cloud.network.NetworkService;
 import com.cloud.network.PublicIpAddress;
 import com.cloud.network.router.VirtualRouter;
+import com.cloud.network.router.VirtualRouter.Role;
 import com.cloud.network.router.VpcVirtualNetworkApplianceManager;
+import com.cloud.network.rules.FirewallRule;
+import com.cloud.network.rules.NetworkACL;
 import com.cloud.network.vpc.Vpc;
 import com.cloud.network.vpc.VpcManager;
 import com.cloud.offering.NetworkOffering;
@@ -51,7 +54,7 @@ import com.cloud.vm.VirtualMachineProfile;
  * @author Alena Prokharchyk
  */
 @Local(value = NetworkElement.class)
-public class VpcVirtualRouterElement extends VirtualRouterElement implements VpcProvider{
+public class VpcVirtualRouterElement extends VirtualRouterElement implements VpcProvider, NetworkACLServiceProvider{
     private static final Logger s_logger = Logger.getLogger(VpcVirtualRouterElement.class);
     @Inject 
     NetworkService _ntwkService;
@@ -189,6 +192,16 @@ public class VpcVirtualRouterElement extends VirtualRouterElement implements Vpc
                 throw new ResourceUnavailableException("Can't find at least one running router!",
                         DataCenter.class, network.getDataCenterId());
             }
+            for (VirtualRouter router : routers) {
+                //Add router to guest network if needed
+                if (!_networkMgr.isVmPartOfNetwork(router.getId(), network.getId())) {
+                    if (!_vpcRouterMgr.addVpcRouterToGuestNetwork(router, network, false)) {
+                        throw new CloudRuntimeException("Failed to add VPC router " + router + " to guest network " + network);
+                    } else {
+                        s_logger.debug("Successfully added VPC router " + router + " to guest network " + network);
+                    }
+                }
+            }
         }
        
         return true;
@@ -268,7 +281,7 @@ public class VpcVirtualRouterElement extends VirtualRouterElement implements Vpc
         capabilities.put(Service.Vpn, vpnCapabilities);
         
         Map<Capability, String> firewallCapabilities = capabilities.get(Service.Firewall);
-        firewallCapabilities.put(Capability.FirewallType, "percidr");
+        firewallCapabilities.put(Capability.FirewallType, "networkacl");
         capabilities.put(Service.Firewall, firewallCapabilities);
 
         return capabilities;
@@ -329,6 +342,26 @@ public class VpcVirtualRouterElement extends VirtualRouterElement implements Vpc
             return _vpcRouterMgr.associateIP(network, ipAddress, routers);
         } else {
             return false;
+        }
+    }
+    
+    @Override
+    public boolean applyNetworkACLs(Network config, List<? extends FirewallRule> rules) throws ResourceUnavailableException {
+        if (canHandle(config, Service.Firewall)) {
+            List<DomainRouterVO> routers = _routerDao.listByNetworkAndRole(config.getId(), Role.VIRTUAL_ROUTER);
+            if (routers == null || routers.isEmpty()) {
+                s_logger.debug("Virtual router elemnt doesn't need to apply firewall rules on the backend; virtual " +
+                        "router doesn't exist in the network " + config.getId());
+                return true;
+            }
+
+            if (!_vpcRouterMgr.applyNetworkACLs(config, (List<NetworkACL>)rules, routers)) {
+                throw new CloudRuntimeException("Failed to apply firewall rules in network " + config.getId());
+            } else {
+                return true;
+            }
+        } else {
+            return true;
         }
     }
 }
