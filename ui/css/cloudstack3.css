@@ -8884,10 +8884,11 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   width: 28px;
   height: 3px;
   background: #CCCCCC 0px -8px;
-  /*+placement:shift -29px 22px;*/
+  /*+placement:shift -29px 38px;*/
   position: relative;
   left: -29px;
-  top: 22px;
+  top: 38px;
+  position: absolute;
 }
 
 .vpc-chart li.tier span.title {
@@ -8895,13 +8896,15 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   position: relative;
   left: 7px;
   top: 9px;
+  position: absolute;
 }
 
 .vpc-chart li.tier span.cidr {
-  /*+placement:shift -25px 23px;*/
+  /*+placement:shift 7px 23px;*/
   position: relative;
-  left: -25px;
+  left: 7px;
   top: 23px;
+  position: absolute;
   font-size: 13px;
   color: #2A2A2A;
 }
