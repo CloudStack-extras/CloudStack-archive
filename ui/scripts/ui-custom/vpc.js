@@ -112,11 +112,19 @@
         maximizeIfSelected: true,
         title: 'Configure VPC: ' + vpc.name,
         complete: function($panel) {
+          var $loading = $('<div>').addClass('loading-overlay').appendTo($panel);
+
+          $chart.hide();
           $panel.append($toolbar, $chart);
 
-          if (!tiers || !tiers.length) {
-            addTierDialog();
-          }
+          setTimeout(function() {
+            $loading.remove();
+            $chart.fadeIn(function() {
+              if (!tiers || !tiers.length) {
+                addTierDialog();
+              }
+            });
+          }, 1000);
         }
       });
     };
