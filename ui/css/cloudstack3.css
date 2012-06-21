@@ -8835,6 +8835,18 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   width: 100%;
   height: 100%;
   overflow: auto;
+  position: relative;
+  margin: 30px 0 0;
+}
+
+.vpc-chart .vpc-title {
+  font-size: 24px;
+  /*+placement:shift 50px 40px;*/
+  position: relative;
+  left: 50px;
+  top: 40px;
+  position: absolute;
+  color: #5F768A;
 }
 
 .vpc-chart ul.tiers {
@@ -8940,9 +8952,9 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   margin: 0px;
   width: 126px;
   height: 65px;
-  /*+placement:shift 0px -36px;*/
+  /*+placement:shift 17px -36px;*/
   position: relative;
-  left: 0px;
+  left: 17px;
   top: -36px;
 }
 
@@ -8961,7 +8973,11 @@ div.panel.ui-dialog div.list-view div.fixed-header {
 }
 
 .vpc-chart li.tier.virtual-router .connect-line {
-  top: 16px;
+  /*+placement:shift -47px 14px;*/
+  position: relative;
+  left: -47px;
+  top: 14px;
+  width: 46px;
 }
 
 /*Action icons*/
