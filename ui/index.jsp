@@ -1634,6 +1634,7 @@
     <script type="text/javascript" src="scripts/ui-custom/ipRules.js?t=<%=now%>"></script>
     <script type="text/javascript" src="scripts/ui-custom/enableStaticNAT.js?t=<%=now%>"></script>
     <script type="text/javascript" src="scripts/ui-custom/securityRules.js?t=<%=now%>"></script>
+    <script type="text/javascript" src="scripts/ui-custom/vpc.js?t=<%=now%>"></script>
     <script type="text/javascript" src="scripts/network.js?t=<%=now%>"></script>
     <script type="text/javascript" src="scripts/ui-custom/recurringSnapshots.js?t=<%=now%>"></script>
     <script type="text/javascript" src="scripts/ui-custom/uploadVolume.js?t=<%=now%>"></script>

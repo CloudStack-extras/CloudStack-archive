@@ -8830,6 +8830,140 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   background: #DFE1E3;
 }
 
+/*VPC / vApps*/
+.vpc-chart {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+.vpc-chart ul.tiers {
+  padding: 0 0 0 26px;
+  margin: 79px 0 0 232px;
+  border-left: 3px solid #CCC;
+}
+
+.vpc-chart li.tier {
+  display: block;
+  width: 167px;
+  height: 77px;
+  margin: 0 0 20px;
+  /*+border-radius:4px;*/
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  -khtml-border-radius: 4px;
+  border-radius: 4px;
+  border: 1px solid #9EA1A5;
+  background: url(../images/bg-gradients.png) 0px -2518px;
+  /*+placement:shift 0px 39px;*/
+  position: relative;
+  left: 0px;
+  top: 39px;
+  position: relative;
+  /*+box-shadow:0px 5px 7px #DADADA;*/
+  -moz-box-shadow: 0px 5px 7px #DADADA;
+  -webkit-box-shadow: 0px 5px 7px #DADADA;
+  -o-box-shadow: 0px 5px 7px #DADADA;
+  box-shadow: 0px 5px 7px #DADADA;
+}
+
+.vpc-chart li.tier .connect-line {
+  position: absolute;
+  width: 28px;
+  height: 3px;
+  background: #CCCCCC 0px -8px;
+  /*+placement:shift -29px 22px;*/
+  position: relative;
+  left: -29px;
+  top: 22px;
+}
+
+.vpc-chart li.tier span.title {
+  /*+placement:shift 7px 9px;*/
+  position: relative;
+  left: 7px;
+  top: 9px;
+}
+
+.vpc-chart li.tier span.cidr {
+  /*+placement:shift -25px 23px;*/
+  position: relative;
+  left: -25px;
+  top: 23px;
+  font-size: 13px;
+  color: #2A2A2A;
+}
+
+.vpc-chart li.tier.placeholder {
+  background: #ECECEC;
+  border: dotted #ACACAC;
+  /*+border-radius:4px;*/
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  -khtml-border-radius: 4px;
+  border-radius: 4px;
+  /*+box-shadow:none;*/
+  -moz-box-shadow: none;
+  -webkit-box-shadow: none;
+  -o-box-shadow: none;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.vpc-chart li.tier.placeholder:hover {
+  background: #D3D3D3;
+  /*+box-shadow:0px 2px 8px #A7A7A7;*/
+  -moz-box-shadow: 0px 2px 8px #A7A7A7;
+  -webkit-box-shadow: 0px 2px 8px #A7A7A7;
+  -o-box-shadow: 0px 2px 8px #A7A7A7;
+  box-shadow: 0px 2px 8px #A7A7A7;
+}
+
+.vpc-chart li.tier.placeholder span {
+  /*+placement:shift 39px 31px;*/
+  position: relative;
+  left: 39px;
+  top: 31px;
+  color: #9C9C9C;
+}
+
+.vpc-chart li.tier.placeholder:hover span {
+  color: #000000;
+  /*+text-shadow:0px 0px 7px #FFFFFF;*/
+  -moz-text-shadow: 0px 0px 7px #FFFFFF;
+  -webkit-text-shadow: 0px 0px 7px #FFFFFF;
+  -o-text-shadow: 0px 0px 7px #FFFFFF;
+  text-shadow: 0px 0px 7px #FFFFFF;
+}
+
+.vpc-chart li.tier.virtual-router {
+  margin: 0px;
+  width: 126px;
+  height: 65px;
+  /*+placement:shift 0px -36px;*/
+  position: relative;
+  left: 0px;
+  top: -36px;
+}
+
+.vpc-chart li.tier.virtual-router span {
+  color: #586E82;
+  font-size: 18px;
+  /*+text-shadow:0px 1px 3px #FFFFFF;*/
+  -moz-text-shadow: 0px 1px 3px #FFFFFF;
+  -webkit-text-shadow: 0px 1px 3px #FFFFFF;
+  -o-text-shadow: 0px 1px 3px #FFFFFF;
+  text-shadow: 0px 1px 3px #FFFFFF;
+  /*+placement:shift 6px 20px;*/
+  position: relative;
+  left: 6px;
+  top: 20px;
+}
+
+.vpc-chart li.tier.virtual-router .connect-line {
+  top: 16px;
+}
+
 /*Action icons*/
 .action.edit .icon {
   background-position: 1px -1px;

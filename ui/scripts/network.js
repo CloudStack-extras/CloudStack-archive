@@ -3187,7 +3187,8 @@
             editVpc: {
               label: 'Edit VPC',
               action: {
-                custom: function() {}
+                custom: cloudStack.uiCustom.vpc({
+                })
               }
             }
           }
