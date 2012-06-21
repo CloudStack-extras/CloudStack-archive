@@ -15,9 +15,11 @@
       var name = args.name;
       var cidr = args.cidr;
       var isPlaceholder = args.isPlaceholder;
+      var virtualMachines = args.virtualMachines;
       var $tier = $('<li>').addClass('tier');
       var $title = $('<span>').addClass('title');
       var $cidr = $('<span>').addClass('cidr');
+      var $vmCount = $('<span>').addClass('vm-count');
 
       if (isPlaceholder) {
         $tier.addClass('placeholder');
@@ -25,9 +27,13 @@
       } else {
         $title.html(name);
         $cidr.html(cidr);
+        $vmCount.append(
+          $('<span>').addClass('total').html(virtualMachines.length),
+          ' VMs'
+        );
       }
 
-      $tier.append($title, $cidr);
+      $tier.append($title, $cidr, $vmCount);
 
       // Append horizontal chart line
       $tier.append($('<div>').addClass('connect-line'));
@@ -46,7 +52,8 @@
         $(tiers).map(function(index, tier) {
           var $tier = elems.tier({
             name: tier.name,
-            cidr: tier.cidr
+            cidr: tier.cidr,
+            virtualMachines: tier.virtualMachines
           });
 
           $tier.appendTo($tiers);
@@ -80,14 +87,19 @@
     return function(args) {
       var $browser = $('#browser .container');
       var $toolbar = $('<div>').addClass('toolbar');
-      var tiers = [
+      var tiers = [ // Dummy content
         {
           name: 'tier1',
-          cidr: '0.0.0.0/0'
+          cidr: '0.0.0.0/0',
+          virtualMachines: [
+            { name: 'i-2-VM' },
+            { name: 'i-3-VM' }
+          ]
         },
         {
           name: 'tier2',
-          cidr: '10.0.0.0/24'
+          cidr: '10.0.0.0/24',
+          virtualMachines: []
         }
       ];
       var vpc = args.context.vpc[0];

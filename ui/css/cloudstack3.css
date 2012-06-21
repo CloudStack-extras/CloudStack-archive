@@ -8906,6 +8906,22 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   color: #2A2A2A;
 }
 
+.vpc-chart li.tier .vm-count {
+  font-size: 12px;
+  /*+placement:shift 95px 16px;*/
+  position: relative;
+  left: 95px;
+  top: 16px;
+  position: absolute;
+  color: #454545;
+}
+
+.vpc-chart li.tier .vm-count .total {
+  color: #000000;
+  padding-right: 4px;
+  font-size: 24px;
+}
+
 .vpc-chart li.tier.placeholder {
   background: #ECECEC;
   border: dotted #ACACAC;
