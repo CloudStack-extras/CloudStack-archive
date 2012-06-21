@@ -3188,6 +3188,59 @@
               label: 'Edit VPC',
               action: {
                 custom: cloudStack.uiCustom.vpc({
+                  tiers: {
+                    actions: {
+                      // Add new tier
+                      add: {
+                        action: function(args) {
+                          setTimeout(function() {
+                            args.response.success({
+                              data: {
+                                name: args.data.name,
+                                cidr: args.data.cidr
+                              }
+                            });
+                          }, 500);
+                        },
+                        
+                        createForm: {
+                          title: 'Add new tier',
+                          desc: 'Please fill in the following to add a new VPC tier.',
+                          fields: {
+                            name: { label: 'label.name', validation: { required: true } },
+                            cidr: { label: 'label.cidr', validation: { required: true } }
+                          }
+                        }
+                      }
+                    },
+
+                    // Get tiers
+                    dataProvider: function(args) {
+                      var tiers = [ // Dummy content
+                        {
+                          name: 'tier1',
+                          cidr: '0.0.0.0/0',
+                          virtualMachines: [
+                            { name: 'i-2-VM' },
+                            { name: 'i-3-VM' }
+                          ]
+                        },
+                        {
+                          name: 'tier2',
+                          cidr: '10.0.0.0/24',
+                          virtualMachines: []
+                        }
+                      ];
+                      
+                      setTimeout(function() {
+                        args.response.success({
+                          data: {
+                            tiers: tiers
+                          }
+                        });
+                      }, 1000);
+                    }
+                  }
                 })
               }
             }

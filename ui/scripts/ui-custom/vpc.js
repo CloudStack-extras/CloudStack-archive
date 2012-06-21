@@ -42,11 +42,19 @@
     },
     chart: function(args) {
       var tiers = args.tiers;
+      var actions = args.actions;
       var vpcName = args.vpcName;
       var $tiers = $('<ul>').addClass('tiers');
       var $router = elems.router();
       var $chart = $('<div>').addClass('vpc-chart');
       var $title = $('<div>').addClass('vpc-title').html(vpcName);
+
+      var showAddTierDialog = function() {
+        addTierDialog({
+          $tiers: $tiers,
+          action: actions.add
+        });
+      };
 
       if (tiers.length) {
         $(tiers).map(function(index, tier) {
@@ -58,55 +66,69 @@
 
           $tier.appendTo($tiers);
         });
-        
+
       }
-      
+
       elems.tier({ isPlaceholder: true }).appendTo($tiers)
-        .click(addTierDialog);
+        .click(showAddTierDialog);
       $tiers.prepend($router);
       $chart.append($title, $tiers);
+
+      if (!tiers || !tiers.length) {
+        showAddTierDialog();
+      }
 
       return $chart;
     }
   };
 
-  var addTierDialog = function() {
+  var addNewTier = function(args) {
+    var tier = $.extend(args.tier, {
+      virtualMachines: []
+    });
+    var $tiers = args.$tiers;
+
+    $tiers.find('li.placeholder')
+      .before(
+        elems.tier(tier)
+          .hide()
+          .fadeIn('slow')
+      );
+  };
+
+  var addTierDialog = function(args) {
+    var action = args.action;
+    var $tiers = args.$tiers;
+
     cloudStack.dialog.createForm({
-      form: {
-        title: 'Add new tier',
-        desc: 'Please fill in the following to add a new VPC tier.',
-        fields: {
-          name: { label: 'Name', validation: { required: true } }
-        }
-      },
-      after: function(args) {}
+      form: action.createForm,
+      after: function(args) {
+        var $loading = $('<div>').addClass('loading-overlay').prependTo($tiers.find('li.placeholder'));
+        action.action({
+          data: args.data,
+          response: {
+            success: function(args) {
+              var tier = args.data;
+
+              $loading.remove();
+              addNewTier({
+                tier: tier,
+                $tiers: $tiers
+              });
+            }
+          }
+        });
+      }
     });
   };
 
   cloudStack.uiCustom.vpc = function(args) {
+    var tierArgs = args.tiers;
+
     return function(args) {
       var $browser = $('#browser .container');
       var $toolbar = $('<div>').addClass('toolbar');
-      var tiers = [ // Dummy content
-        {
-          name: 'tier1',
-          cidr: '0.0.0.0/0',
-          virtualMachines: [
-            { name: 'i-2-VM' },
-            { name: 'i-3-VM' }
-          ]
-        },
-        {
-          name: 'tier2',
-          cidr: '10.0.0.0/24',
-          virtualMachines: []
-        }
-      ];
       var vpc = args.context.vpc[0];
-      var $chart = elems.chart({
-        vpcName: vpc.name,
-        tiers: tiers
-      });
 
       $browser.cloudBrowser('addPanel', {
         maximizeIfSelected: true,
@@ -114,17 +136,24 @@
         complete: function($panel) {
           var $loading = $('<div>').addClass('loading-overlay').appendTo($panel);
 
-          $chart.hide();
-          $panel.append($toolbar, $chart);
+          $panel.append($toolbar);
 
-          setTimeout(function() {
-            $loading.remove();
-            $chart.fadeIn(function() {
-              if (!tiers || !tiers.length) {
-                addTierDialog();
+          tierArgs.dataProvider({
+            response: {
+              success: function(args) {
+                var tiers = args.data.tiers;
+                var $chart = elems.chart({
+                  actions: tierArgs.actions,
+                  vpcName: vpc.name,
+                  tiers: tiers
+                }).appendTo($panel);
+
+                $loading.remove();
+                $chart.fadeIn(function() {
+                });
               }
-            });
-          }, 1000);
+            }
+          });
         }
       });
     };
