@@ -82,6 +82,7 @@
     }
   };
 
+  // Appends a new tier to chart
   var addNewTier = function(args) {
     var tier = $.extend(args.tier, {
       virtualMachines: []
@@ -96,6 +97,7 @@
       );
   };
 
+  // Renders the add tier form, in a dialog
   var addTierDialog = function(args) {
     var action = args.action;
     var $tiers = args.$tiers;
@@ -138,6 +140,7 @@
 
           $panel.append($toolbar);
 
+          // Load data
           tierArgs.dataProvider({
             response: {
               success: function(args) {
