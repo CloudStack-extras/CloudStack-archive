@@ -8909,6 +8909,35 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   color: #2A2A2A;
 }
 
+.vpc-chart li.tier .actions {
+  width: 100%;
+  height: 35px;
+  position: absolute;
+  /*+box-shadow:inset 0px 0px 10px #D3D8DD;*/
+  -moz-box-shadow: inset 0px 0px 10px #D3D8DD;
+  -webkit-box-shadow: inset 0px 0px 10px #D3D8DD;
+  -o-box-shadow: inset 0px 0px 10px #D3D8DD;
+  box-shadow: inset 0px 0px 10px #D3D8DD;
+  border-top: 1px solid #9EA1A5;
+  /*+placement:shift 0px 42px;*/
+  position: relative;
+  left: 0px;
+  top: 42px;
+  position: absolute;
+}
+
+.vpc-chart li.tier .action span.icon {
+  background-image: url(../images/sprites.png);
+  cursor: pointer;
+  width: 37px;
+  height: 23px;
+  float: left;
+  /*+placement:shift 1px 3px;*/
+  position: relative;
+  left: 1px;
+  top: 3px;
+}
+
 .vpc-chart li.tier .vm-count {
   font-size: 12px;
   /*+placement:shift 95px 16px;*/

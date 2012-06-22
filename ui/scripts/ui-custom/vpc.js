@@ -14,12 +14,24 @@
     tier: function(args) {
       var name = args.name;
       var cidr = args.cidr;
+      var actions = $.map(
+        args.actions ? args.actions : {}, function(value, key) {
+          return { id: key, action: value };
+        }
+      );
       var isPlaceholder = args.isPlaceholder;
       var virtualMachines = args.virtualMachines;
       var $tier = $('<li>').addClass('tier');
       var $title = $('<span>').addClass('title');
       var $cidr = $('<span>').addClass('cidr');
       var $vmCount = $('<span>').addClass('vm-count');
+      var $actions = $('<div>').addClass('actions');
+
+      // Ignore special actions
+      // -- Add tier action is handled separately
+      actions = $.grep(actions, function(action) {
+        return action.id != 'add';
+      });
 
       if (isPlaceholder) {
         $tier.addClass('placeholder');
@@ -31,9 +43,27 @@
           $('<span>').addClass('total').html(virtualMachines.length),
           ' VMs'
         );
+        $tier.append($actions);
+
+        // Add actions
+        $(actions).map(function(index, action) {
+          var $action = $('<div>').addClass('action');
+
+          $action.addClass(action.id);
+          $action.append($('<span>').addClass('icon').html('&nbsp;'));
+          $actions.append($action);
+
+          // Action event
+          $action.click(function() {
+            tierAction({
+              action: action,
+              $tier: $tier
+            });
+          });
+        });
       }
 
-      $tier.append($title, $cidr, $vmCount);
+      $tier.prepend($title, $cidr, $vmCount);
 
       // Append horizontal chart line
       $tier.append($('<div>').addClass('connect-line'));
@@ -52,7 +82,7 @@
       var showAddTierDialog = function() {
         addTierDialog({
           $tiers: $tiers,
-          action: actions.add
+          actions: actions
         });
       };
 
@@ -61,7 +91,8 @@
           var $tier = elems.tier({
             name: tier.name,
             cidr: tier.cidr,
-            virtualMachines: tier.virtualMachines
+            virtualMachines: tier.virtualMachines,
+            actions: actions
           });
 
           $tier.appendTo($tiers);
@@ -82,9 +113,48 @@
     }
   };
 
+  // Handles tier action, including UI effects
+  var tierAction = function(args) {
+    var $tier = args.$tier;
+    var $loading = $('<div>').addClass('loading-overlay').appendTo($tier);
+    var actionArgs = args.action.action;
+    var action = actionArgs.action;
+    var notification = actionArgs.notification;
+    var label = actionArgs.label;
+
+    action({
+      response: {
+        success: function(args) {
+          cloudStack.ui.notifications.add(
+            // Notification
+            {
+              desc: label,
+              poll: notification.poll
+            },
+
+            // Success
+            function(args) {
+              $loading.remove();
+            },
+
+            {},
+
+            // Error
+            function(args) {
+              $loading.remove();
+            }
+          );
+        },
+        error: function(args) { $loading.remove(); }
+      }
+    });
+  };
+
   // Appends a new tier to chart
   var addNewTier = function(args) {
+    var actions = args.actions;
     var tier = $.extend(args.tier, {
+      actions: actions,
       virtualMachines: []
     });
     var $tiers = args.$tiers;
@@ -99,14 +169,14 @@
 
   // Renders the add tier form, in a dialog
   var addTierDialog = function(args) {
-    var action = args.action;
+    var actions = args.actions;
     var $tiers = args.$tiers;
 
     cloudStack.dialog.createForm({
-      form: action.createForm,
+      form: actions.add.createForm,
       after: function(args) {
         var $loading = $('<div>').addClass('loading-overlay').prependTo($tiers.find('li.placeholder'));
-        action.action({
+        actions.add.action({
           data: args.data,
           response: {
             success: function(args) {
@@ -115,7 +185,8 @@
               $loading.remove();
               addNewTier({
                 tier: tier,
-                $tiers: $tiers
+                $tiers: $tiers,
+                actions: actions
               });
             }
           }

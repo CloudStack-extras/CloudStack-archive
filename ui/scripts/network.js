@@ -3211,6 +3211,42 @@
                             cidr: { label: 'label.cidr', validation: { required: true } }
                           }
                         }
+                      },
+                      enable: {
+                        label: 'Enable tier',
+                        action: function(args) {
+                          args.response.success();
+                        },
+                        notification: {
+                          poll: function(args) { args.complete(); }
+                        }
+                      },
+                      disable: {
+                        label: 'Disable tier',
+                        action: function(args) {
+                          args.response.success();
+                        },
+                        notification: {
+                          poll: function(args) { args.complete(); }
+                        }
+                      },
+                      addVM: {
+                        label: 'Add VM to tier',
+                        action: function(args) {
+                          args.response.success();
+                        },
+                        notification: {
+                          poll: function(args) { args.complete(); }
+                        }
+                      },
+                      networkACL: {
+                        label: 'Network ACL',
+                        action: function(args) {
+                          args.response.success();
+                        },
+                        notification: {
+                          poll: function(args) { args.complete(); }
+                        }
                       }
                     },
 
