@@ -9196,13 +9196,15 @@ div.panel.ui-dialog div.list-view div.fixed-header {
 
 .create .icon,
 .createTemplate .icon,
-.enableSwift .icon {
+.enableSwift .icon,
+.addVM .icon {
   background-position: -69px -63px;
 }
 
 .create:hover .icon,
 .createTemplate:hover .icon,
-.enableSwift:hover .icon {
+.enableSwift:hover .icon,
+.addVM:hover .icon {
   background-position: -69px -645px;
 }
 
@@ -9264,11 +9266,13 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   background-position: -167px -648px;
 }
 
-.generateKeys .icon {
+.generateKeys .icon,
+.networkACL .icon {
   background-position: -167px -95px;
 }
 
-.generateKeys:hover .icon {
+.generateKeys:hover .icon,
+.networkACL:hover .icon {
   background-position: -167px -677px;
 }
 
