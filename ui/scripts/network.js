@@ -3232,9 +3232,14 @@
                       },
                       addVM: {
                         label: 'Add VM to tier',
-                        action: function(args) {
-                          args.response.success();
-                        },
+                        action: cloudStack.instanceWizard(
+                          $.extend(cloudStack.sections.instances.instanceWizard, {
+                            action: function(args) {
+                              // Placeholder for deploy VM action
+                              args.response.success({});
+                            }
+                          })
+                        ),
                         notification: {
                           poll: function(args) { args.complete(); }
                         }

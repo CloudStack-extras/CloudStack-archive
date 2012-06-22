@@ -116,38 +116,52 @@
   // Handles tier action, including UI effects
   var tierAction = function(args) {
     var $tier = args.$tier;
-    var $loading = $('<div>').addClass('loading-overlay').appendTo($tier);
+    var $loading = $('<div>').addClass('loading-overlay');
     var actionArgs = args.action.action;
     var action = actionArgs.action;
+    var actionID = args.action.id;
     var notification = actionArgs.notification;
     var label = actionArgs.label;
 
-    action({
-      response: {
-        success: function(args) {
-          cloudStack.ui.notifications.add(
-            // Notification
-            {
-              desc: label,
-              poll: notification.poll
-            },
-
-            // Success
-            function(args) {
-              $loading.remove();
-            },
-
-            {},
-
-            // Error
-            function(args) {
-              $loading.remove();
-            }
-          );
+    var success = function(args) {
+      cloudStack.ui.notifications.add(
+        // Notification
+        {
+          desc: label,
+          poll: notification.poll
         },
-        error: function(args) { $loading.remove(); }
-      }
-    });
+
+        // Success
+        function(args) {
+          $loading.remove();
+        },
+
+        {},
+
+        // Error
+        function(args) {
+          $loading.remove();
+        }
+      );
+    };
+
+    if (actionID == 'addVM') {
+      action({
+        complete: function(args) {
+          $loading.appendTo($tier);
+          success(args);
+        }
+      });
+    } else {
+      $loading.appendTo($tier);
+      action({
+        complete: success,
+        response: {
+          success: success,
+          error: function(args) { $loading.remove(); }
+        }
+      });
+    }
   };
 
   // Appends a new tier to chart
