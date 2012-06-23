@@ -30,15 +30,15 @@ import org.apache.log4j.Logger;
 
 import com.cloud.bridge.util.ConfigurationHelper;
 
-public class BucketPolicyDao {
+public class BucketPolicyDao extends BaseDao {
 	public static final Logger logger = Logger.getLogger(BucketPolicyDao.class);
 
 	private Connection conn       = null;
 	private String     dbName     = null;
-	private String     dbUser     = null;
-	private String     dbPassword = null;
-    private String     dbHost     = null;
-    private String     dbPort     = null; 
+	//private String     dbUser     = null;
+	//private String     dbPassword = null;
+    //private String     dbHost     = null;
+    //private String     dbPort     = null; 
 	
 	public BucketPolicyDao() 
 	{
