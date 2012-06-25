@@ -1048,4 +1048,17 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager, NetworkS
         // TODO Auto-generated method stub
         return false;
     }
+
+	@Override
+	public List<? extends PhysicalNetwork> getPhysicalNtwksSupportingTrafficType(
+			long zoneId, TrafficType trafficType) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isPrivateGateway(Nic guestNic) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
