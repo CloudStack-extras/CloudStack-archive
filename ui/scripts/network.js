@@ -3259,15 +3259,15 @@
                     dataProvider: function(args) {
                       var tiers = [ // Dummy content
                         {
-                          name: 'tier1',
-                          cidr: '0.0.0.0/0',
+                          name: 'web',
+                          cidr: '192.168.0.0/24',
                           virtualMachines: [
                             { name: 'i-2-VM' },
                             { name: 'i-3-VM' }
                           ]
                         },
                         {
-                          name: 'tier2',
+                          name: 'app',
                           cidr: '10.0.0.0/24',
                           virtualMachines: []
                         }
