@@ -8857,7 +8857,7 @@ div.panel.ui-dialog div.list-view div.fixed-header {
 
 .vpc-chart li.tier {
   display: block;
-  width: 167px;
+  width: 200px;
   height: 77px;
   margin: 0 0 20px;
   /*+border-radius:4px;*/
@@ -8895,7 +8895,7 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   /*+placement:shift 7px 9px;*/
   position: relative;
   left: 7px;
-  top: 9px;
+  top: 4px;
   position: absolute;
 }
 
@@ -8905,8 +8905,8 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   left: 7px;
   top: 23px;
   position: absolute;
-  font-size: 13px;
-  color: #2A2A2A;
+  font-size: 12px;
+  color: #474747;
 }
 
 .vpc-chart li.tier .actions {
@@ -8942,7 +8942,7 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   font-size: 12px;
   /*+placement:shift 95px 16px;*/
   position: relative;
-  left: 95px;
+  left: 118px;
   top: 16px;
   position: absolute;
   color: #454545;
