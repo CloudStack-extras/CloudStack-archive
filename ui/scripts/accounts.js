@@ -86,6 +86,15 @@
                   password: {
                     label: 'label.password',
                     validation: { required: true },
+                    isPassword: true,
+                    id: 'password'
+                  },
+                  'password-confirm': {
+                    label: 'label.confirm.password',
+                    validation: {
+                      required: true,
+                      equalTo: '#password'
+                    },
                     isPassword: true
                   },
                   email: {
@@ -507,7 +516,8 @@
                   {
                     name: {
                       label: 'label.name',
-                      isEditable: true
+                      isEditable: true,
+					            validation: { required: true }
                     }
                   },
                   {
@@ -576,7 +586,7 @@
 											var accountObj = json.listaccountsresponse.account[0];
 
 											$.ajax({
-												url: createURL("listResourceLimits&domainid=" + accountObj.domainid + "&account=" + accountObj.name),
+												url: createURL("listResourceLimits&domainid=" + accountObj.domainid + "&account=" + todb(accountObj.name)),
 												dataType: "json",												
 												success: function(json) {
 													var limits = json.listresourcelimitsresponse.resourcelimit;													
@@ -645,7 +655,7 @@
             var accountObj = args.context.accounts[0];
 						if(isAdmin() || isDomainAdmin()) {
 							$.ajax({
-								url: createURL("listUsers&domainid=" + accountObj.domainid + "&account=" + accountObj.name + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
+								url: createURL("listUsers&domainid=" + accountObj.domainid + "&account=" + todb(accountObj.name) + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
 								dataType: "json",
 								success: function(json) {
 									args.response.success({
@@ -689,7 +699,16 @@
                   password: {
                     label: 'label.password',
                     isPassword: true,
-                    validation: { required: true }
+                    validation: { required: true },
+                    id: 'password'
+                  },
+                  'password-confirm': {
+                    label: 'label.confirm.password',
+                    validation: {
+                      required: true,
+                      equalTo: '#password'
+                    },
+                    isPassword: true
                   },
                   email: {
                     label: 'label.email',
@@ -736,7 +755,7 @@
                   array1.push("&timezone=" + todb(args.data.timezone));
 
                 array1.push("&domainid=" + accountObj.domainid);
-                array1.push("&account=" + accountObj.name);
+                array1.push("&account=" + todb(accountObj.name));
                 array1.push("&accounttype=" + accountObj.accounttype);
 
                 $.ajax({
@@ -799,8 +818,17 @@
                     newPassword: {
                       label: 'label.new.password',
                       isPassword: true,
-                      validation: { required: true }
-                    }
+                      validation: { required: true },
+					            id: 'newPassword'
+                    },
+					          'password-confirm': {
+						          label: 'label.confirm.password',
+						          validation: {
+							          required: true,
+							          equalTo: '#newPassword'
+						          },
+						          isPassword: true
+					          }
                   }
                 },
                 action: function(args) {
@@ -954,7 +982,8 @@
                   {
                     username: {
                       label: 'label.name',
-                      isEditable: true
+                      isEditable: true,
+					            validation: { required: true }
                     }
                   },
                   {
@@ -972,15 +1001,18 @@
                     domain: { label: 'label.domain' },
                     email: {
                       label: 'label.email',
-                      isEditable: true
+                      isEditable: true,
+					            validation: { required: true, email: true }
                     },
                     firstname: {
                       label: 'label.first.name',
-                      isEditable: true
+                      isEditable: true,
+					            validation: { required: true }
                     },
                     lastname: {
                       label: 'label.last.name',
-                      isEditable: true
+                      isEditable: true,
+					            validation: { required: true }
                     },
                     timezone: {
                       label: 'label.timezone',
