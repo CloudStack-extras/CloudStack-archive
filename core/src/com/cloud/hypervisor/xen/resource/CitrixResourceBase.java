@@ -982,6 +982,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
     }
     
     protected CheckSshAnswer execute(CheckSshCommand cmd) {
+    	/*
         Connection conn = getConnection();
         String vmName = cmd.getName();
         String privateIp = cmd.getIp();
@@ -1004,7 +1005,9 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             s_logger.debug("Ping command port succeeded for vm " + vmName);
         }
         
-        return new CheckSshAnswer(cmd);
+        return new CheckSshAnswer(cmd);*/
+        
+        return new CheckSshAnswer(cmd, "Can not ping System vm ");
     }
     
     private HashMap<String, String> parseDefaultOvsRuleComamnd(String str) {

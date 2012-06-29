@@ -2639,7 +2639,7 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
     }
 
     @Override
-    public void prepare(VirtualMachineProfile<? extends VirtualMachine> vm, DeployDestination dest) throws StorageUnavailableException, InsufficientStorageCapacityException {
+    public void prepare(VirtualMachineProfile<? extends VirtualMachine> vm, DeployDestination dest, boolean recreate) throws StorageUnavailableException, InsufficientStorageCapacityException {
 
         if (dest == null) {
             if (s_logger.isDebugEnabled()) {
@@ -2659,7 +2659,7 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
             if (dest.getStorageForDisks() != null) {
                 assignedPool = dest.getStorageForDisks().get(vol);
             }
-            if (assignedPool != null) {
+            if (assignedPool != null || recreate) {
                 Volume.State state = vol.getState();
                 if (state == Volume.State.Allocated || state == Volume.State.Creating) {
                     recreateVols.add(vol);
