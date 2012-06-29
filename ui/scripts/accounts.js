@@ -164,7 +164,7 @@
               action: function(args) {
                 var array1 = [];
                 array1.push("&username=" + todb(args.data.username));
-
+                var errorMsg = "";
                 var password = args.data.password;
                 if (md5Hashed)
                   password = $.md5(password);
@@ -264,7 +264,12 @@
                     async: false,
                     success: function(json) {
                       accountObj = json.updateaccountresponse.account;
+                    },
+                    error: function(json) {
+                      errorMsg = parseXMLHttpResponse(json);
+                      args.response.error(errorMsg);
                     }
+ 
                   });
 
                   $.ajax({
@@ -312,6 +317,7 @@
                     }
                   });
 
+                  if(errorMsg == "")
                   args.response.success({data: accountObj});
                 }
               },
