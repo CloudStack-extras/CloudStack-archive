@@ -43,9 +43,12 @@ public interface BaremetalPxeManager extends Manager, PluggableService {
 	BaremetalPxeResponse getApiResponse(BaremetalPxeVO vo);
 	
 	List<BaremetalPxeResponse> listPxeServers(ListBaremetalPxePingServersCmd cmd);
+	
+	boolean addUserData(NicProfile nic, VirtualMachineProfile<UserVm> vm);
 		
 	public static final Network.Service BAREMETAL_PXE_SERVICE = new Network.Service("BaremetalPxeService");
 	public static final String BAREMETAL_PXE_CAPABILITY = "BaremetalPxe";
 	public static final String BAREMETAL_PXE_SERVICE_PROPERTIES = "baremetalpxe_commands.properties";
 	public static final Provider BAREMETAL_PXE_SERVICE_PROVIDER = new Provider("BaremetalPxeProvider", true);;
+	public static final Provider BAREMETAL_USERDATA_PROVIDER = new Provider("BaremetaUserdataProvider", true);
 }

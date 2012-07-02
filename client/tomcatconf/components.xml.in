@@ -138,6 +138,7 @@
             <adapter name="CiscoNexus1000vVSM" class="com.cloud.network.element.CiscoNexusVSMElement"/>
             <adapter name="BaremetalPxe" class="com.cloud.baremetal.networkservice.BaremetalPxeElement"/>
             <adapter name="BaremetalDhcp" class="com.cloud.baremetal.networkservice.BaremetalDhcpElement"/>
+            <adapter name="BaremetalUserData" class="com.cloud.baremetal.networkservice.BaremetalUserdataElement"/>
         </adapters>
         <adapters key="com.cloud.cluster.agentlb.AgentLoadBalancerPlanner">
             <adapter name="ClusterBasedAgentLbPlanner" class="com.cloud.cluster.agentlb.ClusterBasedAgentLoadBalancerPlanner"/>

@@ -250,6 +250,7 @@ Requires: xinetd
 Requires: syslinux
 Requires: chkconfig
 Requires: dhcp
+Requires: httpd
 Group:     System Environment/Libraries
 %description baremetal-agent
 The CloudStack baremetal agent

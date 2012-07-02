@@ -130,7 +130,7 @@ def checkEnv():
    else:
        writeProgressBar(None, True)
        
-   pkgList = ['tftp-server', 'syslinux', 'xinetd', 'chkconfig', 'dhcp']
+   pkgList = ['tftp-server', 'syslinux', 'xinetd', 'chkconfig', 'dhcp', 'httpd']
    for pkg in pkgList:
        if not checkRpm(pkg):
            return False
@@ -151,7 +151,7 @@ def bashWithResult(cmd):
         return True
     
 def configurePxeStuff(): 
-    stuff = ['tftp', 'xinetd', 'dhcpd']
+    stuff = ['tftp', 'xinetd', 'dhcpd', 'httpd']
     cmds = ['chkconfig --level 345 %s on' % i for i in stuff]
     cmds.append('/etc/init.d/xinetd restart')
     

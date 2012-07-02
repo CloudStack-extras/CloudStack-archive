@@ -13,10 +13,12 @@
 package com.cloud.baremetal.networkservice;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.naming.ConfigurationException;
 
+import org.apache.axis.utils.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.IAgentControl;
@@ -29,6 +31,7 @@ import com.cloud.agent.api.StartupExternalDhcpCommand;
 import com.cloud.agent.api.baremetal.PreparePxeServerAnswer;
 import com.cloud.agent.api.baremetal.PreparePxeServerCommand;
 import com.cloud.agent.api.baremetal.prepareCreateTemplateCommand;
+import com.cloud.agent.api.routing.VmDataCommand;
 import com.cloud.api.ApiConstants;
 import com.cloud.baremetal.networkservice.BaremetalPxeService;
 import com.cloud.host.Host.Type;
@@ -108,6 +111,13 @@ public class BaremetalPingPxeResource extends BaremetalPxeResourceBase {
 				throw new ConfigurationException("Can not find prepare_tftp_bootfile.py at " + prepareScriptPath);
 			}
 			scp.put(prepareScriptPath, "/usr/bin/", "0755");
+			
+			String userDataScript = "scripts/network/ping/baremetal_user_data.py";
+			String userDataScriptPath = Script.findScript("", userDataScript);
+			if (userDataScriptPath == null) {
+				throw new ConfigurationException("Can not find baremetal_user_data.py at " + userDataScriptPath);
+			}
+			scp.put(userDataScriptPath, "/usr/bin/", "0755");
 			
 			return true;
 		} catch (Exception e) {
@@ -192,8 +202,53 @@ public class BaremetalPingPxeResource extends BaremetalPxeResourceBase {
 			return execute((PreparePxeServerCommand) cmd);
 		} else if (cmd instanceof prepareCreateTemplateCommand) {
 		    return execute((prepareCreateTemplateCommand)cmd);
+		} else if (cmd instanceof VmDataCommand) {
+		    return execute((VmDataCommand)cmd);
 		} else {
 			return super.executeRequest(cmd);
 		}
 	}
+
+    private Answer execute(VmDataCommand cmd) {
+        com.trilead.ssh2.Connection sshConnection = new com.trilead.ssh2.Connection(_ip, 22);
+        try {
+            List<String[]> vmData = cmd.getVmData();
+            StringBuilder sb = new StringBuilder();
+            for (String[] data : vmData) {
+                String folder = data[0];
+                String file = data[1];
+                String contents = (data[2] == null) ? "none" : data[2];
+                sb.append(cmd.getVmIpAddress());
+                sb.append(",");
+                sb.append(folder);
+                sb.append(",");
+                sb.append(file);
+                sb.append(",");
+                sb.append(contents);
+                sb.append(";");
+            }
+            String arg = StringUtils.stripEnd(sb.toString(), ";");
+            
+            sshConnection.connect(null, 60000, 60000);
+            if (!sshConnection.authenticateWithPassword(_username, _password)) {
+                s_logger.debug("SSH Failed to authenticate");
+                throw new ConfigurationException(String.format("Cannot connect to PING PXE server(IP=%1$s, username=%2$s, password=%3$s", _ip, _username,
+                        _password));
+            }
+            
+            String script = String.format("python /usr/bin/baremetal_user_data.py %s", arg);
+            if (!SSHCmdHelper.sshExecuteCmd(sshConnection, script)) {
+                return new Answer(cmd, false, "Failed to add user data, command:" + script);
+            }
+            
+            return new Answer(cmd, true, "Success");
+        }  catch (Exception e){
+            s_logger.debug("Prepare for creating baremetal template failed", e);
+            return new Answer(cmd, false, e.getMessage());
+        } finally {
+            if (sshConnection != null) {
+                sshConnection.close();
+            }
+        }
+    }
 }

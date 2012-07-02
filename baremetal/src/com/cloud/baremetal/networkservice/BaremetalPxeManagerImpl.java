@@ -21,11 +21,16 @@ import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 import com.cloud.agent.AgentManager;
+import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupPxeServerCommand;
+import com.cloud.agent.api.routing.VmDataCommand;
 import com.cloud.baremetal.database.BaremetalPxeVO;
+import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.deploy.DeployDestination;
+import com.cloud.exception.AgentUnavailableException;
+import com.cloud.exception.OperationTimedoutException;
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
@@ -33,15 +38,23 @@ import com.cloud.resource.ResourceManager;
 import com.cloud.resource.ResourceStateAdapter;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.UnableDeleteHostException;
+import com.cloud.service.dao.ServiceOfferingDao;
 import com.cloud.uservm.UserVm;
+import com.cloud.utils.StringUtils;
 import com.cloud.utils.component.Adapters;
 import com.cloud.utils.component.Inject;
+import com.cloud.utils.db.SearchCriteria2;
+import com.cloud.utils.db.SearchCriteriaService;
+import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.NicProfile;
+import com.cloud.vm.NicVO;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VirtualMachineProfile;
 import com.cloud.vm.VirtualMachineProfile.Param;
+import com.cloud.vm.dao.NicDao;
+import com.cloud.vm.dao.UserVmDao;
 
 @Local(value = {BaremetalPxeManager.class})
 public class BaremetalPxeManagerImpl implements BaremetalPxeManager, ResourceStateAdapter {
@@ -53,6 +66,10 @@ public class BaremetalPxeManagerImpl implements BaremetalPxeManager, ResourceSta
 	@Inject ResourceManager _resourceMgr;
 	@Inject(adapter=BaremetalPxeService.class)
 	protected Adapters<BaremetalPxeService> _services;
+	@Inject UserVmDao _vmDao;
+	@Inject ServiceOfferingDao _serviceOfferingDao;
+	@Inject NicDao _nicDao;
+	@Inject ConfigurationDao _configDao;
 	
 	@Override
 	public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -150,5 +167,53 @@ public class BaremetalPxeManagerImpl implements BaremetalPxeManager, ResourceSta
     @Override
     public List<BaremetalPxeResponse> listPxeServers(ListBaremetalPxePingServersCmd cmd) {
         return getServiceByType(BaremetalPxeManager.BaremetalPxeType.PING.toString()).listPxeServers(cmd);
+    }
+
+    @Override
+    public boolean addUserData(NicProfile nic, VirtualMachineProfile<UserVm> profile) {
+        UserVmVO vm = (UserVmVO) profile.getVirtualMachine();
+        _vmDao.loadDetails(vm);
+        
+        String serviceOffering = _serviceOfferingDao.findByIdIncludingRemoved(vm.getServiceOfferingId()).getDisplayText();
+        String zoneName = _dcDao.findById(vm.getDataCenterIdToDeployIn()).getName();
+        NicVO nvo = _nicDao.findById(nic.getId());
+        VmDataCommand cmd = new VmDataCommand(nvo.getIp4Address(), vm.getInstanceName());
+        cmd.addVmData("userdata", "user-data", vm.getUserData());
+        cmd.addVmData("metadata", "service-offering", StringUtils.unicodeEscape(serviceOffering));
+        cmd.addVmData("metadata", "availability-zone", StringUtils.unicodeEscape(zoneName));
+        cmd.addVmData("metadata", "local-ipv4", nic.getIp4Address());
+        cmd.addVmData("metadata", "local-hostname", StringUtils.unicodeEscape(vm.getInstanceName()));
+        cmd.addVmData("metadata", "public-ipv4", nic.getIp4Address());
+        cmd.addVmData("metadata", "public-hostname",  StringUtils.unicodeEscape(vm.getInstanceName()));
+        cmd.addVmData("metadata", "instance-id", String.valueOf(vm.getId()));
+        cmd.addVmData("metadata", "vm-id", String.valueOf(vm.getInstanceName()));
+        cmd.addVmData("metadata", "public-keys", null);
+        String cloudIdentifier = _configDao.getValue("cloud.identifier");
+        if (cloudIdentifier == null) {
+            cloudIdentifier = "";
+        } else {
+            cloudIdentifier = "CloudStack-{" + cloudIdentifier + "}";
+        }
+        cmd.addVmData("metadata", "cloud-identifier", cloudIdentifier);
+        
+        SearchCriteriaService<BaremetalPxeVO, BaremetalPxeVO> sc = SearchCriteria2.create(BaremetalPxeVO.class);
+        sc.addAnd(sc.getEntity().getPodId(), Op.EQ, vm.getPodIdToDeployIn());
+        BaremetalPxeVO pxeVo = sc.find();
+        if (pxeVo == null) {
+            throw new CloudRuntimeException("No PING PXE server found in pod: " + vm.getPodIdToDeployIn() + ", you need to add it before starting VM");
+        }
+        
+        try {
+            Answer ans = _agentMgr.send(pxeVo.getHostId(), cmd);
+            if (!ans.getResult()) {
+                s_logger.debug(String.format("Add userdata to vm:%s failed because %s", vm.getInstanceName(), ans.getDetails()));
+                return false;
+            } else {
+                return true;
+            }
+        } catch (Exception e) {
+            s_logger.debug(String.format("Add userdata to vm:%s failed", vm.getInstanceName()), e);
+            return false;
+        }
     }
 }
