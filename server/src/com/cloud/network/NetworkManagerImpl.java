@@ -6080,6 +6080,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     	if (dvo.getNetworkType() == NetworkType.Basic) {
     		addProviderToPhysicalNetwork(physicalNetworkId, "BaremetalDhcpProvider", null, null);
     		addProviderToPhysicalNetwork(physicalNetworkId, "BaremetalPxeProvider", null, null);
+    		addProviderToPhysicalNetwork(physicalNetworkId, "BaremetaUserdataProvider", null, null);
     	}
     	return null;
     }

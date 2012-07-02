@@ -236,7 +236,7 @@ public class BaremetalPingPxeResource extends BaremetalPxeResourceBase {
                         _password));
             }
             
-            String script = String.format("python /usr/bin/baremetal_user_data.py %s", arg);
+            String script = String.format("python /usr/bin/baremetal_user_data.py '%s'", arg);
             if (!SSHCmdHelper.sshExecuteCmd(sshConnection, script)) {
                 return new Answer(cmd, false, "Failed to add user data, command:" + script);
             }
