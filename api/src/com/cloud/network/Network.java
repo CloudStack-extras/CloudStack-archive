@@ -28,7 +28,7 @@ import com.cloud.utils.fsm.StateMachine;
  * owned by an account. 
  */
 public interface Network extends ControlledEntity {
-    
+
     public enum GuestType {
         Shared,
         Isolated
@@ -161,6 +161,8 @@ public interface Network extends ControlledEntity {
         public static final Capability ElasticIp = new Capability("ElasticIp");
         public static final Capability ElasticLb = new Capability("ElasticLb");
         public static final Capability FirewallType = new Capability("FirewallType");
+        public static final Capability AutoScaleCounters = new Capability("AutoScaleCounters");
+
 
         private String name;
 
@@ -280,11 +282,11 @@ public interface Network extends ControlledEntity {
 
     void setPhysicalNetworkId(Long physicalNetworkId);
 
-	ACLType getAclType();
-	
-	boolean isRestartRequired();
+    ACLType getAclType();
+    
+    boolean isRestartRequired();
 
-	boolean getSpecifyIpRanges();
+    boolean getSpecifyIpRanges();
 
     /**
      * @return
