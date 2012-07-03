@@ -76,6 +76,7 @@ import com.cloud.network.dao.PhysicalNetworkDao;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderDao;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderVO;
 import com.cloud.network.lb.LoadBalancingRule;
+import com.cloud.network.lb.LoadBalancingRule.LbAutoScaleVmGroup;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
 import com.cloud.network.resource.CreateLoadBalancerApplianceAnswer;
 import com.cloud.network.resource.DestroyLoadBalancerApplianceAnswer;
@@ -860,8 +861,10 @@ public abstract class ExternalLoadBalancerDeviceManagerImpl extends AdapterBase 
                 srcIp = loadBalancingIpNic.getIp4Address();
             }
 
-            if (destinations != null && !destinations.isEmpty()) {
+            if ((destinations != null && !destinations.isEmpty()) || rule.isAutoScaleConfig()) {
                 LoadBalancerTO loadBalancer = new LoadBalancerTO(srcIp, srcPort, protocol, algorithm, revoked, false, destinations, rule.getStickinessPolicies());
+                if(rule.isAutoScaleConfig())
+                    loadBalancer.setAutoScaleVmGroup(rule.getAutoScaleVmGroup());
                 loadBalancersToApply.add(loadBalancer);
             }
         }
