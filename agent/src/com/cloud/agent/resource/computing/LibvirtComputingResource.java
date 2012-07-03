@@ -38,7 +38,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -2402,7 +2405,16 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 	}
 
 	protected void createVbd(Connect conn, VirtualMachineTO vmSpec, String vmName, LibvirtVMDef vm) throws InternalErrorException, LibvirtException, URISyntaxException{
-		for (VolumeTO volume : vmSpec.getDisks()) {
+		List<VolumeTO> disks = Arrays.asList(vmSpec.getDisks());
+		Collections.sort(disks, new Comparator<VolumeTO>() {
+			@Override
+			public int compare(VolumeTO arg0, VolumeTO arg1) {
+				return arg0.getDeviceId() > arg1.getDeviceId() ? 1 : -1;
+			}
+		});
+		
+		for (VolumeTO volume : disks) {
+
 			String volPath = getVolumePath(conn, volume);
 
 			DiskDef.diskBus diskBusType = getGuestDiskModel(vmSpec.getOs());
@@ -2417,19 +2429,16 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 			} else {
 				int devId = (int)volume.getDeviceId();
 				
-				disk.defFileBasedDisk(volume.getPath(), devId, diskBusType, DiskDef.diskFmtType.QCOW2);
+				if (volume.getType() == Volume.Type.DATADISK) {
+					disk.defFileBasedDisk(volume.getPath(), devId, DiskDef.diskBus.VIRTIO, DiskDef.diskFmtType.QCOW2);
+				} else {
+					disk.defFileBasedDisk(volume.getPath(), devId, diskBusType, DiskDef.diskFmtType.QCOW2);
+				}
 			}
 
-			//Centos doesn't support scsi hotplug. For other host OSes, we attach the disk after the vm is running, so that we can hotplug it.
-			if (volume.getType() == Volume.Type.DATADISK &&  diskBusType != DiskDef.diskBus.VIRTIO) {
-				disk.setAttachDeferred(true);
-			}
-
-			if (!disk.isAttachDeferred()) {
-				vm.getDevices().addDevice(disk);
-			}
+			vm.getDevices().addDevice(disk);
 		}
-		
+
 		if (vmSpec.getType() != VirtualMachine.Type.User) {
 		    if (_sysvmISOPath != null) {
 		        DiskDef iso = new DiskDef();
