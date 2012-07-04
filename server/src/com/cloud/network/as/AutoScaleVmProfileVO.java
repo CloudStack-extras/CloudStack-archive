@@ -33,7 +33,6 @@ import com.cloud.utils.net.NetUtils;
 @Entity
 @Table(name="autoscale_vmprofiles")
 @Inheritance(strategy=InheritanceType.JOINED)
-@DiscriminatorColumn(name="purpose", discriminatorType=DiscriminatorType.STRING, length=32)
 public class AutoScaleVmProfileVO implements AutoScaleVmProfile, Identity {
 
     @Id
@@ -47,7 +46,7 @@ public class AutoScaleVmProfileVO implements AutoScaleVmProfile, Identity {
     @Column(name="zone_id", updatable=true, nullable=false)
     protected Long zoneId;
 
-    @Column(name="domain_id", table="account", insertable=false, updatable=false)
+    @Column(name="domain_id", updatable=true)
     private long domainId;
 
     @Column(name="account_id")
@@ -87,13 +86,15 @@ public class AutoScaleVmProfileVO implements AutoScaleVmProfile, Identity {
         setAccountId(accountId);
         setServiceOfferingId(serviceOfferingId);
         setTemplateId(templateId);
-        setSnmpCommunity(snmpCommunity);
         setOtherDeployParams(otherDeployParams);
+        if(destroyVmGraceperiod != null) {
+        	setDestroyVmGraceperiod(destroyVmGraceperiod);
+        }
+        if(snmpCommunity != null) {
+        	setSnmpCommunity(snmpCommunity);
+        }
         if(snmpPort != null) {
 			setSnmpPort(snmpPort);
-		}
-        if(destroyVmGraceperiod != null) {
-			setDestroyVmGraceperiod(destroyVmGraceperiod);
 		}
     }
 

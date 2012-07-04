@@ -17,7 +17,7 @@ import java.util.List;
 import com.cloud.api.commands.AddConditionCmd;
 import com.cloud.api.commands.AddCounterCmd;
 import com.cloud.api.commands.CreateAutoScalePolicyCmd;
-import com.cloud.api.commands.CreateAutoScaleVMGroupCmd;
+import com.cloud.api.commands.CreateAutoScaleVmGroupCmd;
 import com.cloud.api.commands.CreateLBStickinessPolicyCmd;
 import com.cloud.api.commands.CreateLoadBalancerRuleCmd;
 import com.cloud.api.commands.DeleteConditionCmd;
@@ -136,9 +136,9 @@ public interface LoadBalancingRulesService {
     List<? extends AutoScaleVmProfile> listAutoScaleVmProfiles(ListAutoScaleVmProfilesCmd listAutoScaleVmProfilesCmd);
     
     
-    AutoScaleVmGroup createAutoScaleVmGroup(CreateAutoScaleVMGroupCmd cmd);
+    AutoScaleVmGroup createAutoScaleVmGroup(CreateAutoScaleVmGroupCmd cmd);
 
-    boolean configureAutoScaleVmGroup(CreateAutoScaleVMGroupCmd cmd);
+    boolean configureAutoScaleVmGroup(CreateAutoScaleVmGroupCmd cmd);
 
     boolean deleteAutoScaleVmGroup(long vmGroupId);
 

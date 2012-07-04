@@ -20,7 +20,12 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class AutoScaleVmProfileResponse extends BaseResponse implements ControlledEntityResponse {
+	
+    @SerializedName(ApiConstants.ID)
+    @Param(description = "the autoscale vm profile ID")
+    private IdentityProxy id = new IdentityProxy("autoscale_profiles");
 
+	/* Parameters related to deploy virtual machine */
     @SerializedName(ApiConstants.ZONE_ID)
     @Param(description = "the availability zone to be used while deploying a virtual machine")
     private IdentityProxy zoneId = new IdentityProxy("data_center");
@@ -37,18 +42,6 @@ public class AutoScaleVmProfileResponse extends BaseResponse implements Controll
     @Param(description = "parameters other than zoneId/serviceOfferringId/templateId to be used while deploying a virtual machine")
     private String otherDeployParams;
 
-    @SerializedName(ApiConstants.SNMP_COMMUNITY)
-    @Param(description = "snmp community string to be used to contact a virtual machine deployed by this profile")
-    private String snmpCommunity;
-
-    @SerializedName(ApiConstants.SNMP_PORT)
-    @Param(description = "port at which the snmp agent is listening in a virtual machine deployed by this profile")
-    private Integer snmpPort;
-
-    @SerializedName(ApiConstants.AUTOSCALE_VM_DESTROY_TIME)
-    @Param(description = "the time allowed for existing connections to get closed before a vm is destroyed")
-    private Integer destroyVmGraceperiod;
-
     @SerializedName(ApiConstants.ACCOUNT) @Param(description="the account owning the instance group")
     private String accountName;
 
@@ -64,9 +57,26 @@ public class AutoScaleVmProfileResponse extends BaseResponse implements Controll
     @SerializedName(ApiConstants.DOMAIN) @Param(description="the domain name of the vm profile")
     private String domainName;
 
+	/* Parameters related to destroying a virtual machine */
+    @SerializedName(ApiConstants.AUTOSCALE_VM_DESTROY_TIME)
+    @Param(description = "the time allowed for existing connections to get closed before a vm is destroyed")
+    private Integer destroyVmGraceperiod;
+
+	/* Parameters related to a running virtual machine - monitoring aspects */
+    @SerializedName(ApiConstants.SNMP_COMMUNITY)
+    @Param(description = "snmp community string to be used to contact a virtual machine deployed by this profile")
+    private String snmpCommunity;
+
+    @SerializedName(ApiConstants.SNMP_PORT)
+    @Param(description = "port at which the snmp agent is listening in a virtual machine deployed by this profile")
+    private Integer snmpPort;
 
     public AutoScaleVmProfileResponse() {
 
+    }
+
+    public void setId(Long id) {
+        this.id.setValue(id);
     }
 
     public void setZoneId(Long zoneId) {

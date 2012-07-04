@@ -29,6 +29,10 @@ public class AutoScalePolicyResponse extends BaseResponse implements ControlledE
     @Param(description = "the availability zone of the autoscale policy")
     private IdentityProxy zoneId = new IdentityProxy("data_center");
 
+    @SerializedName(ApiConstants.ACTION)
+    @Param(description = "the action to be executed if all the conditions evaluate to true for the specified duration.")
+    private String action;
+
     @SerializedName(ApiConstants.DURATION)
     @Param(description = "the duration for which the conditions have to be true before action is taken")
     private Integer duration;
@@ -41,13 +45,9 @@ public class AutoScalePolicyResponse extends BaseResponse implements ControlledE
     @Param(description = "the cool down period for which the policy should not be evaluated after the action has been taken")
     private Integer quietTime;
 
-    @SerializedName(ApiConstants.ACTION)
-    @Param(description = "the action to be executed if all the conditions evaluate to true for the specified duration.")
-    private String action;
-
-    @SerializedName(ApiConstants.CONDITION_IDS)
+    @SerializedName("conditions")
     @Param(description = "the list of IDs of the conditions that are being evaluated on every interval")
-    private List<Long> conditionIds;
+    private List<ConditionResponse> conditions;
 
     @SerializedName(ApiConstants.ACCOUNT) @Param(description="the account owning the autoscale policy")
     private String accountName;
@@ -88,8 +88,8 @@ public class AutoScalePolicyResponse extends BaseResponse implements ControlledE
     	this.action = action;
     }
     
-    public void setConditionIds(List<Long> conditionIds) {
-        this.conditionIds = conditionIds;
+    public void setConditions(List<ConditionResponse> conditions) {
+        this.conditions = conditions;
     }
 
     public void setZoneId(Long zoneId) {

@@ -32,9 +32,9 @@ import com.cloud.exception.ResourceAllocationException;
 import com.cloud.network.as.AutoScaleVmGroup;
 import com.cloud.network.rules.LoadBalancer;
 
-@Implementation(description="Creates and automatically starts a virtual machine based on a service offering, disk offering, and template.", responseObject=UserVmResponse.class)
-public class CreateAutoScaleVMGroupCmd extends BaseAsyncCreateCmd {
-    public static final Logger s_logger = Logger.getLogger(CreateAutoScaleVMGroupCmd.class.getName());
+@Implementation(description="Creates and automatically starts a virtual machine based on a service offering, disk offering, and template.", responseObject=AutoScaleVmGroupResponse.class)
+public class CreateAutoScaleVmGroupCmd extends BaseAsyncCreateCmd {
+    public static final Logger s_logger = Logger.getLogger(CreateAutoScaleVmGroupCmd.class.getName());
 
     private static final String s_name = "autoscalevmgroupresponse";
 
@@ -46,10 +46,10 @@ public class CreateAutoScaleVMGroupCmd extends BaseAsyncCreateCmd {
     @Parameter(name = ApiConstants.LBID, type = CommandType.LONG, required = true, description = "the ID of the load balancer rule")
     private Long lbRuleId;
 
-    @Parameter(name=ApiConstants.MIN_MEMBERS, type=CommandType.LONG, required=true, description="the minimum number of members in the vmgroup, the number of instances in the vm group will be equal to or more than this number.")
+    @Parameter(name=ApiConstants.MIN_MEMBERS, type=CommandType.INTEGER, required=true, description="the minimum number of members in the vmgroup, the number of instances in the vm group will be equal to or more than this number.")
     private int minMembers;
 
-    @Parameter(name=ApiConstants.MAX_MEMBERS, type=CommandType.LONG, required=true, description="the maximum number of members in the vmgroup, The number of instances in the vm group will be equal to or less than this number.")
+    @Parameter(name=ApiConstants.MAX_MEMBERS, type=CommandType.INTEGER, required=true, description="the maximum number of members in the vmgroup, The number of instances in the vm group will be equal to or less than this number.")
     private int maxMembers;
 
     @IdentityMapper(entityTableName="autoscale_policies")
@@ -60,7 +60,7 @@ public class CreateAutoScaleVMGroupCmd extends BaseAsyncCreateCmd {
     @Parameter(name=ApiConstants.SCALEDOWN_POLICY_IDS, type=CommandType.LIST, collectionType=CommandType.LONG, required=true, description="list of de-provision autoscale policies")
     private List<Long> scaleDownPolicyIds;
 
-    @IdentityMapper(entityTableName="autoscale_vmprofile")
+    @IdentityMapper(entityTableName="autoscale_vmprofiles")
     @Parameter(name=ApiConstants.VMPROFILE_ID, type=CommandType.LONG, required=true, description="the autoscale profile that contains information about the vms in the vm group.")
     private Long profileId;
 
@@ -168,7 +168,8 @@ public class CreateAutoScaleVMGroupCmd extends BaseAsyncCreateCmd {
         AutoScaleVmGroup vmGroup = null;
         try
         {
-            success = _lbService.configureAutoScaleVmGroup(this);
+        	success = true; // Temporary, till we call configure.
+//            success = _lbService.configureAutoScaleVmGroup(this);
             vmGroup = _entityMgr.findById(AutoScaleVmGroup.class, getEntityId());
             AutoScaleVmGroupResponse responseObject = _responseGenerator.createAutoScaleVmGroupResponse(vmGroup);
             setResponseObject(responseObject);

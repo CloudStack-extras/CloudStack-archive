@@ -3,18 +3,18 @@
 
 <project name="VMOps-Common" default="help" basedir=".">
   <!--
-	     compile-java requires the following parameters
-	       - top.dir = the root directory of the source.
-	       - jar.name = name of the jar file.
-	       - classpath = classpath to use for this compile      
+         compile-java requires the following parameters
+           - top.dir = the root directory of the source.
+           - jar.name = name of the jar file.
+           - classpath = classpath to use for this compile      
 
 
-	     The directory structure under the ${top.dir} needs to be.
-	         - src
-	         
-	     The target files are generated to ${classes.dir}/${jar.name}.
-	     The jar file is generated to ${dist.dir}/${jar.name}.jar. 
-	-->
+         The directory structure under the ${top.dir} needs to be.
+             - src
+             
+         The target files are generated to ${classes.dir}/${jar.name}.
+         The jar file is generated to ${dist.dir}/${jar.name}.jar. 
+    -->
   <target name="help">
     <echo message="This file is meant to be imported by other build.xml to provide common
                    functionality.  Don not edit this file unless you are sure about adding
@@ -38,17 +38,17 @@
     <attribute name="classpath" description="class path to use"/>
     <element name="include-files" optional="true"/>
     <element name="exclude-files" optional="true"/>
-    
+
     <sequential>
 
       <mkdir dir="${classes.dir}/@{jar.name}"/>
         
       <depend srcdir="@{top.dir}/src" destdir="${classes.dir}/@{jar.name}" cache="${dep.cache.dir}" />
         
-   	  <echo message="Compiling @{top.dir}/src"/>
+         <echo message="Compiling @{top.dir}/src"/>
       <javac srcdir="@{top.dir}/src" debug="${debug}" debuglevel="${debuglevel}" deprecation="${deprecation}" destdir="${classes.dir}/@{jar.name}" 
-      	source="${source.compat.version}" target="${target.compat.version}" includeantruntime="false" compiler="javac1.6" 
-      	memoryinitialsize="512m" memorymaximumsize="1024m" fork="true">
+          source="${source.compat.version}" target="${target.compat.version}" includeantruntime="false" compiler="javac1.6" 
+          memoryinitialsize="256m" memorymaximumsize="512m" fork="true">
         <!-- compilerarg line="-processor com.cloud.annotation.LocalProcessor -processorpath ${base.dir}/tools/src -Xlint:all"/ -->
         <!-- compilerarg line="-processor com.cloud.utils.LocalProcessor -processorpath ${base.dir}/utils/src -Xlint:all"/ -->
         <compilerarg line="-Xlint:-path"/>
@@ -74,7 +74,7 @@
   <macrodef name="clean-java">
     <attribute name="top.dir" description="Top Directory of the source.  We will add src to this to get the source code."/>
     <attribute name="jar.name" description="Name of the jar file"/>
-    
+
     <sequential>
       <local name="compile.java.bin.dir"/>
       <property name="compile.java.bin.dir" location="${classes.dir}/@{jar.name}" />

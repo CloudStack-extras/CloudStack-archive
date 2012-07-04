@@ -34,7 +34,7 @@ import com.cloud.api.ApiDispatcher;
 import com.cloud.api.commands.AddConditionCmd;
 import com.cloud.api.commands.AddCounterCmd;
 import com.cloud.api.commands.CreateAutoScalePolicyCmd;
-import com.cloud.api.commands.CreateAutoScaleVMGroupCmd;
+import com.cloud.api.commands.CreateAutoScaleVmGroupCmd;
 import com.cloud.api.commands.CreateAutoScaleVmProfileCmd;
 import com.cloud.api.commands.CreateLBStickinessPolicyCmd;
 import com.cloud.api.commands.CreateLoadBalancerRuleCmd;
@@ -1441,7 +1441,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
     private boolean isAutoScaleProvisionPolicy(AutoScalePolicy policyVO)
     {
-        return policyVO.getAction() == "provision";
+        return policyVO.getAction().equals("provision");
     }
 
     private List<AutoScalePolicyVO> getAutoScalePolicies(String paramName, List<Long> policyIds, List<Counter> counters, boolean scaleUpPolicies)
@@ -1476,13 +1476,13 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMPROFILE_CREATE, eventDescription = "creating autoscale vm profile")
     public AutoScaleVmProfile createAutoScaleVmProfile(CreateAutoScaleVmProfileCmd cmd) {
         // validations
-        HashMap<String, String> deployParams = cmd.getDeployParamMap();
+        //HashMap<String, String> deployParams = cmd.getDeployParamMap();
         /*
          * Just for making sure the values are right in other deploy params.
          * For ex. if projectId is given as a string instead of an long value, this
          * will be throwing an error.
          */
-        ApiDispatcher.setupParameters(new DeployVMCmd(), deployParams);
+//        ApiDispatcher.setupParameters(new DeployVMCmd(), deployParams);
 
         if(_templateMgr.getTemplate(cmd.getTemplateId()) == null) {
 			throw new InvalidParameterValueException("Unable to find template for id:" + cmd.getTemplateId());
@@ -1519,11 +1519,9 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
         Transaction txn = Transaction.currentTxn();
         txn.start();
-        try {
-            return _autoScaleVmProfileDao.remove(id);
-        } finally {
-            txn.commit();
-        }
+        _autoScaleVmProfileDao.remove(id);
+        txn.commit();
+        return true;
     }
 
     @Override
@@ -1533,7 +1531,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         String otherDeployParams = cmd.getOtherDeployParams();
 
 
-        Filter searchFilter = new Filter(AutoScaleVmGroupVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
+        Filter searchFilter = new Filter(AutoScaleVmProfileVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
         SearchBuilder<AutoScaleVmProfileVO> sb = _autoScaleVmProfileDao.createSearchBuilder();
 
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
@@ -1588,8 +1586,13 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         action = action.toLowerCase();
 
         List<Long> conditionIds = cmd.getConditionIds();
+        ArrayList<Long> counterIds = new ArrayList<Long>();
         for (Long conditionId : conditionIds) {
-            getEntityInDatabase("conditionid" , conditionId, _conditionDao);
+            Condition condition = getEntityInDatabase("conditionid" , conditionId, _conditionDao);
+            if(counterIds.contains(condition.getCounterid())) {
+                throw new InvalidParameterValueException("atleast two conditions in the conditionids have the same counter. It is not right to apply two different conditions for the same counter");
+            }
+            counterIds.add(condition.getCounterid());
         }
 
         final Transaction txn = Transaction.currentTxn();
@@ -1624,11 +1627,18 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
         Transaction txn = Transaction.currentTxn();
         txn.start();
-        try {
-            return _autoScalePolicyDao.remove(id);
-        } finally {
-            txn.commit();
-        }
+        List<AutoScalePolicyConditionMapVO> autoScaleConditionMapVOs = _autoScalePolicyConditionMapDao.listByAll(id, null);
+        boolean success = true;
+        for (AutoScalePolicyConditionMapVO autoScalePolicyConditionMapVO : autoScaleConditionMapVOs) {
+        	if(!success)
+        		return success;
+        	success = _autoScalePolicyConditionMapDao.remove(autoScalePolicyConditionMapVO.getId());
+		}
+    	if(!success)
+    		return success;
+        _autoScalePolicyDao.remove(id);
+        txn.commit();
+        return success;
     }
 
     @Override
@@ -1665,7 +1675,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @Override
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMGROUP_CREATE, eventDescription = "creating autoscale vm group")
-    public AutoScaleVmGroup createAutoScaleVmGroup(CreateAutoScaleVMGroupCmd cmd) {
+    public AutoScaleVmGroup createAutoScaleVmGroup(CreateAutoScaleVmGroupCmd cmd) {
         int minMembers = cmd.getMinMembers();
         int maxMembers = cmd.getMaxMembers();
 
@@ -1695,14 +1705,15 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
         _accountMgr.checkAccess(UserContext.current().getCaller(), null, true, loadBalancer);
 
-        validateAutoScaleCounters(loadBalancer.getNetworkId(), counters);
+//        validateAutoScaleCounters(loadBalancer.getNetworkId(), counters);
 
 
         final Transaction txn = Transaction.currentTxn();
         txn.start();
 
-    	AutoScaleVmGroupVO vmGroupVO = new AutoScaleVmGroupVO(cmd.getLbRuleId(), minMembers, maxMembers, cmd.getProfileId());
+    	AutoScaleVmGroupVO vmGroupVO = new AutoScaleVmGroupVO(cmd.getLbRuleId(), loadBalancer.getDomainId(), loadBalancer.getAccountId(), minMembers, maxMembers, cmd.getProfileId());
     	vmGroupVO = _autoScaleVmGroupDao.persist(vmGroupVO);
+    	
     	for (AutoScalePolicyVO autoScalePolicyVO : policies) {
     		_autoScaleVmGroupPolicyMapDao.persist(new AutoScaleVmGroupPolicyMapVO(vmGroupVO.getId(), autoScalePolicyVO.getId()));
     	}
@@ -1711,7 +1722,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     }
 
     @Override
-    public boolean configureAutoScaleVmGroup(CreateAutoScaleVMGroupCmd cmd) {
+    public boolean configureAutoScaleVmGroup(CreateAutoScaleVmGroupCmd cmd) {
         return configureAutoScaleVmGroup(cmd.getEntityId(), true);
     }
 
@@ -1768,7 +1779,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         if (!isRollBackAllowedForProvider(lb)) {
             // this is for Netscalar type of devices. if their is failure the db entries will be rollbacked.
             return false;
-        }         // TODO Auto-generated method stub
+        }        
         Transaction txn = Transaction.currentTxn();
 
         List<LoadBalancingRule> rules = Arrays.asList(rule);
@@ -1851,6 +1862,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         }
 
         autoScaleVmGroupVO.setRevoke(true);
+        // TODO: call configureAutoScaleVmGroup
 
         Transaction txn = Transaction.currentTxn();
         txn.start();
