@@ -2085,6 +2085,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         if (condition == null) {
             throw new InvalidParameterValueException("Unable to find Condition with Id " + conditionId);
         }
+        _accountMgr.checkAccess(UserContext.current().getCaller(), null, true, condition);
+
         // TODO - Verify if it is used in any auto-scale profile
         AutoScalePolicyConditionMapVO policyCondition;
         policyCondition = _autoScalePolicyConditionMapDao.findById(conditionId);
