@@ -75,6 +75,11 @@ public class CounterVO implements Counter, Identity {
     }
 
     @Override
+    public String toString() {
+        return new StringBuilder("Counter[").append("id-").append(id).append("]").toString();
+    }
+
+    @Override
     public String getName() {
         return name;
     }

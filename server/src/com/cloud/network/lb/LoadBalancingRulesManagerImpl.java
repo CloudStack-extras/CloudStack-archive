@@ -38,8 +38,6 @@ import com.cloud.api.commands.CreateAutoScaleVmGroupCmd;
 import com.cloud.api.commands.CreateAutoScaleVmProfileCmd;
 import com.cloud.api.commands.CreateLBStickinessPolicyCmd;
 import com.cloud.api.commands.CreateLoadBalancerRuleCmd;
-import com.cloud.api.commands.DeleteConditionCmd;
-import com.cloud.api.commands.DeleteCounterCmd;
 import com.cloud.api.commands.DeployVMCmd;
 import com.cloud.api.commands.ListAutoScalePoliciesCmd;
 import com.cloud.api.commands.ListAutoScaleVmGroupsCmd;
@@ -956,7 +954,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         return new LbAutoScaleVmGroup(vmGroup, autoScalePolicies, lbAutoScaleVmProfile);
     }
 
-//    protected boolean applyLoadBalancerRules(List<LoadBalancerVO> lbs, boolean updateRulesInDB) throws ResourceUnavailableException {
+// protected boolean applyLoadBalancerRules(List<LoadBalancerVO> lbs, boolean updateRulesInDB) throws
+// ResourceUnavailableException {
 //        List<LoadBalancingRule> rules = new ArrayList<LoadBalancingRule>();
 //        for (LoadBalancerVO lb : lbs) {
 //            List<LbDestination> dstList = getExistingDestinations(lb.getId());
@@ -1294,7 +1293,6 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         return Arrays.asList(capability.split(","));
     }
 
-
     public void validateAutoScaleCounters(long networkid, List<Counter> counters)
     {
         List<String> supportedCounters = getSupportedAutoScaleCounters(networkid);
@@ -1308,7 +1306,6 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 			}
         }
     }
-
 
     @Override
     public List<LbStickinessMethod> getStickinessMethods(long networkid)
@@ -1496,7 +1493,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
         Transaction txn = Transaction.currentTxn();
         txn.start();
-        AutoScaleVmProfileVO profileVO = new AutoScaleVmProfileVO(cmd.getZoneId(), cmd.getDomainId(), cmd.getAccountId(), cmd.getServiceOfferingId(), cmd.getTemplateId(), cmd.getOtherDeployParams(), cmd.getSnmpCommunity(), cmd.getSnmpPort(), cmd.getDestroyVmGraceperiod());
+        AutoScaleVmProfileVO profileVO = new AutoScaleVmProfileVO(cmd.getZoneId(), cmd.getDomainId(), cmd.getAccountId(), cmd.getServiceOfferingId(), cmd.getTemplateId(), cmd.getOtherDeployParams(),
+                cmd.getSnmpCommunity(), cmd.getSnmpPort(), cmd.getDestroyVmGraceperiod());
         _autoScaleVmProfileDao.persist(profileVO);
         txn.commit();
         return profileVO;
@@ -1520,16 +1518,15 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         Transaction txn = Transaction.currentTxn();
         txn.start();
         _autoScaleVmProfileDao.remove(id);
-        txn.commit();
+            txn.commit();
         return true;
-    }
+        }
 
     @Override
     public List<? extends AutoScaleVmProfile> listAutoScaleVmProfiles(ListAutoScaleVmProfilesCmd cmd) {
         Long id = cmd.getId();
         Long templateId = cmd.getTemplateId();
         String otherDeployParams = cmd.getOtherDeployParams();
-
 
         Filter searchFilter = new Filter(AutoScaleVmProfileVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
         SearchBuilder<AutoScaleVmProfileVO> sb = _autoScaleVmProfileDao.createSearchBuilder();
@@ -1591,7 +1588,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             Condition condition = getEntityInDatabase("conditionid" , conditionId, _conditionDao);
             if(counterIds.contains(condition.getCounterid())) {
                 throw new InvalidParameterValueException("atleast two conditions in the conditionids have the same counter. It is not right to apply two different conditions for the same counter");
-            }
+        }
             counterIds.add(condition.getCounterid());
         }
 
@@ -1637,7 +1634,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     	if(!success)
     		return success;
         _autoScalePolicyDao.remove(id);
-        txn.commit();
+            txn.commit();
         return success;
     }
 
@@ -1707,7 +1704,6 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
 //        validateAutoScaleCounters(loadBalancer.getNetworkId(), counters);
 
-
         final Transaction txn = Transaction.currentTxn();
         txn.start();
 
@@ -1737,7 +1733,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
         boolean loadBalancerCreation = false;
 
-        if(vmLoadBalancerMappings.size() == 0 && vmGroupCreation) { // No manual binding exists, a loadbalancer will be created eventually, setting to lb to Add state
+        if (vmLoadBalancerMappings.size() == 0 && vmGroupCreation) { // No manual binding exists, a loadbalancer will be
+// created eventually, setting to lb to Add state
             loadBalancerCreation = true;
         }
 
@@ -1773,7 +1770,6 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
         return success;
     }
-
 
     private boolean applyAutoScaleConfig(LoadBalancerVO lb, LoadBalancingRule rule, boolean updateRulesInDB) throws ResourceUnavailableException {
         if (!isRollBackAllowedForProvider(lb)) {
@@ -1872,8 +1868,6 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             txn.commit();
         }
     }
-
-
 
     @Override
     public List<? extends AutoScaleVmGroup> listAutoScaleVmGroups(ListAutoScaleVmGroupsCmd cmd) {
@@ -2041,15 +2035,20 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_COUNTER_DELETE, eventDescription = "condition")
-    public boolean deleteCondition(long conditionId) {
+    public boolean deleteCondition(long conditionId) throws ResourceInUseException {
         // Verify Counter id
         ConditionVO condition = _conditionDao.findById(conditionId);
         if (condition == null) {
             throw new InvalidParameterValueException("Unable to find Condition with Id " + conditionId);
         }
+        _accountMgr.checkAccess(UserContext.current().getCaller(), null, true, condition);
 
         // TODO - Verify if it is used in any auto-scale profile
-
+        List<AutoScalePolicyConditionMapVO> autoScalePolicyConditionMapVOs = _autoScalePolicyConditionMapDao.listByAll(null, conditionId);
+        if (autoScalePolicyConditionMapVOs.size() > 0) {
+            s_logger.info("Cannot delete condition " + conditionId + " as it is being used in a policy.");
+            throw new ResourceInUseException("Condition with Id " + conditionId + " is in use.");
+        }
         s_logger.debug("Deleting Condition " + condition.getId());
         if (_conditionDao.remove(conditionId)) {
             return true;

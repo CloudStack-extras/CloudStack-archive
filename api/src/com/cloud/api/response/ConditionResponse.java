@@ -37,8 +37,8 @@ public class ConditionResponse extends BaseResponse implements ControlledEntityR
     private String relationalOperator;
 
     @SerializedName(value = ApiConstants.COUNTER_ID)
-    @Param(description = "UUID of the Counter.")
-    private final IdentityProxy counterId = new IdentityProxy("counter");
+    @Param(description = "Details of the Counter.")
+    private CounterResponse counter;
 
     @SerializedName(ApiConstants.DOMAIN_ID)
     @Param(description = "the domain id of the Condition owner")
@@ -80,8 +80,8 @@ public class ConditionResponse extends BaseResponse implements ControlledEntityR
         this.relationalOperator = relationalOperator;
     }
 
-    public void setCounterId(long counterId) {
-        this.counterId.setValue(counterId);
+    public void setCounter(CounterResponse counter) {
+        this.counter = counter;
     }
 
     @Override

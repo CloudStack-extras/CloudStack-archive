@@ -64,10 +64,12 @@ import com.cloud.network.as.AutoScalePolicy;
 import com.cloud.network.as.AutoScalePolicyConditionMapVO;
 import com.cloud.network.as.AutoScaleVmGroupPolicyMapVO;
 import com.cloud.network.as.ConditionVO;
+import com.cloud.network.as.CounterVO;
 import com.cloud.network.as.dao.AutoScalePolicyConditionMapDao;
 import com.cloud.network.as.dao.AutoScalePolicyDao;
 import com.cloud.network.as.dao.AutoScaleVmGroupPolicyMapDao;
 import com.cloud.network.as.dao.ConditionDao;
+import com.cloud.network.as.dao.CounterDao;
 import com.cloud.network.dao.FirewallRulesCidrsDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.LoadBalancerDao;
@@ -207,6 +209,7 @@ public class ApiDBUtils {
     private static AutoScalePolicyConditionMapDao _asPolicyConditionMapDao;
     private static AutoScaleVmGroupPolicyMapDao _asVmGroupPolicyMapDao;
     private static AutoScalePolicyDao _asPolicyDao;
+    private static CounterDao _counterDao;
 
     static {
         _ms = (ManagementServer) ComponentLocator.getComponent(ManagementServer.Name);
@@ -266,8 +269,10 @@ public class ApiDBUtils {
 	    _asPolicyDao = locator.getDao(AutoScalePolicyDao.class);
         _asPolicyConditionMapDao = locator.getDao(AutoScalePolicyConditionMapDao.class);
         _asVmGroupPolicyMapDao = locator.getDao(AutoScaleVmGroupPolicyMapDao.class);
+        _counterDao = locator.getDao(CounterDao.class);
 
-        // Note: stats collector should already have been initialized by this time, otherwise a null instance is returned
+        // Note: stats collector should already have been initialized by this time, otherwise a null instance is
+// returned
         _statsCollector = StatsCollector.getInstance();
     }
 
@@ -536,7 +541,6 @@ public class ApiDBUtils {
             return _storageMgr.getTemplateHostRef(zoneId, templateId, readyOnly);
         }
     }
-
 
     public static VolumeHostVO findVolumeHostRef(long volumeId, long zoneId) {
         return _volumeHostDao.findVolumeByZone(volumeId, zoneId);
@@ -811,5 +815,9 @@ public class ApiDBUtils {
             else
                 scaleDownPolicies.add(autoScalePolicy);
         }
+    }
+
+    public static CounterVO getCounter(long counterId) {
+        return _counterDao.findById(counterId);
     }
 }

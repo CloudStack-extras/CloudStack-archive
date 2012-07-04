@@ -27,6 +27,7 @@ import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
 import com.cloud.api.response.ConditionResponse;
+import com.cloud.async.AsyncJob;
 import com.cloud.event.EventTypes;
 import com.cloud.network.as.Condition;
 import com.cloud.user.UserContext;
@@ -111,6 +112,11 @@ public class AddConditionCmd extends BaseAsyncCmd {
 
     public Long getZoneId() {
         return zoneId;
+    }
+
+    @Override
+    public AsyncJob.Type getInstanceType() {
+        return AsyncJob.Type.Condition;
     }
 
     @Override

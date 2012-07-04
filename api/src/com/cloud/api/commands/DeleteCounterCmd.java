@@ -27,6 +27,7 @@ import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
 import com.cloud.api.response.SuccessResponse;
+import com.cloud.async.AsyncJob;
 import com.cloud.event.EventTypes;
 import com.cloud.exception.ResourceInUseException;
 import com.cloud.user.Account;
@@ -54,8 +55,10 @@ public class DeleteCounterCmd extends BaseAsyncCmd {
         try {
             result = _lbService.deleteCounter(getId());
         } catch (ResourceInUseException ex) {
-            s_logger.debug("Counter with Id: " + getId() + "is in use.");
+            s_logger.warn("Exception: ", ex);
+            throw new ServerApiException(BaseCmd.RESOURCE_IN_USE_ERROR, ex.getMessage());
         }
+
         if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
@@ -75,6 +78,11 @@ public class DeleteCounterCmd extends BaseAsyncCmd {
 
     public Long getId() {
         return id;
+    }
+
+    @Override
+    public AsyncJob.Type getInstanceType() {
+        return AsyncJob.Type.Counter;
     }
 
     @Override

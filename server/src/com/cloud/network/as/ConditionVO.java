@@ -91,6 +91,11 @@ public class ConditionVO implements Condition, Identity {
         return id;
     }
 
+    @Override
+    public String toString() {
+        return new StringBuilder("Condition[").append("id-").append(id).append("]").toString();
+    }
+
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }
