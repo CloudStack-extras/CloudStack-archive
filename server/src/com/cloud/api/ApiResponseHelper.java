@@ -3847,17 +3847,6 @@ public class ApiResponseHelper implements ResponseGenerator {
             return response;
         }
         
-        @Override
-    public Site2SiteVpnConnectionResponse createSite2SiteVpnConnectionResponse(Site2SiteVpnConnection result) {
-        Site2SiteVpnConnectionResponse response = new Site2SiteVpnConnectionResponse();
-        response.setId(result.getId());
-        response.setVpnGatewayId(result.getVpnGatewayId());
-        response.setCustomerGatewayId(result.getCustomerGatewayId());
-        response.setCreated(result.getCreated());
-        response.setRemoved(result.getRemoved());
-        return response;
-    }
-
     @Override
     public CounterResponse createCounterResponse(Counter counter) {
         CounterResponse response = new CounterResponse();
