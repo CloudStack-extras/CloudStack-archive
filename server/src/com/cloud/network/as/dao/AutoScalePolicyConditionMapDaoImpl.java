@@ -20,17 +20,17 @@ import com.cloud.network.as.AutoScalePolicyConditionMapVO;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchCriteria;
 
-@Local(value={AutoScalePolicyConditionMapDao.class})
+@Local(value = { AutoScalePolicyConditionMapDao.class })
 public class AutoScalePolicyConditionMapDaoImpl extends GenericDaoBase<AutoScalePolicyConditionMapVO, Long> implements AutoScalePolicyConditionMapDao {
 
     @Override
-    public List<AutoScalePolicyConditionMapVO> listByAll(Long policyId, List<Long> conditionIds){
+    public List<AutoScalePolicyConditionMapVO> listByAll(Long policyId, List<Long> conditionIds) {
         SearchCriteria<AutoScalePolicyConditionMapVO> sc = createSearchCriteria();
 
-        if(policyId != null)
+        if (policyId != null)
             sc.addAnd("policyId", SearchCriteria.Op.EQ, policyId);
 
-        if(conditionIds != null)
+        if (conditionIds != null)
             sc.addAnd("conditionId", SearchCriteria.Op.IN, conditionIds.toArray());
 
         return listBy(sc);
@@ -43,4 +43,12 @@ public class AutoScalePolicyConditionMapDaoImpl extends GenericDaoBase<AutoScale
         sc.addAnd("conditionId", SearchCriteria.Op.EQ, conditionId);
         return findOneBy(sc);
     }
+
+    @Override
+    public AutoScalePolicyConditionMapVO findByConditionId(Long conditionId) {
+        SearchCriteria<AutoScalePolicyConditionMapVO> sc = createSearchCriteria();
+        sc.addAnd("conditionId", SearchCriteria.Op.EQ, conditionId);
+        return findOneBy(sc);
+    }
+
 }

@@ -18,10 +18,9 @@ import com.cloud.api.commands.AddConditionCmd;
 import com.cloud.api.commands.AddCounterCmd;
 import com.cloud.api.commands.CreateAutoScalePolicyCmd;
 import com.cloud.api.commands.CreateAutoScaleVMGroupCmd;
+import com.cloud.api.commands.CreateAutoScaleVmProfileCmd;
 import com.cloud.api.commands.CreateLBStickinessPolicyCmd;
 import com.cloud.api.commands.CreateLoadBalancerRuleCmd;
-import com.cloud.api.commands.DeleteConditionCmd;
-import com.cloud.api.commands.DeleteCounterCmd;
 import com.cloud.api.commands.ListAutoScalePoliciesCmd;
 import com.cloud.api.commands.ListAutoScaleVmGroupsCmd;
 import com.cloud.api.commands.ListAutoScaleVmProfilesCmd;
@@ -31,20 +30,17 @@ import com.cloud.api.commands.ListLBStickinessPoliciesCmd;
 import com.cloud.api.commands.ListLoadBalancerRuleInstancesCmd;
 import com.cloud.api.commands.ListLoadBalancerRulesCmd;
 import com.cloud.api.commands.UpdateLoadBalancerRuleCmd;
-import com.cloud.api.commands.CreateAutoScaleVmProfileCmd;
 import com.cloud.exception.InsufficientAddressCapacityException;
 import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceInUseException;
 import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.network.as.AutoScalePolicy;
+import com.cloud.network.as.AutoScaleVmGroup;
+import com.cloud.network.as.AutoScaleVmProfile;
 import com.cloud.network.as.Condition;
 import com.cloud.network.as.Counter;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.network.rules.StickinessPolicy;
-import com.cloud.network.as.AutoScalePolicy;
-import com.cloud.network.as.AutoScaleVmProfile;
-import com.cloud.network.as.AutoScaleVmGroup;
-import com.cloud.network.as.Condition;
-import com.cloud.network.as.Counter;
 import com.cloud.uservm.UserVm;
 
 public interface LoadBalancingRulesService {
@@ -77,7 +73,7 @@ public interface LoadBalancingRulesService {
     public StickinessPolicy createLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws NetworkRuleConflictException;
 
     public boolean applyLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws ResourceUnavailableException;
-    
+
     boolean deleteLBStickinessPolicy(long stickinessPolicyId, boolean apply);
 
     /**
@@ -119,7 +115,7 @@ public interface LoadBalancingRulesService {
     List<? extends StickinessPolicy> searchForLBStickinessPolicies(ListLBStickinessPoliciesCmd cmd);
 
     List<LoadBalancingRule> listByNetworkId(long networkId);
-    
+
     LoadBalancer findById(long LoadBalancer);
 
     public AutoScalePolicy createAutoScalePolicy(CreateAutoScalePolicyCmd createAutoScalePolicyCmd);
@@ -128,14 +124,12 @@ public interface LoadBalancingRulesService {
 
     List<? extends AutoScalePolicy> listAutoScalePolicies(ListAutoScalePoliciesCmd cmd);
 
-
     AutoScaleVmProfile createAutoScaleVmProfile(CreateAutoScaleVmProfileCmd cmd);
 
     boolean deleteAutoScaleVmProfile(long profileId);
 
     List<? extends AutoScaleVmProfile> listAutoScaleVmProfiles(ListAutoScaleVmProfilesCmd listAutoScaleVmProfilesCmd);
-    
-    
+
     AutoScaleVmGroup createAutoScaleVmGroup(CreateAutoScaleVMGroupCmd cmd);
 
     boolean configureAutoScaleVmGroup(CreateAutoScaleVMGroupCmd cmd);
@@ -143,7 +137,6 @@ public interface LoadBalancingRulesService {
     boolean deleteAutoScaleVmGroup(long vmGroupId);
 
     List<? extends AutoScaleVmGroup> listAutoScaleVmGroups(ListAutoScaleVmGroupsCmd listAutoScaleVmGroupsCmd);
-
 
     /**
      * Creates a counter
@@ -167,5 +160,5 @@ public interface LoadBalancingRulesService {
 
     List<? extends Condition> listConditions(ListConditionsCmd cmd);
 
-    boolean deleteCondition(long conditionId);
+    boolean deleteCondition(long conditionId) throws ResourceInUseException;
 }
