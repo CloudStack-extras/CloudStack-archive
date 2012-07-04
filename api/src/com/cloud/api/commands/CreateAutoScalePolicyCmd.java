@@ -111,13 +111,18 @@ public class CreateAutoScalePolicyCmd extends BaseAsyncCreateCmd {
     {
         if(conditionAccountId == null) 
             getEntityOwnerId();
-        return conditionDomainId;
+        return conditionAccountId;
     }
 
     public long getDomainId()
     {
-        if(conditionDomainId == null) 
+    	s_logger.warn("Inside getDomainId..." + conditionDomainId);
+        if(conditionDomainId == null) {
+            s_logger.debug("Inside getDomainId..1." + conditionDomainId);
             getEntityOwnerId();
+        }
+        s_logger.warn("Inside getDomainId..2." + conditionDomainId);
+
         return conditionDomainId;
     }
 
@@ -135,6 +140,7 @@ public class CreateAutoScalePolicyCmd extends BaseAsyncCreateCmd {
         }
         conditionDomainId = condition.getDomainId();
         conditionAccountId = condition.getAccountId();
+        
         return conditionAccountId;
     }
 

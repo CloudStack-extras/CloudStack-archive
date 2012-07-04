@@ -49,7 +49,7 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
     @Column(name="uuid")
     String uuid;
 
-    @Column(name="domain_id", table="account", insertable=false, updatable=false)
+    @Column(name="domain_id", updatable=false)
     private long domainId;
 
     @Column(name="account_id")
@@ -76,15 +76,20 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
     @Column(name = "revoke")
     private boolean revoke = false;
 
-    public AutoScaleVmGroupVO() {
+    @Column(name = "state")
+    private String state;
+
+	public AutoScaleVmGroupVO() {
     }
 
-    public AutoScaleVmGroupVO( long lbRuleId, int minMembers, int maxMembers, long profileId) {
+    public AutoScaleVmGroupVO( long lbRuleId, long domainId, long accountId, int minMembers, int maxMembers, long profileId) {
         this.uuid = UUID.randomUUID().toString();
         this.loadBalancerId = lbRuleId;
         this.minMembers = minMembers;
         this.maxMembers = maxMembers;
         this.profileId = profileId;
+        this.accountId = accountId;
+        this.domainId= domainId;
     }
 
     @Override
@@ -126,11 +131,18 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
     }
 
     public boolean isRevoke() {
-        return revoke;
+    	return false;
     }
 
     public void setRevoke(boolean revoke) {
         this.revoke = revoke;
     }
 
+    public String getState() {
+    	return "";
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
 }

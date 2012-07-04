@@ -65,14 +65,14 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
     @Parameter(name=ApiConstants.OTHER_DEPLOY_PARAMS, type=CommandType.STRING, description="parameters other than zoneId/serviceOfferringId/templateId to be used while deploying a virtual machine")
     private String otherDeployParams;
 
+    @Parameter(name=ApiConstants.AUTOSCALE_VM_DESTROY_TIME, type=CommandType.INTEGER, required=true, description="the time allowed for existing connections to get closed before a vm is destroyed")
+    private Integer destroyVmGraceperiod;
+    
     @Parameter(name=ApiConstants.SNMP_COMMUNITY, type=CommandType.STRING, description="snmp community string to be used to contact a virtual machine deployed by this profile")
     private String snmpCommunity;
 
-    @Parameter(name=ApiConstants.SNMP_PORT, type=CommandType.INTEGER, required=true, description="port at which snmp agent is listening in a virtual machine deployed by this profile")
+    @Parameter(name=ApiConstants.SNMP_PORT, type=CommandType.INTEGER, description="port at which snmp agent is listening in a virtual machine deployed by this profile")
     private Integer snmpPort;
-
-    @Parameter(name=ApiConstants.AUTOSCALE_VM_DESTROY_TIME, type=CommandType.INTEGER, required=true, description="the time allowed for existing connections to get closed before a vm is destroyed")
-    private Integer destroyVmGraceperiod;
 
     private Map<String,String> otherDeployParamMap;
     /////////////////////////////////////////////////////
@@ -89,6 +89,9 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
     }
 
     public Long getDomainId() {
+        if (domainId == null) {
+            return UserContext.current().getCaller().getDomainId();
+        }
         return domainId;
     }
     public Long getZoneId() {
@@ -139,6 +142,8 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
         if(otherDeployParamMap == null) {
 			otherDeployParamMap = new HashMap<String,String>();
 		}
+        if(otherDeployParams == null)
+        	return;
         String[] keyValues = otherDeployParams.split("&"); //hostid=123, hypervisor=xenserver
         for (String keyValue : keyValues) { // keyValue == "hostid=123"
             String[] keyAndValue = keyValue.split("="); // keyValue = hostid, 123
@@ -147,14 +152,6 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
 			}
             String paramName = keyAndValue[0]; // hostid
             String paramValue = keyAndValue[1]; // 123
-            try {
-                DeployVMCmd.class.getField(keyAndValue[0]);
-            } catch (SecurityException se) {
-            	// Ignored because this wont occur.
-            	s_logger.warn("This field security exception should not occur", se);
-            } catch (NoSuchFieldException e) {
-                throw new InvalidParameterValueException("The parameter " + paramName+ " specified in otherDeployParam is not a DeployVM parameter");
-            }
             otherDeployParamMap.put(paramName, paramValue);
         }
     }
@@ -163,6 +160,7 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
     {
         createOtherDeployParamMap();
         HashMap<String, String> deployParams = new HashMap<String, String>(otherDeployParamMap);
+        deployParams.put("command","deployVirtualMachine");
         deployParams.put("zoneId",zoneId.toString());
         deployParams.put("serviceOfferingId",serviceOfferingId.toString());
         deployParams.put("templateId",templateId.toString());
@@ -192,8 +190,17 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
 
     @Override
     public long getEntityOwnerId() {
-
-        Long accountId = finalyzeAccountId(accountName, domainId, Long.parseLong(getOtherDeployParam("projectId")), true);
+    	Long projectId = null;
+    	String sProjectId = getOtherDeployParam("projectId");
+    	
+    	if(sProjectId != null)
+    		try {
+    			projectId = Long.parseLong(sProjectId);
+    		} catch(Exception ex) {
+    			throw new InvalidParameterValueException("projectid specified is invalid");
+    		}
+    		
+        Long accountId = finalyzeAccountId(accountName, domainId, projectId, true);
         if (accountId == null) {
             return UserContext.current().getCaller().getId();
         }

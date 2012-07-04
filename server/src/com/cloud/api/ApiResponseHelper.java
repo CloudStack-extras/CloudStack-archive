@@ -152,9 +152,11 @@ import com.cloud.network.Site2SiteVpnGatewayVO;
 import com.cloud.network.VirtualRouterProvider;
 import com.cloud.network.VpnUser;
 import com.cloud.network.as.AutoScalePolicy;
+import com.cloud.network.as.AutoScalePolicyConditionMapVO;
 import com.cloud.network.as.AutoScaleVmGroup;
 import com.cloud.network.as.AutoScaleVmProfile;
 import com.cloud.network.as.Condition;
+import com.cloud.network.as.ConditionVO;
 import com.cloud.network.as.Counter;
 import com.cloud.network.router.VirtualRouter;
 import com.cloud.network.rules.FirewallRule;
@@ -3741,6 +3743,7 @@ public class ApiResponseHelper implements ResponseGenerator {
     @Override
     public AutoScaleVmProfileResponse createAutoScaleVmProfileResponse(AutoScaleVmProfile profile) {
         AutoScaleVmProfileResponse response = new AutoScaleVmProfileResponse();
+        response.setId(profile.getId());
         response.setZoneId(profile.getZoneId());
         response.setServiceOfferingId(profile.getServiceOfferingId());
         response.setTemplateId(profile.getTemplateId());
@@ -3762,7 +3765,13 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setInterval(policy.getInterval());
         response.setQuietTime(policy.getQuietTime());
         response.setAction(policy.getAction());
-        response.setConditionIds(ApiDBUtils.getAutoScalePolicyConditionIds(policy.getId()));
+        List<ConditionVO> vos = ApiDBUtils.getAutoScalePolicyConditions(policy.getId());
+        ArrayList<ConditionResponse> conditions = new ArrayList<ConditionResponse>(vos.size());
+        for (ConditionVO vo : vos) {
+        	conditions.add(createConditionResponse(vo));
+        }
+        response.setConditions(conditions);
+        
         // Populates the account information in the response
         populateOwner(response, policy);
     
@@ -3772,6 +3781,7 @@ public class ApiResponseHelper implements ResponseGenerator {
     @Override
     public AutoScaleVmGroupResponse createAutoScaleVmGroupResponse(AutoScaleVmGroup vmGroup) {
         AutoScaleVmGroupResponse response = new AutoScaleVmGroupResponse();
+        response.setId(vmGroup.getId());
         response.setMinMembers(vmGroup.getMinMembers());
         response.setMaxMembers(vmGroup.getMaxMembers());
         response.setProfileId(vmGroup.getProfileId());

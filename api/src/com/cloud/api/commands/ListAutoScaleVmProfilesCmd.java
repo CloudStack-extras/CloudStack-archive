@@ -41,7 +41,7 @@ public class ListAutoScaleVmProfilesCmd extends BaseListProjectAndAccountResourc
     private Long id;
 
     @IdentityMapper(entityTableName="vm_template")
-    @Parameter(name=ApiConstants.TEMPLATE_ID, type=CommandType.LONG, required=true, description="the templateid of the autoscale vm profile")
+    @Parameter(name=ApiConstants.TEMPLATE_ID, type=CommandType.LONG, description="the templateid of the autoscale vm profile")
     private Long templateId;
 
     @Parameter(name=ApiConstants.OTHER_DEPLOY_PARAMS, type=CommandType.STRING, description="the otherdeployparameters of the autoscale vm profile")

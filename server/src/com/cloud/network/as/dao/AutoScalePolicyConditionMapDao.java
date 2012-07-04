@@ -18,9 +18,7 @@ import com.cloud.network.as.AutoScalePolicyConditionMapVO;
 import com.cloud.utils.db.GenericDao;
 
 public interface AutoScalePolicyConditionMapDao extends GenericDao<AutoScalePolicyConditionMapVO, Long> {
-    List<AutoScalePolicyConditionMapVO> listByAll(Long policyId, List<Long> conditionIds);
+    List<AutoScalePolicyConditionMapVO> listByAll(Long policyId, Long conditionId);
 
-    AutoScalePolicyConditionMapVO findByPolicyIdAndConditionId(Long policyId, Long conditionId);
 
-    AutoScalePolicyConditionMapVO findByConditionId(Long conditionId);
 }

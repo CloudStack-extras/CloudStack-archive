@@ -17,8 +17,8 @@ import java.util.List;
 import com.cloud.api.commands.AddConditionCmd;
 import com.cloud.api.commands.AddCounterCmd;
 import com.cloud.api.commands.CreateAutoScalePolicyCmd;
-import com.cloud.api.commands.CreateAutoScaleVMGroupCmd;
 import com.cloud.api.commands.CreateAutoScaleVmProfileCmd;
+import com.cloud.api.commands.CreateAutoScaleVmGroupCmd;
 import com.cloud.api.commands.CreateLBStickinessPolicyCmd;
 import com.cloud.api.commands.CreateLoadBalancerRuleCmd;
 import com.cloud.api.commands.ListAutoScalePoliciesCmd;
@@ -73,7 +73,7 @@ public interface LoadBalancingRulesService {
     public StickinessPolicy createLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws NetworkRuleConflictException;
 
     public boolean applyLBStickinessPolicy(CreateLBStickinessPolicyCmd cmd) throws ResourceUnavailableException;
-
+    
     boolean deleteLBStickinessPolicy(long stickinessPolicyId, boolean apply);
 
     /**
@@ -115,7 +115,7 @@ public interface LoadBalancingRulesService {
     List<? extends StickinessPolicy> searchForLBStickinessPolicies(ListLBStickinessPoliciesCmd cmd);
 
     List<LoadBalancingRule> listByNetworkId(long networkId);
-
+    
     LoadBalancer findById(long LoadBalancer);
 
     public AutoScalePolicy createAutoScalePolicy(CreateAutoScalePolicyCmd createAutoScalePolicyCmd);
@@ -129,10 +129,10 @@ public interface LoadBalancingRulesService {
     boolean deleteAutoScaleVmProfile(long profileId);
 
     List<? extends AutoScaleVmProfile> listAutoScaleVmProfiles(ListAutoScaleVmProfilesCmd listAutoScaleVmProfilesCmd);
+    
+    AutoScaleVmGroup createAutoScaleVmGroup(CreateAutoScaleVmGroupCmd cmd);
 
-    AutoScaleVmGroup createAutoScaleVmGroup(CreateAutoScaleVMGroupCmd cmd);
-
-    boolean configureAutoScaleVmGroup(CreateAutoScaleVMGroupCmd cmd);
+    boolean configureAutoScaleVmGroup(CreateAutoScaleVmGroupCmd cmd);
 
     boolean deleteAutoScaleVmGroup(long vmGroupId);
 

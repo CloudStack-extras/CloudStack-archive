@@ -66,10 +66,12 @@ import com.cloud.network.as.AutoScalePolicy;
 import com.cloud.network.as.AutoScalePolicyConditionMapVO;
 import com.cloud.network.as.AutoScaleVmGroupPolicyMapVO;
 import com.cloud.network.as.CounterVO;
+import com.cloud.network.as.ConditionVO;
 import com.cloud.network.as.dao.AutoScalePolicyConditionMapDao;
 import com.cloud.network.as.dao.AutoScalePolicyDao;
 import com.cloud.network.as.dao.AutoScaleVmGroupPolicyMapDao;
 import com.cloud.network.as.dao.CounterDao;
+import com.cloud.network.as.dao.ConditionDao;
 import com.cloud.network.dao.FirewallRulesCidrsDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.LoadBalancerDao;
@@ -211,6 +213,7 @@ public class ApiDBUtils {
     private static HighAvailabilityManager _haMgr;
     private static TaggedResourceService _taggedResourceService;
     private static VpcManager _vpcMgr;
+    private static ConditionDao _asConditionDao;
     private static AutoScalePolicyConditionMapDao _asPolicyConditionMapDao;
     private static AutoScaleVmGroupPolicyMapDao _asVmGroupPolicyMapDao;
     private static AutoScalePolicyDao _asPolicyDao;
@@ -272,8 +275,11 @@ public class ApiDBUtils {
         _haMgr = locator.getManager(HighAvailabilityManager.class);
         _taggedResourceService = locator.getManager(TaggedResourceService.class);
         _vpcMgr = locator.getManager(VpcManager.class);
+        _asConditionDao = locator.getDao(ConditionDao.class);
+	    _asPolicyDao = locator.getDao(AutoScalePolicyDao.class);
         _asPolicyConditionMapDao = locator.getDao(AutoScalePolicyConditionMapDao.class);
         _counterDao = locator.getDao(CounterDao.class);
+        _asVmGroupPolicyMapDao = locator.getDao(AutoScaleVmGroupPolicyMapDao.class);
 
         // Note: stats collector should already have been initialized by this time, otherwise a null instance is
 // returned
@@ -806,6 +812,17 @@ public class ApiDBUtils {
         return _networkMgr.canUseForDeploy(network);
     }
 
+    public static List<ConditionVO> getAutoScalePolicyConditions(long policyId)
+    {
+        List<AutoScalePolicyConditionMapVO> vos = _asPolicyConditionMapDao.listByAll(policyId, null);
+        ArrayList<ConditionVO> conditions = new ArrayList<ConditionVO>(vos.size());
+        for (AutoScalePolicyConditionMapVO vo : vos) {
+            conditions.add(_asConditionDao.findById(vo.getConditionId()));
+        }
+    	
+       return conditions;
+    }
+
     public static List<? extends ResourceTag> listByResourceTypeAndId(TaggedResourceType type, long resourceId) {
         return _taggedResourceService.listByResourceTypeAndId(type, resourceId);
     }
@@ -814,22 +831,13 @@ public class ApiDBUtils {
         boolean vpcProvider = _configMgr.isOfferingForVpc(offering);
         return vpcProvider;
     }
-    public static List<Long> getAutoScalePolicyConditionIds(long policyId)
-    {
-        List<AutoScalePolicyConditionMapVO> vos = _asPolicyConditionMapDao.listByAll(policyId, null);
-        ArrayList<Long> conditionIds = new ArrayList<Long>(vos.size());
-        for (AutoScalePolicyConditionMapVO vo : vos) {
-            conditionIds.add(vo.getConditionId());
-        }
-        return conditionIds;
-    }
 
     public static void getAutoScaleVmGroupPolicies(long vmGroupId, List<AutoScalePolicy> scaleUpPolicies, List<AutoScalePolicy> scaleDownPolicies)
     {
         List<AutoScaleVmGroupPolicyMapVO> vos = _asVmGroupPolicyMapDao.listByVmGroupId(vmGroupId);
         for (AutoScaleVmGroupPolicyMapVO vo : vos) {
             AutoScalePolicy autoScalePolicy = _asPolicyDao.findById(vo.getPolicyId());
-            if(autoScalePolicy.getAction() == "provision")
+            if(autoScalePolicy.getAction().equals("provision"))
                 scaleUpPolicies.add(autoScalePolicy);
             else
                 scaleDownPolicies.add(autoScalePolicy);

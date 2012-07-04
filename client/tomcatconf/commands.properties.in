@@ -147,9 +147,9 @@ deleteAutoScaleVmProfile=com.cloud.api.commands.DeleteAutoScaleVmProfileCmd;15
 deleteAutoScaleVmGroup=com.cloud.api.commands.DeleteAutoScaleVmGroupCmd;15
 listCounters = com.cloud.api.commands.ListCountersCmd;15
 listConditions = com.cloud.api.commands.ListConditionsCmd;15
-listAutoScalePolicy=com.cloud.api.commands.ListAutoScalePolicyCmd;15
-listAutoScaleVmProfile=com.cloud.api.commands.ListAutoScaleVmProfileCmd;15
-listAutoScaleVmGroup=com.cloud.api.commands.ListAutoScaleVmGroupCmd;15
+listAutoScalePolicies=com.cloud.api.commands.ListAutoScalePoliciesCmd;15
+listAutoScaleVmProfiles=com.cloud.api.commands.ListAutoScaleVmProfilesCmd;15
+listAutoScaleVmGroups=com.cloud.api.commands.ListAutoScaleVmGroupsCmd;15
 
 #### router commands
 startRouter=com.cloud.api.commands.StartRouterCmd;7
