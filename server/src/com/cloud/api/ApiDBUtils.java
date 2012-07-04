@@ -63,9 +63,11 @@ import com.cloud.network.Networks.TrafficType;
 import com.cloud.network.as.AutoScalePolicy;
 import com.cloud.network.as.AutoScalePolicyConditionMapVO;
 import com.cloud.network.as.AutoScaleVmGroupPolicyMapVO;
+import com.cloud.network.as.CounterVO;
 import com.cloud.network.as.dao.AutoScalePolicyConditionMapDao;
 import com.cloud.network.as.dao.AutoScalePolicyDao;
 import com.cloud.network.as.dao.AutoScaleVmGroupPolicyMapDao;
+import com.cloud.network.as.dao.CounterDao;
 import com.cloud.network.dao.FirewallRulesCidrsDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.LoadBalancerDao;
@@ -204,10 +206,11 @@ public class ApiDBUtils {
     private static AutoScalePolicyConditionMapDao _asPolicyConditionMapDao;
     private static AutoScaleVmGroupPolicyMapDao _asVmGroupPolicyMapDao;
     private static AutoScalePolicyDao _asPolicyDao;
+    private static CounterDao _counterDao;
 
     static {
         _ms = (ManagementServer) ComponentLocator.getComponent(ManagementServer.Name);
-         ComponentLocator locator = ComponentLocator.getLocator(ManagementServer.Name);
+        ComponentLocator locator = ComponentLocator.getLocator(ManagementServer.Name);
         _asyncMgr = locator.getManager(AsyncJobManager.class);
         _securityGroupMgr = locator.getManager(SecurityGroupManager.class);
         _storageMgr = locator.getManager(StorageManager.class);
@@ -260,8 +263,10 @@ public class ApiDBUtils {
         _taggedResourceService = locator.getManager(TaggedResourceService.class);
         _vpcMgr = locator.getManager(VpcManager.class);
         _asPolicyConditionMapDao = locator.getDao(AutoScalePolicyConditionMapDao.class);
+        _counterDao = locator.getDao(CounterDao.class);
 
-        // Note: stats collector should already have been initialized by this time, otherwise a null instance is returned
+        // Note: stats collector should already have been initialized by this time, otherwise a null instance is
+// returned
         _statsCollector = StatsCollector.getInstance();
     }
 
@@ -278,7 +283,7 @@ public class ApiDBUtils {
         // so if this Utils class can have some kind of config rather than a static initializer (maybe from
         // management server instantiation?) then maybe the management server method can be moved entirely
         // into this utils class.
-        return _ms.getMemoryOrCpuCapacityByHost(hostId,capacityType);
+        return _ms.getMemoryOrCpuCapacityByHost(hostId, capacityType);
     }
 
     public static long getStorageCapacitybyPool(Long poolId, short capacityType) {
@@ -289,17 +294,17 @@ public class ApiDBUtils {
         return _ms.getMemoryOrCpuCapacityByHost(poolId, capacityType);
     }
 
-    public static List<SummedCapacity> getCapacityByClusterPodZone(Long zoneId, Long podId, Long clusterId){
-        return _capacityDao.findByClusterPodZone(zoneId,podId,clusterId);         
+    public static List<SummedCapacity> getCapacityByClusterPodZone(Long zoneId, Long podId, Long clusterId) {
+        return _capacityDao.findByClusterPodZone(zoneId, podId, clusterId);
     }
 
-    public static List<SummedCapacity> findNonSharedStorageForClusterPodZone(Long zoneId, Long podId, Long clusterId){
-        return _capacityDao.findNonSharedStorageForClusterPodZone(zoneId,podId,clusterId);         
+    public static List<SummedCapacity> findNonSharedStorageForClusterPodZone(Long zoneId, Long podId, Long clusterId) {
+        return _capacityDao.findNonSharedStorageForClusterPodZone(zoneId, podId, clusterId);
     }
 
-    public static List<CapacityVO> getCapacityByPod(){
+    public static List<CapacityVO> getCapacityByPod() {
         return null;
-        
+
     }
 
     public static Long getPodIdForVlan(long vlanDbId) {
@@ -391,11 +396,11 @@ public class ApiDBUtils {
         return _statsCollector.getStorageStats(id);
     }
 
-    public static CapacityVO getStoragePoolUsedStats(Long poolId, Long clusterId, Long podId, Long zoneId){
+    public static CapacityVO getStoragePoolUsedStats(Long poolId, Long clusterId, Long podId, Long zoneId) {
         return _storageMgr.getStoragePoolUsedStats(poolId, clusterId, podId, zoneId);
     }
 
-    public static CapacityVO getSecondaryStorageUsedStats(Long hostId, Long zoneId){
+    public static CapacityVO getSecondaryStorageUsedStats(Long hostId, Long zoneId) {
         return _storageMgr.getSecondaryStorageUsedStats(hostId, zoneId);
     }
 
@@ -509,9 +514,9 @@ public class ApiDBUtils {
 
     public static VMTemplateVO findTemplateById(Long templateId) {
         VMTemplateVO template = _templateDao.findByIdIncludingRemoved(templateId);
-        if(template != null) {
+        if (template != null) {
             Map details = _templateDetailsDao.findDetails(templateId);
-            if(details != null && !details.isEmpty())
+            if (details != null && !details.isEmpty())
                 template.setDetails(details);
         }
         return template;
@@ -530,7 +535,6 @@ public class ApiDBUtils {
             return _storageMgr.getTemplateHostRef(zoneId, templateId, readyOnly);
         }
     }
-
 
     public static VolumeHostVO findVolumeHostRef(long volumeId, long zoneId) {
         return _volumeHostDao.findVolumeByZone(volumeId, zoneId);
@@ -581,8 +585,8 @@ public class ApiDBUtils {
         return _volumeDao.getHypervisorType(volumeId);
     }
 
-    public static HypervisorType getHypervisorTypeFromFormat(ImageFormat format){
-        return _storageMgr.getHypervisorTypeFromFormat(format);               
+    public static HypervisorType getHypervisorTypeFromFormat(ImageFormat format) {
+        return _storageMgr.getHypervisorTypeFromFormat(format);
     }
 
     public static List<VMTemplateHostVO> listTemplateHostBy(long templateId, Long zoneId, boolean readyOnly) {
@@ -684,9 +688,9 @@ public class ApiDBUtils {
         return cpuOverprovisioningFactor;
     }
 
-    public static boolean isExtractionDisabled(){
+    public static boolean isExtractionDisabled() {
         String disableExtractionString = _configDao.getValue(Config.DisableExtraction.toString());
-        boolean disableExtraction  = (disableExtractionString == null) ? false : Boolean.parseBoolean(disableExtractionString);
+        boolean disableExtraction = (disableExtractionString == null) ? false : Boolean.parseBoolean(disableExtractionString);
         return disableExtraction;
     }
 
@@ -698,11 +702,11 @@ public class ApiDBUtils {
         return _consoleProxyDao.findById(id);
     }
 
-    public static List<String> findFirewallSourceCidrs(long id){
-        return _firewallCidrsDao.getSourceCidrs(id);  
+    public static List<String> findFirewallSourceCidrs(long id) {
+        return _firewallCidrsDao.getSourceCidrs(id);
     }
 
-    public static Hashtable<Long, UserVmData> listVmDetails(Hashtable<Long, UserVmData> vmData){
+    public static Hashtable<Long, UserVmData> listVmDetails(Hashtable<Long, UserVmData> vmData) {
         return _userVmDao.listVmDetails(vmData);
     }
 
@@ -732,12 +736,12 @@ public class ApiDBUtils {
     }
 
     public static List<Service> getElementServices(Provider provider) {
-         return _networkMgr.getElementServices(provider);
+        return _networkMgr.getElementServices(provider);
     }
 
     public static List<? extends Provider> getProvidersForService(Service service) {
         return _networkMgr.listSupportedNetworkServiceProviders(service.getName());
-   }
+    }
 
     public static boolean canElementEnableIndividualServices(Provider serviceProvider) {
         return _networkMgr.canElementEnableIndividualServices(serviceProvider);
@@ -745,9 +749,9 @@ public class ApiDBUtils {
 
     public static Pair<Long, Boolean> getDomainNetworkDetails(long networkId) {
         NetworkDomainVO map = _networkDomainDao.getDomainNetworkMapByNetworkId(networkId);
-        
+
         boolean subdomainAccess = (map.isSubdomainAccess() != null) ? map.isSubdomainAccess() : _networkMgr.getAllowSubdomainAccessGlobal();
-        
+
         return new Pair<Long, Boolean>(map.getDomainId(), subdomainAccess);
     }
 
@@ -799,10 +803,14 @@ public class ApiDBUtils {
         List<AutoScaleVmGroupPolicyMapVO> vos = _asVmGroupPolicyMapDao.listByVmGroupId(vmGroupId);
         for (AutoScaleVmGroupPolicyMapVO vo : vos) {
             AutoScalePolicy autoScalePolicy = _asPolicyDao.findById(vo.getPolicyId());
-            if(autoScalePolicy.getAction() == "provision")
+            if (autoScalePolicy.getAction() == "provision")
                 scaleUpPolicies.add(autoScalePolicy);
             else
                 scaleDownPolicies.add(autoScalePolicy);
         }
+    }
+
+    public static CounterVO getCounter(long counterId) {
+        return _counterDao.findById(counterId);
     }
 }
