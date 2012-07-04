@@ -29,6 +29,7 @@ import com.cloud.api.ServerApiException;
 import com.cloud.api.response.SuccessResponse;
 import com.cloud.async.AsyncJob;
 import com.cloud.event.EventTypes;
+import com.cloud.exception.ResourceInUseException;
 import com.cloud.user.UserContext;
 
 @Implementation(description = "Removes a condition", responseObject = SuccessResponse.class)
@@ -58,7 +59,13 @@ public class DeleteConditionCmd extends BaseAsyncCmd {
 
     @Override
     public void execute() {
-        boolean result = _lbService.deleteCondition(getId());
+        boolean result = false;
+        try {
+            result = _lbService.deleteCondition(getId());
+        } catch (ResourceInUseException ex) {
+            s_logger.warn("Exception: ", ex);
+            throw new ServerApiException(BaseCmd.RESOURCE_IN_USE_ERROR, ex.getMessage());
+        }
         if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);

@@ -55,8 +55,10 @@ public class DeleteCounterCmd extends BaseAsyncCmd {
         try {
             result = _lbService.deleteCounter(getId());
         } catch (ResourceInUseException ex) {
-            s_logger.debug("Counter with Id: " + getId() + "is in use.");
+            s_logger.warn("Exception: ", ex);
+            throw new ServerApiException(BaseCmd.RESOURCE_IN_USE_ERROR, ex.getMessage());
         }
+
         if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());
             this.setResponseObject(response);
