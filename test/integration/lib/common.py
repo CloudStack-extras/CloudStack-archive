@@ -275,9 +275,18 @@ def list_zones(apiclient, **kwargs):
 
     cmd = listZones.listZonesCmd()
     [setattr(cmd, k, v) for k, v in kwargs.items()]
-    return(apiclient.listZones(cmd))
-
-
+	
+    list_zones_response = apiclient.listZones(cmd)
+    
+    if isinstance(list_zones_response, list):
+       pass
+    
+    if len(list_zones_response) > 0:
+       pass
+    
+    return list_zones_response    
+	
+	
 def list_networks(apiclient, **kwargs):
     """List all Networks matching criteria"""
 
@@ -291,9 +300,33 @@ def list_clusters(apiclient, **kwargs):
 
     cmd = listClusters.listClustersCmd()
     [setattr(cmd, k, v) for k, v in kwargs.items()]
-    return(apiclient.listClusters(cmd))
+	
+    list_cluster_response = apiclient.listClusters(cmd)
+    if isinstance(list_cluster_response, list):
+       pass
+    
+    if len(list_cluster_response) > 0:
+       pass
+    
+    return list_cluster_response
 
+def list_pods(apiclient, **kwargs):
+    """List all Pods matching criteria"""
 
+    cmd = listPods.listPodsCmd()
+    [setattr(cmd, k, v) for k, v in kwargs.items()]
+	
+    list_pods_response = apiclient.listPods(cmd)
+    if isinstance(list_pods_response, list):
+       pass
+    
+    if len(list_pods_response) > 0:
+       pass
+    
+    return list_pods_response
+	
+
+	
 def list_ssvms(apiclient, **kwargs):
     """List all SSVMs matching criteria"""
 
@@ -307,7 +340,15 @@ def list_storage_pools(apiclient, **kwargs):
 
     cmd = listStoragePools.listStoragePoolsCmd()
     [setattr(cmd, k, v) for k, v in kwargs.items()]
-    return(apiclient.listStoragePools(cmd))
+	
+    list_storage_pools_response = apiclient.listStoragePools(cmd)
+    if isinstance(list_storage_pools_response, list):
+       pass
+    
+    if len(list_storage_pools_response) > 0:
+       pass
+    			  
+    return list_storage_pools_response
 
 
 def list_virtual_machines(apiclient, **kwargs):
@@ -315,15 +356,36 @@ def list_virtual_machines(apiclient, **kwargs):
 
     cmd = listVirtualMachines.listVirtualMachinesCmd()
     [setattr(cmd, k, v) for k, v in kwargs.items()]
-    return(apiclient.listVirtualMachines(cmd))
+	
+    list_vm_response = apiclient.listVirtualMachines(cmd)
+    if isinstance(list_vm_response, list):
+       pass
+    
+    if len(list_vm_response) > 0:
+       pass
+    				
+    return list_vm_response
 
-
+def migrate_virtual_machine(apiclient, **kwargs):
+    """Migrate Virtual Machine"""
+    cmd = migrateVirtualMachine.migrateVirtualMachineCmd()
+    [setattr(cmd, k, v) for k, v in kwargs.items()]
+    return (apiclient.migrateVirtualMachine(cmd))
+    
 def list_hosts(apiclient, **kwargs):
     """List all Hosts matching criteria"""
 
     cmd = listHosts.listHostsCmd()
     [setattr(cmd, k, v) for k, v in kwargs.items()]
-    return(apiclient.listHosts(cmd))
+	
+    list_hosts_response = apiclient.listHosts(cmd)
+    if isinstance(list_hosts_response, list):
+       pass
+    
+    if len(list_hosts_response) > 0:
+       pass
+    			
+    return list_hosts_response
 
 
 def list_configurations(apiclient, **kwargs):
@@ -379,7 +441,15 @@ def list_volumes(apiclient, **kwargs):
 
     cmd = listVolumes.listVolumesCmd()
     [setattr(cmd, k, v) for k, v in kwargs.items()]
-    return(apiclient.listVolumes(cmd))
+	
+    list_volumes_response = apiclient.listVolumes(cmd)
+    if isinstance(list_volumes_response, list):
+       pass
+    
+    if len(list_volumes_response) > 0:
+       pass
+    
+    return list_volumes_response
 
 
 def list_isos(apiclient, **kwargs):

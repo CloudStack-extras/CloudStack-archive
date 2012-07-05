@@ -283,7 +283,7 @@ class VirtualMachine:
         cmd = rebootVirtualMachine.rebootVirtualMachineCmd()
         cmd.id = self.id
         apiclient.rebootVirtualMachine(cmd)
-
+		
     def get_ssh_client(self, ipaddress=None, reconnect=False, port=None):
         """Get SSH object of VM"""
 
@@ -324,10 +324,11 @@ class VirtualMachine:
 
     def detach_volume(self, apiclient, volume):
         """Detach volume to instance"""
-        cmd = detachVolume.detachVolumeCmd()
+        cmd = detachVolume.detachVolumeCmd() 
         cmd.id = volume.id
         return apiclient.detachVolume(cmd)
-
+    
+    
     @classmethod
     def list(cls, apiclient, **kwargs):
         """List all VMs matching criteria"""
