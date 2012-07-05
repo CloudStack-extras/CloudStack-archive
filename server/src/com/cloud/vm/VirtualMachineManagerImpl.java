@@ -1817,14 +1817,11 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         		}
             }
                else if(info == null && vm.getState() == State.Stopping) { //Handling CS-13376
-                  Host host = _hostDao.findByGuid(info.getHosUuid());
-                  if(host != null ){
-                        s_logger.warn("Marking the VM as Stopped as it was still stopping on the CS" +info.name);
+                        s_logger.warn("Marking the VM as Stopped as it was still stopping on the CS" +vm.getName());
                         vm.setState(State.Stopped); // Setting the VM as stopped on the DB and clearing it from the host
+                        vm.setLastHostId(vm.getHostId());
                         vm.setHostId(null);
-                        vm.setLastHostId(host.getId());
                         _vmDao.persist(vm);
-                     }
                  }
         }
 
