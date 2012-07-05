@@ -12,11 +12,11 @@ HTML_ROOT = "/var/www/html/"
 
 def writeIfNotHere(fileName, texts):
     if not os.path.exists(fileName):
-    	entries = []
+        entries = []
     else:
-    	f = open(fileName, 'r')
-    	entries = f.readlines()
-    	f.close()
+        f = open(fileName, 'r')
+        entries = f.readlines()
+        f.close()
 
     texts = [ "%s\n" % t for t in texts ]
     need = False
@@ -76,7 +76,7 @@ def addUserData(vmIp, folder, fileName, contents):
     f.close()
     
     if folder == "metadata" or folder == "meta-data":
-	writeIfNotHere(metaManifest, fileName)
+        writeIfNotHere(metaManifest, fileName)
 
 if __name__ == '__main__':
     string = sys.argv[1]
