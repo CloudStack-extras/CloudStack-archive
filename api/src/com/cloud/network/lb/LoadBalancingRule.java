@@ -257,6 +257,7 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     public static class LbAutoScalePolicy {
         private final List<LbCondition> conditions;
         private final AutoScalePolicy policy;
+        private boolean revoked;
         public LbAutoScalePolicy(AutoScalePolicy policy, List<LbCondition> conditions)
         {
             this.policy = policy;
@@ -267,6 +268,13 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
         }
         public AutoScalePolicy getPolicy() {
             return policy;
+        }
+
+        public boolean isRevoked() {
+            return revoked;
+        }
+        public void setRevoked(boolean revoked) {
+            this.revoked = revoked;
         }
     }
 

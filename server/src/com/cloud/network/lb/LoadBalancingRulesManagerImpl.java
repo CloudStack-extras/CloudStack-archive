@@ -28,9 +28,12 @@ import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 
+import com.cloud.acl.ControlledEntity;
 import com.cloud.api.ApiConstants;
 import com.cloud.api.ApiDBUtils;
 import com.cloud.api.ApiDispatcher;
+import com.cloud.api.BaseListAccountResourcesCmd;
+import com.cloud.api.BaseListDomainResourcesCmd;
 import com.cloud.api.commands.AddConditionCmd;
 import com.cloud.api.commands.AddCounterCmd;
 import com.cloud.api.commands.CreateAutoScalePolicyCmd;
@@ -103,6 +106,7 @@ import com.cloud.network.dao.LoadBalancerDao;
 import com.cloud.network.dao.LoadBalancerVMMapDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.NetworkServiceMapDao;
+import com.cloud.network.element.IpDeployer;
 import com.cloud.network.lb.LoadBalancingRule.LbAutoScalePolicy;
 import com.cloud.network.lb.LoadBalancingRule.LbAutoScaleVmGroup;
 import com.cloud.network.lb.LoadBalancingRule.LbAutoScaleVmProfile;
@@ -119,6 +123,7 @@ import com.cloud.network.rules.LbStickinessMethod.LbStickinessMethodParam;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.network.rules.RulesManager;
 import com.cloud.network.rules.StickinessPolicy;
+import com.cloud.network.vpc.VpcVO;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.projects.Project.ListProjectResourcesCriteria;
 import com.cloud.server.ResourceTag.TaggedResourceType;
@@ -472,8 +477,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
             UserVm vm = _vmDao.findById(instanceId);
             if (vm == null || vm.getState() == State.Destroyed || vm.getState() == State.Expunging) {
-                InvalidParameterValueException ex = new InvalidParameterValueException("Invalid instance id specified");
-                ex.addProxyObject(vm, instanceId, "instanceId");
+            	InvalidParameterValueException ex = new InvalidParameterValueException("Invalid instance id specified");
+            	ex.addProxyObject(vm, instanceId, "instanceId");               
                 throw ex;
             }
 
@@ -494,8 +499,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             }
 
             if (nicInSameNetwork == null) {
-                InvalidParameterValueException ex = new InvalidParameterValueException("VM " + instanceId + " cannot be added because it doesn't belong in the same network.");
-                ex.addProxyObject(vm, instanceId, "instanceId");
+            	InvalidParameterValueException ex = new InvalidParameterValueException("VM " + instanceId + " cannot be added because it doesn't belong in the same network.");
+            	ex.addProxyObject(vm, instanceId, "instanceId");                
                 throw ex;
             }
 
@@ -540,9 +545,9 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         }
         
         if(!success){
-            CloudRuntimeException ex = new CloudRuntimeException("Failed to add specified loadbalancerruleid for vms " + instanceIds);
-            ex.addProxyObject(loadBalancer, loadBalancerId, "loadBalancerId");
-            // TBD: Also pack in the instanceIds in the exception using the right VO object or table name.
+        	CloudRuntimeException ex = new CloudRuntimeException("Failed to add specified loadbalancerruleid for vms " + instanceIds);
+        	ex.addProxyObject(loadBalancer, loadBalancerId, "loadBalancerId");           
+            // TBD: Also pack in the instanceIds in the exception using the right VO object or table name.            
             throw ex;
         }
 
@@ -581,7 +586,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             if (!applyLoadBalancerConfig(loadBalancerId)) {
                 s_logger.warn("Failed to remove load balancer rule id " + loadBalancerId + " for vms " + instanceIds);
                 CloudRuntimeException ex = new CloudRuntimeException("Failed to remove specified load balancer rule id for vms " + instanceIds);
-                ex.addProxyObject(loadBalancer, loadBalancerId, "loadBalancerId");
+                ex.addProxyObject(loadBalancer, loadBalancerId, "loadBalancerId");                
                 throw ex;
             }
             success = true;
@@ -602,10 +607,10 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             s_logger.warn("Unable to apply the load balancer config because resource is unavaliable.", e);
         }
         if(!success){
-            CloudRuntimeException ex = new CloudRuntimeException("Failed to remove specified load balancer rule id for vms " + instanceIds);
-            ex.addProxyObject(loadBalancer, loadBalancerId, "loadBalancerId");
+        	CloudRuntimeException ex = new CloudRuntimeException("Failed to remove specified load balancer rule id for vms " + instanceIds);
+        	ex.addProxyObject(loadBalancer, loadBalancerId, "loadBalancerId");            
             throw ex;
-        }
+    	}
         return success;
     }
 
@@ -801,14 +806,14 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                         ipAddressVO.setAssociatedWithNetworkId(lb.getNetworkId());
                         _networkMgr.checkIpForService(ipAddressVO, Service.Lb);
                         
-                        s_logger.debug("The ip is not associated with the network id=" + lb.getNetworkId() + " so assigning");
+                        s_logger.debug("The ip is not associated with the network id="+ lb.getNetworkId() + " so assigning");
                         ipAddressVO = _networkMgr.associateIPToGuestNetwork(ipAddrId, lb.getNetworkId());
                         performedIpAssoc = true;
                     } else {                    
                         _networkMgr.checkIpForService(ipAddressVO, Service.Lb);
                     }
-                }
-
+                }   
+               
                 if (lb.getSourceIpAddressId() == null) {
                     throw new CloudRuntimeException("No ip address is defined to assign the LB to");
                 }
@@ -854,22 +859,22 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         IPAddressVO ipAddr = _ipAddressDao.findById(sourceIpId);
         // make sure ip address exists
         if (ipAddr == null || !ipAddr.readyToUse()) {
-            InvalidParameterValueException ex = new InvalidParameterValueException("Unable to create load balancer rule, invalid IP address id specified");
-            ex.addProxyObject(ipAddr, sourceIpId, "sourceIpId");
+        	InvalidParameterValueException ex = new InvalidParameterValueException("Unable to create load balancer rule, invalid IP address id specified");
+        	ex.addProxyObject(ipAddr, sourceIpId, "sourceIpId");            
             throw ex;
         } else if (ipAddr.isOneToOneNat()) {
-            InvalidParameterValueException ex = new InvalidParameterValueException("Unable to create load balancer rule; specified sourceip id has static nat enabled");
-            ex.addProxyObject(ipAddr, sourceIpId, "sourceIpId");
+        	InvalidParameterValueException ex = new InvalidParameterValueException("Unable to create load balancer rule; specified sourceip id has static nat enabled");
+        	ex.addProxyObject(ipAddr, sourceIpId, "sourceIpId");            
             throw ex;
         }
-        
+
         _firewallMgr.validateFirewallRule(caller.getCaller(), ipAddr, srcPortStart, srcPortEnd, lb.getProtocol(), 
                 Purpose.LoadBalancing, FirewallRuleType.User);
 
         Long networkId = ipAddr.getAssociatedWithNetworkId();
         if (networkId == null) {
-            InvalidParameterValueException ex = new InvalidParameterValueException("Unable to create load balancer rule ; specified sourceip id is not associated with any network");
-            ex.addProxyObject(ipAddr, sourceIpId, "sourceIpId");
+        	InvalidParameterValueException ex = new InvalidParameterValueException("Unable to create load balancer rule ; specified sourceip id is not associated with any network");
+        	ex.addProxyObject(ipAddr, sourceIpId, "sourceIpId");            
             throw ex;
         }
         NetworkVO network = _networkDao.findById(networkId);
@@ -878,8 +883,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
         // verify that lb service is supported by the network
         if (!_networkMgr.areServicesSupportedInNetwork(network.getId(), Service.Lb)) {
-            InvalidParameterValueException ex = new InvalidParameterValueException("LB service is not supported in specified network id");
-            ex.addProxyObject(network, networkId, "networkId");
+        	InvalidParameterValueException ex = new InvalidParameterValueException("LB service is not supported in specified network id");
+        	ex.addProxyObject(network, networkId, "networkId");        	
             throw ex;
         }
 
@@ -987,7 +992,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
     @DB
     protected boolean applyLoadBalancerRules(List<LoadBalancerVO> lbs, boolean updateRulesInDB) throws ResourceUnavailableException {
-    	Transaction txn = Transaction.currentTxn();
+        Transaction txn = Transaction.currentTxn();
         List<LoadBalancingRule> rules = new ArrayList<LoadBalancingRule>();
         for (LoadBalancerVO lb : lbs) {
             List<LbDestination> dstList = getExistingDestinations(lb.getId());
@@ -1468,7 +1473,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     public LoadBalancerVO findById(long lbId) {
         return _lbDao.findById(lbId);
     }
-    
+
     @DB
     protected void removeLBRule(LoadBalancerVO rule) {
         Transaction txn = Transaction.currentTxn();
@@ -1484,11 +1489,17 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     }
     private <VO> VO getEntityInDatabase(String paramName, Long id, GenericDao<VO, Long> dao)
     {
+    	
         VO vo = dao.findById(id);
+
         if (vo == null) {
-            throw new InvalidParameterValueException(paramName + ":" + id + " not present");
+            throw new InvalidParameterValueException("Unable to find " + paramName );
         }
 
+        if(vo instanceof ControlledEntity) {
+        	_accountMgr.checkAccess(UserContext.current().getCaller(), null, true, (ControlledEntity)vo);
+        }
+        
         return vo;
     }
 
@@ -1529,30 +1540,17 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMPROFILE_CREATE, eventDescription = "creating autoscale vm profile")
     public AutoScaleVmProfile createAutoScaleVmProfile(CreateAutoScaleVmProfileCmd cmd) {
         // validations
-        //HashMap<String, String> deployParams = cmd.getDeployParamMap();
+        HashMap<String, String> deployParams = cmd.getDeployParamMap();
         /*
          * Just for making sure the values are right in other deploy params.
          * For ex. if projectId is given as a string instead of an long value, this
          * will be throwing an error.
          */
-//        ApiDispatcher.setupParameters(new DeployVMCmd(), deployParams);
+        ApiDispatcher.setupParameters(new DeployVMCmd(), deployParams);
 
-        if(_templateMgr.getTemplate(cmd.getTemplateId()) == null) {
-			throw new InvalidParameterValueException("Unable to find template for id:" + cmd.getTemplateId());
-		}
-        if (_configMgr.getServiceOffering(cmd.getServiceOfferingId()) == null) {
-            throw new InvalidParameterValueException("Unable to find service offering: " + cmd.getServiceOfferingId());
-        }
-        if (_dcDao.findById(cmd.getZoneId()) == null) {
-            throw new InvalidParameterValueException("Unable to find zone: " + cmd.getZoneId());
-        }
-
-        Transaction txn = Transaction.currentTxn();
-        txn.start();
         AutoScaleVmProfileVO profileVO = new AutoScaleVmProfileVO(cmd.getZoneId(), cmd.getDomainId(), cmd.getAccountId(), cmd.getServiceOfferingId(), cmd.getTemplateId(), cmd.getOtherDeployParams(),
                 cmd.getSnmpCommunity(), cmd.getSnmpPort(), cmd.getDestroyVmGraceperiod());
         _autoScaleVmProfileDao.persist(profileVO);
-        txn.commit();
         return profileVO;
     }
 
@@ -1560,23 +1558,13 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMPROFILE_DELETE, eventDescription = "deleting autoscale vm profile")
     public boolean deleteAutoScaleVmProfile(long id) {
-        AutoScaleVmProfile autoScaleVmProfile = _autoScaleVmProfileDao.findById(id);
-        if(autoScaleVmProfile == null) {
-            throw new InvalidParameterValueException("Unable to find AutoScale Vm Profile: " + id);
+        /* Check if entity is in database */
+    	getEntityInDatabase("AutoScale Vm Profile", id, _autoScaleVmProfileDao);
+        if(_autoScaleVmGroupDao.isProfileInUse(id)) {
+            throw new InvalidParameterValueException("Cannot delete AutoScale Vm Profile when it is in use by one more vm groups");
         }
-        List<AutoScaleVmGroupVO> autoScaleVmGroups = _autoScaleVmGroupDao.listByAll(null, id);
-        if(autoScaleVmGroups.size() > 0) {
-            throw new InvalidParameterValueException("AutoScale Vm Profile given is in use by " + autoScaleVmGroups.size() + " vm group(s), cannot be deleted");
-        }
-
-        _accountMgr.checkAccess(UserContext.current().getCaller(), null, true, autoScaleVmProfile);
-
-        Transaction txn = Transaction.currentTxn();
-        txn.start();
-        _autoScaleVmProfileDao.remove(id);
-            txn.commit();
-        return true;
-        }
+        return _autoScaleVmProfileDao.remove(id);
+    }
 
     @Override
     public List<? extends AutoScaleVmProfile> listAutoScaleVmProfiles(ListAutoScaleVmProfilesCmd cmd) {
@@ -1584,14 +1572,14 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         Long templateId = cmd.getTemplateId();
         String otherDeployParams = cmd.getOtherDeployParams();
 
-        Filter searchFilter = new Filter(AutoScaleVmProfileVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
-        SearchBuilder<AutoScaleVmProfileVO> sb = _autoScaleVmProfileDao.createSearchBuilder();
+    	SearchWrapper<AutoScaleVmProfileVO> searchWrapper = new SearchWrapper<AutoScaleVmProfileVO>(_autoScaleVmProfileDao, AutoScaleVmProfileVO.class, cmd, cmd.getId());
+    	SearchBuilder<AutoScaleVmProfileVO> sb = searchWrapper.getSearchBuilder();
 
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("templateId", sb.entity().getTemplateId(), SearchCriteria.Op.EQ);
         sb.and("otherDeployParams", sb.entity().getOtherDeployParams(), SearchCriteria.Op.LIKE);
 
-        SearchCriteria<AutoScaleVmProfileVO> sc = sb.create();
+        SearchCriteria<AutoScaleVmProfileVO> sc = searchWrapper.buildSearchCriteria();
         if (id != null) {
             sc.setParameters("id", id);
         }
@@ -1601,7 +1589,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         if (otherDeployParams != null) {
             sc.addAnd("otherDeployParams", SearchCriteria.Op.LIKE, "%" + otherDeployParams + "%");
         }
-        return _autoScaleVmProfileDao.search(sc, searchFilter);
+        return searchWrapper.search();
     }
 
     @Override
@@ -1637,16 +1625,20 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             throw new InvalidParameterValueException("action is invalid, only 'provision' and 'de-provision' is supported");
         }
         action = action.toLowerCase();
+        
 
         List<Long> conditionIds = cmd.getConditionIds();
         ArrayList<Long> counterIds = new ArrayList<Long>();
+        Condition condition = null;
         for (Long conditionId : conditionIds) {
-            Condition condition = getEntityInDatabase("conditionid" , conditionId, _conditionDao);
+            condition = getEntityInDatabase(ApiConstants.CONDITION_ID , conditionId, _conditionDao);
+
             if(counterIds.contains(condition.getCounterid())) {
                 throw new InvalidParameterValueException("atleast two conditions in the conditionids have the same counter. It is not right to apply two different conditions for the same counter");
             }
             counterIds.add(condition.getCounterid());
         }
+        
 
         final Transaction txn = Transaction.currentTxn();
         txn.start();
@@ -1668,40 +1660,83 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEPOLICY_DELETE, eventDescription = "deleting autoscale policy")
     public boolean deleteAutoScalePolicy(long id) {
-        AutoScalePolicy autoScalePolicy = _autoScalePolicyDao.findById(id);
-        if(autoScalePolicy == null) {
-            throw new InvalidParameterValueException("Unable to find AutoScale Policy Id: " + id);
+        /* Check if entity is in database */
+    	getEntityInDatabase("AutoScale Policy", id, _autoScalePolicyDao);
+
+        if(_autoScaleVmGroupPolicyMapDao.isAutoScalePolicyInUse(id)) {
+            throw new InvalidParameterValueException("Cannot delete AutoScale Policy when it is in use by one or more AutoScale Vm Groups");
         }
-        List<AutoScaleVmGroupPolicyMapVO> autoScaleVmGroupPolicyMapVOs = _autoScaleVmGroupPolicyMapDao.listByPolicyId(id);
-        if(autoScaleVmGroupPolicyMapVOs.size() > 0) {
-            throw new InvalidParameterValueException("AutoScale Policy given is in use by " + autoScaleVmGroupPolicyMapVOs.size() + " vm group(s), cannot be deleted");
-        }
-        _accountMgr.checkAccess(UserContext.current().getCaller(), null, true, autoScalePolicy);
 
         Transaction txn = Transaction.currentTxn();
         txn.start();
-        List<AutoScalePolicyConditionMapVO> autoScaleConditionMapVOs = _autoScalePolicyConditionMapDao.listByAll(id, null);
+
         boolean success = true;
-        for (AutoScalePolicyConditionMapVO autoScalePolicyConditionMapVO : autoScaleConditionMapVOs) {
-        	if(!success)
-        		return success;
-        	success = _autoScalePolicyConditionMapDao.remove(autoScalePolicyConditionMapVO.getId());
+        success = _autoScalePolicyDao.remove(id);
+    	if(success) { 
+        	success = _autoScalePolicyConditionMapDao.removeByAutoScalePolicyId(id);
+    	}
+    	if(success) { 
+    		txn.commit();
+    	}
+        return success; // successful
+    }
+    
+    private class SearchWrapper<VO extends ControlledEntity> {
+    	GenericDao<VO, Long> dao;
+    	SearchBuilder<VO> searchBuilder;
+    	SearchCriteria<VO> searchCriteria;
+    	Long domainId;
+    	boolean isRecursive;
+    	List<Long> permittedAccounts = new ArrayList<Long>();
+    	ListProjectResourcesCriteria listProjectResourcesCriteria;
+    	Filter searchFilter;
+    	
+		public SearchWrapper(GenericDao<VO, Long> dao, Class<VO> entityClass, BaseListAccountResourcesCmd cmd, Long id)
+    	{
+    		this.dao = dao;
+    		this.searchBuilder = dao.createSearchBuilder();
+        	domainId = cmd.getDomainId();
+        	String accountName = cmd.getAccountName();
+        	isRecursive = cmd.isRecursive();
+        	boolean listAll = cmd.listAll();
+        	long startIndex = cmd.getStartIndex();
+        	long pageSizeVal = cmd.getPageSizeVal();
+            Account caller = UserContext.current().getCaller();
+            
+            Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean, 
+                    ListProjectResourcesCriteria>(domainId, isRecursive, null);
+            _accountMgr.buildACLSearchParameters(caller, id, accountName, null, permittedAccounts, domainIdRecursiveListProject,
+                    listAll, false);
+            domainId = domainIdRecursiveListProject.first();
+            isRecursive = domainIdRecursiveListProject.second();
+            ListProjectResourcesCriteria listProjectResourcesCriteria = domainIdRecursiveListProject.third();
+            _accountMgr.buildACLSearchBuilder(searchBuilder, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
+            searchFilter = new Filter(entityClass, "id", false, startIndex, pageSizeVal);
+    	}
+    	
+    	public SearchBuilder<VO> getSearchBuilder() {
+    		return searchBuilder;
+    	}
+    	
+    	public SearchCriteria<VO> buildSearchCriteria()
+    	{
+            searchCriteria = searchBuilder.create();
+            _accountMgr.buildACLSearchCriteria(searchCriteria, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
+            return searchCriteria;
+    	}
+
+    	public List<VO> search() {
+    		return dao.search(searchCriteria, searchFilter);
 		}
-    	if(!success)
-    		return success;
-        _autoScalePolicyDao.remove(id);
-            txn.commit();
-        return success;
     }
 
     @Override
     public List<? extends AutoScalePolicy> listAutoScalePolicies(ListAutoScalePoliciesCmd cmd) {
+    	SearchWrapper<AutoScalePolicyVO> searchWrapper = new SearchWrapper<AutoScalePolicyVO>(_autoScalePolicyDao, AutoScalePolicyVO.class, cmd, cmd.getId());
+    	SearchBuilder<AutoScalePolicyVO> sb = searchWrapper.getSearchBuilder();
         Long id = cmd.getId();
         Long conditionId = cmd.getConditionId();
         Long zoneId = cmd.getZoneId();
-
-        Filter searchFilter = new Filter(AutoScalePolicyVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
-        SearchBuilder<AutoScalePolicyVO> sb = _autoScalePolicyDao.createSearchBuilder();
 
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("zoneId", sb.entity().getZoneId(), SearchCriteria.Op.EQ);
@@ -1712,7 +1747,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             sb.join("asPolicyConditionSearch", asPolicyConditionSearch, sb.entity().getId(), asPolicyConditionSearch.entity().getPolicyId(), JoinBuilder.JoinType.INNER);
         }
 
-        SearchCriteria<AutoScalePolicyVO> sc = sb.create();
+        SearchCriteria<AutoScalePolicyVO> sc = searchWrapper.buildSearchCriteria();
         if (id != null) {
             sc.setParameters("id", id);
         }
@@ -1722,7 +1757,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         if (conditionId != null) {
             sc.setJoinParameters("asPolicyConditionSearch", "conditionId", conditionId);
         }
-        return _autoScalePolicyDao.search(sc, searchFilter);
+        return searchWrapper.search();
     }
 
     @Override
@@ -1744,7 +1779,9 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         }
 
         LoadBalancerVO loadBalancer = getEntityInDatabase(ApiConstants.LBID , cmd.getLbRuleId(), _lbDao);
-        AutoScaleVmProfileVO profileVO = getEntityInDatabase(ApiConstants.VMPROFILE_ID , cmd.getProfileId(), _autoScaleVmProfileDao);
+        Long zoneId = _ipAddressDao.findById(loadBalancer.getSourceIpAddressId()).getDataCenterId();
+
+        getEntityInDatabase(ApiConstants.VMPROFILE_ID , cmd.getProfileId(), _autoScaleVmProfileDao);
 
         List<AutoScaleVmGroupVO> existingVmGroupVO = _autoScaleVmGroupDao.listByAll(loadBalancer.getId(), null);
         if(existingVmGroupVO.size() > 0) {
@@ -1756,14 +1793,12 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         policies.addAll(getAutoScalePolicies("scaleuppolicyid", cmd.getScaleUpPolicyIds(), counters, true));
         policies.addAll(getAutoScalePolicies("scaledownpolicyid", cmd.getScaleDownPolicyIds(), counters, false));
 
-        _accountMgr.checkAccess(UserContext.current().getCaller(), null, true, loadBalancer);
-
 //        validateAutoScaleCounters(loadBalancer.getNetworkId(), counters);
 
         final Transaction txn = Transaction.currentTxn();
         txn.start();
 
-    	AutoScaleVmGroupVO vmGroupVO = new AutoScaleVmGroupVO(cmd.getLbRuleId(), loadBalancer.getDomainId(), loadBalancer.getAccountId(), minMembers, maxMembers, cmd.getProfileId());
+    	AutoScaleVmGroupVO vmGroupVO = new AutoScaleVmGroupVO(cmd.getLbRuleId(), zoneId, loadBalancer.getDomainId(), loadBalancer.getAccountId(), minMembers, maxMembers, cmd.getProfileId());
     	vmGroupVO = _autoScaleVmGroupDao.persist(vmGroupVO);
     	
     	for (AutoScalePolicyVO autoScalePolicyVO : policies) {
@@ -1908,21 +1943,20 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMGROUP_DELETE, eventDescription = "deleting autoscale vm group")
     public boolean deleteAutoScaleVmGroup(long id) {
-        AutoScaleVmGroupVO autoScaleVmGroupVO = _autoScaleVmGroupDao.findById(id);
-        if(autoScaleVmGroupVO == null) {
-            throw new InvalidParameterValueException("Unable to find AutoScale Vm Group Id: " + id);
-        }
-
+        /* Check if entity is in database */
+    	AutoScaleVmGroupVO autoScaleVmGroupVO = getEntityInDatabase("AutoScale Vm Group", id, _autoScaleVmGroupDao);
         autoScaleVmGroupVO.setRevoke(true);
+
         // TODO: call configureAutoScaleVmGroup
 
         Transaction txn = Transaction.currentTxn();
         txn.start();
-        try {
-            return _autoScaleVmGroupDao.remove(id);
-        } finally {
-            txn.commit();
-        }
+        boolean success = _autoScaleVmGroupDao.remove(id);
+        if(success) 
+        	success = _autoScaleVmGroupPolicyMapDao.remove(id);
+        if(success) 
+        	txn.commit();
+        return success;
     }
 
     @Override
@@ -1931,13 +1965,15 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         Long policyId = cmd.getPolicyId();
         Long loadBalancerId = cmd.getLoadBalancerId();
         Long profileId = cmd.getProfileId();
+        Long zoneId = cmd.getZoneId();
 
-        Filter searchFilter = new Filter(AutoScaleVmGroupVO.class, "id", true, cmd.getStartIndex(), cmd.getPageSizeVal());
-        SearchBuilder<AutoScaleVmGroupVO> sb = _autoScaleVmGroupDao.createSearchBuilder();
+    	SearchWrapper<AutoScaleVmGroupVO> searchWrapper = new SearchWrapper<AutoScaleVmGroupVO>(_autoScaleVmGroupDao, AutoScaleVmGroupVO.class, cmd, cmd.getId());
+    	SearchBuilder<AutoScaleVmGroupVO> sb = searchWrapper.getSearchBuilder();
 
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("loadBalancerId", sb.entity().getLoadBalancerId(), SearchCriteria.Op.EQ);
         sb.and("profileId", sb.entity().getProfileId(), SearchCriteria.Op.EQ);
+        sb.and("zoneId", sb.entity().getZoneId(), SearchCriteria.Op.EQ);
 
         if (policyId != null) {
             SearchBuilder<AutoScaleVmGroupPolicyMapVO> asVmGroupPolicySearch = _autoScaleVmGroupPolicyMapDao.createSearchBuilder();
@@ -1945,7 +1981,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             sb.join("asVmGroupPolicySearch", asVmGroupPolicySearch, sb.entity().getId(), asVmGroupPolicySearch.entity().getVmGroupId(), JoinBuilder.JoinType.INNER);
         }
 
-        SearchCriteria<AutoScaleVmGroupVO> sc = sb.create();
+        SearchCriteria<AutoScaleVmGroupVO> sc = searchWrapper.buildSearchCriteria();
         if (id != null) {
             sc.setParameters("id", id);
         }
@@ -1955,11 +1991,13 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         if (profileId != null) {
             sc.setParameters("profileId", profileId);
         }
+        if (zoneId != null) {
+            sc.setParameters("zoneId", zoneId);
+        }
         if (policyId != null) {
             sc.setJoinParameters("asVmGroupPolicySearch", "policyId", policyId);
         }
-        return _autoScaleVmGroupDao.search(sc, searchFilter);
-
+        return searchWrapper.search();
     }
 
     @Override
@@ -2042,14 +2080,14 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         Long id = cmd.getId();
         Long counterId = cmd.getCounterId();
 
-        Filter searchFilter = new Filter(ConditionVO.class, "created", false, cmd.getStartIndex(), cmd.getPageSizeVal());
+    	SearchWrapper<ConditionVO> searchWrapper = new SearchWrapper<ConditionVO>(_conditionDao, ConditionVO.class, cmd, cmd.getId());
+    	SearchBuilder<ConditionVO> sb = searchWrapper.getSearchBuilder();
 
-        SearchBuilder<ConditionVO> sb = _conditionDao.createSearchBuilder();
-        sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
+    	sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("counterId", sb.entity().getCounterid(), SearchCriteria.Op.EQ);
 
         // now set the SC criteria...
-        SearchCriteria<ConditionVO> sc = sb.create();
+        SearchCriteria<ConditionVO> sc = searchWrapper.buildSearchCriteria();
 
         if (id != null) {
             sc.addAnd("id", SearchCriteria.Op.EQ, id);
@@ -2059,9 +2097,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             sc.addAnd("counterId", SearchCriteria.Op.EQ, counterId);
         }
 
-        List<ConditionVO> conditions = _conditionDao.search(sc, searchFilter);
-
-        return conditions;
+        return searchWrapper.search();
     }
 
     @Override
@@ -2092,19 +2128,16 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_COUNTER_DELETE, eventDescription = "condition")
     public boolean deleteCondition(long conditionId) throws ResourceInUseException {
-        // Verify Counter id
-        ConditionVO condition = _conditionDao.findById(conditionId);
+        /* Check if entity is in database */
+        ConditionVO condition = getEntityInDatabase("Condition", conditionId, _conditionDao);
         if (condition == null) {
             throw new InvalidParameterValueException("Unable to find Condition with Id " + conditionId);
         }
-        _accountMgr.checkAccess(UserContext.current().getCaller(), null, true, condition);
 
-        // TODO - Verify if it is used in any auto-scale profile
-        AutoScalePolicyConditionMapVO policyCondition;
-        policyCondition = _autoScalePolicyConditionMapDao.findById(conditionId);
-        if (policyCondition != null) {
+        // Verify if condition is used in any autoscale policy
+        if (_autoScalePolicyConditionMapDao.isConditionInUse(conditionId)) {
             s_logger.info("Cannot delete condition " + conditionId + " as it is being used in a condition.");
-            throw new ResourceInUseException("Condition with Id " + conditionId + " is in use.");
+            throw new ResourceInUseException("Cannot delete Condition when it is in use by one or more AutoScale Policies.");
         }
         s_logger.debug("Deleting Condition " + condition.getId());
         if (_conditionDao.remove(conditionId)) {

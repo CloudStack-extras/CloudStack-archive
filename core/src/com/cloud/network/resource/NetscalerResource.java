@@ -524,6 +524,7 @@ public class NetscalerResource implements ServerResource {
                         //unbind the all services associated with this virtual server
                         com.citrix.netscaler.nitro.resource.config.lb.lbvserver_service_binding[] serviceBindings = com.citrix.netscaler.nitro.resource.config.lb.lbvserver_service_binding.get(_netscalerService, nsVirtualServerName);
                         
+                        
                         if (serviceBindings != null) {
                             for (com.citrix.netscaler.nitro.resource.config.lb.lbvserver_service_binding binding : serviceBindings) {
                                 String serviceName = binding.get_servicename();

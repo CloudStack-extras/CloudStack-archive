@@ -31,6 +31,7 @@ import com.cloud.utils.Pair;
 
 
 public class LoadBalancerTO {
+	Long id;
     String srcIp;
     int srcPort;
     String protocol;
@@ -39,15 +40,11 @@ public class LoadBalancerTO {
     boolean alreadyAdded;
     DestinationTO[] destinations;
     private StickinessPolicyTO[] stickinessPolicies;
-
-    public void setAutoScaleVmGroupTO(AutoScaleVmGroupTO autoScaleVmGroupTO) {
-		this.autoScaleVmGroupTO = autoScaleVmGroupTO;
-	}
-
 	private AutoScaleVmGroupTO autoScaleVmGroupTO;
     final static int MAX_STICKINESS_POLICIES = 1;
 
-    public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> destinations) {
+    public LoadBalancerTO (Long id, String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> destinations) {
+    	this.id = id;
         this.srcIp = srcIp;
         this.srcPort = srcPort;
         this.protocol = protocol;
@@ -62,8 +59,8 @@ public class LoadBalancerTO {
         }
     }
 
-    public LoadBalancerTO (String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> arg_destinations, List<LbStickinessPolicy> stickinessPolicies) {
-        this(srcIp, srcPort, protocol, algorithm, revoked, alreadyAdded, arg_destinations);
+    public LoadBalancerTO (Long id, String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> arg_destinations, List<LbStickinessPolicy> stickinessPolicies) {
+        this(id, srcIp, srcPort, protocol, algorithm, revoked, alreadyAdded, arg_destinations);
         this.stickinessPolicies = null;
         if (stickinessPolicies != null && stickinessPolicies.size()>0) {
             this.stickinessPolicies = new StickinessPolicyTO[MAX_STICKINESS_POLICIES];
@@ -85,6 +82,10 @@ public class LoadBalancerTO {
 
 
     protected LoadBalancerTO() {
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public String getSrcIp() {
@@ -121,6 +122,10 @@ public class LoadBalancerTO {
 
     public AutoScaleVmGroupTO getAutoScaleVmGroupTO() {
 		return autoScaleVmGroupTO;
+	}
+
+    public void setAutoScaleVmGroupTO(AutoScaleVmGroupTO autoScaleVmGroupTO) {
+		this.autoScaleVmGroupTO = autoScaleVmGroupTO;
 	}
 
     public static class StickinessPolicyTO {
@@ -225,19 +230,28 @@ public class LoadBalancerTO {
     public static class AutoScalePolicyTO {
         private final int interval;
 
+        private final long id;
         private final int duration;
         private final int quietTime;
         private String action;
+        boolean revoked;
         private final List<ConditionTO> conditions;
 
-        public AutoScalePolicyTO(int duration, int interval, int quietTime, String action, List<ConditionTO> conditions) {
+        public AutoScalePolicyTO(long id, int duration, int interval, int quietTime, String action, List<ConditionTO> conditions, boolean revoked) {
+        	this.id = id;
             this.interval = interval;
             this.duration = duration;
             this.quietTime = quietTime;
             this.conditions = conditions;
+            this.action = action;
+            this.revoked = revoked;
         }
 
-        public int getInterval() {
+        public long getId() {
+			return id;
+		}
+
+		public int getInterval() {
             return interval;
         }
 
@@ -251,6 +265,10 @@ public class LoadBalancerTO {
 
         public String getAction() {
             return action;
+        }
+
+        public boolean isRevoked() {
+            return revoked;
         }
 
         public List<ConditionTO> getConditions() {
@@ -362,7 +380,9 @@ public class LoadBalancerTO {
                 conditionTOs.add(conditionTO);
             }
             AutoScalePolicy autoScalePolicy = lbAutoScalePolicy.getPolicy();
-            autoScalePolicyTOs.add(new AutoScalePolicyTO(autoScalePolicy.getDuration(), autoScalePolicy.getInterval(), autoScalePolicy.getQuietTime(), autoScalePolicy.getAction(), conditionTOs));
+            autoScalePolicyTOs.add(new AutoScalePolicyTO(autoScalePolicy.getId(), autoScalePolicy.getDuration(), 
+            		autoScalePolicy.getInterval(), autoScalePolicy.getQuietTime(), autoScalePolicy.getAction(), 
+            		conditionTOs, lbAutoScalePolicy.isRevoked()));
         }
         LbAutoScaleVmProfile lbAutoScaleVmProfile = lbAutoScaleVmGroup.getProfile();
         AutoScaleVmProfile autoScaleVmProfile = lbAutoScaleVmProfile.getProfile();

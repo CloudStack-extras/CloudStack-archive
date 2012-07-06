@@ -1816,7 +1816,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
         		}
             }
                else if(info == null && vm.getState() == State.Stopping) { //Handling CS-13376
-                  Host host = _hostDao.findByGuid(info.getHosUuid());
+                  Host host = _hostDao.findByGuid(info.getHostUuid());
                   if(host != null ){
                         s_logger.warn("Marking the VM as Stopped as it was still stopping on the CS" +info.name);
                         vm.setState(State.Stopped); // Setting the VM as stopped on the DB and clearing it from the host

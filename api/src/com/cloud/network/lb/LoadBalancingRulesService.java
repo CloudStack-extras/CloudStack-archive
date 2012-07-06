@@ -115,7 +115,7 @@ public interface LoadBalancingRulesService {
     List<? extends StickinessPolicy> searchForLBStickinessPolicies(ListLBStickinessPoliciesCmd cmd);
 
     List<LoadBalancingRule> listByNetworkId(long networkId);
-    
+
     LoadBalancer findById(long LoadBalancer);
 
     public AutoScalePolicy createAutoScalePolicy(CreateAutoScalePolicyCmd createAutoScalePolicyCmd);

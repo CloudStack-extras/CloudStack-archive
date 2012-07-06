@@ -24,12 +24,16 @@ import com.cloud.api.IdentityMapper;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
+import com.cloud.api.BaseCmd.CommandType;
 import com.cloud.api.response.AutoScaleVmProfileResponse;
 import com.cloud.async.AsyncJob;
+import com.cloud.dc.DataCenter;
 import com.cloud.event.EventTypes;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.network.as.AutoScaleVmProfile;
+import com.cloud.offering.ServiceOffering;
+import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.user.Account;
 import com.cloud.user.UserContext;
 
@@ -44,25 +48,25 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
     /////////////////////////////////////////////////////
 
     @IdentityMapper(entityTableName="data_center")
-    @Parameter(name=ApiConstants.ZONE_ID, type=CommandType.LONG, required=true, description="the availability zone to be used while deploying a virtual machine")
+    @Parameter(name=ApiConstants.ZONE_ID, type=CommandType.LONG, required=true, description="availability zone for the auto deployed virtual machine")
     private Long zoneId;
 
     @IdentityMapper(entityTableName = "domain")
-    @Parameter(name = ApiConstants.DOMAIN_ID, type = CommandType.LONG, description = "the domain ID of account owning the instance group")
+    @Parameter(name = ApiConstants.DOMAIN_ID, type = CommandType.LONG, description = "the domain ID of the auto deployed a virtual machine")
     private Long domainId;
 
-    @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, description = "the account of the instance group. The account parameter must be used with the domainId parameter.")
+    @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, description = "the account of the auto deployed virtual machine. The account parameter must be used with the domainId parameter.")
     private String accountName;
 
     @IdentityMapper(entityTableName="disk_offering")
-    @Parameter(name=ApiConstants.SERVICE_OFFERING_ID, type=CommandType.LONG, required=true, description="the service offering to be used while deploying a virtual machine")
+    @Parameter(name=ApiConstants.SERVICE_OFFERING_ID, type=CommandType.LONG, required=true, description="the service offering of the auto deployed virtual machine")
     private Long serviceOfferingId;
 
     @IdentityMapper(entityTableName="vm_template")
-    @Parameter(name=ApiConstants.TEMPLATE_ID, type=CommandType.LONG, required=true, description="the template to be used while deploying a virtual machine")
+    @Parameter(name=ApiConstants.TEMPLATE_ID, type=CommandType.LONG, required=true, description="the template of the auto deployed virtual machine")
     private Long templateId;
 
-    @Parameter(name=ApiConstants.OTHER_DEPLOY_PARAMS, type=CommandType.STRING, description="parameters other than zoneId/serviceOfferringId/templateId to be used while deploying a virtual machine")
+    @Parameter(name=ApiConstants.OTHER_DEPLOY_PARAMS, type=CommandType.STRING, description="parameters other than zoneId/serviceOfferringId/templateId of the auto deployed virtual machine")
     private String otherDeployParams;
 
     @Parameter(name=ApiConstants.AUTOSCALE_VM_DESTROY_TIME, type=CommandType.INTEGER, required=true, description="the time allowed for existing connections to get closed before a vm is destroyed")
@@ -94,6 +98,7 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
         }
         return domainId;
     }
+
     public Long getZoneId() {
         return zoneId;
     }
@@ -229,6 +234,23 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
 
     @Override
     public void create() throws ResourceAllocationException {
+
+        DataCenter zone = _configService.getZone(zoneId);
+        if (zone == null) {
+            throw new InvalidParameterValueException("Unable to find zone by id=" + zoneId);
+        }
+
+        ServiceOffering serviceOffering = _configService.getServiceOffering(serviceOfferingId);
+        if (serviceOffering == null) {
+            throw new InvalidParameterValueException("Unable to find service offering: " + serviceOfferingId);
+        }
+
+        VirtualMachineTemplate template = _templateService.getTemplate(templateId);
+        // Make sure a valid template ID was specified
+        if (template == null) {
+            throw new InvalidParameterValueException("Unable to use template " + templateId);
+        }
+    	
         AutoScaleVmProfile result = _lbService.createAutoScaleVmProfile(this);
         if (result != null) {
             this.setEntityId(result.getId());

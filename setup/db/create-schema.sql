@@ -2388,6 +2388,7 @@ CREATE TABLE `cloud`.`autoscale_policies` (
 CREATE TABLE `cloud`.`autoscale_vmgroups` (
   `id` bigint unsigned NOT NULL auto_increment,
   `uuid` varchar(40),
+  `zone_id` bigint unsigned NOT NULL,
   `domain_id` bigint unsigned NOT NULL,
   `account_id` bigint unsigned NOT NULL,
   `load_balancer_id` bigint unsigned NOT NULL,
@@ -2403,6 +2404,7 @@ CREATE TABLE `cloud`.`autoscale_vmgroups` (
   CONSTRAINT `fk_autoscale_vmgroup__load_balancer_id` FOREIGN KEY(`load_balancer_id`) REFERENCES `load_balancing_rules`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_autoscale_vmgroups__domain_id` FOREIGN KEY `fk_autoscale_vmgroups__domain_id` (`domain_id`) REFERENCES `domain`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_autoscale_vmgroups__account_id` FOREIGN KEY `fk_autoscale_vmgroups__account_id` (`account_id`) REFERENCES `account`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_autoscale_vmgroups__zone_id` FOREIGN KEY `fk_autoscale_vmgroups__zone_id`(`zone_id`) REFERENCES `data_center`(`id`),
   CONSTRAINT `uc_autoscale_vmgroups__uuid` UNIQUE (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

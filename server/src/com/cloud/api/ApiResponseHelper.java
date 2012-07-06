@@ -1089,7 +1089,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             volResponse.setCreated(volumeHostRef.getCreated());
             Account caller = UserContext.current().getCaller();
             if (caller.getType() == Account.ACCOUNT_TYPE_ADMIN || caller.getType() == Account.ACCOUNT_TYPE_RESOURCE_DOMAIN_ADMIN)
-            	volResponse.setHypervisor(ApiDBUtils.getHypervisorTypeFromFormat(volumeHostRef.getFormat()).toString());
+            volResponse.setHypervisor(ApiDBUtils.getHypervisorTypeFromFormat(volumeHostRef.getFormat()).toString());
             if (volumeHostRef.getDownloadState() != Status.DOWNLOADED) {
                 String volumeStatus = "Processing";
                 if (volumeHostRef.getDownloadState() == VMTemplateHostVO.Status.DOWNLOAD_IN_PROGRESS) {
@@ -3138,7 +3138,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setObjectName("networkacl");
         return response;
     }
-    
+
     public UserVmData newUserVmData(UserVm userVm) {
         UserVmData userVmData = new UserVmData();
         userVmData.setId(userVm.getId());
@@ -3755,7 +3755,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         populateOwner(response, profile);
         return response;
     }
-    
+        
     @Override
     public AutoScalePolicyResponse createAutoScalePolicyResponse(AutoScalePolicy policy) {
         AutoScalePolicyResponse response = new AutoScalePolicyResponse();
@@ -3777,7 +3777,7 @@ public class ApiResponseHelper implements ResponseGenerator {
     
         return response;
     }
-
+    
     @Override
     public AutoScaleVmGroupResponse createAutoScaleVmGroupResponse(AutoScaleVmGroup vmGroup) {
         AutoScaleVmGroupResponse response = new AutoScaleVmGroupResponse();
@@ -3807,45 +3807,58 @@ public class ApiResponseHelper implements ResponseGenerator {
     }
 
         @Override
-        public StaticRouteResponse createStaticRouteResponse(StaticRoute result) {
-            StaticRouteResponse response = new StaticRouteResponse();
-            response.setId(result.getId());
-            response.setVpcId(result.getVpcId());
-            response.setCidr(result.getCidr());
-
-            StaticRoute.State state = result.getState();
-            String stateToSet = state.toString();
-            if (state.equals(FirewallRule.State.Revoke)) {
-                stateToSet = "Deleting";
-            }
-            response.setState(stateToSet);
-            populateAccount(response, result.getAccountId());
-            populateDomain(response, result.getDomainId());
-            response.setObjectName("staticroute");
-            return response;
+    public StaticRouteResponse createStaticRouteResponse(StaticRoute result) {
+        StaticRouteResponse response = new StaticRouteResponse();
+        response.setId(result.getId());
+        response.setVpcId(result.getVpcId());
+        response.setCidr(result.getCidr());
+        
+        StaticRoute.State state = result.getState();
+        String stateToSet = state.toString();
+        if (state.equals(FirewallRule.State.Revoke)) {
+            stateToSet = "Deleting";
         }
-
-        @Override
-        public Site2SiteVpnGatewayResponse createSite2SiteVpnGatewayResponse(Site2SiteVpnGateway result) {
-            Site2SiteVpnGatewayResponse response = new Site2SiteVpnGatewayResponse();
-            response.setId(result.getId());
-            response.setIp(ApiDBUtils.findIpAddressById(result.getAddrId()).getAddress().toString());
-            response.setRemoved(result.getRemoved());
+        response.setState(stateToSet);
+        populateAccount(response, result.getAccountId());
+        populateDomain(response, result.getDomainId());
+        response.setObjectName("staticroute");
+        return response;
+    }
+    
+    @Override
+    public Site2SiteVpnGatewayResponse createSite2SiteVpnGatewayResponse(Site2SiteVpnGateway result) {
+        Site2SiteVpnGatewayResponse response = new Site2SiteVpnGatewayResponse();
+        response.setId(result.getId());
+        response.setIp(ApiDBUtils.findIpAddressById(result.getAddrId()).getAddress().toString());
+        response.setRemoved(result.getRemoved());
         response.setObjectName("vpngateway");
-            return response;
-        }
+        return response;
+    }
 
-        @Override
-        public Site2SiteCustomerGatewayResponse createSite2SiteCustomerGatewayResponse(Site2SiteCustomerGateway result) {
-            Site2SiteCustomerGatewayResponse response = new Site2SiteCustomerGatewayResponse();
-            response.setId(result.getId());
-            response.setGatewayIp(result.getGatewayIp());
-            response.setGuestCidrList(result.getGuestCidrList());
-            response.setIpsecPsk(result.getIpsecPsk());
-            response.setRemoved(result.getRemoved());
+    @Override
+    public Site2SiteCustomerGatewayResponse createSite2SiteCustomerGatewayResponse(Site2SiteCustomerGateway result) {
+        Site2SiteCustomerGatewayResponse response = new Site2SiteCustomerGatewayResponse();
+        response.setId(result.getId());
+        response.setGatewayIp(result.getGatewayIp());
+        response.setGuestCidrList(result.getGuestCidrList());
+        response.setIpsecPsk(result.getIpsecPsk());
+        response.setRemoved(result.getRemoved());
         response.setObjectName("vpncustomergateway");
+        return response;
+    }
+
+    @Override
+    public Site2SiteVpnConnectionResponse createSite2SiteVpnConnectionResponse(Site2SiteVpnConnection result) {
+        Site2SiteVpnConnectionResponse response = new Site2SiteVpnConnectionResponse();
+        response.setId(result.getId());
+        response.setVpnGatewayId(result.getVpnGatewayId());
+        response.setCustomerGatewayId(result.getCustomerGatewayId());
+        response.setCreated(result.getCreated());
+        response.setRemoved(result.getRemoved());
             return response;
         }
+    
+    /*
         
     @Override
     public CounterResponse createCounterResponse(Counter counter) {
@@ -3856,13 +3869,6 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setValue(counter.getValue());
         response.setZoneId(counter.getZoneId());
         response.setObjectName("counter");
-        return response;
-    }
-
-    @Override
-    public Site2SiteVpnConnectionResponse createSite2SiteVpnConnectionResponse(Site2SiteVpnConnection result) {
-        Site2SiteVpnConnectionResponse response = new Site2SiteVpnConnectionResponse();
-        response.setId(result.getId());
         
         response.setVpnGatewayId(result.getVpnGatewayId());
         Long vpnGatewayId = result.getVpnGatewayId();
@@ -3889,6 +3895,36 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setCreated(result.getCreated());
         response.setRemoved(result.getRemoved());
         response.setObjectName("vpnconnection");
+        return response;
+    }
+    */
+
+//    @Override
+//    public ConditionResponse createConditionResponse(Condition condition) {
+//        ConditionResponse response = new ConditionResponse();
+//        response.setId(condition.getId());
+//        CounterResponse counter;
+//        counter = createCounterResponse(ApiDBUtils.getCounter(condition.getCounterid()));
+//        response.setCounter(counter);
+//        response.setRelationalOperator(condition.getRelationalOperator().toString());
+//        response.setThreshold(condition.getThreshold());
+//        Account account = ApiDBUtils.findAccountById(condition.getAccountId());
+//        response.setZoneId(condition.getZoneId());
+//        response.setObjectName("condition");
+//
+//        populateOwner(response, condition);
+//        return response;
+//    }
+
+    @Override
+    public CounterResponse createCounterResponse(Counter counter) {
+        CounterResponse response = new CounterResponse();
+        response.setId(counter.getId());
+        response.setSource(counter.getSource().toString());
+        response.setName(counter.getName());
+        response.setValue(counter.getValue());
+        response.setZoneId(counter.getZoneId());
+        response.setObjectName("counter");
         return response;
     }
 

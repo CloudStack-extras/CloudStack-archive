@@ -24,23 +24,11 @@ import com.cloud.utils.db.SearchCriteria;
 public class AutoScaleVmGroupPolicyMapDaoImpl extends GenericDaoBase<AutoScaleVmGroupPolicyMapVO, Long> implements AutoScaleVmGroupPolicyMapDao {
 
     @Override
-    public void remove(long vmGroupId) {
+    public boolean removeByGroupId(long vmGroupId) {
         SearchCriteria<AutoScaleVmGroupPolicyMapVO> sc = createSearchCriteria();
         sc.addAnd("vmGroupId", SearchCriteria.Op.EQ, vmGroupId);
 
-        expunge(sc);
-    }
-
-    @Override
-    public void remove(long vmGroupId, List<Long> policyIds, Boolean revoke) {
-        SearchCriteria<AutoScaleVmGroupPolicyMapVO> sc = createSearchCriteria();
-        sc.addAnd("vmGroupId", SearchCriteria.Op.EQ, vmGroupId);
-        sc.addAnd("policyId", SearchCriteria.Op.IN, policyIds.toArray());
-        if (revoke != null) {
-            sc.addAnd("revoke", SearchCriteria.Op.EQ, revoke);
-        }
-
-        expunge(sc);
+        return expunge(sc) > 0;
     }
 
     @Override
@@ -51,15 +39,6 @@ public class AutoScaleVmGroupPolicyMapDaoImpl extends GenericDaoBase<AutoScaleVm
     }
 
     @Override
-    public AutoScaleVmGroupPolicyMapVO findByVmGroupIdAndPolicyId(long vmGroupId, long policyId) {
-        SearchCriteria<AutoScaleVmGroupPolicyMapVO> sc = createSearchCriteria();
-        sc.addAnd("vmGroupId", SearchCriteria.Op.EQ, vmGroupId);
-        sc.addAnd("policyId", SearchCriteria.Op.EQ, policyId);
-        return findOneBy(sc);
-    }
-
-
-    @Override
     public List<AutoScaleVmGroupPolicyMapVO> listByPolicyId(long policyId) {
         SearchCriteria<AutoScaleVmGroupPolicyMapVO> sc = createSearchCriteria();
         sc.addAnd("policyId", SearchCriteria.Op.EQ, policyId);
@@ -67,12 +46,10 @@ public class AutoScaleVmGroupPolicyMapDaoImpl extends GenericDaoBase<AutoScaleVm
         return listBy(sc);
     }
 
-//    @Override
-//    public List<AutoScaleVmGroupPolicyMapVO> listByVmGroupId(long vmGroupId, boolean revoke) {
-//        SearchCriteria<AutoScaleVmGroupPolicyMapVO> sc = createSearchCriteria();
-//        sc.addAnd("vmGroupId", SearchCriteria.Op.EQ, vmGroupId);
-//        sc.addAnd("revoke", SearchCriteria.Op.EQ, revoke);
-//        return listBy(sc);
-//    }
+    public boolean isAutoScalePolicyInUse(long policyId) {
+        SearchCriteria<AutoScaleVmGroupPolicyMapVO> sc = createSearchCriteria();
+        sc.addAnd("policyId", SearchCriteria.Op.EQ, policyId);
+    	return findOneBy(sc) != null;
+    }
 
 }

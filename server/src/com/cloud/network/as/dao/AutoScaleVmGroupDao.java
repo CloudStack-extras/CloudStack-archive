@@ -19,4 +19,5 @@ import com.cloud.utils.db.GenericDao;
 
 public interface AutoScaleVmGroupDao extends GenericDao<AutoScaleVmGroupVO, Long> {
     List<AutoScaleVmGroupVO> listByAll(Long loadBalancerId, Long profileId);
+	boolean isProfileInUse(long profileId);
 }

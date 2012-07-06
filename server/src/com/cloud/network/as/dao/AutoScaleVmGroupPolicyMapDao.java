@@ -19,9 +19,8 @@ import com.cloud.network.as.AutoScaleVmGroupPolicyMapVO;
 import com.cloud.utils.db.GenericDao;
 
 public interface AutoScaleVmGroupPolicyMapDao extends GenericDao<AutoScaleVmGroupPolicyMapVO, Long> {
-    void remove(long vmGroupId);
-    void remove(long vmGroupId, List<Long> policyIds, Boolean pending);
+    boolean removeByGroupId(long vmGroupId);
     List<AutoScaleVmGroupPolicyMapVO> listByVmGroupId(long vmGroupId);
     List<AutoScaleVmGroupPolicyMapVO> listByPolicyId(long policyId);
-    AutoScaleVmGroupPolicyMapVO findByVmGroupIdAndPolicyId(long vmGroupId, long policyId);
+    public boolean isAutoScalePolicyInUse(long policyId);
 }

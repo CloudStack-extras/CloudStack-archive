@@ -49,6 +49,9 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
     @Column(name="uuid")
     String uuid;
 
+    @Column(name="zone_id", updatable=false)
+    private long zoneId;
+
     @Column(name="domain_id", updatable=false)
     private long domainId;
 
@@ -82,23 +85,27 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
 	public AutoScaleVmGroupVO() {
     }
 
-    public AutoScaleVmGroupVO( long lbRuleId, long domainId, long accountId, int minMembers, int maxMembers, long profileId) {
+    public AutoScaleVmGroupVO( long lbRuleId, long zoneId, long domainId, long accountId, int minMembers, int maxMembers, long profileId) {
         this.uuid = UUID.randomUUID().toString();
-        this.loadBalancerId = lbRuleId;
         this.minMembers = minMembers;
         this.maxMembers = maxMembers;
         this.profileId = profileId;
         this.accountId = accountId;
-        this.domainId= domainId;
+        this.domainId = domainId;
+        this.zoneId = zoneId;
     }
 
-    @Override
+	@Override
     public String toString() {
         return new StringBuilder("AutoScaleVmGroupVO[").append("id").append("]").toString();
     }
-
+	
     public long getId()    {
         return id;
+    }
+    
+    public long getZoneId() {
+    	return zoneId;
     }
     public long getDomainId() {
         return domainId;

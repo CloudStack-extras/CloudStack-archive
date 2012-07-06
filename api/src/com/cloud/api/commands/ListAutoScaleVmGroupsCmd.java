@@ -60,6 +60,9 @@ public class ListAutoScaleVmGroupsCmd extends BaseListProjectAndAccountResources
     @Parameter(name = ApiConstants.POLICY_ID, type = CommandType.LONG, description = "the ID of the policy")
     private Long policyId;
 
+    @IdentityMapper(entityTableName="data_center")
+    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.LONG, description = "the availability zone ID")
+    private Long zoneId;
     // ///////////////////////////////////////////////////
     // ///////////////// Accessors ///////////////////////
     // ///////////////////////////////////////////////////
@@ -81,6 +84,9 @@ public class ListAutoScaleVmGroupsCmd extends BaseListProjectAndAccountResources
         return policyId;
     }
 
+    public Long getZoneId() {
+        return zoneId;
+    }
     // ///////////////////////////////////////////////////
     // ///////////// API Implementation///////////////////
     // ///////////////////////////////////////////////////
