@@ -736,6 +736,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                     _networkMgr.prepare(vmProfile, dest, ctx);
                     if (vm.getHypervisorType() != HypervisorType.BareMetal) {
                         _storageMgr.prepare(vmProfile, dest, recreate);
+                        recreate = false;
                     }
 
                     vmGuru.finalizeVirtualMachineProfile(vmProfile, dest, ctx);

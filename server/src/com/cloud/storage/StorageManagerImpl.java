@@ -2659,6 +2659,10 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
             if (dest.getStorageForDisks() != null) {
                 assignedPool = dest.getStorageForDisks().get(vol);
             }
+            if (assignedPool == null && recreate) {
+            	assignedPool = _storagePoolDao.findById(vol.getPoolId());
+            	
+            }
             if (assignedPool != null || recreate) {
                 Volume.State state = vol.getState();
                 if (state == Volume.State.Allocated || state == Volume.State.Creating) {
@@ -2691,6 +2695,12 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
 
         for (VolumeVO vol : recreateVols) {
             VolumeVO newVol;
+            StoragePool existingPool = null;
+            if (recreate && (dest.getStorageForDisks() == null || dest.getStorageForDisks().get(vol) == null)) {
+            	existingPool = _storagePoolDao.findById(vol.getPoolId());
+            	s_logger.debug("existing pool: " + existingPool.getId());
+            }
+            
             if (vol.getState() == Volume.State.Allocated || vol.getState() == Volume.State.Creating) {
                 newVol = vol;
             } else {
@@ -2709,9 +2719,12 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
             try {
                 _volsDao.update(newVol, Volume.Event.Create);
             } catch (ConcurrentOperationException e) {
+            	s_logger.debug("unable to update volume state: due to"  + e.toString());
                 throw new StorageUnavailableException("Unable to create " + newVol, newVol.getPoolId());
             }
-            Pair<VolumeTO, StoragePool> created = createVolume(newVol, _diskOfferingDao.findById(newVol.getDiskOfferingId()), vm, vols, dest);
+            
+           
+            Pair<VolumeTO, StoragePool> created = createVolume(newVol, _diskOfferingDao.findById(newVol.getDiskOfferingId()), vm, vols, dest, existingPool);
             if (created == null) {
                 Long poolId = newVol.getPoolId();
                 newVol.setPoolId(null);
@@ -2766,7 +2779,7 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
     }
 
     public Pair<VolumeTO, StoragePool> createVolume(VolumeVO toBeCreated, DiskOfferingVO offering, VirtualMachineProfile<? extends VirtualMachine> vm, List<? extends Volume> alreadyCreated,
-            DeployDestination dest) throws StorageUnavailableException {
+            DeployDestination dest, StoragePool sPool) throws StorageUnavailableException {
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Creating volume: " + toBeCreated);
         }
@@ -2776,9 +2789,15 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
         if (toBeCreated.getTemplateId() != null) {
             template = _templateDao.findById(toBeCreated.getTemplateId());
         }
+        
+        StoragePool pool = null;
+        if (sPool != null) {
+        	pool = sPool;
+        } else {
+        	pool = dest.getStorageForDisks().get(toBeCreated);
+        }
 
-        if (dest.getStorageForDisks() != null) {
-            StoragePool pool = dest.getStorageForDisks().get(toBeCreated);
+        if (pool != null) {
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("Trying to create in " + pool);
             }
