@@ -432,8 +432,9 @@ if [ "$1" == "1" ] ; then
     root=/usr/share/cloud/bridge
     target=/usr/share/cloud/management/
 
-    if [ ! -e $target/webapps/awsapi ]; then
-        ln -s $root/webapps/awsapi $target/webapps/awsapi
+    mkdir -p $target/webapps7080
+    if [ ! -e $target/webapps7080/awsapi ]; then
+        ln -s $root/webapps/awsapi $target/webapps7080/awsapi
     fi
 
     jars=`ls $root/lib`
@@ -632,7 +633,7 @@ fi
 %config(noreplace) %attr(0640,root,%{name}) %{_sysconfdir}/%{name}/usage/db.properties
 
 %files aws-api
-%defattr(0644,cloud,cloud,0755)
+%defattr(0666,cloud,cloud,0755)
 %{_datadir}/cloud/bridge/conf/*
 %{_datadir}/cloud/bridge/lib/*
 %{_datadir}/cloud/bridge/webapps/*

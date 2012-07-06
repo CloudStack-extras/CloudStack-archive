@@ -67,6 +67,7 @@ import com.cloud.org.Grouping;
 import com.cloud.projects.Project.ListProjectResourcesCriteria;
 import com.cloud.projects.ProjectManager;
 import com.cloud.resource.ResourceManager;
+import com.cloud.server.ResourceTag.TaggedResourceType;
 import com.cloud.storage.Snapshot;
 import com.cloud.storage.Snapshot.Status;
 import com.cloud.storage.Snapshot.Type;
@@ -89,6 +90,8 @@ import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.storage.secondary.SecondaryStorageVmManager;
 import com.cloud.storage.swift.SwiftManager;
+import com.cloud.tags.ResourceTagVO;
+import com.cloud.tags.dao.ResourceTagDao;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.AccountVO;
@@ -108,6 +111,7 @@ import com.cloud.utils.component.Inject;
 import com.cloud.utils.component.Manager;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.Filter;
+import com.cloud.utils.db.JoinBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
@@ -179,6 +183,9 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
     private DomainManager _domainMgr;
     @Inject
     private VolumeDao _volumeDao;
+    @Inject
+    private ResourceTagDao _resourceTagDao;
+    
     String _name;
     private int _totalRetries;
     private int _pauseInterval;
@@ -370,24 +377,32 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_SNAPSHOT_CREATE, eventDescription = "creating snapshot", async = true)
     public SnapshotVO createSnapshot(Long volumeId, Long policyId, Long snapshotId, Account snapshotOwner) {
-        VolumeVO volume = _volsDao.findById(volumeId);   
+        VolumeVO volume = _volsDao.findById(volumeId);
         if (volume == null) {
-        	throw new InvalidParameterValueException("No such volume exist");
+            _resourceLimitMgr.decrementResourceCount(snapshotOwner.getId(), ResourceType.snapshot);
+            throw new InvalidParameterValueException("No such volume exist");
         }
         
         if (volume.getState() != Volume.State.Ready) {
-        	throw new InvalidParameterValueException("Volume is not in ready state");
+            _resourceLimitMgr.decrementResourceCount(snapshotOwner.getId(), ResourceType.snapshot);
+            throw new InvalidParameterValueException("Volume is not in ready state");
         }
-        
+
         SnapshotVO snapshot = null;
-     
         boolean backedUp = false;
         UserVmVO uservm = null;
         // does the caller have the authority to act on this volume
-        _accountMgr.checkAccess(UserContext.current().getCaller(), null, true, volume);
+        try {
+            _accountMgr.checkAccess(UserContext.current().getCaller(), null, true, volume);
+        } catch ( PermissionDeniedException pe) {
+            // decrement the resource count
+            _resourceLimitMgr.decrementResourceCount(snapshotOwner.getId(), ResourceType.snapshot);
+            s_logger.debug("Decrementing the resource count for account: " + snapshotOwner.getAccountName() + ", access failed");
+            throw pe;
+        }
         
         try {
-    
+
             Long poolId = volume.getPoolId();
             if (poolId == null) {
                 throw new CloudRuntimeException("You cannot take a snapshot of a volume until it has been attached to an instance");
@@ -442,7 +457,6 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
             		throw new CloudRuntimeException("Creating snapshot failed due to volume:" + volumeId + " is being used, try it later ");
             	}
             }*/
-
             snapshot = createSnapshotOnPrimary(volume, policyId, snapshotId);
             if (snapshot != null) {
                 if (snapshot.getStatus() == Snapshot.Status.CreatedOnPrimary) {
@@ -475,18 +489,23 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
                     _usageEventDao.persist(usageEvent);
                 }
                 if( !backedUp ) {
-
                     snapshot.setStatus(Status.Error);
                     _snapshotDao.update(snapshot.getId(), snapshot);
+                    //Decrement Resource Count
+                    _resourceLimitMgr.decrementResourceCount(snapshotOwner.getId(), ResourceType.snapshot);
+                    s_logger.debug("Decrementing the snapshot resource count for account: " + snapshotOwner.getAccountName() + " as backup failed");
                 } else {
-                    _resourceLimitMgr.incrementResourceCount(snapshotOwner.getId(), ResourceType.snapshot);
+                    s_logger.debug("Backup of the snapshot for account id :" + snapshotOwner.getAccountName() + ", successfully completed");
                 }
             } else {
-            	snapshot = _snapshotDao.findById(snapshotId);
-            	if (snapshot != null) {
-            		snapshot.setStatus(Status.Error);
-            		_snapshotDao.update(snapshotId, snapshot);
-            	}
+                //Decrement Resource Count
+                _resourceLimitMgr.decrementResourceCount(snapshotOwner.getId(), ResourceType.snapshot);
+                s_logger.debug("Decrementing the snapshot resource count  for account: " + snapshotOwner.getAccountName() + " as snapshot creation failed");
+                snapshot = _snapshotDao.findById(snapshotId);
+                if(snapshot != null) {
+                    snapshot.setStatus(Status.Error);
+                    _snapshotDao.update(snapshotId, snapshot);
+                }
             }
 
             /*
@@ -497,7 +516,6 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
             }*/
 
         }
-
         return snapshot;
     }
 
@@ -894,6 +912,7 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
         String keyword = cmd.getKeyword();
         String snapshotTypeStr = cmd.getSnapshotType();
         String intervalTypeStr = cmd.getIntervalType();
+        Map<String, String> tags = cmd.getTags();
         
         Account caller = UserContext.current().getCaller();
         List<Long> permittedAccounts = new ArrayList<Long>();
@@ -922,12 +941,34 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
         sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         sb.and("snapshotTypeEQ", sb.entity().getsnapshotType(), SearchCriteria.Op.IN);
         sb.and("snapshotTypeNEQ", sb.entity().getsnapshotType(), SearchCriteria.Op.NEQ);
+        
+        if (tags != null && !tags.isEmpty()) {
+        SearchBuilder<ResourceTagVO> tagSearch = _resourceTagDao.createSearchBuilder();
+        for (int count=0; count < tags.size(); count++) {
+            tagSearch.or().op("key" + String.valueOf(count), tagSearch.entity().getKey(), SearchCriteria.Op.EQ);
+            tagSearch.and("value" + String.valueOf(count), tagSearch.entity().getValue(), SearchCriteria.Op.EQ);
+            tagSearch.cp();
+        }
+        tagSearch.and("resourceType", tagSearch.entity().getResourceType(), SearchCriteria.Op.EQ);
+        sb.groupBy(sb.entity().getId());
+        sb.join("tagSearch", tagSearch, sb.entity().getId(), tagSearch.entity().getResourceId(), JoinBuilder.JoinType.INNER);
+    }
 
         SearchCriteria<SnapshotVO> sc = sb.create();
         _accountMgr.buildACLSearchCriteria(sc, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
 
         if (volumeId != null) {
             sc.setParameters("volumeId", volumeId);
+        }
+        
+        if (tags != null && !tags.isEmpty()) {
+            int count = 0;
+            sc.setJoinParameters("tagSearch", "resourceType", TaggedResourceType.Snapshot.toString());
+            for (String key : tags.keySet()) {
+                sc.setJoinParameters("tagSearch", "key" + String.valueOf(count), key);
+                sc.setJoinParameters("tagSearch", "value" + String.valueOf(count), tags.get(key));
+                count++;
+            }
         }
 
         if (name != null) {
@@ -1312,15 +1353,21 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
         Type snapshotType = getSnapshotType(policyId);
         Account owner = _accountMgr.getAccount(volume.getAccountId());
         try{
-        	_resourceLimitMgr.checkResourceLimit(owner, ResourceType.snapshot);
+            //synchronize the resource count
+            synchronized (this) {
+            	_resourceLimitMgr.checkResourceLimit(owner, ResourceType.snapshot);
+            	//Increment the resourceCount  
+            	_resourceLimitMgr.incrementResourceCount(owner.getId(), ResourceType.snapshot);
+            	s_logger.debug("Incrementing the snapshot resource count for account : " + owner.getAccountName());
+            }
         } catch (ResourceAllocationException e){
-        	if (snapshotType != Type.MANUAL){
-        		String msg = "Snapshot resource limit exceeded for account id : " + owner.getId() + ". Failed to create recurring snapshots";
-        		s_logger.warn(msg);
-        		_alertMgr.sendAlert(AlertManager.ALERT_TYPE_UPDATE_RESOURCE_COUNT, 0L, 0L, msg, 
-        				"Snapshot resource limit exceeded for account id : " + owner.getId() + ". Failed to create recurring snapshots; please use updateResourceLimit to increase the limit");
-        	}
-        	throw e;
+            if (snapshotType != Type.MANUAL){
+                String msg = "Snapshot resource limit exceeded for account id : " + owner.getId() + ". Failed to create recurring snapshots";
+                s_logger.warn(msg);
+                _alertMgr.sendAlert(AlertManager.ALERT_TYPE_UPDATE_RESOURCE_COUNT, 0L, 0L, msg, 
+                "Snapshot resource limit exceeded for account id : " + owner.getId() + ". Failed to create recurring snapshots; please use updateResourceLimit to increase the limit");
+            }
+            throw e;
         }
 
         // Determine the name for this snapshot
@@ -1335,14 +1382,18 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
         String snapshotName = vmDisplayName + "_" + volume.getName() + "_" + timeString;
 
         // Create the Snapshot object and save it so we can return it to the
-        // user        
+        // user
         HypervisorType hypervisorType = this._volsDao.getHypervisorType(volumeId);
         SnapshotVO snapshotVO = new SnapshotVO(volume.getDataCenterId(), volume.getAccountId(), volume.getDomainId(), volume.getId(), volume.getDiskOfferingId(), null, snapshotName,
                 (short) snapshotType.ordinal(), snapshotType.name(), volume.getSize(), hypervisorType);
         SnapshotVO snapshot = _snapshotDao.persist(snapshotVO);
         if (snapshot == null) {
+            //Decrement the resource count
+            _resourceLimitMgr.decrementResourceCount(owner.getId(), ResourceType.snapshot);
+            s_logger.debug("Decrementing the snapshot resource count for account: " + owner.getAccountName() + " as snapshot creation failed for volume");
             throw new CloudRuntimeException("Failed to create snapshot for volume: "+volumeId);
         }
+
         return snapshot;
     }
 

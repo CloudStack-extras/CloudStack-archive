@@ -1,3 +1,13 @@
+// Copyright 2012 Citrix Systems, Inc. Licensed under the
+// Apache License, Version 2.0 (the "License"); you may not use this
+// file except in compliance with the License.  Citrix Systems, Inc.
+// reserves all rights not expressly granted by the License.
+// You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License. 
 (function($, cloudStack) {
   var zoneObjs, hypervisorObjs, featuredTemplateObjs, communityTemplateObjs, myTemplateObjs, featuredIsoObjs, community
   var selectedZoneObj, selectedTemplateObj, selectedHypervisor, selectedDiskOfferingObj; 
@@ -276,15 +286,18 @@
             networkObjs = json.listnetworksresponse.network ? json.listnetworksresponse.network : [];
           }
         });
-
-
-        var apiCmd = "listNetworkOfferings&guestiptype=Isolated&supportedServices=sourceNat&state=Enabled&specifyvlan=false&zoneid=" + args.currentData.zoneid ; 
-        var array1 = [];
-        var guestTrafficTypeTotal = 0;
-
+                  
         $.ajax({
-          url: createURL(apiCmd + array1.join("")), //get the network offering for isolated network with sourceNat
+          url: createURL("listNetworkOfferings"), 
           dataType: "json",
+					data: {
+						forvpc: false, 
+						zoneid: args.currentData.zoneid,
+						guestiptype: 'Isolated',
+						supportedServices: 'SourceNat',
+						specifyvlan: false,
+						state: 'Enabled'
+					},
           async: false,
           success: function(json) {
             networkOfferingObjs  = json.listnetworkofferingsresponse.networkoffering;

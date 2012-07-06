@@ -283,14 +283,15 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
 
         // As it is so common for people to forget about configuring
         // management.network.cidr,
-        String mgtCidr = _configDao.getValue(Config.ManagementNetwork.key());
+        ConfigurationVO	mgmtNetwork = _configDao.findByName(Config.ManagementNetwork.key());
+        String mgtCidr = mgmtNetwork.getValue();
         if (mgtCidr == null || mgtCidr.trim().isEmpty()) {
             String[] localCidrs = NetUtils.getLocalCidrs();
             if (localCidrs.length > 0) {
                 s_logger.warn("Management network CIDR is not configured originally. Set it default to " + localCidrs[0]);
 
                 _alertMgr.sendAlert(AlertManager.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management network CIDR is not configured originally. Set it default to " + localCidrs[0], "");
-                _configDao.update(Config.ManagementNetwork.key(), Config.ManagementNetwork.getCategory(), localCidrs[0]);
+                _configDao.update(Config.ManagementNetwork.key(), mgmtNetwork.getCategory(), localCidrs[0]);
             } else {
                 s_logger.warn("Management network CIDR is not properly configured and we are not able to find a default setting");
                 _alertMgr.sendAlert(AlertManager.ALERT_TYPE_MANAGMENT_NODE, 0, new Long(0), "Management network CIDR is not properly configured and we are not able to find a default setting", "");
@@ -2131,6 +2132,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
             if (network == null) {
                 if (zone.getNetworkType() == DataCenter.NetworkType.Basic) {
                     networkId = _networkMgr.getExclusiveGuestNetwork(zoneId).getId();
+                    network = _networkMgr.getNetwork(networkId);
                 } else {
                     network = _networkMgr.getNetworkWithSecurityGroupEnabled(zoneId);
                     if (network == null) {
@@ -3281,6 +3283,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         Object specifyIpRanges = cmd.getSpecifyIpRanges();
         String tags = cmd.getTags();
         Boolean isTagged = cmd.isTagged();
+        Boolean forVpc = cmd.getForVpc();
 
         if (zoneId != null) {
             zone = getZone(zoneId);
@@ -3408,7 +3411,8 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         // filter by supported services
         boolean listBySupportedServices = (supportedServicesStr != null && !supportedServicesStr.isEmpty() && !offerings.isEmpty());
         boolean checkIfProvidersAreEnabled = (zoneId != null);
-        boolean parseOfferings = (listBySupportedServices || sourceNatSupported != null || checkIfProvidersAreEnabled);
+        boolean parseOfferings = (listBySupportedServices || sourceNatSupported != null || checkIfProvidersAreEnabled 
+                || forVpc != null);
 
         if (parseOfferings) {
             List<NetworkOfferingVO> supportedOfferings = new ArrayList<NetworkOfferingVO>();
@@ -3455,6 +3459,10 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
                 if (sourceNatSupported != null) {
                     addOffering = addOffering && (_networkMgr.areServicesSupportedByNetworkOffering(offering.getId(), Network.Service.SourceNat) == sourceNatSupported);
                 }
+                
+                if (forVpc != null) {
+                    addOffering = addOffering && (isOfferingForVpc(offering) == forVpc.booleanValue());    
+                }
 
                 if (addOffering) {
                     supportedOfferings.add(offering);
@@ -3466,6 +3474,13 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         } else {
             return offerings;
         }
+    }
+
+    @Override
+    public boolean isOfferingForVpc(NetworkOffering offering) {
+        boolean vpcProvider = _ntwkOffServiceMapDao.isProviderForNetworkOffering(offering.getId(),
+                Provider.VPCVirtualRouter);
+        return vpcProvider;
     }
 
     @Override

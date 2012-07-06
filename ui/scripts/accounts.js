@@ -262,6 +262,7 @@
               edit: {
                 label: 'message.edit.account',
                 action: function(args) {
+                  var errorMsg = "";
                   var accountObj = args.context.accounts[0];
 
                   var array1 = [];

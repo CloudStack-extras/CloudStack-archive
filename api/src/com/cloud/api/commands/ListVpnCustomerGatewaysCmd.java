@@ -37,7 +37,7 @@ public class ListVpnCustomerGatewaysCmd extends BaseListProjectAndAccountResourc
     /////////////////////////////////////////////////////
 
     @IdentityMapper(entityTableName="s2s_customer_gateway")
-    @Parameter(name=ApiConstants.ID, type=CommandType.LONG, required=true, description="id of the customer gateway")
+    @Parameter(name=ApiConstants.ID, type=CommandType.LONG, description="id of the customer gateway")
     private Long id;
 
     /////////////////////////////////////////////////////
@@ -65,7 +65,9 @@ public class ListVpnCustomerGatewaysCmd extends BaseListProjectAndAccountResourc
         List<Site2SiteCustomerGatewayResponse> gwResponses = new ArrayList<Site2SiteCustomerGatewayResponse>();
         if (gws != null && !gws.isEmpty()) {
             for (Site2SiteCustomerGateway gw : gws) {
-                gwResponses.add(_responseGenerator.createSite2SiteCustomerGatewayResponse(gw));
+            	Site2SiteCustomerGatewayResponse site2SiteCustomerGatewayRes = _responseGenerator.createSite2SiteCustomerGatewayResponse(gw);
+            	site2SiteCustomerGatewayRes.setObjectName("vpncustomergateway");
+                gwResponses.add(site2SiteCustomerGatewayRes);
             }
         }
         response.setResponses(gwResponses);

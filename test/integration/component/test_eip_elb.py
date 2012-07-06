@@ -44,8 +44,8 @@ class Services:
                                     "name": "Tiny Instance",
                                     "displaytext": "Tiny Instance",
                                     "cpunumber": 1,
-                                    "cpuspeed": 100,    # in MHz
-                                    "memory": 64,       # In MBs
+                                    "cpuspeed": 100, # in MHz
+                                    "memory": 64, # In MBs
                                     },
                          "lbrule": {
                                     "name": "SSH",
@@ -180,6 +180,8 @@ class TestEIP(cloudstackTestCase):
     def test_01_eip_by_deploying_instance(self):
         """Test EIP by deploying an instance
         """
+
+        tags = ["eip"]
 
         # Validate the following
         # 1. Instance gets an IP from GUEST IP range.
@@ -346,6 +348,8 @@ class TestEIP(cloudstackTestCase):
         """Test associate new IP and enable static NAT for new IP and the VM
         """
 
+        tags = ["eip"]
+
         # Validate the following
         # 1. user_ip_address.is_system = 0 & user_ip_address.one_to_one_nat=1
         # 2. releases default EIP whose user_ip_address.is_system=1
@@ -487,6 +491,8 @@ class TestEIP(cloudstackTestCase):
     def test_03_disable_static_nat(self):
         """Test disable static NAT and release EIP acquired
         """
+
+        tags = ["eip"]
 
         # Validate the following
         # 1. Disable static NAT. Disables one-to-one NAT and releases EIP
@@ -685,6 +691,8 @@ class TestEIP(cloudstackTestCase):
         """Test disable static NAT with system = True
         """
 
+        tags = ["eip"]
+
         # Validate the following
         # 1. Try to disassociate/disable static NAT on EIP where is_system=1
         # 2. This operation should fail with proper error message.
@@ -751,6 +759,8 @@ class TestEIP(cloudstackTestCase):
     def test_05_destroy_instance(self):
         """Test EIO after destroying instance
         """
+
+        tags = ["eip"]
 
         # Validate the following
         # 1. Destroy instance. Destroy should result in is_system=0 for EIP
@@ -988,6 +998,8 @@ class TestELB(cloudstackTestCase):
         """Test ELB by creating a LB rule
         """
 
+        tags = ["eip"]
+
         # Validate the following
         # 1. Deploy 2 instances
         # 2. Create LB rule to port 22 for the VMs and try to access VMs with
@@ -1159,6 +1171,8 @@ class TestELB(cloudstackTestCase):
         """Test ELB by acquiring IP and then creating a LB rule
         """
 
+        tags = ["eip"]
+
         # Validate the following
         # 1. Deploy 2 instances
         # 2. Create LB rule to port 22 for the VMs and try to access VMs with
@@ -1305,6 +1319,8 @@ class TestELB(cloudstackTestCase):
         """Test delete LB rule generated with public IP with is_system = 1
         """
 
+        tags = ["eip"]
+
         # Validate the following
         # 1. Deleting LB rule should release EIP where is_system=1
         # 2. check configuration changes for EIP reflects on NS
@@ -1406,6 +1422,8 @@ class TestELB(cloudstackTestCase):
     def test_04_delete_lb_on_eip(self):
         """Test delete LB rule generated on EIP
         """
+
+        tags = ["eip"]
 
         # Validate the following
         # 1. Deleting LB rule won't release EIP where is_system=0

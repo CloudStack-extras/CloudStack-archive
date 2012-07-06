@@ -19,7 +19,6 @@ import java.util.List;
 import com.cloud.api.ApiConstants.HostDetails;
 import com.cloud.api.ApiConstants.VMDetails;
 import com.cloud.api.commands.QueryAsyncJobResultCmd;
-import com.cloud.api.response.NetworkACLResponse;
 import com.cloud.api.response.AccountResponse;
 import com.cloud.api.response.AsyncJobResponse;
 import com.cloud.api.response.CapacityResponse;
@@ -42,6 +41,7 @@ import com.cloud.api.response.LBStickinessResponse;
 import com.cloud.api.response.LDAPConfigResponse;
 import com.cloud.api.response.ListResponse;
 import com.cloud.api.response.LoadBalancerResponse;
+import com.cloud.api.response.NetworkACLResponse;
 import com.cloud.api.response.NetworkOfferingResponse;
 import com.cloud.api.response.NetworkResponse;
 import com.cloud.api.response.PhysicalNetworkResponse;
@@ -109,17 +109,16 @@ import com.cloud.network.VpnUser;
 import com.cloud.network.router.VirtualRouter;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.LoadBalancer;
-import com.cloud.network.rules.NetworkACL;
 import com.cloud.network.rules.PortForwardingRule;
 import com.cloud.network.rules.StaticNatRule;
 import com.cloud.network.rules.StickinessPolicy;
 import com.cloud.network.security.SecurityGroup;
 import com.cloud.network.security.SecurityGroupRules;
 import com.cloud.network.security.SecurityRule;
+import com.cloud.network.vpc.PrivateGateway;
 import com.cloud.network.vpc.StaticRoute;
 import com.cloud.network.vpc.Vpc;
 import com.cloud.network.vpc.VpcOffering;
-import com.cloud.network.vpc.PrivateGateway;
 import com.cloud.offering.DiskOffering;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offering.ServiceOffering;
@@ -297,9 +296,10 @@ public interface ResponseGenerator {
 
     /**
      * @param resourceTag
+     * @param keyValueOnly TODO
      * @return
      */
-    ResourceTagResponse createResourceTagResponse(ResourceTag resourceTag);
+    ResourceTagResponse createResourceTagResponse(ResourceTag resourceTag, boolean keyValueOnly);
 
     Site2SiteVpnGatewayResponse createSite2SiteVpnGatewayResponse(Site2SiteVpnGateway result);
 
@@ -319,7 +319,7 @@ public interface ResponseGenerator {
      * @param networkACL
      * @return
      */
-    NetworkACLResponse createNetworkACLResponse(NetworkACL networkACL);
+    NetworkACLResponse createNetworkACLResponse(FirewallRule networkACL);
 
     /**
      * @param result
@@ -332,8 +332,6 @@ public interface ResponseGenerator {
      * @return
      */
     StaticRouteResponse createStaticRouteResponse(StaticRoute result);
-
-    PrivateGatewayResponse createPrivateGatewayResponseResponse(PrivateGateway result);
 
     Site2SiteCustomerGatewayResponse createSite2SiteCustomerGatewayResponse(Site2SiteCustomerGateway result);
 

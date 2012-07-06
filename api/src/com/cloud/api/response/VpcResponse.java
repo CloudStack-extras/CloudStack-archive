@@ -35,11 +35,14 @@ public class VpcResponse extends BaseResponse implements ControlledEntityRespons
     @SerializedName(ApiConstants.DISPLAY_TEXT) @Param(description="an alternate display text of the VPC.")
     private String displayText;
     
-    @SerializedName(ApiConstants.STATE) @Param(description="state of the VPC. Can be Disabled/Enabled")
+    @SerializedName(ApiConstants.STATE) @Param(description="state of the VPC. Can be Inactive/Enabled")
     private String state;
     
     @SerializedName(ApiConstants.ZONE_ID) @Param(description="zone id of the vpc")
     private IdentityProxy zoneId = new IdentityProxy("data_center");
+    
+    @SerializedName(ApiConstants.ZONE_NAME) @Param(description="the name of the zone the VPC belongs to")
+    private String zoneName;
    
     @SerializedName(ApiConstants.SERVICE) @Param(description="the list of supported services", responseObject = ServiceResponse.class)
     private List<ServiceResponse> services;
@@ -76,6 +79,9 @@ public class VpcResponse extends BaseResponse implements ControlledEntityRespons
     
     @SerializedName(ApiConstants.NETWORK_DOMAIN) @Param(description="the network domain")
     private String networkDomain;
+    
+    @SerializedName(ApiConstants.TAGS)  @Param(description="the list of resource tags associated with the project", responseObject = ResourceTagResponse.class)
+    private List<ResourceTagResponse> tags;
 
     public void setId(Long id) {
         this.id.setValue(id);
@@ -152,5 +158,13 @@ public class VpcResponse extends BaseResponse implements ControlledEntityRespons
     
     public void setNetworkDomain(String networkDomain) {
         this.networkDomain = networkDomain;
+    }
+    
+    public void setZoneName(String zoneName) {
+        this.zoneName = zoneName;
+    }
+    
+    public void setTags(List<ResourceTagResponse> tags) {
+        this.tags = tags;
     }
 }

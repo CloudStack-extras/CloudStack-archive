@@ -67,7 +67,7 @@ class Services:
                                 "numretries": 2,
                                 "lbdevicededicated": False,
                                 "lbdevicecapacity": 50,
-				"port": 22,
+                "port": 22,
                          },
                          "network_offering": {
                                     "name": 'Netscaler',
@@ -76,7 +76,7 @@ class Services:
                                     "supportedservices": 'Dhcp,Dns,SourceNat,PortForwarding,Vpn,Firewall,Lb,UserData,StaticNat',
                                     "traffictype": 'GUEST',
                                     "availability": 'Optional',
-                                    "serviceProviderList" : {
+                                    "serviceProviderList": {
                                             "Dhcp": 'VirtualRouter',
                                             "Dns": 'VirtualRouter',
                                             "SourceNat": 'VirtualRouter',
@@ -104,7 +104,7 @@ class Services:
                          # Cent OS 5.3 (64 bit)
                          "sleep": 60,
                          "timeout": 10,
-                         "mode":'advanced'
+                         "mode": 'advanced'
                     }
 
 
@@ -191,6 +191,7 @@ class TestLbWithRoundRobin(cloudstackTestCase):
     def test_lb_with_round_robin(self):
         """Test Create LB rule with round robin algorithm
         """
+        tags = ["advancedns"]
 
         # Validate the following
         # 1. Deploy the first VM using a network from the above created
@@ -403,6 +404,7 @@ class TestLbWithLeastConn(cloudstackTestCase):
     def test_lb_with_least_conn(self):
         """Test Create LB rule with least connection algorithm
         """
+        tags = ["advancedns"]
 
         # Validate the following
         # 1. Deploy the first VM using a network from the above created
@@ -539,7 +541,6 @@ class TestLbWithLeastConn(cloudstackTestCase):
         return
 
 
-
 class TestLbWithSourceIp(cloudstackTestCase):
 
     @classmethod
@@ -622,6 +623,7 @@ class TestLbWithSourceIp(cloudstackTestCase):
     def test_lb_with_source_ip(self):
         """Test Create LB rule with source Ip algorithm
         """
+        tags = ["advancedns"]
 
         # Validate the following
         # 1. Deploy the first VM using a network from the above created
@@ -751,7 +753,6 @@ class TestLbWithSourceIp(cloudstackTestCase):
         return
 
 
-
 class TestLbAlgoRrLc(cloudstackTestCase):
 
     @classmethod
@@ -859,6 +860,7 @@ class TestLbAlgoRrLc(cloudstackTestCase):
     def test_lb_round_robin_to_least_conn(self):
         """Test edit LB rule from round robin to least connection algo
         """
+        tags = ["advancedns"]
 
         # Validate the following
         # 1. Deploy the first VM using a network from the above created
@@ -961,7 +963,6 @@ class TestLbAlgoRrLc(cloudstackTestCase):
             self.fail("SSH Access failed for %s: %s" % \
                       (self.services["netscaler"]["ipaddress"], e))
         return
-
 
 
 class TestLbAlgoLcRr(cloudstackTestCase):
@@ -1071,6 +1072,7 @@ class TestLbAlgoLcRr(cloudstackTestCase):
     def test_lb_least_conn_to_round_robin(self):
         """Test edit LB rule from least conn to round robin algo
         """
+        tags = ["advancedns"]
 
         # Validate the following
         # 1. Deploy the first VM using a network from the above created
@@ -1170,7 +1172,6 @@ class TestLbAlgoLcRr(cloudstackTestCase):
             self.fail("SSH Access failed for %s: %s" % \
                       (self.services["netscaler"]["ipaddress"], e))
         return
-
 
 
 class TestLbAlgoRrSb(cloudstackTestCase):
@@ -1281,6 +1282,7 @@ class TestLbAlgoRrSb(cloudstackTestCase):
     def test_lb_round_robin_to_source(self):
         """Test edit LB rule from round robin to source algo
         """
+        tags = ["advancedns"]
 
         # Validate the following
         # 1. Deploy the first VM using a network from the above created
@@ -1382,7 +1384,6 @@ class TestLbAlgoRrSb(cloudstackTestCase):
             self.fail("SSH Access failed for %s: %s" % \
                       (self.services["netscaler"]["ipaddress"], e))
         return
-
 
 
 class TestLbAlgoSbRr(cloudstackTestCase):
@@ -1493,6 +1494,7 @@ class TestLbAlgoSbRr(cloudstackTestCase):
     def test_lb_source_to_round_robin(self):
         """Test edit LB rule from source to round robin algo
         """
+        tags = ["advancedns"]
 
         # Validate the following
         # 1. Deploy the first VM using a network from the above created
@@ -1596,7 +1598,6 @@ class TestLbAlgoSbRr(cloudstackTestCase):
             self.fail("SSH Access failed for %s: %s" % \
                       (self.services["netscaler"]["ipaddress"], e))
         return
-
 
 
 class TestLbAlgoSbLc(cloudstackTestCase):
@@ -1708,6 +1709,7 @@ class TestLbAlgoSbLc(cloudstackTestCase):
     def test_lb_source_to_least_conn(self):
         """Test edit LB rule from source to least conn algo
         """
+        tags = ["advancedns"]
 
         # Validate the following
         # 1. Deploy the first VM using a network from the above created
@@ -1810,7 +1812,6 @@ class TestLbAlgoSbLc(cloudstackTestCase):
             self.fail("SSH Access failed for %s: %s" % \
                       (self.services["netscaler"]["ipaddress"], e))
         return
-
 
 
 class TestLbAlgoLcSb(cloudstackTestCase):
@@ -1921,6 +1922,7 @@ class TestLbAlgoLcSb(cloudstackTestCase):
     def test_lb_leastconn_to_source(self):
         """Test edit LB rule from round robin to source algo
         """
+        tags = ["advancedns"]
 
         # Validate the following
         # 1. Deploy the first VM using a network from the above created
@@ -1961,7 +1963,7 @@ class TestLbAlgoLcSb(cloudstackTestCase):
                                                 lb_rule.name
                                                 ))
         lb_rule.assign(self.apiclient, [self.virtual_machine])
-        
+
         self.debug("SSH into Netscaler to check whether algorithm is configured properly or not?")
         self.debug("SSH into netscaler: %s" %
                                     self.services["netscaler"]["ipaddress"])

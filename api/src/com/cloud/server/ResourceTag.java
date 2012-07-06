@@ -30,7 +30,11 @@ public interface ResourceTag extends ControlledEntity{
         PortForwardingRule,
         FirewallRule,
         SecurityGroup,
-        PublicIpAddress
+        PublicIpAddress,
+        Project,
+        Vpc,
+        NetworkACL,
+        StaticRoute
     }
 
     /**
@@ -62,5 +66,10 @@ public interface ResourceTag extends ControlledEntity{
      * @return
      */
     String getCustomer();
+
+    /**
+     * @return
+     */
+    String getResourceUuid();
 
 }

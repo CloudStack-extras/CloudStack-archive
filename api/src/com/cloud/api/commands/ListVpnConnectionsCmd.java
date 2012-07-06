@@ -28,7 +28,7 @@ import com.cloud.network.Site2SiteVpnConnection;
 
 @Implementation(description="Lists site to site vpn connection gateways", responseObject=Site2SiteVpnConnectionResponse.class)
 public class ListVpnConnectionsCmd extends BaseListProjectAndAccountResourcesCmd {
-    public static final Logger s_logger = Logger.getLogger (ListVpnCustomerGatewaysCmd.class.getName());
+    public static final Logger s_logger = Logger.getLogger (ListVpnConnectionsCmd.class.getName());
 
     private static final String s_name = "listvpnconnectionsresponse";
 
@@ -37,7 +37,7 @@ public class ListVpnConnectionsCmd extends BaseListProjectAndAccountResourcesCmd
     /////////////////////////////////////////////////////
 
     @IdentityMapper(entityTableName="s2s_vpn_connection")
-    @Parameter(name=ApiConstants.ID, type=CommandType.LONG, required=true, description="id of the vpn connection")
+    @Parameter(name=ApiConstants.ID, type=CommandType.LONG, description="id of the vpn connection")
     private Long id;
 
     /////////////////////////////////////////////////////
@@ -65,7 +65,9 @@ public class ListVpnConnectionsCmd extends BaseListProjectAndAccountResourcesCmd
         List<Site2SiteVpnConnectionResponse> connResponses = new ArrayList<Site2SiteVpnConnectionResponse>();
         if (conns != null && !conns.isEmpty()) {
             for (Site2SiteVpnConnection conn : conns) {
-                connResponses.add(_responseGenerator.createSite2SiteVpnConnectionResponse(conn));
+            	Site2SiteVpnConnectionResponse site2SiteVpnConnectonRes = _responseGenerator.createSite2SiteVpnConnectionResponse(conn);
+            	site2SiteVpnConnectonRes.setObjectName("vpnconnection");
+                connResponses.add(site2SiteVpnConnectonRes);
             }
         }
         response.setResponses(connResponses);

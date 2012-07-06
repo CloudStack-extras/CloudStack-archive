@@ -560,7 +560,7 @@ setup_vpcrouter() {
   fi
 
     cat > /etc/network/interfaces << EOF
-auto lo $1
+auto lo
 iface lo inet loopback
 EOF
   setup_interface "0" $ETH0_IP $ETH0_MASK $GW
@@ -596,11 +596,19 @@ EOF
   fi
   if [ -n "$MGMTNET"  -a -n "$LOCAL_GW" ]
   then
-    ip route add $MGMTNET via $LOCAL_GW dev eth1
+    if [ "$hyp" == "vmware" ]
+    then
+      ip route add $MGMTNET via $LOCAL_GW dev eth0
+    fi
   fi
 
   ip route delete default
+  # create route table for static route
 
+  sudo echo "252 static_route" >> /etc/iproute2/rt_tables 2>/dev/null
+  sudo echo "251 static_route_back" >> /etc/iproute2/rt_tables 2>/dev/null
+  sudo ip rule add from $VPCCIDR table static_route 2>/dev/null
+  sudo ip rule add from $VPCCIDR table static_route_back 2>/dev/null
 
   sed -i  /gateway/d /etc/hosts
 
@@ -619,6 +627,12 @@ EOF
   cp /etc/cloud-nic.rules /etc/udev/rules.d/cloud-nic.rules
   echo "" > /etc/dnsmasq.d/dhcphosts.txt
   echo "dhcp-hostsfile=/etc/dhcphosts.txt" > /etc/dnsmasq.d/cloud.conf
+
+  [ -z $DOMAIN ] && DOMAIN="cloudnine.internal"
+  #DNS server will append $DOMAIN to local queries
+  sed -r -i s/^[#]?domain=.*$/domain=$DOMAIN/ /etc/dnsmasq.conf
+  #answer all local domain queries
+  sed  -i -e "s/^[#]*local=.*$/local=\/$DOMAIN\//" /etc/dnsmasq.conf
 }
 
 
@@ -772,6 +786,7 @@ setup_default() {
 auto lo
 iface lo inet loopback
 EOF
+  cp -f /etc/iptables/rt_tables_init /etc/iproute2/rt_tables
 }
 
 change_password() {
@@ -950,6 +965,9 @@ for i in $CMDLINE
         ;;
       vmpassword)
         VM_PASSWORD=$VALUE
+        ;;
+      vpccidr)
+        VPCCIDR=$VALUE
         ;;
     esac
 done

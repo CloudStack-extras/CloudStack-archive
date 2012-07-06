@@ -1,5 +1,98 @@
+// Copyright 2012 Citrix Systems, Inc. Licensed under the
+// Apache License, Version 2.0 (the "License"); you may not use this
+// file except in compliance with the License.  Citrix Systems, Inc.
+// reserves all rights not expressly granted by the License.
+// You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 (function($, cloudStack) {
   var elems = {
+    vpcConfigureTooltip: function(args) {
+      var $browser = args.$browser;
+      var siteToSiteVPN = args.siteToSiteVPN;
+      var links = {
+        'ip-addresses': 'IP Addresses',
+        'gateways': 'Gateways',
+        'site-to-site-vpn': 'Site-to-site VPN'
+      };
+      var $links = $('<ul>').addClass('links');
+      var $tooltip = $('<div>').addClass('vpc-configure-tooltip').append(
+        $('<div>').addClass('arrow')
+      );
+
+      // Make links
+      $.map(links, function(label, id) {
+        var $link = $('<li>').addClass('link').addClass(id);
+        var $label = $('<span>').html(label);
+
+        $link.append($label);
+        $link.appendTo($links);
+
+        // Link event
+        $link.click(function() {
+          switch (id) {
+          case 'site-to-site-vpn':
+            $browser.cloudBrowser('addPanel', {
+              title: 'Site-to-site VPNs',
+              maximizeIfSelected: true,
+              complete: function($panel) {
+                $panel.listView(
+                  $.isFunction(siteToSiteVPN.listView) ?
+                    siteToSiteVPN.listView() : siteToSiteVPN.listView
+                );
+              }
+            });
+            break;
+          }
+        });
+      });
+
+      $tooltip.append($links);
+
+      // Tooltip hover event
+      $tooltip.hover(
+        function() {
+          $tooltip.addClass('active');
+        },
+        function() {
+          $tooltip.removeClass('active');
+
+          setTimeout(function() {
+            if (!$tooltip.hasClass('active')) {
+              $tooltip.remove();
+            }
+          }, 500);
+        }
+      );
+
+      return $tooltip;
+    },
+    vpcConfigureArea: function(args) {
+      var $browser = args.$browser;
+      var siteToSiteVPN = args.siteToSiteVPN;
+      var $config = $('<div>').addClass('config-area');
+      var $configIcon = $('<span>').addClass('icon').html('&nbsp');
+
+      $config.append($configIcon);
+
+      // Tooltip event
+      $configIcon.mouseover(function() {
+        var $tooltip = elems.vpcConfigureTooltip({
+          $browser: $browser,
+          siteToSiteVPN: siteToSiteVPN
+        });
+
+        // Make sure tooltip is center aligned with icon
+        $tooltip.css({ left: $configIcon.position().left });
+        $tooltip.appendTo($config).hide();
+        $tooltip.stop().fadeIn('fast');
+      });
+
+      return $config;
+    },
     router: function() {
       var $router = $('<li>').addClass('tier virtual-router');
       var $title = $('<span>').addClass('title').html('Virtual Router');
@@ -16,16 +109,12 @@
       var cidr = args.cidr;
       var context = args.context;
       var vmListView = args.vmListView;
-      var disabledActions = args.actionPreFilter ? args.actionPreFilter({
-        context: context
-      }) : true;
+      var actionPreFilter = args.actionPreFilter;
       var actions = $.map(
         args.actions ? args.actions : {}, function(value, key) {
           return {
             id: key,
-            action: value,
-            isDisabled: $.isArray(disabledActions) &&
-              $.inArray(key, disabledActions) != -1
+            action: value
           };
         }
       );
@@ -72,7 +161,7 @@
         $title.html(name);
         $cidr.html(cidr);
         $vmCount.append(
-          $('<span>').addClass('total').html(virtualMachines.length),
+          $('<span>').addClass('total').html(virtualMachines != null? virtualMachines.length: 0),
           ' VMs'
         );
         $tier.append($actions);
@@ -82,7 +171,6 @@
           var $action = $('<div>').addClass('action');
           var shortLabel = action.action.shortLabel;
           var label = action.action.label;
-          var isDisabled = action.isDisabled;
 
           $action.addClass(action.id);
 
@@ -91,21 +179,23 @@
           } else {
             $action.append($('<span>').addClass('icon').html('&nbsp;'));
           }
+
           $actions.append($action);
           $action.attr('title', label);
-
-          if (isDisabled) $action.addClass('disabled');
+          $action.data('vpc-tier-action-id', action.id);
 
           // Action event
           $action.click(function() {
-            if (isDisabled) {
+            if ($action.hasClass('disabled')) {
               return false;
             }
-                
+
             tierAction({
               action: action,
+              actionPreFilter: actionPreFilter,
               context: context,
-              $tier: $tier
+              $tier: $tier,
+              $actions: $actions
             });
 
             return true;
@@ -122,9 +212,18 @@
       // Append horizontal chart line
       $tier.append($('<div>').addClass('connect-line'));
 
+      // Handle action filter
+      filterActions({
+        $actions: $actions,
+        actionPreFilter: actionPreFilter,
+        context: context
+      });
+
       return $tier;
     },
-    chart: function(args) {
+    chart: function(args) {		 
+      var $browser = args.$browser;
+      var siteToSiteVPN = args.siteToSiteVPN;
       var tiers = args.tiers;
       var vmListView = args.vmListView;
       var actions = args.actions;
@@ -134,13 +233,22 @@
       var $tiers = $('<ul>').addClass('tiers');
       var $router = elems.router();
       var $chart = $('<div>').addClass('vpc-chart');
-      var $title = $('<div>').addClass('vpc-title').html(vpcName);
+      var $title = $('<div>').addClass('vpc-title')
+            .append(
+              $('<span>').html(vpcName)
+            )
+            .append(
+              elems.vpcConfigureArea({
+                $browser: $browser,
+                siteToSiteVPN: siteToSiteVPN
+              })
+            );
 
       var showAddTierDialog = function() {
         if ($(this).find('.loading-overlay').size()) {
           return false;
         }
-        
+
         addTierDialog({
           $tiers: $tiers,
           context: context,
@@ -152,7 +260,7 @@
         return true;
       };
 
-      if (tiers.length) {
+      if (tiers != null && tiers.length > 0) {
         $(tiers).map(function(index, tier) {
           var $tier = elems.tier({
             name: tier.name,
@@ -184,29 +292,63 @@
     }
   };
 
+  var filterActions = function(args) {
+    var $actions = args.$actions;
+    var actionPreFilter = args.actionPreFilter;
+    var context = args.context;
+    var disabledActions, allowedActions;
+
+    disabledActions = actionPreFilter ? actionPreFilter({
+      context: context
+    }) : [];
+
+    // Visual appearance for disabled actions
+    $actions.find('.action').map(function(index, action) {
+      var $action = $(action);
+      var actionID = $action.data('vpc-tier-action-id');
+
+      if ($.inArray(actionID, disabledActions) > -1) {
+        $action.addClass('disabled');
+      } else {
+        $action.removeClass('disabled');
+      }
+    });
+  };
+
   // Handles tier action, including UI effects
   var tierAction = function(args) {
     var $tier = args.$tier;
     var $loading = $('<div>').addClass('loading-overlay');
+    var $actions = args.$actions;
     var actionArgs = args.action.action;
     var action = actionArgs.action;
     var actionID = args.action.id;
     var notification = actionArgs.notification;
     var label = actionArgs.label;
     var context = args.context;
+    var actionPreFilter = args.actionPreFilter;
 
     var success = function(args) {
       var remove = args ? args.remove : false;
+      var _custom = args ? args._custom : {};
 
       cloudStack.ui.notifications.add(
         // Notification
         {
           desc: label,
-          poll: notification.poll
+          poll: notification.poll,
+          _custom: _custom
         },
 
         // Success
         function(args) {
+          var newData = args.data ? args.data : {};
+          var newTier = $.extend(true, {}, context.tiers[0], newData);
+          var newContext = $.extend(true, {}, context);
+
+          // Update data
+          newContext.tiers = [newTier];
+
           if (remove) {
             $tier.remove();
           } else {
@@ -221,6 +363,12 @@
 
             $total.html(newTotal);
           }
+
+          filterActions({
+            $actions: $actions,
+            actionPreFilter: actionPreFilter,
+            context: newContext
+          });
         },
 
         {},
@@ -290,7 +438,9 @@
     var actions = args.actions;
     var vmListView = args.vmListView;
     var actionPreFilter = args.actionPreFilter;
+    var context = args.context;
     var tier = $.extend(args.tier, {
+      context: context,
       vmListView: vmListView,
       actions: actions,
       actionPreFilter: actionPreFilter,
@@ -322,20 +472,22 @@
           context: context,
           data: args.data,
           response: {
-            success: function(args) {
+            success: function(args) {						  
               var tier = args.data;
-              
+
               cloudStack.ui.notifications.add(
                 // Notification
                 {
-                  desc: actions.add.label,
-                  poll: actions.add.notification.poll
+                  desc: actions.add.label                  
                 },
 
                 // Success
                 function(args) {
                   $loading.remove();
                   addNewTier({
+                    context: $.extend(true, {}, context, {
+                      tiers: [tier]
+                    }),
                     tier: tier,
                     $tiers: $tiers,
                     actions: actions,
@@ -351,7 +503,11 @@
                   $loading.remove();
                 }
               );
-            }
+            },
+						error: function(errorMsg) {						 
+							cloudStack.dialog.notice({ message: _s(errorMsg) });							
+						  $loading.remove();
+						}						
           }
         });
       }
@@ -361,6 +517,7 @@
   cloudStack.uiCustom.vpc = function(args) {
     var vmListView = args.vmListView;
     var tierArgs = args.tiers;
+    var siteToSiteVPN = args.siteToSiteVPN;
 
     return function(args) {
       var context = args.context;
@@ -381,8 +538,10 @@
             context: context,
             response: {
               success: function(args) {
-                var tiers = args.data.tiers;
+                var tiers = args.tiers;
                 var $chart = elems.chart({
+                  $browser: $browser,
+                  siteToSiteVPN: siteToSiteVPN,
                   vmListView: vmListView,
                   context: context,
                   actions: tierArgs.actions,

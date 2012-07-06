@@ -421,10 +421,11 @@ public class ConfigurationServerImpl implements ConfigurationServer {
 
     protected void updateCloudIdentifier() {
         // Creates and saves a UUID as the cloud identifier
-        String currentCloudIdentifier = _configDao.getValue("cloud.identifier");
+    	ConfigurationVO cloudIdentifier = _configDao.findByName("cloud.identifier");
+        String currentCloudIdentifier = cloudIdentifier.getValue();
         if (currentCloudIdentifier == null || currentCloudIdentifier.isEmpty()) {
             String uuid = UUID.randomUUID().toString();
-            _configDao.update(Config.CloudIdentifier.key(), Config.CloudIdentifier.getCategory(), uuid);
+            _configDao.update(Config.CloudIdentifier.key(), cloudIdentifier.getCategory(), uuid);
         }
     }
 
@@ -1029,7 +1030,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         defaultVpcNetworkOfferingProviders.put(Service.Dhcp, Provider.VPCVirtualRouter);
         defaultVpcNetworkOfferingProviders.put(Service.Dns, Provider.VPCVirtualRouter);
         defaultVpcNetworkOfferingProviders.put(Service.UserData, Provider.VPCVirtualRouter);
-        defaultVpcNetworkOfferingProviders.put(Service.Firewall, Provider.VPCVirtualRouter);
+        defaultVpcNetworkOfferingProviders.put(Service.NetworkACL, Provider.VPCVirtualRouter);
         defaultVpcNetworkOfferingProviders.put(Service.Gateway, Provider.VPCVirtualRouter);
         defaultVpcNetworkOfferingProviders.put(Service.Lb, Provider.VPCVirtualRouter);
         defaultVpcNetworkOfferingProviders.put(Service.SourceNat, Provider.VPCVirtualRouter);

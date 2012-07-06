@@ -16,6 +16,7 @@
 # @VERSION@
 
 source /root/func.sh
+source /opt/cloud/bin/vpc_func.sh
 
 lock="biglock"
 locked=$(getLockFile $lock)
@@ -43,16 +44,15 @@ setup_dnsmasq() {
   fi
   # setup DNS
   sed -i -e "/^[#]*dhcp-option=tag:interface-$dev,6.*$/d" /etc/dnsmasq.d/cloud.conf
-  if [ -n "$DNS" ]
+  if [ -n "$gw" ]
   then
-    echo "dhcp-option=tag:interface-$dev,6,$DNS" >> /etc/dnsmasq.d/cloud.conf
+    echo "dhcp-option=tag:interface-$dev,6,$gw" >> /etc/dnsmasq.d/cloud.conf
   fi
   # setup DOMAIN
+  [ -z $DOMAIN ] && DOMAIN="cloudnine.internal"
+
   sed -i -e "/^[#]*dhcp-option=tag:interface-$dev,15.*$/d" /etc/dnsmasq.d/cloud.conf
-  if [ -n "$DOMAIN" ]
-  then
-    echo "dhcp-option=tag:interface-$dev,15,$DOMAIN" >> /etc/dnsmasq.d/cloud.conf
-  fi
+  echo "dhcp-option=tag:interface-$dev,15,$DOMAIN" >> /etc/dnsmasq.d/cloud.conf
   service dnsmasq restart
   sleep 1
 }
@@ -67,6 +67,13 @@ desetup_dnsmasq() {
   sleep 1
 }
 
+setup_usage() {
+  sudo iptables -t mangle -N NETWORK_STATS_$dev
+  sudo iptables -t mangle -A NETWORK_STATS_$dev -s $subnet/$mask ! -d $vpccidr
+  sudo iptables -t mangle -A NETWORK_STATS_$dev -o $dev ! -s $vpccidr
+  sudo iptables -t mangle -A POSTROUTING -s $subnet/$mask -j NETWORK_STATS_$dev
+  sudo iptables -t mangle -A POSTROUTING -o $dev -j NETWORK_STATS_$dev
+}
 
 create_guest_network() {
   logger -t cloud " $(basename $0): Create network on interface $dev,  gateway $gw, network $ip/$mask "
@@ -79,9 +86,14 @@ create_guest_network() {
   sudo iptables -D INPUT -i $dev -p udp -m udp --dport 53 -j ACCEPT
   sudo iptables -A INPUT -i $dev -p udp -m udp --dport 67 -j ACCEPT
   sudo iptables -A INPUT -i $dev -p udp -m udp --dport 53 -j ACCEPT
+  # restore mark from  connection mark
   local tableName="Table_$dev"
   sudo ip route add $subnet/$mask dev $dev table $tableName proto static
   sudo iptables -t mangle -A PREROUTING -i $dev -m state --state ESTABLISHED,RELATED -j CONNMARK --restore-mark
+  # set up hairpin
+  sudo iptables -t nat -A POSTROUTING -s $subnet/$mask -o $dev -j SNAT --to-source $ip
+
+  setup_usage
   setup_dnsmasq
 }
 
@@ -92,6 +104,7 @@ destroy_guest_network() {
   sudo iptables -D INPUT -i $dev -p udp -m udp --dport 67 -j ACCEPT
   sudo iptables -D INPUT -i $dev -p udp -m udp --dport 53 -j ACCEPT
   sudo iptables -t mangle -D PREROUTING -i $dev -m state --state ESTABLISHED,RELATED -j CONNMARK --restore-mark
+  sudo iptables -t nat -A POSTROUTING -s $subnet/$mask -o $dev -j SNAT --to-source $ip
   desetup_dnsmasq
 }
 
@@ -143,6 +156,7 @@ do
   esac
 done
 
+vpccidr=$(getVPCcidr)
 
 if [ "$Cflag$Dflag$dflag" != "11" ]
 then
