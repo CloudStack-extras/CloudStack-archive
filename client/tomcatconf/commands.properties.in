@@ -135,8 +135,8 @@ listLBStickinessPolicies=com.cloud.api.commands.ListLBStickinessPoliciesCmd;15
 listLoadBalancerRuleInstances=com.cloud.api.commands.ListLoadBalancerRuleInstancesCmd;15
 updateLoadBalancerRule=com.cloud.api.commands.UpdateLoadBalancerRuleCmd;15
 #### autoscale commands
-addCounter = com.cloud.api.commands.AddCounterCmd;1
-addCondition = com.cloud.api.commands.AddConditionCmd;15
+createCounter = com.cloud.api.commands.CreateCounterCmd;1
+createCondition = com.cloud.api.commands.CreateConditionCmd;15
 createAutoScalePolicy=com.cloud.api.commands.CreateAutoScalePolicyCmd;15
 createAutoScaleVmProfile=com.cloud.api.commands.CreateAutoScaleVmProfileCmd;15
 createAutoScaleVmGroup=com.cloud.api.commands.CreateAutoScaleVmGroupCmd;15

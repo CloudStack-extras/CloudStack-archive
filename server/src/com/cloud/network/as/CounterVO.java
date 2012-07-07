@@ -54,9 +54,6 @@ public class CounterVO implements Counter, Identity {
     @Column(name = "uuid")
     private String uuid;
 
-    @Column(name = "zone_id")
-    long zoneId;
-
     @Column(name = GenericDao.REMOVED_COLUMN)
     Date removed;
 
@@ -66,8 +63,7 @@ public class CounterVO implements Counter, Identity {
     public CounterVO() {
     }
 
-    public CounterVO(long zoneId, Source source, String name, String value) {
-        this.zoneId = zoneId;
+    public CounterVO(Source source, String name, String value) {
         this.source = source;
         this.name = name;
         this.value = value;
@@ -106,11 +102,6 @@ public class CounterVO implements Counter, Identity {
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
-    }
-
-    @Override
-    public long getZoneId() {
-        return zoneId;
     }
 
     public Date getRemoved() {

@@ -16,8 +16,6 @@ import java.util.Date;
 import java.util.UUID;
 
 import javax.persistence.Column;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -31,55 +29,59 @@ import com.cloud.utils.db.GenericDao;
 import com.cloud.utils.net.NetUtils;
 
 @Entity
-@Table(name="autoscale_vmprofiles")
-@Inheritance(strategy=InheritanceType.JOINED)
+@Table(name = "autoscale_vmprofiles")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class AutoScaleVmProfileVO implements AutoScaleVmProfile, Identity {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
-    @Column(name="id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     protected long id;
 
-    @Column(name="uuid")
+    @Column(name = "uuid")
     protected String uuid;
 
-    @Column(name="zone_id", updatable=true, nullable=false)
+    @Column(name = "zone_id", updatable = true, nullable = false)
     protected Long zoneId;
 
-    @Column(name="domain_id", updatable=true)
+    @Column(name = "domain_id", updatable = true)
     private long domainId;
 
-    @Column(name="account_id")
+    @Column(name = "account_id")
     private long accountId;
 
-    @Column(name = "service_offering_id", updatable=true, nullable=false)
+    @Column(name = "autoscale_user_id")
+    private long autoscaleUserId;
+
+    @Column(name = "service_offering_id", updatable = true, nullable = false)
     private Long serviceOfferingId;
 
-    @Column(name="template_id", updatable=true, nullable=false, length=17)
+    @Column(name = "template_id", updatable = true, nullable = false, length = 17)
     private Long templateId;
 
-    @Column(name="other_deploy_params", updatable=true, length=1024)
+    @Column(name = "other_deploy_params", updatable = true, length = 1024)
     private String otherDeployParams;
 
-    @Column(name="destroy_vm_grace_period", updatable=true)
+    @Column(name = "destroy_vm_grace_period", updatable = true)
     private Integer destroyVmGraceperiod = NetUtils.DEFAULT_AUTOSCALE_VM_DESTROY_TIME;
 
-    @Column(name="snmp_community", updatable=true)
+    @Column(name = "snmp_community", updatable = true)
     private String snmpCommunity = NetUtils.DEFAULT_SNMP_COMMUNITY;
 
-    @Column(name="snmp_port", updatable=true)
+    @Column(name = "snmp_port", updatable = true)
     private Integer snmpPort = NetUtils.DEFAULT_SNMP_PORT;
 
-    @Column(name=GenericDao.REMOVED_COLUMN)
+    @Column(name = GenericDao.REMOVED_COLUMN)
     protected Date removed;
 
-    @Column(name=GenericDao.CREATED_COLUMN)
+    @Column(name = GenericDao.CREATED_COLUMN)
     protected Date created;
 
     public AutoScaleVmProfileVO() {
     }
 
-    public AutoScaleVmProfileVO(long zoneId, long domainId, long accountId, long serviceOfferingId, long templateId, String otherDeployParams, String snmpCommunity, Integer snmpPort, Integer destroyVmGraceperiod) {
+    public AutoScaleVmProfileVO(long zoneId, long domainId, long accountId, long serviceOfferingId, long templateId, String otherDeployParams, String snmpCommunity, Integer snmpPort, Integer destroyVmGraceperiod,
+            long autoscaleUserId) {
         this.uuid = UUID.randomUUID().toString();
         setZoneId(zoneId);
         setDomainId(domainId);
@@ -87,15 +89,16 @@ public class AutoScaleVmProfileVO implements AutoScaleVmProfile, Identity {
         setServiceOfferingId(serviceOfferingId);
         setTemplateId(templateId);
         setOtherDeployParams(otherDeployParams);
-        if(destroyVmGraceperiod != null) {
-        	setDestroyVmGraceperiod(destroyVmGraceperiod);
+        setAutoscaleUserId(autoscaleUserId);
+        if (destroyVmGraceperiod != null) {
+            setDestroyVmGraceperiod(destroyVmGraceperiod);
         }
-        if(snmpCommunity != null) {
-        	setSnmpCommunity(snmpCommunity);
+        if (snmpCommunity != null) {
+            setSnmpCommunity(snmpCommunity);
         }
-        if(snmpPort != null) {
-			setSnmpPort(snmpPort);
-		}
+        if (snmpPort != null) {
+            setSnmpPort(snmpPort);
+        }
     }
 
     @Override
@@ -104,7 +107,7 @@ public class AutoScaleVmProfileVO implements AutoScaleVmProfile, Identity {
     }
 
     @Override
-	public Long getTemplateId() {
+    public Long getTemplateId() {
         return templateId;
     }
 
@@ -113,7 +116,7 @@ public class AutoScaleVmProfileVO implements AutoScaleVmProfile, Identity {
     }
 
     @Override
-	public Long getServiceOfferingId() {
+    public Long getServiceOfferingId() {
         return serviceOfferingId;
     }
 
@@ -122,7 +125,7 @@ public class AutoScaleVmProfileVO implements AutoScaleVmProfile, Identity {
     }
 
     @Override
-	public String getOtherDeployParams() {
+    public String getOtherDeployParams() {
         return otherDeployParams;
     }
 
@@ -131,7 +134,7 @@ public class AutoScaleVmProfileVO implements AutoScaleVmProfile, Identity {
     }
 
     @Override
-	public String getSnmpCommunity() {
+    public String getSnmpCommunity() {
         return snmpCommunity;
     }
 
@@ -140,7 +143,7 @@ public class AutoScaleVmProfileVO implements AutoScaleVmProfile, Identity {
     }
 
     @Override
-	public Integer getSnmpPort() {
+    public Integer getSnmpPort() {
         return snmpPort;
     }
 
@@ -149,7 +152,7 @@ public class AutoScaleVmProfileVO implements AutoScaleVmProfile, Identity {
     }
 
     @Override
-	public String getUuid() {
+    public String getUuid() {
         return uuid;
     }
 
@@ -161,8 +164,12 @@ public class AutoScaleVmProfileVO implements AutoScaleVmProfile, Identity {
         this.zoneId = zoneId;
     }
 
+    public void setAutoscaleUserId(long autoscaleUserId) {
+        this.autoscaleUserId = autoscaleUserId;
+    }
+
     @Override
-	public Long getZoneId() {
+    public Long getZoneId() {
         return zoneId;
     }
 
@@ -180,21 +187,26 @@ public class AutoScaleVmProfileVO implements AutoScaleVmProfile, Identity {
     }
 
     @Override
-	public long getDomainId() {
+    public long getDomainId() {
         return domainId;
     }
 
     @Override
-	public long getId() {
+    public long getId() {
         return id;
     }
 
     @Override
-	public Integer getDestroyVmGraceperiod() {
+    public Integer getDestroyVmGraceperiod() {
         return destroyVmGraceperiod;
     }
 
     public void setDestroyVmGraceperiod(Integer destroyVmGraceperiod) {
         this.destroyVmGraceperiod = destroyVmGraceperiod;
+    }
+
+    @Override
+    public long getAutoScaleUserId() {
+        return autoscaleUserId;
     }
 }

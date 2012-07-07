@@ -42,7 +42,7 @@ public class ListCountersCmd extends BaseListCmd {
     // ///////////////////////////////////////////////////
 
     @IdentityMapper(entityTableName = "counter")
-    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = false, description = "ID of the Counter.")
+    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, description = "ID of the Counter.")
     private Long id;
 
     @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, required = false, description = "Name of the counter.")

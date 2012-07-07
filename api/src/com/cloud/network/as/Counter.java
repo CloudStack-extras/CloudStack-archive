@@ -32,7 +32,5 @@ public interface Counter {
 
     String getUuid();
 
-    long getZoneId();
-
     long getId();
 }

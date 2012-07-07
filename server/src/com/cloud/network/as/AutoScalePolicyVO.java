@@ -28,53 +28,49 @@ import com.cloud.utils.db.GenericDao;
 import com.cloud.utils.net.NetUtils;
 
 @Entity
-@Table(name="autoscale_policies")
-@Inheritance(strategy=InheritanceType.JOINED)
+@Table(name = "autoscale_policies")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class AutoScalePolicyVO implements AutoScalePolicy {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
-    @Column(name="id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     long id;
 
-    @Column(name="uuid")
+    @Column(name = "uuid")
     String uuid;
 
-    @Column(name="zone_id")
-    protected long zoneId;
-
-    @Column(name="domain_id")
+    @Column(name = "domain_id")
     private long domainId;
 
-    @Column(name="account_id")
+    @Column(name = "account_id")
     private long accountId;
 
-    @Column(name="duration")
+    @Column(name = "duration")
     private Integer duration;
 
-    @Column(name="quiet_time", updatable=true, nullable = false)
+    @Column(name = "quiet_time", updatable = true, nullable = false)
     private Integer quietTime = NetUtils.DEFAULT_AUTOSCALE_POLICY_QUIET_TIME;
 
-    @Column(name="action", updatable=false, nullable = false)
+    @Column(name = "action", updatable = false, nullable = false)
     private String action;
 
-    @Column(name=GenericDao.REMOVED_COLUMN)
+    @Column(name = GenericDao.REMOVED_COLUMN)
     protected Date removed;
 
-    @Column(name=GenericDao.CREATED_COLUMN)
+    @Column(name = GenericDao.CREATED_COLUMN)
     protected Date created;
 
     public AutoScalePolicyVO() {
     }
 
-    public AutoScalePolicyVO(long zoneId, long domainId, long accountId, Integer duration, Integer quietTime, String action) {
+    public AutoScalePolicyVO(long domainId, long accountId, Integer duration, Integer quietTime, String action) {
         this.uuid = UUID.randomUUID().toString();
-        this.zoneId = zoneId;
-        this.domainId=domainId;
+        this.domainId = domainId;
         this.accountId = accountId;
         this.duration = duration;
         if (quietTime != null) {
-        	this.quietTime = quietTime;
+            this.quietTime = quietTime;
         }
         this.action = action;
     }
@@ -83,8 +79,9 @@ public class AutoScalePolicyVO implements AutoScalePolicy {
     public String toString() {
         return new StringBuilder("AutoScalePolicy[").append("id-").append(id).append("]").toString();
     }
+
     @Override
-	public long getId() {
+    public long getId() {
         return id;
     }
 
@@ -93,32 +90,27 @@ public class AutoScalePolicyVO implements AutoScalePolicy {
     }
 
     @Override
-	public long getZoneId() {
-        return zoneId;
-    }
-
-    @Override
-	public long getDomainId() {
+    public long getDomainId() {
         return domainId;
     }
 
     @Override
-	public long getAccountId() {
+    public long getAccountId() {
         return accountId;
     }
 
     @Override
-	public Integer getDuration() {
+    public Integer getDuration() {
         return duration;
     }
 
     @Override
-	public Integer getQuietTime() {
+    public Integer getQuietTime() {
         return quietTime;
     }
 
     @Override
-	public String getAction() {
+    public String getAction() {
         return action;
     }
 
@@ -129,5 +121,4 @@ public class AutoScalePolicyVO implements AutoScalePolicy {
     public Date getCreated() {
         return created;
     }
-
 }

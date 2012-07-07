@@ -30,46 +30,39 @@ import com.cloud.exception.ResourceAllocationException;
 import com.cloud.network.as.AutoScalePolicy;
 import com.cloud.network.as.Condition;
 
-@Implementation(description="Creates an autoscale policy for a provision or deprovision action, the action is taken when the all the conditions evaluates to true for the specified duration. The policy is in effect once it is attached to a autscale vm group.", responseObject=AutoScalePolicyResponse.class)
+@Implementation(description = "Creates an autoscale policy for a provision or deprovision action, the action is taken when the all the conditions evaluates to true for the specified duration. The policy is in effect once it is attached to a autscale vm group.", responseObject = AutoScalePolicyResponse.class)
 public class CreateAutoScalePolicyCmd extends BaseAsyncCreateCmd {
     public static final Logger s_logger = Logger.getLogger(CreateAutoScalePolicyCmd.class.getName());
 
     private static final String s_name = "autoscalepolicyresponse";
 
-    /////////////////////////////////////////////////////
-    //////////////// API parameters /////////////////////
-    /////////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
+    // ////////////// API parameters /////////////////////
+    // ///////////////////////////////////////////////////
 
-    @IdentityMapper(entityTableName="data_center")
-    @Parameter(name=ApiConstants.ZONE_ID, type=CommandType.LONG, required=true, description="the availability zone of the autoscale policy")
-    private Long zoneId;
-
-    @Parameter(name=ApiConstants.DURATION, type=CommandType.INTEGER, required=true, description="the duration for which the conditions have to be true before action is taken")
+    @Parameter(name = ApiConstants.DURATION, type = CommandType.INTEGER, required = true, description = "the duration for which the conditions have to be true before action is taken")
     private Integer duration;
 
-    @Parameter(name=ApiConstants.QUIETTIME, type=CommandType.INTEGER, description="the cool down period for which the policy should not be evaluated after the action has been taken")
+    @Parameter(name = ApiConstants.QUIETTIME, type = CommandType.INTEGER, description = "the cool down period for which the policy should not be evaluated after the action has been taken")
     private Integer quietTime;
 
-    @Parameter(name=ApiConstants.ACTION, type=CommandType.STRING, required=true, description="the action to be executed if all the conditions evaluate to true for the specified duration.")
+    @Parameter(name = ApiConstants.ACTION, type = CommandType.STRING, required = true, description = "the action to be executed if all the conditions evaluate to true for the specified duration.")
     private String action;
 
-    @IdentityMapper(entityTableName="conditions")
-    @Parameter(name=ApiConstants.CONDITION_IDS, type=CommandType.LIST, collectionType=CommandType.LONG, required=true, description="the list of IDs of the conditions that are being evaluated on every interval")
+    @IdentityMapper(entityTableName = "conditions")
+    @Parameter(name = ApiConstants.CONDITION_IDS, type = CommandType.LIST, collectionType = CommandType.LONG, required = true, description = "the list of IDs of the conditions that are being evaluated on every interval")
     private List<Long> conditionIds;
 
-    /////////////////////////////////////////////////////
-    /////////////////// Accessors ///////////////////////
-    /////////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
+    // ///////////////// Accessors ///////////////////////
+    // ///////////////////////////////////////////////////
 
     private Long conditionDomainId;
     private Long conditionAccountId;
 
+    @Override
     public String getEntityTable() {
         return "autoscale_policies";
-    }
-
-    public Long getZoneId() {
-        return zoneId;
     }
 
     public Integer getDuration() {
@@ -87,9 +80,10 @@ public class CreateAutoScalePolicyCmd extends BaseAsyncCreateCmd {
     public List<Long> getConditionIds() {
         return conditionIds;
     }
-    /////////////////////////////////////////////////////
-    /////////////// API Implementation///////////////////
-    /////////////////////////////////////////////////////
+
+    // ///////////////////////////////////////////////////
+    // ///////////// API Implementation///////////////////
+    // ///////////////////////////////////////////////////
 
     @Override
     public String getCommandName() {
@@ -102,14 +96,14 @@ public class CreateAutoScalePolicyCmd extends BaseAsyncCreateCmd {
 
     public long getAccountId()
     {
-        if(conditionAccountId == null) 
+        if (conditionAccountId == null)
             getEntityOwnerId();
         return conditionAccountId;
     }
 
     public long getDomainId()
     {
-        if(conditionDomainId == null) {
+        if (conditionDomainId == null) {
             getEntityOwnerId();
         }
 
@@ -118,9 +112,9 @@ public class CreateAutoScalePolicyCmd extends BaseAsyncCreateCmd {
 
     @Override
     public long getEntityOwnerId() {
-        if(conditionAccountId != null)
+        if (conditionAccountId != null)
             return conditionAccountId;
-        if(getConditionIds() == null || getConditionIds().size() == 0) {
+        if (getConditionIds() == null || getConditionIds().size() == 0) {
             throw new InvalidParameterValueException("Condition ids should be passed");
         }
         long conditionId = getConditionIds().get(0);
@@ -128,10 +122,10 @@ public class CreateAutoScalePolicyCmd extends BaseAsyncCreateCmd {
         if (condition == null) {
             throw new InvalidParameterValueException("Unable to find condition by id=" + conditionId);
         }
-        
+
         conditionDomainId = condition.getDomainId();
         conditionAccountId = condition.getAccountId();
-        
+
         return conditionAccountId;
     }
 
@@ -142,7 +136,7 @@ public class CreateAutoScalePolicyCmd extends BaseAsyncCreateCmd {
 
     @Override
     public String getEventDescription() {
-        return  "creating AutoScale Policy";
+        return "creating AutoScale Policy";
     }
 
     @Override
@@ -151,7 +145,7 @@ public class CreateAutoScalePolicyCmd extends BaseAsyncCreateCmd {
     }
 
     @Override
-    public void execute(){
+    public void execute() {
     }
 
     @Override

@@ -13,19 +13,17 @@
 package com.cloud.api.response;
 
 import com.cloud.api.ApiConstants;
-import com.cloud.utils.IdentityProxy;
 import com.cloud.serializer.Param;
+import com.cloud.utils.IdentityProxy;
 import com.google.gson.annotations.SerializedName;
 
-import java.util.List;
-
 public class AutoScaleVmProfileResponse extends BaseResponse implements ControlledEntityResponse {
-	
+
     @SerializedName(ApiConstants.ID)
     @Param(description = "the autoscale vm profile ID")
     private IdentityProxy id = new IdentityProxy("autoscale_profiles");
 
-	/* Parameters related to deploy virtual machine */
+    /* Parameters related to deploy virtual machine */
     @SerializedName(ApiConstants.ZONE_ID)
     @Param(description = "the availability zone to be used while deploying a virtual machine")
     private IdentityProxy zoneId = new IdentityProxy("data_center");
@@ -42,27 +40,32 @@ public class AutoScaleVmProfileResponse extends BaseResponse implements Controll
     @Param(description = "parameters other than zoneId/serviceOfferringId/templateId to be used while deploying a virtual machine")
     private String otherDeployParams;
 
-    @SerializedName(ApiConstants.ACCOUNT) @Param(description="the account owning the instance group")
+    @SerializedName(ApiConstants.ACCOUNT)
+    @Param(description = "the account owning the instance group")
     private String accountName;
 
-    @SerializedName(ApiConstants.PROJECT_ID) @Param(description="the project id vm profile")
+    @SerializedName(ApiConstants.PROJECT_ID)
+    @Param(description = "the project id vm profile")
     private IdentityProxy projectId = new IdentityProxy("projects");
 
-    @SerializedName(ApiConstants.PROJECT) @Param(description="the project name of the vm profile")
+    @SerializedName(ApiConstants.PROJECT)
+    @Param(description = "the project name of the vm profile")
     private String projectName;
 
-    @SerializedName(ApiConstants.DOMAIN_ID) @Param(description="the domain ID of the vm profile")
+    @SerializedName(ApiConstants.DOMAIN_ID)
+    @Param(description = "the domain ID of the vm profile")
     private IdentityProxy domainId = new IdentityProxy("domain");
 
-    @SerializedName(ApiConstants.DOMAIN) @Param(description="the domain name of the vm profile")
+    @SerializedName(ApiConstants.DOMAIN)
+    @Param(description = "the domain name of the vm profile")
     private String domainName;
 
-	/* Parameters related to destroying a virtual machine */
+    /* Parameters related to destroying a virtual machine */
     @SerializedName(ApiConstants.AUTOSCALE_VM_DESTROY_TIME)
     @Param(description = "the time allowed for existing connections to get closed before a vm is destroyed")
     private Integer destroyVmGraceperiod;
 
-	/* Parameters related to a running virtual machine - monitoring aspects */
+    /* Parameters related to a running virtual machine - monitoring aspects */
     @SerializedName(ApiConstants.SNMP_COMMUNITY)
     @Param(description = "snmp community string to be used to contact a virtual machine deployed by this profile")
     private String snmpCommunity;
@@ -70,6 +73,10 @@ public class AutoScaleVmProfileResponse extends BaseResponse implements Controll
     @SerializedName(ApiConstants.SNMP_PORT)
     @Param(description = "port at which the snmp agent is listening in a virtual machine deployed by this profile")
     private Integer snmpPort;
+
+    @SerializedName(ApiConstants.AUTOSCALE_USER_ID)
+    @Param(description = "the ID of the user used to launch and destroy the VMs")
+    private IdentityProxy autoscaleUserId = new IdentityProxy("user");
 
     public AutoScaleVmProfileResponse() {
 
@@ -126,6 +133,10 @@ public class AutoScaleVmProfileResponse extends BaseResponse implements Controll
     @Override
     public void setProjectName(String projectName) {
         this.projectName = projectName;
+    }
+
+    public void setAutoscaleUserId(Long autoscaleUserId) {
+        this.autoscaleUserId.setValue(autoscaleUserId);
     }
 
     public void setDestroyVmGraceperiod(Integer destroyVmGraceperiod) {

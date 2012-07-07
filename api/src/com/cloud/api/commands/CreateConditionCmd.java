@@ -20,7 +20,7 @@ package com.cloud.api.commands;
 import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiConstants;
-import com.cloud.api.BaseAsyncCmd;
+import com.cloud.api.BaseAsyncCreateCmd;
 import com.cloud.api.BaseCmd;
 import com.cloud.api.IdentityMapper;
 import com.cloud.api.Implementation;
@@ -29,12 +29,13 @@ import com.cloud.api.ServerApiException;
 import com.cloud.api.response.ConditionResponse;
 import com.cloud.async.AsyncJob;
 import com.cloud.event.EventTypes;
+import com.cloud.exception.ResourceAllocationException;
 import com.cloud.network.as.Condition;
 import com.cloud.user.UserContext;
 
-@Implementation(description = "Adds a condition", responseObject = ConditionResponse.class)
-public class AddConditionCmd extends BaseAsyncCmd {
-    public static final Logger s_logger = Logger.getLogger(AddConditionCmd.class.getName());
+@Implementation(description = "Creates a condition", responseObject = ConditionResponse.class)
+public class CreateConditionCmd extends BaseAsyncCreateCmd {
+    public static final Logger s_logger = Logger.getLogger(CreateConditionCmd.class.getName());
     private static final String s_name = "conditionresponse";
 
     // ///////////////////////////////////////////////////
@@ -59,26 +60,27 @@ public class AddConditionCmd extends BaseAsyncCmd {
     @Parameter(name = ApiConstants.DOMAIN_ID, type = CommandType.LONG, description = "the domain ID of the account.")
     private Long domainId;
 
-    @IdentityMapper(entityTableName = "data_center")
-    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.LONG, required = true, description = "the ID of the availability zone")
-    private Long zoneId;
-
     // ///////////////////////////////////////////////////
     // ///////////// API Implementation///////////////////
     // ///////////////////////////////////////////////////
 
     @Override
-    public void execute() {
-        Condition cndn = null;
-        cndn = _lbService.createCondition(this);
+    public void create() throws ResourceAllocationException {
+        Condition condition = null;
+        condition = _lbService.createCondition(this);
 
-        if (cndn != null) {
-            ConditionResponse response = _responseGenerator.createConditionResponse(cndn);
+        if (condition != null) {
+            this.setEntityId(condition.getId());
+            ConditionResponse response = _responseGenerator.createConditionResponse(condition);
             response.setResponseName(getCommandName());
             this.setResponseObject(response);
         } else {
             throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to create condition.");
         }
+    }
+
+    @Override
+    public void execute() {
     }
 
     // /////////////////////////////////////////////////
@@ -110,10 +112,6 @@ public class AddConditionCmd extends BaseAsyncCmd {
         return threshold;
     }
 
-    public Long getZoneId() {
-        return zoneId;
-    }
-
     @Override
     public AsyncJob.Type getInstanceType() {
         return AsyncJob.Type.Condition;
@@ -137,5 +135,10 @@ public class AddConditionCmd extends BaseAsyncCmd {
         }
 
         return accountId;
+    }
+
+    @Override
+    public String getEntityTable() {
+        return "conditions";
     }
 }

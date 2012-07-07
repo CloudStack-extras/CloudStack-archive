@@ -60,9 +60,6 @@ public class ConditionVO implements Condition, Identity {
     @Column(name = "uuid")
     private String uuid;
 
-    @Column(name = "zone_id")
-    long zoneId;
-
     @Column(name = GenericDao.REMOVED_COLUMN)
     Date removed;
 
@@ -72,8 +69,7 @@ public class ConditionVO implements Condition, Identity {
     public ConditionVO() {
     }
 
-    public ConditionVO(long zoneId, long counterid, long threshold, long accountId, long domainId, Operator relationalOperator) {
-        this.zoneId = zoneId;
+    public ConditionVO(long counterid, long threshold, long accountId, long domainId, Operator relationalOperator) {
         this.counterid = counterid;
         this.threshold = threshold;
         this.relationalOperator = relationalOperator;
@@ -128,11 +124,6 @@ public class ConditionVO implements Condition, Identity {
     @Override
     public String getUuid() {
         return this.uuid;
-    }
-
-    @Override
-    public long getZoneId() {
-        return zoneId;
     }
 
     public Date getRemoved() {

@@ -2320,11 +2320,9 @@ CREATE TABLE `cloud`.`counter` (
   `source` varchar(255) NOT NULL COMMENT 'source e.g. netscaler, snmp',
   `name` varchar(255) NOT NULL COMMENT 'Counter name',
   `value` varchar(255) NOT NULL COMMENT 'Value in case of source=snmp',
-  `zone_id` bigint unsigned NOT NULL COMMENT 'id of the availability zone',
   `removed` datetime COMMENT 'date removed if not null',
   `created` datetime NOT NULL COMMENT 'date created',
   PRIMARY KEY (`id`),
-  CONSTRAINT `fk_counter__zone_id` FOREIGN KEY `fk_counter__zone_id`(`zone_id`) REFERENCES `data_center`(`id`),
   CONSTRAINT `uc_counter__uuid` UNIQUE (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -2336,14 +2334,12 @@ CREATE TABLE `cloud`.`conditions` (
   `relational_operator` char(2) COMMENT 'relational operator to be used upon the counter and condition',
   `domain_id` bigint unsigned NOT NULL COMMENT 'domain the Condition belongs to',
   `account_id` bigint unsigned NOT NULL COMMENT 'owner of this Condition',
-  `zone_id` bigint unsigned NOT NULL COMMENT 'id of the availability zone',
   `removed` datetime COMMENT 'date removed if not null',
   `created` datetime NOT NULL COMMENT 'date created',
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_conditions__counter_id` FOREIGN KEY `fk_condition__counter_id`(`counter_id`) REFERENCES `counter`(`id`),
   CONSTRAINT `fk_conditions__account_id` FOREIGN KEY `fk_condition__account_id` (`account_id`) REFERENCES `account`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_conditions__domain_id` FOREIGN KEY `fk_condition__domain_id` (`domain_id`) REFERENCES `domain`(`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_conditions__zone_id` FOREIGN KEY `fk_conditions__zone_id`(`zone_id`) REFERENCES `data_center`(`id`),
   CONSTRAINT `uc_conditions__uuid` UNIQUE (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -2353,6 +2349,7 @@ CREATE TABLE `cloud`.`autoscale_vmprofiles` (
   `zone_id` bigint unsigned NOT NULL,
   `domain_id` bigint unsigned NOT NULL,
   `account_id` bigint unsigned NOT NULL,
+  `autoscale_user_id` bigint unsigned NOT NULL,
   `service_offering_id` bigint unsigned NOT NULL,
   `template_id` bigint unsigned NOT NULL,
   `other_deploy_params` varchar(1024) COMMENT 'other deployment parameters that is in addition to zoneid,serviceofferingid,domainid',
@@ -2364,13 +2361,13 @@ CREATE TABLE `cloud`.`autoscale_vmprofiles` (
   PRIMARY KEY  (`id`),
   CONSTRAINT `fk_autoscale_vmprofiles__domain_id` FOREIGN KEY `fk_autoscale_vmprofiles__domain_id` (`domain_id`) REFERENCES `domain`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_autoscale_vmprofiles__account_id` FOREIGN KEY `fk_autoscale_vmprofiles__account_id` (`account_id`) REFERENCES `account`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_autoscale_vmprofiles__autoscale_user_id` FOREIGN KEY `fk_autoscale_vmprofiles__autoscale_user_id` (`autoscale_user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
   CONSTRAINT `uc_autoscale_vmprofiles__uuid` UNIQUE (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `cloud`.`autoscale_policies` (
   `id` bigint unsigned NOT NULL auto_increment,
   `uuid` varchar(40),
-  `zone_id` bigint unsigned NOT NULL,
   `domain_id` bigint unsigned NOT NULL,
   `account_id` bigint unsigned NOT NULL,
   `duration` int unsigned NOT NULL,

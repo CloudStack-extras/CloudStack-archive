@@ -13,12 +13,11 @@ package com.cloud.network.as;
 
 import com.cloud.acl.ControlledEntity;
 
-
 /**
  * AutoScaleVmProfile
  */
 public interface AutoScaleVmProfile extends ControlledEntity {
-  
+
     public long getId();
 
     public Long getZoneId();
@@ -34,4 +33,6 @@ public interface AutoScaleVmProfile extends ControlledEntity {
     public Integer getSnmpPort();
 
     public Integer getDestroyVmGraceperiod();
+
+    public long getAutoScaleUserId();
 }

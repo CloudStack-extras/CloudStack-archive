@@ -24,6 +24,6 @@ import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.GenericDao;
 
 public interface CounterDao extends GenericDao<CounterVO, Long> {
-    public List<CounterVO> listCounters(Long id, String name, String source, Filter filter);
+    public List<CounterVO> listCounters(Long id, String name, String source, String keyword, Filter filter);
 
 }

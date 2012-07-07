@@ -20,9 +20,8 @@ package com.cloud.api.commands;
 import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiConstants;
-import com.cloud.api.BaseAsyncCmd;
+import com.cloud.api.BaseAsyncCreateCmd;
 import com.cloud.api.BaseCmd;
-import com.cloud.api.IdentityMapper;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
@@ -33,8 +32,8 @@ import com.cloud.network.as.Counter;
 import com.cloud.user.Account;
 
 @Implementation(description = "Adds metric counter", responseObject = CounterResponse.class)
-public class AddCounterCmd extends BaseAsyncCmd {
-    public static final Logger s_logger = Logger.getLogger(AddCounterCmd.class.getName());
+public class CreateCounterCmd extends BaseAsyncCreateCmd {
+    public static final Logger s_logger = Logger.getLogger(CreateCounterCmd.class.getName());
     private static final String s_name = "counterresponse";
 
     // ///////////////////////////////////////////////////
@@ -66,10 +65,6 @@ public class AddCounterCmd extends BaseAsyncCmd {
         return value;
     }
 
-    @IdentityMapper(entityTableName = "data_center")
-    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.LONG, required = true, description = "the ID of the availability zone")
-    private Long zoneId;
-
     // ///////////////////////////////////////////////////
     // ///////////// API Implementation///////////////////
     // ///////////////////////////////////////////////////
@@ -80,22 +75,22 @@ public class AddCounterCmd extends BaseAsyncCmd {
     }
 
     @Override
-    public void execute() {
+    public void create() {
         Counter ctr = null;
         ctr = _lbService.createCounter(this);
 
         if (ctr != null) {
+            this.setEntityId(ctr.getId());
             CounterResponse response = _responseGenerator.createCounterResponse(ctr);
             response.setResponseName(getCommandName());
             this.setResponseObject(response);
         } else {
             throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to create Counter with name " + getName());
         }
-
     }
 
-    public Long getZoneId() {
-        return zoneId;
+    @Override
+    public void execute() {
     }
 
     @Override
@@ -116,5 +111,10 @@ public class AddCounterCmd extends BaseAsyncCmd {
     @Override
     public long getEntityOwnerId() {
         return Account.ACCOUNT_ID_SYSTEM;
+    }
+
+    @Override
+    public String getEntityTable() {
+        return "counter";
     }
 }

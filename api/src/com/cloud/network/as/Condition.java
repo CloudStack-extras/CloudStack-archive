@@ -33,7 +33,5 @@ public interface Condition extends ControlledEntity {
 
     String getUuid();
 
-    long getZoneId();
-
     long getId();
 }

@@ -21,29 +21,26 @@ import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiConstants;
 import com.cloud.api.BaseAsyncCmd;
-import com.cloud.api.BaseCmd;
 import com.cloud.api.IdentityMapper;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
-import com.cloud.api.response.SuccessResponse;
+import com.cloud.api.response.AutoScaleVmProfileResponse;
 import com.cloud.async.AsyncJob;
 import com.cloud.event.EventTypes;
-import com.cloud.exception.ResourceInUseException;
-import com.cloud.network.as.Condition;
-import com.cloud.user.Account;
 
-@Implementation(description = "Removes a condition", responseObject = SuccessResponse.class)
-public class DeleteConditionCmd extends BaseAsyncCmd {
-    public static final Logger s_logger = Logger.getLogger(DeleteConditionCmd.class.getName());
-    private static final String s_name = "deleteconditionresponse";
+@Implementation(description = "Updates an existing autoscale vm profile.", responseObject = AutoScaleVmProfileResponse.class)
+public class UpdateAutoScaleVmProfileCmd extends BaseAsyncCmd {
+    public static final Logger s_logger = Logger.getLogger(UpdateAutoScaleVmProfileCmd.class.getName());
+
+    private static final String s_name = "updateautoscalevmprofileresponse";
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////
     // ///////////////////////////////////////////////////
 
-    @IdentityMapper(entityTableName = "conditions")
-    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = true, description = "the ID of the condition.")
+    @IdentityMapper(entityTableName = "autoscale_vmgroups")
+    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = true, description = "the ID of the autoscale group")
     private Long id;
 
     // ///////////////////////////////////////////////////
@@ -51,20 +48,8 @@ public class DeleteConditionCmd extends BaseAsyncCmd {
     // ///////////////////////////////////////////////////
 
     @Override
-    public void execute() {
-        boolean result = false;
-        try {
-            result = _lbService.deleteCondition(getId());
-        } catch (ResourceInUseException ex) {
-            s_logger.warn("Exception: ", ex);
-            throw new ServerApiException(BaseCmd.RESOURCE_IN_USE_ERROR, ex.getMessage());
-        }
-        if (result) {
-            SuccessResponse response = new SuccessResponse(getCommandName());
-            this.setResponseObject(response);
-        } else {
-            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to delete condition.");
-        }
+    public void execute() throws ServerApiException {
+
     }
 
     // ///////////////////////////////////////////////////
@@ -76,8 +61,13 @@ public class DeleteConditionCmd extends BaseAsyncCmd {
     }
 
     @Override
-    public AsyncJob.Type getInstanceType() {
-        return AsyncJob.Type.Condition;
+    public String getEventType() {
+        return EventTypes.EVENT_AUTOSCALEVMPROFILE_UPDATE;
+    }
+
+    @Override
+    public String getEventDescription() {
+        return "Updating AutoScale Vm Profile";
     }
 
     @Override
@@ -87,22 +77,27 @@ public class DeleteConditionCmd extends BaseAsyncCmd {
 
     @Override
     public long getEntityOwnerId() {
-        Condition condition = _entityMgr.findById(Condition.class, getId());
-        if (condition != null) {
-            return condition.getAccountId();
-        }
-
-        return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are
-// tracked
+// Long projectId = null;
+// String sProjectId = getOtherDeployParam("projectId");
+//
+// if (sProjectId != null)
+// try {
+// projectId = Long.parseLong(sProjectId);
+// } catch (Exception ex) {
+// throw new InvalidParameterValueException("projectid specified is invalid");
+// }
+//
+// Long accountId = finalyzeAccountId(accountName, domainId, projectId, true);
+// if (accountId == null) {
+// return UserContext.current().getCaller().getId();
+// }
+//
+// return accountId;
+        return 0;
     }
 
     @Override
-    public String getEventType() {
-        return EventTypes.EVENT_CONDITION_DELETE;
-    }
-
-    @Override
-    public String getEventDescription() {
-        return "Deleting a condition.";
+    public AsyncJob.Type getInstanceType() {
+        return AsyncJob.Type.AutoScaleVmProfile;
     }
 }

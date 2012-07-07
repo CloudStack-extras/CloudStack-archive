@@ -56,10 +56,6 @@ public class CounterResponse extends BaseResponse {
         this.source = source;
     }
 
-    public void setZoneId(Long zoneId) {
-        this.zoneId.setValue(zoneId);
-    }
-
     public void setValue(String value) {
         this.value = value;
     }

@@ -204,7 +204,7 @@ public class EventTypes {
     public static final String EVENT_S2S_CONNECTION_CREATE = "VPN.S2S.CONNECTION.CREATE";
     public static final String EVENT_S2S_CONNECTION_DELETE = "VPN.S2S.CONNECTION.DELETE";
     public static final String EVENT_S2S_CONNECTION_RESET = "VPN.S2S.CONNECTION.RESET";
-    
+
     // Network
     public static final String EVENT_NETWORK_RESTART = "NETWORK.RESTART";
 
@@ -262,7 +262,7 @@ public class EventTypes {
     public static final String EVENT_EXTERNAL_FIREWALL_DEVICE_ADD = "PHYSICAL.FIREWALL.ADD";
     public static final String EVENT_EXTERNAL_FIREWALL_DEVICE_DELETE = "PHYSICAL.FIREWALL.DELETE";
     public static final String EVENT_EXTERNAL_FIREWALL_DEVICE_CONFIGURE = "PHYSICAL.FIREWALL.CONFIGURE";
-    
+
     // tag related events
     public static final String EVENT_TAGS_CREATE = "CREATE_TAGS";
     public static final String EVENT_TAGS_DELETE = "DELETE_TAGS";
@@ -272,12 +272,12 @@ public class EventTypes {
     public static final String EVENT_VPC_UPDATE = "VPC.UPDATE";
     public static final String EVENT_VPC_DELETE = "VPC.DELETE";
     public static final String EVENT_VPC_RESTART = "VPC.RESTART";
-    
-   // VPC offerings
+
+    // VPC offerings
     public static final String EVENT_VPC_OFFERING_CREATE = "VPC.OFFERING.CREATE";
     public static final String EVENT_VPC_OFFERING_UPDATE = "VPC.OFFERING.UPDATE";
     public static final String EVENT_VPC_OFFERING_DELETE = "VPC.OFFERING.DELETE";
-    
+
     // Private gateway
     public static final String EVENT_PRIVATE_GATEWAY_CREATE = "PRIVATE.GATEWAY.CREATE";
     public static final String EVENT_PRIVATE_GATEWAY_DELETE = "PRIVATE.GATEWAY.DELETE";
@@ -292,9 +292,12 @@ public class EventTypes {
     public static final String EVENT_CONDITION_CREATE = "CONDITION.CREATE";
     public static final String EVENT_CONDITION_DELETE = "CONDITION.DELETE";
     public static final String EVENT_AUTOSCALEPOLICY_CREATE = "AUTOSCALEPOLICY.CREATE";
+    public static final String EVENT_AUTOSCALEPOLICY_UPDATE = "AUTOSCALEPOLICY.UPDATE";
     public static final String EVENT_AUTOSCALEPOLICY_DELETE = "AUTOSCALEPOLICY.DELETE";
     public static final String EVENT_AUTOSCALEVMPROFILE_CREATE = "AUTOSCALEVMPROFILE.CREATE";
     public static final String EVENT_AUTOSCALEVMPROFILE_DELETE = "AUTOSCALEVMPROFILE.DELETE";
+    public static final String EVENT_AUTOSCALEVMPROFILE_UPDATE = "AUTOSCALEVMPROFILE.UPDATE";
     public static final String EVENT_AUTOSCALEVMGROUP_CREATE = "AUTOSCALEVMGROUP.CREATE";
     public static final String EVENT_AUTOSCALEVMGROUP_DELETE = "AUTOSCALEVMGROUP.DELETE";
+    public static final String EVENT_AUTOSCALEVMGROUP_UPDATE = "AUTOSCALEVMGROUP.UPDATE";
 }

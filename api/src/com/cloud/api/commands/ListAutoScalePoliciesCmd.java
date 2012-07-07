@@ -36,15 +36,15 @@ public class ListAutoScalePoliciesCmd extends BaseListAccountResourcesCmd {
     // ////////////// API parameters /////////////////////
     // ///////////////////////////////////////////////////
 
-    @IdentityMapper(entityTableName="autoscale_policies")
+    @IdentityMapper(entityTableName = "autoscale_policies")
     @Parameter(name = ApiConstants.ID, type = CommandType.LONG, description = "the ID of the autoscale policy")
     private Long id;
 
-    @IdentityMapper(entityTableName="conditions")
+    @IdentityMapper(entityTableName = "conditions")
     @Parameter(name = ApiConstants.CONDITION_ID, type = CommandType.LONG, description = "the ID of the condition of the policy")
     private Long conditionId;
 
-    @IdentityMapper(entityTableName="data_center")
+    @IdentityMapper(entityTableName = "data_center")
     @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.LONG, description = "the availability zone ID")
     private Long zoneId;
 
