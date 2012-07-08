@@ -4,6 +4,7 @@
 
 package com.cloud.storage.resource;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,11 +49,15 @@ public class VmwareSecondaryStorageContextFactory {
 	
 	public static void invalidate(VmwareContext context) {
 		synchronized(s_contextMap) {
-			for(Map.Entry<String, VmwareContext> entry : s_contextMap.entrySet()) {
-				if(entry.getValue() == context) {
-					s_contextMap.remove(entry.getKey());
-				}
-			}
+                    ArrayList<String> removedItemKeys = new ArrayList<String>();
+                    for(Map.Entry<String, VmwareContext> entry : s_contextMap.entrySet()) {
+                        if(entry.getValue() == context) {
+                            removedItemKeys.add(entry.getKey());
+                        }
+                    }
+
+                   for(String key : removedItemKeys)
+                       s_contextMap.remove(key);
 		}
 		
 		context.close();
