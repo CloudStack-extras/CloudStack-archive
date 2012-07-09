@@ -35,74 +35,75 @@ import com.cloud.user.Account;
 
 @Implementation(description = "Removes a condition", responseObject = SuccessResponse.class)
 public class DeleteConditionCmd extends BaseAsyncCmd {
-    public static final Logger s_logger = Logger.getLogger(DeleteConditionCmd.class.getName());
-    private static final String s_name = "deleteconditionresponse";
+	public static final Logger s_logger = Logger.getLogger(DeleteConditionCmd.class.getName());
+	private static final String s_name = "deleteconditionresponse";
 
-    // ///////////////////////////////////////////////////
-    // ////////////// API parameters /////////////////////
-    // ///////////////////////////////////////////////////
+	// ///////////////////////////////////////////////////
+	// ////////////// API parameters /////////////////////
+	// ///////////////////////////////////////////////////
 
-    @IdentityMapper(entityTableName = "conditions")
-    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = true, description = "the ID of the condition.")
-    private Long id;
+	@IdentityMapper(entityTableName = "conditions")
+	@Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = true, description = "the ID of the condition.")
+	private Long id;
 
-    // ///////////////////////////////////////////////////
-    // ///////////// API Implementation///////////////////
-    // ///////////////////////////////////////////////////
+	// ///////////////////////////////////////////////////
+	// ///////////// API Implementation///////////////////
+	// ///////////////////////////////////////////////////
 
-    @Override
-    public void execute() {
-        boolean result = false;
-        try {
-            result = _lbService.deleteCondition(getId());
-        } catch (ResourceInUseException ex) {
-            s_logger.warn("Exception: ", ex);
-            throw new ServerApiException(BaseCmd.RESOURCE_IN_USE_ERROR, ex.getMessage());
-        }
-        if (result) {
-            SuccessResponse response = new SuccessResponse(getCommandName());
-            this.setResponseObject(response);
-        } else {
-            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to delete condition.");
-        }
-    }
+	@Override
+	public void execute() {
+		boolean result = false;
+		try {
+			result = _lbService.deleteCondition(getId());
+		} catch (ResourceInUseException ex) {
+			s_logger.warn("Exception: ", ex);
+			throw new ServerApiException(BaseCmd.RESOURCE_IN_USE_ERROR, ex.getMessage());
+		}
+		if (result) {
+			SuccessResponse response = new SuccessResponse(getCommandName());
+			this.setResponseObject(response);
+		} else {
+			s_logger.warn("Failed to delete condition " + getId());
+			throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to delete condition.");
+		}
+	}
 
-    // ///////////////////////////////////////////////////
-    // ///////////////// Accessors ///////////////////////
-    // ///////////////////////////////////////////////////
+	// ///////////////////////////////////////////////////
+	// ///////////////// Accessors ///////////////////////
+	// ///////////////////////////////////////////////////
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    @Override
-    public AsyncJob.Type getInstanceType() {
-        return AsyncJob.Type.Condition;
-    }
+	@Override
+	public AsyncJob.Type getInstanceType() {
+		return AsyncJob.Type.Condition;
+	}
 
-    @Override
-    public String getCommandName() {
-        return s_name;
-    }
+	@Override
+	public String getCommandName() {
+		return s_name;
+	}
 
-    @Override
-    public long getEntityOwnerId() {
-        Condition condition = _entityMgr.findById(Condition.class, getId());
-        if (condition != null) {
-            return condition.getAccountId();
-        }
+	@Override
+	public long getEntityOwnerId() {
+		Condition condition = _entityMgr.findById(Condition.class, getId());
+		if (condition != null) {
+			return condition.getAccountId();
+		}
 
-        return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are
-// tracked
-    }
+		return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are
+		// tracked
+	}
 
-    @Override
-    public String getEventType() {
-        return EventTypes.EVENT_CONDITION_DELETE;
-    }
+	@Override
+	public String getEventType() {
+		return EventTypes.EVENT_CONDITION_DELETE;
+	}
 
-    @Override
-    public String getEventDescription() {
-        return "Deleting a condition.";
-    }
+	@Override
+	public String getEventDescription() {
+		return "Deleting a condition.";
+	}
 }

@@ -25,22 +25,25 @@ import com.cloud.acl.ControlledEntity;
 
 public interface AutoScaleVmGroup extends ControlledEntity {
 
-    static enum Operator { EQ, GT, LT, GE, LE };
+	static enum Operator { EQ, GT, LT, GE, LE };
 
-    long getId();
+	long getId();
 
-    long getAccountId();
+	@Override
+	long getAccountId();
 
-    long getLoadBalancerId();
+	long getLoadBalancerId();
 
-    long getProfileId();
+	long getProfileId();
 
-    int getMinMembers();
+	int getMinMembers();
 
-    int getMaxMembers();
+	int getMaxMembers();
 
-    public Integer getInterval();
+	int getMemberPort();
 
-    boolean isRevoke();
+	int getInterval();
+
+	boolean isRevoke();
 
 }
