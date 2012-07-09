@@ -25,8 +25,6 @@ public interface AutoScalePolicy extends ControlledEntity {
 
     long getZoneId();
 
-    public Integer getInterval();
-
     public Integer getDuration();
 
     public Integer getQuietTime();

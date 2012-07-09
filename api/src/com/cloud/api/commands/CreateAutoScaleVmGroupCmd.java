@@ -23,6 +23,7 @@ import com.cloud.api.IdentityMapper;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
+import com.cloud.api.BaseCmd.CommandType;
 import com.cloud.api.response.AutoScaleVmGroupResponse;
 import com.cloud.api.response.UserVmResponse;
 import com.cloud.async.AsyncJob;
@@ -51,6 +52,9 @@ public class CreateAutoScaleVmGroupCmd extends BaseAsyncCreateCmd {
 
     @Parameter(name=ApiConstants.MAX_MEMBERS, type=CommandType.INTEGER, required=true, description="the maximum number of members in the vmgroup, The number of instances in the vm group will be equal to or less than this number.")
     private int maxMembers;
+
+    @Parameter(name=ApiConstants.INTERVAL, type=CommandType.INTEGER, description="the frequency at which the conditions have to be evaluated")
+    private Integer interval;
 
     @IdentityMapper(entityTableName="autoscale_policies")
     @Parameter(name=ApiConstants.SCALEUP_POLICY_IDS, type=CommandType.LIST, collectionType=CommandType.LONG, required=true, description="list of provision autoscale policies")
@@ -81,7 +85,12 @@ public class CreateAutoScaleVmGroupCmd extends BaseAsyncCreateCmd {
         return maxMembers;
     }
 
-    public Long getProfileId() {
+    
+    public Integer getInterval() {
+		return interval;
+	}
+
+	public Long getProfileId() {
         return profileId;
     }
 

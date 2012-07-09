@@ -67,6 +67,9 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
     @Column(name="max_members", updatable=true)
     private int maxMembers;
 
+    @Column(name="interval")
+    private Integer interval = NetUtils.DEFAULT_AUTOSCALE_POLICY_INTERVAL_TIME;
+
     @Column(name = "profile_id")
     private long profileId;
 
@@ -85,7 +88,7 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
 	public AutoScaleVmGroupVO() {
     }
 
-    public AutoScaleVmGroupVO( long lbRuleId, long zoneId, long domainId, long accountId, int minMembers, int maxMembers, long profileId) {
+    public AutoScaleVmGroupVO( long lbRuleId, long zoneId, long domainId, long accountId, Integer minMembers, Integer maxMembers, Integer interval, long profileId) {
         this.uuid = UUID.randomUUID().toString();
         this.minMembers = minMembers;
         this.maxMembers = maxMembers;
@@ -93,6 +96,9 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
         this.accountId = accountId;
         this.domainId = domainId;
         this.zoneId = zoneId;
+        if (interval != null) {
+        	this.interval = interval;
+        }
     }
 
 	@Override
@@ -125,7 +131,11 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
         return maxMembers;
     }
 
-    public long getProfileId() {
+    public Integer getInterval() {
+		return interval;
+	}
+
+	public long getProfileId() {
         return profileId;
     }
 

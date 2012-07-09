@@ -3762,7 +3762,6 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setId(policy.getId());
         response.setZoneId(policy.getZoneId());
         response.setDuration(policy.getDuration());
-        response.setInterval(policy.getInterval());
         response.setQuietTime(policy.getQuietTime());
         response.setAction(policy.getAction());
         List<ConditionVO> vos = ApiDBUtils.getAutoScalePolicyConditions(policy.getId());
@@ -3784,6 +3783,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setId(vmGroup.getId());
         response.setMinMembers(vmGroup.getMinMembers());
         response.setMaxMembers(vmGroup.getMaxMembers());
+        response.setInterval(vmGroup.getInterval());
         response.setProfileId(vmGroup.getProfileId());
         response.setLoadBalancerId(vmGroup.getProfileId());
 

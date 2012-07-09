@@ -39,6 +39,8 @@ public interface AutoScaleVmGroup extends ControlledEntity {
 
     int getMaxMembers();
 
+    public Integer getInterval();
+
     boolean isRevoke();
 
 }

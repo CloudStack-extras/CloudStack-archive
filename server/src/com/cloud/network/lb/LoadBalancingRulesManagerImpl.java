@@ -1597,7 +1597,6 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEPOLICY_CREATE, eventDescription = "creating autoscale policy")
     public AutoScalePolicy createAutoScalePolicy(CreateAutoScalePolicyCmd cmd) {
         Integer duration = cmd.getDuration();
-        Integer interval = cmd.getInterval();
         Integer quietTime = cmd.getQuietTime();
         String action = cmd.getAction();
 
@@ -1605,21 +1604,17 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             throw new InvalidParameterValueException("duration is an invalid value: " + duration);
         }
 
-        if (interval != null && interval < 0) {
-            throw new InvalidParameterValueException("interval is an invalid value: " + interval);
-        }
-
         if (quietTime != null && quietTime < 0) {
             throw new InvalidParameterValueException("quiettime is an invalid value: " + quietTime);
         }
 
-        if (duration != null && interval != null && duration < interval) {
-            throw new InvalidParameterValueException("duration cannot be less than interval");
-        }
-
-        if (quietTime != null && interval != null && quietTime < interval) {
-            throw new InvalidParameterValueException("quietTime cannot be less than interval");
-        }
+//        if (duration != null && interval != null && duration < interval) {
+//            throw new InvalidParameterValueException("duration cannot be less than interval");
+//        }
+//
+//        if (quietTime != null && interval != null && quietTime < interval) {
+//            throw new InvalidParameterValueException("quietTime cannot be less than interval");
+//        }
 
         if(!NetUtils.isValidAutoScaleAction(action)) {
             throw new InvalidParameterValueException("action is invalid, only 'provision' and 'de-provision' is supported");
@@ -1643,7 +1638,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         final Transaction txn = Transaction.currentTxn();
         txn.start();
 
-        AutoScalePolicyVO policyVO = new AutoScalePolicyVO(cmd.getZoneId(), cmd.getDomainId(), cmd.getAccountId(), duration, interval, quietTime, action);
+        AutoScalePolicyVO policyVO = new AutoScalePolicyVO(cmd.getZoneId(), cmd.getDomainId(), cmd.getAccountId(), duration, quietTime, action);
         policyVO = _autoScalePolicyDao.persist(policyVO);
 
         for (Long conditionId : conditionIds) {
@@ -1778,6 +1773,12 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             throw new InvalidParameterValueException(ApiConstants.MIN_MEMBERS  + " cannot be greater than " + ApiConstants.MAX_MEMBERS +", range is invalid: " + minMembers + "-" + maxMembers);
         }
 
+        Integer interval = cmd.getInterval();
+        if (interval != null && interval < 0) {
+            throw new InvalidParameterValueException("interval is an invalid value: " + interval);
+        }
+
+
         LoadBalancerVO loadBalancer = getEntityInDatabase(ApiConstants.LBID , cmd.getLbRuleId(), _lbDao);
         Long zoneId = _ipAddressDao.findById(loadBalancer.getSourceIpAddressId()).getDataCenterId();
 
@@ -1798,7 +1799,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         final Transaction txn = Transaction.currentTxn();
         txn.start();
 
-    	AutoScaleVmGroupVO vmGroupVO = new AutoScaleVmGroupVO(cmd.getLbRuleId(), zoneId, loadBalancer.getDomainId(), loadBalancer.getAccountId(), minMembers, maxMembers, cmd.getProfileId());
+    	AutoScaleVmGroupVO vmGroupVO = new AutoScaleVmGroupVO(cmd.getLbRuleId(), zoneId, loadBalancer.getDomainId(), loadBalancer.getAccountId(), minMembers, maxMembers, interval, cmd.getProfileId());
     	vmGroupVO = _autoScaleVmGroupDao.persist(vmGroupVO);
     	
     	for (AutoScalePolicyVO autoScalePolicyVO : policies) {

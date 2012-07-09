@@ -127,6 +127,10 @@ public class LoadBalancerTO {
     public void setAutoScaleVmGroupTO(AutoScaleVmGroupTO autoScaleVmGroupTO) {
 		this.autoScaleVmGroupTO = autoScaleVmGroupTO;
 	}
+    
+    public boolean isAutoScaleVmGroupTO() {
+		return this.autoScaleVmGroupTO != null;
+	}
 
     public static class StickinessPolicyTO {
         private final String _methodName;
@@ -228,8 +232,6 @@ public class LoadBalancerTO {
     }
 
     public static class AutoScalePolicyTO {
-        private final int interval;
-
         private final long id;
         private final int duration;
         private final int quietTime;
@@ -237,9 +239,8 @@ public class LoadBalancerTO {
         boolean revoked;
         private final List<ConditionTO> conditions;
 
-        public AutoScalePolicyTO(long id, int duration, int interval, int quietTime, String action, List<ConditionTO> conditions, boolean revoked) {
+        public AutoScalePolicyTO(long id, int duration, int quietTime, String action, List<ConditionTO> conditions, boolean revoked) {
         	this.id = id;
-            this.interval = interval;
             this.duration = duration;
             this.quietTime = quietTime;
             this.conditions = conditions;
@@ -250,10 +251,6 @@ public class LoadBalancerTO {
         public long getId() {
 			return id;
 		}
-
-		public int getInterval() {
-            return interval;
-        }
 
         public int getDuration() {
             return duration;
@@ -287,6 +284,10 @@ public class LoadBalancerTO {
         private final String snmpCommunity;
         private final Integer snmpPort;
         private final Integer destroyVmGraceperiod;
+        private String cloudStackApiUrl;
+        private String autoScaleUserApiKey;
+        private String autoScaleUserSecretKey;
+        
         public AutoScaleVmProfileTO(Long zoneId, Long domainId, String accountName,Long serviceOfferingId, Long templateId,
                 String otherDeployParams, String snmpCommunity, Integer snmpPort, Integer destroyVmGraceperiod) {
             this.zoneId = zoneId;
@@ -326,19 +327,30 @@ public class LoadBalancerTO {
         public Integer getDestroyVmGraceperiod() {
             return destroyVmGraceperiod;
         }
+		public String getCloudStackApiUrl() {
+			return cloudStackApiUrl;
+		}
+		public String getAutoScaleUserApiKey() {
+			return autoScaleUserApiKey;
+		}
+		public String getAutoScaleUserSecretKey() {
+			return autoScaleUserSecretKey;
+		}
     }
 
     public static class AutoScaleVmGroupTO {
         private final int minMembers;
         private final int maxMembers;
+        private final int interval;
         private final List<AutoScalePolicyTO> policies;
         private final AutoScaleVmProfileTO profile;
         private final boolean revoked;
 
-        AutoScaleVmGroupTO(int minMembers, int maxMembers, List<AutoScalePolicyTO> policies, AutoScaleVmProfileTO profile, boolean revoked)
+        AutoScaleVmGroupTO(int minMembers, int maxMembers, int interval, List<AutoScalePolicyTO> policies, AutoScaleVmProfileTO profile, boolean revoked)
         {
             this.minMembers = minMembers;
             this.maxMembers = maxMembers;
+            this.interval = interval;
             this.policies = policies;
             this.profile = profile;
             this.revoked = revoked;
@@ -352,7 +364,11 @@ public class LoadBalancerTO {
             return maxMembers;
         }
 
-        public List<AutoScalePolicyTO> getPolicies() {
+        public int getInterval() {
+			return interval;
+		}
+
+		public List<AutoScalePolicyTO> getPolicies() {
             return policies;
         }
 
@@ -381,7 +397,7 @@ public class LoadBalancerTO {
             }
             AutoScalePolicy autoScalePolicy = lbAutoScalePolicy.getPolicy();
             autoScalePolicyTOs.add(new AutoScalePolicyTO(autoScalePolicy.getId(), autoScalePolicy.getDuration(), 
-            		autoScalePolicy.getInterval(), autoScalePolicy.getQuietTime(), autoScalePolicy.getAction(), 
+            		autoScalePolicy.getQuietTime(), autoScalePolicy.getAction(), 
             		conditionTOs, lbAutoScalePolicy.isRevoked()));
         }
         LbAutoScaleVmProfile lbAutoScaleVmProfile = lbAutoScaleVmGroup.getProfile();
@@ -392,9 +408,7 @@ public class LoadBalancerTO {
 
         AutoScaleVmGroup autoScaleVmGroup = lbAutoScaleVmGroup.getVmGroup();
         autoScaleVmGroupTO = new AutoScaleVmGroupTO(autoScaleVmGroup.getMinMembers(), autoScaleVmGroup.getMaxMembers(),
-                autoScalePolicyTOs, autoScaleVmProfileTO, autoScaleVmGroup.isRevoke());
-
-
+        		autoScaleVmGroup.getInterval(),autoScalePolicyTOs, autoScaleVmProfileTO, autoScaleVmGroup.isRevoke());
     }
 
 }

@@ -42,6 +42,10 @@ public class AutoScaleVmGroupResponse extends BaseResponse implements Controlled
     @Param(description = "the frequency at which the conditions have to be evaluated")
     private Integer maxMembers;
 
+    @SerializedName(ApiConstants.INTERVAL)
+    @Param(description = "the frequency at which the conditions have to be evaluated")
+    private Integer interval;
+
     @SerializedName(ApiConstants.SCALEUP_POLICY_IDS)
     @Param(description = "list of provision autoscale policies")
     private List<AutoScalePolicyResponse> scaleUpPolicies;
@@ -89,7 +93,11 @@ public class AutoScaleVmGroupResponse extends BaseResponse implements Controlled
         this.maxMembers = maxMembers;
     }
 
-    public void setScaleUpPolicies(List<AutoScalePolicyResponse> scaleUpPolicies) {
+    public void setInterval(Integer interval) {
+		this.interval = interval;
+	}
+
+	public void setScaleUpPolicies(List<AutoScalePolicyResponse> scaleUpPolicies) {
         this.scaleUpPolicies = scaleUpPolicies;
     }
 

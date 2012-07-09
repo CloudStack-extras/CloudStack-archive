@@ -52,9 +52,6 @@ public class AutoScalePolicyVO implements AutoScalePolicy {
     @Column(name="duration")
     private Integer duration;
 
-    @Column(name="interval")
-    private Integer interval = NetUtils.DEFAULT_AUTOSCALE_POLICY_INTERVAL_TIME;
-
     @Column(name="quiet_time", updatable=true, nullable = false)
     private Integer quietTime = NetUtils.DEFAULT_AUTOSCALE_POLICY_QUIET_TIME;
 
@@ -70,15 +67,12 @@ public class AutoScalePolicyVO implements AutoScalePolicy {
     public AutoScalePolicyVO() {
     }
 
-    public AutoScalePolicyVO(long zoneId, long domainId, long accountId, Integer duration, Integer interval, Integer quietTime, String action) {
+    public AutoScalePolicyVO(long zoneId, long domainId, long accountId, Integer duration, Integer quietTime, String action) {
         this.uuid = UUID.randomUUID().toString();
         this.zoneId = zoneId;
         this.domainId=domainId;
         this.accountId = accountId;
         this.duration = duration;
-        if (interval != null) {
-        	this.interval = interval;
-        }
         if (quietTime != null) {
         	this.quietTime = quietTime;
         }
@@ -111,11 +105,6 @@ public class AutoScalePolicyVO implements AutoScalePolicy {
     @Override
 	public long getAccountId() {
         return accountId;
-    }
-
-    @Override
-	public Integer getInterval() {
-        return interval;
     }
 
     @Override

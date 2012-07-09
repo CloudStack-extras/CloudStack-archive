@@ -47,9 +47,6 @@ public class CreateAutoScalePolicyCmd extends BaseAsyncCreateCmd {
     @Parameter(name=ApiConstants.DURATION, type=CommandType.INTEGER, required=true, description="the duration for which the conditions have to be true before action is taken")
     private Integer duration;
 
-    @Parameter(name=ApiConstants.INTERVAL, type=CommandType.INTEGER, description="the frequency at which the conditions have to be evaluated")
-    private Integer interval;
-
     @Parameter(name=ApiConstants.QUIETTIME, type=CommandType.INTEGER, description="the cool down period for which the policy should not be evaluated after the action has been taken")
     private Integer quietTime;
 
@@ -77,10 +74,6 @@ public class CreateAutoScalePolicyCmd extends BaseAsyncCreateCmd {
 
     public Integer getDuration() {
         return duration;
-    }
-
-    public Integer getInterval() {
-        return interval;
     }
 
     public Integer getQuietTime() {
