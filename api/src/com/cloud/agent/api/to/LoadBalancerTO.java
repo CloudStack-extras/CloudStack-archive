@@ -277,37 +277,35 @@ public class LoadBalancerTO {
     public static class AutoScaleVmProfileTO {
         private final Long zoneId;
         private final Long domainId;
-        private final String accountName;
         private final Long serviceOfferingId;
         private final Long templateId;
         private final String otherDeployParams;
         private final String snmpCommunity;
         private final Integer snmpPort;
         private final Integer destroyVmGraceperiod;
-        private String cloudStackApiUrl;
-        private String autoScaleUserApiKey;
-        private String autoScaleUserSecretKey;
+        private final String cloudStackApiUrl;
+        private final String autoScaleUserApiKey;
+        private final String autoScaleUserSecretKey;
         
-        public AutoScaleVmProfileTO(Long zoneId, Long domainId, String accountName,Long serviceOfferingId, Long templateId,
+        public AutoScaleVmProfileTO(Long zoneId, Long domainId, String cloudStackApiUrl, String autoScaleUserApiKey, String  autoScaleUserSecretKey,Long serviceOfferingId, Long templateId,
                 String otherDeployParams, String snmpCommunity, Integer snmpPort, Integer destroyVmGraceperiod) {
             this.zoneId = zoneId;
             this.domainId = domainId;
-            this.accountName = accountName;
             this.serviceOfferingId = serviceOfferingId;
             this.templateId = templateId;
             this.otherDeployParams = otherDeployParams;
             this.snmpCommunity = snmpCommunity;
             this.snmpPort = snmpPort;
             this.destroyVmGraceperiod = destroyVmGraceperiod;
+            this.cloudStackApiUrl = cloudStackApiUrl;
+            this.autoScaleUserApiKey = autoScaleUserApiKey;
+            this.autoScaleUserSecretKey = autoScaleUserSecretKey;
         }
         public Long getZoneId() {
             return zoneId;
         }
         public Long getDomainId() {
             return domainId;
-        }
-        public String getAccountName() {
-            return accountName;
         }
         public Long getServiceOfferingId() {
             return serviceOfferingId;
@@ -402,7 +400,8 @@ public class LoadBalancerTO {
         }
         LbAutoScaleVmProfile lbAutoScaleVmProfile = lbAutoScaleVmGroup.getProfile();
         AutoScaleVmProfile autoScaleVmProfile = lbAutoScaleVmProfile.getProfile();
-        AutoScaleVmProfileTO autoScaleVmProfileTO = new AutoScaleVmProfileTO(autoScaleVmProfile.getZoneId(), autoScaleVmProfile.getDomainId(), lbAutoScaleVmProfile.getAccountName(),
+        AutoScaleVmProfileTO autoScaleVmProfileTO = new AutoScaleVmProfileTO(autoScaleVmProfile.getZoneId(), autoScaleVmProfile.getDomainId(), 
+        		lbAutoScaleVmProfile.getAutoScaleUserApiKey(), lbAutoScaleVmProfile.getAutoScaleUserSecretKey(), lbAutoScaleVmProfile.getCloudStackApiUrl(),
                 autoScaleVmProfile.getServiceOfferingId(), autoScaleVmProfile.getTemplateId(), autoScaleVmProfile.getOtherDeployParams(),
                 autoScaleVmProfile.getSnmpCommunity(), autoScaleVmProfile.getSnmpPort(), autoScaleVmProfile.getDestroyVmGraceperiod());
 

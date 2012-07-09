@@ -973,8 +973,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             autoScalePolicies.add(new LbAutoScalePolicy(autoScalePolicy, lbConditions));
         }
         AutoScaleVmProfile autoScaleVmProfile = _autoScaleVmProfileDao.findById(vmGroup.getProfileId());
-        Account account = ApiDBUtils.findAccountByIdIncludingRemoved(autoScaleVmProfile.getAccountId());
-        LbAutoScaleVmProfile lbAutoScaleVmProfile = new LbAutoScaleVmProfile(autoScaleVmProfile, account.getAccountName());
+        LbAutoScaleVmProfile lbAutoScaleVmProfile = new LbAutoScaleVmProfile(autoScaleVmProfile, "", "", "");
         return new LbAutoScaleVmGroup(vmGroup, autoScalePolicies, lbAutoScaleVmProfile);
     }
 

@@ -280,18 +280,28 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
 
     public static class LbAutoScaleVmProfile {
         AutoScaleVmProfile profile;
-        String accountName;
+        private final String cloudStackApiUrl;
+        private final String autoScaleUserApiKey;
+        private final String autoScaleUserSecretKey;
 
-        public LbAutoScaleVmProfile(AutoScaleVmProfile profile, String accountName) {
+        public LbAutoScaleVmProfile(AutoScaleVmProfile profile, String cloudStackApiUrl, String autoScaleUserApiKey, String  autoScaleUserSecretKey) {
             this.profile = profile;
-            this.accountName = accountName;
+            this.cloudStackApiUrl = cloudStackApiUrl;
+            this.autoScaleUserApiKey = autoScaleUserApiKey;
+            this.autoScaleUserSecretKey = autoScaleUserSecretKey;
         }
         public AutoScaleVmProfile getProfile() {
             return profile;
         }
-        public String getAccountName() {
-            return accountName;
-        }
+		public String getCloudStackApiUrl() {
+			return cloudStackApiUrl;
+		}
+		public String getAutoScaleUserApiKey() {
+			return autoScaleUserApiKey;
+		}
+		public String getAutoScaleUserSecretKey() {
+			return autoScaleUserSecretKey;
+		}
     }
 
     public static class LbAutoScaleVmGroup {
