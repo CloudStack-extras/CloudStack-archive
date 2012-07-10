@@ -21,7 +21,7 @@ public class AutoScaleVmProfileResponse extends BaseResponse implements Controll
 
     @SerializedName(ApiConstants.ID)
     @Param(description = "the autoscale vm profile ID")
-    private IdentityProxy id = new IdentityProxy("autoscale_profiles");
+    private IdentityProxy id = new IdentityProxy("autoscale_vmprofiles");
 
     /* Parameters related to deploy virtual machine */
     @SerializedName(ApiConstants.ZONE_ID)
