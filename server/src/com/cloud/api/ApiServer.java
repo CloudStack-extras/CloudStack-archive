@@ -25,6 +25,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -969,7 +970,22 @@ public class ApiServer implements HttpRequestHandler {
         }
 
         public String getServerIpAddress() {
-            return _serverSocket.getInetAddress().toString();
+            String hostName;
+            InetAddress addrs[] = null;
+            try {
+                hostName = InetAddress.getLocalHost().getHostName();
+                addrs = InetAddress.getAllByName(hostName);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            String myIp = "UNKNOWN";
+            for (InetAddress addr : addrs) {
+                if (!addr.isLoopbackAddress() && addr.isSiteLocalAddress()) {
+                    myIp = addr.getHostAddress();
+                    break;
+                }
+            }
+            return myIp;
         }
 
         public String getServerPort() {

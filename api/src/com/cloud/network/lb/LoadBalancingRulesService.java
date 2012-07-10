@@ -14,11 +14,11 @@ package com.cloud.network.lb;
 
 import java.util.List;
 
+import com.cloud.api.commands.CreateAutoScalePolicyCmd;
+import com.cloud.api.commands.CreateAutoScaleVmGroupCmd;
+import com.cloud.api.commands.CreateAutoScaleVmProfileCmd;
 import com.cloud.api.commands.CreateConditionCmd;
 import com.cloud.api.commands.CreateCounterCmd;
-import com.cloud.api.commands.CreateAutoScalePolicyCmd;
-import com.cloud.api.commands.CreateAutoScaleVmProfileCmd;
-import com.cloud.api.commands.CreateAutoScaleVmGroupCmd;
 import com.cloud.api.commands.CreateLBStickinessPolicyCmd;
 import com.cloud.api.commands.CreateLoadBalancerRuleCmd;
 import com.cloud.api.commands.ListAutoScalePoliciesCmd;
@@ -31,6 +31,7 @@ import com.cloud.api.commands.ListLoadBalancerRuleInstancesCmd;
 import com.cloud.api.commands.ListLoadBalancerRulesCmd;
 import com.cloud.api.commands.UpdateAutoScalePolicyCmd;
 import com.cloud.api.commands.UpdateAutoScaleVmGroupCmd;
+import com.cloud.api.commands.UpdateAutoScaleVmProfileCmd;
 import com.cloud.api.commands.UpdateLoadBalancerRuleCmd;
 import com.cloud.exception.InsufficientAddressCapacityException;
 import com.cloud.exception.NetworkRuleConflictException;
@@ -134,6 +135,8 @@ public interface LoadBalancingRulesService {
 
     List<? extends AutoScaleVmProfile> listAutoScaleVmProfiles(ListAutoScaleVmProfilesCmd listAutoScaleVmProfilesCmd);
 
+    AutoScaleVmProfile updateAutoScaleVmProfile(UpdateAutoScaleVmProfileCmd cmd);
+
     AutoScaleVmGroup createAutoScaleVmGroup(CreateAutoScaleVmGroupCmd cmd);
 
     boolean configureAutoScaleVmGroup(CreateAutoScaleVmGroupCmd cmd);
@@ -141,6 +144,10 @@ public interface LoadBalancingRulesService {
     boolean deleteAutoScaleVmGroup(long vmGroupId);
 
     AutoScaleVmGroup updateAutoScaleVmGroup(UpdateAutoScaleVmGroupCmd cmd);
+
+    AutoScaleVmGroup enableAutoScaleVmGroup(Long id);
+
+    AutoScaleVmGroup disableAutoScaleVmGroup(Long id);
 
     List<? extends AutoScaleVmGroup> listAutoScaleVmGroups(ListAutoScaleVmGroupsCmd listAutoScaleVmGroupsCmd);
 

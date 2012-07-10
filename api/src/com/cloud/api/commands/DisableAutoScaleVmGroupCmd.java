@@ -17,39 +17,30 @@
 
 package com.cloud.api.commands;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiConstants;
-import com.cloud.api.BaseListCmd;
+import com.cloud.api.BaseCmd;
 import com.cloud.api.IdentityMapper;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
-import com.cloud.api.response.CounterResponse;
-import com.cloud.api.response.ListResponse;
-import com.cloud.network.as.Counter;
+import com.cloud.api.ServerApiException;
+import com.cloud.api.response.AutoScaleVmGroupResponse;
+import com.cloud.network.as.AutoScaleVmGroup;
 import com.cloud.user.Account;
 
-@Implementation(description = "List the counters", responseObject = CounterResponse.class)
-public class ListCountersCmd extends BaseListCmd {
-    public static final Logger s_logger = Logger.getLogger(ListCountersCmd.class.getName());
-    private static final String s_name = "counterresponse";
+@Implementation(description = "Disables an AutoScale Vm Group", responseObject = AutoScaleVmGroupResponse.class)
+public class DisableAutoScaleVmGroupCmd extends BaseCmd {
+    public static final Logger s_logger = Logger.getLogger(DisableAutoScaleVmGroupCmd.class.getName());
+    private static final String s_name = "disableautoscalevmGroupresponse";
 
     // ///////////////////////////////////////////////////
     // ////////////// API parameters /////////////////////
     // ///////////////////////////////////////////////////
 
-    @IdentityMapper(entityTableName = "counter")
-    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, description = "ID of the Counter.")
+    @IdentityMapper(entityTableName = "account")
+    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, description = "Account id")
     private Long id;
-
-    @Parameter(name = ApiConstants.NAME, type = CommandType.STRING, description = "Name of the counter.")
-    private String name;
-
-    @Parameter(name = ApiConstants.SOURCE, type = CommandType.STRING, description = "Source of the counter.")
-    private String source;
 
     // ///////////////////////////////////////////////////
     // ///////////// API Implementation///////////////////
@@ -57,43 +48,37 @@ public class ListCountersCmd extends BaseListCmd {
 
     @Override
     public void execute() {
-        List<? extends Counter> counters = null;
-        counters = _lbService.listCounters(this);
-        ListResponse<CounterResponse> response = new ListResponse<CounterResponse>();
-        List<CounterResponse> ctrResponses = new ArrayList<CounterResponse>();
-        for (Counter ctr : counters) {
-            CounterResponse ctrResponse = _responseGenerator.createCounterResponse(ctr);
-            ctrResponses.add(ctrResponse);
+        AutoScaleVmGroup result = _lbService.disableAutoScaleVmGroup(getId());
+        if (result != null) {
+            AutoScaleVmGroupResponse response = _responseGenerator.createAutoScaleVmGroupResponse(result);
+            response.setResponseName(getCommandName());
+            this.setResponseObject(response);
+        } else {
+            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to disable AutoScale Vm Group");
         }
-
-        response.setResponses(ctrResponses);
-        response.setResponseName(getCommandName());
-        this.setResponseObject(response);
     }
 
-    // /////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
     // ///////////////// Accessors ///////////////////////
     // ///////////////////////////////////////////////////
+
+    public Long getId() {
+        return id;
+    }
 
     @Override
     public String getCommandName() {
         return s_name;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
     @Override
     public long getEntityOwnerId() {
-        return Account.ACCOUNT_ID_SYSTEM;
+        AutoScaleVmGroup autoScaleVmGroup = _entityMgr.findById(AutoScaleVmGroup.class, getId());
+        if (autoScaleVmGroup != null) {
+            return autoScaleVmGroup.getAccountId();
+        }
+        return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are
+// tracked
     }
+
 }

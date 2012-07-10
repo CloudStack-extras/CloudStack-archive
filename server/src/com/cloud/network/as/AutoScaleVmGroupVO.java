@@ -23,53 +23,54 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.Table;
+
 import com.cloud.utils.db.GenericDao;
 import com.cloud.utils.net.NetUtils;
 
 @Entity
-@Table(name="autoscale_vmgroups")
-@Inheritance(strategy=InheritanceType.JOINED)
+@Table(name = "autoscale_vmgroups")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
-    @Column(name="id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     long id;
 
-    @Column(name="uuid")
+    @Column(name = "uuid")
     String uuid;
 
-    @Column(name="zone_id", updatable=false)
+    @Column(name = "zone_id", updatable = false)
     private long zoneId;
 
-    @Column(name="domain_id", updatable=false)
+    @Column(name = "domain_id", updatable = false)
     private long domainId;
 
-    @Column(name="account_id")
+    @Column(name = "account_id")
     private long accountId;
 
     @Column(name = "load_balancer_id")
     private long loadBalancerId;
 
-    @Column(name="min_members", updatable=true)
+    @Column(name = "min_members", updatable = true)
     private int minMembers;
 
-    @Column(name="max_members", updatable=true)
+    @Column(name = "max_members", updatable = true)
     private int maxMembers;
 
-    @Column(name="member_port")
+    @Column(name = "member_port")
     private int memberPort;
 
-    @Column(name="interval")
+    @Column(name = "interval")
     private Integer interval = NetUtils.DEFAULT_AUTOSCALE_POLICY_INTERVAL_TIME;
 
     @Column(name = "profile_id")
     private long profileId;
 
-    @Column(name=GenericDao.REMOVED_COLUMN)
+    @Column(name = GenericDao.REMOVED_COLUMN)
     protected Date removed;
 
-    @Column(name=GenericDao.CREATED_COLUMN)
+    @Column(name = GenericDao.CREATED_COLUMN)
     protected Date created;
 
     @Column(name = "revoke")
@@ -81,7 +82,7 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
     public AutoScaleVmGroupVO() {
     }
 
-    public AutoScaleVmGroupVO( long lbRuleId, long zoneId, long domainId, long accountId, Integer minMembers, Integer maxMembers, Integer memberPort, Integer interval, long profileId) {
+    public AutoScaleVmGroupVO(long lbRuleId, long zoneId, long domainId, long accountId, Integer minMembers, Integer maxMembers, Integer memberPort, Integer interval, long profileId, String state) {
         this.uuid = UUID.randomUUID().toString();
         this.minMembers = minMembers;
         this.maxMembers = maxMembers;
@@ -90,7 +91,7 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
         this.accountId = accountId;
         this.domainId = domainId;
         this.zoneId = zoneId;
-
+        this.state = state;
         if (interval != null) {
             this.interval = interval;
         }
@@ -102,21 +103,24 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
     }
 
     @Override
-    public long getId()    {
+    public long getId() {
         return id;
     }
 
     public long getZoneId() {
         return zoneId;
     }
+
     @Override
     public long getDomainId() {
         return domainId;
     }
+
     @Override
     public long getAccountId() {
         return accountId;
     }
+
     @Override
     public long getLoadBalancerId() {
         return loadBalancerId;
@@ -164,11 +168,20 @@ public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
         this.revoke = revoke;
     }
 
+    @Override
     public String getState() {
-        return "";
+        return state;
     }
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public void setMinMembers(int minMembers) {
+        this.minMembers = minMembers;
+    }
+
+    public void setMaxMembers(int maxMembers) {
+        this.maxMembers = maxMembers;
     }
 }

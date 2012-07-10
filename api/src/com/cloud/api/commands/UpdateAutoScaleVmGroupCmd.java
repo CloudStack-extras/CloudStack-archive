@@ -63,6 +63,10 @@ public class UpdateAutoScaleVmGroupCmd extends BaseAsyncCmd {
     @Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = true, description = "the ID of the autoscale group")
     private Long id;
 
+    // ///////////////////////////////////////////////////
+    // ///////////// API Implementation///////////////////
+    // ///////////////////////////////////////////////////
+
     @Override
     public void execute() throws ServerApiException {
         UserContext.current().setEventDetails("AutoScale Vm Group Id: " + getId());

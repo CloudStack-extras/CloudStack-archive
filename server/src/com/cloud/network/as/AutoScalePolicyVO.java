@@ -121,4 +121,12 @@ public class AutoScalePolicyVO implements AutoScalePolicy {
     public Date getCreated() {
         return created;
     }
+
+    public void setDuration(Integer duration) {
+        this.duration = duration;
+    }
+
+    public void setQuietTime(Integer quietTime) {
+        this.quietTime = quietTime;
+    }
 }

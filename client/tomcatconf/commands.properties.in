@@ -150,6 +150,8 @@ listConditions = com.cloud.api.commands.ListConditionsCmd;15
 listAutoScalePolicies=com.cloud.api.commands.ListAutoScalePoliciesCmd;15
 listAutoScaleVmProfiles=com.cloud.api.commands.ListAutoScaleVmProfilesCmd;15
 listAutoScaleVmGroups=com.cloud.api.commands.ListAutoScaleVmGroupsCmd;15
+enableAutoScaleVmGroup=com.cloud.api.commands.EnableAutoScaleVmGroupCmd;15
+disableAutoScaleVmGroup=com.cloud.api.commands.DisableAutoScaleVmGroupCmd;15
 
 #### router commands
 startRouter=com.cloud.api.commands.StartRouterCmd;7

@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiConstants;
 import com.cloud.api.BaseAsyncCmd;
+import com.cloud.api.BaseCmd;
 import com.cloud.api.IdentityMapper;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
@@ -28,6 +29,9 @@ import com.cloud.api.ServerApiException;
 import com.cloud.api.response.AutoScaleVmProfileResponse;
 import com.cloud.async.AsyncJob;
 import com.cloud.event.EventTypes;
+import com.cloud.network.as.AutoScaleVmProfile;
+import com.cloud.user.Account;
+import com.cloud.user.UserContext;
 
 @Implementation(description = "Updates an existing autoscale vm profile.", responseObject = AutoScaleVmProfileResponse.class)
 public class UpdateAutoScaleVmProfileCmd extends BaseAsyncCmd {
@@ -40,8 +44,15 @@ public class UpdateAutoScaleVmProfileCmd extends BaseAsyncCmd {
     // ///////////////////////////////////////////////////
 
     @IdentityMapper(entityTableName = "autoscale_vmgroups")
-    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = true, description = "the ID of the autoscale group")
+    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = true, description = "the ID of the autoscale vm profile")
     private Long id;
+
+    @IdentityMapper(entityTableName = "vm_template")
+    @Parameter(name = ApiConstants.TEMPLATE_ID, type = CommandType.LONG, required = true, description = "the template of the auto deployed virtual machine")
+    private Long templateId;
+
+    @Parameter(name = ApiConstants.OTHER_DEPLOY_PARAMS, type = CommandType.STRING, description = "parameters other than zoneId/serviceOfferringId/templateId of the auto deployed virtual machine")
+    private String otherDeployParams;
 
     // ///////////////////////////////////////////////////
     // ///////////// API Implementation///////////////////
@@ -49,7 +60,15 @@ public class UpdateAutoScaleVmProfileCmd extends BaseAsyncCmd {
 
     @Override
     public void execute() throws ServerApiException {
-
+        UserContext.current().setEventDetails("AutoScale Policy Id: " + getId());
+        AutoScaleVmProfile result = _lbService.updateAutoScaleVmProfile(this);
+        if (result != null) {
+            AutoScaleVmProfileResponse response = _responseGenerator.createAutoScaleVmProfileResponse(result);
+            response.setResponseName(getCommandName());
+            this.setResponseObject(response);
+        } else {
+            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to update autoscale vm profile");
+        }
     }
 
     // ///////////////////////////////////////////////////
@@ -58,6 +77,14 @@ public class UpdateAutoScaleVmProfileCmd extends BaseAsyncCmd {
 
     public Long getId() {
         return id;
+    }
+
+    public Long getTemplateId() {
+        return templateId;
+    }
+
+    public String getOtherDeployParams() {
+        return otherDeployParams;
     }
 
     @Override
@@ -77,23 +104,12 @@ public class UpdateAutoScaleVmProfileCmd extends BaseAsyncCmd {
 
     @Override
     public long getEntityOwnerId() {
-// Long projectId = null;
-// String sProjectId = getOtherDeployParam("projectId");
-//
-// if (sProjectId != null)
-// try {
-// projectId = Long.parseLong(sProjectId);
-// } catch (Exception ex) {
-// throw new InvalidParameterValueException("projectid specified is invalid");
-// }
-//
-// Long accountId = finalyzeAccountId(accountName, domainId, projectId, true);
-// if (accountId == null) {
-// return UserContext.current().getCaller().getId();
-// }
-//
-// return accountId;
-        return 0;
+        AutoScaleVmProfile vmProfile = _entityMgr.findById(AutoScaleVmProfile.class, getId());
+        if (vmProfile != null) {
+            return vmProfile.getAccountId();
+        }
+        return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are
+// tracked
     }
 
     @Override
