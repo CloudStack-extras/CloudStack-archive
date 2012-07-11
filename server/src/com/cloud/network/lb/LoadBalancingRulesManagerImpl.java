@@ -2186,17 +2186,6 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             throw new InvalidParameterValueException("The Source " + source + " does not exist; Unable to create Counter");
         }
 
-        ApiServer apiserver = ApiServer.getInstance();
-        String apiIpAddress = apiserver.getServerIpAddress();
-        String apiPort = apiserver.getServerPort();
-        StringBuilder sb = new StringBuilder();
-
-        Formatter formatter = new Formatter(sb, java.util.Locale.US);
-        formatter.format("https://%s:%s/client/api?", apiIpAddress, apiPort);
-        String csurl = sb.toString();
-        if (csurl instanceof String)
-            throw new InvalidParameterValueException("The Sourceeee: " + csurl);
-
         CounterVO counter = null;
 
         s_logger.debug("Adding Counter " + name);
