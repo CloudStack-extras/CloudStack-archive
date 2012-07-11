@@ -344,6 +344,7 @@ public class LoadBalancerTO {
 		private final List<AutoScalePolicyTO> policies;
 		private final AutoScaleVmProfileTO profile;
 		private final boolean revoked;
+		private String state;
 
 		AutoScaleVmGroupTO(int minMembers, int maxMembers, int memberPort, int interval, List<AutoScalePolicyTO> policies, AutoScaleVmProfileTO profile, boolean revoked)
 		{
@@ -378,6 +379,10 @@ public class LoadBalancerTO {
 
 		public AutoScaleVmProfileTO getProfile() {
 			return profile;
+		}
+
+		public String getState() {
+			return state;
 		}
 
 		public boolean isRevoked() {

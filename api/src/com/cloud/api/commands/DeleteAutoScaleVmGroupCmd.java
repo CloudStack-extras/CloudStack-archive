@@ -85,6 +85,7 @@ public class DeleteAutoScaleVmGroupCmd extends BaseAsyncCmd {
 
 		if (result) {
 			SuccessResponse response = new SuccessResponse(getCommandName());
+			s_logger.info("Successfully deleted autoscale vm group id : " + getId());
 			this.setResponseObject(response);
 		} else {
 			s_logger.warn("Failed to delete autoscale vm group " + getId());

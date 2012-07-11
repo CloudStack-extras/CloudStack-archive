@@ -58,9 +58,8 @@ public class NetUtils {
 	public final static String DEFAULT_SNMP_COMMUNITY = "public";
 	public final static int DEFAULT_SNMP_PORT = 161;
 
-	public final static int DEFAULT_AUTOSCALE_VM_DESTROY_TIME = 15 * 60; // Grace period before Vm is destroyed
-
-	public final static int DEFAULT_AUTOSCALE_POLICY_INTERVAL_TIME = 1 * 60;
+	public final static int DEFAULT_AUTOSCALE_VM_DESTROY_TIME = 2 * 60; // Grace period before Vm is destroyed
+	public final static int DEFAULT_AUTOSCALE_POLICY_INTERVAL_TIME = 30;
 	public final static int DEFAULT_AUTOSCALE_POLICY_QUIET_TIME = 5 * 60;
 
 	private final static Random _rand = new Random(System.currentTimeMillis());

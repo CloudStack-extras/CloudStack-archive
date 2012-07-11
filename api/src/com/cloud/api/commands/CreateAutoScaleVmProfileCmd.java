@@ -34,240 +34,231 @@ import com.cloud.network.as.AutoScaleVmProfile;
 import com.cloud.offering.ServiceOffering;
 import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.user.Account;
+import com.cloud.user.User;
 import com.cloud.user.UserContext;
 
 @Implementation(description = "Creates a profile that contains information about the virtual machine which will be provisioned automatically by autoscale feature.", responseObject = AutoScaleVmProfileResponse.class)
 public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
-    public static final Logger s_logger = Logger.getLogger(CreateAutoScaleVmProfileCmd.class.getName());
+	public static final Logger s_logger = Logger.getLogger(CreateAutoScaleVmProfileCmd.class.getName());
 
-    private static final String s_name = "autoscalevmprofileresponse";
+	private static final String s_name = "autoscalevmprofileresponse";
 
-    // ///////////////////////////////////////////////////
-    // ////////////// API parameters /////////////////////
-    // ///////////////////////////////////////////////////
+	// ///////////////////////////////////////////////////
+	// ////////////// API parameters /////////////////////
+	// ///////////////////////////////////////////////////
 
-    @IdentityMapper(entityTableName = "data_center")
-    @Parameter(name = ApiConstants.ZONE_ID, type = CommandType.LONG, required = true, description = "availability zone for the auto deployed virtual machine")
-    private Long zoneId;
+	@IdentityMapper(entityTableName = "data_center")
+	@Parameter(name = ApiConstants.ZONE_ID, type = CommandType.LONG, required = true, description = "availability zone for the auto deployed virtual machine")
+	private Long zoneId;
 
-    @IdentityMapper(entityTableName = "domain")
-    @Parameter(name = ApiConstants.DOMAIN_ID, type = CommandType.LONG, description = "the domain ID of the auto deployed a virtual machine")
-    private Long domainId;
+	@IdentityMapper(entityTableName = "disk_offering")
+	@Parameter(name = ApiConstants.SERVICE_OFFERING_ID, type = CommandType.LONG, required = true, description = "the service offering of the auto deployed virtual machine")
+	private Long serviceOfferingId;
 
-    @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, description = "the account of the auto deployed virtual machine. The account parameter must be used with the domainId parameter.")
-    private String accountName;
+	@IdentityMapper(entityTableName = "vm_template")
+	@Parameter(name = ApiConstants.TEMPLATE_ID, type = CommandType.LONG, required = true, description = "the template of the auto deployed virtual machine")
+	private Long templateId;
 
-    @IdentityMapper(entityTableName = "disk_offering")
-    @Parameter(name = ApiConstants.SERVICE_OFFERING_ID, type = CommandType.LONG, required = true, description = "the service offering of the auto deployed virtual machine")
-    private Long serviceOfferingId;
+	@Parameter(name = ApiConstants.OTHER_DEPLOY_PARAMS, type = CommandType.STRING, description = "parameters other than zoneId/serviceOfferringId/templateId of the auto deployed virtual machine")
+	private String otherDeployParams;
 
-    @IdentityMapper(entityTableName = "vm_template")
-    @Parameter(name = ApiConstants.TEMPLATE_ID, type = CommandType.LONG, required = true, description = "the template of the auto deployed virtual machine")
-    private Long templateId;
+	@Parameter(name = ApiConstants.AUTOSCALE_VM_DESTROY_TIME, type = CommandType.INTEGER, required = true, description = "the time allowed for existing connections to get closed before a vm is destroyed")
+	private Integer destroyVmGraceperiod;
 
-    @Parameter(name = ApiConstants.OTHER_DEPLOY_PARAMS, type = CommandType.STRING, description = "parameters other than zoneId/serviceOfferringId/templateId of the auto deployed virtual machine")
-    private String otherDeployParams;
+	@Parameter(name = ApiConstants.SNMP_COMMUNITY, type = CommandType.STRING, description = "snmp community string to be used to contact a virtual machine deployed by this profile")
+	private String snmpCommunity;
 
-    @Parameter(name = ApiConstants.AUTOSCALE_VM_DESTROY_TIME, type = CommandType.INTEGER, required = true, description = "the time allowed for existing connections to get closed before a vm is destroyed")
-    private Integer destroyVmGraceperiod;
+	@Parameter(name = ApiConstants.SNMP_PORT, type = CommandType.INTEGER, description = "port at which snmp agent is listening in a virtual machine deployed by this profile")
+	private Integer snmpPort;
 
-    @Parameter(name = ApiConstants.SNMP_COMMUNITY, type = CommandType.STRING, description = "snmp community string to be used to contact a virtual machine deployed by this profile")
-    private String snmpCommunity;
+	@IdentityMapper(entityTableName = "user")
+	@Parameter(name = ApiConstants.AUTOSCALE_USER_ID, type = CommandType.LONG, description = "the ID of the user used to launch and destroy the VMs")
+	private Long autoscaleUserId;
 
-    @Parameter(name = ApiConstants.SNMP_PORT, type = CommandType.INTEGER, description = "port at which snmp agent is listening in a virtual machine deployed by this profile")
-    private Integer snmpPort;
+	private Map<String, String> otherDeployParamMap;
 
-    @IdentityMapper(entityTableName = "user")
-    @Parameter(name = ApiConstants.AUTOSCALE_USER_ID, type = CommandType.LONG, description = "the ID of the user used to launch and destroy the VMs")
-    private Long autoscaleUserId;
+	// ///////////////////////////////////////////////////
+	// ///////////////// Accessors ///////////////////////
+	// ///////////////////////////////////////////////////
 
-    private Map<String, String> otherDeployParamMap;
+	private Long domainId;
+	private Long accountId;
 
-    // ///////////////////////////////////////////////////
-    // ///////////////// Accessors ///////////////////////
-    // ///////////////////////////////////////////////////
+	@Override
+	public String getEntityTable() {
+		return "autoscale_vmprofiles";
+	}
 
-    @Override
-    public String getEntityTable() {
-        return "autoscale_vmprofiles";
-    }
+	public Long getDomainId() {
+		if (domainId == null) {
+			getAccountId();
+		}
+		return domainId;
+	}
 
-    public String getAccountName() {
-        return accountName;
-    }
+	public Long getZoneId() {
+		return zoneId;
+	}
 
-    public Long getDomainId() {
-        if (domainId == null) {
-            return UserContext.current().getCaller().getDomainId();
-        }
-        return domainId;
-    }
+	public Long getServiceOfferingId() {
+		return serviceOfferingId;
+	}
 
-    public Long getZoneId() {
-        return zoneId;
-    }
+	public Long getTemplateId() {
+		return templateId;
+	}
 
-    public Long getServiceOfferingId() {
-        return serviceOfferingId;
-    }
+	public Integer getSnmpPort() {
+		return snmpPort;
+	}
 
-    public Long getTemplateId() {
-        return templateId;
-    }
+	public String getSnmpCommunity() {
+		return snmpCommunity;
+	}
 
-    public Integer getSnmpPort() {
-        return snmpPort;
-    }
+	public String getOtherDeployParams() {
+		return otherDeployParams;
+	}
 
-    public String getSnmpCommunity() {
-        return snmpCommunity;
-    }
+	public Long getAutoscaleUserId() {
+		if(autoscaleUserId != null) {
+			return autoscaleUserId;
+		} else {
+			return UserContext.current().getCaller().getId();
+		}
+	}
 
-    public String getOtherDeployParams() {
-        return otherDeployParams;
-    }
+	public Integer getDestroyVmGraceperiod() {
+		return destroyVmGraceperiod;
+	}
 
-    public Long getAutoscaleUserId() {
-        return autoscaleUserId;
-    }
+	public long getAccountId() {
+		if(accountId != null) {
+			return accountId;
+		}
+		Account account = null;
+		//		if ((domainId != null) && (accountName != null)) {
+		//			account = _responseGenerator.findAccountByNameDomain(accountName, domainId);
+		//			if (account != null) {
+		//				return account.getId();
+		//			} else {
+		//				throw new InvalidParameterValueException("Unable to find account " + account + " in domain id=" + domainId);
+		//			}
+		//		}
+		if(autoscaleUserId != null) {
+			User user = _entityMgr.findById(User.class, autoscaleUserId);
+			account = _entityMgr.findById(Account.class, user.getAccountId());
+		} else {
+			account = UserContext.current().getCaller();
+		}
+		accountId = account.getAccountId();
+		domainId = account.getDomainId();
+		return accountId;
+	}
 
-    public Integer getDestroyVmGraceperiod() {
-        return destroyVmGraceperiod;
-    }
+	private void createOtherDeployParamMap()
+	{
+		if (otherDeployParamMap == null) {
+			otherDeployParamMap = new HashMap<String, String>();
+		}
+		if (otherDeployParams == null)
+			return;
+		String[] keyValues = otherDeployParams.split("&"); // hostid=123, hypervisor=xenserver
+		for (String keyValue : keyValues) { // keyValue == "hostid=123"
+			String[] keyAndValue = keyValue.split("="); // keyValue = hostid, 123
+			if (keyAndValue.length != 2) {
+				throw new InvalidParameterValueException("Invalid parameter in otherDeployParam : " + keyValue);
+			}
+			String paramName = keyAndValue[0]; // hostid
+			String paramValue = keyAndValue[1]; // 123
+			otherDeployParamMap.put(paramName, paramValue);
+		}
+	}
 
-    public long getAccountId() {
+	public HashMap<String, String> getDeployParamMap()
+	{
+		createOtherDeployParamMap();
+		HashMap<String, String> deployParams = new HashMap<String, String>(otherDeployParamMap);
+		deployParams.put("command", "deployVirtualMachine");
+		deployParams.put("zoneId", zoneId.toString());
+		deployParams.put("serviceOfferingId", serviceOfferingId.toString());
+		deployParams.put("templateId", templateId.toString());
+		return deployParams;
+	}
 
-        Account account = null;
-        if ((domainId != null) && (accountName != null)) {
-            account = _responseGenerator.findAccountByNameDomain(accountName, domainId);
-            if (account != null) {
-                return account.getId();
-            } else {
-                throw new InvalidParameterValueException("Unable to find account " + account + " in domain id=" + domainId);
-            }
-        } else {
-            return UserContext.current().getCaller().getId();
-        }
-    }
+	public String getOtherDeployParam(String param)
+	{
+		if (param == null) {
+			return null;
+		}
+		createOtherDeployParamMap();
+		return otherDeployParamMap.get(param);
+	}
 
-    private void createOtherDeployParamMap()
-    {
-        if (otherDeployParamMap == null) {
-            otherDeployParamMap = new HashMap<String, String>();
-        }
-        if (otherDeployParams == null)
-            return;
-        String[] keyValues = otherDeployParams.split("&"); // hostid=123, hypervisor=xenserver
-        for (String keyValue : keyValues) { // keyValue == "hostid=123"
-            String[] keyAndValue = keyValue.split("="); // keyValue = hostid, 123
-            if (keyAndValue.length != 2) {
-                throw new InvalidParameterValueException("Invalid parameter in otherDeployParam : " + keyValue);
-            }
-            String paramName = keyAndValue[0]; // hostid
-            String paramValue = keyAndValue[1]; // 123
-            otherDeployParamMap.put(paramName, paramValue);
-        }
-    }
+	// ///////////////////////////////////////////////////
+	// ///////////// API Implementation///////////////////
+	// ///////////////////////////////////////////////////
 
-    public HashMap<String, String> getDeployParamMap()
-    {
-        createOtherDeployParamMap();
-        HashMap<String, String> deployParams = new HashMap<String, String>(otherDeployParamMap);
-        deployParams.put("command", "deployVirtualMachine");
-        deployParams.put("zoneId", zoneId.toString());
-        deployParams.put("serviceOfferingId", serviceOfferingId.toString());
-        deployParams.put("templateId", templateId.toString());
-        return deployParams;
-    }
+	@Override
+	public String getCommandName() {
+		return s_name;
+	}
 
-    public String getOtherDeployParam(String param)
-    {
-        if (param == null) {
-            return null;
-        }
-        createOtherDeployParamMap();
-        return otherDeployParamMap.get(param);
-    }
+	public static String getResultObjectName() {
+		return "autoscalevmprofile";
+	}
 
-    // ///////////////////////////////////////////////////
-    // ///////////// API Implementation///////////////////
-    // ///////////////////////////////////////////////////
+	@Override
+	public long getEntityOwnerId() {
+		return getAccountId();
+	}
 
-    @Override
-    public String getCommandName() {
-        return s_name;
-    }
+	@Override
+	public String getEventType() {
+		return EventTypes.EVENT_AUTOSCALEVMPROFILE_CREATE;
+	}
 
-    public static String getResultObjectName() {
-        return "autoscalevmprofile";
-    }
+	@Override
+	public String getEventDescription() {
+		return "creating AutoScale Vm Profile";
+	}
 
-    @Override
-    public long getEntityOwnerId() {
-        Long projectId = null;
-        String sProjectId = getOtherDeployParam("projectId");
+	@Override
+	public AsyncJob.Type getInstanceType() {
+		return AsyncJob.Type.AutoScaleVmProfile;
+	}
 
-        if (sProjectId != null)
-            try {
-                projectId = Long.parseLong(sProjectId);
-            } catch (Exception ex) {
-                throw new InvalidParameterValueException("projectid specified is invalid");
-            }
+	@Override
+	public void execute() {
+	}
 
-        Long accountId = finalyzeAccountId(accountName, domainId, projectId, true);
-        if (accountId == null) {
-            return UserContext.current().getCaller().getId();
-        }
+	@Override
+	public void create() throws ResourceAllocationException {
 
-        return accountId;
-    }
+		DataCenter zone = _configService.getZone(zoneId);
+		if (zone == null) {
+			throw new InvalidParameterValueException("Unable to find zone by id=" + zoneId);
+		}
 
-    @Override
-    public String getEventType() {
-        return EventTypes.EVENT_AUTOSCALEVMPROFILE_CREATE;
-    }
+		ServiceOffering serviceOffering = _configService.getServiceOffering(serviceOfferingId);
+		if (serviceOffering == null) {
+			throw new InvalidParameterValueException("Unable to find service offering: " + serviceOfferingId);
+		}
 
-    @Override
-    public String getEventDescription() {
-        return "creating AutoScale Vm Profile";
-    }
+		VirtualMachineTemplate template = _templateService.getTemplate(templateId);
+		// Make sure a valid template ID was specified
+		if (template == null) {
+			throw new InvalidParameterValueException("Unable to use template " + templateId);
+		}
 
-    @Override
-    public AsyncJob.Type getInstanceType() {
-        return AsyncJob.Type.AutoScaleVmProfile;
-    }
-
-    @Override
-    public void execute() {
-    }
-
-    @Override
-    public void create() throws ResourceAllocationException {
-
-        DataCenter zone = _configService.getZone(zoneId);
-        if (zone == null) {
-            throw new InvalidParameterValueException("Unable to find zone by id=" + zoneId);
-        }
-
-        ServiceOffering serviceOffering = _configService.getServiceOffering(serviceOfferingId);
-        if (serviceOffering == null) {
-            throw new InvalidParameterValueException("Unable to find service offering: " + serviceOfferingId);
-        }
-
-        VirtualMachineTemplate template = _templateService.getTemplate(templateId);
-        // Make sure a valid template ID was specified
-        if (template == null) {
-            throw new InvalidParameterValueException("Unable to use template " + templateId);
-        }
-
-        AutoScaleVmProfile result = _lbService.createAutoScaleVmProfile(this);
-        if (result != null) {
-            this.setEntityId(result.getId());
-            AutoScaleVmProfileResponse response = _responseGenerator.createAutoScaleVmProfileResponse(result);
-            response.setResponseName(getCommandName());
-            this.setResponseObject(response);
-        } else {
-            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to create Autoscale Vm Profile");
-        }
-    }
+		AutoScaleVmProfile result = _lbService.createAutoScaleVmProfile(this);
+		if (result != null) {
+			this.setEntityId(result.getId());
+			AutoScaleVmProfileResponse response = _responseGenerator.createAutoScaleVmProfileResponse(result);
+			response.setResponseName(getCommandName());
+			this.setResponseObject(response);
+		} else {
+			throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to create Autoscale Vm Profile");
+		}
+	}
 }
