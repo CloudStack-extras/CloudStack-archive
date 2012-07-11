@@ -148,6 +148,7 @@ import com.cloud.utils.db.JoinBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
+import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.vm.Nic;
@@ -1503,7 +1504,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 		txn.commit();
 	}
 
-	private <VO> VO getEntityInDatabase(String paramName, Long id, GenericDao<VO, Long> dao)
+	private <VO extends ControlledEntity> VO getEntityInDatabase(String paramName, Long id, GenericDao<VO, Long> dao)
 	{
 
 		VO vo = dao.findById(id);
@@ -1512,9 +1513,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 			throw new InvalidParameterValueException("Unable to find " + paramName);
 		}
 
-		if (vo instanceof ControlledEntity) {
-			_accountMgr.checkAccess(UserContext.current().getCaller(), null, true, (ControlledEntity) vo);
-		}
+		//		_accountMgr.checkAccess(UserContext.current().getCaller(), null, true, (ControlledEntity) vo);
+		_accountMgr.checkAccess(UserContext.current().getCaller(), null, true, (ControlledEntity) vo);
 
 		return vo;
 	}
@@ -1526,10 +1526,20 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
 	private List<AutoScalePolicyVO> getAutoScalePolicies(String paramName, List<Long> policyIds, List<Counter> counters, Integer interval, boolean scaleUpPolicies)
 	{
-		List<AutoScalePolicyVO> policies = new ArrayList<AutoScalePolicyVO>();
-		for (Long policyId : policyIds) {
-			AutoScalePolicyVO policy = getEntityInDatabase(paramName, policyId, _autoScalePolicyDao);
+		SearchBuilder<AutoScalePolicyVO> policySearch = _autoScalePolicyDao.createSearchBuilder();
+		policySearch.and("ids", policySearch.entity().getId(), Op.IN);
+		policySearch.done();
+		SearchCriteria<AutoScalePolicyVO> sc = policySearch.create();
+
+		sc.setParameters("ids", policyIds.toArray(new Object[0]));
+		List<AutoScalePolicyVO> policies = _autoScalePolicyDao.search(sc, null);
+
+		Integer prevQuietTime = 0;
+
+		for (AutoScalePolicyVO policy : policies) {
 			Integer quietTime = policy.getQuietTime();
+			if(prevQuietTime == 0)
+				prevQuietTime = quietTime;
 			Integer duration = policy.getDuration();
 			if (interval != null && duration < interval) {
 				throw new InvalidParameterValueException("duration - " + duration + " specified in a policy cannot be less than vm group's interval - " + interval);
@@ -1539,6 +1549,9 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 				throw new InvalidParameterValueException("quietTime - " + quietTime + " specified in a policy cannot be less than vm group's interval - " + interval);
 			}
 
+			if (quietTime != prevQuietTime) {
+				throw new InvalidParameterValueException("quietTime should be same for all the policies specified in " + paramName);
+			}
 
 			if (scaleUpPolicies) {
 				if (!isAutoScaleScaleUpPolicy(policy)) {
@@ -1550,7 +1563,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 					throw new InvalidParameterValueException("Only de-provision policies can be specified in scaledownpolicyids");
 				}
 			}
-			List<AutoScalePolicyConditionMapVO> policyConditionMapVOs = _autoScalePolicyConditionMapDao.listByAll(policyId, null);
+			List<AutoScalePolicyConditionMapVO> policyConditionMapVOs = _autoScalePolicyConditionMapDao.listByAll(policy.getId(), null);
 			for (AutoScalePolicyConditionMapVO policyConditionMapVO : policyConditionMapVOs) {
 				long conditionid = policyConditionMapVO.getConditionId();
 				Condition condition = _conditionDao.findById(conditionid);
@@ -1567,7 +1580,10 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 	@ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMPROFILE_CREATE, eventDescription = "creating autoscale vm profile")
 	public AutoScaleVmProfile createAutoScaleVmProfile(CreateAutoScaleVmProfileCmd cmd) {
 
-		checkCallerAccess(cmd.getAccountName(), cmd.getDomainId());
+		Account owner = _accountDao.findById(cmd.getAccountId());
+		Account caller = UserContext.current().getCaller();
+		_accountMgr.checkAccess(caller, null, true, owner);
+
 
 		// validations
 		HashMap<String, String> deployParams = cmd.getDeployParamMap();
@@ -1644,9 +1660,9 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 	@ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEPOLICY_CREATE, eventDescription = "creating autoscale policy")
 	public AutoScalePolicy createAutoScalePolicy(CreateAutoScalePolicyCmd cmd) {
 
-		Account owner = _accountDao.findById(cmd.getAccountId());
-		Account caller = UserContext.current().getCaller();
-		_accountMgr.checkAccess(caller, null, true, owner);
+		//		Account owner = _accountDao.findById(cmd.getAccountId());
+		//		Account caller = UserContext.current().getCaller();
+		//		_accountMgr.checkAccess(caller, null, true, owner);
 
 		Integer duration = cmd.getDuration();
 		Integer quietTime = cmd.getQuietTime();
@@ -1665,22 +1681,34 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 		}
 		action = action.toLowerCase();
 
-		List<Long> conditionIds = cmd.getConditionIds();
-		ArrayList<Long> counterIds = new ArrayList<Long>();
-		Condition condition = null;
-		for (Long conditionId : conditionIds) {
-			condition = getEntityInDatabase(ApiConstants.CONDITION_ID, conditionId, _conditionDao);
+		SearchBuilder<ConditionVO> policySearch = _conditionDao.createSearchBuilder();
+		policySearch.and("ids", policySearch.entity().getId(), Op.IN);
+		policySearch.done();
+		SearchCriteria<ConditionVO> sc = policySearch.create();
 
+		List<Long> conditionIds = cmd.getConditionIds();
+		sc.setParameters("ids", conditionIds.toArray(new Object[0]));
+		List<ConditionVO> conditions = _conditionDao.search(sc, null);
+
+		ArrayList<Long> counterIds = new ArrayList<Long>();
+		ControlledEntity[] sameOwnerEntities = conditions.toArray(new ControlledEntity[conditions.size() + 1]);
+		AutoScalePolicyVO policyVO = new AutoScalePolicyVO(cmd.getDomainId(), cmd.getAccountId(), duration, quietTime, action);
+		sameOwnerEntities[ sameOwnerEntities.length - 1 ] = policyVO;
+		_accountMgr.checkAccess(UserContext.current().getCaller(), null, true, sameOwnerEntities);
+
+		if(conditionIds.size() != conditions.size()) {
+			// TODO report the condition id which could not be found
+			throw new InvalidParameterValueException("Unable to find a condition specified");
+		}
+		for (ConditionVO condition : conditions) {
 			if (counterIds.contains(condition.getCounterid())) {
 				throw new InvalidParameterValueException("atleast two conditions in the conditionids have the same counter. It is not right to apply two different conditions for the same counter");
 			}
-			counterIds.add(condition.getCounterid());
 		}
 
 		final Transaction txn = Transaction.currentTxn();
 		txn.start();
 
-		AutoScalePolicyVO policyVO = new AutoScalePolicyVO(cmd.getDomainId(), cmd.getAccountId(), duration, quietTime, action);
 		policyVO = _autoScalePolicyDao.persist(policyVO);
 
 		for (Long conditionId : conditionIds) {
@@ -1835,13 +1863,14 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
 		LoadBalancerVO loadBalancer = getEntityInDatabase(ApiConstants.LBID, cmd.getLbRuleId(), _lbDao);
 
-		Account owner = _accountDao.findById(loadBalancer.getAccountId());
-		Account caller = UserContext.current().getCaller();
-		_accountMgr.checkAccess(caller, null, true, owner);
+
+		//		Account owner = _accountDao.findById(loadBalancer.getAccountId());
+		//		Account caller = UserContext.current().getCaller();
+		//		_accountMgr.checkAccess(caller, null, true, owner);
 
 		Long zoneId = _ipAddressDao.findById(loadBalancer.getSourceIpAddressId()).getDataCenterId();
 
-		getEntityInDatabase(ApiConstants.VMPROFILE_ID, cmd.getProfileId(), _autoScaleVmProfileDao);
+		AutoScaleVmProfileVO profileVO = getEntityInDatabase(ApiConstants.VMPROFILE_ID, cmd.getProfileId(), _autoScaleVmProfileDao);
 
 		List<AutoScaleVmGroupVO> existingVmGroupVO = _autoScaleVmGroupDao.listByAll(loadBalancer.getId(), null);
 		if (existingVmGroupVO.size() > 0) {
@@ -1857,6 +1886,11 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 		List<AutoScalePolicyVO> policies = new ArrayList<AutoScalePolicyVO>();
 		policies.addAll(getAutoScalePolicies("scaleuppolicyid", cmd.getScaleUpPolicyIds(), counters, interval, true));
 		policies.addAll(getAutoScalePolicies("scaledownpolicyid", cmd.getScaleDownPolicyIds(), counters, interval, false));
+
+		ControlledEntity[] sameOwnerEntities = policies.toArray(new ControlledEntity[policies.size() + 2]);
+		sameOwnerEntities[ sameOwnerEntities.length - 2 ] = loadBalancer;
+		sameOwnerEntities[ sameOwnerEntities.length - 1 ] = profileVO;
+		_accountMgr.checkAccess(UserContext.current().getCaller(), null, true, sameOwnerEntities);
 
 		// validateAutoScaleCounters(loadBalancer.getNetworkId(), counters);
 
@@ -2055,7 +2089,11 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 		}
 		// TODO - Validate threshold
 
-		getEntityInDatabase(ApiConstants.COUNTER_ID, cid, _counterDao);
+		CounterVO counter = _counterDao.findById(cid);
+
+		if (counter == null) {
+			throw new InvalidParameterValueException("Unable to find condition - " + cid);
+		}
 		ConditionVO condition = null;
 
 		s_logger.debug("Adding Condition ");

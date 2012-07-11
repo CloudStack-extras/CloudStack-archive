@@ -84,6 +84,7 @@ public class DeleteAutoScaleVmProfileCmd extends BaseAsyncCmd {
 		boolean result = _lbService.deleteAutoScaleVmProfile(id);
 		if (result) {
 			SuccessResponse response = new SuccessResponse(getCommandName());
+			s_logger.info("Successfully deleted autoscale vm profile id : " + getId());
 			this.setResponseObject(response);
 		} else {
 			s_logger.warn("Failed to delete autoscale vm profile " + getId());

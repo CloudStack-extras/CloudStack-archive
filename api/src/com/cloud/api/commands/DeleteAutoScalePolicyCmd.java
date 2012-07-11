@@ -85,6 +85,7 @@ public class DeleteAutoScalePolicyCmd extends BaseAsyncCmd {
 
 		if (result) {
 			SuccessResponse response = new SuccessResponse(getCommandName());
+			s_logger.info("Successfully deleted autoscale policy id : " + getId());
 			this.setResponseObject(response);
 		} else {
 			s_logger.warn("Failed to delete autoscale policy " + getId());
