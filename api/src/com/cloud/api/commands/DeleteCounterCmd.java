@@ -34,71 +34,71 @@ import com.cloud.user.Account;
 
 @Implementation(description = "Deletes a counter", responseObject = SuccessResponse.class)
 public class DeleteCounterCmd extends BaseAsyncCmd {
-	public static final Logger s_logger = Logger.getLogger(DeleteCounterCmd.class.getName());
-	private static final String s_name = "deletecounterresponse";
+    public static final Logger s_logger = Logger.getLogger(DeleteCounterCmd.class.getName());
+    private static final String s_name = "deletecounterresponse";
 
-	// ///////////////////////////////////////////////////
-	// ////////////// API parameters /////////////////////
-	// ///////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
+    // ////////////// API parameters /////////////////////
+    // ///////////////////////////////////////////////////
 
-	@IdentityMapper(entityTableName = "counter")
-	@Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = true, description = "the ID of the counter")
-	private Long id;
+    @IdentityMapper(entityTableName = "counter")
+    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = true, description = "the ID of the counter")
+    private Long id;
 
-	// ///////////////////////////////////////////////////
-	// ///////////// API Implementation///////////////////
-	// ///////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
+    // ///////////// API Implementation///////////////////
+    // ///////////////////////////////////////////////////
 
-	@Override
-	public void execute() {
-		boolean result = false;
-		try {
-			result = _lbService.deleteCounter(getId());
-		} catch (ResourceInUseException ex) {
-			s_logger.warn("Exception: ", ex);
-			throw new ServerApiException(BaseCmd.RESOURCE_IN_USE_ERROR, ex.getMessage());
-		}
+    @Override
+    public void execute() {
+        boolean result = false;
+        try {
+            result = _lbService.deleteCounter(getId());
+        } catch (ResourceInUseException ex) {
+            s_logger.warn("Exception: ", ex);
+            throw new ServerApiException(BaseCmd.RESOURCE_IN_USE_ERROR, ex.getMessage());
+        }
 
-		if (result) {
-			SuccessResponse response = new SuccessResponse(getCommandName());
-			s_logger.info("Successfully deleted counter id : " + getId());
-			this.setResponseObject(response);
-		} else {
-			s_logger.warn("Failed to delete counter");
-			throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to delete counter.");
-		}
-	}
+        if (result) {
+            SuccessResponse response = new SuccessResponse(getCommandName());
+            s_logger.info("Successfully deleted counter id : " + getId());
+            this.setResponseObject(response);
+        } else {
+            s_logger.warn("Failed to delete counter");
+            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to delete counter.");
+        }
+    }
 
-	// ///////////////////////////////////////////////////
-	// ///////////////// Accessors ///////////////////////
-	// ///////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
+    // ///////////////// Accessors ///////////////////////
+    // ///////////////////////////////////////////////////
 
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	@Override
-	public AsyncJob.Type getInstanceType() {
-		return AsyncJob.Type.Counter;
-	}
+    @Override
+    public AsyncJob.Type getInstanceType() {
+        return AsyncJob.Type.Counter;
+    }
 
-	@Override
-	public long getEntityOwnerId() {
-		return Account.ACCOUNT_ID_SYSTEM;
-	}
+    @Override
+    public long getEntityOwnerId() {
+        return Account.ACCOUNT_ID_SYSTEM;
+    }
 
-	@Override
-	public String getEventType() {
-		return EventTypes.EVENT_COUNTER_DELETE;
-	}
+    @Override
+    public String getEventType() {
+        return EventTypes.EVENT_COUNTER_DELETE;
+    }
 
-	@Override
-	public String getEventDescription() {
-		return "Deleting a counter.";
-	}
+    @Override
+    public String getEventDescription() {
+        return "Deleting a counter.";
+    }
 }

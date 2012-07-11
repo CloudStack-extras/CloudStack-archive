@@ -30,71 +30,71 @@ import com.cloud.user.UserContext;
 
 @Implementation(description="Deletes a autoscale vm group.", responseObject=SuccessResponse.class)
 public class DeleteAutoScaleVmGroupCmd extends BaseAsyncCmd {
-	public static final Logger s_logger = Logger.getLogger(DeleteAutoScaleVmGroupCmd.class.getName());
-	private static final String s_name = "deleteautoscalevmgroupresponse";
-	/////////////////////////////////////////////////////
-	//////////////// API parameters /////////////////////
-	/////////////////////////////////////////////////////
+    public static final Logger s_logger = Logger.getLogger(DeleteAutoScaleVmGroupCmd.class.getName());
+    private static final String s_name = "deleteautoscalevmgroupresponse";
+    /////////////////////////////////////////////////////
+    //////////////// API parameters /////////////////////
+    /////////////////////////////////////////////////////
 
-	@IdentityMapper(entityTableName="autoscale_vmgroups")
-	@Parameter(name=ApiConstants.ID, type=CommandType.LONG, required=true, description="the ID of the autoscale group")
-	private Long id;
+    @IdentityMapper(entityTableName="autoscale_vmgroups")
+    @Parameter(name=ApiConstants.ID, type=CommandType.LONG, required=true, description="the ID of the autoscale group")
+    private Long id;
 
 
-	/////////////////////////////////////////////////////
-	/////////////////// Accessors ///////////////////////
-	/////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////
+    /////////////////// Accessors ///////////////////////
+    /////////////////////////////////////////////////////
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	/////////////////////////////////////////////////////
-	/////////////// API Implementation///////////////////
-	/////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////
+    /////////////// API Implementation///////////////////
+    /////////////////////////////////////////////////////
 
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
 
-	@Override
-	public long getEntityOwnerId() {
-		AutoScaleVmGroup autoScaleVmGroup = _entityMgr.findById(AutoScaleVmGroup.class, getId());
-		if (autoScaleVmGroup != null) {
-			return autoScaleVmGroup.getAccountId();
-		}
+    @Override
+    public long getEntityOwnerId() {
+        AutoScaleVmGroup autoScaleVmGroup = _entityMgr.findById(AutoScaleVmGroup.class, getId());
+        if (autoScaleVmGroup != null) {
+            return autoScaleVmGroup.getAccountId();
+        }
 
-		return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are tracked
-	}
+        return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are tracked
+    }
 
-	@Override
-	public String getEventType() {
-		return EventTypes.EVENT_AUTOSCALEVMGROUP_DELETE;
-	}
+    @Override
+    public String getEventType() {
+        return EventTypes.EVENT_AUTOSCALEVMGROUP_DELETE;
+    }
 
-	@Override
-	public String getEventDescription() {
-		return  "deleting autoscale vm group: " + getId();
-	}
+    @Override
+    public String getEventDescription() {
+        return  "deleting autoscale vm group: " + getId();
+    }
 
-	@Override
-	public void execute(){
-		UserContext.current().setEventDetails("AutoScale Vm Group Id: "+getId());
-		boolean result = _lbService.deleteAutoScaleVmGroup(id);
+    @Override
+    public void execute(){
+        UserContext.current().setEventDetails("AutoScale Vm Group Id: "+getId());
+        boolean result = _lbService.deleteAutoScaleVmGroup(id);
 
-		if (result) {
-			SuccessResponse response = new SuccessResponse(getCommandName());
-			s_logger.info("Successfully deleted autoscale vm group id : " + getId());
-			this.setResponseObject(response);
-		} else {
-			s_logger.warn("Failed to delete autoscale vm group " + getId());
-			throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to delete autoscale vm group");
-		}
-	}
+        if (result) {
+            SuccessResponse response = new SuccessResponse(getCommandName());
+            s_logger.info("Successfully deleted autoscale vm group id : " + getId());
+            this.setResponseObject(response);
+        } else {
+            s_logger.warn("Failed to delete autoscale vm group " + getId());
+            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to delete autoscale vm group");
+        }
+    }
 
-	@Override
-	public AsyncJob.Type getInstanceType() {
-		return AsyncJob.Type.AutoScalePolicy;
-	}
+    @Override
+    public AsyncJob.Type getInstanceType() {
+        return AsyncJob.Type.AutoScalePolicy;
+    }
 }

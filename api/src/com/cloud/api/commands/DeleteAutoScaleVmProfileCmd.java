@@ -30,70 +30,70 @@ import com.cloud.user.UserContext;
 
 @Implementation(description="Deletes a autoscale vm profile.", responseObject=SuccessResponse.class)
 public class DeleteAutoScaleVmProfileCmd extends BaseAsyncCmd {
-	public static final Logger s_logger = Logger.getLogger(DeleteAutoScaleVmProfileCmd.class.getName());
-	private static final String s_name = "deleteautoscalevmprofileresponse";
-	/////////////////////////////////////////////////////
-	//////////////// API parameters /////////////////////
-	/////////////////////////////////////////////////////
+    public static final Logger s_logger = Logger.getLogger(DeleteAutoScaleVmProfileCmd.class.getName());
+    private static final String s_name = "deleteautoscalevmprofileresponse";
+    /////////////////////////////////////////////////////
+    //////////////// API parameters /////////////////////
+    /////////////////////////////////////////////////////
 
-	@IdentityMapper(entityTableName="autoscale_vmprofiles")
-	@Parameter(name=ApiConstants.ID, type=CommandType.LONG, required=true, description="the ID of the autoscale profile")
-	private Long id;
+    @IdentityMapper(entityTableName="autoscale_vmprofiles")
+    @Parameter(name=ApiConstants.ID, type=CommandType.LONG, required=true, description="the ID of the autoscale profile")
+    private Long id;
 
 
-	/////////////////////////////////////////////////////
-	/////////////////// Accessors ///////////////////////
-	/////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////
+    /////////////////// Accessors ///////////////////////
+    /////////////////////////////////////////////////////
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	/////////////////////////////////////////////////////
-	/////////////// API Implementation///////////////////
-	/////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////
+    /////////////// API Implementation///////////////////
+    /////////////////////////////////////////////////////
 
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
 
-	@Override
-	public long getEntityOwnerId() {
-		AutoScaleVmProfile autoScaleVmProfile = _entityMgr.findById(AutoScaleVmProfile.class, getId());
-		if (autoScaleVmProfile != null) {
-			return autoScaleVmProfile.getAccountId();
-		}
+    @Override
+    public long getEntityOwnerId() {
+        AutoScaleVmProfile autoScaleVmProfile = _entityMgr.findById(AutoScaleVmProfile.class, getId());
+        if (autoScaleVmProfile != null) {
+            return autoScaleVmProfile.getAccountId();
+        }
 
-		return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are tracked
-	}
+        return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are tracked
+    }
 
-	@Override
-	public String getEventType() {
-		return EventTypes.EVENT_AUTOSCALEVMPROFILE_DELETE;
-	}
+    @Override
+    public String getEventType() {
+        return EventTypes.EVENT_AUTOSCALEVMPROFILE_DELETE;
+    }
 
-	@Override
-	public String getEventDescription() {
-		return  "deleting autoscale vm profile: " + getId();
-	}
+    @Override
+    public String getEventDescription() {
+        return  "deleting autoscale vm profile: " + getId();
+    }
 
-	@Override
-	public void execute(){
-		UserContext.current().setEventDetails("AutoScale VM Profile Id: "+getId());
-		boolean result = _lbService.deleteAutoScaleVmProfile(id);
-		if (result) {
-			SuccessResponse response = new SuccessResponse(getCommandName());
-			s_logger.info("Successfully deleted autoscale vm profile id : " + getId());
-			this.setResponseObject(response);
-		} else {
-			s_logger.warn("Failed to delete autoscale vm profile " + getId());
-			throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to delete autoscale vm profile");
-		}
-	}
+    @Override
+    public void execute(){
+        UserContext.current().setEventDetails("AutoScale VM Profile Id: "+getId());
+        boolean result = _lbService.deleteAutoScaleVmProfile(id);
+        if (result) {
+            SuccessResponse response = new SuccessResponse(getCommandName());
+            s_logger.info("Successfully deleted autoscale vm profile id : " + getId());
+            this.setResponseObject(response);
+        } else {
+            s_logger.warn("Failed to delete autoscale vm profile " + getId());
+            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to delete autoscale vm profile");
+        }
+    }
 
-	@Override
-	public AsyncJob.Type getInstanceType() {
-		return AsyncJob.Type.AutoScaleVmProfile;
-	}
+    @Override
+    public AsyncJob.Type getInstanceType() {
+        return AsyncJob.Type.AutoScaleVmProfile;
+    }
 }
