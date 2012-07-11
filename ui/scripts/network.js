@@ -837,7 +837,7 @@
                             action: cloudStack.lbStickyPolicy.dialog()
                           }
                         },
-			  'autoScale': {
+                        'autoScale': {
                           label: 'AutoScale',
                           custom: {
                             buttonLabel: 'label.configure',

@@ -50,8 +50,8 @@
         );
 
         var conditionalFields = {
-	 
-	   templateCategory: {
+
+        			templateCategory: {
                       label: 'Template Catogary',
                       select: function(args) {
                             args.response.success({
@@ -64,7 +64,8 @@
                             });
                           }
                     },
-           templateNames: {
+
+                    templateNames: {
                       label: 'Template Name',
                       select: function(args) {
                         $.ajax({
@@ -84,8 +85,9 @@
                           }
                         });
                       }
-                    }, 
-          serviceOfferingId: {
+                    },
+
+                    serviceOfferingId: {
                       label: 'label.compute.offering',
                       select: function(args) {
                         $.ajax({
@@ -95,60 +97,66 @@
                           success: function(json) {
                             var serviceofferings = json.listserviceofferingsresponse.serviceoffering;
                             args.response.success({
-				data:  $.map(serviceofferings, function(serviceoffering) {
+                            	data:  $.map(serviceofferings, function(serviceoffering) {
                                 return {
                                 id: serviceoffering.id,
                                 description: serviceoffering.name
-                              };
-                            })
-
-			    });
+                                };
+                            	})
+                            });
                           }
                         });
                       }
                     },
-          minInstance: {
-                    label: 'Min. Instance',
-                    validation: { required: true }
-                  },
-	  maxInstance: {
-                    label: 'Max. Instance',
-                    validation: { required: true }
-                  },
-	  quietTime: {
-                    label: 'Quiet Time (in sec)',
-                    validation: { required: true }
-                  },
-          destroyVMgracePeriod: {
-                    label: 'Destroy VM Grace Period',
-                    validation: { required: true }
-                  },
-	  interval: {
-                    label: 'Interval (in sec)',
-                    validation: { required: true }
-                  },
-          securityGroups: {
-                    label: 'label.menu.security.groups',
-		    select: function(args) {
-                        $.ajax({
-                          url: createURL("listSecurityGroups&listAll=true"),
-                          dataType: "json",
-                          async: true,
-                          success: function(json) {
-                            var securitygroups = json.listsecuritygroupsresponse.securitygroup;
-                            args.response.success({
-                                data:  $.map(securitygroups, function(securitygroup) {
-                                return {
-                                id: securitygroup.id,
-                                description: securitygroup.name
-                                };
-                                })
-                            });
-                          }
-                        });
+
+                    minInstance: {
+                    	label: 'Min. Instance',
+                    	validation: { required: true }
+                    },
+
+                    maxInstance: {
+                    	label: 'Max. Instance',
+                    	validation: { required: true }
+                    },
+
+                    quietTime: {
+                    	label: 'Quiet Time (in sec)',
+                    	validation: { required: true }
+                    },
+
+                    destroyVMgracePeriod: {
+                    	label: 'Destroy VM Grace Period',
+                    	validation: { required: true }
+                    },
+
+                    interval: {
+                    	label: 'Interval (in sec)',
+                    	validation: { required: true }
+                    },
+
+                    securityGroups: {
+                    	label: 'label.menu.security.groups',
+                    	select: function(args) {
+                        	$.ajax({
+                        		url: createURL("listSecurityGroups&listAll=true"),
+                        		dataType: "json",
+                        		async: true,
+                        		success: function(json) {
+                        			var securitygroups = json.listsecuritygroupsresponse.securitygroup;
+                        			args.response.success({
+                        				data:  $.map(securitygroups, function(securitygroup) {
+                        					return {
+                        						id: securitygroup.id,
+                        						description: securitygroup.name
+                        					};
+                        				})
+                        			});
+                        	}
+                        	});
                     }
                   },
-	  DiskOfferings: {
+
+                  DiskOfferings: {
                     label: 'label.menu.disk.offerings',
                     select: function(args) {
                         $.ajax({
@@ -169,17 +177,20 @@
                         });
                     }
                   },
-          snmpCommunity: {
+
+                  snmpCommunity: {
                     label: 'SNMP Community',
                     validation: { required: true }
                   },
-	  snmpPort: {
+
+                  snmpPort: {
                     label: 'SNMP Port',
                     validation: { required: true }
                   },
-          autoscaleUsername: {
+
+                  autoscaleUsername: {
                     label: 'AutoScale Username',
-		    /*select: function(args) {
+                    /*select: function(args) {
                         $.ajax({
                           url: createURL("listUsers&domainid=" + args.context.users[0].domainid),
                           dataType: "json",
