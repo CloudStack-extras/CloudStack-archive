@@ -31,144 +31,144 @@ import com.cloud.utils.net.NetUtils;
 @Inheritance(strategy=InheritanceType.JOINED)
 public class AutoScaleVmGroupVO implements AutoScaleVmGroup {
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name="id")
-	long id;
+    @Id
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @Column(name="id")
+    long id;
 
-	@Column(name="uuid")
-	String uuid;
+    @Column(name="uuid")
+    String uuid;
 
-	@Column(name="zone_id", updatable=false)
-	private long zoneId;
+    @Column(name="zone_id", updatable=false)
+    private long zoneId;
 
-	@Column(name="domain_id", updatable=false)
-	private long domainId;
+    @Column(name="domain_id", updatable=false)
+    private long domainId;
 
-	@Column(name="account_id")
-	private long accountId;
+    @Column(name="account_id")
+    private long accountId;
 
-	@Column(name = "load_balancer_id")
-	private long loadBalancerId;
+    @Column(name = "load_balancer_id")
+    private long loadBalancerId;
 
-	@Column(name="min_members", updatable=true)
-	private int minMembers;
+    @Column(name="min_members", updatable=true)
+    private int minMembers;
 
-	@Column(name="max_members", updatable=true)
-	private int maxMembers;
+    @Column(name="max_members", updatable=true)
+    private int maxMembers;
 
-	@Column(name="member_port")
-	private int memberPort;
+    @Column(name="member_port")
+    private int memberPort;
 
-	@Column(name="interval")
-	private Integer interval = NetUtils.DEFAULT_AUTOSCALE_POLICY_INTERVAL_TIME;
+    @Column(name="interval")
+    private Integer interval = NetUtils.DEFAULT_AUTOSCALE_POLICY_INTERVAL_TIME;
 
-	@Column(name = "profile_id")
-	private long profileId;
+    @Column(name = "profile_id")
+    private long profileId;
 
-	@Column(name=GenericDao.REMOVED_COLUMN)
-	protected Date removed;
+    @Column(name=GenericDao.REMOVED_COLUMN)
+    protected Date removed;
 
-	@Column(name=GenericDao.CREATED_COLUMN)
-	protected Date created;
+    @Column(name=GenericDao.CREATED_COLUMN)
+    protected Date created;
 
-	@Column(name = "revoke")
-	private boolean revoke = false;
+    @Column(name = "revoke")
+    private boolean revoke = false;
 
-	@Column(name = "state")
-	private String state;
+    @Column(name = "state")
+    private String state;
 
-	public AutoScaleVmGroupVO() {
-	}
+    public AutoScaleVmGroupVO() {
+    }
 
-	public AutoScaleVmGroupVO( long lbRuleId, long zoneId, long domainId, long accountId, Integer minMembers, Integer maxMembers, Integer memberPort, Integer interval, long profileId) {
-		this.uuid = UUID.randomUUID().toString();
-		this.minMembers = minMembers;
-		this.maxMembers = maxMembers;
-		this.memberPort = memberPort;
-		this.profileId = profileId;
-		this.accountId = accountId;
-		this.domainId = domainId;
-		this.zoneId = zoneId;
+    public AutoScaleVmGroupVO( long lbRuleId, long zoneId, long domainId, long accountId, Integer minMembers, Integer maxMembers, Integer memberPort, Integer interval, long profileId) {
+        this.uuid = UUID.randomUUID().toString();
+        this.minMembers = minMembers;
+        this.maxMembers = maxMembers;
+        this.memberPort = memberPort;
+        this.profileId = profileId;
+        this.accountId = accountId;
+        this.domainId = domainId;
+        this.zoneId = zoneId;
 
-		if (interval != null) {
-			this.interval = interval;
-		}
-	}
+        if (interval != null) {
+            this.interval = interval;
+        }
+    }
 
-	@Override
-	public String toString() {
-		return new StringBuilder("AutoScaleVmGroupVO[").append("id").append("]").toString();
-	}
+    @Override
+    public String toString() {
+        return new StringBuilder("AutoScaleVmGroupVO[").append("id").append("]").toString();
+    }
 
-	@Override
-	public long getId()    {
-		return id;
-	}
+    @Override
+    public long getId()    {
+        return id;
+    }
 
-	public long getZoneId() {
-		return zoneId;
-	}
-	@Override
-	public long getDomainId() {
-		return domainId;
-	}
-	@Override
-	public long getAccountId() {
-		return accountId;
-	}
-	@Override
-	public long getLoadBalancerId() {
-		return loadBalancerId;
-	}
+    public long getZoneId() {
+        return zoneId;
+    }
+    @Override
+    public long getDomainId() {
+        return domainId;
+    }
+    @Override
+    public long getAccountId() {
+        return accountId;
+    }
+    @Override
+    public long getLoadBalancerId() {
+        return loadBalancerId;
+    }
 
-	@Override
-	public int getMinMembers() {
-		return minMembers;
-	}
+    @Override
+    public int getMinMembers() {
+        return minMembers;
+    }
 
-	@Override
-	public int getMaxMembers() {
-		return maxMembers;
-	}
+    @Override
+    public int getMaxMembers() {
+        return maxMembers;
+    }
 
-	@Override
-	public int getMemberPort() {
-		return memberPort;
-	}
+    @Override
+    public int getMemberPort() {
+        return memberPort;
+    }
 
-	@Override
-	public int getInterval() {
-		return interval;
-	}
+    @Override
+    public int getInterval() {
+        return interval;
+    }
 
-	@Override
-	public long getProfileId() {
-		return profileId;
-	}
+    @Override
+    public long getProfileId() {
+        return profileId;
+    }
 
-	public Date getRemoved() {
-		return removed;
-	}
+    public Date getRemoved() {
+        return removed;
+    }
 
-	public Date getCreated() {
-		return created;
-	}
+    public Date getCreated() {
+        return created;
+    }
 
-	@Override
-	public boolean isRevoke() {
-		return false;
-	}
+    @Override
+    public boolean isRevoke() {
+        return false;
+    }
 
-	public void setRevoke(boolean revoke) {
-		this.revoke = revoke;
-	}
+    public void setRevoke(boolean revoke) {
+        this.revoke = revoke;
+    }
 
-	public String getState() {
-		return "";
-	}
+    public String getState() {
+        return "";
+    }
 
-	public void setState(String state) {
-		this.state = state;
-	}
+    public void setState(String state) {
+        this.state = state;
+    }
 }
