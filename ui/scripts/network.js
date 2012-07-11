@@ -837,6 +837,13 @@
                             action: cloudStack.lbStickyPolicy.dialog()
                           }
                         },
+			  'autoScale': {
+                          label: 'AutoScale',
+                          custom: {
+                            buttonLabel: 'label.configure',
+                            action: cloudStack.autoScale.dialog()
+                          }
+                        },
                         'add-vm': {
                           label: 'label.add.vms',
                           addButton: true
