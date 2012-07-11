@@ -50,6 +50,41 @@
         );
 
         var conditionalFields = {
+	 
+	   templateCategory: {
+                      label: 'Template Catogary',
+                      select: function(args) {
+                            args.response.success({
+                              data: [
+                                { catogary: 'all', description: _l('ui.listView.filters.all') },
+                                { catogary: 'featured', description: _l('label.featured') },
+                                { catogary: 'Community', description: _l('label.menu.community.templates') },
+                                { catogary: 'self', description: _l('ui.listView.filters.mine') }
+                              ]
+                            });
+                          }
+                    },
+           templateNames: {
+                      label: 'Template Name',
+                      select: function(args) {
+                        $.ajax({
+                          url: createURL("listTemplates&templatefilter=all" ),
+                          dataType: "json",
+                          async: true,
+                          success: function(json) {
+                            var templates = json.listtemplatesresponse.template;
+                            args.response.success({
+                                data:  $.map(templates, function(template) {
+                                return {
+                                id: template.id,
+                                description: template.name
+                              };
+                            })
+                            });
+                          }
+                        });
+                      }
+                    }, 
           serviceOfferingId: {
                       label: 'label.compute.offering',
                       select: function(args) {
@@ -72,12 +107,12 @@
                         });
                       }
                     },
-          minMember: {
-                    label: 'Min. Member',
+          minInstance: {
+                    label: 'Min. Instance',
                     validation: { required: true }
                   },
-	  maxMember: {
-                    label: 'Max. Member',
+	  maxInstance: {
+                    label: 'Max. Instance',
                     validation: { required: true }
                   },
 	  quietTime: {
@@ -164,36 +199,7 @@
                         });
                     }*/
 
-                  },
-
-
-
-          methodname: {
-            label: 'Stickiness method',
-            select: function(args) {
-              var $select = args.$select;
-              var $form = $select.closest('form');
-              var stickyOptions = [];
-
-              stickinessCapabilities.push({ methodname: 'None', paramlist: [] });
-              $(stickinessCapabilities).each(function() {
-                var stickyCapability = this;
-
-                stickyOptions.push({
-                  id: stickyCapability.methodname,
-                  description: stickyCapability.methodname
-                });
-              });
-
-              stickyOptions = stickyOptions.sort(function() {
-                return this.id != 'None';
-              });
-
-              args.response.success({
-                data: stickyOptions
-              }, 500);
-            }
-          }
+                  }
         };
 
        var hello = $.extend(conditionalFields, baseFields);
