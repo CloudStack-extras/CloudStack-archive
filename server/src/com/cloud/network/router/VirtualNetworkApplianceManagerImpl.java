@@ -1215,7 +1215,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         Network network = _networkDao.acquireInLockTable(guestNetwork.getId());
         if (network == null) {
             throw new ConcurrentOperationException("Unable to lock network " + guestNetwork.getId());
-        }
+        } 
 
         try {
             //Check if providers are supported in the physical networks
@@ -1265,7 +1265,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                 _routerDao.addRouterToGuestNetwork(router, network);
                 
                 routers.add(router);
-            }
+                }
         } finally {
             if (network != null) {
                 _networkDao.releaseFromLockTable(network.getId());
@@ -1284,7 +1284,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Creating the router " + id + " in datacenter "  + dest.getDataCenter());
         }
-
+        
         ServiceOfferingVO routerOffering = _serviceOfferingDao.findById(svcOffId);
 
         // Router is the network element, we don't know the hypervisor type yet.
@@ -1381,7 +1381,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         boolean setupPublicNetwork = false;
         if (publicNetwork != null) {
             setupPublicNetwork = publicNetwork.first();
-        }
+            }
         
         //Form networks
         List<Pair<NetworkVO, NicProfile>> networks = new ArrayList<Pair<NetworkVO, NicProfile>>(3);
@@ -1713,7 +1713,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
          * virtual router itself. */
         if (dnsProvided || dhcpProvided) {
             if (defaultDns1 != null) {
-                buf.append(" dns1=").append(defaultDns1);
+            buf.append(" dns1=").append(defaultDns1);
             }
             if (defaultDns2 != null) {
                 buf.append(" dns2=").append(defaultDns2);
@@ -2058,9 +2058,9 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
                 if (addIp) {
                     PublicIp publicIp = new PublicIp(userIp, _vlanDao.findById(userIp.getVlanId()), 
                             NetUtils.createSequenceBasedMacAddress(userIp.getMacAddress()));
-                    allPublicIps.add(publicIp);
-                }
+                allPublicIps.add(publicIp);
             }
+        }
         }
         
         //Get public Ips that should be handled by router
@@ -2607,7 +2607,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             int srcPort = rule.getSourcePortStart();
             List<LbDestination> destinations = rule.getDestinations();
             List<LbStickinessPolicy> stickinessPolicies = rule.getStickinessPolicies();
-            LoadBalancerTO lb = new LoadBalancerTO(srcIp, srcPort, protocol, algorithm, revoked, false, destinations, stickinessPolicies);
+            LoadBalancerTO lb = new LoadBalancerTO(rule.getId(), srcIp, srcPort, protocol, algorithm, revoked, false, destinations, stickinessPolicies);
             lbs[i++] = lb;
         }
         String RouterPublicIp = null;

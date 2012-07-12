@@ -811,9 +811,9 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                             if (vmGuru.recreateNeeded(vmProfile, destHostId, cmds, ctx)) {
                             	recreate = true;
                             } else {
-                            	throw new ExecutionException("Unable to start " + vm + " due to error in finalizeStart, not retrying");
-                            }
+                            throw new ExecutionException("Unable to start " + vm + " due to error in finalizeStart, not retrying");
                         }
+                    }
                     }
                     s_logger.info("Unable to start VM on " + dest.getHost() + " due to " + (startAnswer == null ? " no start answer" : startAnswer.getDetails()));
                     
@@ -1829,7 +1829,7 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                         vm.setHostId(null);
                         _vmDao.persist(vm);
                  }*/
-        }
+                     }
 
         for (final AgentVmInfo left : infos.values()) {
         	if (VirtualMachineName.isValidVmName(left.name)) continue;  // if the vm follows cloudstack naming ignore it for stopping
@@ -2471,24 +2471,24 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
             //1) allocate and prepare nic
             NicProfile nic = _networkMgr.createNicForVm(network, requested, context, vmProfile, true);
             
-            //2) Convert vmProfile to vmTO
-            HypervisorGuru hvGuru = _hvGuruMgr.getGuru(vmProfile.getVirtualMachine().getHypervisorType());
-            VirtualMachineTO vmTO = hvGuru.implement(vmProfile);
-            
-            //3) Convert nicProfile to NicTO
-            NicTO nicTO = toNicTO(nic, vmProfile.getVirtualMachine().getHypervisorType());
-            
-            //4) plug the nic to the vm
-            VirtualMachineGuru<VMInstanceVO> vmGuru = getVmGuru(vmVO);
-            
-            s_logger.debug("Plugging nic for vm " + vm + " in network " + network);
-            if (vmGuru.plugNic(network, nicTO, vmTO, context, dest)) {
-                s_logger.debug("Nic is plugged successfully for vm " + vm + " in network " + network + ". Vm  is a part of network now");
-                return nic;
-            } else {
-                s_logger.warn("Failed to plug nic to the vm " + vm + " in network " + network);
-                return null;
-            }
+        //2) Convert vmProfile to vmTO
+        HypervisorGuru hvGuru = _hvGuruMgr.getGuru(vmProfile.getVirtualMachine().getHypervisorType());
+        VirtualMachineTO vmTO = hvGuru.implement(vmProfile);
+        
+        //3) Convert nicProfile to NicTO
+        NicTO nicTO = toNicTO(nic, vmProfile.getVirtualMachine().getHypervisorType());
+        
+        //4) plug the nic to the vm
+        VirtualMachineGuru<VMInstanceVO> vmGuru = getVmGuru(vmVO);
+        
+        s_logger.debug("Plugging nic for vm " + vm + " in network " + network);
+        if (vmGuru.plugNic(network, nicTO, vmTO, context, dest)) {
+            s_logger.debug("Nic is plugged successfully for vm " + vm + " in network " + network + ". Vm  is a part of network now");
+            return nic;
+        } else {
+            s_logger.warn("Failed to plug nic to the vm " + vm + " in network " + network);
+            return null;
+        }
         } else if (vm.getState() == State.Stopped) {
             //1) allocate nic
             return _networkMgr.createNicForVm(network, requested, context, vmProfile, false);
