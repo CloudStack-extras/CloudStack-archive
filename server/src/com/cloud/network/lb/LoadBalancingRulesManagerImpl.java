@@ -244,7 +244,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                 serviceResponse.setName(service.getName());
                 if ("Lb".equalsIgnoreCase(service.getName())) {
                     Map<Capability, String> serviceCapabilities = serviceCapabilitiesMap
-                            .get(service);
+                    .get(service);
                     if (serviceCapabilities != null) {
                         for (Capability capability : serviceCapabilities
                                 .keySet()) {
@@ -469,6 +469,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             throw new InvalidParameterValueException("Failed to assign to load balancer " + loadBalancerId + ", the load balancer was not found.");
         }
 
+
         List<LoadBalancerVMMapVO> mappedInstances = _lb2VmMapDao.listByLoadBalancerId(loadBalancerId, false);
         Set<Long> mappedInstanceIds = new HashSet<Long>();
         for (LoadBalancerVMMapVO mappedInstance : mappedInstances) {
@@ -524,6 +525,12 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             map = _lb2VmMapDao.persist(map);
         }
         txn.commit();
+
+        if(_autoScaleVmGroupDao.isAutoScaleLoadBalancer(loadBalancerId)) {
+            // Nothing needs to be done for an autoscaled loadbalancer,
+            // just persist and proceed.
+            return true;
+        }
 
         boolean success = false;
         FirewallRule.State backupState = loadBalancer.getState();
@@ -588,6 +595,12 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                 map.setRevoke(true);
                 _lb2VmMapDao.persist(map);
                 s_logger.debug("Set load balancer rule for revoke: rule id " + loadBalancerId + ", vmId " + instanceId);
+            }
+
+            if(_autoScaleVmGroupDao.isAutoScaleLoadBalancer(loadBalancerId)) {
+                // Nothing needs to be done for an autoscaled loadbalancer,
+                // just persist and proceed.
+                return true;
             }
 
             if (!applyLoadBalancerConfig(loadBalancerId)) {
@@ -789,7 +802,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             // Validate ip address
             if (ipAddressVO == null) {
                 throw new InvalidParameterValueException("Unable to create load balance rule; ip id=" + ipAddrId + "" +
-                        " doesn't exist in the system");
+                " doesn't exist in the system");
             } else if (ipAddressVO.isOneToOneNat()) {
                 throw new NetworkRuleConflictException("Can't do load balance on ip address: " + ipAddressVO.getAddress());
             }
@@ -1178,7 +1191,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         // Nic nic = _nicDao.findByInstanceIdAndNetworkIdIncludingRemoved(lb.getNetworkId(), vm.getId());
         // dstIp = nic.getIp4Address();
         // LbDestination lbDst = new LbDestination(lb.getDefaultPortStart(), lb.getDefaultPortEnd(), dstIp,
-// lbVmMap.isRevoke());
+        // lbVmMap.isRevoke());
         // dstList.add(lbDst);
         // }
         // return dstList;
@@ -1345,7 +1358,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         for (Counter counter : counters) {
             if (!supportedCounters.contains(counter.getSource())) {
                 throw new InvalidParameterException("AutoScale counter with source='" + counter.getSource() + "' is not supported " +
-                        "in the network where lb is configured");
+                "in the network where lb is configured");
             }
         }
     }
@@ -1803,7 +1816,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             Account caller = UserContext.current().getCaller();
 
             Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean,
-                    ListProjectResourcesCriteria>(domainId, isRecursive, null);
+            ListProjectResourcesCriteria>(domainId, isRecursive, null);
             _accountMgr.buildACLSearchParameters(caller, id, accountName, null, permittedAccounts, domainIdRecursiveListProject,
                     listAll, false);
             domainId = domainIdRecursiveListProject.first();
