@@ -344,9 +344,7 @@
               async: false,
               success: function(data) {
                 args.response.success({								  
-                  data: $.grep(data.listnetworksresponse.network, function(item) {
-									  return (item.vpcid == null);
-									})
+                  data: data.listnetworksresponse.network
                 });
               },
               error: function(data) {
@@ -1085,8 +1083,11 @@
               }
             }
 											
-						if("vpc" in args.context) 
-						  array1.push("&vpcid=" + args.context.vpc[0].id);						
+						if("vpc" in args.context) {
+						  $.extend(data, {
+							  vpcid: args.context.vpc[0].id
+							});									
+            }							
 						
             $.ajax({
               url: createURL("listPublicIpAddresses&listAll=true&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
@@ -3487,6 +3488,7 @@
             },
             editVpc: {
               label: 'Edit VPC',
+              textLabel: 'label.configure',
               action: {
                 custom: cloudStack.uiCustom.vpc(cloudStack.vpc)
               }
