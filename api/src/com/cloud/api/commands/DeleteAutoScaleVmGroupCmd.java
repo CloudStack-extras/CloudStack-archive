@@ -81,7 +81,7 @@ public class DeleteAutoScaleVmGroupCmd extends BaseAsyncCmd {
     @Override
     public void execute(){
         UserContext.current().setEventDetails("AutoScale Vm Group Id: "+getId());
-        boolean result = _lbService.deleteAutoScaleVmGroup(id);
+        boolean result = _autoScaleService.deleteAutoScaleVmGroup(id);
 
         if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());

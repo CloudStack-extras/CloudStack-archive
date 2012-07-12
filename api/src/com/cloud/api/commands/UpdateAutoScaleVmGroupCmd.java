@@ -70,7 +70,7 @@ public class UpdateAutoScaleVmGroupCmd extends BaseAsyncCmd {
     @Override
     public void execute() throws ServerApiException {
         UserContext.current().setEventDetails("AutoScale Vm Group Id: " + getId());
-        AutoScaleVmGroup result = _lbService.updateAutoScaleVmGroup(this);
+        AutoScaleVmGroup result = _autoScaleService.updateAutoScaleVmGroup(this);
         if (result != null) {
             AutoScaleVmGroupResponse response = _responseGenerator.createAutoScaleVmGroupResponse(result);
             response.setResponseName(getCommandName());
@@ -126,7 +126,7 @@ public class UpdateAutoScaleVmGroupCmd extends BaseAsyncCmd {
             return autoScaleVmGroup.getAccountId();
         }
         return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are
-// tracked
+        // tracked
     }
 
     @Override

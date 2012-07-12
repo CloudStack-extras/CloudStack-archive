@@ -23,9 +23,7 @@ import com.cloud.api.IdentityMapper;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
-import com.cloud.api.BaseCmd.CommandType;
 import com.cloud.api.response.AutoScaleVmGroupResponse;
-import com.cloud.api.response.UserVmResponse;
 import com.cloud.async.AsyncJob;
 import com.cloud.event.EventTypes;
 import com.cloud.exception.InvalidParameterValueException;
@@ -73,7 +71,7 @@ public class CreateAutoScaleVmGroupCmd extends BaseAsyncCreateCmd {
     /////////////////////////////////////////////////////
 
     @Override
-	public String getEntityTable() {
+    public String getEntityTable() {
         return "autoscale_vm_groups";
     }
 
@@ -85,12 +83,12 @@ public class CreateAutoScaleVmGroupCmd extends BaseAsyncCreateCmd {
         return maxMembers;
     }
 
-    
-    public Integer getInterval() {
-		return interval;
-	}
 
-	public Long getProfileId() {
+    public Integer getInterval() {
+        return interval;
+    }
+
+    public Long getProfileId() {
         return profileId;
     }
 
@@ -123,8 +121,8 @@ public class CreateAutoScaleVmGroupCmd extends BaseAsyncCreateCmd {
     public long getEntityOwnerId() {
         LoadBalancer lb = _entityMgr.findById(LoadBalancer.class, getLbRuleId());
         if(lb == null) {
-			throw new InvalidParameterValueException("Unable to find loadbalancer from lbRuleId=" + getLbRuleId());
-		}
+            throw new InvalidParameterValueException("Unable to find loadbalancer from lbRuleId=" + getLbRuleId());
+        }
         return lb.getAccountId();
     }
 
@@ -159,8 +157,8 @@ public class CreateAutoScaleVmGroupCmd extends BaseAsyncCreateCmd {
     }
 
     @Override
-	public void create() throws ResourceAllocationException{
-        AutoScaleVmGroup result = _lbService.createAutoScaleVmGroup(this);
+    public void create() throws ResourceAllocationException{
+        AutoScaleVmGroup result = _autoScaleService.createAutoScaleVmGroup(this);
         if (result != null) {
             this.setEntityId(result.getId());
             AutoScaleVmGroupResponse response = _responseGenerator.createAutoScaleVmGroupResponse(result);
@@ -177,8 +175,8 @@ public class CreateAutoScaleVmGroupCmd extends BaseAsyncCreateCmd {
         AutoScaleVmGroup vmGroup = null;
         try
         {
-        	success = true; // Temporary, till we call configure.
-//            success = _lbService.configureAutoScaleVmGroup(this);
+            success = true; // Temporary, till we call configure.
+            //            success = _lbService.configureAutoScaleVmGroup(this);
             vmGroup = _entityMgr.findById(AutoScaleVmGroup.class, getEntityId());
             AutoScaleVmGroupResponse responseObject = _responseGenerator.createAutoScaleVmGroupResponse(vmGroup);
             setResponseObject(responseObject);

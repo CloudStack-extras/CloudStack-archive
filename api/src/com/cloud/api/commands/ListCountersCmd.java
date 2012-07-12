@@ -58,7 +58,7 @@ public class ListCountersCmd extends BaseListCmd {
     @Override
     public void execute() {
         List<? extends Counter> counters = null;
-        counters = _lbService.listCounters(this);
+        counters = _autoScaleService.listCounters(this);
         ListResponse<CounterResponse> response = new ListResponse<CounterResponse>();
         List<CounterResponse> ctrResponses = new ArrayList<CounterResponse>();
         for (Counter ctr : counters) {

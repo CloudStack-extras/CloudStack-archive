@@ -77,7 +77,7 @@ public class CreateCounterCmd extends BaseAsyncCreateCmd {
     @Override
     public void create() {
         Counter ctr = null;
-        ctr = _lbService.createCounter(this);
+        ctr = _autoScaleService.createCounter(this);
 
         if (ctr != null) {
             this.setEntityId(ctr.getId());

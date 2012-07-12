@@ -48,7 +48,7 @@ public class DisableAutoScaleVmGroupCmd extends BaseCmd {
 
     @Override
     public void execute() {
-        AutoScaleVmGroup result = _lbService.disableAutoScaleVmGroup(getId());
+        AutoScaleVmGroup result = _autoScaleService.disableAutoScaleVmGroup(getId());
         if (result != null) {
             AutoScaleVmGroupResponse response = _responseGenerator.createAutoScaleVmGroupResponse(result);
             response.setResponseName(getCommandName());
@@ -78,7 +78,7 @@ public class DisableAutoScaleVmGroupCmd extends BaseCmd {
             return autoScaleVmGroup.getAccountId();
         }
         return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are
-// tracked
+        // tracked
     }
 
 }

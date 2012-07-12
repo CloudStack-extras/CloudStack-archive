@@ -28,58 +28,58 @@ import com.cloud.network.as.AutoScalePolicy;
 
 @Implementation(description = "Lists autoscale policies.", responseObject = AutoScalePolicyResponse.class)
 public class ListAutoScalePoliciesCmd extends BaseListAccountResourcesCmd {
-	public static final Logger s_logger = Logger.getLogger(ListAutoScalePoliciesCmd.class.getName());
+    public static final Logger s_logger = Logger.getLogger(ListAutoScalePoliciesCmd.class.getName());
 
-	private static final String s_name = "listautoscalepoliciesresponse";
+    private static final String s_name = "listautoscalepoliciesresponse";
 
-	// ///////////////////////////////////////////////////
-	// ////////////// API parameters /////////////////////
-	// ///////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
+    // ////////////// API parameters /////////////////////
+    // ///////////////////////////////////////////////////
 
-	@IdentityMapper(entityTableName = "autoscale_policies")
-	@Parameter(name = ApiConstants.ID, type = CommandType.LONG, description = "the ID of the autoscale policy")
-	private Long id;
+    @IdentityMapper(entityTableName = "autoscale_policies")
+    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, description = "the ID of the autoscale policy")
+    private Long id;
 
-	@IdentityMapper(entityTableName = "conditions")
-	@Parameter(name = ApiConstants.CONDITION_ID, type = CommandType.LONG, description = "the ID of the condition of the policy")
-	private Long conditionId;
+    @IdentityMapper(entityTableName = "conditions")
+    @Parameter(name = ApiConstants.CONDITION_ID, type = CommandType.LONG, description = "the ID of the condition of the policy")
+    private Long conditionId;
 
-	// ///////////////////////////////////////////////////
-	// ///////////////// Accessors ///////////////////////
-	// ///////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
+    // ///////////////// Accessors ///////////////////////
+    // ///////////////////////////////////////////////////
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public Long getConditionId() {
-		return conditionId;
-	}
+    public Long getConditionId() {
+        return conditionId;
+    }
 
-	// ///////////////////////////////////////////////////
-	// ///////////// API Implementation///////////////////
-	// ///////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
+    // ///////////// API Implementation///////////////////
+    // ///////////////////////////////////////////////////
 
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
 
-	@Override
-	public void execute() {
-		List<? extends AutoScalePolicy> autoScalePolicies = _lbService.listAutoScalePolicies(this);
-		ListResponse<AutoScalePolicyResponse> response = new ListResponse<AutoScalePolicyResponse>();
-		List<AutoScalePolicyResponse> responses = new ArrayList<AutoScalePolicyResponse>();
-		if (autoScalePolicies != null) {
-			for (AutoScalePolicy autoScalePolicy : autoScalePolicies) {
-				AutoScalePolicyResponse autoScalePolicyResponse = _responseGenerator.createAutoScalePolicyResponse(autoScalePolicy);
-				autoScalePolicyResponse.setObjectName("autoscalepolicy");
-				responses.add(autoScalePolicyResponse);
-			}
-		}
-		response.setResponses(responses);
-		response.setResponseName(getCommandName());
-		this.setResponseObject(response);
-	}
+    @Override
+    public void execute() {
+        List<? extends AutoScalePolicy> autoScalePolicies = _autoScaleService.listAutoScalePolicies(this);
+        ListResponse<AutoScalePolicyResponse> response = new ListResponse<AutoScalePolicyResponse>();
+        List<AutoScalePolicyResponse> responses = new ArrayList<AutoScalePolicyResponse>();
+        if (autoScalePolicies != null) {
+            for (AutoScalePolicy autoScalePolicy : autoScalePolicies) {
+                AutoScalePolicyResponse autoScalePolicyResponse = _responseGenerator.createAutoScalePolicyResponse(autoScalePolicy);
+                autoScalePolicyResponse.setObjectName("autoscalepolicy");
+                responses.add(autoScalePolicyResponse);
+            }
+        }
+        response.setResponses(responses);
+        response.setResponseName(getCommandName());
+        this.setResponseObject(response);
+    }
 
 }

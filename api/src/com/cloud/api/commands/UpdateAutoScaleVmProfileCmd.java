@@ -61,7 +61,7 @@ public class UpdateAutoScaleVmProfileCmd extends BaseAsyncCmd {
     @Override
     public void execute() throws ServerApiException {
         UserContext.current().setEventDetails("AutoScale Policy Id: " + getId());
-        AutoScaleVmProfile result = _lbService.updateAutoScaleVmProfile(this);
+        AutoScaleVmProfile result = _autoScaleService.updateAutoScaleVmProfile(this);
         if (result != null) {
             AutoScaleVmProfileResponse response = _responseGenerator.createAutoScaleVmProfileResponse(result);
             response.setResponseName(getCommandName());
@@ -109,7 +109,7 @@ public class UpdateAutoScaleVmProfileCmd extends BaseAsyncCmd {
             return vmProfile.getAccountId();
         }
         return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are
-// tracked
+        // tracked
     }
 
     @Override

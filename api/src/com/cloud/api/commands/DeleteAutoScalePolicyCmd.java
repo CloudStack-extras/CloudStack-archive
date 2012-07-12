@@ -81,7 +81,7 @@ public class DeleteAutoScalePolicyCmd extends BaseAsyncCmd {
     @Override
     public void execute(){
         UserContext.current().setEventDetails("AutoScale Policy Id: "+getId());
-        boolean result = _lbService.deleteAutoScalePolicy(id);
+        boolean result = _autoScaleService.deleteAutoScalePolicy(id);
 
         if (result) {
             SuccessResponse response = new SuccessResponse(getCommandName());

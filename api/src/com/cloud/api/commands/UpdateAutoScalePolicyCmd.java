@@ -39,7 +39,7 @@ public class UpdateAutoScalePolicyCmd extends BaseAsyncCmd {
     @Override
     public void execute() throws ServerApiException {
         UserContext.current().setEventDetails("AutoScale Policy Id: " + getId());
-        AutoScalePolicy result = _lbService.updateAutoScalePolicy(this);
+        AutoScalePolicy result = _autoScaleService.updateAutoScalePolicy(this);
         if (result != null) {
             AutoScalePolicyResponse response = _responseGenerator.createAutoScalePolicyResponse(result);
             response.setResponseName(getCommandName());
@@ -78,7 +78,7 @@ public class UpdateAutoScalePolicyCmd extends BaseAsyncCmd {
         }
 
         return Account.ACCOUNT_ID_SYSTEM; // no account info given, parent this command to SYSTEM so ERROR events are
-// tracked
+        // tracked
     }
 
     @Override

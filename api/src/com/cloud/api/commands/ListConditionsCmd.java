@@ -34,55 +34,55 @@ import com.cloud.network.as.Condition;
 
 @Implementation(description = "List Conditions for the specific user", responseObject = CounterResponse.class)
 public class ListConditionsCmd extends BaseListAccountResourcesCmd {
-	public static final Logger s_logger = Logger.getLogger(ListConditionsCmd.class.getName());
-	private static final String s_name = "listconditionsresponse";
+    public static final Logger s_logger = Logger.getLogger(ListConditionsCmd.class.getName());
+    private static final String s_name = "listconditionsresponse";
 
-	// ///////////////////////////////////////////////////
-	// ////////////// API parameters /////////////////////
-	// ///////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
+    // ////////////// API parameters /////////////////////
+    // ///////////////////////////////////////////////////
 
-	@IdentityMapper(entityTableName = "conditions")
-	@Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = false, description = "ID of the Condition.")
-	private Long id;
+    @IdentityMapper(entityTableName = "conditions")
+    @Parameter(name = ApiConstants.ID, type = CommandType.LONG, required = false, description = "ID of the Condition.")
+    private Long id;
 
-	@Parameter(name = ApiConstants.COUNTER_ID, type = CommandType.LONG, required = false, description = "Counter-id of the condition.")
-	private Long counterId;
+    @Parameter(name = ApiConstants.COUNTER_ID, type = CommandType.LONG, required = false, description = "Counter-id of the condition.")
+    private Long counterId;
 
-	// ///////////////////////////////////////////////////
-	// ///////////// API Implementation///////////////////
-	// ///////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////
+    // ///////////// API Implementation///////////////////
+    // ///////////////////////////////////////////////////
 
-	@Override
-	public void execute() {
-		List<? extends Condition> conditions = null;
-		conditions = _lbService.listConditions(this);
-		ListResponse<ConditionResponse> response = new ListResponse<ConditionResponse>();
-		List<ConditionResponse> cndnResponses = new ArrayList<ConditionResponse>();
-		for (Condition cndn : conditions) {
-			ConditionResponse cndnResponse = _responseGenerator.createConditionResponse(cndn);
-			cndnResponses.add(cndnResponse);
-		}
+    @Override
+    public void execute() {
+        List<? extends Condition> conditions = null;
+        conditions = _autoScaleService.listConditions(this);
+        ListResponse<ConditionResponse> response = new ListResponse<ConditionResponse>();
+        List<ConditionResponse> cndnResponses = new ArrayList<ConditionResponse>();
+        for (Condition cndn : conditions) {
+            ConditionResponse cndnResponse = _responseGenerator.createConditionResponse(cndn);
+            cndnResponses.add(cndnResponse);
+        }
 
-		response.setResponses(cndnResponses);
-		response.setResponseName(getCommandName());
-		this.setResponseObject(response);
-	}
+        response.setResponses(cndnResponses);
+        response.setResponseName(getCommandName());
+        this.setResponseObject(response);
+    }
 
-	// /////////////////////////////////////////////////
-	// ///////////////// Accessors ///////////////////////
-	// ///////////////////////////////////////////////////
+    // /////////////////////////////////////////////////
+    // ///////////////// Accessors ///////////////////////
+    // ///////////////////////////////////////////////////
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public Long getCounterId() {
-		return counterId;
-	}
+    public Long getCounterId() {
+        return counterId;
+    }
 
-	@Override
-	public String getCommandName() {
-		return s_name;
-	}
+    @Override
+    public String getCommandName() {
+        return s_name;
+    }
 
 }

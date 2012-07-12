@@ -243,7 +243,7 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
             throw new InvalidParameterValueException("Unable to use template " + templateId);
         }
 
-        AutoScaleVmProfile result = _lbService.createAutoScaleVmProfile(this);
+        AutoScaleVmProfile result = _autoScaleService.createAutoScaleVmProfile(this);
         if (result != null) {
             this.setEntityId(result.getId());
             AutoScaleVmProfileResponse response = _responseGenerator.createAutoScaleVmProfileResponse(result);

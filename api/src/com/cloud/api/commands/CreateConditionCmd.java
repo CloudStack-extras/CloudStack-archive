@@ -53,7 +53,7 @@ public class CreateConditionCmd extends BaseAsyncCreateCmd {
     private Long threshold;
 
     @Parameter(name = ApiConstants.ACCOUNT, type = CommandType.STRING, description = "the account of the condition. " +
-            "Must be used with the domainId parameter.")
+    "Must be used with the domainId parameter.")
     private String accountName;
 
     @IdentityMapper(entityTableName = "domain")
@@ -67,7 +67,7 @@ public class CreateConditionCmd extends BaseAsyncCreateCmd {
     @Override
     public void create() throws ResourceAllocationException {
         Condition condition = null;
-        condition = _lbService.createCondition(this);
+        condition = _autoScaleService.createCondition(this);
 
         if (condition != null) {
             this.setEntityId(condition.getId());

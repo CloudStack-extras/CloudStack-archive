@@ -53,7 +53,7 @@ public class DeleteCounterCmd extends BaseAsyncCmd {
     public void execute() {
         boolean result = false;
         try {
-            result = _lbService.deleteCounter(getId());
+            result = _autoScaleService.deleteCounter(getId());
         } catch (ResourceInUseException ex) {
             s_logger.warn("Exception: ", ex);
             throw new ServerApiException(BaseCmd.RESOURCE_IN_USE_ERROR, ex.getMessage());

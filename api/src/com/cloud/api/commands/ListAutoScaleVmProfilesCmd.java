@@ -73,7 +73,7 @@ public class ListAutoScaleVmProfilesCmd extends BaseListProjectAndAccountResourc
 
     @Override
     public void execute() {
-        List<? extends AutoScaleVmProfile> autoScaleProfiles = _lbService.listAutoScaleVmProfiles(this);
+        List<? extends AutoScaleVmProfile> autoScaleProfiles = _autoScaleService.listAutoScaleVmProfiles(this);
         ListResponse<AutoScaleVmProfileResponse> response = new ListResponse<AutoScaleVmProfileResponse>();
         List<AutoScaleVmProfileResponse> responses = new ArrayList<AutoScaleVmProfileResponse>();
         if (autoScaleProfiles != null) {
