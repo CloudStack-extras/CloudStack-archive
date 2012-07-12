@@ -2200,7 +2200,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @DB
     public Condition createCondition(CreateConditionCmd cmd) {
         checkCallerAccess(cmd.getAccountName(), cmd.getDomainId());
-        String opr = cmd.getRelationalOperator();
+        String opr = cmd.getRelationalOperator().toUpperCase();
         long cid = cmd.getCounterId();
         long threshold = cmd.getThreshold();
         Condition.Operator op;
