@@ -851,29 +851,37 @@
                       },
                       add: {
                         label: 'label.add.vms',
-                        action: function(args) {
-                          var openFirewall = false;
+                        action: function(args) {                         
                           var data = {
                             algorithm: args.data.algorithm,
                             name: args.data.name,
                             privateport: args.data.privateport,
-                            publicport: args.data.publicport
+                            publicport: args.data.publicport,
+														openfirewall: false,
+														domainid: g_domainid,
+														account: g_account
                           };
+													
+													if('vpc' in args.context) { //from VPC section
+														if(args.data.tier == null) {													  
+															args.response.error('Tier is required');
+															return;
+														}			
+														$.extend(data, {
+															networkid: args.data.tier		
+														});	
+													}
+													else {  //from Guest Network section
+														$.extend(data, {
+															networkid: args.context.networks[0].id
+														});	
+													}
+													
                           var stickyData = $.extend(true, {}, args.data.sticky);
-
-                          var apiCmd = "createLoadBalancerRule";
-                          //if(args.context.networks[0].type == "Shared")
-                          apiCmd += "&domainid=" + g_domainid + "&account=" + g_account;
-                          //else //args.context.networks[0].type == "Isolated"
-                          //apiCmd += "&account=" + args.context.users[0].account;
-                          //apiCmd += '&domainid=' + args.context.users[0].domainid;
-
+                         
                           $.ajax({
-                            url: createURL(apiCmd),
-                            data: $.extend(data, {
-                              openfirewall: openFirewall,
-                              networkid: args.context.networks[0].id
-                            }),
+                            url: createURL('createLoadBalancerRule'),
+                            data: data,
                             dataType: 'json',
                             async: true,
                             success: function(data) {
@@ -2096,13 +2104,24 @@
                       tier: {
                         label: 'Tier',
                         select: function(args) {	
-													if('vpc' in args.context) {													
+													if('vpc' in args.context) {		
+                            var data = {
+														  listAll: true
+														};
+														if(args.context.ipAddresses[0].associatednetworkid == null) {
+														  $.extend(data, {
+															  vpcid: args.context.vpc[0].id
+															});
+														}
+														else {
+														  $.extend(data, {
+															  id: args.context.ipAddresses[0].associatednetworkid
+															});
+														}			//???
+													
 														$.ajax({
 															url: createURL("listNetworks"),															
-															data: {
-																vpcid: args.context.vpc[0].id,
-																listAll: true
-															},															
+															data: data,															
 															success: function(json) {					  
 																var networks = json.listnetworksresponse.network;	
 																var items = [];
@@ -2470,14 +2489,24 @@
                     headerFields: {
                       tier: {
                         label: 'Tier',
-                        select: function(args) {												  
-													if('vpc' in args.context) {													
+                        select: function(args) {
+													if('vpc' in args.context) {		
+                            var data = {
+														  listAll: true
+														};
+														if(args.context.ipAddresses[0].associatednetworkid == null) {
+														  $.extend(data, {
+															  vpcid: args.context.vpc[0].id
+															});
+														}
+														else {
+														  $.extend(data, {
+															  id: args.context.ipAddresses[0].associatednetworkid
+															});
+														}													
 														$.ajax({
 															url: createURL("listNetworks"),															
-															data: {
-																vpcid: args.context.vpc[0].id,
-																listAll: true
-															},															
+															data: data,															
 															success: function(json) {					  
 																var networks = json.listnetworksresponse.network;	
 																var items = [];
@@ -2570,22 +2599,31 @@
                     },
                     add: {
                       label: 'label.add.vm',
-                      action: function(args) {                        
-												var data = $.extend(args.data, {
-													openfirewall: false,
-													ipaddressid: args.context.ipAddresses[0].id,
-													virtualmachineid: args.itemData[0].id
-												});									
+                      action: function(args) {  
+												var data = {
+												  ipaddressid: args.context.ipAddresses[0].id,
+												  privateport: args.data.privateport,
+													publicport: args.data.publicport,
+													protocol: args.data.protocol,		
+													virtualmachineid: args.itemData[0].id,
+                          openfirewall: false													
+												};	
+													                        								
 												if('vpc' in args.context) { //from VPC section
 												  if(args.data.tier == null) {													  
 														args.response.error('Tier is required');
 													  return;
-													}	
+													}			
                           $.extend(data, {
                             networkid: args.data.tier		
                           });	
 												}
-												
+												else {  //from Guest Network section
+												  $.extend(data, {
+                            networkid: args.context.networks[0].id
+                          });	
+												}
+											
                         $.ajax({
                           url: createURL('createPortForwardingRule'),
                           data: data,                        
@@ -2695,11 +2733,14 @@
 													// Check if tiers are present; hide/show header drop-down                     
 													var $headerFields = $multi.find('.header-fields');													
 													if ('vpc' in args.context) {
-													  if(args.context.ipAddresses[0].associatednetworkid == null) {
-														  $headerFields.show();
+													   $headerFields.show();
+													  if(args.context.ipAddresses[0].associatednetworkid == null) {														  
+															//$headerFields.find("select").removeAttr("disabled");
+															$headerFields.show();
 														}
-														else {
-														  $headerFields.hide();
+														else {								
+															//$headerFields.find("select").attr("disabled", true);
+															$headerFields.hide();
 														}
 													} 
 													else if('networks' in args.context){
@@ -3486,8 +3527,8 @@
                 });								
               }					
             },
-            editVpc: {
-              label: 'Edit VPC',
+            configureVpc: {
+              label: 'Configure VPC',
               textLabel: 'label.configure',
               action: {
                 custom: cloudStack.uiCustom.vpc(cloudStack.vpc)
@@ -3496,16 +3537,134 @@
           },									
 					
 					detailView: {
-            name: 'label.details',
+            name: 'label.details',											
+						actions: {
+              configureVpc: {
+                label: 'Edit VPC',
+                textLabel: 'label.configure',
+                action: {
+                  custom: cloudStack.uiCustom.vpc(cloudStack.vpc)
+                },
+                messages: { notification: function() { return ''; } }
+              },
+							
+							edit: {
+                label: 'label.edit',
+                action: function(args) {            
+                  $.ajax({
+                    url: createURL('updateVPC'),
+                    data: {
+										  id: args.context.vpc[0].id,
+											name: args.data.name,
+											displaytext: args.data.displaytext
+										},
+                    success: function(json) {
+                      var jid = json.updatevpcresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+												    jobId: jid,
+                            getUpdatedItem: function(json) {														  
+															return json.queryasyncjobresultresponse.jobresult.vpc;
+														}
+													}													 
+                        }
+                      );						
+                    },
+                    error: function(data) {
+                      args.response.error(parseXMLHttpResponse(data));
+                    }
+                  });
+                },								
+								notification: {
+                  poll: pollAsyncJobResult
+                }								
+              },
+														
+							restart: {
+                label: 'restart VPC',
+                messages: {
+                  confirm: function(args) {
+                    return 'Please confirm that you want to restart the VPC';
+                  },
+                  notification: function(args) {
+                    return 'restart VPC';
+                  }
+                },
+                action: function(args) {								 
+                  $.ajax({
+                    url: createURL("restartVPC"),
+                    data: {
+										  id: args.context.vpc[0].id
+										},                    
+                    success: function(json) {                      
+											var jid = json.restartvpcresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+												    jobId: jid,
+														getUpdatedItem: function(json) {														  
+															return json.queryasyncjobresultresponse.jobresult.vpc;
+														}
+                          }
+                        }
+                      );											
+                    },
+                    error: function(data) {
+                      args.response.error(parseXMLHttpResponse(data));
+                    }
+                  });
+                },
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              },							
+							
+              remove: {
+                label: 'remove VPC',
+                messages: {
+                  confirm: function(args) {
+                    return 'Please confirm that you want to delete the VPC';
+                  },
+                  notification: function(args) {
+                    return 'remove VPC';
+                  }
+                },
+                action: function(args) {								 
+                  $.ajax({
+                    url: createURL("deleteVPC"),
+                    data: {
+										  id: args.context.vpc[0].id
+										},                    
+                    success: function(json) {                      
+											var jid = json.deletevpcresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+												    jobId: jid 
+                          }
+                        }
+                      );											
+                    },
+                    error: function(data) {
+                      args.response.error(parseXMLHttpResponse(data));
+                    }
+                  });
+                },
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              }
+            },						
             tabs: {
               details: {
                 title: 'label.details',
                 fields: [
                   {				
-                    name: { label: 'label.name' }
+                    name: { label: 'label.name', isEditable: true }
                   },
                   {	
-										displaytext: { label: 'label.description' },										
+										displaytext: { label: 'label.description', isEditable: true },										
 										zonename: { label: 'label.zone' },
 										cidr: { label: 'label.cidr' },
 										networkdomain: { label: 'label.network.domain' },
