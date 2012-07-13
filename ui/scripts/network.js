@@ -622,7 +622,7 @@
               });
 
               var hiddenTabs = [];
-              if(networkOfferingHavingELB == false)
+              if(networkOfferingHavingELB != false)
                 hiddenTabs.push("addloadBalancer");
               return hiddenTabs;
             },
@@ -839,10 +839,12 @@
                         },
 			  'autoScale': {
                           label: 'AutoScale',
+                          id: 'autoscale',
+                          
                           custom: {
-                            buttonLabel: 'label.configure',
-                            action: cloudStack.autoScale.dialog()
-                          }
+                             buttonLabel:'autoScale',
+                             action:cloudStack.autoScale.dialog()   
+                           }
                         },
                         'add-vm': {
                           label: 'label.add.vms',
@@ -946,6 +948,15 @@
                           });
                         }
                       },
+                    /*  add: {
+                         label: 'Autoscale',
+                          action: {
+                               custom:cloudStack.uiCustom.autoScale(
+                                   cloudStack.autoScale
+                                )
+                               
+                            }
+                          },*/
                       dataProvider: function(args) {
                         args.response.success({ //no LB listing in AddLoadBalancer tab
                           data: []
