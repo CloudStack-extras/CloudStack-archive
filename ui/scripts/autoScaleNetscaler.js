@@ -65,65 +65,8 @@ cloudStack.autoScale = {
    
         return function(args) { 
          var context = args.context; 
-/*       var $dialog= $('<div>');
-	$dialog.dialog ({ 
-        title: 'AutoScale Configuration Wizard',
-        width:  825 ,
-        height :600 
-        }).closest('.ui-dialog').overlay();
 
-*/
-
- //var $multi = $('<div>').multiEdit($.extend(true, {},cloudStack.autoScale.autoScaleCondition(),{context:args.context}));
-/*autoScaleCondition:function(args) {
-          var multiEditData=[];
-          var totalIndex =0;
-
-          return $('<div>').multiEdit({
-               context:args.context,
-               noSelect:true,
-
-               fields:{
-                   'Counter':{edit: true,label: 'label.counter'},
-                   'Operator': {edit:true,label: 'label.operator'},
-                   'Threshold':{edit:true,label: 'label.threshold'},   
-                   'add-policy':{label:'label.add' ,addButton:true} 
-
-                 }, 
-
-            add: {
-            label: 'label.add',
-            action: function(args) {
-              multiEditData.push($.extend(args.data, {
-                index: totalIndex
-              }));
-
-              totalIndex++;
-              args.response.success();
-            }
-          },
-          actions: {
-            destroy: {
-              label: 'label.remove.rule',
-              action: function(args) {
-                multiEditData = $.grep(multiEditData, function(item) {
-                  return item.index != args.context.multiRule[0].index;
-                });
-                args.response.success();
-              }
-            }
-          },
-          dataProvider: function(args) {
-            args.response.success({
-              data: multiEditData
-            });
-          }
-        });
-      }
-*/
-    var $dialog= $('<div>');
-   //  $dialog.find('<div>').append('abcd');
-     //   $dialog.append(customUI);
+        var $dialog= $('<div>');
         $dialog.dialog ({
         title: 'AutoScale Configuration Wizard',
         closeonEscape: false,
@@ -148,6 +91,13 @@ cloudStack.autoScale = {
          $("buttons").each(function() {
                 $(this).attr('style','float: right');
              });
+        var $field = $('<div>').addClass('field username');
+     var $input = $('<input>').attr({ name: 'username' });
+     var $inputLabel = $('<label>').html('Username');
+
+     $field.append($input, $inputLabel);
+     $field.appendTo($dialog);
+
 
        }       
       }
