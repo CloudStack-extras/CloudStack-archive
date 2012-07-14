@@ -622,7 +622,7 @@
               });
 
               var hiddenTabs = [];
-              if(networkOfferingHavingELB != false)
+              if(networkOfferingHavingELB == false)
                 hiddenTabs.push("addloadBalancer");
               return hiddenTabs;
             },
