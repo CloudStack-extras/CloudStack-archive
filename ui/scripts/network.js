@@ -837,14 +837,12 @@
                             action: cloudStack.lbStickyPolicy.dialog()
                           }
                         },
-			  'autoScale': {
+                        'autoScale': {
                           label: 'AutoScale',
-                          id: 'autoscale',
-                          
                           custom: {
-                             buttonLabel:'autoScale',
-                             action:cloudStack.autoScale.dialog()   
-                           }
+                            buttonLabel: 'label.configure',
+                            action: cloudStack.uiCustom.autoscaler(cloudStack.autoscaler) //cloudStack.uiCustom.autoScale.userManagement()
+                          }
                         },
                         'add-vm': {
                           label: 'label.add.vms',
@@ -948,15 +946,6 @@
                           });
                         }
                       },
-                    /*  add: {
-                         label: 'Autoscale',
-                          action: {
-                               custom:cloudStack.uiCustom.autoScale(
-                                   cloudStack.autoScale
-                                )
-                               
-                            }
-                          },*/
                       dataProvider: function(args) {
                         args.response.success({ //no LB listing in AddLoadBalancer tab
                           data: []

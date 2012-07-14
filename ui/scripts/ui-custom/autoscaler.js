@@ -13,7 +13,10 @@
     // Place outer args here as local variables
     // i.e, -- var dataProvider = args.dataProvider
 
-    return function(args) {
+      var topfields = args.forms.topFields;
+      var bottomfields = args.forms.bottomFields;  
+  
+  return function(args) {
       var $autoscalerDialog = $('<div>').addClass('autoscaler');
       var $topFields = $('<div>').addClass('field-group top-fields');
       var $bottomFields = $('<div>').addClass('field-group bottom-fields');
@@ -28,9 +31,9 @@
         noDialog: true, // Don't render a dialog, just return $formContainer
         form: {
           title: '',
-          fields: {
+          fields: topfields/*{
             fieldA: { label: 'Field A', validation: { required: true } }
-          } // Replace with object containing createForm fields, specified in your server call JS
+          } */// Replace with object containing createForm fields, specified in your server call JS
         }
       }); 
       $topFieldForm = topFieldForm.$formContainer;
@@ -46,9 +49,9 @@
         noDialog: true, // Don't render a dialog, just return $formContainer
         form: {
           title: '',
-          fields: {
-            fieldA: { label: 'Field B', validation: { required: true } }
-          } // Replace with object containing createForm fields, specified in your server call JS
+          fields: bottomfields /*{
+            //fieldA: { label: 'Field B', validation: { required: true } }
+           }*/ // Replace with object containing createForm fields, specified in your server call JS
         }
       }); 
       $bottomFieldForm = bottomFieldForm.$formContainer;
