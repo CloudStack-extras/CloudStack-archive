@@ -67,9 +67,11 @@
        
       // Render dialog
       $autoscalerDialog.dialog({
-        title: 'Configure Autoscaler',
+        title: 'AutoScale Configuration Wizard',
         width: 825,
         height: 600,
+        draggable: true,
+        closeonEscape: false,
         buttons: {
           'Done': function() {
             $autoscalerDialog.dialog('close');

@@ -24,7 +24,7 @@
         forms: {
 		topFields: {
        		    templateCategory: {
-                      label: 'Template Catogary',
+                      label: 'Template Category',
                       select: function(args) {
                             args.response.success({
                               data: [
@@ -82,12 +82,12 @@
                     },
 
                     minInstance: {
-                    	label: 'Min. Instance',
+                    	label: 'Min Instance',
                     	validation: { required: true }
                     },
 
                     maxInstance: {
-                    	label: 'Max. Instance',
+                    	label: 'Max Instance',
                     	validation: { required: true }
                     }
 		},
