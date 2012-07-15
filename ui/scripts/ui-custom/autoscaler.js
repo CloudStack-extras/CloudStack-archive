@@ -75,10 +75,11 @@
         buttons: {
           'Done': function() {
             $autoscalerDialog.dialog('close');
+            $('.overlay').remove();
             $autoscalerDialog.closest(':ui-dialog').remove();
           }
         }
-      });
+      }).closest('.ui-dialog').overlay();
     }
   }
 }(jQuery, cloudStack));
