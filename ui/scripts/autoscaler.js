@@ -162,8 +162,8 @@
                     validation: { required: true }
                   },
 
-                  autoscaleUsername: {
-                    label: 'AutoScale Username',
+                  username: {
+                    label: 'Username',
                     /*select: function(args) {
                         $.ajax({
                           url: createURL("listUsers&domainid=" + args.context.users[0].domainid),
