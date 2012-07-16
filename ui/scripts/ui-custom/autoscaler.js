@@ -12,55 +12,58 @@
   cloudStack.uiCustom.autoscaler = function(args) {
     // Place outer args here as local variables
     // i.e, -- var dataProvider = args.dataProvider
+    var topfields = args.forms.topFields;
+    var bottomfields = args.forms.bottomFields;
+    var scaleuppolicy = args.forms.scaleUpPolicy;
+    var scaledownpolicy = args.forms.scaleDownPolicy;
 
-      var topfields = args.forms.topFields;
-      var bottomfields = args.forms.bottomFields;  
-      var scaleuppolicy = args.forms.scaleUpPolicy;
-      var scaledownpolicy = args.forms.scaleDownPolicy;
-      
-  return function(args) {
+    return function(args) {
+      var context = args.context;
       var $autoscalerDialog = $('<div>').addClass('autoscaler');
       var $topFields = $('<div>').addClass('field-group top-fields');
       var $bottomFields = $('<div>').addClass('field-group bottom-fields');
       var $scaleUpPolicy = $('<div>').addClass('scale-up-policy');
       var $scaleDownPolicy = $('<div>').addClass('scale-down-policy');
       var topFieldForm, $topFieldForm,
-          bottomFieldForm, $bottomFieldForm;
+          bottomFieldForm, $bottomFieldForm,
+          scaleUpPolicyForm, scaleDownPolicyForm;
 
       // Create and append top fields
       // -- uses create form to generate fields
       topFieldForm = cloudStack.dialog.createForm({
+        context: context,
         noDialog: true, // Don't render a dialog, just return $formContainer
         form: {
           title: '',
           fields: topfields/*{
-            fieldA: { label: 'Field A', validation: { required: true } }
-          } */// Replace with object containing createForm fields, specified in your server call JS
+                            fieldA: { label: 'Field A', validation: { required: true } }
+                            } */// Replace with object containing createForm fields, specified in your server call JS
         }
-      }); 
+      });
       $topFieldForm = topFieldForm.$formContainer;
       $topFieldForm.appendTo($topFields);
 
       // Make multi-edits
       // $scaleUpPolicy.multiEdit(...)
       scaleUpPolicyForm = $scaleUpPolicy.multiEdit(
-    			$.extend(true, {}, scaleuppolicy))
+        $.extend(true, {}, scaleuppolicy, { context: context }));
       // $scaleDownPolicy.multiEdit(...)
       scaleDownPolicyForm = $scaleDownPolicy.multiEdit(
-    			$.extend(true, {}, scaledownpolicy))
-    			
+        $.extend(true, {}, scaledownpolicy, { context: context }));
+
       // Create and append bottom fields
       bottomFieldForm = cloudStack.dialog.createForm({
+        context: context,
         noDialog: true, // Don't render a dialog, just return $formContainer
         form: {
           title: '',
           fields: bottomfields /*{
-            //fieldA: { label: 'Field B', validation: { required: true } }
-           }*/ // Replace with object containing createForm fields, specified in your server call JS
+                                //fieldA: { label: 'Field B', validation: { required: true } }
+                                }*/ // Replace with object containing createForm fields, specified in your server call JS
         }
-      }); 
+      });
       $bottomFieldForm = bottomFieldForm.$formContainer;
-      $bottomFieldForm.appendTo($bottomFields); 
+      $bottomFieldForm.appendTo($bottomFields);
 
       // Append main div elements
       $autoscalerDialog.append(
@@ -69,7 +72,7 @@
         $scaleDownPolicy,
         $bottomFields
       );
-       
+
       // Render dialog
       $autoscalerDialog.dialog({
         title: 'AutoScale Configuration Wizard',
@@ -78,11 +81,10 @@
         draggable: true,
         closeonEscape: false,
         buttons: {
-
-           'Cancel': function() {
-              $(this).dialog('close');
-              $('.overlay').remove();
-            },
+          'Cancel': function() {
+            $(this).dialog('close');
+            $('.overlay').remove();
+          },
 
           'Apply': function() {
             $autoscalerDialog.dialog('close');
@@ -91,7 +93,6 @@
           }
         }
       }).closest('.ui-dialog').overlay();
-    }
-  }
+    };
+  };
 }(jQuery, cloudStack));
-
