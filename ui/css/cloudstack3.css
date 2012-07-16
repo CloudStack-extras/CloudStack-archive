@@ -2868,6 +2868,8 @@ Dialogs*/
   border-radius: 10px 10px 10px 10px;
 }
 
+
+
 .ui-dialog .ui-widget-content .nothing-to-select p {
   margin: 18px 0 0;
 }
@@ -6733,6 +6735,7 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   height: 23px;
 }
 
+
 .multi-edit-add-list .ui-button.cancel {
   /*+placement:shift 492px -18px;*/
   position: relative;
@@ -9249,22 +9252,39 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   overflow: auto;
 }
 
+
 /*Autoscaler*/
 .ui-dialog div.autoscaler div.form-container div.form-item[rel=templateCategory] {
+
+    display: block;
+    width: 345px;
+    float:left;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=templateNames] {
+ 
+    display: inline-block;
+    width: 330px;
+    float:left;
+    position:relative;    
+    margin-top: -3px;
+}
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=minInstance] {
 
     display: block;
     width: 50%;
     float:left;
 }
 
-.ui-dialog div.autoscaler div.form-container div.form-item[rel=templateNames] {
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=maxInstance] {
 
     display: inline-block;
     width: 50%;
     float:left;
-    left:-130px;
+    left:-30px;
     position:relative;
 }
+
 
 
 
