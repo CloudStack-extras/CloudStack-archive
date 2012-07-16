@@ -15,7 +15,9 @@
 
       var topfields = args.forms.topFields;
       var bottomfields = args.forms.bottomFields;  
-  
+      var scaleuppolicy = args.forms.scaleUpPolicy;
+      var scaledownpolicy = args.forms.scaleDownPolicy;
+      
   return function(args) {
       var $autoscalerDialog = $('<div>').addClass('autoscaler');
       var $topFields = $('<div>').addClass('field-group top-fields');
@@ -41,9 +43,12 @@
 
       // Make multi-edits
       // $scaleUpPolicy.multiEdit(...)
-      // ...
+      scaleUpPolicyForm = $scaleUpPolicy.multiEdit(
+    			$.extend(true, {}, scaleuppolicy))
       // $scaleDownPolicy.multiEdit(...)
-
+      scaleDownPolicyForm = $scaleDownPolicy.multiEdit(
+    			$.extend(true, {}, scaledownpolicy))
+    			
       // Create and append bottom fields
       bottomFieldForm = cloudStack.dialog.createForm({
         noDialog: true, // Don't render a dialog, just return $formContainer

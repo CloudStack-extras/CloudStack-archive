@@ -185,7 +185,104 @@
                     }*/
                     
                   }
-		}
+		},
+		scaleUpPolicy: {
+            title: 'ScaleUp Policy',
+              noSelect: true,
+              noHeaderActionsColumn: true,
+              fields: {
+                'name': { edit: true, label: 'Counter' },
+                'operator': { edit: true, label: 'Operator' },
+                'threshold': { edit: true, label: 'Threshold'},
+                'add-scaleUpcondition': {
+                  label: 'label.add',
+                  addButton: true
+                }
+              },
+              add: {
+                label: 'label.add',
+                action: function(args) {
+                  $.ajax({
+                    url: createURL(''),
+                    dataType: 'json',
+                    async: false
+                  });
+                }
+              },
+              actions: {
+                destroy: {
+                  label: '',
+                  action: function(args) {
+                    $.ajax({
+                      url: createURL(''),
+                      dataType: 'json',
+                      async: true,
+                    });
+                  }
+                }
+              },
+              dataProvider: function(args) {
+                $.ajax({
+                  url: createURL('listClusters'),
+                  dataType: 'json',
+                  async: true,
+                  success: function(json) {
+                    args.response.success({
+                    	data: json.listclustersresponse.cluster
+                    });
+                  }
+                });
+              }
+          },
+          
+  		scaleDownPolicy: {
+              title: 'ScaleUp Policy',
+                noSelect: true,
+                noHeaderActionsColumn: true,
+                fields: {
+                  'name': { edit: true, label: 'Counter' },
+                  'operator': { edit: true, label: 'Operator' },
+                  'threshold': { edit: true, label: 'Threshold'},
+                  'add-scaleUpcondition': {
+                    label: 'label.add',
+                    addButton: true
+                  }
+                },
+                add: {
+                  label: 'label.add',
+                  action: function(args) {
+                    $.ajax({
+                      url: createURL(''),
+                      dataType: 'json',
+                      async: false
+                    });
+                  }
+                },
+                actions: {
+                  destroy: {
+                    label: '',
+                    action: function(args) {
+                      $.ajax({
+                        url: createURL(''),
+                        dataType: 'json',
+                        async: true,
+                      });
+                    }
+                  }
+                },
+                dataProvider: function(args) {
+                  $.ajax({
+                    url: createURL('listClusters'),
+                    dataType: 'json',
+                    async: true,
+                    success: function(json) {
+                      args.response.success({
+                      	data: json.listclustersresponse.cluster
+                      });
+                    }
+                  });
+                }
+            }
 	},
     dialog: function(args) {
       return function(args) { 
