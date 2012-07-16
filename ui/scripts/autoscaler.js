@@ -198,7 +198,28 @@
         noSelect: true,
         noHeaderActionsColumn: true,
         fields: {
-          'name': { edit: true, label: 'Counter' },
+          'name': { 
+    	    label: 'Counter',
+    	      select: function(args) {
+                $.ajax({
+                  url: createURL("listCounters"),
+                  dataType: "json",
+                  async: true,
+                  success: function(json) {
+                    var counters = json.counterresponse.counter;
+                    args.response.success({
+                        data:  $.map(counters, function(counter) {
+                        return {
+                        id: counter.id,
+                        description: counter.name
+                      };
+                      })
+                    });
+                  }
+                });
+            }
+	
+	      },
           'operator': {
             label: 'Operator',
             select: function(args) {
@@ -260,7 +281,27 @@
         noSelect: true,
         noHeaderActionsColumn: true,
         fields: {
-          'name': { edit: true, label: 'Counter' },
+          'name': {
+    	  label: 'Counter',
+            select: function(args) {
+	            $.ajax({
+	              url: createURL("listCounters"),
+	              dataType: "json",
+	              async: true,
+	              success: function(json) {
+	                var counters = json.counterresponse.counter;
+	                args.response.success({
+	                    data:  $.map(counters, function(counter) {
+	                    return {
+	                    id: counter.id,
+	                    description: counter.name
+	                  };
+	                  })
+	                });
+	              }
+	            });
+	        }
+	  },
           'operator': {
             label: 'Operator',
             select: function(args) {
