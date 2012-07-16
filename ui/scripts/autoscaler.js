@@ -25,6 +25,7 @@
 		topFields: {
        		    templateCategory: {
                       label: 'Template Category',
+                      id:'templatecategory',
                       select: function(args) {
                             args.response.success({
                               data: [
@@ -38,7 +39,8 @@
                     },
 
                     templateNames: {
-                      label: 'Template Name',
+                      label: '',
+                      id:'templatename',
                       select: function(args) {
                         $.ajax({
                           url: createURL("listTemplates&templatefilter=all" ),

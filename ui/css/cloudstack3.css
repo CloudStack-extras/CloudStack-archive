@@ -9249,6 +9249,25 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   overflow: auto;
 }
 
+/*Autoscaler*/
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=templateCategory] {
+
+    display: block;
+    width: 50%;
+    float:left;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=templateNames] {
+
+    display: inline-block;
+    width: 50%;
+    float:left;
+    left:-130px;
+    position:relative;
+}
+
+
+
 /*Action icons*/
 .action.edit .icon {
   background-position: 1px -1px;
