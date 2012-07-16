@@ -78,7 +78,14 @@
         draggable: true,
         closeonEscape: false,
         buttons: {
-          'Done': function() {
+
+           'Cancel': function() {
+              $autoscalerDialog.dialog('close');
+              $('.overlay').remove();
+              $autoscalerdialog.closest(':ui-dialog').remove();
+            },
+
+          'Apply': function() {
             $autoscalerDialog.dialog('close');
             $('.overlay').remove();
             $autoscalerDialog.closest(':ui-dialog').remove();
