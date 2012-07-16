@@ -194,7 +194,7 @@
                   }
 		},
 		scaleUpPolicy: {
-            title: 'ScaleUp Policy',
+			title: 'ScaleUp Policy',
               noSelect: true,
               noHeaderActionsColumn: true,
               fields: {
@@ -204,8 +204,11 @@
                 	select: function(args) {
                     args.response.success({
                         data: [
-                          { category: 'greater-than', description: _l('greater-than') },
-                          { category: 'equals-to', description: _l('equals-to') }
+                          { category: 'GT', description: _l('greater-than') },
+                          { category: 'GE', description: _l('greater-than or equals to') },
+                          { category: 'LT', description: _l('less-than') },
+                          { category: 'LE', description: _l('less-than or equals to') },
+                          { category: 'EQ', description: _l('equals-to') }
                         ]
                       });
                     }
@@ -263,8 +266,11 @@
                   	select: function(args) {
                       args.response.success({
                           data: [
-                            { category: 'less-than', description: _l('less-than') },
-                            { category: 'equals-to', description: _l('equals-to') }
+                            { category: 'GT', description: _l('greater-than') },
+                            { category: 'GE', description: _l('greater-than or equals to') },
+                            { category: 'LT', description: _l('less-than') },
+                            { category: 'LE', description: _l('less-than or equals to') },
+                            { category: 'EQ', description: _l('equals-to') }
                           ]
                         });
                       }
