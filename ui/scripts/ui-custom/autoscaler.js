@@ -80,9 +80,8 @@
         buttons: {
 
            'Cancel': function() {
-              $autoscalerDialog.dialog('close');
+              $(this)..dialog('close');
               $('.overlay').remove();
-              $autoscalerdialog.closest(':ui-dialog').remove();
             },
 
           'Apply': function() {
