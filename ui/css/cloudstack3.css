@@ -9269,6 +9269,25 @@ div.panel.ui-dialog div.list-view div.fixed-header {
     position:relative;    
     margin-top: -3px;
 }
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=securityGroups] {
+
+    display: block;
+    width: 370px;
+    float:left;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=DiskOfferings] {
+
+    display: inline-block;
+    width: 370px;
+    float:left;
+    position:relative;
+    margin-top: 1px;
+}
+
+
+
 .ui-dialog div.autoscaler div.form-container div.form-item[rel=minInstance] {
 
     display: block;
@@ -9285,11 +9304,29 @@ div.panel.ui-dialog div.list-view div.fixed-header {
     position:relative;
 }
 
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=interval] {
+
+    display: block;
+    width: 50%;
+    float:left;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=quietTime] {
+
+    display: inline-block;
+    width: 50%;
+    float:left;
+    left:-15px;
+    position:relative;
+}
+
+
+
 .ui-dialog div.autoscaler div.form-container div.value select {
   width: 88%;
   float: left;
 }
-
 
 
 /*Action icons*/
