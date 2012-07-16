@@ -192,7 +192,17 @@
               noHeaderActionsColumn: true,
               fields: {
                 'name': { edit: true, label: 'Counter' },
-                'operator': { edit: true, label: 'Operator' },
+                'operator': {
+                	label: 'Operator',
+                	select: function(args) {
+                    args.response.success({
+                        data: [
+                          { category: 'greater-than', description: _l('greater-than') },
+                          { category: 'equals-to', description: _l('equals-to') }
+                        ]
+                      });
+                    }
+                },
                 'threshold': { edit: true, label: 'Threshold'},
                 'add-scaleUpcondition': {
                   label: 'label.add',
@@ -236,14 +246,24 @@
           },
           
   		scaleDownPolicy: {
-              title: 'ScaleUp Policy',
+              	title: 'ScaleDown Policy',
                 noSelect: true,
                 noHeaderActionsColumn: true,
                 fields: {
                   'name': { edit: true, label: 'Counter' },
-                  'operator': { edit: true, label: 'Operator' },
+                  'operator': {
+                  	label: 'Operator',
+                  	select: function(args) {
+                      args.response.success({
+                          data: [
+                            { category: 'less-than', description: _l('less-than') },
+                            { category: 'equals-to', description: _l('equals-to') }
+                          ]
+                        });
+                      }
+                  },
                   'threshold': { edit: true, label: 'Threshold'},
-                  'add-scaleUpcondition': {
+                  'add-scaleDowncondition': {
                     label: 'label.add',
                     addButton: true
                   }
