@@ -16,7 +16,6 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -221,7 +220,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                 serviceResponse.setName(service.getName());
                 if ("Lb".equalsIgnoreCase(service.getName())) {
                     Map<Capability, String> serviceCapabilities = serviceCapabilitiesMap
-                    .get(service);
+                            .get(service);
                     if (serviceCapabilities != null) {
                         for (Capability capability : serviceCapabilities
                                 .keySet()) {
@@ -251,19 +250,12 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             autoScalePolicies.add(new LbAutoScalePolicy(autoScalePolicy, lbConditions));
         }
         ApiServer apiserver = ApiServer.getInstance();
-        String apiIpAddress = apiserver.getServerIpAddress();
-        String apiPort = apiserver.getServerPort();
-        StringBuilder sb = new StringBuilder();
-
-        Formatter formatter = new Formatter(sb, java.util.Locale.US);
-        formatter.format("https://%s:%s/client/api?", apiIpAddress, apiPort);
-        String csurl = sb.toString();
         AutoScaleVmProfile autoScaleVmProfile = _autoScaleVmProfileDao.findById(vmGroup.getProfileId());
         Long autoscaleUserId = autoScaleVmProfile.getAutoScaleUserId();
         User user = _userDao.findById(autoscaleUserId);
         String apiKey = user.getApiKey();
         String secretKey = user.getSecretKey();
-        LbAutoScaleVmProfile lbAutoScaleVmProfile = new LbAutoScaleVmProfile(autoScaleVmProfile, csurl, apiKey, secretKey);
+        LbAutoScaleVmProfile lbAutoScaleVmProfile = new LbAutoScaleVmProfile(autoScaleVmProfile, apiKey, secretKey);
         return new LbAutoScaleVmGroup(vmGroup, autoScalePolicies, lbAutoScaleVmProfile);
     }
 
@@ -320,7 +312,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             success = false;
         }
 
-        if(success) {
+        if (success) {
             if (vmGroup.getState().equals(AutoScaleVmGroup.State_New)) {
                 Transaction.currentTxn().start();
                 loadBalancer.setState(FirewallRule.State.Active);
@@ -465,7 +457,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
         LoadBalancerVO loadBalancer = _lbDao.findById(cmd.getLbRuleId());
         if (loadBalancer == null) {
-            throw new InvalidParameterException("Invalid Load balancer Id:"  + cmd.getLbRuleId());
+            throw new InvalidParameterException("Invalid Load balancer Id:" + cmd.getLbRuleId());
         }
         FirewallRule.State backupState = loadBalancer.getState();
         loadBalancer.setState(FirewallRule.State.Add);
@@ -477,7 +469,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             if (isRollBackAllowedForProvider(loadBalancer)) {
                 loadBalancer.setState(backupState);
                 _lbDao.persist(loadBalancer);
-                s_logger.debug("LB Rollback rule id: " + loadBalancer.getId() + " lb state rolback while creating sticky policy" );
+                s_logger.debug("LB Rollback rule id: " + loadBalancer.getId() + " lb state rolback while creating sticky policy");
             }
             deleteLBStickinessPolicy(cmd.getEntityId(), false);
             success = false;
@@ -532,7 +524,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                 s_logger.warn("Unable to apply the load balancer config because resource is unavaliable.", e);
                 success = false;
             }
-        }else{
+        } else {
             _lb2stickinesspoliciesDao.remove(stickinessPolicy.getLoadBalancerId());
         }
 
@@ -556,7 +548,6 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         if (loadBalancer == null) {
             throw new InvalidParameterValueException("Failed to assign to load balancer; the load balancer was not found.", null);
         }
-
 
         List<LoadBalancerVMMapVO> mappedInstances = _lb2VmMapDao.listByLoadBalancerId(loadBalancerId, false);
         Set<Long> mappedInstanceIds = new HashSet<Long>();
@@ -615,7 +606,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         }
         txn.commit();
 
-        if(_autoScaleVmGroupDao.isAutoScaleLoadBalancer(loadBalancerId)) {
+        if (_autoScaleVmGroupDao.isAutoScaleLoadBalancer(loadBalancerId)) {
             // Nothing needs to be done for an autoscaled loadbalancer,
             // just persist and proceed.
             return true;
@@ -647,7 +638,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             s_logger.warn("Unable to apply the load balancer config because resource is unavaliable.", e);
         }
 
-        if(!success){
+        if (!success) {
             CloudRuntimeException ex = new CloudRuntimeException("Failed to add specified loadbalancerruleid for vms " + instanceIds);
             ex.addProxyObject(loadBalancer, loadBalancerId, "loadBalancerId");
             // TBD: Also pack in the instanceIds in the exception using the right VO object or table name.
@@ -686,7 +677,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                 s_logger.debug("Set load balancer rule for revoke: rule id " + loadBalancerId + ", vmId " + instanceId);
             }
 
-            if(_autoScaleVmGroupDao.isAutoScaleLoadBalancer(loadBalancerId)) {
+            if (_autoScaleVmGroupDao.isAutoScaleLoadBalancer(loadBalancerId)) {
                 // Nothing needs to be done for an autoscaled loadbalancer,
                 // just persist and proceed.
                 return true;
@@ -715,7 +706,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             }
             s_logger.warn("Unable to apply the load balancer config because resource is unavaliable.", e);
         }
-        if(!success){
+        if (!success) {
             CloudRuntimeException ex = new CloudRuntimeException("Failed to remove specified load balancer rule id for vms " + instanceIds);
             ex.addProxyObject(loadBalancer, loadBalancerId, "loadBalancerId");
             throw ex;
@@ -912,13 +903,13 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                 if (ipVO != null) {
                     if (ipVO.getAssociatedWithNetworkId() == null) {
                         boolean assignToVpcNtwk = network.getVpcId() != null
-                        && ipVO.getVpcId() != null && ipVO.getVpcId().longValue() == network.getVpcId();
+                                && ipVO.getVpcId() != null && ipVO.getVpcId().longValue() == network.getVpcId();
                         if (assignToVpcNtwk) {
-                            //set networkId just for verification purposes
+                            // set networkId just for verification purposes
                             ipVO.setAssociatedWithNetworkId(lb.getNetworkId());
                             _networkMgr.checkIpForService(ipVO, Service.Lb, lb.getNetworkId());
 
-                            s_logger.debug("The ip is not associated with the VPC network id="+ lb.getNetworkId() + " so assigning");
+                            s_logger.debug("The ip is not associated with the VPC network id=" + lb.getNetworkId() + " so assigning");
                             ipVO = _networkMgr.associateIPToGuestNetwork(ipAddrId, lb.getNetworkId());
                             performedIpAssoc = true;
                         }
@@ -947,7 +938,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                 }
                 // release ip address if ipassoc was perfored
                 if (performedIpAssoc) {
-                    //if the rule is the last one for the ip address assigned to VPC, unassign it from the network
+                    // if the rule is the last one for the ip address assigned to VPC, unassign it from the network
                     ipVO = _ipAddressDao.findById(ipVO.getId());
                     if (ipVO != null && ipVO.getVpcId() != null && _firewallDao.listByIp(ipVO.getId()).isEmpty()) {
                         s_logger.debug("Releasing VPC ip address " + ipVO + " as LB rule failed to create");
@@ -1323,7 +1314,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                     if (lbBackup.getDescription() != null) {
                         lb.setDescription(lbBackup.getDescription());
                     }
-                    if (lbBackup.getAlgorithm() != null){
+                    if (lbBackup.getAlgorithm() != null) {
                         lb.setAlgorithm(lbBackup.getAlgorithm());
                     }
                     lb.setState(lbBackup.getState());
@@ -1475,7 +1466,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
         if (tags != null && !tags.isEmpty()) {
             SearchBuilder<ResourceTagVO> tagSearch = _resourceTagDao.createSearchBuilder();
-            for (int count=0; count < tags.size(); count++) {
+            for (int count = 0; count < tags.size(); count++) {
                 tagSearch.or().op("key" + String.valueOf(count), tagSearch.entity().getKey(), SearchCriteria.Op.EQ);
                 tagSearch.and("value" + String.valueOf(count), tagSearch.entity().getValue(), SearchCriteria.Op.EQ);
                 tagSearch.cp();
@@ -1551,7 +1542,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         Transaction txn = Transaction.currentTxn();
         txn.start();
         _lbDao.remove(rule.getId());
-        //if the rule is the last one for the ip address assigned to VPC, unassign it from the network
+        // if the rule is the last one for the ip address assigned to VPC, unassign it from the network
         IpAddress ip = _ipAddressDao.findById(rule.getSourceIpAddressId());
         if (ip != null && ip.getVpcId() != null && _firewallDao.listByIp(ip.getId()).isEmpty()) {
             _networkMgr.unassignIPFromVpcNetwork(ip.getId());
