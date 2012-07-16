@@ -61,5 +61,6 @@
 	<classpathentry exported="true" kind="lib" path="awsapi-lib/neethi-2.0.4.jar"/>
 	<classpathentry exported="true" kind="lib" path="awsapi-lib/rampart-lib/wss4j-1.5.8.jar"/>
 	<classpathentry exported="true" kind="lib" path="awsapi-lib/json_simple-1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="cloud-org.apache.httpcomponents.httpclient_4.2.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

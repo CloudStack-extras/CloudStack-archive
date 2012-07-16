@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:element name="SecurityGroupVmRuleSet">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="vmName" type="xsd:string" />
+				<xsd:element name="vmId" type="xsd:long" />
+				<xsd:element name="vmIp" type="xsd:string" />
+				<xsd:element name="vmMac" type="xsd:string" />
+				<xsd:element name="signature" type="xsd:string" />
+				<xsd:element name="sequenceNumber" type="xsd:long" />
+				<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+					<xsd:element name="ingressRules" type="SecurityGroupRule" />
+				</xsd:sequence>
+				<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+					<xsd:element name="egressRules" type="SecurityGroupRule" />
+				</xsd:sequence>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+    <xsd:complexType name="SecurityGroupRule">
+			<xsd:sequence>
+				<xsd:element name="protocol" type="xsd:string" />
+				<xsd:element name="startPort" type="xsd:unsignedInt" />
+				<xsd:element name="endPort" type="xsd:unsignedInt" />
+				<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+					<xsd:element name="ip" type="xsd:string" />
+				</xsd:sequence>
+			</xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>
