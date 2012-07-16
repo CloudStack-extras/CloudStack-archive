@@ -67,16 +67,19 @@
        
       // Render dialog
       $autoscalerDialog.dialog({
-        title: 'Configure Autoscaler',
+        title: 'AutoScale Configuration Wizard',
         width: 825,
         height: 600,
+        draggable: true,
+        closeonEscape: false,
         buttons: {
           'Done': function() {
             $autoscalerDialog.dialog('close');
+            $('.overlay').remove();
             $autoscalerDialog.closest(':ui-dialog').remove();
           }
         }
-      });
+      }).closest('.ui-dialog').overlay();
     }
   }
 }(jQuery, cloudStack));

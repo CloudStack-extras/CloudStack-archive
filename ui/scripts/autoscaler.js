@@ -24,14 +24,14 @@
         forms: {
 		topFields: {
        		    templateCategory: {
-                      label: 'Template Catogary',
+                      label: 'Template Category',
                       select: function(args) {
                             args.response.success({
                               data: [
-                                { catogary: 'all', description: _l('ui.listView.filters.all') },
-                                { catogary: 'featured', description: _l('label.featured') },
-                                { catogary: 'Community', description: _l('label.menu.community.templates') },
-                                { catogary: 'self', description: _l('ui.listView.filters.mine') }
+                                { category: 'all', description: _l('ui.listView.filters.all') },
+                                { category: 'featured', description: _l('label.featured') },
+                                { category: 'Community', description: _l('label.menu.community.templates') },
+                                { category: 'self', description: _l('ui.listView.filters.mine') }
                               ]
                             });
                           }
@@ -82,12 +82,12 @@
                     },
 
                     minInstance: {
-                    	label: 'Min. Instance',
+                    	label: 'Min Instance',
                     	validation: { required: true }
                     },
 
                     maxInstance: {
-                    	label: 'Max. Instance',
+                    	label: 'Max Instance',
                     	validation: { required: true }
                     }
 		},
