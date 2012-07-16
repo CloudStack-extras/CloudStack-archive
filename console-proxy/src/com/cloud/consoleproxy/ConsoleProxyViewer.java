@@ -921,7 +921,7 @@ public class ConsoleProxyViewer implements java.lang.Runnable, RfbViewer, RfbPro
 			"</p></div></body></html>";
 	}
 	
-	public String onAjaxClientStart(String title, List<String> languages, String guest) {
+	public String onAjaxClientStart(String title, List<String> languages, String guest, String hypervisorType) {
 		if(!waitForViewerReady())
 			return onAjaxClientConnectFailed();
 
@@ -1002,11 +1002,12 @@ public class ConsoleProxyViewer implements java.lang.Runnable, RfbViewer, RfbPro
 	*/
 		return getAjaxViewerPageContent(sbTileSequence.toString(), imgUrl, 
 				updateUrl, width, height, tileWidth, tileHeight, title, 
-				ConsoleProxy.keyboardType == ConsoleProxy.KEYBOARD_RAW, languages, guest);
+				ConsoleProxy.keyboardType == ConsoleProxy.KEYBOARD_RAW, languages, guest, hypervisorType);
 	}
 	
 	private String getAjaxViewerPageContent(String tileSequence, String imgUrl, String updateUrl, int width,
-		int height, int tileWidth, int tileHeight, String title, boolean rawKeyboard, List<String> languages, String guest) {
+		int height, int tileWidth, int tileHeight, String title, 
+		boolean rawKeyboard, List<String> languages, String guest, String hypervisorType) {
 
 		StringBuffer sbLanguages = new StringBuffer("");
 		if(languages != null) {
@@ -1017,10 +1018,6 @@ public class ConsoleProxyViewer implements java.lang.Runnable, RfbViewer, RfbPro
 				sbLanguages.append(lang);
 			}
 		}
-		
-		boolean linuxGuest = true;
-		if(guest != null && guest.equalsIgnoreCase("windows"))
-			linuxGuest = false;
 		
 		String[] content = new String[] {
 			"<html>",
@@ -1064,7 +1061,7 @@ public class ConsoleProxyViewer implements java.lang.Runnable, RfbViewer, RfbPro
 			"var acceptLanguages = '" + sbLanguages.toString() + "';",
 			"var tileMap = [ " + tileSequence + " ];",
 			"var ajaxViewer = new AjaxViewer('main_panel', '" + imgUrl + "', '" + updateUrl + "', tileMap, ", 
-				String.valueOf(width) + ", " + String.valueOf(height) + ", " + String.valueOf(tileWidth) + ", " + String.valueOf(tileHeight) + ");",
+				String.valueOf(width) + ", " + String.valueOf(height) + ", " + String.valueOf(tileWidth) + ", " + String.valueOf(tileHeight) + (hypervisorType != null ? (", " + hypervisorType) : "") + ");",
 
 			"$(function() {",
 				"ajaxViewer.start();",

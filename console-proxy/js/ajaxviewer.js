@@ -332,14 +332,14 @@ JsCookedKeyboardMapper.prototype.inputFeed = function(eventType, code, modifiers
 /////////////////////////////////////////////////////////////////////////////
 // class AjaxViewer
 //
-function AjaxViewer(panelId, imageUrl, updateUrl, tileMap, width, height, tileWidth, tileHeight) {
+function AjaxViewer(panelId, imageUrl, updateUrl, tileMap, width, height, tileWidth, tileHeight, hypervisorType) {
 	// logging is disabled by default so that it won't have negative impact on performance
 	// however, a back door key-sequence can trigger to open the logger window, it is designed to help
 	// trouble-shooting
 	g_logger = new Logger();
 	
-	//g_logger.enable(true);
-	//g_logger.open();
+	g_logger.enable(true);
+	g_logger.open();
 	
 	var ajaxViewer = this;
 	this.imageLoaded = false;
@@ -358,6 +358,8 @@ function AjaxViewer(panelId, imageUrl, updateUrl, tileMap, width, height, tileWi
 	this.tileWidth = tileWidth;
 	this.tileHeight = tileHeight;
 	this.maxTileZIndex = 1;
+	
+	this.hypervisorType = hypervisorType;
 	
 	this.currentKeyboard = AjaxViewer.KEYBOARD_TYPE_ENGLISH;
 	this.keyboardMappers = [];
@@ -688,35 +690,67 @@ AjaxViewer.prototype = {
     	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_TILDE, modifiers: 0, shift: true }
         ];
 */		
-		
-		// JP keyboard plugged in a Japanese host OS
-		mapper.jsX11KeysymMap[222] = AjaxViewer.X11_KEY_CIRCUMFLEX_ACCENT;
-		mapper.jsX11KeysymMap[220] = AjaxViewer.X11_KEY_YEN_MARK;
-		mapper.jsX11KeysymMap[219] = AjaxViewer.X11_KEY_OPEN_BRACKET;
-		mapper.jsX11KeysymMap[221] = AjaxViewer.X11_KEY_CLOSE_BRACKET;
-		mapper.jsX11KeysymMap[59] = AjaxViewer.X11_KEY_COLON;					// Firefox
-		mapper.jsX11KeysymMap[186] = AjaxViewer.X11_KEY_COLON;					// Chrome
-		mapper.jsX11KeysymMap[226] = AjaxViewer.X11_KEY_REVERSE_SOLIUS;			// \| key left to right SHIFT on JP keyboard
-		mapper.jsX11KeysymMap[240] = [
-      	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_CAPSLOCK, modifiers: 0 },
-    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_CAPSLOCK, modifiers: 0 },
-    	];
+
+		if(this.hypervisorType && this.hypervisorType == "XenServer") {
+			// XenServer hypervisor
 			
-		// for keycode 107, keypress 59
-		mapper.jsKeyPressX11KeysymMap[59] = [
-    	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SEMI_COLON, modifiers: 0 },
-    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SEMI_COLON, modifiers: 0 },
-    	];
+			mapper.jsX11KeysymMap[192] = 91;
+			mapper.jsX11KeysymMap[219] = 93;
+			mapper.jsX11KeysymMap[187] = 59;
+			mapper.jsX11KeysymMap[186] = 39;
+			mapper.jsX11KeysymMap[221] = 92;
+			mapper.jsX11KeysymMap[222] = 61;
+			
+			// for keycode 106, keypress 42
+			mapper.jsX11KeysymMap[106] = true;
+			mapper.jsKeyPressX11KeysymMap[42] = [
+	      	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
+	    	    {type: AjaxViewer.KEY_DOWN, code: 34, modifiers: 0, shift: false },
+	    	    {type: AjaxViewer.KEY_UP, code: 34, modifiers: 0, shift: false },
+	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
+	    	];
+			
+			mapper.jsX11KeysymMap[107] = true;
+			mapper.jsKeyPressX11KeysymMap[43] = [
+	      	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
+	    	    {type: AjaxViewer.KEY_DOWN, code: 59, modifiers: 0, shift: false },
+	    	    {type: AjaxViewer.KEY_UP, code: 59, modifiers: 0, shift: false },
+	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
+	    	];
+			
+		} else {
+			// for VMware hypervisor
+			
+			// JP keyboard plugged in a Japanese host OS
+			mapper.jsX11KeysymMap[222] = AjaxViewer.X11_KEY_CIRCUMFLEX_ACCENT;
+			mapper.jsX11KeysymMap[220] = AjaxViewer.X11_KEY_YEN_MARK;
+			mapper.jsX11KeysymMap[219] = AjaxViewer.X11_KEY_OPEN_BRACKET;
+			mapper.jsX11KeysymMap[221] = AjaxViewer.X11_KEY_CLOSE_BRACKET;
+			mapper.jsX11KeysymMap[59] = AjaxViewer.X11_KEY_COLON;					// Firefox
+			mapper.jsX11KeysymMap[186] = AjaxViewer.X11_KEY_COLON;					// Chrome
+			mapper.jsX11KeysymMap[226] = AjaxViewer.X11_KEY_REVERSE_SOLIUS;			// \| key left to right SHIFT on JP keyboard
+			mapper.jsX11KeysymMap[240] = [
+	      	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_CAPSLOCK, modifiers: 0 },
+	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_CAPSLOCK, modifiers: 0 },
+	    	];
+				
+			// for keycode 107, keypress 59
+			mapper.jsKeyPressX11KeysymMap[59] = [
+	    	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SEMI_COLON, modifiers: 0 },
+	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SEMI_COLON, modifiers: 0 },
+	    	];
+			
+			// for keycode 107, keypress 43
+			mapper.jsKeyPressX11KeysymMap[43] = [
+	     	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
+	    	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: false },
+	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: false },
+	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
+	       	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: true },
+	       	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: true },
+	        ];
+		}
 		
-		// for keycode 107, keypress 43
-		mapper.jsKeyPressX11KeysymMap[43] = [
-     	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
-    	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: false },
-    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: false },
-    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
-       	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: true },
-       	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: true },
-        ];
 	},
 	
 	getCurrentKeyboardMapper : function() {

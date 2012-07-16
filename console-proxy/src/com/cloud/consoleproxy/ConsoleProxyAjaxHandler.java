@@ -174,7 +174,8 @@ public class ConsoleProxyAjaxHandler implements HttpHandler {
 		
 				String title = queryMap.get("t");
 				String guest = queryMap.get("guest");
-				handleClientStart(t, viewer, title != null ? title : "", guest);
+				String hv = queryMap.get("hv");
+				handleClientStart(t, viewer, title != null ? title : "", guest, hv);
 			} else {
 				
 				if(s_logger.isTraceEnabled())
@@ -387,9 +388,9 @@ public class ConsoleProxyAjaxHandler implements HttpHandler {
 		}
 	}
 	
-	private void handleClientStart(HttpExchange t, ConsoleProxyViewer viewer, String title, String guest) throws IOException {
+	private void handleClientStart(HttpExchange t, ConsoleProxyViewer viewer, String title, String guest, String hypervisorType) throws IOException {
 		List<String> languages = t.getRequestHeaders().get("Accept-Language");
-		String response = viewer.onAjaxClientStart(title, languages, guest);
+		String response = viewer.onAjaxClientStart(title, languages, guest, hypervisorType);
 		
 		Headers hds = t.getResponseHeaders();
 		hds.set("Content-Type", "text/html");

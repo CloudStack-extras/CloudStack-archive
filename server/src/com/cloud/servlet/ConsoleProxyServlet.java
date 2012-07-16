@@ -300,6 +300,7 @@ public class ConsoleProxyServlet extends HttpServlet {
 		sb.append("&w=").append(w).append("&h=").append(h);
 		sb.append("&tag=").append(tag);
 		sb.append("&ticket=").append(ticket);
+		sb.append("&hv=").append(hostVo.getHypervisorType().toString());
 
 		if(s_logger.isDebugEnabled()) {
             s_logger.debug("Compose thumbnail url: " + sb.toString());
@@ -330,6 +331,8 @@ public class ConsoleProxyServlet extends HttpServlet {
 		GuestOSVO guestOsVo = _ms.getGuestOs(guestOs);
 		if(guestOsVo.getCategoryId() == 6)
 			sb.append("&guest=windows");
+		
+		sb.append("&hv=").append(hostVo.getHypervisorType().toString());
 		
 		if(s_logger.isDebugEnabled()) {
             s_logger.debug("Compose console url: " + sb.toString());
