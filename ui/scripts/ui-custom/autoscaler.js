@@ -80,7 +80,7 @@
         buttons: {
 
            'Cancel': function() {
-              $(this)..dialog('close');
+              $(this).dialog('close');
               $('.overlay').remove();
             },
 
