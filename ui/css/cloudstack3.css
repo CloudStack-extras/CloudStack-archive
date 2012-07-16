@@ -9285,6 +9285,10 @@ div.panel.ui-dialog div.list-view div.fixed-header {
     position:relative;
 }
 
+.ui-dialog div.autoscaler div.form-container div.value select {
+  width: 88%;
+  float: left;
+}
 
 
 
