@@ -82,12 +82,14 @@
                     },
 
                     minInstance: {
-                    	label: 'Min Instance',
+                    	label: 'Min Instances',
+                    	defaultValue: '3',
                     	validation: { required: true }
                     },
 
                     maxInstance: {
-                    	label: 'Max Instance',
+                    	label: 'Max Instances',
+                    	defaultValue: '10',
                     	validation: { required: true }
                     }
 		},
@@ -95,16 +97,19 @@
 		bottomFields: {
                     quietTime: {
                     	label: 'Quiet Time (in sec)',
+                    	defaultValue: '300',
                     	validation: { required: true }
                     },
 
                     destroyVMgracePeriod: {
                     	label: 'Destroy VM Grace Period',
+                    	defaultValue: '30',
                     	validation: { required: true }
                     },
 
                     interval: {
                     	label: 'Interval (in sec)',
+                    	defaultValue: '30',
                     	validation: { required: true }
                     },
 
@@ -154,11 +159,13 @@
                   
                   snmpCommunity: {
                     label: 'SNMP Community',
+                    defaultValue: 'Public',
                     validation: { required: true }
                   },
 
                   snmpPort: {
                     label: 'SNMP Port',
+                    defaultValue: '161',
                     validation: { required: true }
                   },
 
