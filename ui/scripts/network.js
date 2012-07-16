@@ -1271,7 +1271,8 @@
                           async: false,
                           data: {
                             vpcid: args.context.vpc[0].id,
-                            listAll: true
+                            listAll: true,
+														supportedservices: 'StaticNat'
                           },
                           success: function(json) {
                             var networks = json.listnetworksresponse.network;
@@ -1308,6 +1309,10 @@
                           if ($tierSelect.size() && $tierSelect.val() != '-1') {
                             data.networkid = $tierSelect.val();
                           }
+													else {
+													  args.response.success({ data: null });
+														return;
+													}
 
 													if('vpc' in args.context) {
 													  $.extend(data, {
@@ -2106,7 +2111,8 @@
                         select: function(args) {	
 													if('vpc' in args.context) {		
                             var data = {
-														  listAll: true
+														  listAll: true,
+															supportedservices: 'Lb'
 														};
 														if(args.context.ipAddresses[0].associatednetworkid == null) {
 														  $.extend(data, {
@@ -2117,7 +2123,7 @@
 														  $.extend(data, {
 															  id: args.context.ipAddresses[0].associatednetworkid
 															});
-														}			//???
+														}			
 													
 														$.ajax({
 															url: createURL("listNetworks"),															
@@ -2492,7 +2498,8 @@
                         select: function(args) {
 													if('vpc' in args.context) {		
                             var data = {
-														  listAll: true
+														  listAll: true,
+															supportedservices: 'PortForwarding'
 														};
 														if(args.context.ipAddresses[0].associatednetworkid == null) {
 														  $.extend(data, {
