@@ -24,7 +24,7 @@
         forms: {
 		topFields: {
        		    templateCategory: {
-                      label: 'Template Category',
+                      label: 'Template',
                       id: 'templatecategory',
                       select: function(args) {
                             args.response.success({
@@ -94,12 +94,15 @@
                     	defaultValue: '10',
                     	validation: { required: true }
                     }
-		},
+
+      		},
+
+                
 		
 		bottomFields: {
 
                     interval: {
-                        label: 'Interval (in sec)',
+                        label: 'Polling Interval (in sec)',
                         defaultValue: '30',
                         validation: { required: true }
                     },
@@ -162,7 +165,7 @@
                   
                   snmpCommunity: {
                     label: 'SNMP Community',
-                    defaultValue: 'Public',
+                    defaultValue: 'public',
                     validation: { required: true }
                   },
 
@@ -218,7 +221,8 @@
                 'add-scaleUpcondition': {
                   label: 'label.add',
                   addButton: true
-                }
+                },
+
               },
               add: {
                 label: 'label.add',

@@ -23,6 +23,8 @@
       var $bottomFields = $('<div>').addClass('field-group bottom-fields');
       var $scaleUpPolicy = $('<div>').addClass('scale-up-policy');
       var $scaleDownPolicy = $('<div>').addClass('scale-down-policy');
+      var $scaleUpPolicyTitle = $('<div>').addClass('scale-up-policy-title').html("Scale Up Policy");
+      var $scaleDownPolicyTitle = $('<div>').addClass('scale-down-policy-title').html("Scale Down Policy");
       var topFieldForm, $topFieldForm,
           bottomFieldForm, $bottomFieldForm;
 
@@ -64,7 +66,9 @@
       // Append main div elements
       $autoscalerDialog.append(
         $topFields,
+        $scaleUpPolicyTitle,
         $scaleUpPolicy,
+        $scaleDownPolicyTitle,
         $scaleDownPolicy,
         $bottomFields
       );
@@ -73,9 +77,10 @@
       $autoscalerDialog.dialog({
         title: 'AutoScale Configuration Wizard',
         width: 825,
-        height: 600,
+        height: 'auto',
         draggable: true,
         closeonEscape: false,
+        resizable: true,
         open:function() {
             $("button").each(function(){
                           $(this).attr("style", "left: 600px; position: relative; margin-right: 5px;"); 
@@ -98,7 +103,7 @@
         }
       }).closest('.ui-dialog').overlay();
         $('.ui-dialog div.autoscaler div.form-container').find('.form-item[rel=templateNames] label').hide();
-
+       $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
     }
   }
 }(jQuery, cloudStack));
