@@ -178,7 +178,6 @@
               async: true,
               success: function(json) {
             	var users = json.listusersresponse.user;
-            	var items = [];
             	args.response.success({
             		data:  $.map(users, function(user) {
             			return {
