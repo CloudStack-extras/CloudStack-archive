@@ -1,5 +1,4 @@
 // Copyright 2012 Citrix Systems, Inc. Licensed under the
-// Apache License, Version 2.0 (the "License"); you may not use this
 // file except in compliance with the License.  Citrix Systems, Inc.
 // reserves all rights not expressly granted by the License.
 // You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -12,32 +11,30 @@
   cloudStack.uiCustom.autoscaler = function(args) {
     // Place outer args here as local variables
     // i.e, -- var dataProvider = args.dataProvider
-    var topfields = args.forms.topFields;
-    var bottomfields = args.forms.bottomFields;
-    var scaleuppolicy = args.forms.scaleUpPolicy;
-    var scaledownpolicy = args.forms.scaleDownPolicy;
 
-    return function(args) {
-      var context = args.context;
+      var topfields = args.forms.topFields;
+      var bottomfields = args.forms.bottomFields;  
+      var scaleuppolicy = args.forms.scaleUpPolicy;
+      var scaledownpolicy = args.forms.scaleDownPolicy;
+      
+  return function(args) {
       var $autoscalerDialog = $('<div>').addClass('autoscaler');
       var $topFields = $('<div>').addClass('field-group top-fields');
       var $bottomFields = $('<div>').addClass('field-group bottom-fields');
       var $scaleUpPolicy = $('<div>').addClass('scale-up-policy');
       var $scaleDownPolicy = $('<div>').addClass('scale-down-policy');
       var topFieldForm, $topFieldForm,
-          bottomFieldForm, $bottomFieldForm,
-          scaleUpPolicyForm, scaleDownPolicyForm;
+          bottomFieldForm, $bottomFieldForm;
 
       // Create and append top fields
       // -- uses create form to generate fields
       topFieldForm = cloudStack.dialog.createForm({
-        context: context,
         noDialog: true, // Don't render a dialog, just return $formContainer
         form: {
           title: '',
           fields: topfields/*{
-                            fieldA: { label: 'Field A', validation: { required: true } }
-                            } */// Replace with object containing createForm fields, specified in your server call JS
+            fieldA: { label: 'Field A', validation: { required: true } }
+          } */// Replace with object containing createForm fields, specified in your server call JS
         }
       });
       $topFieldForm = topFieldForm.$formContainer;
@@ -46,24 +43,23 @@
       // Make multi-edits
       // $scaleUpPolicy.multiEdit(...)
       scaleUpPolicyForm = $scaleUpPolicy.multiEdit(
-        $.extend(true, {}, scaleuppolicy, { context: context }));
+    			$.extend(true, {}, scaleuppolicy))
       // $scaleDownPolicy.multiEdit(...)
       scaleDownPolicyForm = $scaleDownPolicy.multiEdit(
-        $.extend(true, {}, scaledownpolicy, { context: context }));
-
+    			$.extend(true, {}, scaledownpolicy))
+    			
       // Create and append bottom fields
       bottomFieldForm = cloudStack.dialog.createForm({
-        context: context,
         noDialog: true, // Don't render a dialog, just return $formContainer
         form: {
           title: '',
           fields: bottomfields /*{
-                                //fieldA: { label: 'Field B', validation: { required: true } }
-                                }*/ // Replace with object containing createForm fields, specified in your server call JS
+            //fieldA: { label: 'Field B', validation: { required: true } }
+           }*/ // Replace with object containing createForm fields, specified in your server call JS
         }
-      });
+      }); 
       $bottomFieldForm = bottomFieldForm.$formContainer;
-      $bottomFieldForm.appendTo($bottomFields);
+      $bottomFieldForm.appendTo($bottomFields); 
 
       // Append main div elements
       $autoscalerDialog.append(
@@ -72,7 +68,7 @@
         $scaleDownPolicy,
         $bottomFields
       );
-
+       
       // Render dialog
       $autoscalerDialog.dialog({
         title: 'AutoScale Configuration Wizard',
@@ -80,11 +76,19 @@
         height: 600,
         draggable: true,
         closeonEscape: false,
-        buttons: {
-          'Cancel': function() {
-            $(this).dialog('close');
-            $('.overlay').remove();
+        open:function() {
+            $("button").each(function(){
+                          $(this).attr("style", "left: 600px; position: relative; margin-right: 5px;"); 
+                      });
+
           },
+        buttons: {
+
+           'Cancel': function() {
+              $(this).dialog('close');
+              $('.overlay').remove();
+            
+            },
 
           'Apply': function() {
             $autoscalerDialog.dialog('close');
@@ -93,6 +97,9 @@
           }
         }
       }).closest('.ui-dialog').overlay();
-    };
-  };
+        $('.ui-dialog div.autoscaler div.form-container').find('.form-item[rel=templateNames] label').hide();
+
+    }
+  }
 }(jQuery, cloudStack));
+
