@@ -197,7 +197,12 @@
                         });
                     }*/
                     
-                  }
+                  },
+                  msurl: {
+                        label:'Ms-url',
+                        defaultValue: 'http://<cloud stack management server ip>: <port>/client/<api>',
+                        validation: {required:true}
+                    }
 		},
 		scaleUpPolicy: {
             title: 'ScaleUp Policy',

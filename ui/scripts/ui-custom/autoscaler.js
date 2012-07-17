@@ -80,10 +80,10 @@
         height: 'auto',
         draggable: true,
         closeonEscape: false,
-        resizable: true,
+        overflow:'auto',
         open:function() {
             $("button").each(function(){
-                          $(this).attr("style", "left: 600px; position: relative; margin-right: 5px;"); 
+                          $(this).attr("style", "left: 600px; position: relative; margin-right: 5px; "); 
                       });
 
           },
@@ -102,8 +102,10 @@
           }
         }
       }).closest('.ui-dialog').overlay();
-        $('.ui-dialog div.autoscaler div.form-container').find('.form-item[rel=templateNames] label').hide();
+       $('.ui-dialog div.autoscaler div.form-container').find('.form-item[rel=templateNames] label').hide();
        $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+       $('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+
     }
   }
 }(jQuery, cloudStack));

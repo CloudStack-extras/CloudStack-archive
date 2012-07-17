@@ -2838,6 +2838,8 @@ Dialogs*/
   -o-box-shadow: 0px -4px 15px #4C4A4A;
   box-shadow: 0px -4px 15px #4C4A4A;
   position: absolute;
+  overflow:auto;
+  max-height:800px;
 }
 
 .ui-dialog .ui-widget-content {
@@ -2884,7 +2886,8 @@ Dialogs*/
   cursor: pointer;
   float: left;
   width: 82px;
-  height: 31px;
+  left:  510px,
+  height: 40px;
   border: none;
   background: url(../images/gradients.png) -2px -481px;
   border: 1px solid #BFBCBC;
@@ -9321,6 +9324,21 @@ div.panel.ui-dialog div.list-view div.fixed-header {
     position:relative;
 }
 
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=snmpCommunity] {
+
+    display: block;
+    width: 50%;
+    float:left;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=snmpPort] {
+
+    display: inline-block;
+    width: 50%;
+    float:left;
+    left:-15px;
+    position:relative;
+}
 
 
 .ui-dialog div.autoscaler div.form-container div.value select {
@@ -9330,13 +9348,13 @@ div.panel.ui-dialog div.list-view div.fixed-header {
 
 div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit {
 
-margin-top:30px;
+margin-top:0px;
 
 }
 
 div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit {
 
-margin-top:30px;
+margin-top:0px;
 
 }
 
@@ -9350,11 +9368,17 @@ div.ui-dialog div.autoscaler div.scale-up-policy-title {
 
 div.ui-dialog div.autoscaler div.scale-up-policy-title label {
 
-    font-size: 14px;
-    margin-left: 189px;
+    font-size: 13px;
+    margin-left: 170px;
     margin-right: 10px;
 }
 
+div.ui-dialog div.autoscaler div.scale-down-policy-title label {
+
+    font-size: 13px;
+    margin-left: 170px;
+    margin-right: 10px;
+}
 
 div.ui-dialog div.autoscaler div.scale-down-policy-title {
 
