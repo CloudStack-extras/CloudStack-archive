@@ -198,7 +198,7 @@
         noSelect: true,
         noHeaderActionsColumn: true,
         fields: {
-          'name': { 
+          'counter': { 
     	    label: 'Counter',
     	      select: function(args) {
                 $.ajax({
@@ -220,7 +220,7 @@
             }
 	
 	      },
-          'operator': {
+          'relationaloperator': {
             label: 'Operator',
             select: function(args) {
               args.response.success({
@@ -281,7 +281,7 @@
         noSelect: true,
         noHeaderActionsColumn: true,
         fields: {
-          'name': {
+          'counter': {
     	  label: 'Counter',
             select: function(args) {
 	            $.ajax({
@@ -302,7 +302,7 @@
 	            });
 	        }
 	  },
-          'operator': {
+          'relationaloperator': {
             label: 'Operator',
             select: function(args) {
               args.response.success({
