@@ -97,7 +97,7 @@
               }
             },
             {
-              text: _l('label.ok'),
+              text: _l('Apply'),
               'class': 'ok',
               click: function() {
                 $autoscalerDialog.dialog('close');
