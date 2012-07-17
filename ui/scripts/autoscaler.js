@@ -225,11 +225,11 @@
             select: function(args) {
               args.response.success({
                 data: [
-                  { category: 'GT', description: _l('greater-than') },
-                  { category: 'GE', description: _l('greater-than or equals to') },
-                  { category: 'LT', description: _l('less-than') },
-                  { category: 'LE', description: _l('less-than or equals to') },
-                  { category: 'EQ', description: _l('equals-to') }
+                  { id: 'GT', description: _l('greater-than') },
+                  { id: 'GE', description: _l('greater-than or equals to') },
+                  { id: 'LT', description: _l('less-than') },
+                  { id: 'LE', description: _l('less-than or equals to') },
+                  { id: 'EQ', description: _l('equals-to') }
                 ]
               });
             }
@@ -307,11 +307,11 @@
             select: function(args) {
               args.response.success({
                 data: [
-                  { category: 'GT', description: _l('greater-than') },
-                  { category: 'GE', description: _l('greater-than or equals to') },
-                  { category: 'LT', description: _l('less-than') },
-                  { category: 'LE', description: _l('less-than or equals to') },
-                  { category: 'EQ', description: _l('equals-to') }
+                  { id: 'GT', description: _l('greater-than') },
+                  { id: 'GE', description: _l('greater-than or equals to') },
+                  { id: 'LT', description: _l('less-than') },
+                  { id: 'LE', description: _l('less-than or equals to') },
+                  { id: 'EQ', description: _l('equals-to') }
                 ]
               });
             }
