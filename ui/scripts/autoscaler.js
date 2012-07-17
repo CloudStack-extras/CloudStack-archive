@@ -47,7 +47,7 @@
               success: function(json) {
                 var templates = json.listtemplatesresponse.template;
                 args.response.success({
-                  data:  $.map(templates, function(template) {
+                  data: $.map(templates, function(template) {
                     return {
                       id: template.id,
                       description: template.name
@@ -69,7 +69,7 @@
               success: function(json) {
                 var serviceofferings = json.listserviceofferingsresponse.serviceoffering;
                 args.response.success({
-                  data:  $.map(serviceofferings, function(serviceoffering) {
+                  data: $.map(serviceofferings, function(serviceoffering) {
                     return {
                       id: serviceoffering.id,
                       description: serviceoffering.name
@@ -123,7 +123,7 @@
               success: function(json) {
                 var securitygroups = json.listsecuritygroupsresponse.securitygroup;
                 args.response.success({
-                  data:  $.map(securitygroups, function(securitygroup) {
+                  data: $.map(securitygroups, function(securitygroup) {
                     return {
                       id: securitygroup.id,
                       description: securitygroup.name
@@ -145,7 +145,7 @@
               success: function(json) {
                 var diskofferings = json.listdiskofferingsresponse.diskoffering;
                 args.response.success({
-                  data:  $.map(diskofferings, function(diskoffering) {
+                  data: $.map(diskofferings, function(diskoffering) {
                     return {
                       id: diskoffering.id,
                       description: diskoffering.name
@@ -198,7 +198,7 @@
         noSelect: true,
         noHeaderActionsColumn: true,
         fields: {
-          'counter': { 
+          'counterid': { 
     	    label: 'Counter',
     	      select: function(args) {
                 $.ajax({
@@ -208,9 +208,9 @@
                   success: function(json) {
                     var counters = json.counterresponse.counter;
                     args.response.success({
-                        data:  $.map(counters, function(counter) {
+                        data: $.map(counters, function(counter) {
                         return {
-                        id: counter.id,
+                        name: counter.id,
                         description: counter.name
                       };
                       })
@@ -225,11 +225,11 @@
             select: function(args) {
               args.response.success({
                 data: [
-                  { id: 'GT', description: _l('greater-than') },
-                  { id: 'GE', description: _l('greater-than or equals to') },
-                  { id: 'LT', description: _l('less-than') },
-                  { id: 'LE', description: _l('less-than or equals to') },
-                  { id: 'EQ', description: _l('equals-to') }
+                  { name: 'GT', description: 'greater-than' },
+                  { name: 'GE', description: 'greater-than or equals to' },
+                  { name: 'LT', description: 'less-than' },
+                  { name: 'LE', description: 'less-than or equals to' },
+                  { name: 'EQ', description: 'equals-to' }
                 ]
               });
             }
@@ -240,39 +240,77 @@
             addButton: true
           }
         },
+        
         add: {
           label: 'label.add',
           action: function(args) {
+        	var array1 = [];
+            array1.push("&counterid=" + args.data.counterid);
+            array1.push("&relationaloperator=" + args.data.relationaloperator);
+            array1.push("&threshold=" + todb(args.data.threshold));
+            array1.push("&account=" + args.context.users[0].account);
+            array1.push("&domainid=" +args.context.users[0].domainid );
+            
             $.ajax({
-              url: createURL(''),
-              dataType: 'json',
-              async: false
+            	url: createURL("createCondition" + array1.join("")),
+		                dataType: 'json',
+		                async: true,
+		                success: function(data) {
+		                  var jobId = data.conditionresponse.jobid;
+		
+		                  args.response.success({
+		                    _custom: {
+		                      jobId: jobId
+		                    }
+		                  });
+		                }
             });
           }
         },
+        
         actions: {
           destroy: {
-            label: '',
+        	label: '',
             action: function(args) {
               $.ajax({
-                url: createURL(''),
-                dataType: 'json',
-                async: true,
-              });
+                url: createURL("deleteCondition&id=" + args.context.multiRule[0].id),
+                        dataType: 'json',
+                        async: true,
+                        success: function(data) {
+                          var jobId = data.deleteconditionresponse.jobid;
+
+                          args.response.success({
+                            _custom: {
+                              jobId: jobId
+                            }
+                          });
+                        }
+            	});
             }
           }
         },
         dataProvider: function(args) {
-          $.ajax({
-            url: createURL('listClusters'),
-            dataType: 'json',
-            async: true,
-            success: function(json) {
-              args.response.success({
-                data: json.listclustersresponse.cluster
-              });
-            }
-          });
+        	$.ajax({
+                url: createURL('listConditions'),
+                dataType: 'json',
+                async: true,
+                success: function(data) {
+	        		args.response.success({
+	                              data: $.map(
+	                                data.listconditionsresponse.condition ?
+	                                  data.listconditionsresponse.condition : [],
+	                                function(elem) {
+	                                  return {
+	                                	id: elem.id,
+	                                    name: elem.counterid.name,
+	                                    relationaloperator: elem.relationaloperator,
+	                                    threshold: elem.threshold
+	                                  };
+	                                }
+	                              )
+	                            });
+                }
+        	});
         }
       },
 
@@ -281,7 +319,7 @@
         noSelect: true,
         noHeaderActionsColumn: true,
         fields: {
-          'counter': {
+          'counterid': {
     	  label: 'Counter',
             select: function(args) {
 	            $.ajax({
@@ -291,27 +329,27 @@
 	              success: function(json) {
 	                var counters = json.counterresponse.counter;
 	                args.response.success({
-	                    data:  $.map(counters, function(counter) {
+	                    data: $.map(counters, function(counter) {
 	                    return {
-	                    id: counter.id,
+	                    name: counter.id,
 	                    description: counter.name
 	                  };
 	                  })
 	                });
 	              }
 	            });
-	        }
-	  },
+      		}
+      	  },
           'relationaloperator': {
             label: 'Operator',
             select: function(args) {
               args.response.success({
                 data: [
-                  { id: 'GT', description: _l('greater-than') },
-                  { id: 'GE', description: _l('greater-than or equals to') },
-                  { id: 'LT', description: _l('less-than') },
-                  { id: 'LE', description: _l('less-than or equals to') },
-                  { id: 'EQ', description: _l('equals-to') }
+                  { name: 'GT', description: 'greater-than' },
+                  { name: 'GE', description: 'greater-than or equals to' },
+                  { name: 'LT', description: 'less-than' },
+                  { name: 'LE', description: 'less-than or equals to' },
+                  { name: 'EQ', description: 'equals-to' }
                 ]
               });
             }
@@ -325,36 +363,72 @@
         add: {
           label: 'label.add',
           action: function(args) {
-            $.ajax({
-              url: createURL(''),
-              dataType: 'json',
-              async: false
-            });
-          }
+          	var array1 = [];
+              array1.push("&counterid=" + args.data.counterid);
+              array1.push("&relationaloperator=" + args.data.relationaloperator);
+              array1.push("&threshold=" + todb(args.data.threshold));
+              array1.push("&account=" + args.context.users[0].account);
+              array1.push("&domainid=" +args.context.users[0].domainid );
+              
+              $.ajax({
+              	url: createURL("createCondition" + array1.join("")),
+  		                dataType: 'json',
+  		                async: true,
+  		                success: function(data) {
+  		                  var jobId = data.conditionresponse.jobid;
+  		
+  		                  args.response.success({
+  		                    _custom: {
+  		                      jobId: jobId
+  		                    }
+  		                  });
+  		                }
+              });
+            }
         },
         actions: {
           destroy: {
             label: '',
             action: function(args) {
-              $.ajax({
-                url: createURL(''),
-                dataType: 'json',
-                async: true,
-              });
+        	$.ajax({
+                url: createURL("deleteCondition&id=" + args.context.multiRule[0].id),
+                        dataType: 'json',
+                        async: true,
+                        success: function(data) {
+                          var jobId = data.deleteconditionresponse.jobid;
+
+                          args.response.success({
+                            _custom: {
+                              jobId: jobId
+                            }
+                          });
+                        }
+            	});
             }
           }
         },
         dataProvider: function(args) {
-          $.ajax({
-            url: createURL('listClusters'),
-            dataType: 'json',
-            async: true,
-            success: function(json) {
-              args.response.success({
-                data: json.listclustersresponse.cluster
-              });
-            }
-          });
+        	$.ajax({
+                url: createURL('listConditions'),
+                dataType: 'json',
+                async: true,
+                success: function(data) {
+	        		args.response.success({
+	                              data: $.map(
+	                                data.listconditionsresponse.condition ?
+	                                  data.listconditionsresponse.condition : [],
+	                                function(elem) {
+	                                  return {
+	                                	id: elem.id,
+	                                    name: elem.counterid.name,
+	                                    relationaloperator: elem.relationaloperator,
+	                                    threshold: elem.threshold
+	                                  };
+	                                }
+	                              )
+	                            });
+                }
+        	});
         }
       }
     },
