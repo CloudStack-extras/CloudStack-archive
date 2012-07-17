@@ -87,20 +87,25 @@
                       });
 
           },
-        buttons: {
-
-           'Cancel': function() {
-              $(this).dialog('close');
-              $('.overlay').remove();
-            
+          buttons: [
+            {
+              text: _l('label.cancel'),
+              'class': 'cancel',
+              click: function() {
+                $(this).dialog('close');
+                $('.overlay').remove(); 
+              }
             },
-
-          'Apply': function() {
-            $autoscalerDialog.dialog('close');
-            $('.overlay').remove();
-            $autoscalerDialog.closest(':ui-dialog').remove();
-          }
-        }
+            {
+              text: _l('label.ok'),
+              'class': 'ok',
+              click: function() {
+                $autoscalerDialog.dialog('close');
+                $('.overlay').remove();
+                $autoscalerDialog.closest(':ui-dialog').remove();
+              }
+            }
+          ]
       }).closest('.ui-dialog').overlay();
        $('.ui-dialog div.autoscaler div.form-container').find('.form-item[rel=templateNames] label').hide();
        $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
