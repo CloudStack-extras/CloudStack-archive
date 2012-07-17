@@ -370,7 +370,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         accountResponse.setVmRunning(vmRunning);
         accountResponse.setObjectName("account");
 
-        //get resource limits for projects
+        // get resource limits for projects
         Long projectLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.project, account.getId());
         String projectLimitDisplay = (accountIsAdmin || projectLimit == -1) ? "Unlimited" : String.valueOf(projectLimit);
         Long projectTotal = ApiDBUtils.getResourceCount(ResourceType.project, account.getId());
@@ -379,7 +379,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         accountResponse.setProjectTotal(projectTotal);
         accountResponse.setProjectAvailable(projectAvail);
 
-        //get resource limits for networks
+        // get resource limits for networks
         Long networkLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.network, account.getId());
         String networkLimitDisplay = (accountIsAdmin || networkLimit == -1) ? "Unlimited" : String.valueOf(networkLimit);
         Long networkTotal = ApiDBUtils.getResourceCount(ResourceType.network, account.getId());
@@ -560,7 +560,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         snapshotResponse.setIntervalType(ApiDBUtils.getSnapshotIntervalTypes(snapshot.getId()));
         snapshotResponse.setState(snapshot.getStatus());
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.Snapshot, snapshot.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
         for (ResourceTag tag : tags) {
@@ -834,7 +834,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             }
         }
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.PublicIpAddress, ipAddr.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
         for (ResourceTag tag : tags) {
@@ -871,7 +871,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         populateOwner(lbResponse, loadBalancer);
         lbResponse.setZoneId(publicIp.getDataCenterId());
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.UserVm, loadBalancer.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
         for (ResourceTag tag : tags) {
@@ -1075,7 +1075,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         volResponse.setCreated(volume.getCreated());
         volResponse.setState(volume.getState().toString());
-        if(volume.getState() == Volume.State.UploadOp){
+        if (volume.getState() == Volume.State.UploadOp) {
             com.cloud.storage.VolumeHostVO volumeHostRef = ApiDBUtils.findVolumeHostRef(volume.getId(), volume.getDataCenterId());
             volResponse.setSize(volumeHostRef.getSize());
             volResponse.setCreated(volumeHostRef.getCreated());
@@ -1093,9 +1093,9 @@ public class ApiResponseHelper implements ResponseGenerator {
                     volResponse.setState("Uploading");
                 } else {
                     volumeStatus = volumeHostRef.getErrorString();
-                    if(volumeHostRef.getDownloadState() == VMTemplateHostVO.Status.NOT_DOWNLOADED){
+                    if (volumeHostRef.getDownloadState() == VMTemplateHostVO.Status.NOT_DOWNLOADED) {
                         volResponse.setState("UploadNotStarted");
-                    }else {
+                    } else {
                         volResponse.setState("UploadError");
                     }
                 }
@@ -1168,7 +1168,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             }
         }
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.Volume, volume.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
         for (ResourceTag tag : tags) {
@@ -1325,7 +1325,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             stateToSet = "Deleting";
         }
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.PortForwardingRule, fwRule.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
         for (ResourceTag tag : tags) {
@@ -1609,7 +1609,7 @@ public class ApiResponseHelper implements ResponseGenerator {
                 userVmResponse.setNics(nicResponses);
             }
 
-            //set tag information
+            // set tag information
             List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.UserVm, userVm.getId());
             List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
             for (ResourceTag tag : tags) {
@@ -1798,7 +1798,7 @@ public class ApiResponseHelper implements ResponseGenerator {
                         vmResponse.setLinkLocalMacAddress(singleNicProfile.getMacAddress());
                         vmResponse.setLinkLocalNetmask(singleNicProfile.getNetmask());
                     } else if (network.getTrafficType() == TrafficType.Public || network.getTrafficType() == TrafficType.Guest) {
-                        /*In basic zone, public ip has TrafficType.Guest*/
+                        /* In basic zone, public ip has TrafficType.Guest */
                         vmResponse.setPublicIp(singleNicProfile.getIp4Address());
                         vmResponse.setPublicMacAddress(singleNicProfile.getMacAddress());
                         vmResponse.setPublicNetmask(singleNicProfile.getNetmask());
@@ -1896,7 +1896,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         populateAccount(response, owner.getId());
         populateDomain(response, owner.getDomainId());
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = null;
         if (result.getFormat() == ImageFormat.ISO) {
             tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.ISO, result.getId());
@@ -2097,7 +2097,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         templateResponse.setTemplateTag(template.getTemplateTag());
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = null;
         if (template.getFormat() == ImageFormat.ISO) {
             tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.ISO, template.getId());
@@ -2143,8 +2143,8 @@ public class ApiResponseHelper implements ResponseGenerator {
             populateAccount(isoResponse, owner.getId());
             populateDomain(isoResponse, owner.getDomainId());
 
-            //set tag information
-            List<? extends ResourceTag> tags =  ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.ISO, iso.getId());
+            // set tag information
+            List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.ISO, iso.getId());
             List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
             for (ResourceTag tag : tags) {
                 ResourceTagResponse tagResponse = createResourceTagResponse(tag, true);
@@ -2300,8 +2300,8 @@ public class ApiResponseHelper implements ResponseGenerator {
             isoResponse.setSize(isoSize);
         }
 
-        //set tag information
-        List<? extends ResourceTag> tags =  ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.ISO, iso.getId());
+        // set tag information
+        List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.ISO, iso.getId());
 
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
         for (ResourceTag tag : tags) {
@@ -2319,7 +2319,7 @@ public class ApiResponseHelper implements ResponseGenerator {
     public ListResponse<SecurityGroupResponse> createSecurityGroupResponses(
             List<? extends SecurityGroupRules> networkGroups) {
         List<SecurityGroupResultObject> groupResultObjs = SecurityGroupResultObject
-        .transposeNetworkGroups(networkGroups);
+                .transposeNetworkGroups(networkGroups);
 
         ListResponse<SecurityGroupResponse> response = new ListResponse<SecurityGroupResponse>();
         List<SecurityGroupResponse> netGrpResponses = new ArrayList<SecurityGroupResponse>();
@@ -2332,7 +2332,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             populateOwner(netGrpResponse, networkGroup);
 
             List<SecurityGroupRuleResultObject> securityGroupRules = networkGroup
-            .getSecurityGroupRules();
+                    .getSecurityGroupRules();
             if ((securityGroupRules != null) && !securityGroupRules.isEmpty()) {
                 List<SecurityGroupRuleResponse> ingressRulesResponse = new ArrayList<SecurityGroupRuleResponse>();
                 List<SecurityGroupRuleResponse> egressRulesResponse = new ArrayList<SecurityGroupRuleResponse>();
@@ -2367,7 +2367,7 @@ public class ApiResponseHelper implements ResponseGenerator {
                         egressRulesResponse.add(ruleData);
                     }
                 }
-                //set tag information
+                // set tag information
                 List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.UserVm, networkGroup.getId());
                 List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
                 for (ResourceTag tag : tags) {
@@ -2377,7 +2377,7 @@ public class ApiResponseHelper implements ResponseGenerator {
                 netGrpResponse.setTags(tagResponses);
 
                 netGrpResponse
-                .setSecurityGroupIngressRules(ingressRulesResponse);
+                        .setSecurityGroupIngressRules(ingressRulesResponse);
                 netGrpResponse.setSecurityGroupEgressRules(egressRulesResponse);
             }
             netGrpResponse.setObjectName("securitygroup");
@@ -2680,7 +2680,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             }
             capacityResponse.setZoneId(summedCapacity.getDataCenterId());
             capacityResponse.setZoneName(ApiDBUtils.findZoneById(summedCapacity.getDataCenterId()).getName());
-            if (summedCapacity.getUsedPercentage() != null){
+            if (summedCapacity.getUsedPercentage() != null) {
                 capacityResponse.setPercentUsed(format.format(summedCapacity.getUsedPercentage() * 100f));
             } else if (summedCapacity.getTotalCapacity() != 0) {
                 capacityResponse.setPercentUsed(format.format((float) summedCapacity.getUsedCapacity() / (float) summedCapacity.getTotalCapacity() * 100f));
@@ -2947,7 +2947,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         if (network.getBroadcastUri() != null) {
             String broadcastUri = network.getBroadcastUri().toString();
             response.setBroadcastUri(broadcastUri);
-            String vlan="N/A";
+            String vlan = "N/A";
             if (broadcastUri.startsWith("vlan")) {
                 vlan = broadcastUri.substring("vlan://".length(), broadcastUri.length());
             }
@@ -3032,7 +3032,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setCanUseForDeploy(ApiDBUtils.canUseForDeploy(network));
         response.setVpcId(network.getVpcId());
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.Network, network.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
         for (ResourceTag tag : tags) {
@@ -3069,7 +3069,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         response.setOwner(ApiDBUtils.getProjectOwner(project.getId()).getAccountName());
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.Project, project.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
         for (ResourceTag tag : tags) {
@@ -3112,7 +3112,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setIcmpCode(fwRule.getIcmpCode());
         response.setIcmpType(fwRule.getIcmpType());
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.FirewallRule, fwRule.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
         for (ResourceTag tag : tags) {
@@ -3156,7 +3156,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         response.setState(stateToSet);
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.NetworkACL, networkACL.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
         for (ResourceTag tag : tags) {
@@ -3286,7 +3286,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         userVmResponse.setPublicIpId(userVmData.getPublicIpId());
         userVmResponse.setPublicIp(userVmData.getPublicIp());
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.UserVm, userVmData.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
         for (ResourceTag tag : tags) {
@@ -3634,7 +3634,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         if (!keyValueOnly) {
             response.setResourceType(resourceTag.getResourceType().toString());
-            response.setId(ApiDBUtils.getUuid(String.valueOf(resourceTag.getResourceId()),resourceTag.getResourceType()));
+            response.setId(ApiDBUtils.getUuid(String.valueOf(resourceTag.getResourceId()), resourceTag.getResourceType()));
             Long accountId = resourceTag.getAccountId();
             Long domainId = resourceTag.getDomainId();
             if (accountId != null) {
@@ -3746,7 +3746,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setNetworks(networkResponses);
         response.setServices(serviceResponses);
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.Vpc, vpc.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
         for (ResourceTag tag : tags) {
@@ -3793,6 +3793,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setSnmpPort(profile.getSnmpPort());
         response.setDestroyVmGraceperiod(profile.getDestroyVmGraceperiod());
         response.setAutoscaleUserId(profile.getAutoScaleUserId());
+        response.setCsUrl(profile.getCsUrl());
         // Populates the account information in the response
         populateOwner(response, profile);
         return response;
@@ -3864,7 +3865,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         populateAccount(response, result.getAccountId());
         populateDomain(response, result.getDomainId());
 
-        //set tag information
+        // set tag information
         List<? extends ResourceTag> tags = ApiDBUtils.listByResourceTypeAndId(TaggedResourceType.StaticRoute, result.getId());
         List<ResourceTagResponse> tagResponses = new ArrayList<ResourceTagResponse>();
         for (ResourceTag tag : tags) {
@@ -3913,7 +3914,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         response.setVpnGatewayId(result.getVpnGatewayId());
         Long vpnGatewayId = result.getVpnGatewayId();
-        if(vpnGatewayId != null) {
+        if (vpnGatewayId != null) {
             Site2SiteVpnGatewayVO vpnGateway = ApiDBUtils.findVpnGatewayById(vpnGatewayId);
 
             long ipId = vpnGateway.getAddrId();
@@ -3923,7 +3924,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         response.setCustomerGatewayId(result.getCustomerGatewayId());
         Long customerGatewayId = result.getCustomerGatewayId();
-        if(customerGatewayId != null) {
+        if (customerGatewayId != null) {
             Site2SiteCustomerGatewayVO customerGateway = ApiDBUtils.findCustomerGatewayById(customerGatewayId);
             response.setGatewayIp(customerGateway.getGatewayIp());
             response.setGuestCidrList(customerGateway.getGuestCidrList());
