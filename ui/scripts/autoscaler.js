@@ -171,26 +171,25 @@
 
         username: {
           label: 'Username',
-          /*select: function(args) {
-           $.ajax({
-           url: createURL("listUsers&domainid=" + args.context.users[0].domainid),
-           dataType: "json",
-           async: true,
-           success: function(json) {
-           var users = json.listusersresponse.user;
-           var items = [];
-           args.response.success({
-           data:  $.map(users, function(user) {
-           return {
-           id: user.id,
-           description: user.username
-           };
-           })
-           });
-           }
-           });
-           }*/
-
+          select: function(args) {
+            $.ajax({
+              url: createURL("listUsers&domainid=" + args.context.users[0].domainid),
+              dataType: "json",
+              async: true,
+              success: function(json) {
+            	var users = json.listusersresponse.user;
+            	var items = [];
+            	args.response.success({
+            		data:  $.map(users, function(user) {
+            			return {
+            				id: user.id,
+            				description: user.username
+            			};
+            		})
+            	});
+              }
+            });
+          }
         }
       },
       scaleUpPolicy: {
