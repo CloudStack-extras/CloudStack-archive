@@ -100,7 +100,7 @@
                 
 		
 		bottomFields: {
-
+                    isAdvanced: { isBoolean: true, label: 'Show advanced settings' },
                     interval: {
                         label: 'Polling Interval (in sec)',
                         defaultValue: '30',
@@ -120,6 +120,8 @@
                     },
 
                     securityGroups: {
+                      isHidden: true,
+                      dependsOn: 'isAdvanced',
                     	label: 'label.menu.security.groups',
                     	select: function(args) {
                         	$.ajax({
@@ -143,6 +145,8 @@
 
                   DiskOfferings: {
                     label: 'label.menu.disk.offerings',
+                    isHidden: true,
+                    dependsOn: 'isAdvanced',
                     select: function(args) {
                         $.ajax({
                           url: createURL("listDiskOfferings&listAll=true"),
@@ -164,18 +168,24 @@
                   },
                   
                   snmpCommunity: {
+                    isHidden: true,
+                    dependsOn: 'isAdvanced',
                     label: 'SNMP Community',
                     defaultValue: 'public',
                     validation: { required: true }
                   },
 
                   snmpPort: {
+                    isHidden: true,
+                    dependsOn: 'isAdvanced',
                     label: 'SNMP Port',
                     defaultValue: '161',
                     validation: { required: true }
                   },
 
                   username: {
+                    isHidden: true,
+                    dependsOn: 'isAdvanced',
                     label: 'Username',
                     /*select: function(args) {
                         $.ajax({
