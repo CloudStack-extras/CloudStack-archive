@@ -338,8 +338,8 @@ function AjaxViewer(panelId, imageUrl, updateUrl, tileMap, width, height, tileWi
 	// trouble-shooting
 	g_logger = new Logger();
 	
-	g_logger.enable(true);
-	g_logger.open();
+	//g_logger.enable(true);
+	//g_logger.open();
 	
 	var ajaxViewer = this;
 	this.imageLoaded = false;

@@ -1061,7 +1061,7 @@ public class ConsoleProxyViewer implements java.lang.Runnable, RfbViewer, RfbPro
 			"var acceptLanguages = '" + sbLanguages.toString() + "';",
 			"var tileMap = [ " + tileSequence + " ];",
 			"var ajaxViewer = new AjaxViewer('main_panel', '" + imgUrl + "', '" + updateUrl + "', tileMap, ", 
-				String.valueOf(width) + ", " + String.valueOf(height) + ", " + String.valueOf(tileWidth) + ", " + String.valueOf(tileHeight) + (hypervisorType != null ? (", " + hypervisorType) : "") + ");",
+				String.valueOf(width) + ", " + String.valueOf(height) + ", " + String.valueOf(tileWidth) + ", " + String.valueOf(tileHeight) + (hypervisorType != null ? (", '" + hypervisorType) + "'" : "") + ");",
 
 			"$(function() {",
 				"ajaxViewer.start();",
