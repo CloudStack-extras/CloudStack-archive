@@ -116,6 +116,8 @@
                     destroyVMgracePeriod: {
                     	label: 'Destroy VM Grace Period',
                     	defaultValue: '30',
+                        isHidden:true,
+                        dependsOn:'isAdvanced',
                     	validation: { required: true }
                     },
 
@@ -214,7 +216,8 @@
                         validation: {required:true}
                     }
 		},
-		scaleUpPolicy: {
+	
+       	scaleUpPolicy: {
             title: 'ScaleUp Policy',
             label: 'SCALE UP POLICY',
               noSelect: true,
@@ -236,8 +239,7 @@
                 'add-scaleUpcondition': {
                   label: 'label.add',
                   addButton: true
-                },
-
+                }
               },
               add: {
                 label: 'label.add',
