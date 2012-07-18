@@ -24,9 +24,10 @@
       var $bottomFields = $('<div>').addClass('field-group bottom-fields');
       var $scaleUpPolicy = $('<div>').addClass('scale-up-policy');
       var $scaleDownPolicy = $('<div>').addClass('scale-down-policy');
+      var $scaleUpPolicyTitle = $('<div>').addClass('scale-up-policy-title').html("Scale Up Policy");
+      var $scaleDownPolicyTitle = $('<div>').addClass('scale-down-policy-title').html("Scale Down Policy");
       var topFieldForm, $topFieldForm,
-          bottomFieldForm, $bottomFieldForm,
-          scaleUpPolicyForm, scaleDownPolicyForm;
+          bottomFieldForm, $bottomFieldForm;
 
       // Create and append top fields
       // -- uses create form to generate fields
@@ -35,9 +36,7 @@
         noDialog: true, // Don't render a dialog, just return $formContainer
         form: {
           title: '',
-          fields: topfields/*{
-                            fieldA: { label: 'Field A', validation: { required: true } }
-                            } */// Replace with object containing createForm fields, specified in your server call JS
+          fields: topfields
         }
       });
       $topFieldForm = topFieldForm.$formContainer;
@@ -57,9 +56,7 @@
         noDialog: true, // Don't render a dialog, just return $formContainer
         form: {
           title: '',
-          fields: bottomfields /*{
-                                //fieldA: { label: 'Field B', validation: { required: true } }
-                                }*/ // Replace with object containing createForm fields, specified in your server call JS
+          fields: bottomfields 
         }
       });
       $bottomFieldForm = bottomFieldForm.$formContainer;
@@ -68,31 +65,50 @@
       // Append main div elements
       $autoscalerDialog.append(
         $topFields,
+        $scaleUpPolicyTitle,
         $scaleUpPolicy,
+        $scaleDownPolicyTitle,
         $scaleDownPolicy,
         $bottomFields
       );
 
       // Render dialog
       $autoscalerDialog.dialog({
-        title: 'AutoScale Configuration Wizard',
-        width: 825,
-        height: 600,
-        draggable: true,
-        closeonEscape: false,
-        buttons: {
-          'Cancel': function() {
-            $(this).dialog('close');
-            $('.overlay').remove();
-          },
+          title: 'AutoScale Configuration Wizard',
+          width: 825,
+          height: 'auto',
+          draggable: true,
+          closeonEscape: false,
+          overflow:'auto',
+          open:function() {
+              $("button").each(function(){
+                            $(this).attr("style", "left: 600px; position: relative; margin-right: 5px; "); 
+                        });
 
-          'Apply': function() {
-            $autoscalerDialog.dialog('close');
-            $('.overlay').remove();
-            $autoscalerDialog.closest(':ui-dialog').remove();
-          }
-        }
-      }).closest('.ui-dialog').overlay();
-    };
-  };
+            },
+            buttons: [
+              {
+                text: _l('label.cancel'),
+                'class': 'cancel',
+                click: function() {
+                  $(this).dialog('close');
+                  $('.overlay').remove(); 
+                }
+              },
+              {
+                text: _l('Apply'),
+                'class': 'ok',
+                click: function() {
+                  $autoscalerDialog.dialog('close');
+                  $('.overlay').remove();
+                  $autoscalerDialog.closest(':ui-dialog').remove();
+                }
+              }
+            ]
+        }).closest('.ui-dialog').overlay();
+         $('.ui-dialog div.autoscaler div.form-container').find('.form-item[rel=templateNames] label').hide();
+         $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+         $('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+      }
+    }
 }(jQuery, cloudStack));

@@ -9401,6 +9401,135 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   overflow: auto;
 }
 
+/*Autoscaler*/
+.ui-dialog div.autoscaler {
+  overflow: auto;
+  max-height: 600px;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=templateCategory] {
+  display: block;
+  width: 345px;
+  float: left;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=templateNames] {
+  display: inline-block;
+  width: 330px;
+  float: left;
+  position: relative;
+  margin-top: -3px;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=securityGroups] {
+  display: block;
+  width: 370px;
+  float: left;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=DiskOfferings] {
+  display: inline-block;
+  width: 370px;
+  float: left;
+  position: relative;
+  margin-top: 1px;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=minInstance] {
+  display: block;
+  width: 50%;
+  float: left;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=maxInstance] {
+  display: inline-block;
+  width: 50%;
+  float: left;
+  left: -30px;
+  position: relative;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=interval] {
+  display: block;
+  width: 50%;
+  float: left;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=quietTime] {
+  display: inline-block;
+  width: 50%;
+  float: left;
+  left: -15px;
+  position: relative;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=snmpCommunity] {
+  display: block;
+  width: 50%;
+  float: left;
+}
+
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=snmpPort] {
+  display: inline-block;
+  width: 50%;
+  float: left;
+  left: -15px;
+  position: relative;
+}
+
+.ui-dialog div.autoscaler div.form-container div.value select {
+  width: 88%;
+  float: left;
+}
+
+div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit {
+  margin-top: 0px;
+}
+
+div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit {
+  margin-top: 0px;
+}
+
+div.ui-dialog div.autoscaler div.scale-up-policy-title {
+  color: #0055BB;
+  margin-left: -650px;
+  margin-top: 40px;
+}
+
+div.ui-dialog div.autoscaler div.scale-up-policy-title label {
+  font-size: 13px;
+  margin-left: 170px;
+  margin-right: 10px;
+}
+
+div.ui-dialog div.autoscaler div.scale-down-policy-title label {
+  font-size: 13px;
+  margin-left: 170px;
+  margin-right: 10px;
+}
+
+div.ui-dialog div.autoscaler div.scale-down-policy-title {
+  color: #0055BB;
+  margin-left: -650px;
+  margin-top: 10px;
+}
+
+div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.data-body div.data-item {
+
+margin-bottom:0px;
+
+}
+
+div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-body div.data-item {
+
+margin-bottom:0px;
+
+}
+
+div.ui-dialog div.autoscaler div.field-group div.form-container form div.form-item div.name label {
+font-size:11px;
+}
+
 /*Action icons*/
 .action.edit .icon {
   background-position: 1px -1px;

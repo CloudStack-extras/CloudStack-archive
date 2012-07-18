@@ -24,7 +24,8 @@
     forms: {
       topFields: {
         templateCategory: {
-          label: 'Template Category',
+          label: 'Template',
+          id: 'templatecategory',
           select: function(args) {
             args.response.success({
               data: [
@@ -38,7 +39,8 @@
         },
 
         templateNames: {
-          label: 'Template Name',
+          label: '',
+          id: 'templatename',
           select: function(args) {
             $.ajax({
               url: createURL("listTemplates&templatefilter=all" ),
@@ -95,26 +97,30 @@
       },
 
       bottomFields: {
-        quietTime: {
-          label: 'Quiet Time (in sec)',
-          defaultValue: '300',
-          validation: { required: true }
-        },
+    	  isAdvanced: { isBoolean: true, label: 'Show advanced settings' },
+          interval: {
+              label: 'Polling Interval (in sec)',
+              defaultValue: '30',
+              validation: { required: true }
+          },
 
-        destroyVMgracePeriod: {
-          label: 'Destroy VM Grace Period',
-          defaultValue: '30',
-          validation: { required: true }
-        },
+          quietTime: {
+          	label: 'Quiet Time (in sec)',
+          	defaultValue: '300',
+          	validation: { required: true }
+          },
 
-        interval: {
-          label: 'Interval (in sec)',
-          defaultValue: '30',
-          validation: { required: true }
-        },
-
+          destroyVMgracePeriod: {
+          	label: 'Destroy VM Grace Period',
+          	defaultValue: '30',
+              isHidden:true,
+              dependsOn:'isAdvanced',
+          	validation: { required: true }
+          },
         securityGroups: {
           label: 'label.menu.security.groups',
+          isHidden: true,
+          dependsOn: 'isAdvanced',
           select: function(args) {
             $.ajax({
               url: createURL("listSecurityGroups&listAll=true"),
@@ -137,6 +143,8 @@
 
         DiskOfferings: {
           label: 'label.menu.disk.offerings',
+          isHidden: true,
+          dependsOn: 'isAdvanced',
           select: function(args) {
             $.ajax({
               url: createURL("listDiskOfferings&listAll=true"),
@@ -158,18 +166,24 @@
         },
 
         snmpCommunity: {
+        	isHidden: true,
+            dependsOn: 'isAdvanced',
           label: 'SNMP Community',
-          defaultValue: 'Public',
+          defaultValue: 'public',
           validation: { required: true }
         },
 
         snmpPort: {
+        	isHidden: true,
+            dependsOn: 'isAdvanced',
           label: 'SNMP Port',
           defaultValue: '161',
           validation: { required: true }
         },
 
         username: {
+        	isHidden: true,
+            dependsOn: 'isAdvanced',
           label: 'Username',
           select: function(args) {
             $.ajax({
@@ -189,10 +203,16 @@
               }
             });
           }
+        },
+        msurl: {
+            label:'Ms-url',
+            defaultValue: 'http://<cloud stack management server ip>: <port>/client/<api>',
+            validation: {required:true}
         }
       },
       scaleUpPolicy: {
         title: 'ScaleUp Policy',
+        label: 'SCALE UP POLICY',
         noSelect: true,
         noHeaderActionsColumn: true,
         fields: {
