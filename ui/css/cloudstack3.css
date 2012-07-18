@@ -9362,6 +9362,18 @@ div.ui-dialog div.autoscaler div.scale-down-policy-title {
   margin-top: 10px;
 }
 
+div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.data-body div.data-item {
+
+margin-bottom:0px;
+
+}
+
+div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-body div.data-item {
+
+margin-bottom:0px;
+
+}
+
 /*Action icons*/
 .action.edit .icon {
   background-position: 1px -1px;
