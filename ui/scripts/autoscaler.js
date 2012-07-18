@@ -287,6 +287,7 @@
             }
           }
         },
+        ignoreEmptyFields: true,
         dataProvider: function(args) {
         	$.ajax({
                 url: createURL('listConditions'),
@@ -405,6 +406,7 @@
             }
           }
         },
+        ignoreEmptyFields: true,
         dataProvider: function(args) {
         	$.ajax({
                 url: createURL('listConditions'),
