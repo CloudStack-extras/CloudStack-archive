@@ -304,10 +304,13 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         } catch (ResourceUnavailableException e) {
             s_logger.warn("Unable to configure AutoScaleVmGroup to the lb rule: " + loadBalancer.getId() + " because resource is unavaliable:", e);
         } finally {
-            if (!success && isRollBackAllowedForProvider(loadBalancer)) {
-                loadBalancer.setState(backupState);
-                _lbDao.persist(loadBalancer);
-                s_logger.debug("LB Rollback rule id: " + loadBalancer.getId() + " lb state rolback while creating AutoscaleVmGroup");
+            if (!success) {
+                s_logger.warn("Failed to configure LB Auto Scale Vm Group with Id:" + vmGroupid);
+                if (isRollBackAllowedForProvider(loadBalancer)) {
+                    loadBalancer.setState(backupState);
+                    _lbDao.persist(loadBalancer);
+                    s_logger.debug("LB Rollback rule id: " + loadBalancer.getId() + " lb state rolback while creating AutoscaleVmGroup");
+                }
             }
             success = false;
         }
@@ -320,10 +323,11 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                 _lbDao.persist(loadBalancer);
                 vmGroup.setState(AutoScaleVmGroup.State_Enabled);
                 _autoScaleVmGroupDao.persist(vmGroup);
+                s_logger.debug("LB Auto Scale Vm Group with Id: " + vmGroupid + " is set to Enabled state.");
                 Transaction.currentTxn().commit();
             }
+            s_logger.info("Successfully configured LB Autoscale Vm Group with Id: " + vmGroupid);
         }
-
         return success;
     }
 
@@ -879,7 +883,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         if (ipAddrId != null) {
             ipVO = _ipAddressDao.findById(ipAddrId);
         }
-        
+
         Network network = _networkMgr.getNetwork(lb.getNetworkId());
 
         LoadBalancer result = _elbMgr.handleCreateLoadBalancerRule(lb, lbOwner, lb.getNetworkId());
@@ -892,7 +896,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                 lb.setSourceIpAddressId(systemIp.getId());
                 ipVO = _ipAddressDao.findById(systemIp.getId());
             }
-            
+
             // Validate ip address
             if (ipVO == null) {
                 throw new InvalidParameterValueException("Unable to create load balance rule; can't find/allocate source IP", null);
@@ -902,14 +906,14 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
 
             try {
                 if (ipVO.getAssociatedWithNetworkId() == null) {
-                    boolean assignToVpcNtwk = network.getVpcId() != null 
+                    boolean assignToVpcNtwk = network.getVpcId() != null
                             && ipVO.getVpcId() != null && ipVO.getVpcId().longValue() == network.getVpcId();
                     if (assignToVpcNtwk) {
-                        //set networkId just for verification purposes
+                        // set networkId just for verification purposes
                         ipVO.setAssociatedWithNetworkId(lb.getNetworkId());
                         _networkMgr.checkIpForService(ipVO, Service.Lb, lb.getNetworkId());
 
-                        s_logger.debug("The ip is not associated with the VPC network id="+ lb.getNetworkId() + " so assigning");
+                        s_logger.debug("The ip is not associated with the VPC network id=" + lb.getNetworkId() + " so assigning");
                         ipVO = _networkMgr.associateIPToGuestNetwork(ipAddrId, lb.getNetworkId());
                         performedIpAssoc = true;
                     }
