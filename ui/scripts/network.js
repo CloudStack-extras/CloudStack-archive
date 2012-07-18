@@ -801,7 +801,17 @@
                     },
 
                     domain: { label: 'label.domain' },
-                    account: { label: 'label.account' }
+                    account: { label: 'label.account' },
+										
+										vpcid: { 
+										  label: 'VPC ID',	
+                      converter: function(args) {											  
+                        if(args != null)
+												  return args;
+												else
+												  return 'N/A';
+                      }											
+										}
                   }
                 ],
                 dataProvider: function(args) {								 					
@@ -1623,8 +1633,8 @@
                     },
                     dataType: "json",
                     async: true,
-                    success: function(json) {
-                      var ipObj = items[0];	//because json.listpublicipaddressesresponse.publicipaddress is null (API bug). Use old info here until API is fixed.
+                    success: function(json) {										  
+                      var ipObj = json.listpublicipaddressesresponse.publicipaddress[0];	
 											
 											if('networks' in args.context) { //from Guest Network section		
 											  //get ipObj.networkOfferingConserveMode and ipObj.networkOfferingHavingVpnService from guest network's network offering
@@ -1966,7 +1976,8 @@
                     $.ajax({
                       url: createURL('listPublicIpAddresses'),
                       data: {
-                        id: args.context.ipAddresses[0].id
+                        id: args.context.ipAddresses[0].id,
+												listAll: true
                       },
                       dataType: 'json',
                       async: true,
@@ -2547,8 +2558,7 @@
 													listAll: true
 												},
 												success: function(json) {												  
-													//var item = json.listpublicipaddressesresponse.publicipaddress[0];	//uncomment this line and delete the following line when "listPublicIpAddresses&id=N" is fixed to return a record.	
-                          var item = args.context.ipAddresses[0];
+													var item = json.listpublicipaddressesresponse.publicipaddress[0];	
 													
 													args.context.ipAddresses.shift(); //remove the first element in args.context.ipAddresses										
 													args.context.ipAddresses.push(item);
@@ -2827,8 +2837,7 @@
 															listAll: true
 														},
 														success: function(json) {												  
-															//var item = json.listpublicipaddressesresponse.publicipaddress[0];	//uncomment this line and delete the following line when "listPublicIpAddresses&id=N" is fixed to return a record.	
-                              var item = args.context.ipAddresses[0];
+															var item = json.listpublicipaddressesresponse.publicipaddress[0];	
 													
 															args.context.ipAddresses.shift(); //remove the first element in args.context.ipAddresses										
 															args.context.ipAddresses.push(item);
