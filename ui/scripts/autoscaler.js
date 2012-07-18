@@ -320,8 +320,7 @@
 	                                  data.listconditionsresponse.condition : [],
 	                                function(elem) {
 	                                  return {
-	                                	id: elem.id,
-	                                    name: elem.counterid.name,
+	                                	counterid: elem.id,
 	                                    relationaloperator: elem.relationaloperator,
 	                                    threshold: elem.threshold
 	                                  };
@@ -439,8 +438,7 @@
 	                                  data.listconditionsresponse.condition : [],
 	                                function(elem) {
 	                                  return {
-	                                	id: elem.id,
-	                                    name: elem.counterid.name,
+	                                	counterid: elem.id,
 	                                    relationaloperator: elem.relationaloperator,
 	                                    threshold: elem.threshold
 	                                  };
