@@ -35,7 +35,7 @@ public class UpdateAutoScalePolicyCmd extends BaseAsyncCmd {
     private Integer quietTime;
 
     @IdentityMapper(entityTableName = "conditions")
-    @Parameter(name = ApiConstants.CONDITION_IDS, type = CommandType.LIST, collectionType = CommandType.LONG, required = true, description = "the list of IDs of the conditions that are being evaluated on every interval")
+    @Parameter(name = ApiConstants.CONDITION_IDS, type = CommandType.LIST, collectionType = CommandType.LONG, description = "the list of IDs of the conditions that are being evaluated on every interval")
     private List<Long> conditionIds;
 
     @IdentityMapper(entityTableName = "autoscale_policies")
@@ -43,7 +43,7 @@ public class UpdateAutoScalePolicyCmd extends BaseAsyncCmd {
     private Long id;
 
     @Override
-    public void execute() throws ServerApiException {
+    public void execute() {
         UserContext.current().setEventDetails("AutoScale Policy Id: " + getId());
         AutoScalePolicy result = _autoScaleService.updateAutoScalePolicy(this);
         if (result != null) {

@@ -26,13 +26,10 @@ import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
 import com.cloud.api.response.AutoScaleVmProfileResponse;
 import com.cloud.async.AsyncJob;
-import com.cloud.dc.DataCenter;
 import com.cloud.event.EventTypes;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.network.as.AutoScaleVmProfile;
-import com.cloud.offering.ServiceOffering;
-import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.user.Account;
 import com.cloud.user.User;
 import com.cloud.user.UserContext;
@@ -62,7 +59,7 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
     @Parameter(name = ApiConstants.OTHER_DEPLOY_PARAMS, type = CommandType.STRING, description = "parameters other than zoneId/serviceOfferringId/templateId of the auto deployed virtual machine")
     private String otherDeployParams;
 
-    @Parameter(name = ApiConstants.AUTOSCALE_VM_DESTROY_TIME, type = CommandType.INTEGER, required = true, description = "the time allowed for existing connections to get closed before a vm is destroyed")
+    @Parameter(name = ApiConstants.AUTOSCALE_VM_DESTROY_TIME, type = CommandType.INTEGER, description = "the time allowed for existing connections to get closed before a vm is destroyed")
     private Integer destroyVmGraceperiod;
 
     @Parameter(name = ApiConstants.SNMP_COMMUNITY, type = CommandType.STRING, description = "snmp community string to be used to contact a virtual machine deployed by this profile")
@@ -74,6 +71,9 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
     @IdentityMapper(entityTableName = "user")
     @Parameter(name = ApiConstants.AUTOSCALE_USER_ID, type = CommandType.LONG, description = "the ID of the user used to launch and destroy the VMs")
     private Long autoscaleUserId;
+
+    @Parameter(name = ApiConstants.CS_URL, type = CommandType.STRING, description = "the API URL including port of the CloudStack Management Server example: http://server.cloud.com:8080/client/api?")
+    private String csUrl;
 
     private Map<String, String> otherDeployParamMap;
 
@@ -120,8 +120,12 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
         return otherDeployParams;
     }
 
+    public String getCsUrl() {
+        return csUrl;
+    }
+
     public Long getAutoscaleUserId() {
-        if(autoscaleUserId != null) {
+        if (autoscaleUserId != null) {
             return autoscaleUserId;
         } else {
             return UserContext.current().getCaller().getId();
@@ -133,11 +137,11 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
     }
 
     public long getAccountId() {
-        if(accountId != null) {
+        if (accountId != null) {
             return accountId;
         }
         Account account = null;
-        if(autoscaleUserId != null) {
+        if (autoscaleUserId != null) {
             User user = _entityMgr.findById(User.class, autoscaleUserId);
             account = _entityMgr.findById(Account.class, user.getAccountId());
         } else {
@@ -222,33 +226,18 @@ public class CreateAutoScaleVmProfileCmd extends BaseAsyncCreateCmd {
 
     @Override
     public void execute() {
+        AutoScaleVmProfile result = _entityMgr.findById(AutoScaleVmProfile.class, getEntityId());
+        AutoScaleVmProfileResponse response = _responseGenerator.createAutoScaleVmProfileResponse(result);
+        response.setResponseName(getCommandName());
+        this.setResponseObject(response);
     }
 
     @Override
     public void create() throws ResourceAllocationException {
 
-        DataCenter zone = _configService.getZone(zoneId);
-        if (zone == null) {
-            throw new InvalidParameterValueException("Unable to find zone by id=" + zoneId);
-        }
-
-        ServiceOffering serviceOffering = _configService.getServiceOffering(serviceOfferingId);
-        if (serviceOffering == null) {
-            throw new InvalidParameterValueException("Unable to find service offering: " + serviceOfferingId);
-        }
-
-        VirtualMachineTemplate template = _templateService.getTemplate(templateId);
-        // Make sure a valid template ID was specified
-        if (template == null) {
-            throw new InvalidParameterValueException("Unable to use template " + templateId);
-        }
-
         AutoScaleVmProfile result = _autoScaleService.createAutoScaleVmProfile(this);
         if (result != null) {
             this.setEntityId(result.getId());
-            AutoScaleVmProfileResponse response = _responseGenerator.createAutoScaleVmProfileResponse(result);
-            response.setResponseName(getCommandName());
-            this.setResponseObject(response);
         } else {
             throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to create Autoscale Vm Profile");
         }

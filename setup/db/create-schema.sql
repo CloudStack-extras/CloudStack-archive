@@ -2146,11 +2146,13 @@ CREATE TABLE `cloud`.`s2s_vpn_gateway` (
   `id` bigint unsigned NOT NULL auto_increment COMMENT 'id',
   `uuid` varchar(40),
   `addr_id` bigint unsigned NOT NULL,
+  `vpc_id` bigint unsigned NOT NULL,
   `domain_id` bigint unsigned NOT NULL,
   `account_id` bigint unsigned NOT NULL,
   `removed` datetime COMMENT 'date removed if not null',
   PRIMARY KEY  (`id`),
   CONSTRAINT `fk_s2s_vpn_gateway__addr_id` FOREIGN KEY (`addr_id`) REFERENCES `user_ip_address` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_s2s_vpn_gateway__vpc_id` FOREIGN KEY (`vpc_id`) REFERENCES `vpc` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_s2s_vpn_gateway__account_id` FOREIGN KEY (`account_id`) REFERENCES `account`(`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_s2s_vpn_gateway__domain_id` FOREIGN KEY (`domain_id`) REFERENCES `domain`(`id`) ON DELETE CASCADE,
   CONSTRAINT `uc_s2s_vpn_gateway__uuid` UNIQUE (`uuid`)
@@ -2208,7 +2210,7 @@ CREATE TABLE `cloud`.`resource_tags` (
   CONSTRAINT `fk_tags__domain_id` FOREIGN KEY(`domain_id`) REFERENCES `domain`(`id`),
   UNIQUE `i_tags__resource_id__resource_type__key`(`resource_id`, `resource_type`, `key`),
   CONSTRAINT `uc_resource_tags__uuid` UNIQUE (`uuid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `cloud`.`vpc` (
   `id` bigint unsigned NOT NULL auto_increment COMMENT 'id',
@@ -2373,6 +2375,7 @@ CREATE TABLE `cloud`.`autoscale_vmprofiles` (
   `destroy_vm_grace_period` int unsigned COMMENT 'the time allowed for existing connections to get closed before a vm is destroyed',
   `snmp_community` varchar(255) COMMENT 'the community string to be used to reach out to the VM deployed by this profile',
   `snmp_port` int unsigned COMMENT 'the snmp port to be used to reach out to the VM deployed by this profile',
+  `cs_url` varchar(255) NOT NULL COMMENT 'the URL including port of the CloudStack Management Server e.g. http://server.cloud.com:8080',
   `created` datetime NOT NULL COMMENT 'date created',
   `removed` datetime COMMENT 'date removed if not null',
   PRIMARY KEY  (`id`),

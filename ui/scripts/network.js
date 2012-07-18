@@ -152,6 +152,8 @@
     }
   };
 
+	var networkOfferingObjs = [];
+	
   cloudStack.sections.network = {
     title: 'label.network',
     id: 'network',
@@ -257,9 +259,9 @@
                           state: 'Enabled'
                         },
                         success: function(json) {
-                          var networkOfferings = json.listnetworkofferingsresponse.networkoffering;
+                          networkOfferingObjs = json.listnetworkofferingsresponse.networkoffering;
                           args.response.success({
-                            data: $.map(networkOfferings, function(zone) {
+                            data: $.map(networkOfferingObjs, function(zone) {
                               return {
                                 id: zone.id,
                                 description: zone.name
@@ -270,24 +272,74 @@
                       });
                     }
                   },
+									vpcid: {
+										label: 'VPC',
+										dependsOn: 'networkOfferingId',
+										select: function(args) {										  
+											var networkOfferingObj;
+											$(networkOfferingObjs).each(function(key, value) {											  
+											  if(value.id == args.networkOfferingId) {
+												  networkOfferingObj = value;
+													return false; //break each loop
+												}												
+											});											
+											if(networkOfferingObj.forvpc == true) {
+											  args.$select.closest('.form-item').css('display', 'inline-block');
+											  $.ajax({
+												  url: createURL('listVPCs'),
+													data: {
+													  listAll: true
+													},
+													success: function(json) {													  
+														var items = json.listvpcsresponse.vpc;
+														var data;
+														if(items != null && items.length > 0) {
+														  data = $.map(items, function(item) {															  
+															  return {
+																  id: item.id,
+																	description: item.name
+																}
+															});															
+														}		
+														args.response.success({ data: data });
+													}
+												});											
+											}
+											else {
+											  args.$select.closest('.form-item').hide();
+											  args.response.success({ data: null });
+											}			
+										}
+									},
                   guestGateway: { label: 'label.guest.gateway' },
                   guestNetmask: { label: 'label.guest.netmask' }
                 }
               },
               action: function(args) {
-                var array1 = [];
-                array1.push("&zoneId=" + args.data.zoneId);
-                array1.push("&name=" + todb(args.data.name));
-                array1.push("&displayText=" + todb(args.data.displayText));
-                array1.push("&networkOfferingId=" + args.data.networkOfferingId);
-
-                if(args.data.guestGateway != null && args.data.guestGateway.length > 0)
-                  array1.push("&gateway=" + args.data.guestGateway);
-                if(args.data.guestNetmask != null && args.data.guestNetmask.length > 0)
-                  array1.push("&netmask=" + args.data.guestNetmask);
-
+							  var dataObj = {
+								  zoneId: args.data.zoneId,
+									name: args.data.name,
+									displayText: args.data.displayText,
+									networkOfferingId: args.data.networkOfferingId
+								};				
+                if(args.data.guestGateway != null && args.data.guestGateway.length > 0) {                  
+									$.extend(dataObj, {
+									  gateway: args.data.guestGateway
+									});
+								}								
+                if(args.data.guestNetmask != null && args.data.guestNetmask.length > 0) {                  
+									$.extend(dataObj, {
+									  netmask: args.data.guestNetmask
+									});									
+								}								
+								if(args.$form.find('.form-item[rel=vpcid]').css("display") != "none") {                 
+									$.extend(dataObj, {
+									  vpcid: args.data.vpcid
+									});
+								}											
                 $.ajax({
-                  url: createURL('createNetwork' + array1.join("")),
+                  url: createURL('createNetwork'),
+									data: dataObj,
                   success: function(json) {
                     args.response.success({
                       data: json.createnetworkresponse.network
@@ -1005,7 +1057,18 @@
           actions: {
             add: {
               label: 'label.acquire.new.ip',
-              addRow: 'true',			              
+              addRow: 'true',	
+              preFilter: function(args) {
+							  if('networks' in args.context) { //from Guest Network section
+									if(args.context.networks[0].vpcid == null) //if it's a non-VPC network, show Acquire IP button
+										return true;
+									else //if it's a VPC network, hide Acquire IP button
+										return false;
+								}
+								else { //from VPC section
+								  return true; //show Acquire IP button
+								}
+              },							
               messages: {   
                 confirm: function(args) {
                   return 'message.acquire.new.ip';
@@ -1562,12 +1625,13 @@
                   $.ajax({
                     url: createURL('listPublicIpAddresses'),
                     data: {                      
-                      id: args.context.ipAddresses[0].id
+                      id: args.context.ipAddresses[0].id,
+											listAll: true
                     },
                     dataType: "json",
                     async: true,
                     success: function(json) {
-                      var ipObj = items[0];	
+                      var ipObj = items[0];	//because json.listpublicipaddressesresponse.publicipaddress is null (API bug). Use old info here until API is fixed.
 											
 											if('networks' in args.context) { //from Guest Network section		
 											  //get ipObj.networkOfferingConserveMode and ipObj.networkOfferingHavingVpnService from guest network's network offering
@@ -1637,7 +1701,7 @@
                     var havingLbService = false;
 										var havingVpnService = false;		
 										
-                    if('networks' in args.context) { //from Guest Network section
+                    if('networks' in args.context && args.context.networks[0].vpcid == null) { //a non-VPC network from Guest Network section
 											$.ajax({
 												url: createURL("listNetworkOfferings&id=" + args.context.networks[0].networkofferingid),
 												dataType: "json",
@@ -1658,7 +1722,7 @@
 												}
 											});
 										}
-										else { //from VPC section
+										else { //a VPC network from Guest Network section or from VPC section
 										  havingFirewallService = false;  //firewall is not supported in IP from VPC section (because ACL has already supported in tier from VPC section)
 											havingVpnService = false; //VPN is not supported in IP from VPC section
 										
@@ -2481,19 +2545,36 @@
                         }
                       });
 
-                      // Check if tiers are present; hide/show header drop-down                     
-											var $headerFields = $multi.find('.header-fields');													
-											if ('vpc' in args.context) {
-												if(args.context.ipAddresses[0].associatednetworkid == null) {
-													$headerFields.show();
+                      // Check if tiers are present; hide/show header drop-down (begin) ***   
+                      //dataProvider() is called when a LB rule is added in multiEdit. However, adding a LB rule might change parent object (IP Address object). So, we have to force to refresh args.context.ipAddresses[0] here
+										  $.ajax({
+												url: createURL('listPublicIpAddresses'),
+												data: {                      
+													id: args.context.ipAddresses[0].id,
+													listAll: true
+												},
+												success: function(json) {												  
+													//var item = json.listpublicipaddressesresponse.publicipaddress[0];	//uncomment this line and delete the following line when "listPublicIpAddresses&id=N" is fixed to return a record.	
+                          var item = args.context.ipAddresses[0];
+													
+													args.context.ipAddresses.shift(); //remove the first element in args.context.ipAddresses										
+													args.context.ipAddresses.push(item);
+																										
+													var $headerFields = $multi.find('.header-fields');	                       												
+													if ('vpc' in args.context) {
+														if(args.context.ipAddresses[0].associatednetworkid == null) {
+															$headerFields.show();
+														}
+														else {
+															$headerFields.hide();
+														}
+													} 
+													else if('networks' in args.context){
+														$headerFields.hide();
+													}																								
 												}
-												else {
-													$headerFields.hide();
-												}
-											} 
-											else if('networks' in args.context){
-												$headerFields.hide();
-											}													
+											});											
+                      // Check if tiers are present; hide/show header drop-down (end) ***   											
                     }
                   },
 
@@ -2743,23 +2824,37 @@
                               }
                             });
                           });
-                 													
-													// Check if tiers are present; hide/show header drop-down                     
-													var $headerFields = $multi.find('.header-fields');													
-													if ('vpc' in args.context) {
-													   $headerFields.show();
-													  if(args.context.ipAddresses[0].associatednetworkid == null) {														  
-															//$headerFields.find("select").removeAttr("disabled");
-															$headerFields.show();
+                 							
+													// Check if tiers are present; hide/show header drop-down (begin) ***   
+													//dataProvider() is called when a PF rule is added in multiEdit. However, adding a LB rule might change parent object (IP Address object). So, we have to force to refresh args.context.ipAddresses[0] here
+													$.ajax({
+														url: createURL('listPublicIpAddresses'),
+														data: {                      
+															id: args.context.ipAddresses[0].id,
+															listAll: true
+														},
+														success: function(json) {												  
+															//var item = json.listpublicipaddressesresponse.publicipaddress[0];	//uncomment this line and delete the following line when "listPublicIpAddresses&id=N" is fixed to return a record.	
+                              var item = args.context.ipAddresses[0];
+													
+															args.context.ipAddresses.shift(); //remove the first element in args.context.ipAddresses										
+															args.context.ipAddresses.push(item);
+																												
+															var $headerFields = $multi.find('.header-fields');													
+															if ('vpc' in args.context) {
+																if(args.context.ipAddresses[0].associatednetworkid == null) {
+																	$headerFields.show();
+																}
+																else {
+																	$headerFields.hide();
+																}
+															} 
+															else if('networks' in args.context){
+																$headerFields.hide();
+															}																								
 														}
-														else {								
-															//$headerFields.find("select").attr("disabled", true);
-															$headerFields.hide();
-														}
-													} 
-													else if('networks' in args.context){
-														$headerFields.hide();
-													}													
+													});											
+													// Check if tiers are present; hide/show header drop-down (end) ***   	
                         },
                         error: function(data) {
                           args.response.error(parseXMLHttpResponse(data));
@@ -3539,7 +3634,12 @@
                     );
                   }
                 });								
-              }					
+              },
+             
+							notification: {
+                poll: pollAsyncJobResult
+              }							
+							
             },
             configureVpc: {
               label: 'Configure VPC',

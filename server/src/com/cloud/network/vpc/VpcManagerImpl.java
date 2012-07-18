@@ -54,9 +54,13 @@ import com.cloud.network.NetworkVO;
 import com.cloud.network.Networks.BroadcastDomainType;
 import com.cloud.network.Networks.TrafficType;
 import com.cloud.network.PhysicalNetwork;
+import com.cloud.network.Site2SiteVpnGateway;
+import com.cloud.network.addr.PublicIp;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.PhysicalNetworkDao;
+import com.cloud.network.dao.Site2SiteVpnConnectionDao;
+import com.cloud.network.dao.Site2SiteVpnGatewayDao;
 import com.cloud.network.element.VpcProvider;
 import com.cloud.network.vpc.VpcOffering.State;
 import com.cloud.network.vpc.Dao.PrivateIpDao;
@@ -65,6 +69,7 @@ import com.cloud.network.vpc.Dao.VpcDao;
 import com.cloud.network.vpc.Dao.VpcGatewayDao;
 import com.cloud.network.vpc.Dao.VpcOfferingDao;
 import com.cloud.network.vpc.Dao.VpcOfferingServiceMapDao;
+import com.cloud.network.vpn.Site2SiteVpnManager;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offerings.NetworkOfferingServiceMapVO;
 import com.cloud.offerings.dao.NetworkOfferingServiceMapDao;
@@ -141,6 +146,8 @@ public class VpcManagerImpl implements VpcManager, Manager{
     PhysicalNetworkDao _pNtwkDao;
     @Inject
     ResourceTagDao _resourceTagDao;
+    @Inject
+    Site2SiteVpnManager _s2sVpnMgr;
 
     private final ScheduledExecutorService _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("VpcChecker"));
 
@@ -1042,7 +1049,13 @@ public class VpcManagerImpl implements VpcManager, Manager{
         s_logger.debug("Cleaning up resources for vpc id=" + vpcId);
         boolean success = true;
 
-        //1) release all ip addresses
+        //1) Remove VPN connections and VPN gateway
+        s_logger.debug("Cleaning up existed site to site VPN connections");
+        _s2sVpnMgr.cleanupVpnConnectionByVpc(vpcId);
+        s_logger.debug("Cleaning up existed site to site VPN gateways");
+        _s2sVpnMgr.cleanupVpnGatewayByVpc(vpcId);
+        
+        //2) release all ip addresses
         List<IPAddressVO> ipsToRelease = _ipAddressDao.listByAssociatedVpc(vpcId, null);
         s_logger.debug("Releasing ips for vpc id=" + vpcId + " as a part of vpc cleanup");
         for (IPAddressVO ipToRelease : ipsToRelease) {
@@ -1059,13 +1072,13 @@ public class VpcManagerImpl implements VpcManager, Manager{
             //although it failed, proceed to the next cleanup step as it doesn't depend on the public ip release
         }
 
-        //2) Delete all static route rules
+        //3) Delete all static route rules
         if (!revokeStaticRoutesForVpc(vpcId, caller)) {
             s_logger.warn("Failed to revoke static routes for vpc " + vpcId + " as a part of cleanup vpc process");
             return false;
         }
 
-        //3) Delete private gateway
+        //4) Delete private gateway
         VpcGateway gateway = getPrivateGatewayForVpc(vpcId);
         if (gateway != null) {
             s_logger.debug("Deleting private gateway " + gateway + " as a part of vpc " + vpcId + " resources cleanup");

@@ -75,6 +75,7 @@ import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.Type;
 import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.UserVmDao;
+import com.cloud.vm.dao.VMInstanceDao;
 
 @Local(value = { RulesManager.class, RulesService.class })
 public class RulesManagerImpl implements RulesManager, RulesService, Manager {
@@ -91,6 +92,8 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
     IPAddressDao _ipAddressDao;
     @Inject
     UserVmDao _vmDao;
+    @Inject
+    VMInstanceDao _vmInstanceDao;
     @Inject
     AccountManager _accountMgr;
     @Inject
@@ -162,7 +165,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
     @Override
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_NET_RULE_ADD, eventDescription = "creating forwarding rule", create = true)
-    public PortForwardingRule createPortForwardingRule(PortForwardingRule rule, Long vmId, boolean openFirewall) 
+    public PortForwardingRule createPortForwardingRule(PortForwardingRule rule, Long vmId, boolean openFirewall)
             throws NetworkRuleConflictException {
         UserContext ctx = UserContext.current();
         Account caller = ctx.getCaller();
@@ -184,17 +187,17 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
 
         Long networkId = rule.getNetworkId();
         Network network = _networkMgr.getNetwork(networkId);
-        //associate ip address to network (if needed)
+        // associate ip address to network (if needed)
         boolean performedIpAssoc = false;
         if (ipAddress.getAssociatedWithNetworkId() == null) {
-            boolean assignToVpcNtwk =  network.getVpcId() != null 
+            boolean assignToVpcNtwk = network.getVpcId() != null
                     && ipAddress.getVpcId() != null && ipAddress.getVpcId().longValue() == network.getVpcId();
             if (assignToVpcNtwk) {
-                //set networkId just for verification purposes
+                // set networkId just for verification purposes
                 ipAddress.setAssociatedWithNetworkId(networkId);
                 _networkMgr.checkIpForService(ipAddress, Service.PortForwarding, networkId);
 
-                s_logger.debug("The ip is not associated with the VPC network id="+ networkId + ", so assigning");
+                s_logger.debug("The ip is not associated with the VPC network id=" + networkId + ", so assigning");
                 try {
                     ipAddress = _networkMgr.associateIPToGuestNetwork(ipAddrId, networkId);
                     performedIpAssoc = true;
@@ -206,13 +209,13 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
         } else {
             _networkMgr.checkIpForService(ipAddress, Service.PortForwarding, null);
         }
-        
-        if (ipAddress.getAssociatedWithNetworkId() == null) { 
+
+        if (ipAddress.getAssociatedWithNetworkId() == null) {
             throw new InvalidParameterValueException("Ip address " + ipAddress + " is not assigned to the network " + network);
         }
 
         try {
-            _firewallMgr.validateFirewallRule(caller, ipAddress, rule.getSourcePortStart(), rule.getSourcePortEnd(), 
+            _firewallMgr.validateFirewallRule(caller, ipAddress, rule.getSourcePortStart(), rule.getSourcePortEnd(),
                     rule.getProtocol(), Purpose.PortForwarding, FirewallRuleType.User);
 
             Long accountId = ipAddress.getAllocatedToAccountId();
@@ -231,12 +234,11 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
             // validate user VM exists
             UserVm vm = _vmDao.findById(vmId);
             if (vm == null) {
-                throw new InvalidParameterValueException("Unable to create port forwarding rule on address " + ipAddress + 
+                throw new InvalidParameterValueException("Unable to create port forwarding rule on address " + ipAddress +
                         ", couldn't locate virtual machine by id; (invalid id specified)", null);
             } else {
                 checkRuleAndUserVm(rule, vm, caller);
             }
-
 
             // Verify that vm has nic in the network
             Ip dstIp = rule.getDestinationIpAddress();
@@ -250,7 +252,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
             Transaction txn = Transaction.currentTxn();
             txn.start();
 
-            PortForwardingRuleVO newRule = new PortForwardingRuleVO(rule.getXid(), rule.getSourceIpAddressId(), 
+            PortForwardingRuleVO newRule = new PortForwardingRuleVO(rule.getXid(), rule.getSourceIpAddressId(),
                     rule.getSourcePortStart(), rule.getSourcePortEnd(), dstIp, rule.getDestinationPortStart(),
                     rule.getDestinationPortEnd(), rule.getProtocol().toLowerCase(), networkId, accountId, domainId, vmId);
             newRule = _portForwardingDao.persist(newRule);
@@ -267,7 +269,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
                     throw new CloudRuntimeException("Unable to update the state to add for " + newRule);
                 }
                 UserContext.current().setEventDetails("Rule Id: " + newRule.getId());
-                UsageEventVO usageEvent = new UsageEventVO(EventTypes.EVENT_NET_RULE_ADD, newRule.getAccountId(), 
+                UsageEventVO usageEvent = new UsageEventVO(EventTypes.EVENT_NET_RULE_ADD, newRule.getAccountId(),
                         ipAddress.getDataCenterId(), newRule.getId(), null);
                 _usageEventDao.persist(usageEvent);
                 txn.commit();
@@ -290,7 +292,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
         } finally {
             // release ip address if ipassoc was perfored
             if (performedIpAssoc) {
-                //if the rule is the last one for the ip address assigned to VPC, unassign it from the network
+                // if the rule is the last one for the ip address assigned to VPC, unassign it from the network
                 IpAddress ip = _ipAddressDao.findById(ipAddress.getId());
                 if (ip != null && ip.getVpcId() != null && _firewallDao.listByIp(ip.getId()).isEmpty()) {
                     s_logger.debug("Releasing VPC ip address " + ip + " as PF rule failed to create");
@@ -298,7 +300,6 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
                 }
             }
         }
-
 
     }
 
@@ -382,18 +383,29 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
 
     @Override
     @DB
-    public boolean enableStaticNat(long ipId, long vmId, long networkId, boolean isSystemVm) 
+    public boolean enableStaticNat(long ipId, long vmId, long networkId, boolean isSystemVm)
             throws NetworkRuleConflictException, ResourceUnavailableException {
         UserContext ctx = UserContext.current();
         Account caller = ctx.getCaller();
+        Object vmIdentity = null;
 
         // Verify input parameters
-        UserVmVO vm = _vmDao.findById(vmId);
-        if (vm == null) {
+        UserVmVO vm = null;
+
+        if (isSystemVm) { // Work around by Deepak Garg, for CS-15556
+            vmIdentity = _vmInstanceDao.findById(vmId);
+        }
+        else {
+            vm = _vmDao.findById(vmId);
+            vmIdentity = vm;
+        }
+
+        if (vmIdentity == null) {
             List<IdentityProxy> idList = new ArrayList<IdentityProxy>();
             idList.add(new IdentityProxy("user_ip_address", ipId, "ipId"));
             throw new InvalidParameterValueException("Can't enable static nat for the address with specified ipId " +
                     ", invalid virtual machine id specified", idList);
+
         }
 
         IPAddressVO ipAddress = _ipAddressDao.findById(ipId);
@@ -409,32 +421,31 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
             if (network == null) {
                 throw new InvalidParameterValueException("Unable to find network by id", null);
             }
-            
+
             // Check that vm has a nic in the network
             Nic guestNic = _networkMgr.getNicInNetwork(vmId, networkId);
             if (guestNic == null) {
                 List<IdentityProxy> idList = new ArrayList<IdentityProxy>();
-                idList.add(new IdentityProxy(vm, vmId, "vmId"));
+                idList.add(new IdentityProxy(vmIdentity, vmId, "vmId"));
                 throw new InvalidParameterValueException("Vm doesn't belong to the network with specified id", idList);
             }
 
-            
             if (!_networkMgr.areServicesSupportedInNetwork(network.getId(), Service.StaticNat)) {
                 List<IdentityProxy> idList = new ArrayList<IdentityProxy>();
                 idList.add(new IdentityProxy(network, networkId, "networkId"));
                 throw new InvalidParameterValueException("Unable to create static nat rule; StaticNat service is not " +
                         "supported in network with specified id", idList);
             }
- 
+
             if (!isSystemVm) {
-                //associate ip address to network (if needed)
+                // associate ip address to network (if needed)
                 if (ipAddress.getAssociatedWithNetworkId() == null) {
-                    boolean assignToVpcNtwk = network.getVpcId() != null 
+                    boolean assignToVpcNtwk = network.getVpcId() != null
                             && ipAddress.getVpcId() != null && ipAddress.getVpcId().longValue() == network.getVpcId();
                     if (assignToVpcNtwk) {
                         _networkMgr.checkIpForService(ipAddress, Service.StaticNat, networkId);
-                        
-                        s_logger.debug("The ip is not associated with the VPC network id="+ networkId + ", so assigning");
+
+                        s_logger.debug("The ip is not associated with the VPC network id=" + networkId + ", so assigning");
                         try {
                             ipAddress = _networkMgr.associateIPToGuestNetwork(ipId, networkId);
                         } catch (Exception ex) {
@@ -447,18 +458,18 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
                 } else {
                     _networkMgr.checkIpForService(ipAddress, Service.StaticNat, null);
                 }
-                
-                if (ipAddress.getAssociatedWithNetworkId() == null) { 
+
+                if (ipAddress.getAssociatedWithNetworkId() == null) {
                     throw new InvalidParameterValueException("Ip address " + ipAddress + " is not assigned to the network " + network);
                 }
 
                 // Check permissions
                 checkIpAndUserVm(ipAddress, vm, caller);
-                
+
                 // Verify ip address parameter
                 isIpReadyForStaticNat(vmId, ipAddress, caller, ctx.getCallerUserId());
             }
-            
+
             ipAddress.setOneToOneNat(true);
             ipAddress.setAssociatedWithVmId(vmId);
 
@@ -472,7 +483,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
                 }
             } else {
                 s_logger.warn("Failed to update ip address " + ipAddress + " in the DB as a part of enableStaticNat");
-                
+
             }
         } finally {
             if (!result) {
@@ -482,20 +493,20 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
                 ipAddress.setAssociatedWithVmId(null);
                 _ipAddressDao.update(ipAddress.getId(), ipAddress);
                 if (performedIpAssoc) {
-                    //if the rule is the last one for the ip address assigned to VPC, unassign it from the network
+                    // if the rule is the last one for the ip address assigned to VPC, unassign it from the network
                     IpAddress ip = _ipAddressDao.findById(ipAddress.getId());
                     if (ip != null && ip.getVpcId() != null && _firewallDao.listByIp(ip.getId()).isEmpty()) {
                         s_logger.debug("Releasing VPC ip address " + ip + " as PF rule failed to create");
                         _networkMgr.unassignIPFromVpcNetwork(ip.getId());
                     }
-                } 
+                }
                 txn.commit();
             }
         }
         return result;
     }
 
-    protected void isIpReadyForStaticNat(long vmId, IPAddressVO ipAddress, Account caller, long callerUserId) 
+    protected void isIpReadyForStaticNat(long vmId, IPAddressVO ipAddress, Account caller, long callerUserId)
             throws NetworkRuleConflictException, ResourceUnavailableException {
         if (ipAddress.isSourceNat()) {
             List<IdentityProxy> idList = new ArrayList<IdentityProxy>();
@@ -730,7 +741,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
 
         if (tags != null && !tags.isEmpty()) {
             SearchBuilder<ResourceTagVO> tagSearch = _resourceTagDao.createSearchBuilder();
-            for (int count=0; count < tags.size(); count++) {
+            for (int count = 0; count < tags.size(); count++) {
                 tagSearch.or().op("key" + String.valueOf(count), tagSearch.entity().getKey(), SearchCriteria.Op.EQ);
                 tagSearch.and("value" + String.valueOf(count), tagSearch.entity().getValue(), SearchCriteria.Op.EQ);
                 tagSearch.cp();
@@ -739,7 +750,6 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
             sb.groupBy(sb.entity().getId());
             sb.join("tagSearch", tagSearch, sb.entity().getId(), tagSearch.entity().getResourceId(), JoinBuilder.JoinType.INNER);
         }
-
 
         SearchCriteria<PortForwardingRuleVO> sc = sb.create();
         _accountMgr.buildACLSearchCriteria(sc, domainId, isRecursive, permittedAccounts, listProjectResourcesCriteria);
@@ -1106,7 +1116,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
 
     @Override
     @DB
-    public FirewallRuleVO[] reservePorts(IpAddress ip, String protocol, FirewallRule.Purpose purpose, 
+    public FirewallRuleVO[] reservePorts(IpAddress ip, String protocol, FirewallRule.Purpose purpose,
             boolean openFirewall, Account caller, int... ports) throws NetworkRuleConflictException {
         FirewallRuleVO[] rules = new FirewallRuleVO[ports.length];
 
@@ -1118,7 +1128,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
             rules[i] = _firewallDao.persist(rules[i]);
 
             if (openFirewall) {
-                _firewallMgr.createRuleForAllCidrs(ip.getId(), caller, ports[i], ports[i], protocol, null, null, 
+                _firewallMgr.createRuleForAllCidrs(ip.getId(), caller, ports[i], ports[i], protocol, null, null,
                         rules[i].getId(), ip.getAssociatedWithNetworkId());
             }
         }
@@ -1365,7 +1375,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
                 s_logger.debug("Allocating system ip and enabling static nat for it for the vm " + vm + " in guest network " + guestNetwork);
                 IpAddress ip = _networkMgr.assignSystemIp(guestNetwork.getId(), _accountMgr.getAccount(vm.getAccountId()), false, true);
                 if (ip == null) {
-                    throw new CloudRuntimeException("Failed to allocate system ip for vm " + vm + " in guest network " + guestNetwork);                    
+                    throw new CloudRuntimeException("Failed to allocate system ip for vm " + vm + " in guest network " + guestNetwork);
                 }
 
                 s_logger.debug("Allocated system ip " + ip + ", now enabling static nat on it for vm " + vm);
@@ -1374,11 +1384,11 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
                 try {
                     success = enableStaticNat(ip.getId(), vm.getId(), guestNetwork.getId(), isSystemVM);
                 } catch (NetworkRuleConflictException ex) {
-                    s_logger.warn("Failed to enable static nat as a part of enabling elasticIp and staticNat for vm " + 
+                    s_logger.warn("Failed to enable static nat as a part of enabling elasticIp and staticNat for vm " +
                             vm + " in guest network " + guestNetwork + " due to exception ", ex);
                     success = false;
                 } catch (ResourceUnavailableException ex) {
-                    s_logger.warn("Failed to enable static nat as a part of enabling elasticIp and staticNat for vm " + 
+                    s_logger.warn("Failed to enable static nat as a part of enabling elasticIp and staticNat for vm " +
                             vm + " in guest network " + guestNetwork + " due to exception ", ex);
                     success = false;
                 }
@@ -1399,7 +1409,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
         Transaction txn = Transaction.currentTxn();
         txn.start();
         _portForwardingDao.remove(rule.getId());
-        //if the rule is the last one for the ip address assigned to VPC, unassign it from the network
+        // if the rule is the last one for the ip address assigned to VPC, unassign it from the network
         IpAddress ip = _ipAddressDao.findById(rule.getSourceIpAddressId());
         if (ip != null && ip.getVpcId() != null && _firewallDao.listByIp(ip.getId()).isEmpty()) {
             _networkMgr.unassignIPFromVpcNetwork(ip.getId());
