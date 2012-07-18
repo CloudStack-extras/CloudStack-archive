@@ -9374,6 +9374,10 @@ margin-bottom:0px;
 
 }
 
+div.ui-dialog div.autoscaler div.field-group div.form-container form div.form-item div.name label {
+font-size:11px;
+}
+
 /*Action icons*/
 .action.edit .icon {
   background-position: 1px -1px;
