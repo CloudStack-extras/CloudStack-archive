@@ -881,4 +881,12 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager, NetworkS
         // TODO Auto-generated method stub
         return null;
     }
+
+	@Override
+	public IpAddress allocateIP(long networkId, Account ipOwner)
+			throws ResourceAllocationException,
+			InsufficientAddressCapacityException, ConcurrentOperationException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
