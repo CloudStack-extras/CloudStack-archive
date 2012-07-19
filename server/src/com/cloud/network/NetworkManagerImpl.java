@@ -5289,7 +5289,9 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         try {
             txn.start();
             // Create the new physical network in the database
-            PhysicalNetworkVO pNetwork = new PhysicalNetworkVO(zoneId, vnetRange, networkSpeed, domainId, broadcastDomainRange, name);
+            long id = _physicalNetworkDao.getNextInSequence(Long.class, "id");
+            
+            PhysicalNetworkVO pNetwork = new PhysicalNetworkVO(id, zoneId, vnetRange, networkSpeed, domainId, broadcastDomainRange, name);
             pNetwork.setTags(tags);
             pNetwork.setIsolationMethods(isolationMethods);
 
@@ -6658,7 +6660,10 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             physicalNetworkId = getNonGuestNetworkPhysicalNetworkId(network);
         } else {
             NetworkOffering offering = _configMgr.getNetworkOffering(network.getNetworkOfferingId());
-            physicalNetworkId = findPhysicalNetworkId(network.getDataCenterId(), offering.getTags(), offering.getTrafficType());
+            physicalNetworkId = network.getPhysicalNetworkId();
+            if(physicalNetworkId == null){
+                physicalNetworkId = findPhysicalNetworkId(network.getDataCenterId(), offering.getTags(), offering.getTrafficType());
+            }
         }
 
         if (physicalNetworkId == null) {
