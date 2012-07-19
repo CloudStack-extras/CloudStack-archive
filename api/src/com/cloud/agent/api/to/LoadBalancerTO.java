@@ -42,6 +42,9 @@ public class LoadBalancerTO {
     final static int MAX_STICKINESS_POLICIES = 1;
 
     public LoadBalancerTO(Long id, String srcIp, int srcPort, String protocol, String algorithm, boolean revoked, boolean alreadyAdded, List<LbDestination> destinations) {
+        if(destinations == null) { // for autoscaleconfig destinations will be null;
+            destinations = new ArrayList<LbDestination>();
+        }
         this.id = id;
         this.srcIp = srcIp;
         this.srcPort = srcPort;
@@ -415,7 +418,7 @@ public class LoadBalancerTO {
         LbAutoScaleVmProfile lbAutoScaleVmProfile = lbAutoScaleVmGroup.getProfile();
         AutoScaleVmProfile autoScaleVmProfile = lbAutoScaleVmProfile.getProfile();
         AutoScaleVmProfileTO autoScaleVmProfileTO = new AutoScaleVmProfileTO(autoScaleVmProfile.getZoneId(), autoScaleVmProfile.getDomainId(),
-                lbAutoScaleVmProfile.getAutoScaleUserApiKey(), lbAutoScaleVmProfile.getAutoScaleUserSecretKey(), autoScaleVmProfile.getCsUrl(),
+                lbAutoScaleVmProfile.getAutoScaleUserApiKey(), lbAutoScaleVmProfile.getAutoScaleUserSecretKey(), lbAutoScaleVmProfile.getCsUrl(),
                 autoScaleVmProfile.getServiceOfferingId(), autoScaleVmProfile.getTemplateId(), autoScaleVmProfile.getOtherDeployParams(),
                 autoScaleVmProfile.getSnmpCommunity(), autoScaleVmProfile.getSnmpPort(), autoScaleVmProfile.getDestroyVmGraceperiod());
 
