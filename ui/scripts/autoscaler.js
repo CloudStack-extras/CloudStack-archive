@@ -204,11 +204,6 @@
             });
           }
         },
-        msurl: {
-            label:'Ms-url',
-            defaultValue: 'http://<cloud stack management server ip>: <port>/client/<api>',
-            validation: {required:true}
-        }
       },
       scaleUpPolicy: {
         title: 'ScaleUp Policy',
@@ -450,6 +445,21 @@
         }
       }
     },
+
+  /*  actions: {
+      add: function(context) {
+        $.ajax({
+          url: createURL(''),
+        });
+      },
+      recreate: function(args) {
+        // Delete existing rule
+          $.ajax({
+            url: createURL(''),
+          });
+      }
+    },*/
+
     dialog: function(args) {
       return function(args) {
         var context = args.context;
