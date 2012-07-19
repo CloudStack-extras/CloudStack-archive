@@ -29,10 +29,10 @@
           select: function(args) {
             args.response.success({
               data: [
-                { category: 'all', description: _l('ui.listView.filters.all') },
-                { category: 'featured', description: _l('label.featured') },
-                { category: 'Community', description: _l('label.menu.community.templates') },
-                { category: 'self', description: _l('ui.listView.filters.mine') }
+                { id: 'all', description: _l('ui.listView.filters.all') },
+                { id: 'featured', description: _l('label.featured') },
+                { id: 'Community', description: _l('label.menu.community.templates') },
+                { id: 'self', description: _l('ui.listView.filters.mine') }
               ]
             });
           }
