@@ -11,6 +11,7 @@ import xml.etree.ElementTree as xml
 import uuid
 import zlib
 import base64
+import os
 
 class SecurityGroupAgent(object):
     def __init__(self):
@@ -242,11 +243,21 @@ class SecurityGroupAgent(object):
 class WebServer(object):
     securitygroup = SecurityGroupAgent()
     
+    def _writePid(self):
+        fd = open('/var/run/cs-securitygroup.pid', 'w')
+        fd.write(str(os.getpid()))
+        fd.close()
+
+    def __init__(self):
+        self._writePid()
+    
     def index(self):
         return "CloudStack web agent server"
     index.exposed = True
     
 if __name__ == '__main__':
+    cherrypy.log.access_file = '/var/log/cs-securitygroup.log'
+    cherrypy.log.error_file = '/var/log/cs-securitygroup.log'
     cherrypy.server.socket_host = '0.0.0.0'
     cherrypy.server.socket_port = 9988
     cherrypy.quickstart(WebServer())
