@@ -34,7 +34,7 @@ class RuleSet(object):
         self.hypervisorType = None
         self.domainId = None
         self.signature = None
-        self.seqNumber = None
+        self.sequenceNumber = None
         self.ingressRules = None
         self.egressRules = None
         self.interfaces = []
@@ -156,13 +156,14 @@ class Utils(object):
     def printObj(obj):
         contents = []
         for attr, val in obj.__dict__.iteritems():
-            content.append('%s=%s'%s(attr, val))
+            contents.append('%s=%s'%(attr, val))
         cherrypy.log('[%s]' % ','.join(contents))
         
     @staticmethod
     def runBash(cmdstr):
         process = subprocess.Popen(cmdstr, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
+	cherrypy.log(cmdstr)
         if process.returncode != 0:
             raise BashExceutedFailedException(stderr, process.returncode)
         return stdout

@@ -4,22 +4,25 @@ Created on Jul 12, 2012
 @author: frank
 '''
 
-import cherryp
+import cherrypy
 import Header
 from Header import *
 import xml.etree.ElementTree as xml
 import uuid
+import zlib
+import base64
 
 class SecurityGroupAgent(object):
     def __init__(self):
         self.hypervisorStrategies = {}
-        self.ipsetKeyWord = self._getIpSetKeyWord()
+        #self.ipsetKeyWord = self._getIpSetKeyWord()
+	self.ipsetKeyWord = '--set'
         
     def _chainName(self, vmName):
-        if vm_name.startswith('i-') or vm_name.startswith('r-'):
-            if vm_name.endswith('untagged'):
-                return '-'.join(vm_name.split('-')[:-1])
-        return vm_name
+        if vmName.startswith('i-') or vmName.startswith('r-'):
+            if vmName.endswith('untagged'):
+                return '-'.join(vmName.split('-')[:-1])
+        return vmName
     
     def _egressChainName(self, vmName):
         return "%s-eg" % self._chainName(vmName)
@@ -54,6 +57,7 @@ class SecurityGroupAgent(object):
         rs.ingressRules = xmlDocToRule(ingressRules)
         egressRules = tree.findall(Header.XML_VM_EGRESS_RULES)
         rs.egressRules = xmlDocToRule(egressRules)
+	Utils.printObj(rs)
         return rs
     
     def _getIpSetKeyWord(self):
@@ -83,7 +87,7 @@ class SecurityGroupAgent(object):
         except:
             cherrypy.log('ipset[%s] is already here'%name)
         
-        tmpname = '%s-%s' % (name, str(uuid.uuid4()))
+        tmpname = str(uuid.uuid4()).replace('-', '')[0:31]
         try:
             Utils.runBash('ipset -N %s %s'%(tmpname, Header.IPSET_TYPE))
         except:
@@ -108,12 +112,13 @@ class SecurityGroupAgent(object):
             Utils.runBashSilent('ipset -F %s'%tmpname)
             Utils.runBashSilent('ipset -X %s'%tmpname)
         
-        return False
+        return ret
         
     def _setEgressRules(self, ruleSet):
         chainName = self._egressChainName(ruleSet.vmName)
         
         Utils.runBashSilent('iptables -F %s'%chainName)
+	Utils.runBashSilent('iptables -X %s'%chainName)
         Utils.runBash('iptables -N %s'%chainName)
         
         if len(ruleSet.egressRules) > 0:
@@ -132,9 +137,9 @@ class SecurityGroupAgent(object):
                     del erule.ips[erule.ips.index('0.0.0.0/0')]
                     allowAny = True
                     
-                if protocol == "all":
+                if erule.protocol == "all":
                     cmd = "iptables -I %s -m state --state NEW -m set %s %s dst -j RETURN" % (chainName, self.ipsetKeyWord, setname)
-                elif protocol == "icmp":
+                elif erule.protocol == "icmp":
                     if erule.startPort == "-1":
                         range = "any"
                     else:
@@ -163,10 +168,11 @@ class SecurityGroupAgent(object):
     def _setIngressRules(self, ruleSet):
         chainName = self._chainName(ruleSet.vmName)
         Utils.runBashSilent('iptables -F %s'%chainName)
+	Utils.runBashSilent('iptables -X %s'%chainName)
         Utils.runBash('iptables -N %s'%chainName)
         
         if len(ruleSet.ingressRules) > 0:
-            for irule in ruleSet.egressRules:
+            for irule in ruleSet.ingressRules:
                 range = '%s:%s' % (irule.startPort, irule.endPort)
                 if irule.startPort == '-1':
                     setname = "%s_%s_any" % (chainName, irule.protocol)
@@ -181,9 +187,9 @@ class SecurityGroupAgent(object):
                     del irule.ips[irule.ips.index('0.0.0.0/0')]
                     allowAny = True
                     
-                if protocol == "all":
+                if irule.protocol == "all":
                     cmd = "iptables -I %s -m state --state NEW -m set %s %s src -j ACCEPT" % (chainName, self.ipsetKeyWord, setname)
-                elif protocol == "icmp":
+                elif irule.protocol == "icmp":
                     if irule.startPort == "-1":
                         range = "any"
                     else:
@@ -228,9 +234,10 @@ class SecurityGroupAgent(object):
         if not hasattr(self, command):
             raise ValueError("SecurityGroupAgent doesn't have a method called '%s'"%command)
         
+	#args = zlib.decompress(base64.urlsafe_b64decode(args))
         method = getattr(self, command)
         return method(args)
-    index = True
+    index.exposed = True
     
 class WebServer(object):
     securitygroup = SecurityGroupAgent()
@@ -240,4 +247,6 @@ class WebServer(object):
     index.exposed = True
     
 if __name__ == '__main__':
+    cherrypy.server.socket_host = '0.0.0.0'
+    cherrypy.server.socket_port = 9988
     cherrypy.quickstart(WebServer())
