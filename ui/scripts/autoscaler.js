@@ -291,7 +291,7 @@
         	label: '',
             action: function(args) {
               $.ajax({
-                url: createURL("deleteCondition&id=" + args.context.multiRule[0].id),
+                url: createURL("deleteCondition&id=" + args.context.multiRule[0].counterid),
                         dataType: 'json',
                         async: true,
                         success: function(data) {
@@ -409,7 +409,7 @@
             label: '',
             action: function(args) {
         	$.ajax({
-                url: createURL("deleteCondition&id=" + args.context.multiRule[0].id),
+                url: createURL("deleteCondition&id=" + args.context.multiRule[0].counterid),
                         dataType: 'json',
                         async: true,
                         success: function(data) {
