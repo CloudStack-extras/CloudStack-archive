@@ -62,6 +62,8 @@ import com.cloud.utils.script.Script2;
 import com.cloud.utils.script.Script2.ParamType;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.State;
+import com.cloud.agent.api.SecurityGroupRulesCmd;
+import com.cloud.network.security.SecurityGroupHttpClient;
 
 @Local(value = ServerResource.class)
 public class BareMetalResourceBase implements ServerResource {
@@ -383,6 +385,11 @@ public class BareMetalResourceBase implements ServerResource {
 	protected CheckNetworkAnswer execute(CheckNetworkCommand cmd) {
 		return new CheckNetworkAnswer(cmd, true, "Success");
 	}
+	
+	protected Answer execute(SecurityGroupRulesCmd cmd) {
+	    SecurityGroupHttpClient hc = new SecurityGroupHttpClient();
+	    return hc.call(cmd.getGuestIp(), cmd);
+	}
 
 	@Override
 	public Answer executeRequest(Command cmd) {
@@ -406,6 +413,8 @@ public class BareMetalResourceBase implements ServerResource {
 			return execute((CheckVirtualMachineCommand) cmd);
 		} else if (cmd instanceof IpmiBootorResetCommand) {
 			return execute((IpmiBootorResetCommand) cmd);
+		} else if (cmd instanceof SecurityGroupRulesCmd) {
+		    return execute((SecurityGroupRulesCmd) cmd);
 		} else if (cmd instanceof CheckNetworkCommand) {
 			return execute((CheckNetworkCommand) cmd);
 		} else {
