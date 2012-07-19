@@ -28,7 +28,6 @@ import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 
-import com.cloud.api.ApiServer;
 import com.cloud.api.commands.CreateLBStickinessPolicyCmd;
 import com.cloud.api.commands.CreateLoadBalancerRuleCmd;
 import com.cloud.api.commands.ListLBStickinessPoliciesCmd;
@@ -36,7 +35,9 @@ import com.cloud.api.commands.ListLoadBalancerRuleInstancesCmd;
 import com.cloud.api.commands.ListLoadBalancerRulesCmd;
 import com.cloud.api.commands.UpdateLoadBalancerRuleCmd;
 import com.cloud.api.response.ServiceResponse;
+import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;
+import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.VlanDao;
 import com.cloud.domain.dao.DomainDao;
@@ -206,6 +207,8 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @Inject
     AutoScaleVmGroupPolicyMapDao _autoScaleVmGroupPolicyMapDao;
     @Inject
+    ConfigurationDao _configDao;
+    @Inject
     DataCenterDao _dcDao = null;
     @Inject
     UserDao _userDao;
@@ -220,7 +223,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                 serviceResponse.setName(service.getName());
                 if ("Lb".equalsIgnoreCase(service.getName())) {
                     Map<Capability, String> serviceCapabilities = serviceCapabilitiesMap
-                            .get(service);
+                    .get(service);
                     if (serviceCapabilities != null) {
                         for (Capability capability : serviceCapabilities
                                 .keySet()) {
@@ -249,13 +252,14 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             }
             autoScalePolicies.add(new LbAutoScalePolicy(autoScalePolicy, lbConditions));
         }
-        ApiServer apiserver = ApiServer.getInstance();
         AutoScaleVmProfile autoScaleVmProfile = _autoScaleVmProfileDao.findById(vmGroup.getProfileId());
         Long autoscaleUserId = autoScaleVmProfile.getAutoScaleUserId();
         User user = _userDao.findById(autoscaleUserId);
         String apiKey = user.getApiKey();
         String secretKey = user.getSecretKey();
-        LbAutoScaleVmProfile lbAutoScaleVmProfile = new LbAutoScaleVmProfile(autoScaleVmProfile, apiKey, secretKey);
+        String csUrl = _configDao.getValue(Config.EndpointeUrl.key());
+
+        LbAutoScaleVmProfile lbAutoScaleVmProfile = new LbAutoScaleVmProfile(autoScaleVmProfile, apiKey, secretKey, csUrl);
         return new LbAutoScaleVmGroup(vmGroup, autoScalePolicies, lbAutoScaleVmProfile);
     }
 
@@ -279,7 +283,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
     @DB
     public boolean configureLbAutoScaleVmGroup(long vmGroupid) {
         AutoScaleVmGroupVO vmGroup = _autoScaleVmGroupDao.findById(vmGroupid);
-        boolean success = true;
+        boolean success = false;
 
         LoadBalancerVO loadBalancer = _lbDao.findById(vmGroup.getLoadBalancerId());
 
@@ -289,7 +293,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             loadBalancer.setState(FirewallRule.State.Add);
             _lbDao.persist(loadBalancer);
         }
-        if (loadBalancer.getState() == FirewallRule.State.Active &&
+        else if (loadBalancer.getState() == FirewallRule.State.Active &&
                 vmGroup.getState().equals(AutoScaleVmGroup.State_Revoke)) {
             loadBalancer.setState(FirewallRule.State.Add);
             _lbDao.persist(loadBalancer);
@@ -312,7 +316,6 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                     s_logger.debug("LB Rollback rule id: " + loadBalancer.getId() + " lb state rolback while creating AutoscaleVmGroup");
                 }
             }
-            success = false;
         }
 
         if (success) {
@@ -907,7 +910,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             try {
                 if (ipVO.getAssociatedWithNetworkId() == null) {
                     boolean assignToVpcNtwk = network.getVpcId() != null
-                            && ipVO.getVpcId() != null && ipVO.getVpcId().longValue() == network.getVpcId();
+                    && ipVO.getVpcId() != null && ipVO.getVpcId().longValue() == network.getVpcId();
                     if (assignToVpcNtwk) {
                         // set networkId just for verification purposes
                         ipVO.setAssociatedWithNetworkId(lb.getNetworkId());
