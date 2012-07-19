@@ -43,9 +43,7 @@ import com.cloud.api.commands.ListCountersCmd;
 import com.cloud.api.commands.UpdateAutoScalePolicyCmd;
 import com.cloud.api.commands.UpdateAutoScaleVmGroupCmd;
 import com.cloud.api.commands.UpdateAutoScaleVmProfileCmd;
-import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;
-import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.event.ActionEvent;
@@ -89,7 +87,7 @@ import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.net.NetUtils;
 
-@Local(value = { AutoScaleService.class })
+@Local(value = {  AutoScaleService.class })
 public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
     private static final Logger s_logger = Logger.getLogger(AutoScaleManagerImpl.class);
 
@@ -130,8 +128,6 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
     UserDao _userDao;
     @Inject
     IPAddressDao _ipAddressDao;
-    @Inject
-    ConfigurationDao _configDao;
 
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -172,12 +168,12 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
         for (Counter counter : counters) {
             if (!supportedCounters.contains(counter.getSource().name().toString())) {
                 throw new InvalidParameterException("AutoScale counter with source='" + counter.getSource() + "' is not supported " +
-                        "in the network where lb is configured");
+                "in the network where lb is configured");
             }
         }
     }
 
-    private <VO extends ControlledEntity> VO getEntityInDatabase(Account caller, String paramName, Long id, GenericDao<VO, Long> dao)
+    private <VO extends ControlledEntity> VO getEntityInDatabase(Account caller,String paramName, Long id, GenericDao<VO, Long> dao)
     {
 
         VO vo = dao.findById(id);
@@ -247,7 +243,7 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
         return policies;
     }
 
-    private AutoScaleVmProfileVO checkValidityAndPersist(AutoScaleVmProfileVO vmProfile) {
+    protected AutoScaleVmProfileVO checkValidityAndPersist(AutoScaleVmProfileVO vmProfile) {
         long templateId = vmProfile.getTemplateId();
         long autoscaleUserId = vmProfile.getAutoScaleUserId();
         int destroyVmGraceperiod = vmProfile.getDestroyVmGraceperiod();
@@ -273,8 +269,7 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
     }
 
     @Override
-    @DB
-    @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMPROFILE_CREATE, eventDescription = "creating autoscale vm profile")
+    @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMPROFILE_CREATE, eventDescription = "creating autoscale vm profile", create = true)
     public AutoScaleVmProfile createAutoScaleVmProfile(CreateAutoScaleVmProfileCmd cmd) {
 
         Account owner = _accountDao.findById(cmd.getAccountId());
@@ -309,17 +304,8 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
             autoscaleUserId = UserContext.current().getCallerUserId();
         }
 
-        String csUrl = cmd.getCsUrl();
-        if (csUrl == null) {
-            String mgmtIP = _configDao.getValue(Config.ManagementHostIPAdr.key());
-            csUrl = "http://" + mgmtIP + ":8080/client/api?";
-        } else {
-            if (!csUrl.endsWith("?"))
-                csUrl += "?";
-        }
-
         AutoScaleVmProfileVO profileVO = new AutoScaleVmProfileVO(cmd.getZoneId(), cmd.getDomainId(), cmd.getAccountId(), cmd.getServiceOfferingId(), cmd.getTemplateId(), cmd.getOtherDeployParams(),
-                cmd.getSnmpCommunity(), cmd.getSnmpPort(), cmd.getDestroyVmGraceperiod(), autoscaleUserId, csUrl);
+                cmd.getSnmpCommunity(), cmd.getSnmpPort(), cmd.getDestroyVmGraceperiod(), autoscaleUserId);
         profileVO = checkValidityAndPersist(profileVO);
         s_logger.info("Successfully create AutoScale Vm Profile with Id: " + profileVO.getId());
 
@@ -327,7 +313,6 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
     }
 
     @Override
-    @DB
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMPROFILE_UPDATE, eventDescription = "updating autoscale vm profile")
     public AutoScaleVmProfile updateAutoScaleVmProfile(UpdateAutoScaleVmProfileCmd cmd) {
         Long profileId = cmd.getId();
@@ -373,7 +358,6 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
     }
 
     @Override
-    @DB
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMPROFILE_DELETE, eventDescription = "deleting autoscale vm profile")
     public boolean deleteAutoScaleVmProfile(long id) {
         /* Check if entity is in database */
@@ -382,7 +366,9 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
             throw new InvalidParameterValueException("Cannot delete AutoScale Vm Profile when it is in use by one more vm groups");
         }
         boolean success = _autoScaleVmProfileDao.remove(id);
-        s_logger.info("Successfully deleted AutoScale Vm Profile with Id: " + id);
+        if(success) {
+            s_logger.info("Successfully deleted AutoScale Vm Profile with Id: " + id);
+        }
         return success;
     }
 
@@ -412,7 +398,8 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
         return searchWrapper.search();
     }
 
-    private AutoScalePolicyVO checkValidityAndPersist(AutoScalePolicyVO autoScalePolicyVO, List<Long> conditionIds) {
+    @DB
+    protected AutoScalePolicyVO checkValidityAndPersist(AutoScalePolicyVO autoScalePolicyVO, List<Long> conditionIds) {
         int duration = autoScalePolicyVO.getDuration();
         int quietTime = autoScalePolicyVO.getQuietTime();
 
@@ -429,7 +416,7 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
 
         autoScalePolicyVO = _autoScalePolicyDao.persist(autoScalePolicyVO);
 
-        if (conditionIds != null) {
+        if(conditionIds != null) {
             SearchBuilder<ConditionVO> conditionsSearch = _conditionDao.createSearchBuilder();
             conditionsSearch.and("ids", conditionsSearch.entity().getId(), Op.IN);
             conditionsSearch.done();
@@ -469,8 +456,7 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
     }
 
     @Override
-    @DB
-    @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEPOLICY_CREATE, eventDescription = "creating autoscale policy")
+    @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEPOLICY_CREATE, eventDescription = "creating autoscale policy", create = true)
     public AutoScalePolicy createAutoScalePolicy(CreateAutoScalePolicyCmd cmd) {
 
         int duration = cmd.getDuration();
@@ -488,7 +474,7 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
 
         AutoScalePolicyVO policyVO = new AutoScalePolicyVO(cmd.getDomainId(), cmd.getAccountId(), duration, quietTime, action);
 
-        policyVO = checkValidityAndPersist(policyVO, cmd.getConditionIds());
+        policyVO  = checkValidityAndPersist(policyVO, cmd.getConditionIds());
         s_logger.info("Successfully created AutoScale Policy with Id: " + policyVO.getId());
         return policyVO;
     }
@@ -520,7 +506,7 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
         }
         txn.commit();
         s_logger.info("Successfully deleted autoscale policy id : " + id);
-        return success; // successful
+        return true; // successful
     }
 
     public void checkCallerAccess(String accountName, Long domainId)
@@ -556,7 +542,7 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
             Account caller = UserContext.current().getCaller();
 
             Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean,
-                    ListProjectResourcesCriteria>(domainId, isRecursive, null);
+            ListProjectResourcesCriteria>(domainId, isRecursive, null);
             _accountMgr.buildACLSearchParameters(caller, id, accountName, null, permittedAccounts, domainIdRecursiveListProject,
                     listAll, false);
             domainId = domainIdRecursiveListProject.first();
@@ -610,7 +596,6 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
     }
 
     @Override
-    @DB
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEPOLICY_UPDATE, eventDescription = "updating autoscale policy")
     public AutoScalePolicy updateAutoScalePolicy(UpdateAutoScalePolicyCmd cmd) {
         Long policyId = cmd.getId();
@@ -633,41 +618,35 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
             if (!vmGroupVO.getState().equals(AutoScaleVmGroup.State_Disabled)) {
                 throw new InvalidParameterValueException("The AutoScale Policy can be updated only if the Vm Group it is associated with is disabled in state");
             }
-            if (vmGroupVO.getInterval() < policy.getDuration()) {
+            if(vmGroupVO.getInterval() < policy.getDuration()) {
                 throw new InvalidParameterValueException("duration is less than the associated AutoScaleVmGroup's interval");
             }
-            if (vmGroupVO.getInterval() < policy.getQuietTime()) {
+            if(vmGroupVO.getInterval() < policy.getQuietTime()) {
                 throw new InvalidParameterValueException("quietTime is less than the associated AutoScaleVmGroup's interval");
             }
         }
 
         policy = checkValidityAndPersist(policy, conditionIds);
         s_logger.info("Successfully updated Auto Scale Policy id:" + policyId);
-
         return policy;
     }
 
     @Override
-    @DB
-    @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMGROUP_CREATE, eventDescription = "creating autoscale vm group")
+    @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMGROUP_CREATE, eventDescription = "creating autoscale vm group", create = true)
     public AutoScaleVmGroup createAutoScaleVmGroup(CreateAutoScaleVmGroupCmd cmd) {
         int minMembers = cmd.getMinMembers();
         int maxMembers = cmd.getMaxMembers();
         Integer interval = cmd.getInterval();
 
-        if (interval == null) {
+        if(interval == null) {
             interval = NetUtils.DEFAULT_AUTOSCALE_POLICY_INTERVAL_TIME;
         }
 
         LoadBalancerVO loadBalancer = getEntityInDatabase(UserContext.current().getCaller(), ApiConstants.LBID, cmd.getLbRuleId(), _lbDao);
 
-        // Account owner = _accountDao.findById(loadBalancer.getAccountId());
-        // Account caller = UserContext.current().getCaller();
-        // _accountMgr.checkAccess(caller, null, true, owner);
-
         Long zoneId = _ipAddressDao.findById(loadBalancer.getSourceIpAddressId()).getDataCenterId();
 
-        if (_autoScaleVmGroupDao.isAutoScaleLoadBalancer(loadBalancer.getId())) {
+        if(_autoScaleVmGroupDao.isAutoScaleLoadBalancer(loadBalancer.getId())) {
             throw new InvalidParameterValueException("an AutoScaleVmGroup is already attached to the lb rule, the existing vm group has to be first deleted");
         }
 
@@ -696,12 +675,7 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
     public boolean configureAutoScaleVmGroup(long vmGroupid) {
         AutoScaleVmGroup vmGroup = _autoScaleVmGroupDao.findById(vmGroupid);
 
-        /* TODO remove later */
-        if (true) {
-            return true;
-        }
-
-        if (isLoadBalancerBasedAutoScaleVmGroup(vmGroup)) {
+        if(isLoadBalancerBasedAutoScaleVmGroup(vmGroup)) {
             return _lbRulesMgr.configureLbAutoScaleVmGroup(vmGroupid);
         }
 
@@ -715,7 +689,7 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
     public boolean deleteAutoScaleVmGroup(long id) {
         AutoScaleVmGroupVO autoScaleVmGroupVO = getEntityInDatabase(UserContext.current().getCaller(), "AutoScale Vm Group", id, _autoScaleVmGroupDao);
 
-        if (autoScaleVmGroupVO.getState().equals(AutoScaleVmGroup.State_New)) {
+        if(autoScaleVmGroupVO.getState().equals(AutoScaleVmGroup.State_New)) {
             /* This condition is for handling failures during creation command */
             return _autoScaleVmGroupDao.remove(id);
         }
@@ -727,7 +701,7 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
         try {
             success = configureAutoScaleVmGroup(id);
         } finally {
-            if (!success) {
+            if(!success) {
                 s_logger.warn("Could not delete AutoScale Vm Group id : " + id);
                 autoScaleVmGroupVO.setState(bakupState);
                 _autoScaleVmGroupDao.persist(autoScaleVmGroupVO);
@@ -796,7 +770,8 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
         return searchWrapper.search();
     }
 
-    private AutoScaleVmGroupVO checkValidityAndPersist(AutoScaleVmGroupVO vmGroup, List<Long> scaleUpPolicyIds, List<Long> scaleDownPolicyIds) {
+    @DB
+    protected AutoScaleVmGroupVO checkValidityAndPersist(AutoScaleVmGroupVO vmGroup, List<Long> scaleUpPolicyIds, List<Long> scaleDownPolicyIds) {
         int minMembers = vmGroup.getMinMembers();
         int maxMembers = vmGroup.getMaxMembers();
         int interval = vmGroup.getInterval();
@@ -820,11 +795,11 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
             throw new InvalidParameterValueException("interval is an invalid value: " + interval);
         }
 
-        if (scaleUpPolicyIds != null) {
+        if(scaleUpPolicyIds != null) {
             policies.addAll(getAutoScalePolicies("scaleuppolicyid", scaleUpPolicyIds, counters, interval, true));
         }
 
-        if (scaleDownPolicyIds != null) {
+        if(scaleDownPolicyIds != null) {
             policies.addAll(getAutoScalePolicies("scaledownpolicyid", scaleDownPolicyIds, counters, interval, false));
         }
 
@@ -842,16 +817,16 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
         txn.start();
         vmGroup = _autoScaleVmGroupDao.persist(vmGroup);
 
-        if (scaleUpPolicyIds != null || scaleDownPolicyIds != null) {
+        if(scaleUpPolicyIds != null || scaleDownPolicyIds != null) {
             List<Long> bakupScaleUpPolicyIds = new ArrayList<Long>();
             List<Long> bakupScaleDownPolicyIds = new ArrayList<Long>();
             ApiDBUtils.getAutoScaleVmGroupPolicyIds(vmGroup.getId(), bakupScaleUpPolicyIds, bakupScaleDownPolicyIds);
-            if (scaleUpPolicyIds == null) {
+            if(scaleUpPolicyIds == null) {
                 policyIds.addAll(bakupScaleUpPolicyIds);
             } else {
                 policyIds.addAll(scaleUpPolicyIds);
             }
-            if (scaleDownPolicyIds == null) {
+            if(scaleDownPolicyIds == null) {
                 policyIds.addAll(bakupScaleDownPolicyIds);
             } else {
                 policyIds.addAll(scaleDownPolicyIds);
@@ -870,7 +845,6 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_AUTOSCALEVMGROUP_UPDATE, eventDescription = "updating autoscale vm group")
-    @DB
     public AutoScaleVmGroup updateAutoScaleVmGroup(UpdateAutoScaleVmGroupCmd cmd) {
         Long vmGroupId = cmd.getId();
         Integer minMembers = cmd.getMinMembers();
@@ -984,7 +958,6 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_CONDITION_CREATE, eventDescription = "Condition", create = true)
-    @DB
     public Condition createCondition(CreateConditionCmd cmd) {
         checkCallerAccess(cmd.getAccountName(), cmd.getDomainId());
         String opr = cmd.getRelationalOperator().toUpperCase();
@@ -1018,7 +991,7 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
         String name = cmd.getName();
         Long id = cmd.getId();
         String source = cmd.getSource();
-        if (source != null)
+        if(source != null )
             source = source.toLowerCase();
 
         Filter searchFilter = new Filter(CounterVO.class, "created", false, cmd.getStartIndex(), cmd.getPageSizeVal());
@@ -1090,7 +1063,10 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
             throw new ResourceInUseException("Cannot delete Condition when it is in use by one or more AutoScale Policies.");
         }
         boolean success = _conditionDao.remove(conditionId);
-        s_logger.info("Successfully deleted condition " + condition.getId());
+        if(success) {
+            s_logger.info("Successfully deleted condition " + condition.getId());
+        }
+        return success;
     }
 
 }
