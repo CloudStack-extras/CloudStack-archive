@@ -255,6 +255,14 @@ Group:     System Environment/Libraries
 %description baremetal-agent
 The CloudStack baremetal agent
 
+%package baremetal-securitygroup-agent
+Summary: CloudStack baremetal security group agent
+Requires: chkconfig
+Requires: python
+Group:     System Environment/Libraries
+%description baremetal-securitygroup-agent
+The CloudStack baremetal security group agent
+
 %package console-proxy
 Summary:   CloudStack console proxy
 Requires: java >= 1.6.0
@@ -477,6 +485,7 @@ fi
 %files agent-scripts
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/agent/scripts/*
+%exclude %{_libdir}/%{name}/agent/scripts/network/security-group-agent/*
 # maintain the following list in sync with files agent-scripts
 %{_libdir}/%{name}/agent/vms/systemvm.zip
 %{_libdir}/%{name}/agent/vms/systemvm.iso
@@ -614,6 +623,11 @@ fi
 
 %files baremetal-agent
 %attr(0755,root,root) %{_bindir}/cloud-setup-baremetal
+
+%files baremetal-securitygroup-agent
+%defattr(0644,root,root,0775)
+%attr(0755,root,root) %{_initrddir}/cloud-security-group
+%{_libdir}/%{name}/agent/scripts/network/security-group-agent/*
 
 #%files test
 #%defattr(0644,root,root,0755)
