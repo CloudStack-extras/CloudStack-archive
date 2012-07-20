@@ -128,8 +128,8 @@
                 text: _l('Apply'),
                 'class': 'ok',
                 click: function() {
-	          		  var data = cloudStack.serializeForm($('form'));
-	          		  cloudStack.autoscaler.actions.add({data: data,context: context});
+              		var data = cloudStack.serializeForm($('form'));
+              		cloudStack.autoscaler.actions.add({data: data,context: context});
                   $autoscalerDialog.dialog('close');
                   $('.overlay').remove();
                   $autoscalerDialog.closest(':ui-dialog').remove();
@@ -140,8 +140,8 @@
          $('.ui-dialog div.autoscaler div.form-container').find('.form-item[rel=templateNames] label').hide();
 
          /* Duration Fields*/
-         $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
-         $('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+         //$('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+         //$('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
         
          /*Dividers*/
          $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').prepend($scaleUpDivider);
