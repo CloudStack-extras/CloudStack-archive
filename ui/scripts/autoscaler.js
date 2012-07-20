@@ -446,19 +446,6 @@
       }
     },
 
-  /*  actions: {
-      add: function(context) {
-        $.ajax({
-          url: createURL(''),
-        });
-      },
-      recreate: function(args) {
-        // Delete existing rule
-          $.ajax({
-            url: createURL(''),
-          });
-      }
-    },*/
 
     dialog: function(args) {
       return function(args) {
