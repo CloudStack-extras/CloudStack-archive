@@ -1,0 +1,92 @@
+#!/bin/bash
+#
+# @PACKAGE@-management      This shell script takes care of starting and stopping Tomcat
+#
+# chkconfig: - 80 20
+#
+### BEGIN INIT INFO
+# Provides: tomcat6
+# Required-Start: $network $syslog
+# Required-Stop: $network $syslog
+# Default-Start:
+# Default-Stop:
+# Description: Release implementation for Servlet 2.5 and JSP 2.1
+# Short-Description: start and stop tomcat
+### END INIT INFO
+#
+# - originally written by Henri Gomez, Keith Irwin, and Nicolas Mailhot
+# - heavily rewritten by Deepak Bhole and Jason Corley
+#
+
+if [ -r /etc/rc.d/init.d/functions ]; then
+    . /etc/rc.d/init.d/functions
+fi
+if [ -r /lib/lsb/init-functions ]; then
+    . /lib/lsb/init-functions
+fi
+
+
+NAME="$(basename $0)"
+stop() {
+	SHUTDOWN_WAIT="30"
+	count="0"
+	if [ -f /var/run/cs-securitygroup.pid ]; then
+		pid=`cat /var/run/cs-securitygroup.pid`
+		kill $pid &>/dev/null
+		until [ "$(ps --pid $pid | grep -c $pid)" -eq "0" ] || \
+			[ "$count" -gt "$SHUTDOWN_WAIT" ]
+		do
+			sleep 1
+			let count="${count}+1"
+		done
+		if [ "$(ps --pid $pid | grep -c $pid)" -eq "0" ]; then
+			log_success_msg "Stopping cloud-security-group:"
+		else
+			log_failure_msg "Stopping cloud-security-group:"
+		fi
+	else
+		echo "Cannot find PID file of cloud-security-group"
+		log_failure_msg "Stopping cloud-security-group:"
+	fi
+}
+
+
+start() {
+    pid=`cat /var/run/cs-securitygroup.pid`
+    ps -ae | grep $pid &>/dev/null
+    if [ $? == 0 ]; then
+        echo "CloudStack baremetal security group agent[pid:$pid] is still running ..."
+    else
+       /usr/share/cloud/security-group-agent/cs-securitygroup
+       log_success_msg "Starting cloud-security-group:"
+    fi
+}
+
+status() {
+    pid=`cat /var/run/cs-securitygroup.pid`
+    ps -ae | grep $pid &>/dev/null
+    if [ $? == 0 ]; then
+        echo "CloudStack baremetal security group agent[pid:$pid] is still running ..."
+    else
+        echo "CloudStack baremetal security group agent is stopped"
+    fi
+}
+
+# See how we were called.
+case "$1" in
+    status)
+        status
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    start)
+        start
+        ;;
+esac
+
+exit 0

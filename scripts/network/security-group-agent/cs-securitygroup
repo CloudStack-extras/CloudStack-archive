@@ -1,0 +1,4 @@
+#!/bin/bash
+
+basedir=`dirname $0`
+python26 $basedir/com/cloud/securitygroupagent/SecurityGroupAgent.py &>/dev/null &
