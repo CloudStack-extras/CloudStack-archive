@@ -9576,13 +9576,13 @@ div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit {
 
 div.ui-dialog div.autoscaler div.scale-up-policy-title {
   color: #0055BB;
-  margin-left: -620px;
+  margin-left: -650px;
   margin-top: 40px;
 }
 
 div.ui-dialog div.autoscaler div.scale-up-policy-title label {
   font-size: 13px;
-  margin-left: 170px;
+  margin-left: 200px;
   margin-right: 10px;
 }
 
@@ -9594,7 +9594,7 @@ div.ui-dialog div.autoscaler div.scale-down-policy-title label {
 
 div.ui-dialog div.autoscaler div.scale-down-policy-title {
   color: #0055BB;
-  margin-left: -650px;
+  margin-left: -620px;
   margin-top: 10px;
 }
 
