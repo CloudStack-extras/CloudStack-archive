@@ -97,7 +97,7 @@
       },
 
       bottomFields: {
-    	  isAdvanced: { isBoolean: true, label: 'Show advanced settings' },
+    	  	isAdvanced: { isBoolean: true, label: 'Show advanced settings' },
           interval: {
               label: 'Polling Interval (in sec)',
               defaultValue: '30',
@@ -117,94 +117,94 @@
               dependsOn:'isAdvanced',
           	validation: { required: true }
           },
-        securityGroups: {
-          label: 'label.menu.security.groups',
-          isHidden: true,
-          dependsOn: 'isAdvanced',
-          select: function(args) {
-            $.ajax({
-              url: createURL("listSecurityGroups&listAll=true"),
-              dataType: "json",
-              async: true,
-              success: function(json) {
-                var securitygroups = json.listsecuritygroupsresponse.securitygroup;
-                args.response.success({
-                  data: $.map(securitygroups, function(securitygroup) {
-                    return {
-                      id: securitygroup.id,
-                      description: securitygroup.name
-                    };
-                  })
-                });
-              }
-            });
-          }
-        },
+	        securityGroups: {
+	          label: 'label.menu.security.groups',
+	          isHidden: true,
+	          dependsOn: 'isAdvanced',
+	          select: function(args) {
+	            $.ajax({
+	              url: createURL("listSecurityGroups&listAll=true"),
+	              dataType: "json",
+	              async: true,
+	              success: function(json) {
+	                var securitygroups = json.listsecuritygroupsresponse.securitygroup;
+	                args.response.success({
+	                  data: $.map(securitygroups, function(securitygroup) {
+	                    return {
+	                      id: securitygroup.id,
+	                      description: securitygroup.name
+	                    };
+	                  })
+	                });
+	              }
+	            });
+	          }
+	        },
 
-        DiskOfferings: {
-          label: 'label.menu.disk.offerings',
-          isHidden: true,
-          dependsOn: 'isAdvanced',
-          select: function(args) {
-            $.ajax({
-              url: createURL("listDiskOfferings&listAll=true"),
-              dataType: "json",
-              async: true,
-              success: function(json) {
-                var diskofferings = json.listdiskofferingsresponse.diskoffering;
-                args.response.success({
-                  data: $.map(diskofferings, function(diskoffering) {
-                    return {
-                      id: diskoffering.id,
-                      description: diskoffering.name
-                    };
-                  })
-                });
-              }
-            });
-          }
-        },
-
-        snmpCommunity: {
-        	isHidden: true,
-            dependsOn: 'isAdvanced',
-          label: 'SNMP Community',
-          defaultValue: 'public',
-          validation: { required: true }
-        },
-
-        snmpPort: {
-        	isHidden: true,
-            dependsOn: 'isAdvanced',
-          label: 'SNMP Port',
-          defaultValue: '161',
-          validation: { required: true }
-        },
-
-        username: {
-        	isHidden: true,
-            dependsOn: 'isAdvanced',
-          label: 'Username',
-          select: function(args) {
-            $.ajax({
-              url: createURL("listUsers&domainid=" + args.context.users[0].domainid),
-              dataType: "json",
-              async: true,
-              success: function(json) {
-            	var users = json.listusersresponse.user;
-            	args.response.success({
-            		data:  $.map(users, function(user) {
-            			return {
-            				id: user.id,
-            				description: user.username
-            			};
-            		})
-            	});
-              }
-            });
-          }
-        },
-      },
+	        DiskOfferings: {
+	          label: 'label.menu.disk.offerings',
+	          isHidden: true,
+	          dependsOn: 'isAdvanced',
+	          select: function(args) {
+	            $.ajax({
+	              url: createURL("listDiskOfferings&listAll=true"),
+	              dataType: "json",
+	              async: true,
+	              success: function(json) {
+	                var diskofferings = json.listdiskofferingsresponse.diskoffering;
+	                args.response.success({
+	                  data: $.map(diskofferings, function(diskoffering) {
+	                    return {
+	                      id: diskoffering.id,
+	                      description: diskoffering.name
+	                    };
+	                  })
+	                });
+	              }
+	            });
+	          }
+	        },
+	
+	        snmpCommunity: {
+	        	isHidden: true,
+	        	dependsOn: 'isAdvanced',
+	          label: 'SNMP Community',
+	          defaultValue: 'public',
+	          validation: { required: true }
+	        },
+	
+	        snmpPort: {
+	        	isHidden: true,
+	        	dependsOn: 'isAdvanced',
+	          label: 'SNMP Port',
+	          defaultValue: '161',
+	          validation: { required: true }
+	        },
+	
+	        username: {
+	        	isHidden: true,
+	        	dependsOn: 'isAdvanced',
+	          label: 'Username',
+	          select: function(args) {
+	            $.ajax({
+	              url: createURL("listUsers&domainid=" + args.context.users[0].domainid),
+	              dataType: "json",
+	              async: true,
+	              success: function(json) {
+		            	var users = json.listusersresponse.user;
+		            	args.response.success({
+		            		data:  $.map(users, function(user) {
+		            			return {
+		            				id: user.id,
+		            				description: user.username
+		            			};
+		            		})
+		            	});
+	              }
+	            });
+	          }
+	        },
+	      },
       scaleUpPolicy: {
         title: 'ScaleUp Policy',
         label: 'SCALE UP POLICY',
@@ -212,27 +212,27 @@
         noHeaderActionsColumn: true,
         fields: {
           'counterid': { 
-    	    label: 'Counter',
+	    	    label: 'Counter',
     	      select: function(args) {
-                $.ajax({
-                  url: createURL("listCounters"),
-                  dataType: "json",
-                  async: true,
-                  success: function(json) {
-                    var counters = json.counterresponse.counter;
-                    args.response.success({
-                        data: $.map(counters, function(counter) {
-                        return {
+              $.ajax({
+                url: createURL("listCounters"),
+                dataType: "json",
+                async: true,
+                success: function(json) {
+                  var counters = json.counterresponse.counter;
+                  
+                  args.response.success({
+                    data: $.map(counters, function(counter) {
+                      return {
                         name: counter.id,
                         description: counter.name
                       };
-                      })
-                    });
-                  }
-                });
-            }
-	
-	      },
+                    })
+                  });
+                }
+              });
+            }	
+		      },
           'relationaloperator': {
             label: 'Operator',
             select: function(args) {
@@ -266,17 +266,17 @@
             
             $.ajax({
             	url: createURL("createCondition" + array1.join("")),
-		                dataType: 'json',
-		                async: true,
-		                success: function(data) {
-		                  var jobId = data.conditionresponse.jobid;
-		
-		                  args.response.success({
-		                    _custom: {
-		                      jobId: jobId
-		                    }
-		                  });
-		                }
+              dataType: 'json',
+              async: true,
+              success: function(data) {
+                var jobId = data.conditionresponse.jobid;
+                
+                args.response.success({
+                  _custom: {
+                    jobId: jobId
+                  }
+                });
+              }
             });
           }
         },
@@ -287,17 +287,17 @@
             action: function(args) {
               $.ajax({
                 url: createURL("deleteCondition&id=" + args.context.multiRule[0].counterid),
-                        dataType: 'json',
-                        async: true,
-                        success: function(data) {
-                          var jobId = data.deleteconditionresponse.jobid;
-
-                          args.response.success({
-                            _custom: {
-                              jobId: jobId
-                            }
-                          });
-                        }
+                dataType: 'json',
+                async: true,
+                success: function(data) {
+                  var jobId = data.deleteconditionresponse.jobid;
+                  
+                  args.response.success({
+                    _custom: {
+                      jobId: jobId
+                    }
+                  });
+                }
             	});
             }
           }
@@ -305,24 +305,24 @@
         ignoreEmptyFields: true,
         dataProvider: function(args) {
         	$.ajax({
-                url: createURL('listConditions'),
-                dataType: 'json',
-                async: true,
-                success: function(data) {
-	        		args.response.success({
-	                              data: $.map(
-	                                data.listconditionsresponse.condition ?
-	                                  data.listconditionsresponse.condition : [],
-	                                function(elem) {
-	                                  return {
-	                                	counterid: elem.id,
-	                                    relationaloperator: elem.relationaloperator,
-	                                    threshold: elem.threshold
-	                                  };
-	                                }
-	                              )
-	                            });
-                }
+            url: createURL('listConditions'),
+            dataType: 'json',
+            async: true,
+            success: function(data) {
+        			args.response.success({
+                data: $.map(
+                  data.listconditionsresponse.condition ?
+                    data.listconditionsresponse.condition : [],
+                  function(elem) {
+                    return {
+                  	counterid: elem.id,
+                      relationaloperator: elem.relationaloperator,
+                      threshold: elem.threshold
+                    };
+                  }
+                )
+        			});
+            }
         	});
         }
       },
@@ -332,8 +332,8 @@
         noSelect: true,
         noHeaderActionsColumn: true,
         fields: {
-          'counterid': {
-    	  label: 'Counter',
+	      	'counterid': {
+		    	  label: 'Counter',
             select: function(args) {
 	            $.ajax({
 	              url: createURL("listCounters"),
@@ -341,18 +341,19 @@
 	              async: true,
 	              success: function(json) {
 	                var counters = json.counterresponse.counter;
+	              
 	                args.response.success({
-	                    data: $.map(counters, function(counter) {
+                    data: $.map(counters, function(counter) {
 	                    return {
-	                    name: counter.id,
-	                    description: counter.name
-	                  };
+		                    name: counter.id,
+		                    description: counter.name
+		                  };
 	                  })
 	                });
 	              }
 	            });
-      		}
-      	  },
+	      		}
+    			},
           'relationaloperator': {
             label: 'Operator',
             select: function(args) {
@@ -377,45 +378,45 @@
           label: 'label.add',
           action: function(args) {
           	var array1 = [];
-              array1.push("&counterid=" + args.data.counterid);
-              array1.push("&relationaloperator=" + args.data.relationaloperator);
-              array1.push("&threshold=" + todb(args.data.threshold));
-              array1.push("&account=" + args.context.users[0].account);
-              array1.push("&domainid=" +args.context.users[0].domainid );
-              
-              $.ajax({
-              	url: createURL("createCondition" + array1.join("")),
-  		                dataType: 'json',
-  		                async: true,
-  		                success: function(data) {
-  		                  var jobId = data.conditionresponse.jobid;
-  		
-  		                  args.response.success({
-  		                    _custom: {
-  		                      jobId: jobId
-  		                    }
-  		                  });
-  		                }
-              });
-            }
+            array1.push("&counterid=" + args.data.counterid);
+            array1.push("&relationaloperator=" + args.data.relationaloperator);
+            array1.push("&threshold=" + todb(args.data.threshold));
+            array1.push("&account=" + args.context.users[0].account);
+            array1.push("&domainid=" +args.context.users[0].domainid );
+            
+            $.ajax({
+            	url: createURL("createCondition" + array1.join("")),
+              dataType: 'json',
+              async: true,
+              success: function(data) {
+                var jobId = data.conditionresponse.jobid;	
+
+                args.response.success({
+                  _custom: {
+                  	jobId: jobId
+                  }
+                });
+              }
+            });
+          }
         },
         actions: {
           destroy: {
             label: '',
             action: function(args) {
-        	$.ajax({
+        			$.ajax({
                 url: createURL("deleteCondition&id=" + args.context.multiRule[0].counterid),
-                        dataType: 'json',
-                        async: true,
-                        success: function(data) {
-                          var jobId = data.deleteconditionresponse.jobid;
+                dataType: 'json',
+                async: true,
+                success: function(data) {
+                  var jobId = data.deleteconditionresponse.jobid;
 
-                          args.response.success({
-                            _custom: {
-                              jobId: jobId
-                            }
-                          });
-                        }
+                  args.response.success({
+                    _custom: {
+                      jobId: jobId
+                    }
+                  });
+                }
             	});
             }
           }
@@ -423,42 +424,135 @@
         ignoreEmptyFields: true,
         dataProvider: function(args) {
         	$.ajax({
-                url: createURL('listConditions'),
-                dataType: 'json',
-                async: true,
-                success: function(data) {
-	        		args.response.success({
-	                              data: $.map(
-	                                data.listconditionsresponse.condition ?
-	                                  data.listconditionsresponse.condition : [],
-	                                function(elem) {
-	                                  return {
-	                                	counterid: elem.id,
-	                                    relationaloperator: elem.relationaloperator,
-	                                    threshold: elem.threshold
-	                                  };
-	                                }
-	                              )
-	                            });
-                }
+            url: createURL('listConditions'),
+            dataType: 'json',
+            async: true,
+            success: function(data) {
+        			args.response.success({
+                data: $.map(
+                  data.listconditionsresponse.condition ?
+                    data.listconditionsresponse.condition : [],
+                  function(elem) {
+                    return {
+	                  	counterid: elem.id,
+	                    relationaloperator: elem.relationaloperator,
+	                    threshold: elem.threshold
+                    };
+                  }
+                )
+              });
+            }
         	});
         }
       }
     },
 
-  /*  actions: {
-      add: function(context) {
+    actions: {
+    	add: function(args) {
+	    	var array1 = [];
+	    	array1.push("&zoneid=" + args.context.networks[0].zoneid);
+	    	array1.push("&templateid=" + args.data.templateNames);
+	    	array1.push("&serviceofferingid=" + args.data.serviceOfferingId);
+	    	array1.push("&snmpcommunity=" + args.data.snmpCommunity);
+	    	array1.push("&snmpport=" + args.data.snmpPort);
+	    	array1.push("&destroyvmgraceperiod=" + args.data.destroyVMgracePeriod);
+	    	array1.push("&autoscaleuserid=" + args.data.username[1]);
+	    	//array1.push("&otherdeployparams=");
+	
+	    	$.ajax({
+	    		url: createURL('createAutoScaleVmProfile' + array1.join("")),
+	    		dataType: 'json',
+	    		async: false,
+	    		success: function(data) {
+		    		var jobId = data.autoscalevmprofileresponse.jobid;
+		
+		    		args.response.success({
+		    			_custom: {
+		    				jobId: jobId
+		    			},
+		    			notification: {
+		    				label: 'Create AutoScale VM Profile',
+		    				poll: pollAsyncJobResult
+		    			}
+		    		});
+		    	}
+	    	});
+	
+	    	$.ajax({
+	    		url: createURL('listConditions'),
+	    		dataType: 'json',
+	    		async: true,
+	    		success: function(data) {
+		    		args.response.success({
+		    			data: $.map(
+	    					data.listconditionsresponse.condition ?
+	    						data.listconditionsresponse.condition : [],
+	    					function(elem) {
+	    						return {
+	    							counterid: elem.id,
+	    							relationaloperator: elem.relationaloperator,
+	    							threshold: elem.threshold
+	    						};
+	    					}
+		    			)
+		    		});
+	    		}
+	    	});
+	
+	    	var array1 = [];
+        array1.push("&action=" + "scaleup");
+        array1.push("&conditionids=" + "1e17c447-6a78-4d85-982c-9579bd72a57e");
+        array1.push("&duration=" + args.data.scaleUpduration );
+        array1.push("&quiettime=" + args.data.quietTime);
+        
         $.ajax({
-          url: createURL(''),
+        	url: createURL('createAutoScalePolicy' + array1.join("")),
+          dataType: 'json',
+          async: true,
+          success: function(data) {
+        		var jobId = data.autoscalevmprofileresponse.jobid;
+
+        		args.response.success({
+        			_custom: {
+        				jobId: jobId
+        			},
+        			notification: {
+        				label: 'Create AutoScale VM Profile',
+        				poll: pollAsyncJobResult
+        			}
+        		});
+        	}
         });
-      },
-      recreate: function(args) {
-        // Delete existing rule
-          $.ajax({
-            url: createURL(''),
-          });
-      }
-    },*/
+        $.ajax({
+        	url: createURL('createLoadBalancerRule' + array1.join("")),
+        	dataType: 'json',
+        	async: true,
+        	success: function(json) {
+        		var jobId = json.createloadbalancerruleresponse.jobid;
+        		
+        		args.response.success({
+        			_custom: {
+        				jobId: jobId,
+        				getUpdatedItem: function(json) {
+                  return json.queryasyncjobresultresponse.jobresult.loadbalancer;
+                }
+        			},
+        			notification: {
+        				label: 'Create LB Rule',
+        				poll: pollAsyncJobResult
+        			}
+        		});
+        	}
+        });
+        
+	    },
+	    recreate: function(args) {
+	    	// Delete existing rule
+	    	$.ajax({
+	    		url: createURL(''),
+	    	});
+	    }
+    },
 
     dialog: function(args) {
       return function(args) {

@@ -27,7 +27,9 @@
       var $scaleUpPolicyTitle = $('<div>').addClass('scale-up-policy-title').html("Scale Up Policy");
       var $scaleDownPolicyTitle = $('<div>').addClass('scale-down-policy-title').html("Scale Down Policy");
       var topFieldForm, $topFieldForm,
-          bottomFieldForm, $bottomFieldForm;
+          bottomFieldForm, $bottomFieldForm,
+          scaleUpPolicyTitleForm, $scaleUpPolicyTitleForm,
+          scaleDownPolicyTitleForm, $scaleDownPolicyTitleForm;
 
       // Create and append top fields
       // -- uses create form to generate fields
@@ -42,6 +44,28 @@
       $topFieldForm = topFieldForm.$formContainer;
       $topFieldForm.appendTo($topFields);
 
+      scaleUpPolicyTitleForm = cloudStack.dialog.createForm({
+      	context: context,
+      	noDialog: true,
+      	form: {
+    			title: '',
+    			fields: {scaleUpDuration: { label: 'Duration', validation: { required: true } } }
+      	}
+      });
+			$scaleUpPolicyTitleForm = scaleUpPolicyTitleForm.$formContainer;
+			$scaleUpPolicyTitleForm.appendTo($scaleUpPolicyTitle);
+			
+			scaleDownPolicyTitleForm = cloudStack.dialog.createForm({
+      	context: context,
+      	noDialog: true,
+      	form: {
+    			title: '',
+    			fields: {scaleDownDuration: { label: 'Duration', validation: { required: true } } }
+      	}
+      });
+			$scaleDownPolicyTitleForm = scaleDownPolicyTitleForm.$formContainer;
+			$scaleDownPolicyTitleForm.appendTo($scaleDownPolicyTitle)
+			
       // Make multi-edits
       // $scaleUpPolicy.multiEdit(...)
       scaleUpPolicyForm = $scaleUpPolicy.multiEdit(
@@ -99,6 +123,8 @@
                 text: _l('Apply'),
                 'class': 'ok',
                 click: function() {
+	          		  var data = cloudStack.serializeForm($('form'));
+	          		  cloudStack.autoscaler.actions.add({data: data,context: context});
                   $autoscalerDialog.dialog('close');
                   $('.overlay').remove();
                   $autoscalerDialog.closest(':ui-dialog').remove();
@@ -107,8 +133,8 @@
             ]
         }).closest('.ui-dialog').overlay();
          $('.ui-dialog div.autoscaler div.form-container').find('.form-item[rel=templateNames] label').hide();
-         $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
-         $('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+         //$('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+         //$('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
       }
     }
 }(jQuery, cloudStack));
