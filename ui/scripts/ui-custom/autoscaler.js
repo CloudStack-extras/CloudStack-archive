@@ -25,6 +25,9 @@
       var $scaleUpPolicy = $('<div>').addClass('scale-up-policy');
       var $slideScaleUp = $('<div></div>').addClass('expand');
       var $slideScaleDown = $('<div></div>').addClass('expand');
+      var $scaleUpDivider = $('<hr></hr>').addClass('policy-divider');
+      var $scaleDownDivider = $('<hr></hr>').addClass('policy-divider');
+      var $bottomFieldDivider = $('<hr></hr>').addClass('policy-divider');
       var $scaleDownPolicy = $('<div>').addClass('scale-down-policy');
       var $scaleUpPolicyTitle = $('<div>').addClass('scale-up-policy-title').html("Scale Up Policy");
       var $scaleDownPolicyTitle = $('<div>').addClass('scale-down-policy-title').html("Scale Down Policy");
@@ -108,8 +111,16 @@
             ]
         }).closest('.ui-dialog').overlay();
          $('.ui-dialog div.autoscaler div.form-container').find('.form-item[rel=templateNames] label').hide();
+         /* Duration Fields*/
          $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
          $('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+        
+         /*Dividers*/
+         $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').prepend($scaleUpDivider);
+         $('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').prepend($scaleDownDivider);
+         $('div.ui-dialog div.autoscaler').find('div.field-group.bottom-fields').prepend($bottomFieldDivider);
+          
+         /* Hide effects for multi-edit table*/
          $('div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data').prepend( $slideScaleUp);
          $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data').prepend( $slideScaleDown);
 

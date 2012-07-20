@@ -9491,6 +9491,8 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   max-height: 600px;
 }
 
+
+
 .ui-dialog div.autoscaler div.form-container div.form-item[rel=templateCategory] {
   display: block;
   width: 345px;
@@ -9584,6 +9586,34 @@ div.ui-dialog div.autoscaler div.scale-up-policy-title label {
   font-size: 13px;
   margin-left: 200px;
   margin-right: 10px;
+}
+
+div.ui-dialog div.autoscaler div.scale-up-policy-title hr.policy-divider{
+
+    border-left: 1px none #38546D;
+    border-right: 1px none #16222C;
+    border-top: 1px none #38546D;
+    margin-bottom: 12px;
+
+}
+
+div.ui-dialog div.autoscaler div.scale-down-policy-title hr.policy-divider{
+
+    border-left: 1px none #38546D;
+    border-right: 1px none #16222C;
+    border-top: 1px none #38546D;
+    margin-bottom: 12px;
+
+}
+
+div.ui-dialog div.autoscaler div.field-group.bottom-fields  hr.policy-divider{
+
+    border-left: 1px none #38546D;
+    border-right: 1px none #16222C;
+    border-top: 1px none #38546D;
+    margin-top: 15px;
+    margin-bottom: -1px;
+
 }
 
 div.ui-dialog div.autoscaler div.scale-down-policy-title label {
