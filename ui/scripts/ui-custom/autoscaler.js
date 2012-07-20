@@ -16,13 +16,18 @@
     var bottomfields = args.forms.bottomFields;
     var scaleuppolicy = args.forms.scaleUpPolicy;
     var scaledownpolicy = args.forms.scaleDownPolicy;
-
+    
     return function(args) {
       var context = args.context;
       var $autoscalerDialog = $('<div>').addClass('autoscaler');
       var $topFields = $('<div>').addClass('field-group top-fields');
       var $bottomFields = $('<div>').addClass('field-group bottom-fields');
       var $scaleUpPolicy = $('<div>').addClass('scale-up-policy');
+      var $slideScaleUp = $('<div></div>').addClass('expand');
+      var $slideScaleDown = $('<div></div>').addClass('expand');
+      var $scaleUpDivider = $('<hr></hr>').addClass('policy-divider');
+      var $scaleDownDivider = $('<hr></hr>').addClass('policy-divider');
+      var $bottomFieldDivider = $('<hr></hr>').addClass('policy-divider');
       var $scaleDownPolicy = $('<div>').addClass('scale-down-policy');
       var $scaleUpPolicyTitle = $('<div>').addClass('scale-up-policy-title').html("Scale Up Policy");
       var $scaleDownPolicyTitle = $('<div>').addClass('scale-down-policy-title').html("Scale Down Policy");
@@ -133,8 +138,24 @@
             ]
         }).closest('.ui-dialog').overlay();
          $('.ui-dialog div.autoscaler div.form-container').find('.form-item[rel=templateNames] label').hide();
-         //$('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
-         //$('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+
+         /* Duration Fields*/
+         $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+         $('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+        
+         /*Dividers*/
+         $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').prepend($scaleUpDivider);
+         $('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').prepend($scaleDownDivider);
+         $('div.ui-dialog div.autoscaler').find('div.field-group.bottom-fields').prepend($bottomFieldDivider);
+          
+         /* Hide effects for multi-edit table*/
+         $('div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data').prepend( $slideScaleUp);
+         $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data').prepend( $slideScaleDown);
+
+         $('div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.expand').click(function() { $('div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.data-item').slideToggle(); });
+
+          $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.expand').click(function() { $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-item').slideToggle(); });
+       
       }
     }
 }(jQuery, cloudStack));

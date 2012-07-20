@@ -9491,6 +9491,8 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   max-height: 600px;
 }
 
+
+
 .ui-dialog div.autoscaler div.form-container div.form-item[rel=templateCategory] {
   display: block;
   width: 345px;
@@ -9582,8 +9584,36 @@ div.ui-dialog div.autoscaler div.scale-up-policy-title {
 
 div.ui-dialog div.autoscaler div.scale-up-policy-title label {
   font-size: 13px;
-  margin-left: 170px;
+  margin-left: 200px;
   margin-right: 10px;
+}
+
+div.ui-dialog div.autoscaler div.scale-up-policy-title hr.policy-divider{
+
+    border-left: 1px none #38546D;
+    border-right: 1px none #16222C;
+    border-top: 1px none #38546D;
+    margin-bottom: 12px;
+
+}
+
+div.ui-dialog div.autoscaler div.scale-down-policy-title hr.policy-divider{
+
+    border-left: 1px none #38546D;
+    border-right: 1px none #16222C;
+    border-top: 1px none #38546D;
+    margin-bottom: 12px;
+
+}
+
+div.ui-dialog div.autoscaler div.field-group.bottom-fields  hr.policy-divider{
+
+    border-left: 1px none #38546D;
+    border-right: 1px none #16222C;
+    border-top: 1px none #38546D;
+    margin-top: 15px;
+    margin-bottom: -1px;
+
 }
 
 div.ui-dialog div.autoscaler div.scale-down-policy-title label {
@@ -9594,7 +9624,7 @@ div.ui-dialog div.autoscaler div.scale-down-policy-title label {
 
 div.ui-dialog div.autoscaler div.scale-down-policy-title {
   color: #0055BB;
-  margin-left: -650px;
+  margin-left: -620px;
   margin-top: 10px;
 }
 
@@ -9607,6 +9637,30 @@ margin-bottom:0px;
 div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-body div.data-item {
 
 margin-bottom:0px;
+
+}
+
+div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.expand {
+    background: url("../images/sprites.png") repeat scroll -541px -499px #FFFFFF;
+    border: 1px solid #D0D0D0;
+    border-radius: 9px 9px 9px 9px;
+    cursor: pointer;
+    float: right;
+    height: 15px;
+    margin: -3px 0 0 11px;
+    width: 14px;
+
+}
+
+div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.expand {
+    background: url("../images/sprites.png") repeat scroll -541px -499px #FFFFFF;
+    border: 1px solid #D0D0D0;
+    border-radius: 9px 9px 9px 9px;
+    cursor: pointer;
+    float: right;
+    height: 15px;
+    margin: -3px 0 0 11px;
+    width: 14px;
 
 }
 
