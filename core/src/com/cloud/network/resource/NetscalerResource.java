@@ -229,8 +229,8 @@ public class NetscalerResource implements ServerResource {
     }
     private  ArrayList<com.citrix.netscaler.nitro.service.nitro_service> netscalerServices = new ArrayList<com.citrix.netscaler.nitro.service.nitro_service>();
 
-    private com.citrix.netscaler.nitro.service.nitro_service login_get_service(Boolean forAutoScale) throws ExecutionException {
-        if(forAutoScale == null) {
+    private com.citrix.netscaler.nitro.service.nitro_service login_get_service(Boolean loginOnEveryCall) throws ExecutionException {
+        if(loginOnEveryCall == null || !loginOnEveryCall) {
             return _netscalerService;
         }
         com.citrix.netscaler.nitro.service.nitro_service _netscalerService = null;

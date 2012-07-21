@@ -76,7 +76,7 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager, NetworkS
     }
 
     @Override
-    public IPAddressVO associateIPToGuestNetwork(long ipId, long networkId) throws ResourceAllocationException, InsufficientAddressCapacityException, ConcurrentOperationException, ResourceUnavailableException {
+    public IPAddressVO associateIPToGuestNetwork(long ipId, long networkId, boolean releaseOnFailure) throws ResourceAllocationException, InsufficientAddressCapacityException, ConcurrentOperationException, ResourceUnavailableException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -938,7 +938,7 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager, NetworkS
      * @see com.cloud.network.NetworkManager#removeNic(com.cloud.vm.VirtualMachineProfile, com.cloud.network.Network)
      */
     @Override
-    public void removeNic(VirtualMachineProfile<? extends VMInstanceVO> vm, Network network) {
+    public void removeNic(VirtualMachineProfile<? extends VMInstanceVO> vm, Nic nic) {
         // TODO Auto-generated method stub
         
     }
@@ -956,7 +956,7 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager, NetworkS
      * @see com.cloud.network.NetworkManager#unassignIPFromVpcNetwork(long)
      */
     @Override
-    public void unassignIPFromVpcNetwork(long ipId) {
+    public void unassignIPFromVpcNetwork(long ipId, long networkId) {
         // TODO Auto-generated method stub
         
     }
