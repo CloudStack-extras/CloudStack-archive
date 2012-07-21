@@ -220,8 +220,6 @@ public interface NetworkManager extends NetworkService {
 
     List<Long> listNetworkOfferingsForUpgrade(long networkId);
 
-    PhysicalNetwork translateZoneIdToPhysicalNetwork(long zoneId);
-
     boolean isSecurityGroupSupportedInNetwork(Network network);
 
     boolean isProviderSupportServiceInNetwork(long networkId, Service service, Provider provider);
@@ -380,9 +378,9 @@ public interface NetworkManager extends NetworkService {
 
     /**
      * @param vm
-     * @param network
+     * @param nic TODO
      */
-    void removeNic(VirtualMachineProfile<? extends VMInstanceVO> vm, Network network);
+    void removeNic(VirtualMachineProfile<? extends VMInstanceVO> vm, Nic nic);
 
 
     /**
@@ -397,15 +395,17 @@ public interface NetworkManager extends NetworkService {
     /**
      * @param ipAddrId
      * @param networkId
+     * @param releaseOnFailure TODO
      */
-    IPAddressVO associateIPToGuestNetwork(long ipAddrId, long networkId) throws ResourceAllocationException, ResourceUnavailableException, 
+    IPAddressVO associateIPToGuestNetwork(long ipAddrId, long networkId, boolean releaseOnFailure) throws ResourceAllocationException, ResourceUnavailableException, 
         InsufficientAddressCapacityException, ConcurrentOperationException;
 
 
     /**
      * @param ipId
+     * @param networkId TODO
      */
-    void unassignIPFromVpcNetwork(long ipId);
+    void unassignIPFromVpcNetwork(long ipId, long networkId);
 
 
     /**
@@ -467,5 +467,12 @@ public interface NetworkManager extends NetworkService {
 
 
     PublicIp assignVpnGatewayIpAddress(long dcId, Account owner, long vpcId) throws InsufficientAddressCapacityException, ConcurrentOperationException;
+
+
+    /**
+     * @param ip
+     * @return
+     */
+    boolean ipUsedInVpc(IpAddress ip);
 
 }
