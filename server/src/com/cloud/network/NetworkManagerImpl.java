@@ -1141,7 +1141,8 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
 
     @DB
     @Override
-    public IPAddressVO associateIPToGuestNetwork(long ipId, long networkId) throws ResourceAllocationException, ResourceUnavailableException, 
+    public IPAddressVO associateIPToGuestNetwork(long ipId, long networkId, boolean releaseOnFailure) 
+            throws ResourceAllocationException, ResourceUnavailableException, 
     InsufficientAddressCapacityException, ConcurrentOperationException {
         Account caller = UserContext.current().getCaller();
         Account owner = null;
@@ -1219,14 +1220,11 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 s_logger.warn("Failed to associate ip address " + ip.getAddress().addr() + " to network " + network);
             }
             return ip;
-        } catch (ResourceUnavailableException e) {
-            s_logger.error("Unable to associate ip address due to resource unavailable exception", e);
-            return null;
         } finally {
-            if (!success) {
+            if (!success && releaseOnFailure) {
                 if (ip != null) {
                     try {
-                        s_logger.warn("Failed to associate ip address " + ip);
+                        s_logger.warn("Failed to associate ip address, so releasing ip from the database " + ip);
                         _ipAddressDao.markAsUnavailable(ip.getId());
                         if (!applyIpAssociations(network, true)) {
                             // if fail to apply ip assciations again, unassign ip address without updating resource
@@ -2415,20 +2413,21 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
 
         boolean success = disassociatePublicIpAddress(ipAddressId, userId, caller);
 
-        Long networkId = ipVO.getAssociatedWithNetworkId();
-        if (success && networkId != null) {
-            Network guestNetwork = getNetwork(networkId);
-            NetworkOffering offering = _configMgr.getNetworkOffering(guestNetwork.getNetworkOfferingId());
-            Long vmId = ipVO.getAssociatedWithVmId();
-            if (offering.getElasticIp() && vmId != null) {
-                _rulesMgr.getSystemIpAndEnableStaticNatForVm(_userVmDao.findById(vmId), true);
-                return true;
+        if (success) {
+            Long networkId = ipVO.getAssociatedWithNetworkId();
+            if (networkId != null) {
+                Network guestNetwork = getNetwork(networkId);
+                NetworkOffering offering = _configMgr.getNetworkOffering(guestNetwork.getNetworkOfferingId());
+                Long vmId = ipVO.getAssociatedWithVmId();
+                if (offering.getElasticIp() && vmId != null) {
+                    _rulesMgr.getSystemIpAndEnableStaticNatForVm(_userVmDao.findById(vmId), true);
+                    return true;
+                }
             }
-            return true;
         } else {
             s_logger.warn("Failed to release public ip address id=" + ipAddressId);
-            return false;
         }
+        return success;
     }
 
     @Deprecated
@@ -2501,9 +2500,8 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     }
 
     @Override
-    public void removeNic(VirtualMachineProfile<? extends VMInstanceVO> vm, Network network) {
-        NicVO nic = _nicDao.findByInstanceIdAndNetworkId(network.getId(), vm.getVirtualMachine().getId());
-        removeNic(vm, nic);
+    public void removeNic(VirtualMachineProfile<? extends VMInstanceVO> vm, Nic nic) {
+        removeNic(vm, _nicDao.findById(nic.getId()));
     }
 
     protected void removeNic(VirtualMachineProfile<? extends VMInstanceVO> vm, NicVO nic) {
@@ -4254,9 +4252,16 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 throw new CloudRuntimeException("Unable to find network offering with availability=" + 
                         Availability.Required + " to automatically create the network as part of createVlanIpRange");
             }
-            PhysicalNetwork physicalNetwork = translateZoneIdToPhysicalNetwork(zoneId);
 
             if (requiredOfferings.get(0).getState() == NetworkOffering.State.Enabled) {
+                
+                long physicalNetworkId = findPhysicalNetworkId(zoneId, requiredOfferings.get(0).getTags(), requiredOfferings.get(0).getTrafficType());
+                // Validate physical network
+                PhysicalNetwork physicalNetwork = _physicalNetworkDao.findById(physicalNetworkId);
+                if (physicalNetwork == null) {
+                    throw new InvalidParameterValueException("Unable to find physical network with id: "+physicalNetworkId   + " and tag: " +requiredOfferings.get(0).getTags());
+                }
+                
                 s_logger.debug("Creating network for account " + owner + " from the network offering id=" + 
                         requiredOfferings.get(0).getId() + " as a part of createVlanIpRange process");
                 guestNetwork = createGuestNetwork(requiredOfferings.get(0).getId(), owner.getAccountName() + "-network"
@@ -5947,24 +5952,6 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     }
 
     @Override
-    public PhysicalNetwork translateZoneIdToPhysicalNetwork(long zoneId) {
-        List<PhysicalNetworkVO> pNtwks = _physicalNetworkDao.listByZone(zoneId);
-        if (pNtwks.isEmpty()) {
-            List<IdentityProxy> idList = new ArrayList<IdentityProxy>();
-            idList.add(new IdentityProxy("data_center", zoneId, "zoneId"));
-            throw new InvalidParameterValueException("Unable to find physical network in zone with specified id", idList);
-        }
-
-        if (pNtwks.size() > 1) {
-            List<IdentityProxy> idList = new ArrayList<IdentityProxy>();
-            idList.add(new IdentityProxy("data_center", zoneId, "zoneId"));
-            throw new InvalidParameterValueException("More than one physical networks exist in zone with specified id", idList);
-        }
-
-        return pNtwks.get(0);
-    }
-
-    @Override
     public List<Long> listNetworkOfferingsForUpgrade(long networkId) {
         List<Long> offeringsToReturn = new ArrayList<Long>();
         NetworkOffering originalOffering = _configMgr.getNetworkOffering(getNetwork(networkId).getNetworkOfferingId());
@@ -6046,7 +6033,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 IPAddressVO ip = markIpAsUnavailable(ipToRelease.getId());
                 assert (ip != null) : "Unable to mark the ip address id=" + ipToRelease.getId() + " as unavailable.";
             } else {
-                unassignIPFromVpcNetwork(ipToRelease.getId());
+                unassignIPFromVpcNetwork(ipToRelease.getId(), network.getId());
             }
         }
 
@@ -7221,7 +7208,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 throw new InvalidParameterValueException("Can't assign ip to the network directly when network belongs" +
                 		" to VPC.Specify vpcId to associate ip address to VPC", null);
             }
-            return associateIPToGuestNetwork(ipId, networkId);
+            return associateIPToGuestNetwork(ipId, networkId, true);
         }
 
         return null;
@@ -7246,17 +7233,43 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     }
 
     @Override
-    public void unassignIPFromVpcNetwork(long ipId) {
+    public void unassignIPFromVpcNetwork(long ipId, long networkId) {
         IPAddressVO ip = _ipAddressDao.findById(ipId);
-        Long vpcId = ip.getVpcId();
-
-        if (vpcId == null) {
+        if (ipUsedInVpc(ip)) {
             return;
         }
+        
+        if (ip == null || ip.getVpcId() == null) {
+            return;
+        }
+        
+        s_logger.debug("Releasing VPC ip address " + ip + " from vpc network id=" + networkId);
 
-        ip.setAssociatedWithNetworkId(null);
-        _ipAddressDao.update(ipId, ip);
-        s_logger.debug("IP address " + ip + " is no longer associated with the network inside vpc id=" + vpcId);
+        long  vpcId = ip.getVpcId();
+        boolean success = false;
+        try {
+            //unassign ip from the VPC router
+            success = applyIpAssociations(getNetwork(networkId), true);
+        } catch (ResourceUnavailableException ex) {
+            throw new CloudRuntimeException("Failed to apply ip associations for network id=" + networkId + 
+                    " as a part of unassigning ip " + ipId + " from vpc", ex);
+        }
+
+        if (success) {
+            ip.setAssociatedWithNetworkId(null);
+            _ipAddressDao.update(ipId, ip);
+            s_logger.debug("IP address " + ip + " is no longer associated with the network inside vpc id=" + vpcId);
+        } else {
+            throw new CloudRuntimeException("Failed to apply ip associations for network id=" + networkId + 
+                    " as a part of unassigning ip " + ipId + " from vpc");
+        }
+        s_logger.debug("Successfully released VPC ip address " + ip + " back to VPC pool ");
+    }
+
+    @Override
+    public boolean ipUsedInVpc(IpAddress ip) {
+        return (ip != null && ip.getVpcId() != null && 
+                (ip.isOneToOneNat() || !_firewallDao.listByIp(ip.getId()).isEmpty()));
     }
 
     @Override @DB
@@ -7425,4 +7438,5 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
         return nic;
     }
+    
 }

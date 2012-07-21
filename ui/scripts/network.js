@@ -44,7 +44,7 @@
           item.issystem == true ) {
         return [];
       }
-				
+			
 			if(item.networkOfferingConserveMode == false) {			 
 				/*
 				(1) If IP is SourceNat, no StaticNat/VPN/PortForwarding/LoadBalancer can be enabled/added. 
@@ -174,7 +174,7 @@
           }
         });
 
-        var sectionsToShow = ['networks', 'vpc'];
+        var sectionsToShow = ['networks', 'vpc', 'vpnCustomerGateway'];
         if(havingSecurityGroupNetwork == true)
           sectionsToShow.push('securityGroups');
 
@@ -1184,14 +1184,10 @@
               async: true,
               success: function(json) {
                 var items = json.listpublicipaddressesresponse.publicipaddress;
-                var processedItems = 0;
-
-                if (!items) {
-                  args.response.success({
-                    data: []
-                  });
-                  return;
-                }
+                
+								$(items).each(function() {								  
+								  getExtaPropertiesForIpObj(this, args);
+								});                            
 
                 args.response.success({
                   actionFilter: actionFilters.ipAddress,
@@ -1641,51 +1637,9 @@
                     dataType: "json",
                     async: true,
                     success: function(json) {										  
-                      var ipObj = json.listpublicipaddressesresponse.publicipaddress[0];	
-											
-											if('networks' in args.context) { //from Guest Network section		
-											  //get ipObj.networkOfferingConserveMode and ipObj.networkOfferingHavingVpnService from guest network's network offering
-												$.ajax({
-													url: createURL('listNetworkOfferings'), 
-													data: {
-														id: args.context.networks[0].networkofferingid  
-													},													
-													async: false,
-													success: function(json) {		
-														var networkOfferingObj = json.listnetworkofferingsresponse.networkoffering[0];
-														ipObj.networkOfferingConserveMode = networkOfferingObj.conservemode; 
-																												
-														$(networkOfferingObj.service).each(function(){
-															var thisService = this;
-															if(thisService.name == "Vpn")
-																ipObj.networkOfferingHavingVpnService = true;                          
-														});
-																												
-														if(ipObj.networkOfferingHavingVpnService == true) {														 
-															$.ajax({
-																url: createURL('listRemoteAccessVpns'), 
-																data: {
-																	listAll: true,
-																	publicipid: ipObj.id
-																},												
-																async: false,
-																success: function(vpnResponse) {
-																	var isVPNEnabled = vpnResponse.listremoteaccessvpnsresponse.count;
-																	if (isVPNEnabled) {
-																		ipObj.vpnenabled = true;
-																		ipObj.remoteaccessvpn = vpnResponse.listremoteaccessvpnsresponse.remoteaccessvpn[0];
-																	};													
-																}
-															});																	
-														}																
-													}
-												});														
-                      }											
-											else { //from VPC section 											  
-											  ipObj.networkOfferingConserveMode = false; //conserve mode of IP in VPC is always off, so hardcode it as false											
-												ipObj.networkOfferingHavingVpnService = false; //VPN is not supported in IP in VPC, so hardcode it as false													
-											}			
-
+                      var ipObj = json.listpublicipaddressesresponse.publicipaddress[0];	                      									
+											getExtaPropertiesForIpObj(ipObj, args);	
+								
                       args.response.success({
 												actionFilter: actionFilters.ipAddress,
 												data: ipObj
@@ -1701,7 +1655,7 @@
               ipRules: { //Configuration tab
                 title: 'label.configuration',
                 custom: cloudStack.ipRules({
-                  preFilter: function(args) {
+                  preFilter: function(args) {							
                     var disallowedActions = [];
                     if (args.context.ipAddresses[0].isstaticnat)
                       disallowedActions.push("nonStaticNATChart");  //tell ipRules widget to show staticNAT chart instead of non-staticNAT chart.
@@ -1988,11 +1942,12 @@
                       },
                       dataType: 'json',
                       async: true,
-                      success: function(data) {
-                        var ipAddress = data.listpublicipaddressesresponse.publicipaddress[0];
-
+                      success: function(data) {											
+                        var ipObj = data.listpublicipaddressesresponse.publicipaddress[0];
+                        getExtaPropertiesForIpObj(ipObj, args);
+												
                         args.response.success({
-                          data: ipAddress
+                          data: ipObj
                         });
                       },
                       error: function(data) {
@@ -2572,12 +2527,13 @@
 													id: args.context.ipAddresses[0].id,
 													listAll: true
 												},
-												success: function(json) {												  
-													var item = json.listpublicipaddressesresponse.publicipaddress[0];	
-													
+												success: function(json) {		                         											
+													var ipObj = json.listpublicipaddressesresponse.publicipaddress[0];	
+													getExtaPropertiesForIpObj(ipObj, args);
+												
 													args.context.ipAddresses.shift(); //remove the first element in args.context.ipAddresses										
-													args.context.ipAddresses.push(item);
-																										
+													args.context.ipAddresses.push(ipObj);
+																							
 													var $headerFields = $multi.find('.header-fields');	                       												
 													if ('vpc' in args.context) {
 														if(args.context.ipAddresses[0].associatednetworkid == null) {
@@ -2852,11 +2808,12 @@
 															listAll: true
 														},
 														success: function(json) {												  
-															var item = json.listpublicipaddressesresponse.publicipaddress[0];	
+															var ipObj = json.listpublicipaddressesresponse.publicipaddress[0];														 
+											        getExtaPropertiesForIpObj(ipObj, args);													 
 													
 															args.context.ipAddresses.shift(); //remove the first element in args.context.ipAddresses										
-															args.context.ipAddresses.push(item);
-																												
+															args.context.ipAddresses.push(ipObj);
+																									
 															var $headerFields = $multi.find('.header-fields');													
 															if ('vpc' in args.context) {
 																if(args.context.ipAddresses[0].associatednetworkid == null) {
@@ -3821,8 +3778,360 @@
             }
           }								
         }
-      }			
+      },	
+      
+			vpnCustomerGateway: {
+        type: 'select',
+        title: 'VPN Customer Gateway',
+        listView: {
+          id: 'vpnCustomerGateway',
+          label: 'VPN Customer Gateway',
+          fields: {
+            gateway: { label: 'label.gateway' },
+            cidrlist: { label: 'CIDR list' },
+						ipsecpsk: { label: 'IPsec Preshared-Key' }
+          },
+          dataProvider: function(args) {					  
+						var array1 = [];  
+						if(args.filterBy != null) {          
+							if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+								switch(args.filterBy.search.by) {
+								case "name":
+									if(args.filterBy.search.value.length > 0)
+										array1.push("&keyword=" + args.filterBy.search.value);
+									break;
+								}
+							}
+						}
+						
+            $.ajax({
+              url: createURL("listVpnCustomerGateways&listAll=true&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
+              dataType: "json",
+              async: true,
+              success: function(json) {							  
+                var items = json.listvpncustomergatewaysresponse.vpncustomergateway;
+                args.response.success({data: items});
+              }
+            });
+          },
+										
+					actions: {
+						add: {
+							label: 'add VPN Customer Gateway',
+							messages: {                
+								notification: function(args) {
+									return 'add VPN Customer Gateway';
+								}
+							},
+							createForm: {
+								title: 'add VPN Customer Gateway',
+								fields: {										
+									gateway: { 
+										label: 'label.gateway',
+										validation: { required: true }
+									}, 
+									cidrlist: { 
+										label: 'CIDR list',
+										validation: { required: true }
+									},
+									ipsecpsk: { 
+										label: 'IPsec Preshared-Key',
+										validation: { required: true }
+									},
+									ikepolicy: { 
+										label: 'IKE policy',
+										select: function(args) {
+											var items = [];
+											items.push({id: '3des-md5', description: '3des-md5'});
+											items.push({id: 'aes-md5', description: 'aes-md5'});
+											items.push({id: 'aes128-md5', description: 'aes128-md5'});
+											items.push({id: 'des-md5', description: 'des-md5'});											
+											items.push({id: '3des-sha1', description: '3des-sha1'});
+											items.push({id: 'aes-sha1', description: 'aes-sha1'});
+											items.push({id: 'aes128-sha1', description: 'aes128-sha1'});
+											items.push({id: 'des-sha1', description: 'des-sha1'});
+											args.response.success({data: items});
+										}
+									},
+									esppolicy: { 
+										label: 'ESP policy',
+										select: function(args) {
+											var items = [];
+											items.push({id: '3des-md5', description: '3des-md5'});
+											items.push({id: 'aes-md5', description: 'aes-md5'});
+											items.push({id: 'aes128-md5', description: 'aes128-md5'});
+																						
+											items.push({id: '3des-sha1', description: '3des-sha1'});
+											items.push({id: 'aes-sha1', description: 'aes-sha1'});
+											items.push({id: 'aes128-sha1', description: 'aes128-sha1'});											
+											args.response.success({data: items});
+										}
+									},
+									lifetime: { 
+										label: 'Lifetime (second)',
+										defaultValue: '86400',
+										validation: { required: false, number: true }
+									}		
+								}
+							},
+							action: function(args) {										 
+								$.ajax({
+									url: createURL('createVpnCustomerGateway'),
+									data: {
+										gateway: args.data.gateway,
+										cidrlist: args.data.cidrlist,
+										ipsecpsk: args.data.ipsecpsk,
+										ikepolicy: args.data.ikepolicy,
+										esppolicy: args.data.esppolicy,
+										lifetime: args.data.lifetime
+									},
+									dataType: 'json',									
+									success: function(json) {
+										var jid = json.createvpncustomergatewayresponse.jobid;    
+										args.response.success(
+											{_custom:
+												{
+													jobId: jid,
+													getUpdatedItem: function(json) {														  
+														return json.queryasyncjobresultresponse.jobresult.vpncustomergateway;
+													}									 
+												}
+											}
+										);
+									}
+								});									
+							},
+							notification: {
+								poll: pollAsyncJobResult
+							}
+						}
+					},
+										
+					detailView: {
+            name: 'label.details',						
+						actions: {	              
+							add: {
+                addRow: 'false',
+                label: 'Create VPN Connection',
+                messages: {
+                  confirm: function(args) {
+                    return 'Are you sure you want to create VPN connection ?';
+                  },
+                  notification: function(args) {
+                    return 'Create VPN Connection';
+                  }
+                },
+                createForm: {
+                  title: 'Create VPN Connection',                 
+                  fields: {                    
+										zoneid: {
+											label: 'Zone',
+											validation: { required: true },
+											select: function(args) {												
+												$.ajax({
+													url: createURL('listZones'),
+													data: {
+													  available: true
+													},
+													success: function(json) {
+														var zones = json.listzonesresponse.zone;
+														args.response.success({
+															data: $.map(zones, function(zone) {
+																return {
+																	id: zone.id,
+																	description: zone.name
+																};
+															})
+														});
+													}
+												});
+											}
+										},										
+										vpcid: {
+											label: 'VPC',
+											validation: { required: true },
+											dependsOn: 'zoneid',
+											select: function(args) {		                        						
+												$.ajax({
+												  url: createURL('listVPCs'),
+													data: {
+													  zoneid: args.zoneid,
+													  listAll: true
+													},
+													success: function(json) {													  
+														var items = json.listvpcsresponse.vpc;
+														var data;
+														if(items != null && items.length > 0) {
+														  data = $.map(items, function(item) {															  
+															  return {
+																  id: item.id,
+																	description: item.name
+																}
+															});															
+														}		
+														args.response.success({ data: data });
+													}
+												});	
+											}
+										}										
+                  }
+                },
+                action: function(args) {								 
+									var vpngatewayid = null;
+									$.ajax({
+										url: createURL('listVpnGateways'),
+										data: {
+											vpcid: args.data.vpcid
+										},
+										async: false,
+										success: function(json) {								  
+											var items = json.listvpngatewaysresponse.vpngateway;
+											if(items != null && items.length > 0) {
+												vpngatewayid = items[0].id;
+											}											
+										}
+									});		
+
+                  if(vpngatewayid == null) {									  
+										args.response.error('The selected VPC does not have a VPN gateway. Please create a VPN gateway for the VPC first.');
+										return;
+									}
+																	
+									$.ajax({
+										url: createURL('createVpnConnection'),
+										data: {
+											s2svpngatewayid: vpngatewayid,
+											s2scustomergatewayid: args.context.vpnCustomerGateway[0].id
+										},                    
+										success: function(json) {
+											var jid = json.createvpnconnectionresponse.jobid; 
+											args.response.success(
+												{_custom:
+													{
+														jobId: jid
+													}
+												}
+											);
+										}
+									});									
+                },
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              },							
+					  
+							remove: {
+                label: 'delete VPN Customer Gateway',
+                messages: {
+                  confirm: function(args) {
+                    return 'Please confirm that you want to delete this VPN Customer Gateway';
+                  },
+                  notification: function(args) {
+                    return 'delete VPN Customer Gateway';
+                  }
+                },
+                action: function(args) {								  
+                  $.ajax({
+                    url: createURL("deleteVpnCustomerGateway"),
+                    data: {
+										  id: args.context.vpnCustomerGateway[0].id
+										},                  
+                    success: function(json) {
+                      var jid = json.deletecustomergatewayresponse.jobid;
+                      args.response.success(
+                        {_custom:
+                          {
+													  jobId: jid
+                          }
+                        }
+                      );
+                    }
+                  });
+                },
+                notification: {
+                  poll: pollAsyncJobResult
+                }
+              }							
+						},
+						
+            tabs: {
+              details: {
+                title: 'label.details',
+                fields: [
+                  {
+                    gateway: { label: 'label.gateway' }
+									},
+									{
+										cidrlist: { label: 'CIDR list' },
+										ipsecpsk: { label: 'IPsec Preshared-Key' }, 										
+										id: { label: 'label.id' },										
+										domain: { label: 'label.domain' },
+										account: { label: 'label.account' }												
+                  }
+                ],
+                dataProvider: function(args) {		
+									$.ajax({
+										url: createURL("listVpnCustomerGateways"),
+										data: {
+										  id: args.context.vpnCustomerGateway[0].id
+										},										
+										success: function(json) {
+											var item = json.listvpncustomergatewaysresponse.vpncustomergateway[0];
+											args.response.success({data: item});
+										}
+									});									
+								}
+              }
+            }
+          }
+        }
+      }
     }
   };
-		
+	
+  function getExtaPropertiesForIpObj(ipObj, args){	  
+		if('networks' in args.context) { //from Guest Network section		
+			//get ipObj.networkOfferingConserveMode and ipObj.networkOfferingHavingVpnService from guest network's network offering
+			$.ajax({
+				url: createURL('listNetworkOfferings'), 
+				data: {
+					id: args.context.networks[0].networkofferingid  
+				},													
+				async: false,
+				success: function(json) {		
+					var networkOfferingObj = json.listnetworkofferingsresponse.networkoffering[0];
+					ipObj.networkOfferingConserveMode = networkOfferingObj.conservemode; 
+																			
+					$(networkOfferingObj.service).each(function(){
+						var thisService = this;
+						if(thisService.name == "Vpn")
+							ipObj.networkOfferingHavingVpnService = true;                          
+					});
+																			
+					if(ipObj.networkOfferingHavingVpnService == true) {														 
+						$.ajax({
+							url: createURL('listRemoteAccessVpns'), 
+							data: {
+								listAll: true,
+								publicipid: ipObj.id
+							},												
+							async: false,
+							success: function(vpnResponse) {
+								var isVPNEnabled = vpnResponse.listremoteaccessvpnsresponse.count;
+								if (isVPNEnabled) {
+									ipObj.vpnenabled = true;
+									ipObj.remoteaccessvpn = vpnResponse.listremoteaccessvpnsresponse.remoteaccessvpn[0];
+								};													
+							}
+						});																	
+					}																
+				}
+			});														
+		}											
+		else { //from VPC section 											  
+			ipObj.networkOfferingConserveMode = false; //conserve mode of IP in VPC is always off, so hardcode it as false											
+			ipObj.networkOfferingHavingVpnService = false; //VPN is not supported in IP in VPC, so hardcode it as false													
+		}		
+	}
+	
 })(cloudStack, jQuery);
