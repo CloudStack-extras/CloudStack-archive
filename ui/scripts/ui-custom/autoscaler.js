@@ -33,7 +33,11 @@
       var $scaleDownPolicy = $('<div>').addClass('scale-down-policy');
       var $scaleUpPolicyTitle = $('<div>').addClass('scale-up-policy-title').html("Scale Up Policy");
       var $scaleDownPolicyTitle = $('<div>').addClass('scale-down-policy-title').html("Scale Down Policy");
-      var topFieldForm, $topFieldForm,bottomFieldForm, $bottomFieldForm;
+      var topFieldForm, $topFieldForm,
+          bottomFieldForm, $bottomFieldForm,
+          scaleUpPolicyTitleForm, $scaleUpPolicyTitleForm,
+          scaleDownPolicyTitleForm, $scaleDownPolicyTitleForm;
+
       // Create and append top fields
       // -- uses create form to generate fields
       topFieldForm = cloudStack.dialog.createForm({
@@ -47,6 +51,28 @@
       $topFieldForm = topFieldForm.$formContainer;
       $topFieldForm.appendTo($topFields);
 
+      scaleUpPolicyTitleForm = cloudStack.dialog.createForm({
+      	context: context,
+      	noDialog: true,
+      	form: {
+    			title: '',
+    			fields: {scaleUpDuration: { label: 'Duration', validation: { required: true } } }
+      	}
+      });
+			$scaleUpPolicyTitleForm = scaleUpPolicyTitleForm.$formContainer;
+			$scaleUpPolicyTitleForm.appendTo($scaleUpPolicyTitle);
+			
+			scaleDownPolicyTitleForm = cloudStack.dialog.createForm({
+      	context: context,
+      	noDialog: true,
+      	form: {
+    			title: '',
+    			fields: {scaleDownDuration: { label: 'Duration', validation: { required: true } } }
+      	}
+      });
+			$scaleDownPolicyTitleForm = scaleDownPolicyTitleForm.$formContainer;
+			$scaleDownPolicyTitleForm.appendTo($scaleDownPolicyTitle)
+			
       // Make multi-edits
       // $scaleUpPolicy.multiEdit(...)
       scaleUpPolicyForm = $scaleUpPolicy.multiEdit(
@@ -104,7 +130,8 @@
                 text: _l('Apply'),
                 'class': 'ok',
                 click: function() {
-                  cloudStack.autoscaler.actions.add({context: context});
+              		var data = cloudStack.serializeForm($('form'));
+              		cloudStack.autoscaler.actions.add({data: data,context: context});
                   $autoscalerDialog.dialog('close');
                   $('.overlay').remove();
                   $autoscalerDialog.closest(':ui-dialog').remove();
@@ -113,9 +140,10 @@
             ]
         }).closest('.ui-dialog').overlay();
          $('.ui-dialog div.autoscaler div.form-container').find('.form-item[rel=templateNames] label').hide();
+
          /* Duration Fields*/
-         $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
-         $('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+         //$('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+         //$('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
         
          /*Dividers*/
          $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').prepend($scaleUpDivider);
@@ -130,8 +158,10 @@
 
          $('div.ui-dialog div.autoscaler div.scale-up-policy div.expand').click(function() { $('div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.data-item').slideToggle(); });
 
+
           $('div.ui-dialog div.autoscaler div.scale-down-policy div.expand').click(function() { $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-item').slideToggle(); });
 
+          $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.expand').click(function() { $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-item').slideToggle(); });
        
       }
     }
