@@ -9640,26 +9640,46 @@ margin-bottom:0px;
 
 }
 
-div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.expand {
+div.ui-dialog div.autoscaler div.scale-up-policy div.slide-label {
+
+    color: #A5A3A7;
+    font-size: 14px;
+    margin-bottom: 3px;
+    margin-left: 755px;
+    width: 12px;
+
+}
+
+div.ui-dialog div.autoscaler div.scale-down-policy div.slide-label {
+
+    color: #A5A3A7;
+    font-size: 14px;
+    margin-bottom: 3px;
+    margin-left: 755px;
+    width: 12px;
+
+}
+
+div.ui-dialog div.autoscaler div.scale-up-policy div.expand {
     background: url("../images/sprites.png") repeat scroll -541px -499px #FFFFFF;
     border: 1px solid #D0D0D0;
     border-radius: 9px 9px 9px 9px;
     cursor: pointer;
     float: right;
     height: 15px;
-    margin: -3px 0 0 11px;
+    margin: -20px 45px 0 11px;
     width: 14px;
 
 }
 
-div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.expand {
+div.ui-dialog div.autoscaler div.scale-down-policy  div.expand {
     background: url("../images/sprites.png") repeat scroll -541px -499px #FFFFFF;
     border: 1px solid #D0D0D0;
     border-radius: 9px 9px 9px 9px;
     cursor: pointer;
     float: right;
     height: 15px;
-    margin: -3px 0 0 11px;
+    margin: -20px 45px 0 11px;
     width: 14px;
 
 }
