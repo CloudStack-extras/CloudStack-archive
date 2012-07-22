@@ -62,7 +62,8 @@
 			$scaleUpPolicyTitleForm = scaleUpPolicyTitleForm.$formContainer;
 			$scaleUpPolicyTitleForm.appendTo($scaleUpPolicyTitle);
 			
-			scaleDownPolicyTitleForm = cloudStack.dialog.createForm({
+     
+      scaleDownPolicyTitleForm = cloudStack.dialog.createForm({
       	context: context,
       	noDialog: true,
       	form: {

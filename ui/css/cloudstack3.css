@@ -9628,15 +9628,47 @@ div.ui-dialog div.autoscaler div.scale-down-policy-title {
   margin-top: 10px;
 }
 
+div.ui-dialog div.autoscaler div.scale-up-policy-title div.form-container  div.form-item  div.value input[type=text] {
+
+   margin-left: 195px;
+   width: 30%;
+   margin-top:1px;
+
+}
+
+div.ui-dialog div.autoscaler div.scale-up-policy-title div.form-container div.form-item  div.name {
+
+   margin-left: 390px;
+
+
+}
+
+div.ui-dialog div.autoscaler div.scale-down-policy-title div.form-container  div.form-item  div.value input[type=text] {
+
+   margin-left: 670px;
+   width: 30%;
+   margin-top:-16px;
+   
+}
+
+div.ui-dialog div.autoscaler div.scale-down-policy-title div.form-container div.form-item  div.name {
+
+   margin-left: 390px;
+   
+
+}
+
 div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.data-body div.data-item {
 
 margin-bottom:0px;
+margin-right:22px;
 
 }
 
 div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-body div.data-item {
 
 margin-bottom:0px;
+margin-right:22px;
 
 }
 
