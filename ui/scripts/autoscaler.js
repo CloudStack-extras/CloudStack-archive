@@ -559,7 +559,6 @@
                 },
                 error: function(args) {
                   clearInterval(autoScalePolicyTimer);
-                  args.response.error(args.message);
                 }
               });    
           });
@@ -600,8 +599,7 @@
 		        			}
 	        			},
 		        		error: function(args) {
-		        			clearInterval(autoScalePolicyTimer);
-		        			args.response.error(args.message);
+		        			clearInterval(autoScalePolicyTimer);		        			
 		        		}
 	        		});    
 	        	});
@@ -648,7 +646,6 @@
 	        			},
 		        		error: function(args) {
 		        			clearInterval(autoscaleVmProfileTimer);
-		        			args.response.error(args.message);
 		        		}
 	        		});
 	        	});
@@ -693,9 +690,7 @@
 	        				}
         				},
 	        			error: function(args) {
-	        				clearInterval(loadBalancerTimer);
-	        				args.response.error(args.message);
-	        			}
+	        				clearInterval(loadBalancerTimer);	        			}
         			});        
         		});
           }
@@ -707,7 +702,7 @@
       	array1.push("&lbruleid=" + loadBalancerResponse.id);
       	array1.push("&minMembers=" + args.data.minInstance);
       	array1.push("&maxMembers=" + args.data.maxInstance );
-      	array1.push("&autoscaleVMprofileid=" + scaleVmProfileResponse.id);
+      	array1.push("&vmprofileid=" + scaleVmProfileResponse.id);
       	array1.push("&interval=" + args.data.interval);
       	array1.push("&scaleuppolicyids=" + scaleUpPolicyResponse.id);
       	array1.push("&scaledownpolicyids=" + scaleDownPolicyResponse.id );
@@ -716,7 +711,7 @@
       		dataType: 'json',
       		async: true,
       		success: function(json) {
-	      		var jobId = json.jobid;
+	      		var jobId = json.autoscalevmgroupresponse.jobid;
 	      		var scaleVmGroupTimer = setInterval(function(){
 	      			$.ajax({
 	      				url: createURL("queryAsyncJobResult&jobId="+jobId),
@@ -729,18 +724,16 @@
 		      				else {                                                      
 		      					clearInterval(scaleVmGroupTimer); 
 		      					
-		      					if (result.jobstatus == 1) { //LoadBalancerRule successfully created
-		      						loadBalancer = result.jobresult.loadbalancer;
-		      						autoScaleVmGroup(args);
+		      					if (result.jobstatus == 1) { //autoscale Vm group successfully created
+		      						loadBalancer = result.jobresult.autoscalevmgroup;
 		      					}
 		      					else if (result.jobstatus == 2) {
-		      						alert("failed to create autoScaleVmGroup" + _s(result.jobresult.errortext));
+		      						alert(_s(result.jobresult.errortext));
 		      					}
 		      				}
 		      			},
 		      			error: function(args) {
 		      				clearInterval(scaleVmGroupTimer);
-		      				args.response.error(args.message);
 		      			}
 	      			});        
 	      		});
