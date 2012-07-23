@@ -24,8 +24,10 @@
       var $bottomFields = $('<div>').addClass('field-group bottom-fields');
       var $scaleUpPolicy = $('<div>').addClass('scale-up-policy');
       var $slideScaleUp = $('<div></div>').addClass('expand');
-      var $scaleUpLabel= $('<div>Show</div>').addClass('slide-label');
-      var $scaleDownLabel=$('<div>Show</div>').addClass('slide-label');
+      var $scaleUpLabel= $('<div>Hide</div>').addClass('slide-label');
+      var $scaleUpHideLabel=$('<div>Show</div>').addClass('slide-label');
+      var $scaleDownHideLabel=$('<div>Show</div>').addClass('slide-label');
+      var $scaleDownLabel=$('<div>Hide</div>').addClass('slide-label');
       var $slideScaleDown = $('<div></div>').addClass('expand');
       var $scaleUpDivider = $('<hr></hr>').addClass('policy-divider');
       var $scaleDownDivider = $('<hr></hr>').addClass('policy-divider');
@@ -157,11 +159,17 @@
          $('div.ui-dialog div.autoscaler div.scale-up-policy').prepend($scaleUpLabel);
          $('div.ui-dialog div.autoscaler div.scale-down-policy').prepend($scaleDownLabel);
 
-         $('div.ui-dialog div.autoscaler div.scale-up-policy div.expand').click(function() { $('div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.data-item').slideToggle(); });
+         $('div.ui-dialog div.autoscaler div.scale-up-policy div.expand').click(function() { 
+             $('div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.data-item').slideToggle(); 
+             $scaleUpHideLabel = $('div.ui-dialog div.autoscaler div.scale-up-policy div.slide-label').replaceWith($scaleUpHideLabel);
+          });
 
 
-          $('div.ui-dialog div.autoscaler div.scale-down-policy div.expand').click(function() { $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-item').slideToggle(); });
-
+          $('div.ui-dialog div.autoscaler div.scale-down-policy div.expand').click(function() {
+              $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-item').slideToggle();
+              $scaleDownHideLabel = $('div.ui-dialog div.autoscaler div.scale-down-policy div.slide-label').replaceWith($scaleDownHideLabel);
+          });
+        
           $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.expand').click(function() { $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-item').slideToggle(); });
        
       }
