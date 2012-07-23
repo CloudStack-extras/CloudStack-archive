@@ -431,6 +431,9 @@ else
     /sbin/service %{name}-console-proxy condrestart >/dev/null 2>&1 || true
 fi
 
+%post console-proxy
+/sbin/chkconfig --level 345 cloud-security-group on > /dev/null 2>&1 || true
+
 %post client
 if [ "$1" == "1" ] ; then
     /sbin/chkconfig --add %{name}-management > /dev/null 2>&1 || true
