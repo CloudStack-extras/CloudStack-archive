@@ -9703,6 +9703,31 @@ div.ui-dialog div.autoscaler div.scale-down-policy div.slide-label {
 
 }
 
+div.ui-dialog div.autoscaler div.scale-up-policy div.hide {
+
+    background: url("../images/minus.png") no-repeat 38% 59% #FFFFFF ;
+    border: 1px solid #D0D0D0;
+    border-radius: 9px 9px 9px 9px;
+    cursor: pointer;
+    float: right;
+    height: 15px;
+    margin: -20px 45px 0 11px;
+    width: 14px;
+}
+
+div.ui-dialog div.autoscaler div.scale-down-policy div.hide {
+
+    background: url("../images/minus.png") no-repeat 31% 54%  #FFFFFF ;
+    border: 1px solid #D0D0D0;
+    border-radius: 9px 9px 9px 9px;
+    cursor: pointer;
+    float: right;
+    height: 15px;
+    margin: -20px 45px 0 11px;
+    width: 14px;
+}
+
+
 div.ui-dialog div.autoscaler div.scale-up-policy div.expand {
     background: url("../images/sprites.png") repeat scroll -541px -499px #FFFFFF;
     border: 1px solid #D0D0D0;
