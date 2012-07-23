@@ -275,6 +275,7 @@
                 scaleUpData = $.grep(scaleUpData, function(item) {
                   return item.index != args.context.multiRule[0].index;
                 });
+                totalScaleUpCondition--;
                 args.response.success();
               }
             }
@@ -421,6 +422,7 @@
         			scaleDownData = $.grep(scaleDownData, function(item) {
         				return item.index != args.context.multiRule[0].index;
         			});
+                                totalScaleDownCondition--;
         			args.response.success();
         		}
         	}
@@ -485,7 +487,9 @@
         var scaleVmProfileResponse = [];
         var loadBalancerResponse  = [];
         var scaleUpConditionIds = []; 
+        var scaleDownConditionIds = [];
         
+      var scaleUpCondition = function(args){
         $.map(scaleUpData, function(elem) {
         	var array1 = [];
         	array1.push("&counterid=" + elem.counterid);
@@ -500,13 +504,16 @@
         		async: true,
         		success: function(data) {
         			scaleUpConditionIds.push(data.conditionresponse.id);
+                                if (scaleUpConditionIds.length == totalScaleUpCondition)
+                                            scaleDownCondition(args);
         			//scaleUpConditionIds = scaleUpConditionIds? scaleUpConditionIds.concat(",").concat(data.conditionresponse.id): data.conditionresponse.id;	
         		}
         	});
-        });
-        
-        var scaleDownConditionIds = []; 
-        $.map(scaleUpData, function(elem) {
+        });       
+      };
+      
+      var scaleDownCondition = function(args){
+        $.map(scaleDownData, function(elem) {
         	var array1 = [];
         	array1.push("&counterid=" + elem.counterid);
         	array1.push("&relationaloperator=" + elem.relationaloperator);
@@ -519,12 +526,16 @@
         		dataType: 'json',
         		async: true,
         		success: function(data) {
-	        		scaleDownConditionIds.push(data.conditionresponse.id)
+	        		scaleDownConditionIds.push(data.conditionresponse.id);
+                                if (scaleDownConditionIds.length == totalScaleDownCondition)
+                                      scaleUp(args);
 	        		//scaleDownConditionIds = scaleDownConditionIds? scaleDownConditionIds.concat(",").concat(data.conditionresponse.id): data.conditionresponse.id;	
         		}
         	});
         });
-            
+      };
+        
+      var scaleUp = function(args){  
         var array1 = [];
         array1.push("&action=" + "scaleup");
         array1.push("&conditionids=" + scaleUpConditionIds.join(","));
@@ -564,7 +575,7 @@
           });
           }
         });
-        
+      }; 
       var scaleDown = function(args){
         var array1 = [];
         array1.push("&action=" + "scaledown");
@@ -728,7 +739,7 @@
 		      						loadBalancer = result.jobresult.autoscalevmgroup;
 		      					}
 		      					else if (result.jobstatus == 2) {
-		      						alert(_s(result.jobresult.errortext));
+		      						alert("failed to create autoScaleVmGroup" + _s(result.jobresult.errortext));
 		      					}
 		      				}
 		      			},
@@ -739,7 +750,8 @@
 	      		});
       		}
       	});
-      }               
+      };
+     scaleUpCondition(args); 
     },
     destroy: function(args) {
     	$.ajax({
