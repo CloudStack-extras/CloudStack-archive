@@ -9568,6 +9568,17 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   float: left;
 }
 
+
+div.ui-dialog div.autoscaler div.scale-up-policy-title div.form-container{
+
+height:10px;
+}
+
+div.ui-dialog div.autoscaler div.scale-down-policy-title div.form-container{
+
+height:10px;
+}
+
 div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit {
   margin-top: 0px;
 }
