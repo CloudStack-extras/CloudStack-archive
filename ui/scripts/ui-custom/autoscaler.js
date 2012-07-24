@@ -24,9 +24,13 @@
       var $bottomFields = $('<div>').addClass('field-group bottom-fields');
       var $scaleUpPolicy = $('<div>').addClass('scale-up-policy');
       var $slideScaleUp = $('<div></div>').addClass('expand');
+      var $hideScaleUp = $('<div></div>').addClass('hide');
       var $scaleUpLabel= $('<div>Show</div>').addClass('slide-label');
+      var $scaleUpHideLabel=$('<div>Hide</div>').addClass('slide-label');
+      var $scaleDownHideLabel=$('<div>Hide</div>').addClass('slide-label');
       var $scaleDownLabel=$('<div>Show</div>').addClass('slide-label');
       var $slideScaleDown = $('<div></div>').addClass('expand');
+      var $hideScaleDown = $('<div></div>').addClass('hide');
       var $scaleUpDivider = $('<hr></hr>').addClass('policy-divider');
       var $scaleDownDivider = $('<hr></hr>').addClass('policy-divider');
       var $bottomFieldDivider = $('<hr></hr>').addClass('policy-divider');
@@ -152,16 +156,33 @@
          $('div.ui-dialog div.autoscaler').find('div.field-group.bottom-fields').prepend($bottomFieldDivider);
           
          /* Hide effects for multi-edit table*/
-         $('div.ui-dialog div.autoscaler div.scale-up-policy').prepend( $slideScaleUp);
-         $('div.ui-dialog div.autoscaler div.scale-down-policy ').prepend( $slideScaleDown);
-         $('div.ui-dialog div.autoscaler div.scale-up-policy').prepend($scaleUpLabel);
-         $('div.ui-dialog div.autoscaler div.scale-down-policy').prepend($scaleDownLabel);
+         $('div.ui-dialog div.autoscaler div.scale-up-policy').prepend($hideScaleUp);
+         $('div.ui-dialog div.autoscaler div.scale-down-policy ').prepend($hideScaleDown);
+         $('div.ui-dialog div.autoscaler div.scale-up-policy').prepend($scaleUpHideLabel);
+         $('div.ui-dialog div.autoscaler div.scale-down-policy').prepend($scaleDownHideLabel);
 
-         $('div.ui-dialog div.autoscaler div.scale-up-policy div.expand').click(function() { $('div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.data-item').slideToggle(); });
+         /*Toggling the labels and data-item table - SCALE UP POLICY*/
+         $('div.ui-dialog div.autoscaler div.scale-up-policy div.hide').click(function() { 
+             $('div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.data-item').slideToggle(); 
+             $scaleUpLabel = $('div.ui-dialog div.autoscaler div.scale-up-policy div.slide-label').replaceWith($scaleUpLabel);
 
-
-          $('div.ui-dialog div.autoscaler div.scale-down-policy div.expand').click(function() { $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-item').slideToggle(); });
-
+          });
+           
+          /*Toggling the images */
+          $('div.ui-dialog div.autoscaler div.scale-up-policy div.hide').click(function() {
+                    $(this).toggleClass('expand hide');
+              }); 
+                    
+           $('div.ui-dialog div.autoscaler div.scale-down-policy div.hide').click(function() {
+                    $(this).toggleClass('expand hide');
+              });
+ 
+          /*Toggling the labels and data-item table - SCALE DOWN POLICY*/
+             $('div.ui-dialog div.autoscaler div.scale-down-policy div.hide').click(function() {
+              $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-item').slideToggle();
+              $scaleDownLabel = $('div.ui-dialog div.autoscaler div.scale-down-policy div.slide-label').replaceWith($scaleDownLabel);
+          });
+        
           $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.expand').click(function() { $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-item').slideToggle(); });
        
       }
