@@ -229,6 +229,9 @@ class SecurityGroupAgent(object):
         
         self._setEgressRules(ruleSet)
         self._setIngressRules(ruleSet)
+
+    def echo(self, args=None):
+        cherrypy.log("echo: I am alving")
     
     
     def index(self, command=None, args=None):

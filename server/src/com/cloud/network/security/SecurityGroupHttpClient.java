@@ -22,8 +22,10 @@ import com.cloud.utils.net.NetUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.log4j.Logger;
 
 public class SecurityGroupHttpClient {
+    private static final Logger logger = Logger.getLogger(SecurityGroupHttpClient.class);
 	private static final String ARG_NAME = "args";
 	private static final String COMMAND = "command";
 	private static final String APP_NAME = "securitygroup";
@@ -31,7 +33,7 @@ public class SecurityGroupHttpClient {
 	private int port;
 
 	private enum OpConstant {
-		setRules, removeRules,
+		setRules, echo,
 	}
 
 	public SecurityGroupHttpClient() {
@@ -63,6 +65,37 @@ public class SecurityGroupHttpClient {
 		return rules;
 	}
 
+    public boolean echo(String agentIp, int timeout, int interval) {
+        HttpClient httpClient = new HttpClient();
+        boolean ret = false;
+        int count = 1;
+        while (true) {
+            try {
+                Thread.sleep(interval);
+                count++;
+            } catch (InterruptedException e1) {
+                logger.warn("", e1);
+                break;
+            }
+            
+            try {
+                PostMethod post = new PostMethod(String.format("http://%s:%s/%s/", agentIp, getPort(), APP_NAME));
+                post.setParameter(COMMAND, OpConstant.echo.toString());
+                if (httpClient.executeMethod(post) != 200) {
+                    logger.debug(String.format("echoing baremetal security group agent on %s got error: %s", agentIp, post.getResponseBodyAsString()));
+                } else {
+                    ret = true;
+                }
+                break;
+            } catch (Exception e) {
+                if (count*interval >= timeout) {
+                    break;
+                }
+            }
+        }
+        return ret;
+    }
+	
 	public SecurityGroupRuleAnswer call(String agentIp,
 			SecurityGroupRulesCmd cmd) {
 		HttpClient httpClient = new HttpClient();
