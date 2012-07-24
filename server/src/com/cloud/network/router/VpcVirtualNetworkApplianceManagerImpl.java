@@ -30,6 +30,7 @@ import com.cloud.agent.api.PlugNicAnswer;
 import com.cloud.agent.api.PlugNicCommand;
 import com.cloud.agent.api.SetupGuestNetworkAnswer;
 import com.cloud.agent.api.SetupGuestNetworkCommand;
+import com.cloud.agent.api.StopAnswer;
 import com.cloud.agent.api.UnPlugNicAnswer;
 import com.cloud.agent.api.UnPlugNicCommand;
 import com.cloud.agent.api.check.CheckSshCommand;
@@ -73,6 +74,7 @@ import com.cloud.network.PhysicalNetworkServiceProvider;
 import com.cloud.network.PublicIpAddress;
 import com.cloud.network.Site2SiteCustomerGatewayVO;
 import com.cloud.network.Site2SiteVpnConnection;
+import com.cloud.network.Site2SiteVpnConnectionVO;
 import com.cloud.network.Site2SiteVpnGatewayVO;
 import com.cloud.network.VirtualRouterProvider;
 import com.cloud.network.VirtualRouterProvider.VirtualRouterProviderType;
@@ -81,6 +83,7 @@ import com.cloud.network.addr.PublicIp;
 import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.PhysicalNetworkDao;
+import com.cloud.network.dao.Site2SiteVpnConnectionDao;
 import com.cloud.network.dao.Site2SiteVpnGatewayDao;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.vpc.NetworkACLManager;
@@ -96,6 +99,7 @@ import com.cloud.network.vpc.Dao.PrivateIpDao;
 import com.cloud.network.vpc.Dao.StaticRouteDao;
 import com.cloud.network.vpc.Dao.VpcDao;
 import com.cloud.network.vpc.Dao.VpcOfferingDao;
+import com.cloud.network.vpn.Site2SiteVpnManager;
 import com.cloud.offerings.NetworkOfferingVO;
 import com.cloud.user.Account;
 import com.cloud.utils.Pair;
@@ -144,7 +148,11 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
     @Inject
     Site2SiteVpnGatewayDao _vpnGatewayDao;
     @Inject
+    Site2SiteVpnConnectionDao _vpnConnectionDao;
+    @Inject
     FirewallRulesDao _firewallDao;
+    @Inject
+    Site2SiteVpnManager _s2sVpnMgr;
     
     @Override
     public List<DomainRouterVO> deployVirtualRouterInVpc(Vpc vpc, DeployDestination dest, Account owner, 
@@ -538,46 +546,17 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
         Map<String, PublicIpAddress> nicsToPlug = nicsToChange.first();
         Map<String, PublicIpAddress> nicsToUnplug = nicsToChange.second();
         
-        
-        //find out nics to unplug
-        for (PublicIpAddress ip : ipAddress) {
-            long publicNtwkId = ip.getNetworkId();
-            
-            //if ip is not associated to any network, and there are no firewall rules, release it on the backend
-            if (!_networkMgr.ipUsedInVpc(ip)) {
-                ip.setState(IpAddress.State.Releasing);
-            }
-                         
-            if (ip.getState() == IpAddress.State.Releasing) {
-                Nic nic = _nicDao.findByIp4AddressAndNetworkIdAndInstanceId(publicNtwkId, router.getId(), ip.getAddress().addr());
-                if (nic != null) {
-                    nicsToUnplug.put(ip.getVlanTag(), ip);
-                    s_logger.debug("Need to unplug the nic for ip=" + ip + "; vlan=" + ip.getVlanTag() + 
-                            " in public network id =" + publicNtwkId);
-                }
-            }
-        }
-        
-        //find out nics to plug
-        for (PublicIpAddress ip : ipAddress) {
-            URI broadcastUri = BroadcastDomainType.Vlan.toUri(ip.getVlanTag());
-            long publicNtwkId = ip.getNetworkId();
-            
-            //if ip is not associated to any network, and there are no firewall rules, release it on the backend
-            if (!_networkMgr.ipUsedInVpc(ip)) {
-                ip.setState(IpAddress.State.Releasing);
-            }
-                         
-            if (ip.getState() == IpAddress.State.Allocated || ip.getState() == IpAddress.State.Allocating) {
-                //nic has to be plugged only when there are no nics for this vlan tag exist on VR
-                Nic nic = _nicDao.findByInstanceIdNetworkIdAndBroadcastUri(publicNtwkId, router.getId(), 
-                        broadcastUri.toString());
-                
-                if ((nic == null && nicsToPlug.get(ip.getVlanTag()) == null) || nicsToUnplug.get(ip.getVlanTag()) != null) {
-                    nicsToPlug.put(ip.getVlanTag(), ip);
-                    s_logger.debug("Need to plug the nic for ip=" + ip + "; vlan=" + ip.getVlanTag() + 
-                            " in public network id =" + publicNtwkId);
-                }
+        //1) Unplug the nics
+        for (String vlanTag : nicsToUnplug.keySet()) {
+            Network publicNtwk = null;
+            try {
+                publicNtwk = _networkMgr.getNetwork(nicsToUnplug.get(vlanTag).getNetworkId());
+                URI broadcastUri = BroadcastDomainType.Vlan.toUri(vlanTag);
+                _itMgr.removeVmFromNetwork(router, publicNtwk, broadcastUri);
+            } catch (ConcurrentOperationException e) {
+                s_logger.warn("Failed to remove router " + router + " from vlan " + vlanTag + 
+                        " in public network " + publicNtwk + " due to ", e);
+                return false;
             }
         }
         
@@ -627,20 +606,6 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
             }
         });
         
-        //4) Unplug the nics
-        for (String vlanTag : nicsToUnplug.keySet()) {
-            Network publicNtwk = null;
-            try {
-                publicNtwk = _networkMgr.getNetwork(nicsToUnplug.get(vlanTag).getNetworkId());
-                URI broadcastUri = BroadcastDomainType.Vlan.toUri(vlanTag);
-                _itMgr.removeVmFromNetwork(router, publicNtwk, broadcastUri);
-            } catch (ConcurrentOperationException e) {
-                s_logger.warn("Failed to remove router " + router + " from vlan " + vlanTag + 
-                        " in public network " + publicNtwk + " due to ", e);
-                return false;
-            }
-        }
-        
         return result;
     }
     
@@ -662,7 +627,7 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
                         defaultDns1 = nic.getDns1();
                         defaultDns2 = nic.getDns2();
                     }
-                    s_logger.debug("Removing nic of type " + nic.getTrafficType() + " from the nics passed on vm start. " +
+                    s_logger.debug("Removing nic " + nic + " of type " + nic.getTrafficType() + " from the nics passed on vm start. " +
                             "The nic will be plugged later");
                     it.remove();
                 }
@@ -860,9 +825,7 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
             createStaticRouteCommands(staticRouteProfiles, router, cmds);
         }
         
-        //5) REISSUE VPN CONNECTION
-        
-        //6) REPROGRAM GUEST NETWORK
+        //5) REPROGRAM GUEST NETWORK
         boolean reprogramGuestNtwks = true;
         if (profile.getParameter(Param.ReProgramGuestNetworks) != null 
                 && (Boolean) profile.getParameter(Param.ReProgramGuestNetworks) == false) {
@@ -1074,21 +1037,33 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
 
     @Override
     public boolean startSite2SiteVpn(Site2SiteVpnConnection conn, VirtualRouter router) throws ResourceUnavailableException {
+        if (router.getState() != State.Running) {
+            s_logger.warn("Unable to apply site-to-site VPN configuration, virtual router is not in the right state " + router.getState());
+            throw new ResourceUnavailableException("Unable to apply site 2 site VPN configuration," +
+                    " virtual router is not in the right state", DataCenter.class, router.getDataCenterIdToDeployIn());
+        }
+
         return applySite2SiteVpn(true, router, conn);
     }
 
     @Override
     public boolean stopSite2SiteVpn(Site2SiteVpnConnection conn, VirtualRouter router) throws ResourceUnavailableException {
+        if (router.getState() != State.Running) {
+            s_logger.warn("Unable to apply site-to-site VPN configuration, virtual router is not in the right state " + router.getState());
+            throw new ResourceUnavailableException("Unable to apply site 2 site VPN configuration," +
+                    " virtual router is not in the right state", DataCenter.class, router.getDataCenterIdToDeployIn());
+        }
+
         return applySite2SiteVpn(false, router, conn);
     }
 
     protected boolean applySite2SiteVpn(boolean isCreate, VirtualRouter router, Site2SiteVpnConnection conn) throws ResourceUnavailableException {
         Commands cmds = new Commands(OnError.Continue);
-        createApplySite2SiteVpnCommands(conn, isCreate, router, cmds);
+        createSite2SiteVpnCfgCommands(conn, isCreate, router, cmds);
         return sendCommandsToRouter(router, cmds);
     }
 
-    private void createApplySite2SiteVpnCommands(Site2SiteVpnConnection conn, boolean isCreate, VirtualRouter router, Commands cmds) {
+    private void createSite2SiteVpnCfgCommands(Site2SiteVpnConnection conn, boolean isCreate, VirtualRouter router, Commands cmds) {
         Site2SiteCustomerGatewayVO gw = _s2sCustomerGatewayDao.findById(conn.getCustomerGatewayId());
         Site2SiteVpnGatewayVO vpnGw = _s2sVpnGatewayDao.findById(conn.getVpnGatewayId());
         IpAddress ip = _ipAddressDao.findById(vpnGw.getAddrId());
@@ -1301,5 +1276,13 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
         Pair<Map<String, PublicIpAddress>, Map<String, PublicIpAddress>> nicsToChange = 
                 new Pair<Map<String, PublicIpAddress>, Map<String, PublicIpAddress>>(nicsToPlug, nicsToUnplug);
         return nicsToChange;
+    }
+    
+    @Override
+    public void finalizeStop(VirtualMachineProfile<DomainRouterVO> profile, StopAnswer answer) {
+        super.finalizeStop(profile, answer);
+        //Mark VPN connections as Disconnected
+        DomainRouterVO router = profile.getVirtualMachine();
+        _s2sVpnMgr.markDisconnectVpnConnByVpc(router.getVpcId());
     }
 }
