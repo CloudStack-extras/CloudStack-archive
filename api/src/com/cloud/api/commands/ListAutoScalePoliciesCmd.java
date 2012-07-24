@@ -70,7 +70,6 @@ public class ListAutoScalePoliciesCmd extends BaseListAccountResourcesCmd {
     public Long getVmGroupId() {
         return vmGroupId;
     }
-
     // ///////////////////////////////////////////////////
     // ///////////// API Implementation///////////////////
     // ///////////////////////////////////////////////////

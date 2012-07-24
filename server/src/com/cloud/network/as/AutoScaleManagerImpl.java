@@ -43,7 +43,9 @@ import com.cloud.api.commands.ListCountersCmd;
 import com.cloud.api.commands.UpdateAutoScalePolicyCmd;
 import com.cloud.api.commands.UpdateAutoScaleVmGroupCmd;
 import com.cloud.api.commands.UpdateAutoScaleVmProfileCmd;
+import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;
+import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.event.ActionEvent;
@@ -126,6 +128,8 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
     DataCenterDao _dcDao = null;
     @Inject
     UserDao _userDao;
+    @Inject
+    ConfigurationDao _configDao;
     @Inject
     IPAddressDao _ipAddressDao;
 
@@ -258,9 +262,25 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
             throw new InvalidParameterValueException("Destroy Vm Grace Period cannot be less than 0.");
         }
 
-        User autoscaleUser = _userDao.findById(autoscaleUserId);
-        if (autoscaleUser.getAccountId() != vmProfile.getAccountId()) {
+        User user = _userDao.findById(autoscaleUserId);
+        if (user.getAccountId() != vmProfile.getAccountId()) {
             throw new InvalidParameterValueException("AutoScale User id does not belong to the same account");
+        }
+
+        String apiKey = user.getApiKey();
+        String secretKey = user.getSecretKey();
+        String csUrl = _configDao.getValue(Config.EndpointeUrl.key());
+
+        if(apiKey == null) {
+            throw new InvalidParameterValueException("apiKey for user: " + user.getUsername() + " is empty. Please generate it");
+        }
+
+        if(secretKey == null) {
+            throw new InvalidParameterValueException("secretKey for user: " + user.getUsername() + " is empty. Please generate it");
+        }
+
+        if(csUrl == null || csUrl.contains("localhost")) {
+            throw new InvalidParameterValueException("Global setting endpointe.url has to be set to the Management Server's API end point");
         }
 
         vmProfile = _autoScaleVmProfileDao.persist(vmProfile);
@@ -303,6 +323,7 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
         if (autoscaleUserId == null) {
             autoscaleUserId = UserContext.current().getCallerUserId();
         }
+
 
         AutoScaleVmProfileVO profileVO = new AutoScaleVmProfileVO(cmd.getZoneId(), cmd.getDomainId(), cmd.getAccountId(), cmd.getServiceOfferingId(), cmd.getTemplateId(), cmd.getOtherDeployParams(),
                 cmd.getSnmpCommunity(), cmd.getSnmpPort(), cmd.getDestroyVmGraceperiod(), autoscaleUserId);
@@ -700,7 +721,11 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleService, Manager {
         AutoScaleVmGroup vmGroup = _autoScaleVmGroupDao.findById(vmGroupid);
 
         if (isLoadBalancerBasedAutoScaleVmGroup(vmGroup)) {
-            return _lbRulesMgr.configureLbAutoScaleVmGroup(vmGroupid);
+            try {
+                return _lbRulesMgr.configureLbAutoScaleVmGroup(vmGroupid);
+            } catch (RuntimeException re) {
+                s_logger.warn("Exception during configureLbAutoScaleVmGrouop in lb rules manager", re);
+            }
         }
 
         // This should never happen, because today loadbalancerruleid is manadatory for AutoScaleVmGroup.

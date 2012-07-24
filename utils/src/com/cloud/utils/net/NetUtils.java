@@ -855,7 +855,7 @@ public class NetUtils {
         String netmask = NetUtils.long2Ip(numericNetmask);
         return getSubNet(cidrAddress, netmask);
     }
-    
+
     public static String getCidrBroadcastIp(String cidr) {
         if (cidr == null || cidr.isEmpty()) {
             return null;
