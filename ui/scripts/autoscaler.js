@@ -280,39 +280,13 @@
               }
             }
           },
+          ignoreEmptyFields: true,
           dataProvider: function(args) {
             args.response.success({
               data: scaleUpData
             });
           }
-        /*add: {
-          label: 'label.add',
-          action: function(args) {
-        	var array1 = [];
-            array1.push("&counterid=" + args.data.counterid);
-            array1.push("&relationaloperator=" + args.data.relationaloperator);
-            array1.push("&threshold=" + todb(args.data.threshold));
-            array1.push("&account=" + args.context.users[0].account);
-            array1.push("&domainid=" +args.context.users[0].domainid );
-            
-            $.ajax({
-            	url: createURL("createCondition" + array1.join("")),
-              dataType: 'json',
-              async: true,
-              success: function(data) {
-                var jobId = data.conditionresponse.jobid;
-                
-                args.response.success({
-                  _custom: {
-                    jobId: jobId
-                  }
-                });
-              }
-            });
-          }
-        },
-        
-        actions: {
+        /*actions: {
           destroy: {
         	label: '',
             action: function(args) {
@@ -427,6 +401,7 @@
         		}
         	}
         },
+        ignoreEmptyFields: true,
         dataProvider: function(args) {
         	args.response.success({
         		data: scaleDownData
@@ -486,6 +461,7 @@
         var scaleDownPolicyResponse = [];
         var scaleVmProfileResponse = [];
         var loadBalancerResponse  = [];
+        var scaleVmGroupResponse = [];
         var scaleUpConditionIds = []; 
         var scaleDownConditionIds = [];
         
@@ -736,7 +712,7 @@
 		      					clearInterval(scaleVmGroupTimer); 
 		      					
 		      					if (result.jobstatus == 1) { //autoscale Vm group successfully created
-		      						loadBalancer = result.jobresult.autoscalevmgroup;
+		      						scaleVmGroupResponse = result.jobresult.autoscalevmgroup;
 		      					}
 		      					else if (result.jobstatus == 2) {
 		      						alert("failed to create autoScaleVmGroup" + _s(result.jobresult.errortext));
