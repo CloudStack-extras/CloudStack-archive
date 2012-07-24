@@ -51,12 +51,20 @@ stop() {
 }
 
 
+set_ip_table_rule() {
+    iptables-save | grep "8899" &>/dev/null
+    if [ $? != 0 ]; then
+        iptables -A INPUT -p tcp -m tcp --dport 8899 -j ACCEPT
+    fi
+}
+
 start() {
     pid=`cat /var/run/cs-securitygroup.pid`
     ps -ae | grep $pid &>/dev/null
     if [ $? == 0 ]; then
         echo "CloudStack baremetal security group agent[pid:$pid] is still running ..."
     else
+       set_ip_table_rule
        /usr/lib/cloud/agent/scripts/network/security-group-agent/cs-securitygroup
        log_success_msg "Starting cloud-security-group:"
     fi

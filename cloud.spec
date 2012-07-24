@@ -431,7 +431,7 @@ else
     /sbin/service %{name}-console-proxy condrestart >/dev/null 2>&1 || true
 fi
 
-%post console-proxy
+%post baremetal-securitygroup-agent
 /sbin/chkconfig --level 345 cloud-security-group on > /dev/null 2>&1 || true
 
 %post client
