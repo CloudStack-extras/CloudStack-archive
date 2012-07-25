@@ -124,13 +124,20 @@
               $td.attr('title', data[fieldName]);
             }
           } else if (field.select) {
-            $td.append($('<span>').html(_s(
-              // Get matching option text
-              $multi.find('select').filter(function() {
-                return $(this).attr('name') == fieldName;
-              }).find('option').filter(function() {
-                return $(this).val() == data[fieldName];
-              }).html())));
+            // Get matching option text
+            var $matchingSelect = $multi.find('select')
+                  .filter(function() {
+                    return $(this).attr('name') == fieldName;
+                  });
+            var $matchingOption = $matchingSelect.find('option')
+                  .filter(function() {
+                    return $(this).val() == data[fieldName];
+                  });
+
+            var matchingValue = $matchingOption.size() ?
+                  $matchingOption.html() : data[fieldName];
+            
+            $td.append($('<span>').html(_s(matchingValue)));
           } else if (field.addButton && !options.noSelect) {
             if (options.multipleAdd) {
               $addButton.click(function() {
