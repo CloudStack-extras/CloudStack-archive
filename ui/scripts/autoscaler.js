@@ -132,14 +132,12 @@
 	              async: true,
 	              success: function(json) {
 	                var securitygroups = json.listsecuritygroupsresponse.securitygroup;
-	                args.response.success({
-	                  data: $.map(securitygroups, function(securitygroup) {
-	                    return {
-	                      id: securitygroup.id,
-	                      description: securitygroup.name
-	                    };
-	                  })
-	                });
+	                var items = [];
+                    items.push({id: "", description: ""});
+                    $(securitygroups).each(function(){
+                    items.push({id: this.id, description: this.name});
+                    });
+                  args.response.success({ data: items });
 	              }
 	            });
 	          }
@@ -156,14 +154,12 @@
 	              async: true,
 	              success: function(json) {
 	                var diskofferings = json.listdiskofferingsresponse.diskoffering;
-	                args.response.success({
-	                  data: $.map(diskofferings, function(diskoffering) {
-	                    return {
-	                      id: diskoffering.id,
-	                      description: diskoffering.name
-	                    };
-	                  })
-	                });
+                  var items = [];
+                    items.push({id: "", description: ""});
+                    $(diskofferings).each(function(){
+                    items.push({id: this.id, description: this.name});
+                    });
+	                args.response.success({ data: items });
 	              }
 	            });
 	          }
@@ -191,19 +187,17 @@
 	          label: 'Username',
 	          select: function(args) {
 	            $.ajax({
-	              url: createURL("listUsers&account=" + args.context.users[0].account),
+	              url: createURL("listUsers&domainid=" + args.context.users[0].domainid),
 	              dataType: "json",
 	              async: true,
 	              success: function(json) {
 		            	var users = json.listusersresponse.user;
-		            	args.response.success({
-		            		data:  $.map(users, function(user) {
-		            			return {
-		            				id: user.id,
-		            				description: user.username
-		            			};
-		            		})
-		            	});
+                  var items = [];
+                    items.push({id: "", description: ""});
+                    $(users).each(function(){
+                    items.push({id: this.id, description: this.username});
+                    });
+		            	args.response.success({ data:  items });
 	              }
 	            });
 	          }
@@ -602,8 +596,22 @@
         array1.push("&snmpcommunity=" + args.data.snmpCommunity);
         array1.push("&snmpport=" + args.data.snmpPort);
         array1.push("&destroyvmgraceperiod=" + args.data.destroyVMgracePeriod);
-        array1.push("&autoscaleuserid=" + args.data.username[1]);
-        //array1.push("&otherdeployparams=");
+        
+        if(args.data.username[1] != "")
+            array1.push("&autoscaleuserid=" + args.data.username[1]);
+    
+        var array2 = [];
+        if(args.data.diskOfferings != "")
+            array2.push("diskofferingid=" + args.data.diskOfferings);
+        if(args.data.securityGroups != ""){
+          if(array2.join("") != "")
+            array2.push("&securitygroupids=" + args.data.securityGroups);
+          else
+            array2.push("securitygroupids=" + args.data.securityGroups);
+        }
+        array2 = array2.join("");
+        if(array2 != "")
+            array1.push("&otherdeployparams=" + encodeURIComponent(array2));
 
         $.ajax({
         	url: createURL('createAutoScaleVmProfile' + array1.join("")),
