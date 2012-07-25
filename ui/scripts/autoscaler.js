@@ -80,7 +80,7 @@
 
       setTimeout(function() {
         args.response.success({ data: sampleData });
-      }, 500);
+      }, 100);
     },
 
     // --
@@ -279,6 +279,7 @@
         label: 'SCALE UP POLICY',
         noSelect: true,
         noHeaderActionsColumn: true,
+        ignoreEmptyFields: true,
         fields: {
           'counterid': {
             label: 'Counter',
@@ -380,7 +381,7 @@
             args.response.success({
               data: scaleUpData
             });
-          }, 500);
+          }, 1000);
         }
         /*actions: {
          destroy: {
@@ -432,6 +433,7 @@
         title: 'ScaleDown Policy',
         noSelect: true,
         noHeaderActionsColumn: true,
+        ignoreEmptyFields: true,
         fields: {
           'counterid': {
             label: 'Counter',
@@ -532,7 +534,7 @@
             args.response.success({
               data: scaleDownData
             });
-          }, 500);
+          }, 600);
         }
         /*
          actions: {
