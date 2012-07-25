@@ -9606,22 +9606,6 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   max-height: 600px;
 }
 
-
-
-.ui-dialog div.autoscaler div.form-container div.form-item[rel=templateCategory] {
-  display: block;
-  width: 345px;
-  float: left;
-}
-
-.ui-dialog div.autoscaler div.form-container div.form-item[rel=templateNames] {
-  display: inline-block;
-  width: 330px;
-  float: left;
-  position: relative;
-  margin-top: -3px;
-}
-
 .ui-dialog div.autoscaler div.form-container div.form-item[rel=securityGroups] {
   display: block;
   width: 370px;
