@@ -15,7 +15,74 @@
   var totalScaleUpCondition = 0;
   var scaleDownData = [];
   var totalScaleDownCondition = 0;
+  
   cloudStack.autoscaler = {
+    dataProvider: function(args) {
+      // Reset data
+      scaleUpData = [];
+      totalScaleUpCondition = 0;
+      scaleDownData = [];
+      totalScaleDownCondition = 0;
+
+      var sampleData = {
+        templateNames: '58d3f4b2-e847-4f93-993d-1ab1505129b6', //(will set this value to dropdown)
+        serviceOfferingId: '4aa823f3-27ec-46af-9e07-b023d7a7a6f1', //(will set this value to dropdown)
+        minInstance: 1,
+        maxInstance: 10,
+        scaleUpPolicy: { 
+          id: 12345,
+          duration: 1000,
+          conditions: [
+            {
+              id: 1,
+              counterid: 1,
+              relationaloperator: "GE",
+              threshold: 100
+            },
+            {
+              id: 2,
+              counterid: 2,
+              relationaloperator: "LT",
+              threshold: 200
+            }
+
+          ]
+        },
+        scaleDownPolicy: { 
+          id: 6789,
+          duration: 500,
+          conditions: [
+            {
+              id: 1,
+              counterid: 2,
+              relationaloperator: "LT",
+              threshold: 30
+            },
+            {
+              id: 2,
+              counterid: 4,
+              relationaloperator: "LT",
+              threshold: 50
+            }
+
+          ]
+        },
+        interval: 200,
+        quietTime: 300, 
+        destroyVMgracePeriod: null,
+        securityGroups: null, // (will set this value to dropdown)
+        diskOfferingId: 'a21c9aa4-ef7e-41dd-91eb-70b2182816b0', // (will set this value to dropdown)
+        snmpCommunity: 1,
+        snmpPort: 225,
+        
+        isAdvanced: false // Set this to true if any advanced field data is present
+      };
+
+      setTimeout(function() {
+        args.response.success({ data: sampleData });
+      }, 500);
+    },
+    
     // --
     // Add the following object blocks:
     //
@@ -27,23 +94,27 @@
     //
     forms: {
       topFields: {
-        templateCategory: {
-          label: 'Template',
-          id: 'templatecategory',
-          select: function(args) {
-            args.response.success({
-              data: [
-                { id: 'all', description: _l('ui.listView.filters.all') },
-                { id: 'featured', description: _l('label.featured') },
-                { id: 'Community', description: _l('label.menu.community.templates') },
-                { id: 'self', description: _l('ui.listView.filters.mine') }
-              ]
-            });
-          }
-        },
+        //**
+        //** Disabled due to UI issues
+        //**
+        // templateCategory: {
+        //   label: 'Template',
+        //   id: 'templatecategory',
+        //   select: function(args) {
+        //     args.response.success({
+        //       data: [
+        //         { id: 'all', description: _l('ui.listView.filters.all') },
+        //         { id: 'featured', description: _l('label.featured') },
+        //         { id: 'Community', description: _l('label.menu.community.templates') },
+        //         { id: 'self', description: _l('ui.listView.filters.mine') }
+        //       ]
+        //     });
+        //   }
+        // },
+        //**
 
         templateNames: {
-          label: '',
+          label: 'label.template',
           id: 'templatename',
           select: function(args) {
             $.ajax({
@@ -143,7 +214,7 @@
 	          }
 	        },
 
-	        DiskOfferings: {
+	        diskOfferingId: {
 	          label: 'label.menu.disk.offerings',
 	          isHidden: true,
 	          dependsOn: 'isAdvanced',
@@ -217,6 +288,22 @@
                 dataType: "json",
                 async: true,
                 success: function(json) {
+                  // No counters returning from the api right now
+                  // -- just hard code them for the time being
+                  return args.response.success({
+                    data: [
+                      {
+                        id: 1,
+                        description: 'Memory'
+                      },
+                      {
+                        id: 2,
+                        description: 'CPU'
+                      }
+                    ]
+                  });
+                  //
+                  
                   var counters = json.counterresponse.counter;
                   
                   args.response.success({
@@ -245,7 +332,7 @@
               });
             }
           },
-          'threshold': { edit: true, label: 'Threshold'},
+          'threshold': { edit: true, label: 'Threshold' },
           'add-scaleUpcondition': {
             label: 'label.add',
             addButton: true
@@ -274,10 +361,25 @@
               }
             }
           },
-          ignoreEmptyFields: true,
           dataProvider: function(args) {
-            args.response.success({
-              data: scaleUpData
+            var data = scaleUpData;
+            var $autoscaler = $('.ui-dialog .autoscaler');
+            var initialData = $autoscaler.data('autoscaler-scale-up-data');
+
+            if ($.isArray(initialData)) {
+              $(initialData).each(function() {
+                this.index = totalScaleUpCondition;
+                totalScaleUpCondition++;
+                scaleUpData.push(this);
+              });
+
+              $autoscaler.data('autoscaler-scale-up-data', null);
+            }
+
+            setTimeout(function() {
+              args.response.success({
+                data: scaleUpData
+              });
             });
           }
         /*actions: {
@@ -339,6 +441,22 @@
 	              dataType: "json",
 	              async: true,
 	              success: function(json) {
+                  // No counters returning from the api right now
+                  // -- just hard code them for the time being
+                  return args.response.success({
+                    data: [
+                      {
+                        id: 1,
+                        description: 'Memory'
+                      },
+                      {
+                        id: 2,
+                        description: 'CPU'
+                      }
+                    ]
+                  });
+                  //
+                  
 	                var counters = json.counterresponse.counter;
 	              
 	                args.response.success({
@@ -390,16 +508,31 @@
         			scaleDownData = $.grep(scaleDownData, function(item) {
         				return item.index != args.context.multiRule[0].index;
         			});
-                                totalScaleDownCondition--;
+              totalScaleDownCondition--;
         			args.response.success();
         		}
         	}
         },
-        ignoreEmptyFields: true,
         dataProvider: function(args) {
-        	args.response.success({
-        		data: scaleDownData
-        	});
+          var data = scaleDownData;
+          var $autoscaler = $('.ui-dialog .autoscaler');
+          var initialData = $autoscaler.data('autoscaler-scale-down-data');
+
+          if ($.isArray(initialData)) {
+            $(initialData).each(function() {
+              this.index = totalScaleDownCondition;
+              totalScaleDownCondition++;
+              scaleDownData.push(this);
+            });
+
+            $autoscaler.data('autoscaler-scale-down-data', null);
+          }
+
+          setTimeout(function() {
+            args.response.success({
+              data: scaleDownData
+            });
+          });
         }
 	/*
         actions: {
@@ -779,8 +912,6 @@
 
         $field.append($input, $inputLabel);
         $field.appendTo($dialog);
-
-
       }
     }
   }

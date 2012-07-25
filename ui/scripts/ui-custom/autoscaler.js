@@ -12,11 +12,13 @@
   cloudStack.uiCustom.autoscaler = function(args) {
     // Place outer args here as local variables
     // i.e, -- var dataProvider = args.dataProvider
-    var topfields = args.forms.topFields;
-    var bottomfields = args.forms.bottomFields;
-    var scaleuppolicy = args.forms.scaleUpPolicy;
-    var scaledownpolicy = args.forms.scaleDownPolicy;
-    
+    var forms = $.extend(true, {}, args.forms);
+    var topfields = forms.topFields;
+    var bottomfields = forms.bottomFields;
+    var scaleuppolicy = forms.scaleUpPolicy;
+    var scaledownpolicy = forms.scaleDownPolicy;
+    var dataProvider = cloudStack.autoscaler.dataProvider;
+
     return function(args) {
       var context = args.context;
       var $autoscalerDialog = $('<div>').addClass('autoscaler');
@@ -35,156 +37,219 @@
       var $scaleDownDivider = $('<hr></hr>').addClass('policy-divider');
       var $bottomFieldDivider = $('<hr></hr>').addClass('policy-divider');
       var $scaleDownPolicy = $('<div>').addClass('scale-down-policy');
-      var $scaleUpPolicyTitle = $('<div>').addClass('scale-up-policy-title').html("Scale Up Policy");
-      var $scaleDownPolicyTitle = $('<div>').addClass('scale-down-policy-title').html("Scale Down Policy");
+      var $scaleUpPolicyTitle = $('<div>').addClass('scale-up-policy-title')
+            .html("Scale Up Policy");
+      var $scaleDownPolicyTitle = $('<div>').addClass('scale-down-policy-title')
+            .html("Scale Down Policy");
       var topFieldForm, $topFieldForm,
           bottomFieldForm, $bottomFieldForm,
           scaleUpPolicyTitleForm, $scaleUpPolicyTitleForm,
-          scaleDownPolicyTitleForm, $scaleDownPolicyTitleForm;
+          scaleDownPolicyTitleForm, $scaleDownPolicyTitleForm,
+          scaleUpPolicyForm, scaleDownPolicyForm;
 
-      // Create and append top fields
-      // -- uses create form to generate fields
-      topFieldForm = cloudStack.dialog.createForm({
-        context: context,
-        noDialog: true, // Don't render a dialog, just return $formContainer
-        form: {
-          title: '',
-          fields: topfields
+      var renderDialogContent = function(args) {
+        var data = args.data ? args.data : {};
+
+        // Setup default values, in case where existing data is present
+        var setDefaultFields = function(fieldID, field) {
+          var fieldData = data[fieldID];
+
+          if (fieldData && !field.isBoolean) {
+            field.defaultValue = fieldData;
+          } else {
+            field.isChecked = fieldData;
+          }
+        };
+        $.each(topfields, setDefaultFields);
+        $.each(bottomfields, setDefaultFields);
+
+        // Create and append top fields
+        // -- uses create form to generate fields
+        topFieldForm = cloudStack.dialog.createForm({
+          context: context,
+          noDialog: true, // Don't render a dialog, just return $formContainer
+          form: {
+            title: '',
+            fields: topfields
+          }
+        });
+        $topFieldForm = topFieldForm.$formContainer;
+        $topFieldForm.appendTo($topFields);
+
+        scaleUpPolicyTitleForm = cloudStack.dialog.createForm({
+          context: context,
+          noDialog: true,
+          form: {
+            title: '',
+            fields: {
+              scaleUpDuration: { label: 'Duration', validation: { required: true } }
+            }
+          }
+        });
+        $scaleUpPolicyTitleForm = scaleUpPolicyTitleForm.$formContainer;
+        $scaleUpPolicyTitleForm.appendTo($scaleUpPolicyTitle);
+
+
+        scaleDownPolicyTitleForm = cloudStack.dialog.createForm({
+          context: context,
+          noDialog: true,
+          form: {
+            title: '',
+            fields: {
+              scaleDownDuration: { label: 'Duration', validation: { required: true } }
+            }
+          }
+        });
+        $scaleDownPolicyTitleForm = scaleDownPolicyTitleForm.$formContainer;
+        $scaleDownPolicyTitleForm.appendTo($scaleDownPolicyTitle);
+
+        // Make multi-edits
+        //
+        // Scale up policy
+        if (data.scaleUpPolicy && $.isArray(data.scaleUpPolicy.conditions)) {
+          $autoscalerDialog.data('autoscaler-scale-up-data',
+                                 data.scaleUpPolicy.conditions);
         }
-      });
-      $topFieldForm = topFieldForm.$formContainer;
-      $topFieldForm.appendTo($topFields);
 
-      scaleUpPolicyTitleForm = cloudStack.dialog.createForm({
-      	context: context,
-      	noDialog: true,
-      	form: {
-    			title: '',
-    			fields: {scaleUpDuration: { label: 'Duration', validation: { required: true } } }
-      	}
-      });
-			$scaleUpPolicyTitleForm = scaleUpPolicyTitleForm.$formContainer;
-			$scaleUpPolicyTitleForm.appendTo($scaleUpPolicyTitle);
-			
-     
-      scaleDownPolicyTitleForm = cloudStack.dialog.createForm({
-      	context: context,
-      	noDialog: true,
-      	form: {
-    			title: '',
-    			fields: {scaleDownDuration: { label: 'Duration', validation: { required: true } } }
-      	}
-      });
-			$scaleDownPolicyTitleForm = scaleDownPolicyTitleForm.$formContainer;
-			$scaleDownPolicyTitleForm.appendTo($scaleDownPolicyTitle)
-			
-      // Make multi-edits
-      // $scaleUpPolicy.multiEdit(...)
-      scaleUpPolicyForm = $scaleUpPolicy.multiEdit(
-        $.extend(true, {}, scaleuppolicy, { context: context }));
-      // $scaleDownPolicy.multiEdit(...)
-      scaleDownPolicyForm = $scaleDownPolicy.multiEdit(
-        $.extend(true, {}, scaledownpolicy, { context: context }));
-
-      // Create and append bottom fields
-      bottomFieldForm = cloudStack.dialog.createForm({
-        context: context,
-        noDialog: true, // Don't render a dialog, just return $formContainer
-        form: {
-          title: '',
-          fields: bottomfields 
+        if (data.scaleUpPolicy.duration) {
+          $autoscalerDialog.find('input[name=scaleUpDuration]').val(
+            data.scaleUpPolicy.duration
+          );
         }
-      });
-      $bottomFieldForm = bottomFieldForm.$formContainer;
-      $bottomFieldForm.appendTo($bottomFields);
 
-      // Append main div elements
-      $autoscalerDialog.append(
-        $topFields,
-        $scaleUpPolicyTitle,
-        $scaleUpPolicy,
-        $scaleDownPolicyTitle,
-        $scaleDownPolicy,
-        $bottomFields
-      );
+        scaleuppolicy.context = context;
+        scaleUpPolicyForm = $scaleUpPolicy.multiEdit(scaleuppolicy);
 
-      // Render dialog
+        // Scale down policy
+        if (data.scaleDownPolicy && $.isArray(data.scaleDownPolicy.conditions)) {
+          $autoscalerDialog.data('autoscaler-scale-down-data',
+                                 data.scaleDownPolicy.conditions);
+        }
+
+        scaledownpolicy.context = context;
+        scaleDownPolicyForm = $scaleDownPolicy.multiEdit(scaledownpolicy);
+
+        // Create and append bottom fields
+        bottomFieldForm = cloudStack.dialog.createForm({
+          context: context,
+          noDialog: true, // Don't render a dialog, just return $formContainer
+          form: {
+            title: '',
+            fields: bottomfields
+          }
+        });
+        $bottomFieldForm = bottomFieldForm.$formContainer;
+        $bottomFieldForm.appendTo($bottomFields);
+
+        // Append main div elements
+        $autoscalerDialog.append(
+          $topFields,
+          $scaleUpPolicyTitle,
+          $scaleUpPolicy,
+          $scaleDownPolicyTitle,
+          $scaleDownPolicy,
+          $bottomFields
+        );
+
+        // Render dialog
+        //$autoscalerDialog.find('.form-item[rel=templateNames] label').hide();
+        /* Duration Fields*/
+        //$('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+        //$('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
+
+        /*Dividers*/
+        $autoscalerDialog.find('div.scale-up-policy-title').prepend($scaleUpDivider);
+        $autoscalerDialog.find('div.scale-down-policy-title').prepend($scaleDownDivider);
+        $autoscalerDialog.find('div.field-group.bottom-fields').prepend($bottomFieldDivider);
+
+        /* Hide effects for multi-edit table*/
+        $autoscalerDialog.find('div.scale-up-policy').prepend($hideScaleUp);
+        $autoscalerDialog.find('div.scale-down-policy ').prepend($hideScaleDown);
+        $autoscalerDialog.find('div.scale-up-policy').prepend($scaleUpHideLabel);
+        $autoscalerDialog.find('div.scale-down-policy').prepend($scaleDownHideLabel);
+
+        /*Toggling the labels and data-item table - SCALE UP POLICY*/
+        $autoscalerDialog.find('div.scale-up-policy div.hide').click(function() {
+          $autoscalerDialog.find('div.scale-up-policy div.multi-edit div.data-item').slideToggle();
+          $scaleUpLabel = $autoscalerDialog.find('div.scale-up-policy div.slide-label').replaceWith($scaleUpLabel);
+        });
+
+        /*Toggling the images */
+        $('div.ui-dialog div.autoscaler div.scale-up-policy div.hide').click(function() {
+          $(this).toggleClass('expand hide');
+        });
+
+        $('div.ui-dialog div.autoscaler div.scale-down-policy div.hide').click(function() {
+          $(this).toggleClass('expand hide');
+        });
+
+        /*Toggling the labels and data-item table - SCALE DOWN POLICY*/
+        $('div.ui-dialog div.autoscaler div.scale-down-policy div.hide').click(function() {
+          $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-item').slideToggle();
+          $scaleDownLabel = $('div.ui-dialog div.autoscaler div.scale-down-policy div.slide-label').replaceWith($scaleDownLabel);
+        });
+
+        $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.expand').click(function() { $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-item').slideToggle(); });
+
+        $autoscalerDialog.dialog('option', 'position', 'center');
+        $autoscalerDialog.dialog('option', 'height', 'auto');
+      };
+
+      var $loading = $('<div>').addClass('loading-overlay').appendTo($autoscalerDialog);
       $autoscalerDialog.dialog({
-          title: 'AutoScale Configuration Wizard',
-          width: 825,
-          height: 'auto',
-          draggable: true,
-          closeonEscape: false,
-          overflow:'auto',
-          open:function() {
-              $("button").each(function(){
-                            $(this).attr("style", "left: 600px; position: relative; margin-right: 5px; "); 
-                        });
-
-            },
-            buttons: [
-              {
-                text: _l('label.cancel'),
-                'class': 'cancel',
-                click: function() {
-                  $(this).dialog('close');
-                  $('.overlay').remove(); 
-                }
-              },
-              {
-                text: _l('Apply'),
-                'class': 'ok',
-                click: function() {
-              		var data = cloudStack.serializeForm($('form'));
-              		cloudStack.autoscaler.actions.add({data: data,context: context});
-                  $autoscalerDialog.dialog('close');
-                  $('.overlay').remove();
-                  $autoscalerDialog.closest(':ui-dialog').remove();
-                }
-              }
-            ]
-        }).closest('.ui-dialog').overlay();
-         $('.ui-dialog div.autoscaler div.form-container').find('.form-item[rel=templateNames] label').hide();
-
-         /* Duration Fields*/
-         //$('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
-         //$('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').append("<br></br>").append($inputLabel = $('<label>').html('Duration').attr({left:'200'})).append($('<input>').attr({ name: 'username' }));
-        
-         /*Dividers*/
-         $('div.ui-dialog div.autoscaler').find('div.scale-up-policy-title').prepend($scaleUpDivider);
-         $('div.ui-dialog div.autoscaler').find('div.scale-down-policy-title').prepend($scaleDownDivider);
-         $('div.ui-dialog div.autoscaler').find('div.field-group.bottom-fields').prepend($bottomFieldDivider);
-          
-         /* Hide effects for multi-edit table*/
-         $('div.ui-dialog div.autoscaler div.scale-up-policy').prepend($hideScaleUp);
-         $('div.ui-dialog div.autoscaler div.scale-down-policy ').prepend($hideScaleDown);
-         $('div.ui-dialog div.autoscaler div.scale-up-policy').prepend($scaleUpHideLabel);
-         $('div.ui-dialog div.autoscaler div.scale-down-policy').prepend($scaleDownHideLabel);
-
-         /*Toggling the labels and data-item table - SCALE UP POLICY*/
-         $('div.ui-dialog div.autoscaler div.scale-up-policy div.hide').click(function() { 
-             $('div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.data-item').slideToggle(); 
-             $scaleUpLabel = $('div.ui-dialog div.autoscaler div.scale-up-policy div.slide-label').replaceWith($scaleUpLabel);
-
+        title: 'AutoScale Configuration Wizard',
+        width: 825,
+        height: 600,
+        draggable: true,
+        closeonEscape: false,
+        overflow:'auto',
+        open:function() {
+          $("button").each(function(){
+            $(this).attr("style", "left: 600px; position: relative; margin-right: 5px; ");
           });
-           
-          /*Toggling the images */
-          $('div.ui-dialog div.autoscaler div.scale-up-policy div.hide').click(function() {
-                    $(this).toggleClass('expand hide');
-              }); 
-                    
-           $('div.ui-dialog div.autoscaler div.scale-down-policy div.hide').click(function() {
-                    $(this).toggleClass('expand hide');
+        },
+        buttons: [
+          {
+            text: _l('label.cancel'),
+            'class': 'cancel',
+            click: function() {
+              $autoscalerDialog.dialog('destroy');
+              $('.overlay').remove();
+            }
+          },
+          {
+            text: _l('Apply'),
+            'class': 'ok',
+            click: function() {
+              var data = cloudStack.serializeForm($('.ui-dialog .autoscaler form'));
+              
+              cloudStack.autoscaler.actions.add({
+                context: context,
+                data: data
               });
- 
-          /*Toggling the labels and data-item table - SCALE DOWN POLICY*/
-             $('div.ui-dialog div.autoscaler div.scale-down-policy div.hide').click(function() {
-              $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-item').slideToggle();
-              $scaleDownLabel = $('div.ui-dialog div.autoscaler div.scale-down-policy div.slide-label').replaceWith($scaleDownLabel);
-          });
-        
-          $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.expand').click(function() { $('div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-item').slideToggle(); });
-       
-      }
-    }
+              
+              $autoscalerDialog.dialog('destroy');
+              $('.overlay').remove();
+              $autoscalerDialog.closest(':ui-dialog').remove();
+            }
+          }
+        ]
+      }).closest('.ui-dialog').overlay();
+
+      dataProvider({
+        context: context,
+        response: {
+          success: function(args) {
+            $loading.remove();
+            renderDialogContent(args);
+
+            if (args.data.isAdvanced) {
+              $autoscalerDialog.find('input[type=checkbox]').trigger('click');
+              $autoscalerDialog.find('input[type=checkbox]').attr('checked', 'checked');
+            }
+          }
+        }
+      });
+    };
+  };
 }(jQuery, cloudStack));
