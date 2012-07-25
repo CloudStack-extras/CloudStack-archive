@@ -24,6 +24,8 @@
       scaleDownData = [];
       totalScaleDownCondition = 0;
 
+			var sampleData = null;
+			/*
       var sampleData = {
         templateNames: '58d3f4b2-e847-4f93-993d-1ab1505129b6', //(will set this value to dropdown)
         serviceOfferingId: '4aa823f3-27ec-46af-9e07-b023d7a7a6f1', //(will set this value to dropdown)
@@ -77,7 +79,8 @@
 
         isAdvanced: false // Set this to true if any advanced field data is present
       };
-
+      */
+			
       args.response.success({ data: sampleData });
     },
 
@@ -286,23 +289,7 @@
                 url: createURL("listCounters"),
                 dataType: "json",
                 async: true,
-                success: function(json) {
-                  // No counters returning from the api right now
-                  // -- just hard code them for the time being
-                  return args.response.success({
-                    data: [
-                      {
-                        name: 'memory',
-                        description: 'Memory'
-                      },
-                      {
-                        name: 'cpu',
-                        description: 'CPU'
-                      }
-                    ]
-                  });
-                  //
-
+                success: function(json) {   
                   var counters = json.counterresponse.counter;
 
                   args.response.success({
@@ -438,23 +425,7 @@
                 url: createURL("listCounters"),
                 dataType: "json",
                 async: true,
-                success: function(json) {
-                  // No counters returning from the api right now
-                  // -- just hard code them for the time being
-                  return args.response.success({
-                    data: [
-                      {
-                        name: 'memory',
-                        description: 'Memory'
-                      },
-                      {
-                        name: 'cpu',
-                        description: 'CPU'
-                      }
-                    ]
-                  });
-                  //
-
+                success: function(json) {    
                   var counters = json.counterresponse.counter;
 
                   args.response.success({
@@ -726,12 +697,12 @@
           array1.push("&snmpport=" + args.data.snmpPort);
           array1.push("&destroyvmgraceperiod=" + args.data.destroyVMgracePeriod);
 
-          if(args.data.username[1] != "")
-            array1.push("&autoscaleuserid=" + args.data.username[1]);
+          if(args.data.username != "")
+            array1.push("&autoscaleuserid=" + args.data.username);
 
           var array2 = [];
-          if(args.data.diskOfferings != "")
-            array2.push("diskofferingid=" + args.data.diskOfferings);
+          if(args.data.diskOfferingId != "")
+            array2.push("diskofferingid=" + args.data.diskOfferingId);
           if(args.data.securityGroups != ""){
             if(array2.join("") != "")
               array2.push("&securitygroupids=" + args.data.securityGroups);
