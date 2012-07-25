@@ -5,7 +5,7 @@
 // to you under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
-//
+// 
 //   http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
@@ -298,6 +298,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         _identityDao.initializeDefaultUuid("virtual_router_providers");
         _identityDao.initializeDefaultUuid("networks");
         _identityDao.initializeDefaultUuid("user_ip_address");
+        _identityDao.initializeDefaultUuid("counter");
     }
 
     private String getMountParent() {
@@ -588,10 +589,10 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         String already = _configDao.getValue("ssh.privatekey");
         String homeDir = null;
         homeDir = Script.runSimpleBashScript("echo ~" + username);
-        if (homeDir == null) {
+        	if (homeDir == null) {
             throw new CloudRuntimeException("Cannot get home directory for account: " + username);
         }
-
+        
         if (s_logger.isInfoEnabled()) {
             s_logger.info("Processing updateKeyPairs");
         }
@@ -884,7 +885,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         NetworkOfferingVO storageNetworkOffering = new NetworkOfferingVO(NetworkOfferingVO.SystemStorageNetwork, TrafficType.Storage, true);
         storageNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(storageNetworkOffering);
 
-        // populate providers
+        //populate providers
         Map<Network.Service, Network.Provider> defaultSharedNetworkOfferingProviders = new HashMap<Network.Service, Network.Provider>();
         defaultSharedNetworkOfferingProviders.put(Service.Dhcp, Provider.VirtualRouter);
         defaultSharedNetworkOfferingProviders.put(Service.Dns, Provider.VirtualRouter);
