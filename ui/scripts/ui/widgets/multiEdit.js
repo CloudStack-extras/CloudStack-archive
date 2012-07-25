@@ -938,7 +938,7 @@
     }
 
     // Get existing data
-    getData();
+    setTimeout(function() { getData(); });
 
     var fullRefreshEvent = function(event) {
       if ($multi.is(':visible')) {
