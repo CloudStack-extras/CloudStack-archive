@@ -112,7 +112,7 @@
         }
 
         if (data.scaleUpPolicy.duration) {
-          $autoscalerDialog.find('input[name=scaleUpDuration]').val(
+          $scaleUpPolicyTitleForm.find('input[name=scaleUpDuration]').val(
             data.scaleUpPolicy.duration
           );
         }
@@ -124,6 +124,12 @@
         if (data.scaleDownPolicy && $.isArray(data.scaleDownPolicy.conditions)) {
           $autoscalerDialog.data('autoscaler-scale-down-data',
                                  data.scaleDownPolicy.conditions);
+        }
+
+        if (data.scaleDownPolicy.duration) {
+          $scaleDownPolicyTitleForm.find('input[name=scaleDownDuration]').val(
+            data.scaleDownPolicy.duration
+          );
         }
 
         scaledownpolicy.context = context;
