@@ -249,7 +249,7 @@
             $loading.remove();
             renderDialogContent(args);
 
-            if (args.data.isAdvanced) {
+            if (args.data && args.data.isAdvanced) {
               $autoscalerDialog.find('input[type=checkbox]').trigger('click');
               $autoscalerDialog.find('input[type=checkbox]').attr('checked', 'checked');
             }
