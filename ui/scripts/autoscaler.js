@@ -35,13 +35,13 @@
           conditions: [
             {
               id: 1,
-              counterid: 1,
+              counterid: 'cpu',
               relationaloperator: "GE",
               threshold: 100
             },
             {
               id: 2,
-              counterid: 2,
+              counterid: 'memory',
               relationaloperator: "LT",
               threshold: 200
             }
@@ -54,13 +54,13 @@
           conditions: [
             {
               id: 1,
-              counterid: 2,
+              counterid: 'cpu',
               relationaloperator: "LT",
               threshold: 30
             },
             {
               id: 2,
-              counterid: 4,
+              counterid: 'cpu',
               relationaloperator: "LT",
               threshold: 50
             }
@@ -293,11 +293,11 @@
                   return args.response.success({
                     data: [
                       {
-                        id: 1,
+                        name: 'memory',
                         description: 'Memory'
                       },
                       {
-                        id: 2,
+                        name: 'cpu',
                         description: 'CPU'
                       }
                     ]
@@ -380,7 +380,7 @@
             args.response.success({
               data: scaleUpData
             });
-          });
+          }, 500);
         }
         /*actions: {
          destroy: {
@@ -446,11 +446,11 @@
                   return args.response.success({
                     data: [
                       {
-                        id: 1,
+                        name: 'memory',
                         description: 'Memory'
                       },
                       {
-                        id: 2,
+                        name: 'cpu',
                         description: 'CPU'
                       }
                     ]
@@ -532,7 +532,7 @@
             args.response.success({
               data: scaleDownData
             });
-          });
+          }, 500);
         }
         /*
          actions: {
