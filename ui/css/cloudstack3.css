@@ -9667,15 +9667,12 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   float: left;
 }
 
-
-div.ui-dialog div.autoscaler div.scale-up-policy-title div.form-container{
-
-height:55px;
+div.ui-dialog div.autoscaler div.scale-up-policy-title div.form-container {
+  height: 55px;
 }
 
-div.ui-dialog div.autoscaler div.scale-down-policy-title div.form-container{
-
-height:55px;
+div.ui-dialog div.autoscaler div.scale-down-policy-title div.form-container {
+  height: 55px;
 }
 
 div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit {
@@ -9698,32 +9695,26 @@ div.ui-dialog div.autoscaler div.scale-up-policy-title label {
   margin-right: 10px;
 }
 
-div.ui-dialog div.autoscaler div.scale-up-policy-title hr.policy-divider{
-
-    border-left: 1px none #38546D;
-    border-right: 1px none #16222C;
-    border-top: 1px none #38546D;
-    margin-bottom: 12px;
-
+div.ui-dialog div.autoscaler div.scale-up-policy-title hr.policy-divider {
+  border-left: 1px none #38546D;
+  border-right: 1px none #16222C;
+  border-top: 1px none #38546D;
+  margin-bottom: 12px;
 }
 
-div.ui-dialog div.autoscaler div.scale-down-policy-title hr.policy-divider{
-
-    border-left: 1px none #38546D;
-    border-right: 1px none #16222C;
-    border-top: 1px none #38546D;
-    margin-bottom: 12px;
-
+div.ui-dialog div.autoscaler div.scale-down-policy-title hr.policy-divider {
+  border-left: 1px none #38546D;
+  border-right: 1px none #16222C;
+  border-top: 1px none #38546D;
+  margin-bottom: 12px;
 }
 
-div.ui-dialog div.autoscaler div.field-group.bottom-fields  hr.policy-divider{
-
-    border-left: 1px none #38546D;
-    border-right: 1px none #16222C;
-    border-top: 1px none #38546D;
-    margin-top: 15px;
-    margin-bottom: -1px;
-
+div.ui-dialog div.autoscaler div.field-group.bottom-fields hr.policy-divider {
+  border-left: 1px none #38546D;
+  border-right: 1px none #16222C;
+  border-top: 1px none #38546D;
+  margin-top: 15px;
+  margin-bottom: -1px;
 }
 
 div.ui-dialog div.autoscaler div.scale-down-policy-title label {
@@ -9738,121 +9729,98 @@ div.ui-dialog div.autoscaler div.scale-down-policy-title {
   margin-top: 10px;
 }
 
-div.ui-dialog div.autoscaler div.scale-up-policy-title div.form-container  div.form-item  div.value input[type=text] {
-
-   margin-left: 195px;
-   width: 30%;
-   margin-top:1px;
-
+div.ui-dialog div.autoscaler div.scale-up-policy-title div.form-container div.form-item div.value input[type=text] {
+  margin-left: 195px;
+  width: 30%;
+  margin-top: 1px;
 }
 
-div.ui-dialog div.autoscaler div.scale-up-policy-title div.form-container div.form-item  div.name {
-
-   margin-left: 390px;
-
-
+div.ui-dialog div.autoscaler div.scale-up-policy-title div.form-container div.form-item div.name {
+  margin-left: 390px;
 }
 
-div.ui-dialog div.autoscaler div.scale-down-policy-title div.form-container  div.form-item  div.value input[type=text] {
-
-   margin-left: 670px;
-   width: 30%;
-   margin-top:-16px;
-   
+div.ui-dialog div.autoscaler div.scale-down-policy-title div.form-container div.form-item div.value input[type=text] {
+  margin-left: 670px;
+  width: 30%;
+  margin-top: -16px;
 }
 
-div.ui-dialog div.autoscaler div.scale-down-policy-title div.form-container div.form-item  div.name {
-
-   margin-left: 390px;
-   
-
+div.ui-dialog div.autoscaler div.scale-down-policy-title div.form-container div.form-item div.name {
+  margin-left: 390px;
 }
 
 div.ui-dialog div.autoscaler div.scale-up-policy div.multi-edit div.data div.data-body div.data-item {
-
-margin-bottom:0px;
-margin-right:22px;
-
+  margin-bottom: 0px;
+  margin-right: 22px;
 }
 
 div.ui-dialog div.autoscaler div.scale-down-policy div.multi-edit div.data div.data-body div.data-item {
-
-margin-bottom:0px;
-margin-right:22px;
-
+  margin-bottom: 0px;
+  margin-right: 22px;
 }
 
 div.ui-dialog div.autoscaler div.scale-up-policy div.slide-label {
-
-    color: #A5A3A7;
-    font-size: 14px;
-    margin-bottom: 3px;
-    margin-left: 755px;
-    width: 12px;
-
+  color: #A5A3A7;
+  font-size: 14px;
+  margin-bottom: 3px;
+  margin-left: 755px;
+  width: 12px;
 }
 
 div.ui-dialog div.autoscaler div.scale-down-policy div.slide-label {
-
-    color: #A5A3A7;
-    font-size: 14px;
-    margin-bottom: 3px;
-    margin-left: 755px;
-    width: 12px;
-
+  color: #A5A3A7;
+  font-size: 14px;
+  margin-bottom: 3px;
+  margin-left: 755px;
+  width: 12px;
 }
 
 div.ui-dialog div.autoscaler div.scale-up-policy div.hide {
-
-    background: url("../images/minus.png") no-repeat 38% 59% #FFFFFF ;
-    border: 1px solid #D0D0D0;
-    border-radius: 9px 9px 9px 9px;
-    cursor: pointer;
-    float: right;
-    height: 15px;
-    margin: -20px 45px 0 11px;
-    width: 14px;
+  background: #FFFFFF url("../images/minus.png") no-repeat 38% 59%;
+  border: 1px solid #D0D0D0;
+  border-radius: 9px 9px 9px 9px;
+  cursor: pointer;
+  float: right;
+  height: 15px;
+  margin: -20px 45px 0 11px;
+  width: 14px;
 }
 
 div.ui-dialog div.autoscaler div.scale-down-policy div.hide {
-
-    background: url("../images/minus.png") no-repeat 31% 54%  #FFFFFF ;
-    border: 1px solid #D0D0D0;
-    border-radius: 9px 9px 9px 9px;
-    cursor: pointer;
-    float: right;
-    height: 15px;
-    margin: -20px 45px 0 11px;
-    width: 14px;
+  background: #FFFFFF url("../images/minus.png") no-repeat 31% 54%;
+  border: 1px solid #D0D0D0;
+  border-radius: 9px 9px 9px 9px;
+  cursor: pointer;
+  float: right;
+  height: 15px;
+  margin: -20px 45px 0 11px;
+  width: 14px;
 }
-
 
 div.ui-dialog div.autoscaler div.scale-up-policy div.expand {
-    background: url("../images/sprites.png") repeat scroll -541px -499px #FFFFFF;
-    border: 1px solid #D0D0D0;
-    border-radius: 9px 9px 9px 9px;
-    cursor: pointer;
-    float: right;
-    height: 15px;
-    margin: -20px 45px 0 11px;
-    width: 14px;
-
+  background: #FFFFFF url("../images/sprites.png") repeat -541px -499px;
+  border: 1px solid #D0D0D0;
+  border-radius: 9px 9px 9px 9px;
+  cursor: pointer;
+  float: right;
+  height: 15px;
+  margin: -20px 45px 0 11px;
+  width: 14px;
 }
 
-div.ui-dialog div.autoscaler div.scale-down-policy  div.expand {
-    background: url("../images/sprites.png") repeat scroll -541px -499px #FFFFFF;
-    border: 1px solid #D0D0D0;
-    border-radius: 9px 9px 9px 9px;
-    cursor: pointer;
-    float: right;
-    height: 15px;
-    margin: -20px 45px 0 11px;
-    width: 14px;
-
+div.ui-dialog div.autoscaler div.scale-down-policy div.expand {
+  background: #FFFFFF url("../images/sprites.png") repeat -541px -499px;
+  border: 1px solid #D0D0D0;
+  border-radius: 9px 9px 9px 9px;
+  cursor: pointer;
+  float: right;
+  height: 15px;
+  margin: -20px 45px 0 11px;
+  width: 14px;
 }
 
 div.ui-dialog div.autoscaler div.field-group div.form-container form div.form-item div.name label {
-font-size:11px;
+  font-size: 11px;
 }
 
 /*Action icons*/
