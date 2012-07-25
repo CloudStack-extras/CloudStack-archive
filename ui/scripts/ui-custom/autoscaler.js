@@ -111,7 +111,7 @@
                                  data.scaleUpPolicy.conditions);
         }
 
-        if (data.scaleUpPolicy.duration) {
+        if (data.scaleUpPolicy && data.scaleUpPolicy.duration) {
           $scaleUpPolicyTitleForm.find('input[name=scaleUpDuration]').val(
             data.scaleUpPolicy.duration
           );
@@ -126,7 +126,7 @@
                                  data.scaleDownPolicy.conditions);
         }
 
-        if (data.scaleDownPolicy.duration) {
+        if (data.scaleDownPolicy && data.scaleDownPolicy.duration) {
           $scaleDownPolicyTitleForm.find('input[name=scaleDownDuration]').val(
             data.scaleDownPolicy.duration
           );
