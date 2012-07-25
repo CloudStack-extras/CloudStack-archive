@@ -187,7 +187,7 @@
 	          label: 'Username',
 	          select: function(args) {
 	            $.ajax({
-	              url: createURL("listUsers&domainid=" + args.context.users[0].domainid),
+	              url: createURL("listUsers&account=" + args.context.users[0].account),
 	              dataType: "json",
 	              async: true,
 	              success: function(json) {
