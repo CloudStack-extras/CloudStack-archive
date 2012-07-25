@@ -78,9 +78,7 @@
         isAdvanced: false // Set this to true if any advanced field data is present
       };
 
-      setTimeout(function() {
-        args.response.success({ data: sampleData });
-      }, 100);
+      args.response.success({ data: sampleData });
     },
 
     // --
@@ -377,11 +375,9 @@
             $autoscaler.data('autoscaler-scale-up-data', null);
           }
 
-          setTimeout(function() {
-            args.response.success({
-              data: scaleUpData
-            });
-          }, 1000);
+          args.response.success({
+            data: scaleUpData
+          });
         }
         /*actions: {
          destroy: {
@@ -530,11 +526,9 @@
             $autoscaler.data('autoscaler-scale-down-data', null);
           }
 
-          setTimeout(function() {
-            args.response.success({
-              data: scaleDownData
-            });
-          }, 600);
+          args.response.success({
+            data: scaleDownData
+          });
         }
         /*
          actions: {
