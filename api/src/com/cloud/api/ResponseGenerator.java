@@ -25,9 +25,14 @@ import com.cloud.api.ApiConstants.VMDetails;
 import com.cloud.api.commands.QueryAsyncJobResultCmd;
 import com.cloud.api.response.AccountResponse;
 import com.cloud.api.response.AsyncJobResponse;
+import com.cloud.api.response.AutoScalePolicyResponse;
+import com.cloud.api.response.AutoScaleVmGroupResponse;
+import com.cloud.api.response.AutoScaleVmProfileResponse;
 import com.cloud.api.response.CapacityResponse;
 import com.cloud.api.response.ClusterResponse;
+import com.cloud.api.response.ConditionResponse;
 import com.cloud.api.response.ConfigurationResponse;
+import com.cloud.api.response.CounterResponse;
 import com.cloud.api.response.CreateCmdResponse;
 import com.cloud.api.response.DiskOfferingResponse;
 import com.cloud.api.response.DomainResponse;
@@ -99,6 +104,11 @@ import com.cloud.network.PhysicalNetworkTrafficType;
 import com.cloud.network.RemoteAccessVpn;
 import com.cloud.network.VirtualRouterProvider;
 import com.cloud.network.VpnUser;
+import com.cloud.network.as.AutoScalePolicy;
+import com.cloud.network.as.AutoScaleVmGroup;
+import com.cloud.network.as.AutoScaleVmProfile;
+import com.cloud.network.as.Condition;
+import com.cloud.network.as.Counter;
 import com.cloud.network.router.VirtualRouter;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.LoadBalancer;
@@ -290,5 +300,13 @@ public interface ResponseGenerator {
      */
     ResourceTagResponse createResourceTagResponse(ResourceTag resourceTag, boolean keyValueOnly);
 
+    CounterResponse createCounterResponse(Counter ctr);
 
+    ConditionResponse createConditionResponse(Condition cndn);
+
+    AutoScalePolicyResponse createAutoScalePolicyResponse(AutoScalePolicy policy);
+
+    AutoScaleVmProfileResponse createAutoScaleVmProfileResponse(AutoScaleVmProfile profile);
+
+    AutoScaleVmGroupResponse createAutoScaleVmGroupResponse(AutoScaleVmGroup vmGroup);
 }

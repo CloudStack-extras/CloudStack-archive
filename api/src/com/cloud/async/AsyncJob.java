@@ -40,7 +40,12 @@ public interface AsyncJob extends Identity {
         PhysicalNetworkServiceProvider,
         FirewallRule,
         Account,
-        User
+        User,
+        Counter,
+        Condition,
+        AutoScalePolicy,
+        AutoScaleVmProfile,
+        AutoScaleVmGroup
     }
 
     Long getId();

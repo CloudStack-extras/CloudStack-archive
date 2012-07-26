@@ -29,10 +29,10 @@ import com.cloud.utils.fsm.FiniteState;
 import com.cloud.utils.fsm.StateMachine;
 
 /**
- * owned by an account. 
+ * owned by an account.
  */
 public interface Network extends ControlledEntity {
-    
+
     public enum GuestType {
         Shared,
         Isolated
@@ -54,6 +54,7 @@ public interface Network extends ControlledEntity {
         public static final Service SecurityGroup = new Service("SecurityGroup");
         public static final Service Connectivity = new Service("Connectivity");
 
+
         private String name;
         private Capability[] caps;
 
@@ -61,7 +62,7 @@ public interface Network extends ControlledEntity {
             this.name = name;
             this.caps = caps;
             supportedServices.add(this);
-        }  
+        }
 
         public String getName() {
             return name;
@@ -81,11 +82,11 @@ public interface Network extends ControlledEntity {
                         break;
                     }
                 }
-            } 
+            }
 
             return success;
         }
-        
+
         public static Service getService(String serviceName) {
             for (Service service : supportedServices) {
                 if (service.getName().equalsIgnoreCase(serviceName)) {
@@ -94,7 +95,7 @@ public interface Network extends ControlledEntity {
             }
             return null;
         }
-        
+
         public static List<Service> listAllServices(){
             return supportedServices;
         }
@@ -105,7 +106,7 @@ public interface Network extends ControlledEntity {
      */
     public static class Provider {
         private static List<Provider> supportedProviders = new ArrayList<Provider>();
-        
+
         public static final Provider VirtualRouter = new Provider("VirtualRouter", false);
         public static final Provider JuniperSRX = new Provider("JuniperSRX", true);
         public static final Provider F5BigIp = new Provider("F5BigIp", true);
@@ -129,11 +130,11 @@ public interface Network extends ControlledEntity {
         public String getName() {
             return name;
         }
-        
+
         public boolean isExternal() {
             return isExternal;
         }
-        
+
         public static Provider getProvider(String providerName) {
             for (Provider provider : supportedProviders) {
                 if (provider.getName().equalsIgnoreCase(providerName)) {
@@ -147,7 +148,7 @@ public interface Network extends ControlledEntity {
     public static class Capability {
 
         private static List<Capability> supportedCapabilities = new ArrayList<Capability>();
-        
+
         public static final Capability SupportedProtocols = new Capability("SupportedProtocols");
         public static final Capability SupportedLBAlgorithms = new Capability("SupportedLbAlgorithms");
         public static final Capability SupportedLBIsolation = new Capability("SupportedLBIsolation");
@@ -161,6 +162,7 @@ public interface Network extends ControlledEntity {
         public static final Capability RedundantRouter = new Capability("RedundantRouter");
         public static final Capability ElasticIp = new Capability("ElasticIp");
         public static final Capability ElasticLb = new Capability("ElasticLb");
+        public static final Capability AutoScaleCounters = new Capability("AutoScaleCounters");
 
         private String name;
 
@@ -280,9 +282,9 @@ public interface Network extends ControlledEntity {
 
     void setPhysicalNetworkId(Long physicalNetworkId);
 
-	ACLType getAclType();
-	
-	boolean isRestartRequired();
+    ACLType getAclType();
 
-	boolean getSpecifyIpRanges();
+    boolean isRestartRequired();
+
+    boolean getSpecifyIpRanges();
 }

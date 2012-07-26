@@ -40,6 +40,7 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.NetworkService;
 import com.cloud.network.StorageNetworkService;
 import com.cloud.network.VirtualNetworkApplianceService;
+import com.cloud.network.as.AutoScaleService;
 import com.cloud.network.firewall.FirewallService;
 import com.cloud.network.lb.LoadBalancingRulesService;
 import com.cloud.network.rules.RulesService;
@@ -59,7 +60,6 @@ import com.cloud.user.DomainService;
 import com.cloud.user.ResourceLimitService;
 import com.cloud.utils.Pair;
 import com.cloud.utils.component.ComponentLocator;
-import com.cloud.utils.AnnotationHelper;
 import com.cloud.vm.BareMetalVmService;
 import com.cloud.vm.UserVmService;
 
@@ -120,6 +120,7 @@ public abstract class BaseCmd {
     public static ResponseGenerator _responseGenerator;
     public static EntityManager _entityMgr;
     public static RulesService _rulesService;
+    public static AutoScaleService _autoScaleService;
     public static LoadBalancingRulesService _lbService;
     public static RemoteAccessVpnService _ravService;
     public static BareMetalVmService _bareMetalVmService;
@@ -148,6 +149,7 @@ public abstract class BaseCmd {
         _entityMgr = locator.getManager(EntityManager.class);
         _rulesService = locator.getManager(RulesService.class);
         _lbService = locator.getManager(LoadBalancingRulesService.class);
+        _autoScaleService = locator.getManager(AutoScaleService.class);
         _ravService = locator.getManager(RemoteAccessVpnService.class);
         _responseGenerator = generator;
         _bareMetalVmService = locator.getManager(BareMetalVmService.class);
@@ -192,9 +194,9 @@ public abstract class BaseCmd {
     }
 
     public ManagementService getMgmtServiceRef() {
-    	return _mgr;
+        return _mgr;
     }
-    
+
     public static String getDateString(Date date) {
         if (date == null) {
             return "";
@@ -331,7 +333,7 @@ public abstract class BaseCmd {
 
         if (suffixSb.length() > 0) {
             if (RESPONSE_TYPE_JSON.equalsIgnoreCase(responseType)) { // append comma only if we have some suffix else
-// not as per strict Json syntax.
+                // not as per strict Json syntax.
                 prefixSb.append(",");
             }
             prefixSb.append(suffixSb);
@@ -491,7 +493,7 @@ public abstract class BaseCmd {
                 if (!enabledOnly || account.getState() == Account.State.enabled) {
                     return account.getId();
                 } else {
-                    throw new PermissionDeniedException("Can't add resources to the account id=" + account.getId() + " in state=" + account.getState() + " as it's no longer active");                    
+                    throw new PermissionDeniedException("Can't add resources to the account id=" + account.getId() + " in state=" + account.getState() + " as it's no longer active");
                 }
             } else {
                 throw new InvalidParameterValueException("Unable to find account by name " + accountName + " in domain id=" + domainId);
@@ -504,13 +506,13 @@ public abstract class BaseCmd {
                 if (!enabledOnly || project.getState() == Project.State.Active) {
                     return project.getProjectAccountId();
                 } else {
-                	PermissionDeniedException ex = new PermissionDeniedException("Can't add resources to the project with specified projectId in state=" + project.getState() + " as it's no longer active");
-                	ex.addProxyObject(project, projectId, "projectId");                    
+                    PermissionDeniedException ex = new PermissionDeniedException("Can't add resources to the project with specified projectId in state=" + project.getState() + " as it's no longer active");
+                    ex.addProxyObject(project, projectId, "projectId");
                     throw ex;
                 }
             } else {
-            	InvalidParameterValueException ex = new InvalidParameterValueException("Unable to find project with specified projectId");
-            	ex.addProxyObject(project, projectId, "projectId");                
+                InvalidParameterValueException ex = new InvalidParameterValueException("Unable to find project with specified projectId");
+                ex.addProxyObject(project, projectId, "projectId");
                 throw ex;
             }
         }
