@@ -9612,7 +9612,7 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   float: left;
 }
 
-.ui-dialog div.autoscaler div.form-container div.form-item[rel=DiskOfferings] {
+.ui-dialog div.autoscaler div.form-container div.form-item[rel=diskOfferingId] {
   display: inline-block;
   width: 370px;
   float: left;
