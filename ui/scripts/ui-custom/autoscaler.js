@@ -20,7 +20,10 @@
     var dataProvider = cloudStack.autoscaler.dataProvider;
 
     return function(args) {
-      var context = args.context;
+      var context = args.data ?
+            $.extend(true, {}, args.context, {
+              lbRules: [args.data]
+            }) : args.context;
       var formData = args.formData;
       var $autoscalerDialog = $('<div>').addClass('autoscaler');
       var $topFields = $('<div>').addClass('field-group top-fields');
@@ -245,9 +248,7 @@
       }).closest('.ui-dialog').overlay();
 
       dataProvider({
-        context: $.extend(true, {}, context, {
-          lbRules: [args.data]
-        }),
+        context: context,
         response: {
           success: function(args) {
             $loading.remove();
