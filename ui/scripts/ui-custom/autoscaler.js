@@ -243,7 +243,9 @@
       }).closest('.ui-dialog').overlay();
 
       dataProvider({
-        context: context,
+        context: $.extend(true, {}, context, {
+          lbRules: [args.data]
+        }),
         response: {
           success: function(args) {
             $loading.remove();
