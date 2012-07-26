@@ -754,30 +754,27 @@
           });
         };
 
-        var loadBalancer = function(args){
-				  var data = {
+        var loadBalancer = function(args){			
+					var networkid;												
+					if('vpc' in args.context) { //from VPC section
+						if(args.data.tier == null) {													  
+							cloudStack.dialog.notice({ message: 'Tier is required' });		
+							return;
+						}												
+						networkid = args.data.tier;		
+					}
+					else if('networks' in args.context) {	//from Guest Network section										  
+						networkid = args.context.networks[0].id;													
+					}											
+					var data = {
 						algorithm: args.formData.algorithm,
 						name: args.formData.name,
 						privateport: args.formData.privateport,
 						publicport: args.formData.publicport,
 						openfirewall: false,
-						domainid: g_domainid,
-						account: g_account
-					};				  
-					if('vpc' in args.context) { //from VPC section
-						if(args.data.tier == null) {		
-              cloudStack.dialog.notice({ message: 'Tier is required' });		
-							return;
-						}			
-						$.extend(data, {
-							networkid: args.data.tier		
-						});	
-					}
-					else {  //from Guest Network section
-						$.extend(data, {
-							networkid: args.context.networks[0].id
-						});	
-					}
+						networkid: networkid,													
+						publicipid: args.context.ipAddresses[0].id
+					};		
 				 
           $.ajax({
             url: createURL('createLoadBalancerRule'),
