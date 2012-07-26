@@ -21,6 +21,7 @@
 
     return function(args) {
       var context = args.context;
+      var formData = args.formData;
       var $autoscalerDialog = $('<div>').addClass('autoscaler');
       var $topFields = $('<div>').addClass('field-group top-fields');
       var $bottomFields = $('<div>').addClass('field-group bottom-fields');
@@ -230,6 +231,7 @@
               var data = cloudStack.serializeForm($('.ui-dialog .autoscaler form'));
               
               cloudStack.autoscaler.actions.add({
+                formData: formData,
                 context: context,
                 data: data
               });

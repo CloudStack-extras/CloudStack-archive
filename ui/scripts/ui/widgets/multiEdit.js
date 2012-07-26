@@ -752,7 +752,10 @@
         $('<div>').addClass('button add-vm custom-action')
           .html(_l(field.custom.buttonLabel))
           .click(function() {
+            var formData = cloudStack.serializeForm($td.closest('form'));
+            
             field.custom.action({
+              formData: formData,
               context: context,
               data: $td.data('multi-custom-data'),
               response: {
