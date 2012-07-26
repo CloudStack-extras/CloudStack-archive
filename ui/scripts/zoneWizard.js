@@ -288,7 +288,7 @@
         return (args.groupedData.zone.hypervisor != "VMware");
       },
 						
-			addPrimaryStorage: function(args) {
+			addPrimaryStorage: function(args) {		
         return args.data.localstorageenabled != 'on';
       }	
     },
@@ -2009,7 +2009,7 @@
                                 var items = json.listnetworkserviceprovidersresponse.networkserviceprovider;
                                 if(items != null && items.length > 0) {
                                   vpcVirtualRouterProviderId = items[0].id;
-                                }
+                          }
                               }
                             });
                             if(vpcVirtualRouterProviderId == null) {
@@ -2093,7 +2093,7 @@
                                             }
                                           });
                                         }
-                                        else if (result.jobstatus == 2) {
+                          else if (result.jobstatus == 2) {
                                           alert("configureVirtualRouterElement failed. Error: " + _s(result.jobresult.errortext));
                                         }
                                       }
@@ -2161,10 +2161,10 @@
 											var errorMsg = parseXMLHttpResponse(XMLHttpResponse);
 											alert("addNetworkServiceProvider&name=Netscaler failed. Error: " + errorMsg);
 										}
-									});							
+									});
 								}, 3000); 
 							}		
-            });		
+								});
 						//add netscaler provider (end)
 					}
 					else { //selectedNetworkOfferingHavingNetscaler == false
@@ -2805,7 +2805,7 @@
           });
         },
 
-        addPrimaryStorage: function(args) {
+        addPrimaryStorage: function(args) {     
 					if(args.data.zone.localstorageenabled == 'on') { //use local storage, don't need primary storage. So, skip this step.
             stepFns.addSecondaryStorage({
               data: args.data
