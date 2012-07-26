@@ -17,7 +17,13 @@
   var totalScaleDownCondition = 0;
 
   cloudStack.autoscaler = {
-    dataProvider: function(args) {
+    dataProvider: function(args) {		  
+		  if('vpc' in args.context) { //from VPC section
+			  args.response.success({ data: null });
+				cloudStack.dialog.notice({message: 'autoscale is not supported on IP Address under VPC'});
+			  return;
+			}
+		
       // Reset data
       scaleUpData = [];
       totalScaleUpCondition = 0;
@@ -749,18 +755,34 @@
         };
 
         var loadBalancer = function(args){
-          var array1 = [];
-          array1.push("&algorithm=" + args.data.algorithm);
-          array1.push("&name=" + args.data.name);
-          array1.push("&privateport=" + args.data.privateport );
-          array1.push("&publicport=" + args.data.publicport);
-          array1.push("&account=" + args.context.users[0].account);
-          array1.push("&domainid=" + args.context.users[0].domainid);
-          array1.push("&zoneid=" + args.context.networks[0].zoneid );
-
+				  var data = {
+						algorithm: args.formData.algorithm,
+						name: args.formData.name,
+						privateport: args.formData.privateport,
+						publicport: args.formData.publicport,
+						openfirewall: false,
+						domainid: g_domainid,
+						account: g_account
+					};				  
+					if('vpc' in args.context) { //from VPC section
+						if(args.data.tier == null) {		
+              cloudStack.dialog.notice({ message: 'Tier is required' });		
+							return;
+						}			
+						$.extend(data, {
+							networkid: args.data.tier		
+						});	
+					}
+					else {  //from Guest Network section
+						$.extend(data, {
+							networkid: args.context.networks[0].id
+						});	
+					}
+				 
           $.ajax({
-            url: createURL('createLoadBalancerRule' + array1.join("")),
+            url: createURL('createLoadBalancerRule'),
             dataType: 'json',
+						data: data,
             async: true,
             success: function(json) {
               var jobId = json.createloadbalancerruleresponse.jobid;
@@ -785,7 +807,8 @@
                     }
                   },
                   error: function(args) {
-                    clearInterval(loadBalancerTimer);               }
+                    clearInterval(loadBalancerTimer);               
+									}
                 });
               });
             }
