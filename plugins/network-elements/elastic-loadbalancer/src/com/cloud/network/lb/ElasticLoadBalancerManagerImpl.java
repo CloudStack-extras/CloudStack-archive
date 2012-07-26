@@ -5,7 +5,7 @@
 // to you under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
-// 
+//
 //   http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
@@ -298,7 +298,7 @@ public class ElasticLoadBalancerManagerImpl implements
                     .addr();
             int srcPort = rule.getSourcePortStart();
             List<LbDestination> destinations = rule.getDestinations();
-            LoadBalancerTO lb = new LoadBalancerTO(elbIp, srcPort, protocol, algorithm, revoked, false, destinations);
+            LoadBalancerTO lb = new LoadBalancerTO(rule.getId(), elbIp, srcPort, protocol, algorithm, revoked, false, destinations);
             lbs[i++] = lb; 
         }
 
@@ -336,6 +336,7 @@ public class ElasticLoadBalancerManagerImpl implements
         return elbVm;
     }
 
+    @Override
     public boolean applyLoadBalancerRules(Network network,
             List<? extends FirewallRule> rules)
             throws ResourceUnavailableException {
@@ -823,7 +824,7 @@ public class ElasticLoadBalancerManagerImpl implements
                 break;
             }
         }
-        
+
         NetworkVO guestNetwork = _networkDao.findById(guestNtwkId);
 
         DataCenter dc = dest.getDataCenter();
@@ -1008,7 +1009,7 @@ public class ElasticLoadBalancerManagerImpl implements
 
         return VirtualMachineName.getSystemVmId(vmName);
     }
-    
+
     @Override
     public boolean plugNic(Network network, NicTO nic, VirtualMachineTO vm,
             ReservationContext context, DeployDestination dest) throws ConcurrentOperationException, ResourceUnavailableException,
@@ -1018,12 +1019,12 @@ public class ElasticLoadBalancerManagerImpl implements
     }
 
 
-    @Override
+	@Override
     public boolean unplugNic(Network network, NicTO nic, VirtualMachineTO vm,
             ReservationContext context, DeployDestination dest) throws ConcurrentOperationException, ResourceUnavailableException {
         //not supported
         throw new UnsupportedOperationException("Unplug nic is not supported for vm of type " + vm.getType());
-     }
+	}
 
     @Override
     public void prepareStop(VirtualMachineProfile<DomainRouterVO> profile) {

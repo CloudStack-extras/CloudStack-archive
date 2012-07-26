@@ -58,6 +58,7 @@ public interface Network extends ControlledEntity {
         public static final Service NetworkACL = new Service("NetworkACL", Capability.SupportedProtocols);
         public static final Service Connectivity = new Service("Connectivity");
 
+
         private String name;
         private Capability[] caps;
 
@@ -168,6 +169,7 @@ public interface Network extends ControlledEntity {
         public static final Capability RedundantRouter = new Capability("RedundantRouter");
         public static final Capability ElasticIp = new Capability("ElasticIp");
         public static final Capability ElasticLb = new Capability("ElasticLb");
+        public static final Capability AutoScaleCounters = new Capability("AutoScaleCounters");
 
         private String name;
 

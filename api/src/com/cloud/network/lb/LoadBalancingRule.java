@@ -18,6 +18,11 @@ package com.cloud.network.lb;
 
 import java.util.List;
 
+import com.cloud.network.as.AutoScalePolicy;
+import com.cloud.network.as.AutoScaleVmGroup;
+import com.cloud.network.as.AutoScaleVmProfile;
+import com.cloud.network.as.Condition;
+import com.cloud.network.as.Counter;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.utils.Pair;
@@ -26,6 +31,7 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     private LoadBalancer lb;
     private List<LbDestination> destinations;
     private List<LbStickinessPolicy> stickinessPolicies;
+    private LbAutoScaleVmGroup autoScaleVmGroup;
     
     public LoadBalancingRule(LoadBalancer lb, List<LbDestination> destinations, List<LbStickinessPolicy> stickinessPolicies) { 
         this.lb = lb;
@@ -58,6 +64,7 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
         return lb.getDescription();
     }
 
+    @Override
     public int getDefaultPortStart() {
         return lb.getDefaultPortStart();
     }
@@ -175,16 +182,20 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
             this.revoked = revoked;
         }
         
+        @Override
         public String getIpAddress() {
             return ip;
         }
+        @Override
         public int getDestinationPortStart() {
             return portStart;
         }
+        @Override
         public int getDestinationPortEnd() {
             return portEnd;
         }
         
+        @Override
         public boolean isRevoked() {
             return revoked;
         }
@@ -222,5 +233,115 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     @Override
     public TrafficType getTrafficType() {
         return null;
+    }
+    public LbAutoScaleVmGroup getAutoScaleVmGroup() {
+        return autoScaleVmGroup;
+    }
+
+    public boolean isAutoScaleConfig() {
+        return this.autoScaleVmGroup != null;
+    }
+
+    public void setAutoScaleVmGroup(LbAutoScaleVmGroup autoScaleVmGroup) {
+        this.autoScaleVmGroup = autoScaleVmGroup;
+    }
+
+    public static class LbCondition {
+        private final Condition condition;
+        private final Counter counter;
+
+        public LbCondition(Counter counter, Condition condition) {
+            this.condition = condition;
+            this.counter = counter;
+        }
+
+        public Condition getCondition() {
+            return condition;
+        }
+
+        public Counter getCounter() {
+            return counter;
+        }
+    }
+
+    public static class LbAutoScalePolicy {
+        private final List<LbCondition> conditions;
+        private final AutoScalePolicy policy;
+        private boolean revoked;
+
+        public LbAutoScalePolicy(AutoScalePolicy policy, List<LbCondition> conditions)
+        {
+            this.policy = policy;
+            this.conditions = conditions;
+        }
+
+        public List<LbCondition> getConditions() {
+            return conditions;
+        }
+
+        public AutoScalePolicy getPolicy() {
+            return policy;
+        }
+
+        public boolean isRevoked() {
+            return revoked;
+        }
+
+        public void setRevoked(boolean revoked) {
+            this.revoked = revoked;
+        }
+    }
+
+    public static class LbAutoScaleVmProfile {
+        AutoScaleVmProfile profile;
+        private final String autoScaleUserApiKey;
+        private final String autoScaleUserSecretKey;
+        private final String csUrl;
+
+        public LbAutoScaleVmProfile(AutoScaleVmProfile profile, String autoScaleUserApiKey, String autoScaleUserSecretKey, String csUrl) {
+            this.profile = profile;
+            this.autoScaleUserApiKey = autoScaleUserApiKey;
+            this.autoScaleUserSecretKey = autoScaleUserSecretKey;
+            this.csUrl = csUrl;
+        }
+
+        public AutoScaleVmProfile getProfile() {
+            return profile;
+        }
+
+        public String getAutoScaleUserApiKey() {
+            return autoScaleUserApiKey;
+        }
+
+        public String getAutoScaleUserSecretKey() {
+            return autoScaleUserSecretKey;
+        }
+        public String getCsUrl() {
+            return csUrl;
+        }
+    }
+
+    public static class LbAutoScaleVmGroup {
+        AutoScaleVmGroup vmGroup;
+        private final List<LbAutoScalePolicy> policies;
+        private final LbAutoScaleVmProfile profile;
+
+        public LbAutoScaleVmGroup(AutoScaleVmGroup vmGroup, List<LbAutoScalePolicy> policies, LbAutoScaleVmProfile profile) {
+            this.vmGroup = vmGroup;
+            this.policies = policies;
+            this.profile = profile;
+        }
+
+        public AutoScaleVmGroup getVmGroup() {
+            return vmGroup;
+        }
+
+        public List<LbAutoScalePolicy> getPolicies() {
+            return policies;
+        }
+
+        public LbAutoScaleVmProfile getProfile() {
+            return profile;
+        }
     }
 }

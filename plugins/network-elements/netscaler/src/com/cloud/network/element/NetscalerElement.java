@@ -5,7 +5,7 @@
 // to you under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
-//
+// 
 //   http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
@@ -253,6 +253,9 @@ public class NetscalerElement extends ExternalLoadBalancerDeviceManagerImpl impl
         // Specifies that load balancing rules can only be made with public IPs that aren't source NAT IPs
         lbCapabilities.put(Capability.LoadBalancingSupportedIps, "additional");
 
+        // Specifies that load balancing rules can support autoscaling
+        lbCapabilities.put(Capability.AutoScaleCounters, "snmp,netscaler");
+
         LbStickinessMethod method;
         List<LbStickinessMethod> methodList = new ArrayList<LbStickinessMethod>();
         method = new LbStickinessMethod(StickinessMethodType.LBCookieBased, "This is cookie based sticky method, can be used only for http");
@@ -315,7 +318,7 @@ public class NetscalerElement extends ExternalLoadBalancerDeviceManagerImpl impl
             throw new InvalidParameterValueException(msg);
         }
 
-        ExternalLoadBalancerDeviceVO lbDeviceVO = addExternalLoadBalancer(cmd.getPhysicalNetworkId(), cmd.getUrl(), cmd.getUsername(), cmd.getPassword(), deviceName, (ServerResource) new NetscalerResource());
+        ExternalLoadBalancerDeviceVO lbDeviceVO = addExternalLoadBalancer(cmd.getPhysicalNetworkId(), cmd.getUrl(), cmd.getUsername(), cmd.getPassword(), deviceName, new NetscalerResource());
         return lbDeviceVO;
     }
 
@@ -406,7 +409,7 @@ public class NetscalerElement extends ExternalLoadBalancerDeviceManagerImpl impl
                 }
 
                 if (inline != null) {
-                    boolean _setInline = Boolean.parseBoolean((String) lbDetails.get("inline"));
+                    boolean _setInline = Boolean.parseBoolean(lbDetails.get("inline"));
                     if (inline != _setInline) {
                         throw new CloudRuntimeException("There are networks already using this netscaler device to change the device inline or side-by-side configuration");
                     }
@@ -666,8 +669,11 @@ public class NetscalerElement extends ExternalLoadBalancerDeviceManagerImpl impl
             int srcPort = rule.getSourcePortStart();
             List<LbDestination> destinations = rule.getDestinations();
 
-            if (destinations != null && !destinations.isEmpty()) {
-                LoadBalancerTO loadBalancer = new LoadBalancerTO(srcIp, srcPort, protocol, algorithm, revoked, false, destinations, rule.getStickinessPolicies());
+            if ((destinations != null && !destinations.isEmpty()) || rule.isAutoScaleConfig()) {
+                LoadBalancerTO loadBalancer = new LoadBalancerTO(rule.getId(), srcIp, srcPort, protocol, algorithm, revoked, false, destinations, rule.getStickinessPolicies());
+                if(rule.isAutoScaleConfig()) {
+                    loadBalancer.setAutoScaleVmGroup(rule.getAutoScaleVmGroup());
+                }
                 loadBalancersToApply.add(loadBalancer);
             }
         }

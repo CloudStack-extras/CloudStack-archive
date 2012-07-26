@@ -42,6 +42,7 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.NetworkService;
 import com.cloud.network.StorageNetworkService;
 import com.cloud.network.VpcVirtualNetworkApplianceService;
+import com.cloud.network.as.AutoScaleService;
 import com.cloud.network.firewall.FirewallService;
 import com.cloud.network.firewall.NetworkACLService;
 import com.cloud.network.lb.LoadBalancingRulesService;
@@ -125,6 +126,7 @@ public abstract class BaseCmd {
     public static ResponseGenerator _responseGenerator;
     public static EntityManager _entityMgr;
     public static RulesService _rulesService;
+    public static AutoScaleService _autoScaleService;
     public static LoadBalancingRulesService _lbService;
     public static RemoteAccessVpnService _ravService;
     public static BareMetalVmService _bareMetalVmService;
@@ -156,6 +158,7 @@ public abstract class BaseCmd {
         _entityMgr = locator.getManager(EntityManager.class);
         _rulesService = locator.getManager(RulesService.class);
         _lbService = locator.getManager(LoadBalancingRulesService.class);
+        _autoScaleService = locator.getManager(AutoScaleService.class);
         _ravService = locator.getManager(RemoteAccessVpnService.class);
         _responseGenerator = generator;
         _bareMetalVmService = locator.getManager(BareMetalVmService.class);

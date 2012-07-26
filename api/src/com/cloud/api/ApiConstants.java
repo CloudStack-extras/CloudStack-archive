@@ -382,8 +382,33 @@ public class ApiConstants {
     public static final String NICIRA_NVP_DEVICE_ID = "nvpdeviceid";
     public static final String NICIRA_NVP_TRANSPORT_ZONE_UUID = "transportzoneuuid";
     public static final String NICIRA_NVP_DEVICE_NAME = "niciradevicename";
+    public static final String SOURCE = "source";
+    public static final String COUNTER_ID = "counterid";
+    public static final String AGGR_OPERATOR = "aggroperator";
+    public static final String AGGR_FUNCTION = "aggrfunction";
+    public static final String AGGR_VALUE = "aggrvalue";
+    public static final String THRESHOLD = "threshold";
+    public static final String RELATIONAL_OPERATOR = "relationaloperator";
+    public static final String SNMP_COMMUNITY = "snmpcommunity";
+    public static final String SNMP_PORT = "snmpport";
+    public static final String OTHER_DEPLOY_PARAMS = "otherdeployparams";
+    public static final String MIN_MEMBERS = "minmembers";
+    public static final String MAX_MEMBERS = "maxmembers";
+    public static final String AUTOSCALE_VM_DESTROY_TIME = "destroyvmgraceperiod";
+    public static final String VMPROFILE_ID = "vmprofileid";
+    public static final String VMGROUP_ID = "vmgroupid";
+    public static final String CS_URL = "csurl";
+    public static final String SCALEUP_POLICY_IDS = "scaleuppolicyids";
+    public static final String SCALEDOWN_POLICY_IDS = "scaledownpolicyids";
+    public static final String SCALEUP_POLICIES = "scaleuppolicies";
+    public static final String SCALEDOWN_POLICIES = "scaledownpolicies";
+    public static final String INTERVAL = "interval";
+    public static final String QUIETTIME = "quiettime";
+    public static final String ACTION = "action";
+    public static final String CONDITION_ID = "conditionid";
+    public static final String CONDITION_IDS = "conditionids";
+    public static final String AUTOSCALE_USER_ID = "autoscaleuserid";
     
-
     public enum HostDetails {
         all, capacity, events, stats, min;
     }
