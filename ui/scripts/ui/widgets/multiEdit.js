@@ -176,9 +176,14 @@
                          _l(data[fieldName]['_buttonLabel']) : _l(field.custom.buttonLabel));
             $button.click(function() {
               var $button = $(this);
+              var context = $.extend(true, {},
+                                     options.context ?
+                                     options.context : cloudStack.context, {
+                                       multiRules: [data]
+                                     });
 
               field.custom.action({
-                context: options.context ? options.context : cloudStack.context,
+                context: context,
                 data: $td.data('multi-custom-data'),
                 $item: $td,
                 response: {
