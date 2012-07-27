@@ -233,15 +233,27 @@
             click: function() {
               var data = cloudStack.serializeForm($('.ui-dialog .autoscaler form'));
               
+              $loading.appendTo($autoscalerDialog);
               cloudStack.autoscaler.actions.add({
                 formData: formData,
                 context: context,
-                data: data
+                data: data,
+                response: {
+                  success: function() {
+                    $loading.remove();
+                    $autoscalerDialog.dialog('destroy');
+                    $autoscalerDialog.closest(':ui-dialog').remove();
+                    $('.overlay').remove();
+                    cloudStack.dialog.notice({
+                      message: 'Autoscaler configured successfully.'
+                    });
+                  },
+                  error: function(message) {
+                    cloudStack.dialog.notice({ message: message });
+                    $loading.remove();
+                  }
+                }
               });
-              
-              $autoscalerDialog.dialog('destroy');
-              $('.overlay').remove();
-              $autoscalerDialog.closest(':ui-dialog').remove();
             }
           }
         ]
