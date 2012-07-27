@@ -17,13 +17,7 @@
   var totalScaleDownCondition = 0;
 
   cloudStack.autoscaler = {
-    dataProvider: function(args) {		  
-		  if('vpc' in args.context) { //from VPC section
-			  args.response.success({ data: null });
-				cloudStack.dialog.notice({message: 'autoscale is not supported on IP Address under VPC'});
-			  return;
-			}
-		
+    dataProvider: function(args) {				
       // Reset data
       scaleUpData = [];
       totalScaleUpCondition = 0;
