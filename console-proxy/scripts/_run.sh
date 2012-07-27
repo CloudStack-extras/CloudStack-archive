@@ -51,9 +51,14 @@ for i in $CMDLINE
   done
    
 tot_mem_k=$(cat /proc/meminfo | grep MemTotal | awk '{print $2}')
-let "tot_mem_m=tot_mem_k>>10"
-let "eightypcnt=$tot_mem_m*8/10"
-let "maxmem=$tot_mem_m-80"
+# when total memory is more than 3G, use 2048M as max memory pool for java agent
+if [ $tot_mem_k -gt 300000 ]; then
+    maxmem=2048
+else
+    let "tot_mem_m=tot_mem_k>>10"
+    let "eightypcnt=$tot_mem_m*8/10"
+    let "maxmem=$tot_mem_m-80"
+fi
 
 if [ $maxmem -gt $eightypcnt ]
 then
