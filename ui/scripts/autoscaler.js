@@ -642,7 +642,7 @@
                     clearInterval(autoScalePolicyTimer);
                   }
                 });
-              });
+              }, 3000);
             }
           });
         };
@@ -683,7 +683,7 @@
                     clearInterval(autoScalePolicyTimer);
                   }
                 });
-              });
+              }, 3000);
             }
           });
         };
@@ -743,7 +743,7 @@
                     clearInterval(autoscaleVmProfileTimer);
                   }
                 });
-              });
+              }, 3000);
             }
           });
         };
@@ -801,7 +801,7 @@
                     clearInterval(loadBalancerTimer);               
 									}
                 });
-              });
+              }, 3000);
             }
           });
         };
@@ -845,7 +845,7 @@
                     clearInterval(scaleVmGroupTimer);
                   }
                 });
-              });
+              }, 3000);
             }
           });
         };
