@@ -634,7 +634,7 @@
                         scaleDown(args);
                       }
                       else if (result.jobstatus == 2) {
-                        alert("failed to create autoScaleUpPolicy." + _s(result.jobresult.errortext));
+                        args.response.error({message: _s(result.jobresult.errortext)});              
                       }
                     }
                   },
@@ -675,7 +675,7 @@
                         createVmProfile(args);
                       }
                       else if (result.jobstatus == 2) {
-                        alert("failed to create autoScaleDownPolicy." + _s(result.jobresult.errortext));
+                        args.response.error({message: _s(result.jobresult.errortext)});              
                       }
                     }
                   },
@@ -735,7 +735,7 @@
                         loadBalancer(args);
                       }
                       else if (result.jobstatus == 2) {
-                        alert("failed to create autoscaleVM Profile." + _s(result.jobresult.errortext));
+                        args.response.error({message: _s(result.jobresult.errortext)});              
                       }
                     }
                   },
@@ -793,7 +793,7 @@
                         autoScaleVmGroup(args);
                       }
                       else if (result.jobstatus == 2) {
-                        alert("failed to createloadBalancerRule" + _s(result.jobresult.errortext));
+                        args.response.error({message: _s(result.jobresult.errortext)});              
                       }
                     }
                   },
@@ -835,9 +835,10 @@
 
                       if (result.jobstatus == 1) { //autoscale Vm group successfully created
                         scaleVmGroupResponse = result.jobresult.autoscalevmgroup;
+												args.response.success();
                       }
                       else if (result.jobstatus == 2) {
-                        alert("failed to create autoScaleVmGroup" + _s(result.jobresult.errortext));
+											  args.response.error({message: _s(result.jobresult.errortext)});                        
                       }
                     }
                   },
