@@ -117,23 +117,71 @@
         templateNames: {
           label: 'label.template',
           id: 'templatename',
-          select: function(args) {
+          select: function(args) {	
+            var templates;		
+            var templateIdMap = {};		
+            debugger;						
             $.ajax({
-              url: createURL("listTemplates&templatefilter=all" ),
-              dataType: "json",
-              async: true,
+              url: createURL('listTemplates'),
+              data: {
+							  templatefilter: 'featured',
+								zoneid: args.context.networks[0].zoneid
+							},
+							async: false,
               success: function(json) {
-                var templates = json.listtemplatesresponse.template;
-                args.response.success({
-                  data: $.map(templates, function(template) {
-                    return {
-                      id: template.id,
-                      description: template.name
-                    };
-                  })
-                });
+                templates = json.listtemplatesresponse.template;		
+								if (templates == null)
+								  templates = [];
+                $(templates).each(function() {
+								  templateIdMap[this.id] = 1;
+								});								
               }
             });
+												
+						$.ajax({
+              url: createURL('listTemplates'),
+              data: {
+							  templatefilter: 'community',								
+								zoneid: args.context.networks[0].zoneid
+							},
+							async: false,
+              success: function(json) {
+                var items = json.listtemplatesresponse.template;	
+                $(items).each(function() {								  
+								  if(!(this.id in templateIdMap)) {
+									  templates.push(this);
+								    templateIdMap[this.id] = 1;
+									}									
+								});								
+              }
+            });
+						
+						$.ajax({
+              url: createURL('listTemplates'),
+              data: {
+							  templatefilter: 'selfexecutable',								
+								zoneid: args.context.networks[0].zoneid
+							},
+							async: false,
+              success: function(json) {
+                var items = json.listtemplatesresponse.template;	
+                $(items).each(function() {								  
+								  if(!(this.id in templateIdMap)) {
+									  templates.push(this);
+								    templateIdMap[this.id] = 1;
+									}									
+								});								
+              }
+            });
+												
+						args.response.success({
+							data: $.map(templates, function(template) {
+								return {
+									id: template.id,
+									description: template.name
+								};
+							})
+						});		
           }
         },
 
