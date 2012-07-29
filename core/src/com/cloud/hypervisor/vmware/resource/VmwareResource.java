@@ -54,6 +54,8 @@ import com.cloud.agent.api.CheckOnHostAnswer;
 import com.cloud.agent.api.CheckOnHostCommand;
 import com.cloud.agent.api.CheckRouterAnswer;
 import com.cloud.agent.api.CheckRouterCommand;
+import com.cloud.agent.api.CheckS2SVpnConnectionsAnswer;
+import com.cloud.agent.api.CheckS2SVpnConnectionsCommand;
 import com.cloud.agent.api.CheckVirtualMachineAnswer;
 import com.cloud.agent.api.CheckVirtualMachineCommand;
 import com.cloud.agent.api.Command;
@@ -324,124 +326,127 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
             mbean.addProp("Sequence", String.valueOf(cmdSequence));
             mbean.addProp("Name", cmd.getClass().getSimpleName());
 
-            if (cmd instanceof CreateCommand) {
+            Class<? extends Command> clz = cmd.getClass(); 
+            if (clz == CreateCommand.class) {
                 answer = execute((CreateCommand) cmd);
-            } else if (cmd instanceof SetPortForwardingRulesCommand) {
+            } else if (clz == SetPortForwardingRulesCommand.class) {
                 answer = execute((SetPortForwardingRulesCommand) cmd);
-            } else if (cmd instanceof SetStaticNatRulesCommand) {
+            } else if (clz == SetStaticNatRulesCommand.class) {
                 answer = execute((SetStaticNatRulesCommand) cmd);
-            } else if (cmd instanceof LoadBalancerConfigCommand) {
+            } else if( clz == LoadBalancerConfigCommand.class) {
                 answer = execute((LoadBalancerConfigCommand) cmd);
-            } else if (cmd instanceof IpAssocCommand) {
+            } else if (clz == IpAssocCommand.class) {
                 answer = execute((IpAssocCommand) cmd);
-            } else if (cmd instanceof SavePasswordCommand) {
+            } else if (clz == SavePasswordCommand.class) {
                 answer = execute((SavePasswordCommand) cmd);
-            } else if (cmd instanceof DhcpEntryCommand) {
+            } else if (clz == DhcpEntryCommand.class) {
                 answer = execute((DhcpEntryCommand) cmd);
-            } else if (cmd instanceof VmDataCommand) {
+            } else if (clz == VmDataCommand.class) {
                 answer = execute((VmDataCommand) cmd);
-            } else if (cmd instanceof ReadyCommand) {
+            } else if (clz == ReadyCommand.class) {
                 answer = execute((ReadyCommand) cmd);
-            } else if (cmd instanceof GetHostStatsCommand) {
+            } else if (clz == GetHostStatsCommand.class) {
                 answer = execute((GetHostStatsCommand) cmd);
-            } else if (cmd instanceof GetVmStatsCommand) {
+            } else if (clz == GetVmStatsCommand.class) {
                 answer = execute((GetVmStatsCommand) cmd);
-            } else if (cmd instanceof CheckHealthCommand) {
+            } else if (clz == CheckHealthCommand.class) {
                 answer = execute((CheckHealthCommand) cmd);
-            } else if (cmd instanceof StopCommand) {
+            } else if (clz == StopCommand.class) {
                 answer = execute((StopCommand) cmd);
-            } else if (cmd instanceof RebootRouterCommand) {
+            } else if (clz == RebootRouterCommand.class) {
                 answer = execute((RebootRouterCommand) cmd);
-            } else if (cmd instanceof RebootCommand) {
+            } else if (clz == RebootCommand.class) {
                 answer = execute((RebootCommand) cmd);
-            } else if (cmd instanceof CheckVirtualMachineCommand) {
+            } else if (clz == CheckVirtualMachineCommand.class) {
                 answer = execute((CheckVirtualMachineCommand) cmd);
-            } else if (cmd instanceof PrepareForMigrationCommand) {
+            } else if (clz == PrepareForMigrationCommand.class) {
                 answer = execute((PrepareForMigrationCommand) cmd);
-            } else if (cmd instanceof MigrateCommand) {
+            } else if (clz == MigrateCommand.class) {
                 answer = execute((MigrateCommand) cmd);
-            } else if (cmd instanceof DestroyCommand) {
+            } else if (clz == DestroyCommand.class) {
                 answer = execute((DestroyCommand) cmd);
-            } else if (cmd instanceof CreateStoragePoolCommand) {
+            } else if (clz == CreateStoragePoolCommand.class) {
                 return execute((CreateStoragePoolCommand) cmd);
-            } else if (cmd instanceof ModifyStoragePoolCommand) {
+            } else if (clz == ModifyStoragePoolCommand.class) {
                 answer = execute((ModifyStoragePoolCommand) cmd);
-            } else if (cmd instanceof DeleteStoragePoolCommand) {
+            } else if (clz == DeleteStoragePoolCommand.class) {
                 answer = execute((DeleteStoragePoolCommand) cmd);
-            } else if (cmd instanceof CopyVolumeCommand) {
+            } else if (clz == CopyVolumeCommand.class) {
                 answer = execute((CopyVolumeCommand) cmd);
-            } else if (cmd instanceof AttachVolumeCommand) {
+            } else if (clz == AttachVolumeCommand.class) {
                 answer = execute((AttachVolumeCommand) cmd);
-            } else if (cmd instanceof AttachIsoCommand) {
+            } else if (clz == AttachIsoCommand.class) {
                 answer = execute((AttachIsoCommand) cmd);
-            } else if (cmd instanceof ValidateSnapshotCommand) {
+            } else if (clz == ValidateSnapshotCommand.class) {
                 answer = execute((ValidateSnapshotCommand) cmd);
-            } else if (cmd instanceof ManageSnapshotCommand) {
+            } else if (clz == ManageSnapshotCommand.class) {
                 answer = execute((ManageSnapshotCommand) cmd);
-            } else if (cmd instanceof BackupSnapshotCommand) {
+            } else if (clz == BackupSnapshotCommand.class) {
                 answer = execute((BackupSnapshotCommand) cmd);
-            } else if (cmd instanceof CreateVolumeFromSnapshotCommand) {
+            } else if (clz == CreateVolumeFromSnapshotCommand.class) {
                 answer = execute((CreateVolumeFromSnapshotCommand) cmd);
-            } else if (cmd instanceof CreatePrivateTemplateFromVolumeCommand) {
+            } else if (clz == CreatePrivateTemplateFromVolumeCommand.class) {
                 answer = execute((CreatePrivateTemplateFromVolumeCommand) cmd);
-            } else if (cmd instanceof CreatePrivateTemplateFromSnapshotCommand) {
+            } else if (clz == CreatePrivateTemplateFromSnapshotCommand.class) {
                 answer = execute((CreatePrivateTemplateFromSnapshotCommand) cmd);
-            } else if (cmd instanceof UpgradeSnapshotCommand) {
+            } else if (clz == UpgradeSnapshotCommand.class) {
                 answer = execute((UpgradeSnapshotCommand) cmd);
-            } else if (cmd instanceof GetStorageStatsCommand) {
+            } else if (clz == GetStorageStatsCommand.class) {
                 answer = execute((GetStorageStatsCommand) cmd);
-            } else if (cmd instanceof PrimaryStorageDownloadCommand) {
+            } else if (clz == PrimaryStorageDownloadCommand.class) {
                 answer = execute((PrimaryStorageDownloadCommand) cmd);
-            } else if (cmd instanceof GetVncPortCommand) {
+            } else if (clz == GetVncPortCommand.class) {
                 answer = execute((GetVncPortCommand) cmd);
-            } else if (cmd instanceof SetupCommand) {
+            } else if (clz == SetupCommand.class) {
                 answer = execute((SetupCommand) cmd);
-            } else if (cmd instanceof MaintainCommand) {
+            } else if (clz == MaintainCommand.class) {
                 answer = execute((MaintainCommand) cmd);
-            } else if (cmd instanceof PingTestCommand) {
+            } else if (clz == PingTestCommand.class) {
                 answer = execute((PingTestCommand) cmd);
-            } else if (cmd instanceof CheckOnHostCommand) {
+            } else if (clz == CheckOnHostCommand.class) {
                 answer = execute((CheckOnHostCommand) cmd);
-            } else if (cmd instanceof ModifySshKeysCommand) {
+            } else if (clz == ModifySshKeysCommand.class) {
                 answer = execute((ModifySshKeysCommand) cmd);
-            } else if (cmd instanceof PoolEjectCommand) {
+            } else if (clz == PoolEjectCommand.class) {
                 answer = execute((PoolEjectCommand) cmd);
-            } else if (cmd instanceof NetworkUsageCommand) {
+            } else if (clz == NetworkUsageCommand.class) {
                 answer = execute((NetworkUsageCommand) cmd);
-            } else if (cmd instanceof StartCommand) {
+            } else if (clz == StartCommand.class) {
                 answer = execute((StartCommand) cmd);
-            } else if (cmd instanceof RemoteAccessVpnCfgCommand) {
+            } else if (clz == RemoteAccessVpnCfgCommand.class) {
                 answer = execute((RemoteAccessVpnCfgCommand) cmd);
-            } else if (cmd instanceof VpnUsersCfgCommand) {
+            } else if (clz == VpnUsersCfgCommand.class) {
                 answer = execute((VpnUsersCfgCommand) cmd);
-            } else if (cmd instanceof CheckSshCommand) {
+            } else if (clz == CheckSshCommand.class) {
                 answer = execute((CheckSshCommand) cmd);
-            } else if (cmd instanceof CheckRouterCommand) {
+            } else if (clz == CheckRouterCommand.class) {
                 answer = execute((CheckRouterCommand) cmd);
-            } else  if (cmd instanceof SetFirewallRulesCommand) {
+            } else  if (clz == SetFirewallRulesCommand.class) {
             	answer = execute((SetFirewallRulesCommand)cmd);
-            } else if (cmd instanceof BumpUpPriorityCommand) {
+            } else if (clz == BumpUpPriorityCommand.class) {
                 answer = execute((BumpUpPriorityCommand)cmd);
-            } else if (cmd instanceof GetDomRVersionCmd) {
+            } else if (clz == GetDomRVersionCmd.class) {
                 answer = execute((GetDomRVersionCmd)cmd);
-            } else if (cmd instanceof CheckNetworkCommand) {
+            } else if (clz == CheckNetworkCommand.class) {
                 answer = execute((CheckNetworkCommand) cmd);
-            } else if (cmd instanceof SetupGuestNetworkCommand) {
-                return execute((SetupGuestNetworkCommand) cmd);
-            } else if (cmd instanceof PlugNicCommand) {
-                return execute((PlugNicCommand) cmd);
-            } else if (cmd instanceof UnPlugNicCommand) {
-                return execute((UnPlugNicCommand) cmd);
-            } else if (cmd instanceof IpAssocVpcCommand) {
-                return execute((IpAssocVpcCommand) cmd);
-            } else if (cmd instanceof SetSourceNatCommand) {
-                return execute((SetSourceNatCommand) cmd);
-            } else if (cmd instanceof SetNetworkACLCommand) {
-                return execute((SetNetworkACLCommand) cmd);
-            } else if (cmd instanceof SetPortForwardingRulesVpcCommand) {
-                return execute((SetPortForwardingRulesVpcCommand) cmd);
-            } else if (cmd instanceof Site2SiteVpnCfgCommand) {
-                return execute((Site2SiteVpnCfgCommand) cmd);
+            } else if (clz == SetupGuestNetworkCommand.class) {
+                answer = execute((SetupGuestNetworkCommand) cmd);
+            } else if (clz == IpAssocVpcCommand.class) {
+                answer = execute((IpAssocVpcCommand) cmd);
+            } else if (clz == PlugNicCommand.class) {
+                answer = execute((PlugNicCommand) cmd);
+            } else if (clz == UnPlugNicCommand.class) {
+                answer = execute((UnPlugNicCommand) cmd);
+            } else if (clz == SetSourceNatCommand.class) {
+                answer = execute((SetSourceNatCommand) cmd);
+            } else if (clz == SetNetworkACLCommand.class) {
+                answer = execute((SetNetworkACLCommand) cmd);
+            } else if (clz == SetPortForwardingRulesVpcCommand.class) {
+                answer = execute((SetPortForwardingRulesVpcCommand) cmd);
+            } else if (clz == Site2SiteVpnCfgCommand.class) {
+                answer = execute((Site2SiteVpnCfgCommand) cmd);
+            } else if (clz == CheckS2SVpnConnectionsCommand.class) {
+                answer = execute((CheckS2SVpnConnectionsCommand) cmd);
             } else {
                 answer = Answer.createUnsupportedCommandAnswer(cmd);
             }
@@ -750,10 +755,13 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
                 "ls /proc/sys/net/ipv4/conf");
         
         if(result.first()) {
-            String[] tokens = result.second().split(" ");
+            String[] tokens = result.second().split("\\s+");
             HashMap<String, String> deviceNames = new HashMap<String, String>();
-            for(String token: tokens)
-                deviceNames.put(token, token);
+            for(String token: tokens) {
+                if(!("all".equalsIgnoreCase(token) || "default".equalsIgnoreCase(token) || "lo".equalsIgnoreCase(token))) {
+                    deviceNames.put(token, token);
+                }
+            }
             
             for(int i = 1; ; i++) {
                 if(!deviceNames.containsKey("eth" + i))
@@ -767,31 +775,52 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     //
     // find mac address of a specified ethx device
     //    ip address show ethx | grep link/ether | sed -e 's/^[ \t]*//' | cut -d' ' -f2
+    // returns
+    //      eth0:xx.xx.xx.xx
     //
     // list IP with eth devices
     //  ifconfig ethx |grep -B1 "inet addr" | awk '{ if ( $1 == "inet" ) { print $2 } else if ( $2 == "Link" ) { printf "%s:" ,$1 } }' 
     //     | awk -F: '{ print $1 ": " $3 }'
     //
-    // returns
-    //      eth0:xx.xx.xx.xx
-    //
     //
     private int findRouterEthDeviceIndex(String domrName, String routerIp, String mac) throws Exception {
         VmwareManager mgr = getServiceContext().getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
 
+        s_logger.info("findRouterEthDeviceIndex. mac: " + mac);
+        
         // TODO : this is a temporary very inefficient solution, will refactor it later
         Pair<Boolean, String> result = SshHelper.sshExecute(routerIp, DEFAULT_DOMR_SSHPORT, "root", mgr.getSystemVMKeyFile(), null, 
-        "ls /proc/sys/net/ipv4/conf");
-
-        if(result.first()) {
-            String[] tokens = result.second().split(" ");
-            for(String token : tokens) {
-                Pair<Boolean, String> result2 = SshHelper.sshExecute(routerIp, DEFAULT_DOMR_SSHPORT, "root", mgr.getSystemVMKeyFile(), null, 
-                        // TODO need to find the dev index inside router based on IP address
-                        String.format("ip address show %s | grep link/ether | sed -e 's/^[ \t]*//' | cut -d' ' -f2", token));
-                
-                if(result2.first() && result2.second().equalsIgnoreCase(mac))
-                    return Integer.parseInt(token.substring(3));
+            "ls /proc/sys/net/ipv4/conf");
+        
+        // when we dynamically plug in a new NIC into virtual router, it may take time to show up in guest OS
+        // we use a waiting loop here as a workaround to synchronize activities in systems
+        long startTick = System.currentTimeMillis();
+        while(System.currentTimeMillis() - startTick < 15000) {
+            if(result.first()) {
+                String[] tokens = result.second().split("\\s+");
+                for(String token : tokens) {
+                    if(!("all".equalsIgnoreCase(token) || "default".equalsIgnoreCase(token) || "lo".equalsIgnoreCase(token))) {
+                        String cmd = String.format("ip address show %s | grep link/ether | sed -e 's/^[ \t]*//' | cut -d' ' -f2", token);
+                        
+                        if(s_logger.isDebugEnabled())
+                            s_logger.debug("Run domr script " + cmd);
+                        Pair<Boolean, String> result2 = SshHelper.sshExecute(routerIp, DEFAULT_DOMR_SSHPORT, "root", mgr.getSystemVMKeyFile(), null, 
+                                // TODO need to find the dev index inside router based on IP address
+                                cmd);
+                        if(s_logger.isDebugEnabled())
+                            s_logger.debug("result: " + result2.first() + ", output: " + result2.second());
+                        
+                        if(result2.first() && result2.second().trim().equalsIgnoreCase(mac.trim()))
+                            return Integer.parseInt(token.substring(3));
+                    }
+                }
+            }
+            
+            s_logger.warn("can not find intereface associated with mac: " + mac + ", guest OS may still at loading state, retry...");
+            
+            try { 
+                Thread.currentThread().sleep(1000); 
+            } catch (InterruptedException e) {
             }
         }
         
@@ -811,9 +840,13 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     }
     
     private SetupGuestNetworkAnswer execute(SetupGuestNetworkCommand cmd) {
+        
+        s_logger.info("Executing resource SetupGuestNetworkCommand " + _gson.toJson(cmd));
+        
         VmwareManager mgr = getServiceContext().getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
         
         NicTO nic = cmd.getNic();
+        
         String routerIp = getRouterSshControlIp(cmd);
         String domrGIP = cmd.getAccessDetail(NetworkElementCommand.ROUTER_GUEST_IP);
         String domrName = cmd.getAccessDetail(NetworkElementCommand.ROUTER_NAME);
@@ -831,8 +864,9 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
         }
         
         try {
-            int ethDeviceNum = allocRouterEthDeviceIndex(domrName, routerIp);
-
+            int ethDeviceNum = findRouterEthDeviceIndex(domrName, routerIp, nic.getMac());
+            s_logger.info("find interface index. routerIp: " + routerIp + ", mac: " + nic.getMac() + ", index: " + ethDeviceNum);
+            
             String args = "-C ";
             String dev = "eth" + ethDeviceNum;
             args += " -d " + dev;
@@ -863,13 +897,17 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
             
             return new SetupGuestNetworkAnswer(cmd, true, "success");
         } catch (Exception e) {
-            String msg = " UnPlug Nic failed due to " + e.toString();
+            String msg = "SetupGuestNetwork failed due to " + e.toString();
             s_logger.warn(msg, e);
             return new SetupGuestNetworkAnswer(cmd, false, msg);
         }
     }
 
     protected IpAssocAnswer execute(IpAssocVpcCommand cmd) {
+        if (s_logger.isInfoEnabled()) {
+            s_logger.info("Executing resource IpAssocVpcCommand " + _gson.toJson(cmd));
+        }
+        
         String[] results = new String[cmd.getIpAddresses().length];
         int i = 0;
         String routerName = cmd.getAccessDetail(NetworkElementCommand.ROUTER_NAME);
@@ -891,6 +929,10 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     }
 
     protected SetSourceNatAnswer execute(SetSourceNatCommand cmd) {
+        if (s_logger.isInfoEnabled()) {
+            s_logger.info("Executing resource SetSourceNatCommand " + _gson.toJson(cmd));
+        }
+
         VmwareManager mgr = getServiceContext().getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
         
         String routerName = cmd.getAccessDetail(NetworkElementCommand.ROUTER_NAME);
@@ -925,6 +967,9 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     }
 
     private SetNetworkACLAnswer execute(SetNetworkACLCommand cmd) {
+        if (s_logger.isInfoEnabled()) {
+            s_logger.info("Executing resource SetNetworkACLCommand " + _gson.toJson(cmd));
+        }
 
         VmwareManager mgr = getServiceContext().getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
         String routerName = cmd.getAccessDetail(NetworkElementCommand.ROUTER_NAME);
@@ -970,6 +1015,10 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     }
 
     protected SetPortForwardingRulesAnswer execute(SetPortForwardingRulesVpcCommand cmd) {
+        if (s_logger.isInfoEnabled()) {
+            s_logger.info("Executing resource SetPortForwardingRulesVpcCommand " + _gson.toJson(cmd));
+        }
+        
         VmwareManager mgr = getServiceContext().getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
 
         String routerIp = getRouterSshControlIp(cmd);
@@ -1006,6 +1055,10 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     }
     
     protected Answer execute(Site2SiteVpnCfgCommand cmd) {
+        if (s_logger.isInfoEnabled()) {
+            s_logger.info("Executing resource Site2SiteVpnCfgCommand " + _gson.toJson(cmd));
+        }
+        
         VmwareManager mgr = getServiceContext().getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
 
         String routerIp = getRouterSshControlIp(cmd);
@@ -1062,13 +1115,16 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     }
     
     private PlugNicAnswer execute(PlugNicCommand cmd) {
-
+        if (s_logger.isInfoEnabled()) {
+            s_logger.info("Executing resource PlugNicCommand " + _gson.toJson(cmd));
+        }
+               
         VmwareManager mgr = getServiceContext().getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
         VmwareContext context = getServiceContext();
         try {
             VmwareHypervisorHost hyperHost = getHyperHost(context);
 
-            String vmName = cmd.getVirtualMachine().getName();
+            String vmName = cmd.getVmName();
             VirtualMachineMO vmMo = hyperHost.findVmOnHyperHost(vmName);
 
             if(vmMo == null) {
@@ -1084,7 +1140,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
                 s_logger.error(msg);
                 throw new Exception(msg);
             }
-
+            
             // TODO need a way to specify the control of NIC device type
             VirtualEthernetCardType nicDeviceType = VirtualEthernetCardType.E1000;
             
@@ -1134,12 +1190,15 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     }
     
     private UnPlugNicAnswer execute(UnPlugNicCommand cmd) {
-        
+        if (s_logger.isInfoEnabled()) {
+            s_logger.info("Executing resource UnPlugNicCommand " + _gson.toJson(cmd));
+        }
+                
         VmwareContext context = getServiceContext();
         try {
             VmwareHypervisorHost hyperHost = getHyperHost(context);
 
-            String vmName = cmd.getVirtualMachine().getName();
+            String vmName = cmd.getInstanceName();
             VirtualMachineMO vmMo = hyperHost.findVmOnHyperHost(vmName);
 
             if(vmMo == null) {
@@ -1177,6 +1236,11 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     }
     
     protected void assignVPCPublicIpAddress(String domrName, String routerIp, IpAddressTO ip) throws Exception {
+        if (s_logger.isInfoEnabled()) {
+            s_logger.info("Executing resource assignVPCPublicIpAddress. domrName: " + domrName + ", routerIp: " + routerIp
+                + ", ip: " + _gson.toJson(ip));
+        }
+
         VmwareManager mgr = getServiceContext().getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
 
         int ethDeviceNum = this.findRouterEthDeviceIndex(domrName, routerIp, ip.getVifMacAddress());
@@ -1526,6 +1590,35 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
         return new Answer(cmd);
     }
     
+    protected CheckS2SVpnConnectionsAnswer execute(CheckS2SVpnConnectionsCommand cmd) {
+        if (s_logger.isDebugEnabled()) {
+            s_logger.debug("Executing resource CheckS2SVpnConnectionsCommand: " + _gson.toJson(cmd));
+            s_logger.debug("Run command on domR " + cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP) + ", /opt/cloud/bin/checkbatchs2svpn.sh ");
+        }
+
+        Pair<Boolean, String> result;
+        try {
+            VmwareManager mgr = getServiceContext().getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
+            String controlIp = getRouterSshControlIp(cmd);
+            result = SshHelper.sshExecute(controlIp, DEFAULT_DOMR_SSHPORT, "root", mgr.getSystemVMKeyFile(), null,
+                    "/opt/cloud/bin/checkbatchs2svpn.sh ");
+
+            if (!result.first()) {
+                s_logger.error("check site-to-site vpn connections command on domR " + cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP) + " failed, message: " + result.second());
+
+                return new CheckS2SVpnConnectionsAnswer(cmd, false, result.second());
+            }
+
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug("check site-to-site vpn connections command on domain router " + cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP) + " completed");
+            }
+        } catch (Throwable e) {
+            String msg = "CheckS2SVpnConnectionsCommand failed due to " + VmwareHelper.getExceptionMessage(e);
+            s_logger.error(msg, e);
+            return new CheckS2SVpnConnectionsAnswer(cmd, false, "CheckS2SVpnConneciontsCommand failed");
+        }
+        return new CheckS2SVpnConnectionsAnswer(cmd, true, result.second());
+    }
     protected Answer execute(CheckRouterCommand cmd) {
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Executing resource CheckRouterCommand: " + _gson.toJson(cmd));

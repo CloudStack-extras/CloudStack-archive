@@ -66,6 +66,8 @@ import com.cloud.agent.api.CheckOnHostAnswer;
 import com.cloud.agent.api.CheckOnHostCommand;
 import com.cloud.agent.api.CheckRouterAnswer;
 import com.cloud.agent.api.CheckRouterCommand;
+import com.cloud.agent.api.CheckS2SVpnConnectionsAnswer;
+import com.cloud.agent.api.CheckS2SVpnConnectionsCommand;
 import com.cloud.agent.api.CheckVirtualMachineAnswer;
 import com.cloud.agent.api.CheckVirtualMachineCommand;
 import com.cloud.agent.api.CleanupNetworkRulesCmd;
@@ -545,6 +547,8 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             return execute((SetStaticRouteCommand) cmd);
         } else if (clazz == Site2SiteVpnCfgCommand.class) {
             return execute((Site2SiteVpnCfgCommand) cmd);
+        } else if (clazz == CheckS2SVpnConnectionsCommand.class) {
+            return execute((CheckS2SVpnConnectionsCommand) cmd);
         } else {
             return Answer.createUnsupportedCommandAnswer(cmd);
         }
@@ -1386,6 +1390,19 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         return new Answer(cmd);
     }
 
+    private CheckS2SVpnConnectionsAnswer execute(CheckS2SVpnConnectionsCommand cmd) {
+        Connection conn = getConnection();
+        String args = "checkbatchs2svpn.sh " + cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
+        for (String ip : cmd.getVpnIps()) {
+            args += " " + ip;
+        }
+        String result = callHostPlugin(conn, "vmops", "routerProxy", "args", args);
+        if (result == null || result.isEmpty()) {
+            return new CheckS2SVpnConnectionsAnswer(cmd, false, "CheckS2SVpnConneciontsCommand failed");
+        }
+        return new CheckS2SVpnConnectionsAnswer(cmd, true, result);
+    }
+
     private CheckRouterAnswer execute(CheckRouterCommand cmd) {
         Connection conn = getConnection();
         String args = "checkrouter.sh " + cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
@@ -1929,7 +1946,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         try {
             VM router = getVM(conn, vmName);
             
-            VIF correctVif = getCorrectVif(conn, router, ip);
+            VIF correctVif = getVifByMac(conn, router, ip.getVifMacAddress());
             if (correctVif == null) {
                 if (ip.isAdd()) {
                     throw new InternalErrorException("Failed to find DomR VIF to associate IP with.");
@@ -3540,8 +3557,12 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                             // Disable any VLAN networks that aren't used
                             // anymore
                             for (Network network : networks) {
-                                if (network.getNameLabel(conn).startsWith("VLAN")) {
-                                    disableVlanNetwork(conn, network);
+                                try {
+                                    if (network.getNameLabel(conn).startsWith("VLAN")) {
+                                        disableVlanNetwork(conn, network);
+                                    }
+                                } catch (Exception e) {
+                                    // network might be destroyed by other host
                                 }
                             }
                             return new StopAnswer(cmd, "Stop VM " + vmName + " Succeed", 0, true);
@@ -7202,8 +7223,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
      */
     private UnPlugNicAnswer execute(UnPlugNicCommand cmd) {
         Connection conn = getConnection();
-        VirtualMachineTO vmto = cmd.getVirtualMachine();
-        String vmName = vmto.getName();
+        String vmName = cmd.getInstanceName();
         try {
             Set<VM> vms = VM.getByNameLabel(conn, vmName);
             if ( vms == null || vms.isEmpty() ) {
@@ -7212,16 +7232,16 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             VM vm = vms.iterator().next();
             NicTO nic = cmd.getNic();
             String mac = nic.getMac();
-            for ( VIF vif : vm.getVIFs(conn)) {
-                String lmac = vif.getMAC(conn);
-                if ( lmac.equals(mac) ) {
-                    vif.unplug(conn);
-                    Network network = vif.getNetwork(conn);
-                    vif.destroy(conn);
+            VIF vif = getVifByMac(conn, vm, mac);
+            if ( vif != null ) {
+                vif.unplug(conn);
+                Network network = vif.getNetwork(conn);
+                vif.destroy(conn);
+                try {
                     if (network.getNameLabel(conn).startsWith("VLAN")) {
                         disableVlanNetwork(conn, network);
                     }
-                    break;
+                }  catch (Exception e) {
                 }
             }
             return new UnPlugNicAnswer(cmd, true, "success");
@@ -7238,8 +7258,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
      */
     private PlugNicAnswer execute(PlugNicCommand cmd) {
         Connection conn = getConnection();
-        VirtualMachineTO vmto = cmd.getVirtualMachine();
-        String vmName = vmto.getName();
+        String vmName = cmd.getVmName();
         try {
             Set<VM> vms = VM.getByNameLabel(conn, vmName);
             if ( vms == null || vms.isEmpty() ) {
@@ -7247,9 +7266,15 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             }
             VM vm = vms.iterator().next();
             NicTO nic = cmd.getNic();
+            VIF vif = getVifByMac(conn, vm, nic.getMac());
+            if ( vif != null ) {
+                String msg = " Plug Nic failed due to a VIF with the same mac " + nic.getMac() + " exists";
+                s_logger.warn(msg);
+                return new PlugNicAnswer(cmd, false, msg);
+            }
             String deviceId = getUnusedVIFNum(conn, vm);
             nic.setDeviceId(Integer.parseInt(deviceId));
-            VIF vif = createVif(conn, vmName, vm, nic);
+            vif = createVif(conn, vmName, vm, nic);
             vif.plug(conn);
             return new PlugNicAnswer(cmd, true, "success");
         } catch (Exception e) {

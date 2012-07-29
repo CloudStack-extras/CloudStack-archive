@@ -160,6 +160,23 @@
     sectionSelect: {
       preFilter: function(args) {
         var havingSecurityGroupNetwork = false;
+        var havingBasicZones = false;
+
+        // Get basic zones
+        $.ajax({
+          url: createURL('listZones'),
+          async: false,
+          success: function(json) {
+            var zones = json.listzonesresponse.zone ?
+                  json.listzonesresponse.zone : [];
+            var basicZones = $.grep(zones, function(zone) {
+              return zone.networktype == 'Basic';
+            });
+            
+            havingBasicZones = basicZones.length ? true : false;
+          }
+        });
+        
         $.ajax({
           url: createURL('listNetworks', { ignoreProject: true }),
           data: {
@@ -174,7 +191,12 @@
           }
         });
 
-        var sectionsToShow = ['networks', 'vpc', 'vpnCustomerGateway'];
+        var sectionsToShow = ['networks', 'vpnCustomerGateway'];
+
+        if (!havingBasicZones) {
+          sectionsToShow.push('vpc');
+        }
+        
         if(havingSecurityGroupNetwork == true)
           sectionsToShow.push('securityGroups');
 
@@ -389,9 +411,6 @@
             }
             $.ajax({
               url: createURL("listNetworks&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
-              data: {
-                listAll: true
-              },
               dataType: 'json',
               async: false,
               success: function(data) {
@@ -814,10 +833,13 @@
 										}
                   }
                 ],
+
+                tags: cloudStack.api.tags({ resourceType: 'Network', contextId: 'networks' }),
+
+                
                 dataProvider: function(args) {								 					
 								  $.ajax({
-										url: createURL("listNetworks&id=" + args.context.networks[0].id + "&listAll=true"), //pass "&listAll=true" to "listNetworks&id=xxxxxxxx" for now before API gets fixed.
-                    data: { listAll: true },
+										url: createURL("listNetworks&id=" + args.context.networks[0].id), //pass "&listAll=true" to "listNetworks&id=xxxxxxxx" for now before API gets fixed.
 										dataType: "json",
 										async: true,
 										success: function(json) {								  
@@ -843,6 +865,7 @@
                       context: context,
                       listView: $.extend(true, {}, cloudStack.sections.instances, {
                         listView: {
+                          filters: false,
                           dataProvider: function(args) {                           
 														var networkid;
 														if('vpc' in args.context) 
@@ -1371,6 +1394,7 @@
 
                     listView: $.extend(true, {}, cloudStack.sections.instances, {
                       listView: {
+                        filters: false,
                         dataProvider: function(args) {
                           var $listView = args.$listView;
                           var data = {
@@ -1623,6 +1647,8 @@
                     vlanname: { label: 'label.vlan' }
                   }
                 ],
+ 
+                tags: cloudStack.api.tags({ resourceType: 'PublicIpAddress', contextId: 'ipAddresses' }),
 
                 dataProvider: function(args) {
                   var items = args.context.ipAddresses;
@@ -1687,7 +1713,11 @@
 											});
 										}
 										else { //a VPC network from Guest Network section or from VPC section
-										  havingFirewallService = false;  //firewall is not supported in IP from VPC section (because ACL has already supported in tier from VPC section)
+                      // Firewall is not supported in IP from VPC section
+                      // (because ACL has already supported in tier from VPC section)
+										  havingFirewallService = false;
+	                    disallowedActions.push("firewall");
+                      
 											havingVpnService = false; //VPN is not supported in IP from VPC section
 										
 										  if(args.context.ipAddresses[0].associatednetworkid == null) { //IP is not associated with any tier yet												
@@ -1854,6 +1884,9 @@
                         addButton: true
                       }
                     },
+
+                    tags: cloudStack.api.tags({ resourceType: 'FirewallRule', contextId: 'multiRule' }),
+
                     add: {
                       label: 'label.add',
                       action: function(args) {
@@ -1881,6 +1914,19 @@
                       }
                     },
                     actions: {
+                      edit: {
+                        label: 'label.edit',
+
+                        // Blank -- edit is just for tags right now
+                        action: function(args) {
+                          args.response.success({
+                            notification: {
+                              label: 'Edit firewall rule',
+                              poll: function(args) { args.complete(); }
+                            }
+                          });
+                        }
+                      },
                       destroy: {
                         label: 'label.action.delete.firewall',
                         action: function(args) {
@@ -2088,6 +2134,7 @@
                   loadBalancing: {
                     listView: $.extend(true, {}, cloudStack.sections.instances, {
                       listView: {
+                        filters: false,
                         dataProvider: function(args) {
                           var itemData = $.isArray(args.context.multiRule) && args.context.multiRule[0]['_itemData'] ?
                             args.context.multiRule[0]['_itemData'] : [];
@@ -2217,6 +2264,9 @@
                         addButton: true
                       }
                     },
+
+                    tags: cloudStack.api.tags({ resourceType: 'LoadBalancer', contextId: 'multiRule' }),
+
                     add: {
                       label: 'label.add.vms',
                       action: function(args) {  											  
@@ -2594,6 +2644,7 @@
                     },
                     listView: $.extend(true, {}, cloudStack.sections.instances, {
                       listView: {
+                        filters: false,
                         dataProvider: function(args) {
                           var networkid;
 													if('vpc' in args.context) 
@@ -2669,6 +2720,9 @@
                         addButton: true
                       }
                     },
+
+                    tags: cloudStack.api.tags({ resourceType: 'PortForwardingRule', contextId: 'multiRule' }),
+
                     add: {
                       label: 'label.add.vm',
                       action: function(args) {  
@@ -2717,6 +2771,19 @@
                       }
                     },
                     actions: {
+                      edit: {
+                        label: 'label.edit',
+
+                        // Blank -- edit is just for tags right now
+                        action: function(args) {
+                          args.response.success({
+                            notification: {
+                              label: 'label.edit.pf',
+                              poll: function(args) { args.complete(); }
+                            }
+                          });
+                        }
+                      },
                       destroy: {
                         label: 'label.remove.pf',
                         action: function(args) {
@@ -3056,6 +3123,9 @@
                     account: { label: 'label.account' }
                   }
                 ],
+
+                tags: cloudStack.api.tags({ resourceType: 'SecurityGroup', contextId: 'securityGroups' }),
+
 
                 dataProvider: function(args) {
                   $.ajax({
@@ -3763,6 +3833,9 @@
                     id: { label: 'label.id' }										
                   }
                 ],
+
+                tags: cloudStack.api.tags({ resourceType: 'Vpc', contextId: 'vpc' }),
+
                 dataProvider: function(args) {		
 									$.ajax({
 										url: createURL("listVPCs"),

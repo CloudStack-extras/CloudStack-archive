@@ -583,12 +583,6 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager, NetworkS
     }
 
     @Override
-    public PhysicalNetwork translateZoneIdToPhysicalNetwork(long zoneId) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public boolean isSecurityGroupSupportedInNetwork(Network network) {
         // TODO Auto-generated method stub
         return false;
@@ -965,7 +959,7 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager, NetworkS
      * @see com.cloud.network.NetworkManager#getNicProfile(com.cloud.vm.VirtualMachine, long)
      */
     @Override
-    public NicProfile getNicProfile(VirtualMachine vm, long networkId) {
+    public NicProfile getNicProfile(VirtualMachine vm, long networkId, String broadcastUri) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -1088,5 +1082,14 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager, NetworkS
     public PublicIp assignVpnGatewayIpAddress(long dcId, Account owner, long vpcId) throws InsufficientAddressCapacityException, ConcurrentOperationException {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    /* (non-Javadoc)
+     * @see com.cloud.network.NetworkManager#ipUsedInVpc(com.cloud.network.IpAddress)
+     */
+    @Override
+    public boolean ipUsedInVpc(IpAddress ip) {
+        // TODO Auto-generated method stub
+        return false;
     }
 }

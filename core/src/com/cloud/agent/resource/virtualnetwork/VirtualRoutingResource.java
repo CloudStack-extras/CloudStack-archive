@@ -38,6 +38,8 @@ import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.BumpUpPriorityCommand;
 import com.cloud.agent.api.CheckRouterAnswer;
 import com.cloud.agent.api.CheckRouterCommand;
+import com.cloud.agent.api.CheckS2SVpnConnectionsAnswer;
+import com.cloud.agent.api.CheckS2SVpnConnectionsCommand;
 import com.cloud.agent.api.Command;
 import com.cloud.agent.api.GetDomRVersionAnswer;
 import com.cloud.agent.api.GetDomRVersionCmd;
@@ -135,6 +137,8 @@ public class VirtualRoutingResource implements Manager {
                 return execute((GetDomRVersionCmd)cmd);
             } else if (cmd instanceof Site2SiteVpnCfgCommand) {
                 return execute((Site2SiteVpnCfgCommand)cmd);
+            } else if (cmd instanceof CheckS2SVpnConnectionsCommand) {
+                return execute((CheckS2SVpnConnectionsCommand)cmd);
             }
             else {
                 return Answer.createUnsupportedCommandAnswer(cmd);
@@ -477,11 +481,11 @@ public class VirtualRoutingResource implements Manager {
     }
 
     public String getRouterStatus(String routerIP) {
-        return routerProxy("checkrouter.sh", routerIP, null);
+        return routerProxyWithParser("checkrouter.sh", routerIP, null);
     }
     
     
-    public String routerProxy(String script, String routerIP, String args) {
+    public String routerProxyWithParser(String script, String routerIP, String args) {
         final Script command  = new Script(_routerProxyPath, _timeout, s_logger);
         final OutputInterpreter.OneLineParser parser = new OutputInterpreter.OneLineParser();
         command.add(script);
@@ -494,6 +498,31 @@ public class VirtualRoutingResource implements Manager {
             return parser.getLine();
         }
         return null;
+    }
+
+    public String routerProxy(String script, String routerIP, String args) {
+        final Script command  = new Script(_routerProxyPath, _timeout, s_logger);
+        command.add(script);
+        command.add(routerIP);
+        if ( args != null ) {
+            command.add(args);
+        }
+        return command.execute();
+    }
+
+    private CheckS2SVpnConnectionsAnswer execute(CheckS2SVpnConnectionsCommand cmd) {
+        final String routerIP = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
+    
+        String args = "";
+        for (String ip : cmd.getVpnIps()) {
+            args += " " + ip;
+        }
+        
+        final String result = routerProxyWithParser("checkbatchs2svpn.sh", routerIP, args);
+        if (result == null || result.isEmpty()) {
+            return new CheckS2SVpnConnectionsAnswer(cmd, false, "CheckS2SVpnConneciontsCommand failed");
+        }
+        return new CheckS2SVpnConnectionsAnswer(cmd, true, result);
     }
 
     protected Answer execute(CheckRouterCommand cmd) {
@@ -519,7 +548,7 @@ public class VirtualRoutingResource implements Manager {
     }
 
     protected String getDomRVersion(String routerIP) {
-        return routerProxy("getDomRVersion.sh", routerIP, null);
+        return routerProxyWithParser("get_template_version.sh", routerIP, null);
     }
 
     protected Answer execute(GetDomRVersionCmd cmd) {
@@ -629,21 +658,6 @@ public class VirtualRoutingResource implements Manager {
         command.add(localPath);
 
         return command.execute();
-    }
-
-
-    public String assignPublicIpAddress(final String vmName, final long id, final String vnet, final String privateIpAddress, final String macAddress, final String publicIpAddress) {
-        String args ="-A";
-        args += " -f"; //first ip is source nat ip
-        args += " -r ";
-        args += vmName;
-        args += " -i ";
-        args += privateIpAddress;
-        args += " -a ";
-        args += macAddress;
-        args += " -l ";
-        args += publicIpAddress;
-        return routerProxy("ipassoc.sh", privateIpAddress, args);
     }
 
 
@@ -890,9 +904,9 @@ public class VirtualRoutingResource implements Manager {
             throw new ConfigurationException("Unable to find bumpUpPriority.sh");
         }
         
-        _routerProxyPath = findScript("routerProxy.sh");
+        _routerProxyPath = findScript("router_proxy.sh");
         if (_routerProxyPath == null) {
-            throw new ConfigurationException("Unable to find routerProxy.sh");
+            throw new ConfigurationException("Unable to find router_proxy.sh");
         }
         
         return true;
