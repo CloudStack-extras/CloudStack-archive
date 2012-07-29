@@ -663,13 +663,13 @@
 																					args.response.error({ message: _s(result.jobresult.errortext) });              
 																				}
 																			}
-																		},																		
-																		error: function(XMLHttpResponse) {																			
-																			args.response.error({ message: parseXMLHttpResponse(XMLHttpResponse) });
 																		}
 																	});
 																}, 3000);
-															}
+															},																														
+															error: function(XMLHttpResponse) {
+																args.response.error(parseXMLHttpResponse(XMLHttpResponse));  
+															}	
 														});
 													}
 												}
@@ -680,7 +680,10 @@
 										}
 									});                            
 								}, 3000); 
-              }
+              },							
+							error: function(XMLHttpResponse) {
+								args.response.error(parseXMLHttpResponse(XMLHttpResponse));  
+							}		
             });						
 					});		
         };
@@ -744,13 +747,13 @@
 																					args.response.error({ message: _s(result.jobresult.errortext) });              
 																				}
 																			}
-																		},																		
-																		error: function(XMLHttpResponse) {																			
-																			args.response.error({ message: parseXMLHttpResponse(XMLHttpResponse) });
 																		}
 																	});
 																}, 3000);
-															}
+															},	
+															error: function(XMLHttpResponse) {
+																args.response.error(parseXMLHttpResponse(XMLHttpResponse));  
+															}		
 														});
 													}
 												}
@@ -758,7 +761,10 @@
 													args.response.error({ message: _s(result.jobresult.errortext) });  
 												}
 											}
-										}
+										},																				
+										error: function(XMLHttpResponse) {
+											args.response.error(parseXMLHttpResponse(XMLHttpResponse));  
+										}		
 									});                            
 								}, 3000); 
               }
@@ -816,13 +822,13 @@
                         args.response.error({message: _s(result.jobresult.errortext)});              
                       }
                     }
-                  },
-                  error: function(args) {
-                    clearInterval(autoscaleVmProfileTimer);
                   }
                 });
               }, 3000);
-            }
+            },						
+						error: function(XMLHttpResponse) {
+							args.response.error(parseXMLHttpResponse(XMLHttpResponse));  
+						}							
           });
         };
 
@@ -874,13 +880,13 @@
                         args.response.error({message: _s(result.jobresult.errortext)});              
                       }
                     }
-                  },
-                  error: function(args) {
-                    clearInterval(loadBalancerTimer);               
-									}
+                  }
                 });
               }, 3000);
-            }
+            },		
+						error: function(XMLHttpResponse) {
+							args.response.error(parseXMLHttpResponse(XMLHttpResponse));  
+						}							
           });
         };
 
@@ -910,7 +916,6 @@
                     }
                     else {
                       clearInterval(scaleVmGroupTimer);
-
                       if (result.jobstatus == 1) { //autoscale Vm group successfully created
                         scaleVmGroupResponse = result.jobresult.autoscalevmgroup;
 												args.response.success();
@@ -919,15 +924,16 @@
 											  args.response.error({message: _s(result.jobresult.errortext)});                        
                       }
                     }
-                  },
-                  error: function(args) {
-                    clearInterval(scaleVmGroupTimer);
                   }
                 });
               }, 3000);
-            }
+            },					
+						error: function(XMLHttpResponse) {
+							args.response.error(parseXMLHttpResponse(XMLHttpResponse));  
+						}		
           });
         };
+
         scaleUp(args);
         
         //setTimeout(function() { args.response.success(); }, 1000);
