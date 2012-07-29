@@ -305,21 +305,26 @@
           dependsOn: 'isAdvanced',
           label: 'User',
           select: function(args) {
-            $.ajax({
-              url: createURL('listUsers'),
-              data: {
-							  domainid: g_domainid,
-								account: g_account
-							},
-              success: function(json) {
-                var users = json.listusersresponse.user;
-                var items = [];                
-                $(users).each(function(){
-                  items.push({id: this.id, description: this.username});
-                });
-                args.response.success({ data:  items });
-              }
-            });
+					  var items = []; 
+						if(isAdmin() || isDomainAdmin()) {
+							$.ajax({
+								url: createURL('listUsers'),
+								data: {
+									domainid: g_domainid,
+									account: g_account
+								},
+								success: function(json) {
+									var users = json.listusersresponse.user;                               
+									$(users).each(function(){
+										items.push({id: this.id, description: this.username});
+									});
+									args.response.success({ data:  items });
+								}
+							});
+						}
+            else { //regular user doesn't have access to listUers API call.				
+							items.push({id: "", description: ""});
+						}						
           }
         }
       },
