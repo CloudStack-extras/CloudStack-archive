@@ -303,16 +303,17 @@
         username: {
           isHidden: true,
           dependsOn: 'isAdvanced',
-          label: 'Username',
+          label: 'User',
           select: function(args) {
             $.ajax({
-              url: createURL("listUsers&account=" + args.context.users[0].account),
-              dataType: "json",
-              async: true,
+              url: createURL('listUsers'),
+              data: {
+							  domainid: g_domainid,
+								account: g_account
+							},
               success: function(json) {
                 var users = json.listusersresponse.user;
-                var items = [];
-                items.push({id: "", description: ""});
+                var items = [];                
                 $(users).each(function(){
                   items.push({id: this.id, description: this.username});
                 });
@@ -597,7 +598,28 @@
     },
 
     actions: {
-      add: function(args) {        
+      add: function(args) {   
+			  //validation (begin) *****
+				var havingApiKeyAndSecretKey = false;
+				$.ajax({
+				  url: createURL('listUsers'),
+					data: {
+					  id: args.data.username
+					}, 
+					async: false,
+					success: function(json) {					 
+						if(json.listusersresponse.user[0].apikey != null && json.listusersresponse.user[0].secretkey != null) {
+						  havingApiKeyAndSecretKey = true;
+						}						
+					}
+				});		       
+        if(havingApiKeyAndSecretKey == false) {
+          args.response.error('The selected user in advanced settings does not have API key or secret key');
+					return;
+        }			
+				//validation (end) *****	
+				
+			
         var scaleVmProfileResponse = [];
         var loadBalancerResponse  = [];
         var scaleVmGroupResponse = [];
