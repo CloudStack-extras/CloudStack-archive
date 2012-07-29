@@ -617,6 +617,26 @@
           args.response.error('The selected user in advanced settings does not have API key or secret key');
 					return;
         }			
+				
+				var hasValidEndpointeUrl = false;
+				$.ajax({
+				  url: createURL('listConfigurations'),
+					data: {
+					  name: 'endpointe.url'
+					},
+					async: false,
+					success: function(json) {					  
+						if(json.listconfigurationsresponse.configuration != null) {						  
+							if(json.listconfigurationsresponse.configuration[0].value.indexOf('localhost') == -1) {							
+							  hasValidEndpointeUrl = true;
+							}
+						}						
+					}
+				});				
+				if(hasValidEndpointeUrl == false) {
+				  args.response.error("Global setting endpointe.url has to be set to the Management Server's API end point");
+					return;
+				}								
 				//validation (end) *****	
 				
 			
