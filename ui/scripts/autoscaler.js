@@ -119,8 +119,7 @@
           id: 'templatename',
           select: function(args) {	
             var templates;		
-            var templateIdMap = {};		
-            debugger;						
+            var templateIdMap = {};		         				
             $.ajax({
               url: createURL('listTemplates'),
               data: {
@@ -598,142 +597,173 @@
     },
 
     actions: {
-      add: function(args) {
-        var scaleUpPolicyResponse = [];
-        var scaleDownPolicyResponse = [];
+      add: function(args) {        
         var scaleVmProfileResponse = [];
         var loadBalancerResponse  = [];
         var scaleVmGroupResponse = [];
         var scaleUpConditionIds = [];
         var scaleDownConditionIds = [];
 
-        var scaleUpCondition = function(args){
-          $.map(scaleUpData, function(elem) {
-            var array1 = [];
-            array1.push("&counterid=" + elem.counterid);
-            array1.push("&relationaloperator=" + elem.relationaloperator);
-            array1.push("&threshold=" + elem.threshold);
-            array1.push("&account=" + args.context.users[0].account);
-            array1.push("&domainid=" +args.context.users[0].domainid );
-
-            $.ajax({
-              url: createURL("createCondition" + array1.join("")),
-              dataType: 'json',
-              async: true,
-              success: function(data) {
-                scaleUpConditionIds.push(data.conditionresponse.id);
-                if (scaleUpConditionIds.length == totalScaleUpCondition)
-                  scaleDownCondition(args);
-                //scaleUpConditionIds = scaleUpConditionIds? scaleUpConditionIds.concat(",").concat(data.conditionresponse.id): data.conditionresponse.id;
-              }
-            });
-          });
-        };
-
-        var scaleDownCondition = function(args){
-          $.map(scaleDownData, function(elem) {
-            var array1 = [];
-            array1.push("&counterid=" + elem.counterid);
-            array1.push("&relationaloperator=" + elem.relationaloperator);
-            array1.push("&threshold=" + elem.threshold);
-            array1.push("&account=" + args.context.users[0].account);
-            array1.push("&domainid=" +args.context.users[0].domainid );
-
-            $.ajax({
-              url: createURL("createCondition" + array1.join("")),
-              dataType: 'json',
-              async: true,
-              success: function(data) {
-                scaleDownConditionIds.push(data.conditionresponse.id);
-                if (scaleDownConditionIds.length == totalScaleDownCondition)
-                  scaleUp(args);
-                //scaleDownConditionIds = scaleDownConditionIds? scaleDownConditionIds.concat(",").concat(data.conditionresponse.id): data.conditionresponse.id;
-              }
-            });
-          });
-        };
-
         var scaleUp = function(args){
-          var array1 = [];
-          array1.push("&action=" + "scaleup");
-          array1.push("&conditionids=" + scaleUpConditionIds.join(","));
-          array1.push("&duration=" + args.data.scaleUpDuration );
-          array1.push("&quiettime=" + args.data.quietTime);
-
-          $.ajax({
-            url: createURL('createAutoScalePolicy' + array1.join("")),
-            dataType: 'json',
-            async: true,
-            success: function(data) {
-              var jobId = data.autoscalepolicyresponse.jobid;
-              var autoScalePolicyTimer = setInterval(function(){
-                $.ajax({
-                  url: createURL("queryAsyncJobResult&jobId="+jobId),
-                  dataType: "json",
-                  success: function(json) {
-                    var result = json.queryasyncjobresultresponse;
-                    if (result.jobstatus == 0) {
-                      return; //Job has not completed
-                    }
-                    else {
-                      clearInterval(autoScalePolicyTimer);
-                      if (result.jobstatus == 1) { //AutoScalePolicy successfully created
-                        scaleUpPolicyResponse = result.jobresult.autoscalepolicy;
-                        scaleDown(args);
-                      }
-                      else if (result.jobstatus == 2) {
-                        args.response.error({message: _s(result.jobresult.errortext)});              
-                      }
-                    }
-                  },
-                  error: function(args) {
-                    clearInterval(autoScalePolicyTimer);
-                  }
-                });
-              }, 3000);
-            }
-          });
+				  var scaleUpConditionIds = [];
+				  $(scaleUpData).each(function(){
+					  var data = {
+						  counterid: this.counterid,
+							relationaloperator: this.relationaloperator,
+							threshold: this.threshold
+						};						
+						$.ajax({
+              url: createURL('createCondition'),   
+							data: data,
+              success: function(json) {							  
+								var createConditionIntervalID = setInterval(function() { 	
+									$.ajax({
+										url: createURL("queryAsyncJobResult&jobid=" + json.conditionresponse.jobid),
+										dataType: "json",
+										success: function(json) {
+											var result = json.queryasyncjobresultresponse;
+											if(result.jobstatus == 0) {
+												return;
+											}
+											else {                                    
+												clearInterval(createConditionIntervalID); 											
+												if(result.jobstatus == 1) {																		 
+													var item  = json.queryasyncjobresultresponse.jobresult.condition;
+													scaleUpConditionIds.push(item.id);													
+													if (scaleUpConditionIds.length == scaleUpData.length) {													  
+														var data = {
+														  action: 'scaleup',
+															conditionids: scaleUpConditionIds.join(","),
+															duration: args.data.scaleUpDuration,
+															quiettime: args.data.quietTime
+														};														
+														$.ajax({
+															url: createURL('createAutoScalePolicy'),
+												      data: data,															
+															success: function(json) {
+																var jobId = json.autoscalepolicyresponse.jobid;
+																var createAutoScalePolicyInterval = setInterval(function(){
+																	$.ajax({
+																		url: createURL("queryAsyncJobResult&jobId="+jobId),
+																		dataType: "json",
+																		success: function(json) {
+																			var result = json.queryasyncjobresultresponse;
+																			if (result.jobstatus == 0) {
+																				return; //Job has not completed
+																			}
+																			else {
+																				clearInterval(createAutoScalePolicyInterval);																	
+																				if (result.jobstatus == 1) { //AutoScalePolicy successfully created
+																					var item = result.jobresult.autoscalepolicy;
+																					scaleDown($.extend(args, {
+																					  scaleUpPolicyResponse: item
+																					}));
+																				}
+																				else if (result.jobstatus == 2) {
+																					args.response.error({ message: _s(result.jobresult.errortext) });              
+																				}
+																			}
+																		},																		
+																		error: function(XMLHttpResponse) {																			
+																			args.response.error({ message: parseXMLHttpResponse(XMLHttpResponse) });
+																		}
+																	});
+																}, 3000);
+															}
+														});
+													}
+												}
+												else if(result.jobstatus == 2) {
+													args.response.error({ message: _s(result.jobresult.errortext) });  
+												}
+											}
+										}
+									});                            
+								}, 3000); 
+              }
+            });						
+					});		
         };
-        var scaleDown = function(args){
-          var array1 = [];
-          array1.push("&action=" + "scaledown");
-          array1.push("&conditionids=" + scaleDownConditionIds.join(","));
-          array1.push("&duration=" + args.data.scaleDownDuration );
-          array1.push("&quiettime=" + args.data.quietTime);
 
-          $.ajax({
-            url: createURL('createAutoScalePolicy' + array1.join("")),
-            dataType: 'json',
-            async: true,
-            success: function(data) {
-              var jobId = data.autoscalepolicyresponse.jobid;
-              var autoScalePolicyTimer = setInterval(function(){
-                $.ajax({
-                  url: createURL("queryAsyncJobResult&jobId="+jobId),
-                  dataType: "json",
-                  success: function(json) {
-                    var result = json.queryasyncjobresultresponse;
-                    if (result.jobstatus == 0) {
-                      return; //Job has not completed
-                    }
-                    else {
-                      clearInterval(autoScalePolicyTimer);
-                      if (result.jobstatus == 1) { //AutoScalePolicy successfully created
-                        scaleDownPolicyResponse = result.jobresult.autoscalepolicy;
-                        createVmProfile(args);
-                      }
-                      else if (result.jobstatus == 2) {
-                        args.response.error({message: _s(result.jobresult.errortext)});              
-                      }
-                    }
-                  },
-                  error: function(args) {
-                    clearInterval(autoScalePolicyTimer);
-                  }
-                });
-              }, 3000);
-            }
-          });
+        var scaleDown = function(args){
+				  var scaleDownConditionIds = [];
+				  $(scaleDownData).each(function(){
+					  var data = {
+						  counterid: this.counterid,
+							relationaloperator: this.relationaloperator,
+							threshold: this.threshold
+						};						
+						$.ajax({
+              url: createURL('createCondition'),   
+							data: data,
+              success: function(json) {							  
+								var createConditionIntervalID = setInterval(function() { 	
+									$.ajax({
+										url: createURL("queryAsyncJobResult&jobid=" + json.conditionresponse.jobid),
+										dataType: "json",
+										success: function(json) {
+											var result = json.queryasyncjobresultresponse;
+											if(result.jobstatus == 0) {
+												return;
+											}
+											else {                                    
+												clearInterval(createConditionIntervalID); 										
+												if(result.jobstatus == 1) {																		 
+													var item  = json.queryasyncjobresultresponse.jobresult.condition;
+													scaleDownConditionIds.push(item.id);													
+													if (scaleDownConditionIds.length == scaleDownData.length) {													  
+														var data = {
+														  action: 'scaledown',
+															conditionids: scaleDownConditionIds.join(","),
+															duration: args.data.scaleDownDuration,
+															quiettime: args.data.quietTime
+														};														
+														$.ajax({
+															url: createURL('createAutoScalePolicy'),
+												      data: data,															
+															success: function(json) {
+																var jobId = json.autoscalepolicyresponse.jobid;
+																var createAutoScalePolicyInterval = setInterval(function(){
+																	$.ajax({
+																		url: createURL("queryAsyncJobResult&jobId="+jobId),
+																		dataType: "json",
+																		success: function(json) {
+																			var result = json.queryasyncjobresultresponse;
+																			if (result.jobstatus == 0) {
+																				return; //Job has not completed
+																			}
+																			else {
+																				clearInterval(createAutoScalePolicyInterval);																			
+																				if (result.jobstatus == 1) { //AutoScalePolicy successfully created
+																					var item = result.jobresult.autoscalepolicy;
+																					createVmProfile($.extend(args, {
+																					  scaleDownPolicyResponse: item
+																					}));
+																				}
+																				else if (result.jobstatus == 2) {
+																					args.response.error({ message: _s(result.jobresult.errortext) });              
+																				}
+																			}
+																		},																		
+																		error: function(XMLHttpResponse) {																			
+																			args.response.error({ message: parseXMLHttpResponse(XMLHttpResponse) });
+																		}
+																	});
+																}, 3000);
+															}
+														});
+													}
+												}
+												else if(result.jobstatus == 2) {
+													args.response.error({ message: _s(result.jobresult.errortext) });  
+												}
+											}
+										}
+									});                            
+								}, 3000); 
+              }
+            });						
+					});		
         };
 
         var createVmProfile = function(args){
@@ -860,9 +890,9 @@
           array1.push("&minMembers=" + args.data.minInstance);
           array1.push("&maxMembers=" + args.data.maxInstance );
           array1.push("&vmprofileid=" + scaleVmProfileResponse.id);
-          array1.push("&interval=" + args.data.interval);
-          array1.push("&scaleuppolicyids=" + scaleUpPolicyResponse.id);
-          array1.push("&scaledownpolicyids=" + scaleDownPolicyResponse.id );
+          array1.push("&interval=" + args.data.interval);			
+          array1.push("&scaleuppolicyids=" + args.scaleUpPolicyResponse.id);
+          array1.push("&scaledownpolicyids=" + args.scaleDownPolicyResponse.id );
           $.ajax({
             url: createURL('createAutoScaleVmGroup' + array1.join("")),
             dataType: 'json',
@@ -898,7 +928,7 @@
             }
           });
         };
-        scaleUpCondition(args);
+        scaleUp(args);
         
         //setTimeout(function() { args.response.success(); }, 1000);
         //setTimeout(function() { args.response.error('Error!'); }, 1000);
