@@ -600,43 +600,47 @@
     actions: {
       add: function(args) {   
 			  //validation (begin) *****
-				var havingApiKeyAndSecretKey = false;
-				$.ajax({
-				  url: createURL('listUsers'),
-					data: {
-					  id: args.data.username
-					}, 
-					async: false,
-					success: function(json) {					 
-						if(json.listusersresponse.user[0].apikey != null && json.listusersresponse.user[0].secretkey != null) {
-						  havingApiKeyAndSecretKey = true;
-						}						
-					}
-				});		       
-        if(havingApiKeyAndSecretKey == false) {
-          args.response.error('The selected user in advanced settings does not have API key or secret key');
-					return;
-        }			
+				if(isAdmin() || isDomainAdmin()) { //only admin and domain-admin has access to listUers API
+					var havingApiKeyAndSecretKey = false;
+					$.ajax({
+						url: createURL('listUsers'),
+						data: {
+							id: args.data.username
+						}, 
+						async: false,
+						success: function(json) {					 
+							if(json.listusersresponse.user[0].apikey != null && json.listusersresponse.user[0].secretkey != null) {
+								havingApiKeyAndSecretKey = true;
+							}						
+						}
+					});		       
+					if(havingApiKeyAndSecretKey == false) {
+						args.response.error('The selected user in advanced settings does not have API key or secret key');
+						return;
+					}			
+				}
 				
-				var hasValidEndpointeUrl = false;
-				$.ajax({
-				  url: createURL('listConfigurations'),
-					data: {
-					  name: 'endpointe.url'
-					},
-					async: false,
-					success: function(json) {					  
-						if(json.listconfigurationsresponse.configuration != null) {						  
-							if(json.listconfigurationsresponse.configuration[0].value.indexOf('localhost') == -1) {							
-							  hasValidEndpointeUrl = true;
-							}
-						}						
-					}
-				});				
-				if(hasValidEndpointeUrl == false) {
-				  args.response.error("Global setting endpointe.url has to be set to the Management Server's API end point");
-					return;
-				}								
+				if(isAdmin()) { //only admin has access to listConfigurations API
+					var hasValidEndpointeUrl = false;
+					$.ajax({
+						url: createURL('listConfigurations'),
+						data: {
+							name: 'endpointe.url'
+						},
+						async: false,
+						success: function(json) {					  
+							if(json.listconfigurationsresponse.configuration != null) {						  
+								if(json.listconfigurationsresponse.configuration[0].value.indexOf('localhost') == -1) {							
+									hasValidEndpointeUrl = true;
+								}
+							}						
+						}
+					});				
+					if(hasValidEndpointeUrl == false) {
+						args.response.error("Global setting endpointe.url has to be set to the Management Server's API end point");
+						return;
+					}		
+        }					
 				//validation (end) *****	
 				
 			
