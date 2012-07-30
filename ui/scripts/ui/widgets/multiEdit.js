@@ -129,13 +129,20 @@
               $td.attr('title', data[fieldName]);
             }
           } else if (field.select) {
-            $td.append($('<span>').html(_s(
               // Get matching option text
-              $multi.find('select').filter(function() {
+            var $matchingSelect = $multi.find('select')
+                  .filter(function() {
                 return $(this).attr('name') == fieldName;
-              }).find('option').filter(function() {
+                  });
+            var $matchingOption = $matchingSelect.find('option')
+                  .filter(function() {
                 return $(this).val() == data[fieldName];
-              }).html())));
+                  });
+
+            var matchingValue = $matchingOption.size() ?
+                  $matchingOption.html() : data[fieldName];
+            
+            $td.append($('<span>').html(_s(matchingValue)));
           } else if (field.addButton && !options.noSelect) {
             if (options.multipleAdd) {
               $addButton.click(function() {
@@ -180,9 +187,14 @@
               if ($td.hasClass('disabled')) return false;
               
               var $button = $(this);
+              var context = $.extend(true, {},
+                                     options.context ?
+                                     options.context : cloudStack.context, {
+                                       multiRules: [data]
+                                     });
 
               field.custom.action({
-                context: options.context ? options.context : cloudStack.context,
+                context: context,
                 data: $td.data('multi-custom-data'),
                 $item: $td,
                 response: {
@@ -356,7 +368,7 @@
       });
 
       // Add tagger action
-      if (options.tags) {
+                if (options.tags) {
         $actions.prepend(
           $('<div></div>')
             .addClass('action editTags')
@@ -383,17 +395,17 @@
                 })
                 .append(
                   $('<div></div>').addClass('multi-edit-tags').tagger($.extend(true, {}, options.tags, {
-                    context: $.extend(true, {}, options.context, {
-                      multiRule: [multiRule]
-                    })
-                  }))
+                      context: $.extend(true, {}, options.context, {
+                        multiRule: [multiRule]
+                      })
+                    }))
                 )
                 .closest('.ui-dialog').overlay();
 
               return false;
             })
         )
-      }
+                }
 
       // Add expandable listing, for multiple-item
       if (options.multipleAdd) {
@@ -802,7 +814,7 @@
           if (field.defaultValue) {
             $input.val(field.defaultValue);
             $input.data('multi-default-value', field.defaultValue);
-          }
+        }
         }
       } else if (field.custom) {
         $('<div>').addClass('button add-vm custom-action')
@@ -814,6 +826,7 @@
             var formData = getMultiData($multi);
             
             field.custom.action({
+              formData: formData,
               context: context,
               data: $td.data('multi-custom-data'),
               response: {
@@ -847,7 +860,7 @@
       }
     }) : null;
     var $headerFields = $('<div>').addClass('header-fields').hide(); //make headerFields hidden as default
-		
+
     if (headerForm) {
       $headerFields.append(headerForm.$formContainer)
         .prependTo($multi);
@@ -1024,7 +1037,7 @@
     }
 
     // Get existing data
-    getData();
+    setTimeout(function() { getData(); });
 
     var fullRefreshEvent = function(event) {
       if ($multi.is(':visible')) {
