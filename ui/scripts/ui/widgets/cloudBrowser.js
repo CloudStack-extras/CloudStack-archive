@@ -345,7 +345,7 @@
         $panel.css(
           { left: targetPosition }
         );
-        if (args.complete) args.complete($panel);
+        if (args.complete) args.complete($panel, _breadcrumb.filter($panel));
       } else {
         // Animate slide-in
         $panel.animate({ left: targetPosition }, {

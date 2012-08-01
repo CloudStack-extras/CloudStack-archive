@@ -1115,6 +1115,15 @@
 
     if (section) {
       listViewData = args.sections[section].listView;
+      var sectionTitle = _l(args.title);
+      var subsectionTitle = _l(args.sections[section].title);
+      
+      // Show subsection in breadcrumb
+      if (sectionTitle != subsectionTitle) {
+        args.$breadcrumb.find('span.subsection').html(
+          ' - ' + sectionTitle
+        );
+      }
     }
 
     // Create table and other elems
