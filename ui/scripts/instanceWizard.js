@@ -301,7 +301,20 @@
           networkData.account = g_account;
         }
 
-        var networkObjs;
+        var networkObjs, vpcObjs;
+
+        // Get VPCs
+        $.ajax({
+          url: createURL('listVPCs'),
+          data: isDomainAdmin() ?
+            { account: args.context.users[0].account, domainid: args.context.users[0].domainid } :
+            { listAll: true },
+          async: false,
+          success: function(json) {
+            vpcObjs: json.listvpcsresponse.vpc ? json.listvpcsresponse.vpc : [];
+          }
+        });
+        
         $.ajax({
           url: createURL('listNetworks'),
           data: networkData,
@@ -337,7 +350,8 @@
             myNetworks: [], //not used any more
             sharedNetworks: networkObjs,
             securityGroups: [],
-            networkOfferings: networkOfferingObjs
+            networkOfferings: networkOfferingObjs,
+            vpcs: vpcObjs
           }
         });
       }
@@ -370,7 +384,8 @@
             myNetworks: [], //not used any more
             sharedNetworks: [],
             securityGroups: securityGroupArray,
-            networkOfferings: []
+            networkOfferings: [],
+            vpcs: []
           }
         });
       }
@@ -382,7 +397,8 @@
             myNetworks: [], //not used any more
             sharedNetworks: [],
             securityGroups: [],
-            networkOfferings: []
+            networkOfferings: [],
+            vpcs: []
           }
         });
       }
