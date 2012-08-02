@@ -311,14 +311,13 @@
             { listAll: true },
           async: false,
           success: function(json) {
-            vpcObjs: json.listvpcsresponse.vpc ? json.listvpcsresponse.vpc : [];
+            vpcObjs = json.listvpcsresponse.vpc ? json.listvpcsresponse.vpc : [];
           }
         });
         
         $.ajax({
           url: createURL('listNetworks'),
           data: networkData,
-          dataType: "json",
           async: false,
           success: function(json) {
             networkObjs = json.listnetworksresponse.network ? json.listnetworksresponse.network : [];

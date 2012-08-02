@@ -483,6 +483,23 @@
             return {
               response: {
                 success: function(args) {
+                  var $vpcSelect = $step.find('select[name=vpc-filter]');
+                  var vpcs = args.data.vpcs;
+
+                  // Populate VPC drop-down
+                  $(vpcs).map(function(index, vpc) {
+                    var $option = $('<option>');
+                    var id = vpc.id;
+                    var description = vpc.name;
+
+                    $option.attr('value', id);
+                    $option.html(description);
+                    $option.appendTo($vpcSelect);
+                  });
+
+                  // 'No VPC' option
+                  $('<option>').attr('value', '-1').html('None').prependTo($vpcSelect);
+
                   // Populate network offering drop-down
                   $(args.data.networkOfferings).each(function() {
                     $('<option>')
