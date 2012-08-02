@@ -412,6 +412,9 @@
             $.ajax({
               url: createURL("listNetworks&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
               dataType: 'json',
+							data: {
+							  listAll: true
+							},
               async: false,
               success: function(data) {
                 args.response.success({
@@ -840,7 +843,8 @@
                 dataProvider: function(args) {
                   $.ajax({
                     url: createURL("listNetworks&id=" + args.context.networks[0].id), //pass "&listAll=true" to "listNetworks&id=xxxxxxxx" for now before API gets fixed.
-                    dataType: "json",
+                    data: { listAll: true },
+										dataType: "json",
                     async: true,
                     success: function(json) {
                       var jsonObj = json.listnetworksresponse.network[0];
@@ -3891,6 +3895,7 @@
           id: 'vpnCustomerGateway',
           label: 'VPN Customer Gateway',
           fields: {
+					  name: { label: 'label.name' },
             gateway: { label: 'label.gateway' },
             cidrlist: { label: 'CIDR list' },
             ipsecpsk: { label: 'IPsec Preshared-Key' }
@@ -3930,6 +3935,10 @@
               createForm: {
                 title: 'add VPN Customer Gateway',
                 fields: {
+								  name: {
+									  label: 'label.name',
+										validation: { required: true }
+									},
                   gateway: {
                     label: 'label.gateway',
                     validation: { required: true }
@@ -3982,6 +3991,7 @@
                 $.ajax({
                   url: createURL('createVpnCustomerGateway'),
                   data: {
+									  name: args.data.name,
                     gateway: args.data.gateway,
                     cidrlist: args.data.cidrlist,
                     ipsecpsk: args.data.ipsecpsk,
@@ -4019,7 +4029,7 @@
                 label: 'Create VPN Connection',
                 messages: {
                   confirm: function(args) {
-                    return 'Are you sure you want to create VPN connection ?';
+                    return 'Please confirm that you want to create VPN connection.';
                   },
                   notification: function(args) {
                     return 'Create VPN Connection';
@@ -4200,9 +4210,10 @@
                 title: 'label.details',
                 fields: [
                   {
-                    gateway: { label: 'label.gateway' }
+									  name: { label: 'label.name' }                    
                   },
                   {
+									  gateway: { label: 'label.gateway' },
                     cidrlist: { label: 'CIDR list' },
                     ipsecpsk: { label: 'IPsec Preshared-Key' },
                     id: { label: 'label.id' },
