@@ -148,6 +148,11 @@
                     if (!$checkbox.is(':checked')) {
                       $checkbox.attr('checked', true);
                     }
+
+                    if ($(this).closest('.select-container').hasClass('single-select')) {
+                      $(this).closest('.select').siblings().find('input[type=checkbox]')
+                        .attr('checked', false);
+                    }
                   })
                   .after(
                     $('<div>').addClass('name').html(options.secondary.desc)
@@ -498,11 +503,17 @@
                 return args.vpcFilter($select.data('json-obj'), vpcID);
               }));
               var $addNetworkForm = $step.find('.select.new-network');
+              var $addNewNetworkCheck = $addNetworkForm.find('input[name=new-network]');
 
               // VPC networks cannot be created via instance wizard
               if (vpcID != -1) {
                 $step.find('.my-networks .select-container').addClass('single-select');
                 $addNetworkForm.hide();
+
+                if ($addNewNetworkCheck.is(':checked')) {
+                  $addNewNetworkCheck.click();
+                  $addNewNetworkCheck.attr('checked', false);
+                }
               } else {
                 $step.find('.my-networks .select-container').removeClass('single-select');
                 $addNetworkForm.show();
