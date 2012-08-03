@@ -489,6 +489,11 @@
                 
                 return args.vpcFilter($select.data('json-obj'), vpcID);
               }));
+              var $addNetworkForm = $step.find('.select.new-network');
+
+              // VPC networks cannot be created via instance wizard
+              if (vpcID != -1) $addNetworkForm.hide();
+              else $addNetworkForm.show();
               
               $selects.find('input[type=checkbox]').attr('checked', false);
               $selects.hide();
