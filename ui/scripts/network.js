@@ -1405,9 +1405,10 @@
                         args.$tierSelect.hide();
                       }
 
-                    //  args.$tierSelect.change(function() {
+                      args.$tierSelect.change(function() {
                         args.$tierSelect.closest('.list-view').listView('refresh');
-                   //   });
+                      });
+                      args.$tierSelect.closest('.list-view').listView('refresh');
                     },
 
                     listView: $.extend(true, {}, cloudStack.sections.instances, {
@@ -3858,6 +3859,8 @@
                   },
                   {
                     displaytext: { label: 'label.description', isEditable: true },
+                    account: { label: 'label.account' },
+                    domain: { label: 'label.domain' },
                     zonename: { label: 'label.zone' },
                     cidr: { label: 'label.cidr' },
                     networkdomain: { label: 'label.network.domain' },
