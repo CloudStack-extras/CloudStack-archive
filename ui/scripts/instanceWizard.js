@@ -9,7 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License. 
 (function($, cloudStack) {
-  var zoneObjs, hypervisorObjs, featuredTemplateObjs, communityTemplateObjs, myTemplateObjs, featuredIsoObjs, community
+  var zoneObjs, hypervisorObjs, featuredTemplateObjs, communityTemplateObjs, myTemplateObjs, featuredIsoObjs, community;
   var selectedZoneObj, selectedTemplateObj, selectedHypervisor, selectedDiskOfferingObj; 
   var step5ContainerType = 'nothing-to-select'; //'nothing-to-select', 'select-network', 'select-security-group'
 
@@ -17,6 +17,17 @@
     maxDiskOfferingSize: function() {
       return g_capabilities.customdiskofferingmaxsize;
     },
+
+    // Called in networks list, when VPC drop-down is changed
+    // -- if vpcID given, return true if in network specified by vpcID
+    // -- if vpcID == -1, return true if network is not associated with a VPC
+    vpcFilter: function(data, vpcID) {
+      return vpcID != -1?
+        data.vpcid == vpcID :
+        !data.vpcid;
+    },
+
+    // Data providers for each wizard step
     steps: [
       // Step 1: Setup
       function(args) {
