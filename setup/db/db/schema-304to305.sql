@@ -312,7 +312,9 @@ CREATE TABLE `cloud`.`s2s_customer_gateway` (
   `ipsec_psk` varchar(256),
   `ike_policy` varchar(30) NOT NULL,
   `esp_policy` varchar(30) NOT NULL,
-  `lifetime` int,
+  `ike_lifetime` int NOT NULL DEFAULT 86400,
+  `esp_lifetime` int NOT NULL DEFAULT 3600,
+  `dpd` int(1) NOT NULL DEFAULT 0,
   `domain_id` bigint unsigned NOT NULL,
   `account_id` bigint unsigned NOT NULL,
   `removed` datetime COMMENT 'date removed if not null',
@@ -349,8 +351,6 @@ SET SQL_SAFE_UPDATES=0;
 UPDATE `cloud`.`hypervisor_capabilities` SET `max_data_volumes_limit`=13 WHERE `hypervisor_type`='XenServer' AND (`hypervisor_version`='6.0' OR `hypervisor_version`='6.0.2');
 SET SQL_SAFE_UPDATES=1;
 UPDATE `cloud`.`configuration` SET description='In second, timeout for creating volume from snapshot' WHERE name='create.volume.from.snapshot.wait';
-
-ALTER TABLE `cloud`.`host_details` ADD CONSTRAINT UNIQUE KEY (`host_id`, `name`);
 
 INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Account Defaults', 'DEFAULT', 'management-server', 'max.account.vpcs', '20', 'The default maximum number of vpcs that can be created for an account');
 INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Project Defaults', 'DEFAULT', 'management-server', 'max.project.vpcs', '20', 'The default maximum number of vpcs that can be created for a project');

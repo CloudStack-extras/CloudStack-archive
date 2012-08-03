@@ -833,7 +833,7 @@ CREATE TABLE `cloud`.`host_details` (
   `value` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_host_details__host_id` FOREIGN KEY (`host_id`) REFERENCES `host`(`id`) ON DELETE CASCADE,
-  CONSTRAINT UNIQUE KEY (`host_id`, `name`)
+  CONSTRAINT UNIQUE KEY `uk_host_id_name` (`host_id`, `name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE  `cloud`.`mshost` (
@@ -2170,7 +2170,9 @@ CREATE TABLE `cloud`.`s2s_customer_gateway` (
   `ipsec_psk` varchar(256),
   `ike_policy` varchar(30) NOT NULL,
   `esp_policy` varchar(30) NOT NULL,
-  `lifetime` int,
+  `ike_lifetime` int NOT NULL DEFAULT 86400,
+  `esp_lifetime` int NOT NULL DEFAULT 3600,
+  `dpd` int(1) NOT NULL DEFAULT 0,
   `domain_id` bigint unsigned NOT NULL,
   `account_id` bigint unsigned NOT NULL,
   `removed` datetime COMMENT 'date removed if not null',

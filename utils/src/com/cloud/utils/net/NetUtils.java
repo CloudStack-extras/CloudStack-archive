@@ -1109,8 +1109,7 @@ public class NetUtils {
             if (policy.isEmpty()) {
                 return false;
             }
-            //String cipherHash = policy.split(";")[0];
-            String cipherHash = policy;
+            String cipherHash = policy.split(";")[0];
             if (cipherHash.isEmpty()) {
                 return false;
             }
@@ -1126,15 +1125,13 @@ public class NetUtils {
             if (!hash.matches("md5|sha1")) {
                 return false;
             }
-            /*  Disable pfsGroup support, see CS-15511
             String pfsGroup = null;
             if (!policy.equals(cipherHash)) {
                 pfsGroup = policy.split(";")[1];
             }
-            if (pfsGroup != null && !pfsGroup.matches("modp1024|modp1536")) {
+            if (pfsGroup != null && !pfsGroup.matches("modp1024|modp1536|")) {
                 return false;
             }
-            */
         }
         return true;
     }
@@ -1148,7 +1145,7 @@ public class NetUtils {
         return true;
     }
     
-    public static boolean validateIcmpType(int icmpType) {
+    public static boolean validateIcmpType(long icmpType) {
         //Source - http://www.erg.abdn.ac.uk/~gorry/course/inet-pages/icmp-code.html
         if(!(icmpType >=0 && icmpType <=255)) {
             s_logger.warn("impcType is not within 0-255 range");
@@ -1157,7 +1154,7 @@ public class NetUtils {
         return true;
     }
     
-    public static boolean validateIcmpCode(int icmpCode) {
+    public static boolean validateIcmpCode(long icmpCode) {
         
         //Source - http://www.erg.abdn.ac.uk/~gorry/course/inet-pages/icmp-code.html
         if(!(icmpCode >=0 && icmpCode <=15)) {
