@@ -103,6 +103,14 @@
                       .click(function() {
                         var $radio = $(this).closest('.select').find('input[type=radio]');
 
+                        if ($(this).attr('type') == 'checkbox') {
+                          if ($(this).closest('.select-container').hasClass('single-select')) {
+                            $(this).closest('.select').siblings().find('input[type=checkbox]')
+                              .attr('checked', false);
+                            $(this).closest('.select').find('input[type=radio]').click();
+                          }
+                        }
+                        
                         if ($radio.is(':checked') && !$(this).is(':checked')) {
                           if (!$radio.closest('.select').index()) {
                             return false;
@@ -492,8 +500,13 @@
               var $addNetworkForm = $step.find('.select.new-network');
 
               // VPC networks cannot be created via instance wizard
-              if (vpcID != -1) $addNetworkForm.hide();
-              else $addNetworkForm.show();
+              if (vpcID != -1) {
+                $step.find('.my-networks .select-container').addClass('single-select');
+                $addNetworkForm.hide();
+              } else {
+                $step.find('.my-networks .select-container').removeClass('single-select');
+                $addNetworkForm.show();
+              }
               
               $selects.find('input[type=checkbox]').attr('checked', false);
               $selects.hide();
