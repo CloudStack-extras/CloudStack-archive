@@ -338,8 +338,8 @@ function AjaxViewer(panelId, imageUrl, updateUrl, tileMap, width, height, tileWi
 	// trouble-shooting
 	g_logger = new Logger();
 	
-	//g_logger.enable(true);
-	//g_logger.open();
+	// g_logger.enable(true);
+	// g_logger.open();
 	
 	var ajaxViewer = this;
 	this.imageLoaded = false;
@@ -694,12 +694,16 @@ AjaxViewer.prototype = {
 		if(this.hypervisorType && this.hypervisorType == "XenServer") {
 			// XenServer hypervisor
 			
-			mapper.jsX11KeysymMap[192] = 91;
-			mapper.jsX11KeysymMap[219] = 93;
-			mapper.jsX11KeysymMap[187] = 59;
-			mapper.jsX11KeysymMap[186] = 39;
-			mapper.jsX11KeysymMap[221] = 92;
-			mapper.jsX11KeysymMap[222] = 61;
+			mapper.jsX11KeysymMap[192] = 91;		// @ on JP keyboard
+			mapper.jsX11KeysymMap[219] = 93;		// [ on JP keyboard
+			if($.browser.mozilla) {
+				mapper.jsX11KeysymMap[59] = 39;			// : on JP keyboard
+			} else {
+				mapper.jsX11KeysymMap[187] = 59;		// ; on JP keyboard
+				mapper.jsX11KeysymMap[186] = 39;		// : on JP keyboard
+			}
+			mapper.jsX11KeysymMap[221] = 92;		// ] on JP keyboard
+			mapper.jsX11KeysymMap[222] = 61;		// ^ on JP keyboard
 			
 			// for keycode 106, keypress 42
 			mapper.jsX11KeysymMap[106] = true;
@@ -717,7 +721,19 @@ AjaxViewer.prototype = {
 	    	    {type: AjaxViewer.KEY_UP, code: 59, modifiers: 0, shift: false },
 	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
 	    	];
-			
+			if($.browser.mozilla) {
+				mapper.jsKeyPressX11KeysymMap[59] = [
+     	    	    {type: AjaxViewer.KEY_DOWN, code: 59, modifiers: 0, shift: false },
+     	    	    {type: AjaxViewer.KEY_UP, code: 59, modifiers: 0, shift: false },
+     	    	];
+				
+				mapper.jsKeyPressX11KeysymMap[43] = [
+     	      	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: true },
+     	    	    {type: AjaxViewer.KEY_DOWN, code: 59, modifiers: 0, shift: true },
+     	    	    {type: AjaxViewer.KEY_UP, code: 59, modifiers: 0, shift: true },
+     	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: true },
+     	    	];
+			}
 		} else {
 			// for VMware hypervisor
 			
