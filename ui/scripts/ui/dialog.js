@@ -413,6 +413,8 @@
               $('div.overlay').remove();
               $formContainer.remove();
               $(this).dialog('destroy');
+
+              if (args.cancel) args.cancel();
             }
           }
         ]

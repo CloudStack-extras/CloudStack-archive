@@ -50,61 +50,67 @@
           case 'gateways':
             //siteToSiteVPN is an object
             var addAction = gateways.add;
-            var isGatewayPresent = addAction.preCheck({ context: gateways.context });
+
             var showGatewayListView = function() {
               $browser.cloudBrowser('addPanel', {
                 title: 'Private Gateway',
                 maximizeIfSelected: true,
                 complete: function($panel) {
+                  var isGatewayPresent = addAction.preCheck({ context: gateways.context });
+
                   $panel.listView(gateways.listView(), { context: gateways.context });
+
+                  if (!isGatewayPresent) {
+                    cloudStack.dialog.createForm({
+                      form: addAction.createForm,
+								      context: args.gateways.context,
+                      after: function(args) {
+                        var data = args.data;
+                        var $loading = $('<div>').addClass('loading-overlay').appendTo($panel);
+                        var error = function(message) {
+                          $loading.remove();
+                          cloudStack.dialog.notice({ message: message });
+                        };
+
+                        addAction.action({
+                          data: data,
+                          context: gateways.context,
+                          response: {
+                            success: function(args) {
+                              var _custom = args._custom;
+                              var notification = {
+                                poll: addAction.notification.poll,
+                                _custom: _custom,
+                                desc: addAction.messages.notification()
+                              };
+                              var success = function(args) {
+                                if (!$panel.is(':visible')) return;
+                                
+                                $loading.remove();
+                                $panel.listView('refresh');
+                              };
+                              
+                              cloudStack.ui.notifications.add(
+                                notification,
+                                success, {},
+                                error, {}
+                              );
+                            },
+                            error: error
+                          }
+                        });
+                      },
+                      cancel: function() {
+                        $browser.cloudBrowser('selectPanel', { panel: $panel.prev() });
+                      }
+                    });
+                  }
                 }
               });
             };
 
-            if (isGatewayPresent) {
-              showGatewayListView();
-            } else {
-              cloudStack.dialog.createForm({
-                form: addAction.createForm,
-								context: args.gateways.context,
-                after: function(args) {
-                  var data = args.data;
-                  var $loading = $('<div>').addClass('loading-overlay').appendTo($chart);
-                  var error = function(message) {
-                    $loading.remove();
-                    cloudStack.dialog.notice({ message: message });
-                  };
+            showGatewayListView();
 
-                  addAction.action({
-                    data: data,
-                    context: gateways.context,
-                    response: {
-                      success: function(args) {
-                        var _custom = args._custom;
-                        var notification = {
-                          poll: addAction.notification.poll,
-                          _custom: _custom,
-                          desc: addAction.messages.notification()
-                        };
-                        var success = function(args) {
-                          if (!$chart.is(':visible')) return;
-                          
-                          $loading.remove();
-                          showGatewayListView();
-                        };
-                        
-                        cloudStack.ui.notifications.add(
-                          notification,
-                          success, {},
-                          error, {}
-                        );
-                      },
-                      error: error
-                    }
-                  });
-                }
-              });
-            }
             break;
           case 'site-to-site-vpn':
             //siteToSiteVPN is an object
