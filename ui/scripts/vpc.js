@@ -450,6 +450,22 @@
         return cloudStack.sections.network.sections.ipAddresses;
       }
     },
+    acl: {
+      listView: {
+        listView: {
+          id: 'acls',
+          fields: {
+            tierName: { label: 'Tier' },
+            aclTotal: { label: 'ACL Total' }
+          },
+          dataProvider: function(args) {
+            args.response.success({
+              data: []
+            });
+          }
+        }      
+      }
+    },
     gateways: {
       add: {
         preCheck: function(args) {

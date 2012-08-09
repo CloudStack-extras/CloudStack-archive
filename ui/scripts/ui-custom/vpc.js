@@ -14,6 +14,7 @@
       var $browser = args.$browser;
       var $chart = args.$chart;
       var ipAddresses = args.ipAddresses;
+      var acl = args.acl;
       var gateways = args.gateways;
       var siteToSiteVPN = args.siteToSiteVPN;
       var links = {
@@ -40,10 +41,10 @@
           switch (id) {
           case 'network-acls':
               $browser.cloudBrowser('addPanel', {
-              title: 'Network ACL',
+              title: 'Network ACLs',
               maximizeIfSelected: true,
               complete: function($panel) {
-                $panel.listView(ipAddresses.listView(), {context: ipAddresses.context});
+                $panel.listView(acl.listView, {context: acl.context});
               }
             });
             break;
@@ -208,6 +209,7 @@
       var $browser = args.$browser;
       var $chart = args.$chart;
       var ipAddresses = args.ipAddresses;
+      var acl = args.acl;
       var gateways = args.gateways;
       var siteToSiteVPN = args.siteToSiteVPN;
       var $config = $('<div>').addClass('config-area');
@@ -222,6 +224,7 @@
           $chart: $chart,
           ipAddresses: ipAddresses,
           gateways: gateways,
+          acl: acl,
           siteToSiteVPN: siteToSiteVPN
         });
 
@@ -390,6 +393,7 @@
     },
     chart: function(args) {
       var $browser = args.$browser;
+      var acl = args.acl;
       var ipAddresses = args.ipAddresses;
       var gateways = args.gateways;
       var siteToSiteVPN = args.siteToSiteVPN;
@@ -413,7 +417,8 @@
                 $chart: $chart,
                 ipAddresses: $.extend(ipAddresses, {context: context}),
                 gateways: $.extend(gateways, {context: context}),
-                siteToSiteVPN: $.extend(siteToSiteVPN, {context: context})
+                siteToSiteVPN: $.extend(siteToSiteVPN, {context: context}),
+                acl: $.extend(acl, {context: context})
               })
             );
 
@@ -727,6 +732,7 @@
     var tierArgs = args.tiers;
     var ipAddresses = args.ipAddresses;
     var gateways = args.gateways;
+    var acl = args.acl;
     var siteToSiteVPN = args.siteToSiteVPN;
 
     return function(args) {
@@ -753,6 +759,7 @@
                   $browser: $browser,
                   ipAddresses: ipAddresses,
                   gateways: gateways,
+                  acl: acl,
                   tierDetailView: tierArgs.detailView,
                   siteToSiteVPN: siteToSiteVPN,
                   vmListView: vmListView,
