@@ -80,9 +80,7 @@
 								context: args.gateways.context,
                 after: function(args) {
                   var data = args.data;
-                  var $loading = $('<div>').addClass('loading-overlay').appendTo($chart);
                   var error = function(message) {
-                    $loading.remove();
                     cloudStack.dialog.notice({ message: message });
                   };
 
@@ -99,10 +97,16 @@
                         };
                         var success = function(args) {
                           if (!$chart.is(':visible')) return;
-                          
-                          $loading.remove();
-                          showGatewayListView();
+
+                          cloudStack.dialog.confirm({
+                            message: 'Gateway for VPC has been created successfully. Would you like to see its details?',
+                            action: showGatewayListView
+                          });
                         };
+
+                        cloudStack.dialog.notice({
+                          message: 'Your gateway is being created; please see notifications window.'
+                        });
                         
                         cloudStack.ui.notifications.add(
                           notification,
@@ -137,9 +141,7 @@
               cloudStack.dialog.confirm({
                 message: 'Please confirm that you want to add a Site-to-Site VPN gateway.',
                 action: function() {
-                  var $loading = $('<div>').addClass('loading-overlay').appendTo($chart);
                   var error = function(message) {
-                    $loading.remove();
                     cloudStack.dialog.notice({ message: message });
                   };
 
@@ -155,10 +157,15 @@
                         };
                         var success = function(args) {
                           if (!$chart.is(':visible')) return;
-                          
-                          $loading.remove();
-                          showVPNListView();
+                          cloudStack.dialog.confirm({
+                            message: 'Gateway for VPC has been created successfully. Would you like to see its details?',
+                            action: showVPNListView
+                          });
                         };
+                        
+                        cloudStack.dialog.notice({
+                          message: 'Your VPN is being created; please see notifications window.'
+                        });
                         
                         cloudStack.ui.notifications.add(
                           notification,
