@@ -2358,11 +2358,11 @@
 																var items = [];
 																$(networks).each(function(){																  
 																	items.push({id: this.id, description: this.displaytext});
-																});
-																args.response.success({ data: items });																
-															}
                           });
+																args.response.success({ data: items });																
                         }
+                          });
+                      }
                       }
                       }
                     },
@@ -2713,7 +2713,8 @@
                           });
 
                           args.response.success({
-                            data: loadBalancerData
+                            data: loadBalancerData,
+                            //hideFields: ['autoScale']
                           });
                         }
                       });
@@ -2785,7 +2786,7 @@
                           });
 																args.response.success({ data: items });																
                         }
-														});	 
+                          });
                         }
                       }
                       }
@@ -3717,7 +3718,7 @@
 										});
 									}
 								});
-							}						
+      }
 						},
             
 						domainid: {					
@@ -3736,7 +3737,7 @@
 											if(domains != null && domains.length > 0) {
 												for(var i = 0; i < domains.length; i++) {
 													array1.push({id: domains[i].id, description: domains[i].path});
-      }
+    }
     }
 											args.response.success({
 												data: array1
