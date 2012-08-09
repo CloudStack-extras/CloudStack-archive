@@ -210,6 +210,11 @@
         var targetWidth = $multi.find('th.' + fieldName).width() + 5;
         $td.width(targetWidth);
 
+        if (data._hideFields &&
+            $.inArray(fieldName, data._hideFields) > -1) {
+          $td.children().css({ opacity: 0.5 });
+        }
+
         return true;
       });
 

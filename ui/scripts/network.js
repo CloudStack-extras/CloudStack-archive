@@ -2610,8 +2610,11 @@
                           });
 
                           args.response.success({
-                            data: loadBalancerData,
-                            //hideFields: ['autoScale']
+                            data: $(loadBalancerData).map(function(index, lbRule) {
+                              return $.extend(lbRule, {
+                                _hideFields: ['autoScale']
+                              });
+                            })
                           });
                         }
                       });
