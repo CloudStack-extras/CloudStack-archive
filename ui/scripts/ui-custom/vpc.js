@@ -279,6 +279,7 @@
       return $router;
     },
     tier: function(args) {
+      var ipAddresses = args.ipAddresses;
       var acl = args.acl;
       var name = args.name;
       var cidr = args.cidr;
@@ -302,23 +303,6 @@
       var $cidr = $('<span>').addClass('cidr');
       var $vmCount = $('<span>').addClass('vm-count');
       var $actions = $('<div>').addClass('actions');
-
-      // Setup ACL tab
-      detailView = $.extend(true, {}, detailView, {
-        tabs: {
-          acl: {
-            custom: function(args) {
-              var $acl = elems.aclDialog({
-                isDialog: false,
-                actionArgs: acl.action,
-                context: context
-              });
-              
-              return $acl;
-            }
-          }
-        }
-      });
 
       // Ignore special actions
       // -- Add tier action is handled separately
@@ -374,6 +358,32 @@
         $tier.addClass('placeholder');
         $title.html('Create Tier');
       } else {
+        // Setup detail view tabs
+        detailView = $.extend(true, {}, detailView, {
+          tabs: {
+            acl: {
+              custom: function(args) {
+                var $acl = elems.aclDialog({
+                  isDialog: false,
+                  actionArgs: acl.action,
+                  context: context
+                });
+                
+                return $acl;
+              }
+            },
+            ipAddresses: {
+              custom: function(args) {
+                return $('<div>').listView(
+                  $.extend(ipAddresses.listView(), {
+                    context: context
+                  })
+                );
+              }
+            }
+          }
+        });
+        
         $title.html(
           cloudStack.concat(name, 8)
         );
@@ -478,6 +488,7 @@
         }
 
         addTierDialog({
+          ipAddresses: ipAddresses,
           $browser: $browser,
           tierDetailView: tierDetailView,
           $tiers: $tiers,
@@ -494,6 +505,7 @@
       if (tiers != null && tiers.length > 0) {
         $(tiers).map(function(index, tier) {
           var $tier = elems.tier({
+            ipAddresses: ipAddresses,
             acl: acl,
             $browser: $browser,
             detailView: tierDetailView,
@@ -679,6 +691,7 @@
 
   // Appends a new tier to chart
   var addNewTier = function(args) {
+    var ipAddresses = args.ipAddresses;
     var acl = args.acl;
     var actions = args.actions;
     var vmListView = args.vmListView;
@@ -687,6 +700,7 @@
     var $browser = args.$browser;
     var tierDetailView = args.tierDetailView;
     var tier = $.extend(args.tier, {
+      ipAddresses: ipAddresses,
       $browser: $browser,
       detailView: tierDetailView,
       context: context,
@@ -708,6 +722,7 @@
 
   // Renders the add tier form, in a dialog
   var addTierDialog = function(args) {
+    var ipAddresses = args.ipAddresses;
     var actions = args.actions;
     var context = args.context;
     var vmListView = args.vmListView;
@@ -739,6 +754,7 @@
                 function(args) {
                   $loading.remove();
                   addNewTier({
+                    ipAddresses: ipAddresses,
                     $browser: $browser,
                     tierDetailView: tierDetailView,
                     context: $.extend(true, {}, context, {

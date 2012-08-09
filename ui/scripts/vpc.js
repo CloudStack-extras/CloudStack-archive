@@ -1591,6 +1591,14 @@
             }
           },
 
+          ipAddresses: {
+            title: 'label.menu.ipaddresses',
+            custom: function(args) {
+              // Widget renders IP addresses, overriding this fn
+              return $('<div>');
+            }
+          },
+
           addloadBalancer: {
             title: 'label.add.load.balancer',
             custom: function(args) {
