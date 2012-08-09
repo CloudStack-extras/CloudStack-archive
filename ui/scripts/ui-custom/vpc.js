@@ -374,11 +374,7 @@
             },
             ipAddresses: {
               custom: function(args) {
-                return $('<div>').listView(
-                  $.extend(ipAddresses.listView(), {
-                    context: context
-                  })
-                );
+                return $('<div>').listView(ipAddresses.listView(), {context: context});
               }
             }
           }
