@@ -1441,7 +1441,7 @@
         isMaximized: true,
         tabs: {
           details: {
-            title: 'label.tier.details',
+            title: 'Network Details',
             preFilter: function(args) {
               var hiddenFields = [];
               var zone;
@@ -1584,7 +1584,7 @@
           },
 
           acl: {
-            title: 'ACL',
+            title: 'Network ACL',
             custom: function(args) {
               // Widget renders ACL multi-edit, overriding this fn
               return $('<div>');
