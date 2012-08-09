@@ -1583,6 +1583,14 @@
             }
           },
 
+          acl: {
+            title: 'ACL',
+            custom: function(args) {
+              // Widget renders ACL multi-edit, overriding this fn
+              return $('<div>');
+            }
+          },
+
           addloadBalancer: {
             title: 'label.add.load.balancer',
             custom: function(args) {

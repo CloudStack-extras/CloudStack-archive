@@ -279,6 +279,7 @@
       return $router;
     },
     tier: function(args) {
+      var acl = args.acl;
       var name = args.name;
       var cidr = args.cidr;
       var context = args.context;
@@ -301,6 +302,23 @@
       var $cidr = $('<span>').addClass('cidr');
       var $vmCount = $('<span>').addClass('vm-count');
       var $actions = $('<div>').addClass('actions');
+
+      // Setup ACL tab
+      detailView = $.extend(true, {}, detailView, {
+        tabs: {
+          acl: {
+            custom: function(args) {
+              var $acl = elems.aclDialog({
+                isDialog: false,
+                actionArgs: acl.action,
+                context: context
+              });
+              
+              return $acl;
+            }
+          }
+        }
+      });
 
       // Ignore special actions
       // -- Add tier action is handled separately
@@ -463,6 +481,7 @@
           $browser: $browser,
           tierDetailView: tierDetailView,
           $tiers: $tiers,
+          acl: acl,
           context: context,
           actions: actions,
           vmListView: vmListView,
@@ -475,6 +494,7 @@
       if (tiers != null && tiers.length > 0) {
         $(tiers).map(function(index, tier) {
           var $tier = elems.tier({
+            acl: acl,
             $browser: $browser,
             detailView: tierDetailView,
             name: tier.name,
@@ -659,6 +679,7 @@
 
   // Appends a new tier to chart
   var addNewTier = function(args) {
+    var acl = args.acl;
     var actions = args.actions;
     var vmListView = args.vmListView;
     var actionPreFilter = args.actionPreFilter;
@@ -672,6 +693,7 @@
       vmListView: vmListView,
       actions: actions,
       actionPreFilter: actionPreFilter,
+      acl: acl,
       virtualMachines: []
     });
     var $tiers = args.$tiers;
@@ -693,6 +715,7 @@
     var $tiers = args.$tiers;
     var $browser = args.$browser;
     var tierDetailView = args.tierDetailView;
+    var acl = args.acl;
 
     cloudStack.dialog.createForm({
       context: context,
@@ -722,6 +745,7 @@
                       networks: [tier]
                     }),
                     tier: tier,
+                    acl: acl,
                     $tiers: $tiers,
                     actions: actions,
                     actionPreFilter: actionPreFilter,
