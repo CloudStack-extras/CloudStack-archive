@@ -56,6 +56,7 @@
       var $tooltip = $('<div>').addClass('vpc-configure-tooltip').append(
         $('<div>').addClass('arrow')
       );
+      var tierDetailView = args.tierDetailView;
 
       // Make links
       $.map(links, function(label, id) {
@@ -73,7 +74,14 @@
               title: 'Network ACLs',
               maximizeIfSelected: true,
               complete: function($panel) {
-                $panel.listView(acl.listView, {context: acl.context});
+                $panel.listView(
+                  $.extend(true, {}, acl.listView, {
+                    listView: {
+                      detailView: tierDetailView
+                    }
+                  }),
+                  { context: acl.context }
+                );
               }
             });
             break;
@@ -244,7 +252,8 @@
       var siteToSiteVPN = args.siteToSiteVPN;
       var $config = $('<div>').addClass('config-area');
       var $configIcon = $('<span>').addClass('icon').html('&nbsp');
-
+      var tierDetailView = args.tierDetailView;
+      
       $config.append($configIcon);
 
       // Tooltip event
@@ -256,7 +265,8 @@
           ipAddresses: ipAddresses,
           gateways: gateways,
           acl: acl,
-          siteToSiteVPN: siteToSiteVPN
+          siteToSiteVPN: siteToSiteVPN,
+          tierDetailView: tierDetailView
         });
 
         // Make sure tooltip is center aligned with icon
@@ -357,29 +367,7 @@
       if (isPlaceholder) {
         $tier.addClass('placeholder');
         $title.html('Create Tier');
-      } else {
-        // Setup detail view tabs
-        detailView = $.extend(true, {}, detailView, {
-          tabs: {
-            acl: {
-              custom: function(args) {
-                var $acl = elems.aclDialog({
-                  isDialog: false,
-                  actionArgs: acl.action,
-                  context: context
-                });
-                
-                return $acl;
-              }
-            },
-            ipAddresses: {
-              custom: function(args) {
-                return $('<div>').listView(ipAddresses.listView(), {context: context});
-              }
-            }
-          }
-        });
-        
+      } else {        
         $title.html(
           cloudStack.concat(name, 8)
         );
@@ -474,7 +462,8 @@
                 ipAddresses: $.extend(ipAddresses, {context: context}),
                 gateways: $.extend(gateways, {context: context}),
                 siteToSiteVPN: $.extend(siteToSiteVPN, {context: context}),
-                acl: $.extend(acl, {context: context})
+                acl: $.extend(acl, {context: context}),
+                tierDetailView: tierDetailView
               })
             );
 
@@ -810,6 +799,29 @@
             context: context,
             response: {
               success: function(args) {
+                // Setup detail view tabs
+                var tierDetailView = $.extend(true, {}, tierArgs.detailView, {
+                  tabs: {
+                    acl: {
+                      custom: function(args) {
+                        var $acl = elems.aclDialog({
+                          isDialog: false,
+                          actionArgs: tierArgs.actions.acl,
+                          context: args.context
+                        });
+                        
+                        return $acl;
+                      }
+                    },
+                    ipAddresses: {
+                      custom: function(args) {
+                        return $('<div>').listView(ipAddresses.listView(),
+                                                   {context: args.context});
+                      }
+                    }
+                  }
+                });
+                
                 var tiers = args.tiers;
                 var $chart = elems.chart({
                   $browser: $browser,
@@ -818,7 +830,7 @@
                   acl: $.extend(true, {}, acl, {
                     action: tierArgs.actions.acl
                   }),
-                  tierDetailView: tierArgs.detailView,
+                  tierDetailView: tierDetailView,
                   siteToSiteVPN: siteToSiteVPN,
                   vmListView: vmListView,
                   context: context,
