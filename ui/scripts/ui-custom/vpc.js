@@ -10,7 +10,36 @@
 // limitations under the License.
 (function($, cloudStack) {
   var elems = {
+    aclDialog: function(args) {
+      var isDialog = args.isDialog;
+      var actionArgs = args.actionArgs;
+      var context = args.context;
+      var $acl = $('<div>').addClass('acl').multiEdit(
+        $.extend(true, {}, actionArgs.multiEdit, {
+          context: context
+        })
+      );
+
+      // Show ACL dialog
+      if (isDialog) {
+        $acl.dialog({
+          title: 'Configure ACL',
+          dialogClass: 'configure-acl',
+          width: 900,
+          height: 600,
+          buttons: {
+            'Done': function() {
+              $(':ui-dialog').remove();
+              $('.overlay').remove();
+            }
+          }
+        });
+      }
+
+      return $acl;
+    },
     vpcConfigureTooltip: function(args) {
+      var context = args.context;
       var $browser = args.$browser;
       var $chart = args.$chart;
       var ipAddresses = args.ipAddresses;
@@ -206,6 +235,7 @@
       return $tooltip;
     },
     vpcConfigureArea: function(args) {
+      var context = args.context;
       var $browser = args.$browser;
       var $chart = args.$chart;
       var ipAddresses = args.ipAddresses;
@@ -220,6 +250,7 @@
       // Tooltip event
       $configIcon.mouseover(function() {
         var $tooltip = elems.vpcConfigureTooltip({
+          context: context,
           $browser: $browser,
           $chart: $chart,
           ipAddresses: ipAddresses,
@@ -413,6 +444,7 @@
             )
             .append(
               elems.vpcConfigureArea({
+                context: context,
                 $browser: $browser,
                 $chart: $chart,
                 ipAddresses: $.extend(ipAddresses, {context: context}),
@@ -606,22 +638,10 @@
       });
       break;
     case 'acl':
-      // Show ACL dialog
-      $('<div>').addClass('acl').multiEdit(
-        $.extend(true, {}, actionArgs.multiEdit, {
-          context: context
-        })
-      ).dialog({
-        title: 'Configure ACL for tier: ' + $tier.find('.title').attr('title'),
-        dialogClass: 'configure-acl',
-        width: 900,
-        height: 600,
-        buttons: {
-          'Done': function() {
-            $(':ui-dialog').remove();
-            $('.overlay').remove();
-          }
-        }
+      elems.aclDialog({
+        isDialog: true,
+        actionArgs: actionArgs,
+        context: context  
       }).closest('.ui-dialog').overlay();
       break;
     default:
@@ -759,7 +779,9 @@
                   $browser: $browser,
                   ipAddresses: ipAddresses,
                   gateways: gateways,
-                  acl: acl,
+                  acl: $.extend(true, {}, acl, {
+                    action: tierArgs.actions.acl
+                  }),
                   tierDetailView: tierArgs.detailView,
                   siteToSiteVPN: siteToSiteVPN,
                   vmListView: vmListView,
