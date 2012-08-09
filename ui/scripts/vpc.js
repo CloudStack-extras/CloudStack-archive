@@ -453,14 +453,44 @@
     acl: {
       listView: {
         listView: {
-          id: 'acls',
+          id: 'networks',
           fields: {
             tierName: { label: 'Tier' },
             aclTotal: { label: 'ACL Total' }
           },
-          dataProvider: function(args) {
-            args.response.success({
-              data: []
+          dataProvider: function(args) {            
+            $.ajax({
+              url: createURL('listNetworks'),
+              data: {
+                listAll: true,
+                vpcid: args.context.vpc[0].id
+              },
+              success: function(json) {
+                args.response.success({
+                  data: $.map(json.listnetworksresponse.network, function(tier) {
+                    var aclTotal = 0;
+                    
+                    // Get ACL total
+                    $.ajax({
+                      url: createURL('listNetworkACLs'),
+                      async: false,
+                      data: {
+                        listAll: true,
+                        networkid: tier.id
+                      },
+                      success: function(json) {
+                        aclTotal = json.listnetworkaclsresponse.networkacl ?
+                          json.listnetworkaclsresponse.networkacl.length : 0;
+                      }
+                    });
+                    
+                    return $.extend(tier, {
+                      tierName: tier.name,
+                      aclTotal: aclTotal
+                    });
+                  })
+                });
+              }
             });
           }
         }      
