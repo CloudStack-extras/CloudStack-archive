@@ -15,27 +15,56 @@
  */
 package com.cloud.bridge.persist.dao;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import org.apache.log4j.Logger;
 
-import com.cloud.bridge.persist.EntityDao;
-import com.cloud.stack.models.CloudStackConfiguration;
 
-
-public class CloudStackConfigurationDao extends EntityDao<CloudStackConfiguration> {
+public class CloudStackConfigurationDao extends BaseDao {
 	public static final Logger logger = Logger.getLogger(CloudStackConfigurationDao.class);
-
+	private Connection conn = null;
+	
 	public CloudStackConfigurationDao() {
-	    super(CloudStackConfiguration.class, true);
+		
 	}
 
+	public String getConfigValue( String configName ) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		
+		openConnection();
+		try { 
+			PreparedStatement pstmt = conn.prepareStatement ( "SELECT value from configuration where name=?" );
+			pstmt.setString(1, configName);
+			
+			ResultSet rst = pstmt.executeQuery();
+			if (rst.next()) {
+				logger.info("found the config value for " + configName +" :: " + rst.getString("value"));
+				return rst.getString("value");
+             }
 
-	public String getConfigValue( String configName ){
-		CloudStackConfiguration config = queryEntity("from CloudStackConfiguration where name=?", new Object[] {configName});
-		if(config != null){
-		    return config.getValue();
+		/*} catch (Exception ex) {
+			logger.error("Error in reading configuration table", ex);
+		*/} finally {
+			closeConnection();
 		}
 		return null;
 	}
 
+	
+	private void openConnection() 
+        throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException 
+    {
+        if (null == conn) {
+            Class.forName( "com.mysql.jdbc.Driver" ).newInstance();
+            conn = DriverManager.getConnection( "jdbc:mysql://" + dbHost + ":" + dbPort + "/" + cloud_dbName, dbUser, dbPassword );
+        }
+    }
+
+    private void closeConnection() throws SQLException {
+        if (null != conn) conn.close();
+        conn = null;
+    }
 
 }
