@@ -59,6 +59,19 @@
       },
       'startport': { edit: true, label: 'label.start.port' },
       'endport': { edit: true, label: 'label.end.port' },
+      'selecttier': {
+         label: 'Select Tier',
+         select: function(args) {
+           args.response.success({
+             // Need to change this with Ajax Call
+            data: [
+               {name: 'Tier1' , description: 'TIER1'}
+
+            ]
+          });
+
+           }
+         },
       'icmptype': { edit: true, label: 'ICMP.type', isDisabled: true },
       'icmpcode': { edit: true, label: 'ICMP.code', isDisabled: true },
       'traffictype' : {
