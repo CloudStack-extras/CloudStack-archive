@@ -19,7 +19,8 @@
       var links = {
         'ip-addresses': 'IP Addresses',
         'gateways': 'Private Gateway',
-        'site-to-site-vpn': 'Site-to-site VPN'
+        'site-to-site-vpn': 'Site-to-site VPN',
+        'network-acls':  'ACLs'
       };
       var $links = $('<ul>').addClass('links');
       var $tooltip = $('<div>').addClass('vpc-configure-tooltip').append(
@@ -37,6 +38,16 @@
         // Link event
         $link.click(function() {
           switch (id) {
+          case 'network-acls':
+              $browser.cloudBrowser('addPanel', {
+              title: 'Network ACL',
+              maximizeIfSelected: true,
+              complete: function($panel) {
+                $panel.listView(ipAddresses.listView(), {context: ipAddresses.context});
+              }
+            });
+            break;
+
           case 'ip-addresses':
             $browser.cloudBrowser('addPanel', {
               title: 'IP Addresses',
