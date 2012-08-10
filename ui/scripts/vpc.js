@@ -61,22 +61,37 @@
       'endport': { edit: true, label: 'label.end.port' },
       'selecttier': {
          label: 'Select Tier',
-         select: function(args) {
-             //  Ajax Call to display the Tiers
-              $.ajax({
-                     url: createURL("listVPCs&listAll=true" ),
-                    success: function(json) {
-                      var objs = json.listvpcsresponse.vpc[0].network;
-                      var items = [];
-                      $(objs).each(function() {
-                          items.push({ description: this.name});
-                           });
-                      args.response.success({data: items});
-                     }
-                });
+        select: function(args) {
+          var data = {
+            listAll: true,
+            vpcid: args.context.vpc[0].id
+          };
 
-           }
-         },
+          // Only show selected tier, if viewing from detail view
+          if (args.context.networks &&
+              args.context.networks[0] &&
+              args.context.networks[0].vpcid) {
+            $.extend(data, {
+              id: args.context.networks[0].id
+            });
+          }
+          
+          //  Ajax Call to display the Tiers
+          $.ajax({
+            url: createURL('listNetworks'),
+            data: data,
+            success: function(json) {
+              var objs = json.listnetworksresponse.network;
+              var items = [];
+              
+              $(objs).each(function() {
+                items.push({ description: this.name});
+              });
+              args.response.success({data: items});
+            }
+          });
+        }
+      },
       'icmptype': { edit: true, label: 'ICMP.type', isDisabled: true },
       'icmpcode': { edit: true, label: 'ICMP.code', isDisabled: true },
       'traffictype' : {
