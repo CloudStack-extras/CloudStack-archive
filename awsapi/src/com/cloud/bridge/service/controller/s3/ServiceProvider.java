@@ -36,15 +36,12 @@ import java.util.TimerTask;
 import org.apache.axis2.AxisFault;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
-import org.hibernate.SessionException;
 
 import com.amazon.s3.AmazonS3SkeletonInterface;
 import com.amazon.ec2.AmazonEC2SkeletonInterface;
 import com.cloud.bridge.model.MHost;
 import com.cloud.bridge.model.SHost;
 import com.cloud.bridge.model.UserCredentials;
-import com.cloud.bridge.persist.PersistContext;
-import com.cloud.bridge.persist.PersistException;
 import com.cloud.bridge.persist.dao.MHostDao;
 import com.cloud.bridge.persist.dao.SHostDao;
 import com.cloud.bridge.persist.dao.UserCredentialsDao;

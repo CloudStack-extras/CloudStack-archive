@@ -31,7 +31,6 @@ import java.util.UUID;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
-import org.hibernate.ejb.criteria.expression.UnaryArithmeticOperation.Operation;
 import org.xml.sax.SAXException;
 
 import com.cloud.bridge.persist.dao.CloudStackSvcOfferingDao;

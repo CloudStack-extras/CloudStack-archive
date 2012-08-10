@@ -94,7 +94,6 @@ import com.amazon.ec2.StartInstancesResponse;
 import com.amazon.ec2.StopInstancesResponse;
 import com.amazon.ec2.TerminateInstancesResponse;
 import com.cloud.bridge.model.UserCredentials;
-import com.cloud.bridge.persist.PersistContext;
 import com.cloud.bridge.persist.dao.OfferingDao;
 import com.cloud.bridge.persist.dao.UserCredentialsDao;
 import com.cloud.bridge.service.controller.s3.ServiceProvider;
