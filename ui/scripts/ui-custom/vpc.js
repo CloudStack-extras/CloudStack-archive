@@ -77,6 +77,20 @@
                 $panel.listView(
                   $.extend(true, {}, acl.listView, {
                     listView: {
+                      actions: {
+                        add: {
+                          label: 'Add network ACL',
+                          action: {
+                            custom: function() {
+                              elems.aclDialog({
+                                isDialog: true,
+                                actionArgs: acl,
+                                context: context
+                              });
+                            }
+                          }
+                        }
+                      },
                       detailView: tierDetailView
                     }
                   }),
