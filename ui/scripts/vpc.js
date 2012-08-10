@@ -62,13 +62,18 @@
       'selecttier': {
          label: 'Select Tier',
          select: function(args) {
-           args.response.success({
-             // Need to change this with Ajax Call
-            data: [
-               {name: 'Tier1' , description: 'TIER1'}
-
-            ]
-          });
+             //  Ajax Call to display the Tiers
+              $.ajax({
+                     url: createURL("listVPCs&listAll=true" ),
+                    success: function(json) {
+                      var objs = json.listvpcsresponse.vpc[0].network;
+                      var items = [];
+                      $(objs).each(function() {
+                          items.push({ description: this.name});
+                           });
+                      args.response.success({data: items});
+                     }
+                });
 
            }
          },
