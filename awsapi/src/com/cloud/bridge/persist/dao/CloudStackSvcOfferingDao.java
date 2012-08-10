@@ -47,13 +47,13 @@ public class CloudStackSvcOfferingDao extends BaseDao {
         return queryEntity("from CloudStackServiceOffering where id=?", new Object[] {id});
     }
 */    
-    public CloudStackServiceOffering getSvcOfferingByName( String name ) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
+    public CloudStackServiceOffering getSvcOfferingById( String id ) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
     	
     	openConnection();
     	CloudStackServiceOffering offering = null;
 		try { 
 			PreparedStatement pstmt = conn.prepareStatement ( "select id, name, domain_id from disk_offering where name=?");
-			pstmt.setString(1, name);
+			pstmt.setString(1, id);
 			ResultSet rst = pstmt.executeQuery();
 			if (rst.next()) {
 				offering = new CloudStackServiceOffering();
@@ -73,14 +73,14 @@ public class CloudStackSvcOfferingDao extends BaseDao {
 		return offering;
 	}
     
-public List<CloudStackServiceOffering> getSvcOfferingById( String id ) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
+public List<CloudStackServiceOffering> getSvcOfferingByName( String name ) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException{
     	
     	openConnection();
     	List<CloudStackServiceOffering> offerings = new ArrayList<CloudStackServiceOffering>();
     	CloudStackServiceOffering offering = null;
 		try { 
 			PreparedStatement pstmt = conn.prepareStatement ( "select id, name, domain_id, removed from disk_offering where id=?");
-			pstmt.setString(1, id);
+			pstmt.setString(1, name);
 			ResultSet rst = pstmt.executeQuery();
 			if (rst.next()) {
 				offering = new CloudStackServiceOffering();

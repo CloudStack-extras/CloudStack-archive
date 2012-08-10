@@ -1769,16 +1769,26 @@ public class EC2Engine {
 	 */
 	
 	private CloudStackServiceOffering getCSServiceOfferingId(String instanceType){
-       try {
-           if (null == instanceType) instanceType = "m1.small";                      
-           
-           CloudStackSvcOfferingDao dao = new CloudStackSvcOfferingDao();
-           return dao.getSvcOfferingByName(instanceType);
-           
-        } catch(Exception e) {
-            logger.error( "Error while retrieving ServiceOffering information by name - ", e);
-            throw new EC2ServiceException(ServerError.InternalError, e.getMessage());
-        }
+		try {
+			if (null == instanceType)
+				instanceType = "m1.small";
+
+			CloudStackSvcOfferingDao dao = new CloudStackSvcOfferingDao();
+			List<CloudStackServiceOffering> svcOfferingList = dao
+					.getSvcOfferingByName(instanceType);
+			for (CloudStackServiceOffering svcOffering : svcOfferingList) {
+				if (svcOffering.getRemoved() == null)
+					return svcOffering;
+			}
+			return null;
+		} catch (Exception e) {
+			logger.error(
+					"Error while retrieving ServiceOffering information by name - ",
+					e);
+			throw new EC2ServiceException(ServerError.InternalError,
+					e.getMessage());
+		}
+
 	}
 	
 	/**
@@ -1789,20 +1799,24 @@ public class EC2Engine {
 	 * @return A valid value for the Amazon defined instanceType
 	 * @throws SQLException, ClassNotFoundException, IllegalAccessException, InstantiationException 
 	 */
-	private String serviceOfferingIdToInstanceType( String serviceOfferingId ){	
-        try{
-            CloudStackSvcOfferingDao dao = new CloudStackSvcOfferingDao();
-            CloudStackServiceOffering offering =  dao.getSvcOfferingById(serviceOfferingId);
-            if(offering == null){
-                logger.warn( "No instanceType match for serviceOfferingId: [" + serviceOfferingId + "]" );
-                return "m1.small";
-            }
-            return offering.getName();
-        }
-        catch(Exception e) {
-            logger.error( "sError while retrieving ServiceOffering information by id - ", e);
-            throw new EC2ServiceException(ServerError.InternalError, e.getMessage());
-        }
+	private String serviceOfferingIdToInstanceType( String serviceOfferingId ){
+		try {
+			CloudStackSvcOfferingDao dao = new CloudStackSvcOfferingDao();
+			CloudStackServiceOffering offering = dao
+					.getSvcOfferingById(serviceOfferingId);
+			if (offering == null) {
+				logger.warn("No instanceType match for serviceOfferingId: ["
+						+ serviceOfferingId + "]");
+				return "m1.small";
+			}
+			return offering.getName();
+		} catch (Exception e) {
+			logger.error(
+					"sError while retrieving ServiceOffering information by id - ",
+					e);
+			throw new EC2ServiceException(ServerError.InternalError,
+					e.getMessage());
+		}
 	}
 
 	/**

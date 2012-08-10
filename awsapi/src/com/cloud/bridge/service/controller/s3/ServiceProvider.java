@@ -63,6 +63,7 @@ import com.cloud.bridge.util.OrderedPair;
  * @author Kelven Yang
  */
 public class ServiceProvider {
+	
 	protected final static Logger logger = Logger.getLogger(ServiceProvider.class);
 
 	public final static long HEARTBEAT_INTERVAL = 10000;
@@ -97,11 +98,8 @@ public class ServiceProvider {
 			try {
 				instance = new ServiceProvider();
 				instance.initialize();
-				PersistContext.commitTransaction();
 			} catch(Throwable e) {
 				logger.error("Unexpected exception " + e.getMessage(), e);
-			} finally {
-				PersistContext.closeSession();
 			}
 		}
 		return instance;
@@ -230,7 +228,7 @@ public class ServiceProvider {
 		setupHost(hostKey, host);
 
 		// we will commit and start a new transaction to allow host info be flushed to DB
-		PersistContext.flush();
+		//PersistContext.flush();
 
 		String localStorageRoot = properties.getProperty("storage.root");
 		if (localStorageRoot != null) setupLocalStorage(localStorageRoot);
@@ -270,35 +268,54 @@ public class ServiceProvider {
 				try {
 					MHostDao mhostDao = new MHostDao();
 					mhost.setLastHeartbeatTime(DateHelper.currentGMTTime());
-					mhostDao.update(mhost);
-					PersistContext.commitTransaction();
+					mhostDao.update(mhost, mhost.getLastHeartbeatTime());
+					//, "LastHeartbeatTime");
 				} catch(Throwable e){
 					logger.error("Unexpected exception " + e.getMessage(), e);
-				} finally {
-					PersistContext.closeSession();
+				} 
 				}
-			}
 		};
 	}
 
 	private void setupHost(String hostKey, String host) {
 		MHostDao mhostDao = new MHostDao();
-		mhost = mhostDao.getByHostKey(hostKey);
+		try {
+			mhost = mhostDao.getByHostKey(hostKey);
+		
 		if(mhost == null) {
 			mhost = new MHost();
 			mhost.setHostKey(hostKey);
 			mhost.setHost(host);
 			mhost.setLastHeartbeatTime(DateHelper.currentGMTTime());
-			mhostDao.save(mhost);
+			long id = mhostDao.save(mhost);
+			mhost.setId(id);
 		} else {
-			mhost.setHost(host);
-			mhostDao.update(mhost);
+			// Don not update the mhost object if the host is same
+			if (!mhost.getHost().equalsIgnoreCase(host)) {
+				mhost.setHost(host);
+				mhostDao.update(mhost, host);
+			}
+		}
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
 	private void setupLocalStorage(String storageRoot) {
 		SHostDao shostDao = new SHostDao();
-		SHost shost = shostDao.getLocalStorageHost(mhost.getId(), storageRoot);
+		SHost shost = null;
+		try {
+			shost = shostDao.getLocalStorageHost(mhost.getId(), storageRoot);
 		if(shost == null) {
 			shost = new SHost();
 			shost.setMhost(mhost);
@@ -306,7 +323,23 @@ public class ServiceProvider {
 			shost.setHostType(SHost.STORAGE_HOST_TYPE_LOCAL);
 			shost.setHost(NetHelper.getHostName());
 			shost.setExportRoot(storageRoot);
-			PersistContext.getSession().save(shost);
+			shostDao.save(shost);
+			
+			
+			// change to save the DAO.
+		}
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -326,10 +359,6 @@ public class ServiceProvider {
 				Object result = null;
 				try {
 					result = method.invoke(serviceObject, args);
-					PersistContext.commitTransaction();
-			        PersistContext.commitTransaction(true);
-				} catch (PersistException e) {
-				} catch (SessionException e) {
 				} catch(Throwable e) {
 					// Rethrow the exception to Axis:
 						// Check if the exception is an AxisFault or a RuntimeException
@@ -344,9 +373,6 @@ public class ServiceProvider {
 						logger.warn("Unhandled exception " + e.getMessage(), e);
 						throw e;
 					}
-				} finally {
-					PersistContext.closeSession();
-			        PersistContext.closeSession(true);
 				}
 				return result;
 			}
