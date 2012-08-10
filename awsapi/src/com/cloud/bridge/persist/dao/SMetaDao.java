@@ -15,6 +15,12 @@
  */
 package com.cloud.bridge.persist.dao;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.cloud.bridge.model.SMeta;
@@ -25,33 +31,127 @@ import com.cloud.bridge.service.core.s3.S3MetaDataEntry;
 /**
  * @author Kelven Yang, John Zucker
  */
-public class SMetaDao extends EntityDao<SMeta> {
+public class SMetaDao extends BaseDao {
+	private Connection conn = null;
 	public SMetaDao() {
-		super(SMeta.class);
 	}
 	
-	public List<SMeta> getByTarget(String target, long targetId) {
-		return queryEntities("from SMeta where target=? and targetId=?", new Object[] {target, targetId});
+	public List<SMeta> getByTarget(String target, long targetId) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+		//return queryEntities("from SMeta where target=? and targetId=?", new Object[] {target, targetId});
+		List<SMeta> metaList = new ArrayList<SMeta>();
+		SMeta meta = null;
+		try {
+			openConnection();
+			PreparedStatement pstmt = conn.prepareStatement( "SELECT * from meta where Target=? and TargetID=?");
+			pstmt.setString(1, target);
+			pstmt.setLong(2, targetId);
+			ResultSet rs = pstmt.executeQuery();
+			while(rs.next()) {
+				meta = new SMeta();
+				meta.setId(rs.getLong("ID"));
+				meta.setTarget(rs.getString("Target"));
+				meta.setTargetId(rs.getLong("TargetID"));
+				meta.setName(rs.getString("Name"));
+				meta.setValue(rs.getString("Value"));
+				metaList.add(meta);
+			}
+			
+			/*
+			 *    ID       | bigint(20)   | NO   | PRI | NULL    | auto_increment |
+				| Target   | varchar(64)  | NO   | MUL | NULL    |                |
+				| TargetID | bigint(20)   | NO   |     | NULL    |                |
+				| Name     | varchar(64)  | NO   |     | NULL    |                |
+				| Value    | varchar(256) | YES  |     | NULL    |                |
+				+----------+--------------+------+-----+---------+----------------+
+			 * 
+			 */
+			
+			
+		}finally {
+			closeConnection();
+		}
+		return metaList;
 	}
 
-	public SMeta save(String target, long targetId, S3MetaDataEntry entry) {
+	public SMeta save(String target, long targetId, S3MetaDataEntry entry) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		SMeta meta = new SMeta();
 		meta.setTarget(target);
 		meta.setTargetId(targetId);
 		meta.setName(entry.getName());
 		meta.setValue(entry.getValue());
+
+		openConnection();
+		try {            
+			
+			PreparedStatement pstmt = conn.prepareStatement ( "INSERT into meta (Target, TargetID, Name, Value) VALUES(?,?,?,?)" );
+		    pstmt.setString( 1, target);
+		    pstmt.setLong( 2, targetId);
+		    pstmt.setString(3, meta.getName());
+		    pstmt.setString(4, meta.getValue());
+		    pstmt.executeUpdate();
+		    pstmt.close();
+		    // Get the id of the created acl and set it in acl object
+		    pstmt = conn.prepareStatement ( "SELECT ID from meta where Target=? and TargetID=?" );
+		    pstmt.setString( 1, target);
+		    pstmt.setLong( 2, targetId);
+		    ResultSet rs = pstmt.executeQuery(); 
+		    if (rs.next()) {
+		    	meta.setId(rs.getLong("ID"));
+		    }
+		    pstmt.close();
+			    
+		} finally {
+			closeConnection();
+		}
 		
-		PersistContext.getSession().save(meta);
+		//PersistContext.getSession().save(meta);
 		return meta;
 	}
 	
-	public void save(String target, long targetId, S3MetaDataEntry[] entries) {
+	public void save(String target, long targetId, S3MetaDataEntry[] entries) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		// To redefine the target's metadaa
-		executeUpdate("delete from SMeta where target=? and targetId=?", new Object[] { target, new Long(targetId)});
+		executeUpdate(target, targetId);
 
 		if(entries != null) {
 			for(S3MetaDataEntry entry : entries)
 				save(target, targetId, entry);
 		}
 	}
+	
+	private void executeUpdate(String target, long targetId) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		try {
+			openConnection();
+			PreparedStatement pstmt = conn.prepareStatement("DELETE from meta where target=? and targetId=?");
+			pstmt.setString(1, target);
+			pstmt.setLong(2, targetId);
+			pstmt.executeUpdate();
+		} finally {
+			closeConnection();
+		}
+	}
+
+	private void openConnection() 
+	        throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException 
+	    {
+	        if (null == conn) {
+	            Class.forName( "com.mysql.jdbc.Driver" ).newInstance();
+	            conn = DriverManager.getConnection( "jdbc:mysql://" + dbHost + ":" + dbPort + "/" + awsapi_dbName, dbUser, dbPassword );
+	        }
+	    }
+	
+	private void closeConnection() throws SQLException {
+		if (null != conn)
+			conn.close();
+		conn = null;
+	}
+
+	public void delete(SMeta oneTag) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		executeUpdate(oneTag.getTarget(), oneTag.getTargetId());
+	}
+
+
+	
+	
+	
+	
 }

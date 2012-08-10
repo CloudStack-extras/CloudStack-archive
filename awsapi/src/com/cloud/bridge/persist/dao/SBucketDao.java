@@ -15,6 +15,14 @@
  */
 package com.cloud.bridge.persist.dao;
 
+import java.sql.Connection;
+import java.util.Date;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.cloud.bridge.model.SBucket;
@@ -23,17 +31,184 @@ import com.cloud.bridge.persist.EntityDao;
 /**
  * @author Kelven Yang
  */
-public class SBucketDao extends EntityDao<SBucket> {
+public class SBucketDao extends BaseDao {
+
+	private Connection conn = null;
+	
 	public SBucketDao() {
-		super(SBucket.class);
+		// super(SBucketDao.class);
 	}
 
+	public SBucket getByName(String bucketName) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException  {
+		
+		PreparedStatement statement = null;
+        openConnection();
+        try {
+        	statement = conn.prepareStatement( "SELECT * from sbucket where name=?");
+            statement.setString( 1, bucketName );
+            ResultSet rs= statement.executeQuery();
+            return convertToObject(rs);
+        } finally {
+            statement.close();
+            closeConnection();
+        }
+		
+	}
+	
+	private SBucket convertToObject(ResultSet rs) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+		SBucket sbucket = null;
+		SHostDao shostDao = null;
+		if (rs.next()) {
+			sbucket = new SBucket();
+			shostDao = new SHostDao();
+			sbucket.setId(rs.getLong("ID"));
+			sbucket.setName(rs.getString("Name"));
+			sbucket.setShost(shostDao.getById(rs.getLong("SHostID")));
+			sbucket.setOwnerCanonicalId(rs.getString("ownerCanonicalId"));
+			sbucket.setVersioningStatus(rs.getInt("VersioningStatus"));
+			sbucket.setCreateTime(rs.getTimestamp("CreateTime"));
+		}
+		return sbucket;
+		
+	}
+
+/*	
 	public SBucket getByName(String bucketName) {
 		return queryEntity("from SBucket where name=?", new Object[] {bucketName});
 	}
 	
-	public List<SBucket> listBuckets(String canonicalId) {
+*/	
+	public List<SBucket> listBuckets(String canonicalId) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		
+		PreparedStatement statement = null;
+		List<SBucket> buckets = new ArrayList<SBucket>();
+		SBucket sbucket = null;
+        openConnection();
+        try {
+        	statement = conn.prepareStatement( "SELECT * from sbucket where ownerCanonicalId=? order by createTime asc");
+            statement.setString( 1, canonicalId );
+            ResultSet rs= statement.executeQuery();
+/*            if (rs.next()) {
+            	buckets =new ArrayList<SBucket>(); 
+            }
+            rs.beforeFirst();
+*/            
+            while (rs.next()) {
+	        	sbucket = new SBucket();
+				sbucket.setId(rs.getLong("ID"));
+				sbucket.setName(rs.getString("Name"));
+				sbucket.setOwnerCanonicalId(rs.getString("ownerCanonicalId"));
+				sbucket.setVersioningStatus(rs.getInt("VersioningStatus"));
+				sbucket.setCreateTime(rs.getTime("CreateTime"));
+				buckets.add(sbucket);
+            }
+            
+        }catch(Exception e){
+        	
+        }finally {
+        	statement.close();
+        	closeConnection();
+        }
+		
+        return buckets;
+		
+	}
+	
+	/*mysql> desc sbucket;
++------------------+--------------+------+-----+---------+----------------+
+| Field            | Type         | Null | Key | Default | Extra          |
++------------------+--------------+------+-----+---------+----------------+
+| ID               | bigint(20)   | NO   | PRI | NULL    | auto_increment |
+| Name             | varchar(64)  | NO   | UNI | NULL    |                |
+| OwnerCanonicalID | varchar(150) | NO   | MUL | NULL    |                |
+| SHostID          | bigint(20)   | YES  | MUL | NULL    |                |
+| CreateTime       | datetime     | YES  | MUL | NULL    |                |
+| VersioningStatus | int(11)      | NO   |     | 0       |                |
++------------------+--------------+------+-----+---------+----------------+
+	 */
+	
+	
+/*	public List<SBucket> listBuckets(String canonicalId) {
 		return queryEntities("from SBucket where ownerCanonicalId=? order by createTime asc", 
 			new Object[] {canonicalId});
 	}
+*/
+	
+	private void openConnection() 
+	        throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException 
+	    {
+	        if (null == conn) {
+	            Class.forName( "com.mysql.jdbc.Driver" ).newInstance();
+	            conn = DriverManager.getConnection( "jdbc:mysql://" + dbHost + ":" + dbPort + "/" + awsapi_dbName, dbUser, dbPassword );
+	        }
+	    }
+
+	private void closeConnection() throws SQLException {
+		if (null != conn)
+			conn.close();
+		conn = null;
+	}
+	
+	
+	public void update(SBucket sbucket ) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		
+		PreparedStatement statement = null;
+        openConnection();
+        try {
+        	statement = conn.prepareStatement( "UPDATE sbucket SET VersioningStatus=? where ID=?" );
+            statement.setInt( 1, sbucket.getVersioningStatus());
+            statement.setLong( 1, sbucket.getId());
+            statement.executeUpdate();
+            statement.close();
+        } finally {
+            closeConnection();
+        }
+	}
+
+	public long save(SBucket sbucket) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		PreparedStatement pstmt = null;
+        openConnection();
+		Date tod = new Date();
+        java.sql.Timestamp dateTime = new Timestamp( tod.getTime());
+        long id=-1;
+        try {
+        	pstmt = conn.prepareStatement( "INSERT into sbucket (Name, OwnerCanonicalID, SHostID, CreateTime, VersioningStatus) VALUES (?,?,?,?,?)" );
+        	long shostid = sbucket.getShost().getId();
+        	pstmt.setString(1, sbucket.getName());
+        	pstmt.setString(2, sbucket.getOwnerCanonicalId());
+        	pstmt.setLong(3, shostid);
+        	pstmt.setTimestamp(4, dateTime);
+            pstmt.setInt(5, sbucket.getVersioningStatus());
+            pstmt.executeUpdate();
+            pstmt.close();
+            pstmt = conn.prepareStatement( "SELECT ID from sbucket where Name=? and OwnerCanonicalID=? and SHostID=?");
+            pstmt.setString(1, sbucket.getName());
+            pstmt.setString(2, sbucket.getOwnerCanonicalId());
+            pstmt.setLong(3, shostid);
+            ResultSet rs = pstmt.executeQuery();
+            if(rs.next()) {
+            	id = rs.getLong("ID");
+            }
+            return id;
+        } finally {
+            closeConnection();
+        }
+	}
+
+	public void delete(SBucket sbucket) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		PreparedStatement pst = null;
+        openConnection();
+        
+        try {
+        	pst = conn.prepareStatement( "DELETE from sbucket where ID=?" );
+            pst.setLong(1, sbucket.getId());
+            pst.executeUpdate();
+            pst.close();
+        } finally {
+            closeConnection();
+        }
+		
+	}
+
+
 }

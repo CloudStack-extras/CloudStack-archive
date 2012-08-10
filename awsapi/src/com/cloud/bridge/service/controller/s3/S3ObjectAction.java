@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -276,7 +277,22 @@ public class S3ObjectAction implements ServletAction {
 		String key        = (String)request.getAttribute(S3Constants.OBJECT_ATTR_KEY);
 		
 		SBucketDao bucketDao = new SBucketDao();
-		SBucket bucket = bucketDao.getByName( bucketName );
+		SBucket bucket = null;
+		try {
+			bucket = bucketDao.getByName( bucketName );
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		String owner = null;        
         if ( null != bucket ) 
         	 owner = bucket.getOwnerCanonicalId();
@@ -389,10 +405,12 @@ public class S3ObjectAction implements ServletAction {
 		DataHandler dataHandler = new DataHandler(new ServletRequestDataSource(request));
 		engineRequest.setData(dataHandler);
 
-		S3PutObjectInlineResponse engineResponse = ServiceProvider.getInstance().getS3Engine().handleRequest(engineRequest);
+		S3PutObjectInlineResponse engineResponse;
+		engineResponse = ServiceProvider.getInstance().getS3Engine().handleRequest(engineRequest);
 		response.setHeader("ETag", "\"" + engineResponse.getETag() + "\"");
 		String version = engineResponse.getVersion();
 		if (null != version) response.addHeader( "x-amz-version-id", version );		
+
 	}
 
 	/**
@@ -460,10 +478,12 @@ public class S3ObjectAction implements ServletAction {
 		DataHandler dataHandler = new DataHandler(new ServletRequestDataSource(request));
 		engineRequest.setData(dataHandler);
 
-		S3PutObjectInlineResponse engineResponse = ServiceProvider.getInstance().getS3Engine().handleRequest(engineRequest);
+		S3PutObjectInlineResponse engineResponse;
+		engineResponse = ServiceProvider.getInstance().getS3Engine().handleRequest(engineRequest);
 		response.setHeader("ETag", "\"" + engineResponse.getETag() + "\"");
 		String version = engineResponse.getVersion();
 		if (null != version) response.addHeader( "x-amz-version-id", version );		
+
 	}
 
 
@@ -644,10 +664,12 @@ public class S3ObjectAction implements ServletAction {
 		
 		// [C] Perform the request
         if (0 < countMeta) engineRequest.setMetaEntries( metaSet.toArray(new S3MetaDataEntry[0]));
-		S3PutObjectInlineResponse engineResponse = ServiceProvider.getInstance().getS3Engine().handleRequest( engineRequest );
+		S3PutObjectInlineResponse engineResponse;
+		engineResponse = ServiceProvider.getInstance().getS3Engine().handleRequest( engineRequest );
 		response.setHeader("ETag", "\"" + engineResponse.getETag() + "\"");
 		String version = engineResponse.getVersion();
 		if (null != version) response.addHeader( "x-amz-version-id", version );		
+
 	}
 
 	/**
@@ -831,7 +853,22 @@ public class S3ObjectAction implements ServletAction {
 		engineRequest.setMetaEntries(meta);
 		engineRequest.setCannedAccess(cannedAccess);
 
-		S3PutObjectInlineResponse engineResponse = ServiceProvider.getInstance().getS3Engine().concatentateMultipartUploads( response, engineRequest, parts, outputStream );
+		S3PutObjectInlineResponse engineResponse = null;;
+		try {
+			engineResponse = ServiceProvider.getInstance().getS3Engine().concatentateMultipartUploads( response, engineRequest, parts, outputStream );
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		int result = engineResponse.getResultCode();
 		// -> free all multipart state since we now have one concatentated object
 		if (200 == result) ServiceProvider.getInstance().getS3Engine().freeUploadParts( bucket, uploadId, false ); 
@@ -894,7 +931,22 @@ public class S3ObjectAction implements ServletAction {
     	
 		// -> does the bucket exist, we may need it to verify access permissions
 		SBucketDao bucketDao = new SBucketDao();
-		SBucket bucket = bucketDao.getByName(bucketName);
+		SBucket bucket = null;
+		try {
+			bucket = bucketDao.getByName(bucketName);
+		} catch (InstantiationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IllegalAccessException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ClassNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		if (bucket == null) {
 			logger.error( "listUploadParts failed since " + bucketName + " does not exist" );
 	    	response.setStatus(404);

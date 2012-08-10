@@ -15,23 +15,141 @@
  */
 package com.cloud.bridge.persist.dao;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
+
 import com.cloud.bridge.model.SHost;
-import com.cloud.bridge.persist.EntityDao;
 
 /**
  * @author Kelven Yang
  */
-public class SHostDao extends EntityDao<SHost> {
+public class SHostDao extends BaseDao {
+	private Connection conn = null;
+	
 	public SHostDao() {
-		super(SHost.class);
 	}
 	
-	public SHost getByHost(String host) {
+/*	public SHost getByHost(String host) {
 		return queryEntity("from SHost where host=?", new Object[] { host });
 	}
+*/	
+
 	
-	public SHost getLocalStorageHost(long mhostId, String storageRoot) {
+	
+/*	public SHost getLocalStorageHost(long mhostId, String storageRoot) {
 		return queryEntity("from SHost where mhost=? and exportRoot=?", 
 			new Object[] { new Long(mhostId), storageRoot});
+	}
+*/	
+	public SHost getById(Long hostId) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		
+		SHost shost = null;
+		openConnection();
+
+		try { 
+			PreparedStatement pstmt = conn.prepareStatement ( "select * from shost where id=?");
+			pstmt.setLong(1, hostId);
+			
+			ResultSet rst = pstmt.executeQuery();
+			if (rst.next()) {
+				shost = new SHost();
+				MHostDao mhostdao = new MHostDao();
+				shost.setId(rst.getLong("ID"));
+				shost.setHost(rst.getString("Host"));
+				shost.setHostType(rst.getInt("HostType"));
+				shost.setExportRoot(rst.getString("ExportRoot"));
+				shost.setMhost(mhostdao.getByHostId(rst.getLong("MHostID")));
+				shost.setUserOnHost(rst.getString("UserOnHost"));
+				shost.setUserPassword(rst.getString("UserPassword"));
+				return shost;
+			}
+		}catch (Exception e) {
+			
+		} finally {
+			closeConnection();
+		}
+		
+		return shost;
+		
+	}
+	public SHost getLocalStorageHost(long mhostId, String storageRoot) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+	
+		openConnection();
+		SHost shost = null;
+		PreparedStatement pstmt=null;
+		try { 
+			pstmt = conn.prepareStatement ( "SELECT * from shost where MHostID=? and exportRoot=?");
+			pstmt.setLong(1, mhostId);
+			pstmt.setString(2, storageRoot);
+			ResultSet rst = pstmt.executeQuery();
+			if (rst.next()) {
+				shost = new SHost();
+				MHostDao mhostdao = new MHostDao();
+				shost.setId(rst.getLong("ID"));
+				shost.setHost(rst.getString("Host"));
+				shost.setHostType(rst.getInt("HostType"));
+				shost.setExportRoot(rst.getString("ExportRoot"));
+				shost.setMhost(mhostdao.getByHostId(rst.getLong("MHostID")));
+				shost.setUserOnHost(rst.getString("UserOnHost"));
+				shost.setUserPassword(rst.getString("UserPassword"));
+				pstmt.close();
+				return shost;
+			/*				
+				--------------+--------------+------+-----+---------+----------------+
+				| ID           | bigint(20)   | NO   | PRI | NULL    | auto_increment |
+				| Host         | varchar(128) | NO   | MUL | NULL    |                |
+				| HostType     | int(11)      | NO   |     | 0       |                |
+				| ExportRoot   | varchar(128) | NO   |     | NULL    |                |
+				| MHostID      | bigint(20)   | YES  | MUL | NULL    |                |
+				| UserOnHost   | varchar(64)  | YES  |     | NULL    |                |
+				| UserPassword | varchar(128) | YES  |     | NULL    |                |
+			*/
+
+			}
+		} catch(Exception e){
+			
+		}finally {
+			closeConnection();
+		}
+		
+		return shost;
+	}
+	
+	private void openConnection() throws InstantiationException,
+			IllegalAccessException, ClassNotFoundException, SQLException {
+		if (null == conn) {
+			Class.forName("com.mysql.jdbc.Driver").newInstance();
+			conn = DriverManager.getConnection("jdbc:mysql://" + dbHost + ":"
+					+ dbPort + "/" + awsapi_dbName, dbUser, dbPassword);
+		}
+	}
+
+	private void closeConnection() throws SQLException {
+		if (null != conn)
+			conn.close();
+		conn = null;
+	}
+
+	public void save(SHost shost) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		
+		openConnection();
+		try {
+			PreparedStatement pstmt = conn.prepareStatement( "INSERT into shost (Host, HostType, ExportRoot, MHostID) VALUES(?,?,?,?)" );
+			
+			pstmt.setString(1, shost.getHost());
+			pstmt.setInt(2, shost.getHostType());
+			pstmt.setString(3, shost.getExportRoot());
+			pstmt.setLong(4, shost.getMhost().getId());
+			pstmt.executeUpdate();
+			
+		} finally {
+			closeConnection();
+		}
+		
 	}
 }

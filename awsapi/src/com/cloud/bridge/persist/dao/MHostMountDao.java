@@ -15,18 +15,85 @@
  */
 package com.cloud.bridge.persist.dao;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import com.cloud.bridge.model.MHostMount;
 import com.cloud.bridge.persist.EntityDao;
+import com.cloud.bridge.persist.GMTDateTimeUserType;
+import com.cloud.bridge.util.DateHelper;
 
 /**
  * @author Kelven Yang
  */
-public class MHostMountDao extends EntityDao<MHostMount> {
+public class MHostMountDao extends BaseDao {
+	private Connection conn = null;
+	
 	public MHostMountDao() {
-		super(MHostMount.class);
 	}
 	
-	public MHostMount getHostMount(long mHostId, long sHostId) {
+	/*public MHostMount getHostMount(long mHostId, long sHostId) {
 		return queryEntity("from MHostMount where mhost=? and shost=?", new Object[] { mHostId, sHostId } );
+	}*/
+	
+	
+	public MHostMount getHostMount(long mHostId, long sHostId) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+	
+		PreparedStatement statement = null;
+		MHostMount mhostmount = null;
+		
+        openConnection();	
+        try {
+		    statement = conn.prepareStatement( "select * from mhost_mount where mhostid=? and shostid=?" );
+		    statement.setLong(1, mHostId);
+	        statement.setLong(2, sHostId);
+	        ResultSet rst = statement.executeQuery();
+	        if (rst.next()) {
+	        	mhostmount = new MHostMount();
+	        	MHostDao mhostdao = new MHostDao();
+	        	SHostDao shostdao = new SHostDao();
+	        	mhostmount.setId(rst.getLong("ID"));
+	        	mhostmount.setMhost(mhostdao.getByHostId(rst.getLong("MHostID")));
+	        	mhostmount.setShost(shostdao.getById(rst.getLong("SHostID")));
+	        	mhostmount.setLastMountTime(rst.getTimestamp("LastMountTime"));
+	        	mhostmount.setMountPath(rst.getString("MountPath"));
+	        	return mhostmount;
+	        }
+	        
+/*        
+	+---------------+--------------+------+-----+---------+----------------+
+	| Field         | Type         | Null | Key | Default | Extra          |
+	+---------------+--------------+------+-----+---------+----------------+
+	| ID            | bigint(20)   | NO   | PRI | NULL    | auto_increment |
+	| MHostID       | bigint(20)   | NO   | MUL | NULL    |                |
+	| SHostID       | bigint(20)   | NO   | MUL | NULL    |                |
+	| MountPath     | varchar(256) | YES  |     | NULL    |                |
+	| LastMountTime | datetime     | YES  | MUL | NULL    |                |
+	+---------------+--------------+------+-----+---------+----------------+
+
+*/          
+        } finally {
+            closeConnection();
+        }
+		return mhostmount;
 	}
+	
+	private void openConnection() 
+	        throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException 
+	    {
+	        if (null == conn) {
+	            Class.forName( "com.mysql.jdbc.Driver" ).newInstance();
+	            conn = DriverManager.getConnection( "jdbc:mysql://" + dbHost + ":" + dbPort + "/" + awsapi_dbName, dbUser, dbPassword );
+	        }
+	    }
+
+	    private void closeConnection() throws SQLException {
+	        if (null != conn) conn.close();
+	        conn = null;
+	    }
+
+	
 }

@@ -291,10 +291,10 @@ public class ServiceProvider {
 			mhost.setId(id);
 		} else {
 			// Don not update the mhost object if the host is same
-			if (!mhost.getHost().equalsIgnoreCase(host)) {
+/*			if (!mhost.getHost().equalsIgnoreCase(host)) {*/
 				mhost.setHost(host);
 				mhostDao.update(mhost, host);
-			}
+/*			}*/
 		}
 		} catch (InstantiationException e) {
 			// TODO Auto-generated catch block
@@ -324,8 +324,6 @@ public class ServiceProvider {
 			shost.setHost(NetHelper.getHostName());
 			shost.setExportRoot(storageRoot);
 			shostDao.save(shost);
-			
-			
 			// change to save the DAO.
 		}
 		} catch (InstantiationException e) {

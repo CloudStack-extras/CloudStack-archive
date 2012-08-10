@@ -115,8 +115,6 @@ public class S3RestServlet extends HttpServlet {
     		if(value != null) {
     		    isS3APIEnabled = Boolean.valueOf(value);
     		}
-    		PersistContext.commitTransaction(true);
-            PersistContext.closeSession(true);
 		}catch(Exception e){
 		    throw new ServletException("Error initializing awsapi: " + e.getMessage());
         }
@@ -181,23 +179,18 @@ public class S3RestServlet extends HttpServlet {
             	 endResponse(response, "File not found");
         	}
         	
-			PersistContext.commitTransaction();
-			
         } 
         catch( InvalidBucketName e) {
-            PersistContext.rollbackTransaction();
     		logger.error("Unexpected exception " + e.getMessage(), e);
     		response.setStatus(400);
         	endResponse(response, "Invalid Bucket Name - " + e.toString());    	
         } 
         catch(PermissionDeniedException e) {
-            PersistContext.rollbackTransaction();
     		logger.error("Unexpected exception " + e.getMessage(), e);
     		response.setStatus(403);
         	endResponse(response, "Access denied - " + e.toString());
         } 
         catch(Throwable e) {
-            PersistContext.rollbackTransaction();
     		logger.error("Unexpected exception " + e.getMessage(), e);
     		response.setStatus(404);
         	endResponse(response, "Bad request");
@@ -208,7 +201,6 @@ public class S3RestServlet extends HttpServlet {
 			} catch (IOException e) {
 	    		logger.error("Unexpected exception " + e.getMessage(), e);
 			}
-			PersistContext.closeSession();
         }
     }
  
@@ -588,7 +580,6 @@ private S3ObjectAction routePlainPostRequest (HttpServletRequest request)
                 xml.append( "</soap:Body></soap:Envelope>" );
       		
           	    endResponse(response, xml.toString());
-  			    PersistContext.commitTransaction();
   			    return;
     		}
     		   		
@@ -607,7 +598,6 @@ private S3ObjectAction routePlainPostRequest (HttpServletRequest request)
             xml.append( "</soap:Body></soap:Envelope>" );
             		
         	endResponse(response, xml.toString());
-			PersistContext.commitTransaction();
         } 
         catch(PermissionDeniedException e) {
 		    logger.error("Unexpected exception " + e.getMessage(), e);
@@ -620,7 +610,7 @@ private S3ObjectAction routePlainPostRequest (HttpServletRequest request)
         } 
         finally 
         {
-			PersistContext.closeSession();
+
         }
     }
 

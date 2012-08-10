@@ -277,8 +277,6 @@ public class EC2RestServlet extends HttpServlet {
         		logger.error("Unsupported action " + action);
         		throw new EC2ServiceException(ClientError.Unsupported, "This operation is not available");
     	    }
-    	    PersistContext.commitTransaction();     
-    	    PersistContext.commitTransaction(true);
     	    
         } catch( EC2ServiceException e ) {
     		response.setStatus(e.getErrorCode());
@@ -305,8 +303,6 @@ public class EC2RestServlet extends HttpServlet {
 			} catch (IOException e) {
 	    		logger.error("Unexpected exception " + e.getMessage(), e);
 			}
-			PersistContext.closeSession();
-			PersistContext.closeSession(true);
         }       
     }
    

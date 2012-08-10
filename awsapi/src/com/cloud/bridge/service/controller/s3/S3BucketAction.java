@@ -25,6 +25,7 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
@@ -51,7 +52,6 @@ import com.cloud.bridge.io.MTOMAwareResultStreamWriter;
 import com.cloud.bridge.model.SAcl;
 import com.cloud.bridge.model.SBucket;
 import com.cloud.bridge.model.SHost;
-import com.cloud.bridge.persist.PersistContext;
 import com.cloud.bridge.persist.dao.BucketPolicyDao;
 import com.cloud.bridge.persist.dao.MultipartLoadDao;
 import com.cloud.bridge.persist.dao.SAclDao;
@@ -351,7 +351,22 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
 		// [A] Is there an owner of an existing policy or bucket?
         BucketPolicyDao policyDao = new BucketPolicyDao();
 		SBucketDao bucketDao = new SBucketDao();
-		SBucket bucket = bucketDao.getByName( bucketName );
+		SBucket bucket = null;
+		try {
+			bucket = bucketDao.getByName( bucketName );
+		} catch (InstantiationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IllegalAccessException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ClassNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
         String owner = null;
         
         if ( null != bucket ) 
@@ -420,7 +435,22 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
 		// [A] Is there an owner of an existing policy or bucket?
         BucketPolicyDao policyDao = new BucketPolicyDao();
 		SBucketDao bucketDao = new SBucketDao();
-		SBucket bucket = bucketDao.getByName( bucketName );
+		SBucket bucket = null;
+		try {
+			bucket = bucketDao.getByName( bucketName );
+		} catch (InstantiationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IllegalAccessException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ClassNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
         String owner = null;
         
         if ( null != bucket ) 
@@ -479,7 +509,22 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
 		String bucketName = (String)request.getAttribute(S3Constants.BUCKET_ATTR_KEY);
 		
 		SBucketDao bucketDao = new SBucketDao();
-		SBucket bucket = bucketDao.getByName( bucketName );
+		SBucket bucket = null;
+		try {
+			bucket = bucketDao.getByName( bucketName );
+		} catch (InstantiationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IllegalAccessException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ClassNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		if (bucket != null) 
 		{
 		    String client = UserContext.current().getCanonicalUserId();
@@ -643,7 +688,22 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
 		}
 		
 		SBucketDao bucketDao = new SBucketDao();
-		SBucket sbucket = bucketDao.getByName( bucketName );
+		SBucket sbucket = null;
+		try {
+			sbucket = bucketDao.getByName( bucketName );
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		if (sbucket == null) {
 			response.setStatus( 404 );
 			return;
@@ -839,7 +899,22 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
 		
 		String bucketName = (String)request.getAttribute(S3Constants.BUCKET_ATTR_KEY);	
 		SBucketDao bucketDao = new SBucketDao();
-		SBucket bucket = bucketDao.getByName( bucketName );
+		SBucket bucket = null;
+		try {
+			bucket = bucketDao.getByName( bucketName );
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		String owner = null;        
         if ( null != bucket ) 
         	 owner = bucket.getOwnerCanonicalId();
@@ -929,6 +1004,7 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
 				 response.setStatus( 400 ); 
 				 return; 
 		    }
+			//bucketDao.update( sbucket, "versionstatus" );
 			bucketDao.update( sbucket );
 			
 		} catch( PermissionDeniedException e ) {
@@ -1001,7 +1077,22 @@ private void executeMultiObjectDelete(HttpServletRequest request, HttpServletRes
     	
 		// -> does the bucket exist, we may need it to verify access permissions
 		SBucketDao bucketDao = new SBucketDao();
-		SBucket bucket = bucketDao.getByName(bucketName);
+		SBucket bucket = null;
+		try {
+			bucket = bucketDao.getByName(bucketName);
+		} catch (InstantiationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IllegalAccessException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (ClassNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		if (bucket == null) {
 			logger.error( "listMultipartUpload failed since " + bucketName + " does not exist" );
 	    	response.setStatus(404);
