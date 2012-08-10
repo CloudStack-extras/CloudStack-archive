@@ -1997,13 +1997,13 @@
             poll: pollAsyncJobResult
           }
         },
-
-        acl: {
+        //Removing ACL buttons from the tier chart
+     /*   acl: {
           label: 'Configure ACL for tier',
           shortLabel: 'ACL',
           multiEdit: aclMultiEdit
-        },
-
+        },  */
+            
         remove: {
           label: 'Remove tier',
           action: function(args) {
