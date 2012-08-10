@@ -119,6 +119,8 @@
     add: {
       label: 'Add',
       action: function(args) {
+        var $multi = args.$multi;
+        
         $.ajax({
           url: createURL('createNetworkACL'),
           data: $.extend(args.data, {
@@ -128,7 +130,17 @@
           success: function(data) {
             args.response.success({
               _custom: {
-                jobId: data.createnetworkaclresponse.jobid
+                jobId: data.createnetworkaclresponse.jobid,
+                getUpdatedItem: function(json) {
+                  var data = json.queryasyncjobresultresponse.jobresult.networkacl;
+                  var aclRules = $multi.data('acl-rules');
+                  
+                  aclRules.push(data);
+                  $multi.data('acl-rules', aclRules);
+                  $(window).trigger('cloudStack.fullRefresh');
+
+                  return data;
+                }
               },
               notification: {
                 label: 'Add ACL',
@@ -157,7 +169,10 @@
               var jobID = data.deletenetworkaclresponse.jobid;
               args.response.success({
                 _custom: {
-                  jobId: jobID
+                  jobId: jobID,
+                  getUpdatedItem: function() {
+                    $(window).trigger('cloudStack.fullRefresh');
+                  }
                 },
                 notification: {
                   label: 'Remove ACL',
@@ -173,23 +188,38 @@
       }
     },
     dataProvider: function(args) {
-      $.ajax({
-        url: createURL('listNetworkACLs'),
-        data: {
-          listAll: true,
-          networkid: args.context.networks[0].id
-        },
-        dataType: 'json',
-        async: true,
-        success: function(json) {
-          args.response.success({
-            data: json.listnetworkaclsresponse.networkacl
-          });
-        },
-        error: function(XMLHttpResponse) {
-          args.response.error(parseXMLHttpResponse(XMLHttpResponse));
-        }
-      });
+      var $multi = args.$multi;
+      var data = {
+        vpcid: args.context.vpc[0].id,
+        listAll: true
+      };
+
+      if (!$multi.data('acl-rules')) {
+        $multi.data('acl-rules', []);
+      }
+
+      if (args.context.networks &&
+          args.context.networks[0] &&
+          args.context.networks[0].vpcid) {
+        data.networkid = args.context.networks[0].id;
+
+        $.ajax({
+          url: createURL('listNetworkACLs'),
+          data: data,
+          dataType: 'json',
+          async: true,
+          success: function(json) {
+            args.response.success({
+              data: json.listnetworkaclsresponse.networkacl
+            });
+          },
+          error: function(XMLHttpResponse) {
+            args.response.error(parseXMLHttpResponse(XMLHttpResponse));
+          }
+        });
+      } else {
+        args.response.success({ data: $multi.data('acl-rules') });
+      }
     }
   };
 
