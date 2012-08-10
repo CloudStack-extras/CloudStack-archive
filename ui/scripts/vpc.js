@@ -132,7 +132,10 @@
               _custom: {
                 jobId: data.createnetworkaclresponse.jobid,
                 getUpdatedItem: function(json) {
-                  var data = json.queryasyncjobresultresponse.jobresult.networkacl;
+                  var networkName = $multi.find('select[name=networkid] option[value=' + args.data.networkid + ']').html();
+                  var data = $.extend(json.queryasyncjobresultresponse.jobresult.networkacl, {
+                    networkid: networkName
+                  });
                   var aclRules = $multi.data('acl-rules');
                   
                   aclRules.push(data);
@@ -210,7 +213,11 @@
           async: true,
           success: function(json) {
             args.response.success({
-              data: json.listnetworkaclsresponse.networkacl
+              data: $(json.listnetworkaclsresponse.networkacl).map(function(index, acl) {
+                return $.extend(acl, {
+                  networkid: args.context.networks[0].name
+                });
+              })
             });
           },
           error: function(XMLHttpResponse) {
