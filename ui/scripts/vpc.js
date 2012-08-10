@@ -458,6 +458,22 @@
             tierName: { label: 'Tier' },
             aclTotal: { label: 'ACL Total' }
           },
+          actions:{
+            add :{
+              label:'Add network ACL',
+              messages: {
+                    confirm: function(args) {
+                    return 'Please confirm that you would like to add a network ACL';
+                  },
+                    notification: function(args) {
+                    return 'Add network ACL';
+                  }
+                },
+              action:function(args) {
+               }
+          }
+         },
+
           dataProvider: function(args) {            
             $.ajax({
               url: createURL('listNetworks'),
