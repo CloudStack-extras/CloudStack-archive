@@ -29,28 +29,29 @@
 
     // Data providers for each wizard step
     steps: [
-      // Step 1: Setup
-      function(args) {
-      $.ajax({
-        url: createURL("listZones&available=true"),
-        dataType: "json",
-        async: false,
-        success: function(json) {
-          zoneObjs = json.listzonesresponse.zone;
-										
-					var items;
-					if(args.initArgs.pluginForm != null && args.initArgs.pluginForm.name == "vpcTierInstanceWizard") { //from VPC Tier chart
-					  items = $.grep(zoneObjs, function(zoneObj) {						  
-							return zoneObj.networktype == 'Advanced';
-						});
+    
+		// Step 1: Setup
+    function(args) {
+		  if(args.initArgs.pluginForm != null && args.initArgs.pluginForm.name == "vpcTierInstanceWizard") { //from VPC Tier chart			  
+			  //populate only one zone to the dropdown, the zone which the VPC is under.
+				zoneObjs = [{
+				  id: args.context.vpc[0].zoneid, 
+					name: args.context.vpc[0].zonename, 
+					networktype: 'Advanced'
+				}];	        		
+				args.response.success({ data: {zones: zoneObjs}});
+			}
+			else { //from Instance page 			 
+				$.ajax({
+					url: createURL("listZones&available=true"),
+					dataType: "json",
+					async: false,
+					success: function(json) {
+						zoneObjs = json.listzonesresponse.zone;						
+						args.response.success({ data: {zones: zoneObjs}});
 					}
-			    else { //from Instance page 
-            items = zoneObjs;
-          }		         			
-					
-          args.response.success({ data: {zones: items}});
-        }
-      });
+				});				
+			}		
     },
 
     // Step 2: Select template
@@ -513,9 +514,12 @@
         if(checkedSecurityGroupIdArray.length > 0)
           array1.push("&securitygroupids=" + checkedSecurityGroupIdArray.join(","));
       }
-      else if (step5ContainerType == 'nothing-to-select') {		
-				if(args.context.networks != null) //from VPC tier
+      else if (step5ContainerType == 'nothing-to-select') {	  
+				if(args.context.networks != null) { //from VPC tier
 				  array1.push("&networkIds=" + args.context.networks[0].id);
+					array1.push("&domainid=" + args.context.vpc[0].domainid);
+					array1.push("&account=" + args.context.vpc[0].account);
+				}
 			}
 			
       var displayname = args.data.displayname;
