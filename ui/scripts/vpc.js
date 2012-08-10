@@ -59,8 +59,8 @@
       },
       'startport': { edit: true, label: 'label.start.port' },
       'endport': { edit: true, label: 'label.end.port' },
-      'selecttier': {
-         label: 'Select Tier',
+      'networkid': {
+        label: 'Select Tier',
         select: function(args) {
           var data = {
             listAll: true,
@@ -81,13 +81,16 @@
             url: createURL('listNetworks'),
             data: data,
             success: function(json) {
-              var objs = json.listnetworksresponse.network;
-              var items = [];
+              var networks = json.listnetworksresponse.network;
               
-              $(objs).each(function() {
-                items.push({ description: this.name});
+              args.response.success({
+                data: $(networks).map(function(index, network) {
+                  return {
+                    name: network.id,
+                    description: network.name
+                  };
+                })
               });
-              args.response.success({data: items});
             }
           });
         }
@@ -119,7 +122,7 @@
         $.ajax({
           url: createURL('createNetworkACL'),
           data: $.extend(args.data, {
-            networkid: args.context.networks[0].id
+            networkid: args.data.networkid
           }),
           dataType: 'json',
           success: function(data) {
