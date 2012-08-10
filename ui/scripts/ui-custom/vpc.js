@@ -806,7 +806,7 @@
                       custom: function(args) {
                         var $acl = elems.aclDialog({
                           isDialog: false,
-                          actionArgs: tierArgs.actions.acl,
+                          actionArgs: acl,
                           context: args.context
                         });
                         
@@ -827,9 +827,7 @@
                   $browser: $browser,
                   ipAddresses: ipAddresses,
                   gateways: gateways,
-                  acl: $.extend(true, {}, acl, {
-                    action: tierArgs.actions.acl
-                  }),
+                  acl: acl,
                   tierDetailView: tierDetailView,
                   siteToSiteVPN: siteToSiteVPN,
                   vmListView: vmListView,

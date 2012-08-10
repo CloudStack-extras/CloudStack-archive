@@ -456,6 +456,8 @@
       }
     },
     acl: {
+      multiEdit: aclMultiEdit,
+      
       listView: {
         listView: {
           id: 'networks',
@@ -2018,12 +2020,13 @@
             poll: pollAsyncJobResult
           }
         },
-        //Removing ACL buttons from the tier chart
-     /*   acl: {
+        
+        // Removing ACL buttons from the tier chart
+        /* acl: {
           label: 'Configure ACL for tier',
           shortLabel: 'ACL',
-          multiEdit: aclMultiEdit
-        },  */
+         multiEdit: aclMultiEdit
+        }, */
             
         remove: {
           label: 'Remove tier',
