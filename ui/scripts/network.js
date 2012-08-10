@@ -2362,7 +2362,7 @@
 																args.response.success({ data: items });																
                         }
                           });
-                      }
+                        }
                       }
                       }
                     },
@@ -2645,6 +2645,9 @@
                             var stickyData = {};
                             var lbInstances = [];
 
+                            // Passing _hideFields array will disable specified fields for this row
+                            //item._hideFields = ['autoScale'];
+
                             // Get sticky data
                             $.ajax({
                               url: createURL('listLBStickinessPolicies'),
@@ -2713,8 +2716,7 @@
                           });
 
                           args.response.success({
-                            data: loadBalancerData,
-                            //hideFields: ['autoScale']
+                            data: loadBalancerData
                           });
                         }
                       });
@@ -2787,7 +2789,7 @@
 																args.response.success({ data: items });																
                         }
                           });
-                        }
+                      }
                       }
                       }
                     },
@@ -3737,7 +3739,7 @@
 											if(domains != null && domains.length > 0) {
 												for(var i = 0; i < domains.length; i++) {
 													array1.push({id: domains[i].id, description: domains[i].path});
-    }
+      }
     }
 											args.response.success({
 												data: array1
