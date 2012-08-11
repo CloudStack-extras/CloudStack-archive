@@ -36,8 +36,6 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
-import org.hibernate.LockMode;
-import org.hibernate.Session;
 import org.json.simple.parser.ParseException;
 
 import com.cloud.bridge.io.S3FileSystemBucketAdapter;
@@ -49,7 +47,6 @@ import com.cloud.bridge.model.SHost;
 import com.cloud.bridge.model.SMeta;
 import com.cloud.bridge.model.SObject;
 import com.cloud.bridge.model.SObjectItem;
-import com.cloud.bridge.persist.PersistContext;
 import com.cloud.bridge.persist.dao.BucketPolicyDao;
 import com.cloud.bridge.persist.dao.MHostDao;
 import com.cloud.bridge.persist.dao.MHostMountDao;
@@ -60,7 +57,6 @@ import com.cloud.bridge.persist.dao.SHostDao;
 import com.cloud.bridge.persist.dao.SMetaDao;
 import com.cloud.bridge.persist.dao.SObjectDao;
 import com.cloud.bridge.persist.dao.SObjectItemDao;
-import com.cloud.bridge.service.S3Constants;
 import com.cloud.bridge.service.UserContext;
 import com.cloud.bridge.service.controller.s3.ServiceProvider;
 import com.cloud.bridge.service.core.s3.S3BucketPolicy.PolicyAccess;
@@ -195,7 +191,7 @@ public class S3Engine {
 				
 				SBucket sbucket = new SBucket();
 				sbucket.setName(request.getBucketName());
-				sbucket.setCreateTime(DateHelper.currentGMTTime());
+				sbucket.setCreateTime(new Timestamp( new Date().getTime()));
 				sbucket.setOwnerCanonicalId( UserContext.current().getCanonicalUserId());
 				sbucket.setShost(shost_storagelocation_pair.getFirst());
 				shost_storagelocation_pair.getFirst().getBuckets().add(sbucket);
@@ -981,12 +977,15 @@ public class S3Engine {
 			SObjectItemDao itemDao = new SObjectItemDao();
 			SObjectItem item;
 			try {
-				item = itemDao.get( object_objectitem_pair.getSecond().getId());
-				if (item == null) {
-					item = new SObjectItem();
+				//item = itemDao.get( object_objectitem_pair.getSecond().getId());
+				item = object_objectitem_pair.getSecond();
+				
+				if (item != null) {
+					//item = new SObjectItem();
 					item.setMd5(md5Checksum);
 					item.setStoredSize(contentLength);
-					item = itemDao.save(item);
+					//TODO This item should be updated instead of saving it.
+					itemDao.update(item, new String[]{"checksum", "storedsize"});
 				}
 				
 			} catch (InstantiationException e) {
@@ -2075,11 +2074,6 @@ public class S3Engine {
 	 * The cannedAccessPolicy parameter is for REST Put requests only where a simple set of ACLs can be
 	 * created with a single header value.  Note that we do not currently support "anonymous" un-authenticated 
 	 * access in our implementation.
-	 * @throws SQLException 
-	 * @throws ClassNotFoundException 
-	 * @throws IllegalAccessException 
-	 * @throws InstantiationException 
-	 * 
 	 * @throws IOException 
 	 */
 	@SuppressWarnings("deprecation")
@@ -2127,34 +2121,24 @@ public class S3Engine {
 			      //session.lock(object, LockMode.UPGRADE);
 			      versionSeq = object.getNextSequence();
 			      object.setNextSequence(versionSeq + 1);
-			      try {
-					objectDao.updateVerionSeq(object);
-				} catch (InstantiationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
+		      try {
+		    	  objectDao.updateVerionSeq(object);} catch (InstantiationException e) {	e.printStackTrace(); } catch (IllegalAccessException e) {e.printStackTrace();} catch (ClassNotFoundException e) {
 					e.printStackTrace();
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 		 	      //session.save(object);
-		 	     
 			      item = new SObjectItem();
 			      item.setTheObject(object);
 			      object.getItems().add(item);
 			      item.setVersion(String.valueOf(versionSeq));
 			      // Date ts = DateHelper.currentGMTTime();
-			      Date tod = new Date();
-			      java.sql.Timestamp ts = new Timestamp( tod.getTime());
+			      java.sql.Timestamp ts = new Timestamp( new Date().getTime());
 			      item.setCreateTime(ts);
 			      item.setLastAccessTime(ts);
 			      item.setLastModifiedTime(ts);
-			      
+			      //Save the new version key
+			      item = objectItemDao.save(item); 
 			      //session.save(item);
 			 }
 			 else
@@ -2163,17 +2147,7 @@ public class S3Engine {
 				 item = null;
 				  try {
 					item = objectItemDao.getByObjectIdNullVersion( object.getId());
-				} catch (InstantiationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
+				} catch (InstantiationException e) {e.printStackTrace();} catch (IllegalAccessException e) {e.printStackTrace();} catch (ClassNotFoundException e) {e.printStackTrace();} catch (SQLException e) {
 					e.printStackTrace();
 				}
 				  //boolean isAvailable = objectItemDao.getByObjectIdNullVersion( object.getId()); 
@@ -2188,20 +2162,9 @@ public class S3Engine {
 				      item.setLastModifiedTime(ts);
 				      //session.save(item);
 				      try {
-						objectItemDao.save(item);
-					} catch (InstantiationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IllegalAccessException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+						item = objectItemDao.save(item);
+					} catch (InstantiationException e) { e.printStackTrace();	} catch (IllegalAccessException e) {			e.printStackTrace();	} catch (ClassNotFoundException e) {e.printStackTrace();
+					} catch (SQLException e) {e.printStackTrace();}
 				  }
 			 }
 		} 
@@ -2211,7 +2174,7 @@ public class S3Engine {
 			 object.setBucket(bucket);
 			 object.setNameKey(nameKey);
 			 object.setNextSequence(2);
-			 object.setCreateTime(DateHelper.currentGMTTime());
+			 object.setCreateTime(new Timestamp( new Date().getTime()));
 			 object.setOwnerCanonicalId(UserContext.current().getCanonicalUserId());
 			 long id = objectDao.save(object);
 			 object.setId(id);
@@ -2221,11 +2184,10 @@ public class S3Engine {
 		     item.setTheObject(object);
 		     object.getItems().add(item);
 		     if (SBucket.VERSIONING_ENABLED  == versioningStatus) item.setVersion(String.valueOf(versionSeq));
-		     Date ts = DateHelper.currentGMTTime();
-		     item.setCreateTime(ts);
-		     item.setLastAccessTime(ts);
-		     item.setLastModifiedTime(ts);
-		     objectItemDao.save(item);
+		     item.setCreateTime(new Timestamp( new Date().getTime()));
+		     item.setLastAccessTime(new Timestamp( new Date().getTime()));
+		     item.setLastModifiedTime(new Timestamp( new Date().getTime()));
+		     item = objectItemDao.save(item);
 		     //session.save(item);
 		     
 		}
@@ -2240,6 +2202,7 @@ public class S3Engine {
 		else item.setStoredPath(String.valueOf(item.getId()));
 		
 		try {
+			//TODO find why this is not getting saved???
 			metaDao.save("SObjectItem", item.getId(), meta);
 		} catch (InstantiationException e1) {
 			// TODO Auto-generated catch block
@@ -2285,7 +2248,8 @@ public class S3Engine {
 			}
 		}
 		
-		objectItemDao.save(item);
+		// TODO We need to update this item instead of saving it !
+		objectItemDao.update(item, new String[]{"storedpath"});
 		//session.update(item);		
 		return new OrderedPair<SObject, SObjectItem>(object, item);
 	}

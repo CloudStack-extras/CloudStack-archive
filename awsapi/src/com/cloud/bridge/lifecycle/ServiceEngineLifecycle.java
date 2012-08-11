@@ -41,7 +41,7 @@ public class ServiceEngineLifecycle implements ServiceLifeCycle {
 	        UserCredentialsDao.preCheckTableExistence();
 	        ServiceProvider.getInstance();
 	        ServiceEngineLifecycle.initialized = true;
-	    }catch(Exception e){
+	    }catch(Exception e){ 
 	        logger.error("Error initializing awsapi: "+ e.getMessage());
 	    }
 	}

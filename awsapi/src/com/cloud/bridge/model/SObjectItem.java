@@ -127,7 +127,7 @@ public class SObjectItem implements Serializable {
 				return false;
 		}
 		
-		if(theObject.getId() != null) {
+		if(theObject!=null && theObject.getId() != null) {
 			if(!theObject.getId().equals(((SObjectItem)other).getTheObject()))
 				return false;
 		} else {

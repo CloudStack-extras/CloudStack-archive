@@ -80,6 +80,8 @@ public class UserCredentialsDao extends BaseDao{
 
 	public UserCredentials getByAccessKey( String cloudAccessKey ) 
 	    throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		// Replace this call with the Rest call for the get User ID.
+		
 		openConnection();
 		
 		UserCredentials user = null;

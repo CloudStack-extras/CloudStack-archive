@@ -25,9 +25,6 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import com.cloud.bridge.model.SHost;
-import com.cloud.bridge.persist.EntityDao;
-import com.cloud.stack.models.CloudStackConfiguration;
 import com.cloud.stack.models.CloudStackServiceOffering;
 
 

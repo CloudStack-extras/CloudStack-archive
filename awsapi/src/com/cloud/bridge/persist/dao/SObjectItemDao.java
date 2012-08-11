@@ -33,6 +33,7 @@ import com.cloud.bridge.model.SObjectItem;
  * @author Kelven Yang
  */
 public class SObjectItemDao extends BaseDao {
+	
 	private Connection conn= null;
 	
 	public SObjectItemDao() {
@@ -56,7 +57,7 @@ public class SObjectItemDao extends BaseDao {
 				item.setVersion(rst.getString("Version"));
 				item.setMd5(rst.getString("MD5"));
 				item.setStoredPath(rst.getString("StoredPath"));
-				item.setStoredSize(rst.getLong("StoredPath"));
+				item.setStoredSize(rst.getLong("StoredSize"));
 				item.setCreateTime(rst.getTimestamp("CreateTime"));
 				item.setLastModifiedTime(rst.getTimestamp("LastModifiedTime"));
 				item.setLastAccessTime(rst.getTimestamp("LastAccessTime"));
@@ -71,7 +72,7 @@ public class SObjectItemDao extends BaseDao {
 		
 		PreparedStatement pstmt = null;
 		String sql  = "";
-		SObjectItem item = null;
+		SObjectItem item;
 		Set<SObjectItem> items = new HashSet<SObjectItem>();
 		openConnection();
 		try {
@@ -84,7 +85,7 @@ public class SObjectItemDao extends BaseDao {
 				item.setVersion(rst.getString("Version"));
 				item.setMd5(rst.getString("MD5"));
 				item.setStoredPath(rst.getString("StoredPath"));
-				item.setStoredSize(rst.getLong("StoredPath"));
+				item.setStoredSize(rst.getLong("StoredSize"));
 				item.setCreateTime(rst.getTimestamp("CreateTime"));
 				item.setLastModifiedTime(rst.getTimestamp("LastModifiedTime"));
 				item.setLastAccessTime(rst.getTimestamp("LastAccessTime"));
@@ -128,7 +129,7 @@ public class SObjectItemDao extends BaseDao {
 				item.setVersion(rst.getString("Version"));
 				item.setMd5(rst.getString("MD5"));
 				item.setStoredPath(rst.getString("StoredPath"));
-				item.setStoredSize(rst.getLong("StoredPath"));
+				item.setStoredSize(rst.getLong("StoredSize"));
 				item.setCreateTime(rst.getTimestamp("CreateTime"));
 				item.setLastModifiedTime(rst.getTimestamp("LastModifiedTime"));
 				item.setLastAccessTime(rst.getTimestamp("LastAccessTime"));
@@ -154,6 +155,35 @@ public class SObjectItemDao extends BaseDao {
 		
 	}
 
+	public void update(SObjectItem item, String[] keys) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		StringBuffer query =  new StringBuffer("UPDATE sobject_item set ");
+		
+		for(String key:keys) {
+			if (key.equalsIgnoreCase("checksum")) {
+				query.append(" MD5=\""+item.getMd5()+"\"");
+			}
+			if (key.equalsIgnoreCase("storedsize")) {
+				query.append(" , storedsize="+item.getStoredSize());
+			}
+			
+			if (key.equalsIgnoreCase("storedpath")) {
+				query.append(" storedpath=\""+item.getStoredPath()+"\"");
+			}
+		}
+		
+		query.append(" where ID=?");
+		
+		PreparedStatement pstmt = null;
+		openConnection();
+		try {
+			pstmt = conn.prepareStatement(query.toString());
+			pstmt.setLong(1, item.getId());
+			pstmt.executeUpdate();
+		}finally {
+			closeConnection();
+		}
+	}
+	
 	public SObjectItem save(SObjectItem item) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		
 		PreparedStatement pstmt = null;
@@ -188,7 +218,15 @@ public class SObjectItemDao extends BaseDao {
 
 			 */
 		pstmt.close();
-		pstmt = conn.prepareStatement( "SELECT ID from sobject_item where SObjectID=? and Version=?");
+		StringBuffer sb = new StringBuffer();
+		sb.append("SELECT ID from sobject_item where SObjectID=? and "); // Version is null")
+		if (item.getVersion() == null) 
+			sb.append("Version is null");
+		else 
+			sb.append("Version=\""+item.getVersion()+"\"");
+
+		pstmt = conn.prepareStatement(sb.toString());
+		pstmt.setLong(1, item.getTheObject().getId() );
 		ResultSet rs = pstmt.executeQuery();
 		if (rs.next() ){
 			item.setId(rs.getLong("ID"));

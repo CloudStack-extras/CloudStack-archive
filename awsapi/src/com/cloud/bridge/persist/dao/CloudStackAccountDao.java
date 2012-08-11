@@ -23,7 +23,6 @@ import java.sql.SQLException;
 
 import org.apache.log4j.Logger;
 
-import com.cloud.bridge.persist.EntityDao;
 import com.cloud.stack.models.CloudStackAccount;
 
 public class CloudStackAccountDao extends BaseDao {

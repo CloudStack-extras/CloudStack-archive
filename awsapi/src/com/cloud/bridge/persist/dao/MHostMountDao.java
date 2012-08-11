@@ -22,9 +22,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import com.cloud.bridge.model.MHostMount;
-import com.cloud.bridge.persist.EntityDao;
-import com.cloud.bridge.persist.GMTDateTimeUserType;
-import com.cloud.bridge.util.DateHelper;
 
 /**
  * @author Kelven Yang

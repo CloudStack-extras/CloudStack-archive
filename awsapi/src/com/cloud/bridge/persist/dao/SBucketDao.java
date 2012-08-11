@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.cloud.bridge.model.SBucket;
-import com.cloud.bridge.persist.EntityDao;
 
 /**
  * @author Kelven Yang
@@ -157,7 +156,7 @@ public class SBucketDao extends BaseDao {
         try {
         	statement = conn.prepareStatement( "UPDATE sbucket SET VersioningStatus=? where ID=?" );
             statement.setInt( 1, sbucket.getVersioningStatus());
-            statement.setLong( 1, sbucket.getId());
+            statement.setLong( 2, sbucket.getId());
             statement.executeUpdate();
             statement.close();
         } finally {

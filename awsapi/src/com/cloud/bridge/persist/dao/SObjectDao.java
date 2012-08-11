@@ -22,15 +22,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import com.cloud.bridge.model.SBucket;
 import com.cloud.bridge.model.SObject;
-import com.cloud.bridge.model.SObjectItem;
-import com.cloud.bridge.persist.EntityDao;
-import com.cloud.bridge.util.EntityParam;
 
 /**
  * @author Kelven Yang
@@ -54,8 +50,9 @@ public class SObjectDao extends BaseDao {
             statement.setString( 2, nameKey);
             
             ResultSet rs = statement.executeQuery();
-            SObjectItemDao itemDao = new SObjectItemDao();
+            
 	        if (rs.next()) {
+	        	SObjectItemDao itemDao = new SObjectItemDao();
 	        	sobject = new SObject();
 	        	sobject.setId(rs.getLong("ID"));
 	        	sobject.setBucket(bucket);
@@ -248,6 +245,9 @@ public class SObjectDao extends BaseDao {
 		PreparedStatement pstmt = null;
         openConnection();
         long id = 0;
+		//Date tod = new Date();
+        java.sql.Timestamp dateTime = new Timestamp( new Date().getTime());
+
         try {            
         	pstmt = conn.prepareStatement ( "INSERT into sobject (SBucketID, NameKey, OwnerCanonicalID, NextSequence, DeletionMark, CreateTime) VALUES (?,?,?,?,?,?)");
         	pstmt.setLong(1, object.getBucket().getId());
@@ -255,10 +255,12 @@ public class SObjectDao extends BaseDao {
         	pstmt.setString(3, object.getOwnerCanonicalId());
         	pstmt.setInt(4, object.getNextSequence());
         	pstmt.setString(5, object.getDeletionMark());
-        	pstmt.setTimestamp(6, (Timestamp) object.getCreateTime());
+        	pstmt.setTimestamp(6, dateTime);
         	pstmt.executeUpdate();
         	pstmt.close();
         	pstmt = conn.prepareStatement ( "SELECT ID from sobject where SBucketID=? and  NameKey=?");
+        	pstmt.setLong(1, object.getBucket().getId());
+        	pstmt.setString(2, object.getNameKey());
         	ResultSet rs = pstmt.executeQuery();
         	if (rs.next()) {
         		id = rs.getLong("ID");

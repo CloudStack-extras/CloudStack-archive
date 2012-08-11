@@ -503,9 +503,11 @@ public class S3ObjectAction implements ServletAction {
 		// -> is this a request for a specific version of the object?  look for "versionId=" in the query string
 		String queryString = request.getQueryString();
 		if (null != queryString) engineRequest.setVersion( returnParameter( queryString, "versionId=" ));
-
+		
 		S3GetObjectResponse engineResponse = ServiceProvider.getInstance().getS3Engine().handleRequest( engineRequest );		
 		response.setStatus( engineResponse.getResultCode());
+		if ( engineResponse.getResultCode() == 404 )
+			return;
 		
 		String deleteMarker = engineResponse.getDeleteMarker();
 		if ( null != deleteMarker ) {
