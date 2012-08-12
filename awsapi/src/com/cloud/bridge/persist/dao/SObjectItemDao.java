@@ -21,10 +21,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import com.cloud.bridge.model.SObjectItem;
@@ -37,13 +34,10 @@ public class SObjectItemDao extends BaseDao {
 	private Connection conn= null;
 	
 	public SObjectItemDao() {
-		//super(SObjectItem.class);
 	}
 	
 	public SObjectItem getByObjectIdNullVersion(long id) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-		//return queryEntity("from SObjectItem where theObject=? and version is null", new Object[] { id });
 		PreparedStatement pstmt = null;
-		String sql  = "";
 		SObjectItem item = null;
 		openConnection();
 		try {
@@ -63,6 +57,7 @@ public class SObjectItemDao extends BaseDao {
 				item.setLastAccessTime(rst.getTimestamp("LastAccessTime"));
 			}
 		}finally {
+			pstmt.close();
 			closeConnection();
 		}
 		return item;
@@ -71,7 +66,6 @@ public class SObjectItemDao extends BaseDao {
 	public Set<SObjectItem> getByObjectId(long id) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 		
 		PreparedStatement pstmt = null;
-		String sql  = "";
 		SObjectItem item;
 		Set<SObjectItem> items = new HashSet<SObjectItem>();
 		openConnection();
@@ -92,6 +86,7 @@ public class SObjectItemDao extends BaseDao {
 				items.add(item);
 			}
 		}finally {
+			pstmt.close();
 			closeConnection();
 		}
 		return items;
@@ -135,6 +130,7 @@ public class SObjectItemDao extends BaseDao {
 				item.setLastAccessTime(rst.getTimestamp("LastAccessTime"));
 			}
 		}finally {
+			pstmt.close();
 			closeConnection();
 		}
 		return item;
@@ -156,8 +152,8 @@ public class SObjectItemDao extends BaseDao {
 	}
 
 	public void update(SObjectItem item, String[] keys) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-		StringBuffer query =  new StringBuffer("UPDATE sobject_item set ");
 		
+		StringBuffer query =  new StringBuffer("UPDATE sobject_item set ");
 		for(String key:keys) {
 			if (key.equalsIgnoreCase("checksum")) {
 				query.append(" MD5=\""+item.getMd5()+"\"");
@@ -180,6 +176,7 @@ public class SObjectItemDao extends BaseDao {
 			pstmt.setLong(1, item.getId());
 			pstmt.executeUpdate();
 		}finally {
+			pstmt.close();
 			closeConnection();
 		}
 	}
@@ -201,41 +198,25 @@ public class SObjectItemDao extends BaseDao {
 			pstmt.setTimestamp(8, new Timestamp(item.getLastAccessTime().getTime()));
 			pstmt.executeUpdate();
 			
-			/*
-			 * +------------------+--------------+------+-----+---------+----------------+
-			| Field            | Type         | Null | Key | Default | Extra          |
-			+------------------+--------------+------+-----+---------+----------------+
-			| ID               | bigint(20)   | NO   | PRI | NULL    | auto_increment |
-			| SObjectID        | bigint(20)   | NO   | MUL | NULL    |                |
-			| Version          | varchar(64)  | YES  |     | NULL    |                |
-			| MD5              | varchar(128) | YES  |     | NULL    |                |
-			| StoredPath       | varchar(256) | YES  |     | NULL    |                |
-			| StoredSize       | bigint(20)   | NO   | MUL | 0       |                |
-			| CreateTime       | datetime     | YES  | MUL | NULL    |                |
-			| LastModifiedTime | datetime     | YES  | MUL | NULL    |                |
-			| LastAccessTime   | datetime     | YES  | MUL | NULL    |                |
-			+------------------+--------------+------+-----+---------+----------------+
-
-			 */
-		pstmt.close();
-		StringBuffer sb = new StringBuffer();
-		sb.append("SELECT ID from sobject_item where SObjectID=? and "); // Version is null")
-		if (item.getVersion() == null) 
-			sb.append("Version is null");
-		else 
-			sb.append("Version=\""+item.getVersion()+"\"");
-
-		pstmt = conn.prepareStatement(sb.toString());
-		pstmt.setLong(1, item.getTheObject().getId() );
-		ResultSet rs = pstmt.executeQuery();
-		if (rs.next() ){
-			item.setId(rs.getLong("ID"));
-		}
-		pstmt.close();
-		return item;
-		
-		}finally {
-			closeConnection();
-		}
+			pstmt.close();
+			StringBuffer sb = new StringBuffer();
+			sb.append("SELECT ID from sobject_item where SObjectID=? and "); // Version is null")
+			if (item.getVersion() == null) 
+				sb.append("Version is null");
+			else 
+				sb.append("Version=\""+item.getVersion()+"\"");
+	
+			pstmt = conn.prepareStatement(sb.toString());
+			pstmt.setLong(1, item.getTheObject().getId() );
+			ResultSet rs = pstmt.executeQuery();
+			if (rs.next() ){
+				item.setId(rs.getLong("ID"));
+			}
+			return item;
+			
+			}finally {
+				pstmt.close();
+				closeConnection();
+			}
 	}
 }

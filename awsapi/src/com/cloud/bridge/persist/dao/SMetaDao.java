@@ -35,12 +35,12 @@ public class SMetaDao extends BaseDao {
 	}
 	
 	public List<SMeta> getByTarget(String target, long targetId) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-		//return queryEntities("from SMeta where target=? and targetId=?", new Object[] {target, targetId});
 		List<SMeta> metaList = new ArrayList<SMeta>();
 		SMeta meta = null;
+		PreparedStatement pstmt = null;
 		try {
 			openConnection();
-			PreparedStatement pstmt = conn.prepareStatement( "SELECT * from meta where Target=? and TargetID=?");
+			pstmt = conn.prepareStatement( "SELECT * from meta where Target=? and TargetID=?");
 			pstmt.setString(1, target);
 			pstmt.setLong(2, targetId);
 			ResultSet rs = pstmt.executeQuery();
@@ -53,19 +53,8 @@ public class SMetaDao extends BaseDao {
 				meta.setValue(rs.getString("Value"));
 				metaList.add(meta);
 			}
-			
-			/*
-			 *    ID       | bigint(20)   | NO   | PRI | NULL    | auto_increment |
-				| Target   | varchar(64)  | NO   | MUL | NULL    |                |
-				| TargetID | bigint(20)   | NO   |     | NULL    |                |
-				| Name     | varchar(64)  | NO   |     | NULL    |                |
-				| Value    | varchar(256) | YES  |     | NULL    |                |
-				+----------+--------------+------+-----+---------+----------------+
-			 * 
-			 */
-			
-			
 		}finally {
+			pstmt.close();
 			closeConnection();
 		}
 		return metaList;
@@ -77,11 +66,11 @@ public class SMetaDao extends BaseDao {
 		meta.setTargetId(targetId);
 		meta.setName(entry.getName());
 		meta.setValue(entry.getValue());
-
+		PreparedStatement pstmt = null;
 		openConnection();
 		try {            
 			
-			PreparedStatement pstmt = conn.prepareStatement ( "INSERT into meta (Target, TargetID, Name, Value) VALUES(?,?,?,?)" );
+			pstmt = conn.prepareStatement ( "INSERT into meta (Target, TargetID, Name, Value) VALUES(?,?,?,?)" );
 		    pstmt.setString( 1, target);
 		    pstmt.setLong( 2, targetId);
 		    pstmt.setString(3, meta.getName());
@@ -96,18 +85,14 @@ public class SMetaDao extends BaseDao {
 		    if (rs.next()) {
 		    	meta.setId(rs.getLong("ID"));
 		    }
-		    pstmt.close();
-			    
 		} finally {
+			pstmt.close();
 			closeConnection();
 		}
-		
-		//PersistContext.getSession().save(meta);
 		return meta;
 	}
 	
 	public void save(String target, long targetId, S3MetaDataEntry[] entries) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-		// To redefine the target's metadaa
 		executeUpdate(target, targetId);
 
 		if(entries != null) {
@@ -117,13 +102,15 @@ public class SMetaDao extends BaseDao {
 	}
 	
 	private void executeUpdate(String target, long targetId) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
+		PreparedStatement pstmt = null;
 		try {
 			openConnection();
-			PreparedStatement pstmt = conn.prepareStatement("DELETE from meta where target=? and targetId=?");
+			pstmt = conn.prepareStatement("DELETE from meta where target=? and targetId=?");
 			pstmt.setString(1, target);
 			pstmt.setLong(2, targetId);
 			pstmt.executeUpdate();
 		} finally {
+			pstmt.close();
 			closeConnection();
 		}
 	}
@@ -146,10 +133,5 @@ public class SMetaDao extends BaseDao {
 	public void delete(SMeta oneTag) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		executeUpdate(oneTag.getTarget(), oneTag.getTargetId());
 	}
-
-
-	
-	
-	
 	
 }

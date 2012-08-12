@@ -36,13 +36,10 @@ public class SAclDao extends BaseDao {
 	
 	private Connection conn= null;
 	public SAclDao() {
-		//super(SAcl.class);
 	}
 	
 	public List<SAcl> listGrants(String target, long targetId) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-/*		return queryEntities("from SAcl where target=? and targetId=? order by grantOrder asc",
-			new Object[] { target, new Long(targetId)});
-*/		
+
 		PreparedStatement statement = null;
 		List<SAcl> acls = new ArrayList<SAcl>();
 		SAcl acl = null;
@@ -74,9 +71,7 @@ public class SAclDao extends BaseDao {
 	    return acls;
 	}	
 	public List<SAcl> listGrants(String target, long targetId, String userCanonicalId) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-/*		return queryEntities("from SAcl where target=? and targetId=? and granteeCanonicalId=? order by grantOrder asc",
-			new Object[] { target, new Long(targetId), userCanonicalId });
-*/	
+
 		PreparedStatement statement = null;
 		List<SAcl> acls = new ArrayList<SAcl>();
 		SAcl acl = null;
@@ -111,7 +106,6 @@ public class SAclDao extends BaseDao {
 
 	public void save(String target, long targetId, S3AccessControlList acl) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		// -> the target's ACLs are being redefined
-		//executeUpdate("delete from SAcl where target=? and targetId=?",	new Object[] { target, new Long(targetId)});
 		executeUpdate(target, targetId);
 		
 		if(acl != null) {
@@ -126,7 +120,7 @@ public class SAclDao extends BaseDao {
 	}
 	
 	private void executeUpdate(String target, long targetId) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-		// TODO Auto-generated method stub
+
 		PreparedStatement statement = null;
 		openConnection();
 		try {            
@@ -174,7 +168,7 @@ public class SAclDao extends BaseDao {
 			    pstmt.setTimestamp(8, dateTime);
 			    pstmt.executeUpdate();
 			    pstmt.close();
-			    // Get the id of the created acl and set it in acl object
+
 			    pstmt = conn.prepareStatement ( "SELECT ID from acl where target=? and targetId=?" );
 			    pstmt.setString( 1, target);
 			    pstmt.setLong( 2, targetId);
@@ -188,22 +182,6 @@ public class SAclDao extends BaseDao {
 			closeConnection();
 		}
 		
-			 /*
-		     * | ID                 | bigint(20)   | NO   | PRI | NULL    | auto_increment |
-| Target             | varchar(64)  | NO   | MUL | NULL    |                |
-| TargetID           | bigint(20)   | NO   |     | NULL    |                |
-| GranteeType        | int(11)      | NO   |     | 0       |                |
-| GranteeCanonicalID | varchar(150) | YES  |     | NULL    |                |
-| Permission         | int(11)      | NO   |     | 0       |                |
-| GrantOrder         | int(11)      | NO   |     | 0       |                |
-| CreateTime         | datetime     | YES  |     | NULL    |                |
-| LastModifiedTime   | datetime     | YES  | MUL | NULL    |                |
-+--------------------+--------------+------+-----+---------+----------------+
-
-		     */		
-			
-		//PersistContext.getSession().save(aclEntry);
-		//TODO set acl entry ID and then send it 
 		return aclEntry;
 	}
 	
@@ -223,7 +201,7 @@ public class SAclDao extends BaseDao {
 	}
 
 	public void delete(SAcl oneTag) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-		// TODO Auto-generated method stub
+		
 		executeUpdate(oneTag.getTarget(), oneTag.getTargetId());
 		
 	}

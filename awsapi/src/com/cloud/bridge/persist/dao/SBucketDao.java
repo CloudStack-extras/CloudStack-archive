@@ -34,8 +34,7 @@ public class SBucketDao extends BaseDao {
 
 	private Connection conn = null;
 	
-	public SBucketDao() {
-		// super(SBucketDao.class);
+	public SBucketDao() { 
 	}
 
 	public SBucket getByName(String bucketName) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException  {
@@ -71,12 +70,6 @@ public class SBucketDao extends BaseDao {
 		
 	}
 
-/*	
-	public SBucket getByName(String bucketName) {
-		return queryEntity("from SBucket where name=?", new Object[] {bucketName});
-	}
-	
-*/	
 	public List<SBucket> listBuckets(String canonicalId) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		
 		PreparedStatement statement = null;
@@ -87,11 +80,7 @@ public class SBucketDao extends BaseDao {
         	statement = conn.prepareStatement( "SELECT * from sbucket where ownerCanonicalId=? order by createTime asc");
             statement.setString( 1, canonicalId );
             ResultSet rs= statement.executeQuery();
-/*            if (rs.next()) {
-            	buckets =new ArrayList<SBucket>(); 
-            }
-            rs.beforeFirst();
-*/            
+
             while (rs.next()) {
 	        	sbucket = new SBucket();
 				sbucket.setId(rs.getLong("ID"));
@@ -113,25 +102,6 @@ public class SBucketDao extends BaseDao {
 		
 	}
 	
-	/*mysql> desc sbucket;
-+------------------+--------------+------+-----+---------+----------------+
-| Field            | Type         | Null | Key | Default | Extra          |
-+------------------+--------------+------+-----+---------+----------------+
-| ID               | bigint(20)   | NO   | PRI | NULL    | auto_increment |
-| Name             | varchar(64)  | NO   | UNI | NULL    |                |
-| OwnerCanonicalID | varchar(150) | NO   | MUL | NULL    |                |
-| SHostID          | bigint(20)   | YES  | MUL | NULL    |                |
-| CreateTime       | datetime     | YES  | MUL | NULL    |                |
-| VersioningStatus | int(11)      | NO   |     | 0       |                |
-+------------------+--------------+------+-----+---------+----------------+
-	 */
-	
-	
-/*	public List<SBucket> listBuckets(String canonicalId) {
-		return queryEntities("from SBucket where ownerCanonicalId=? order by createTime asc", 
-			new Object[] {canonicalId});
-	}
-*/
 	
 	private void openConnection() 
 	        throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException 
@@ -160,6 +130,7 @@ public class SBucketDao extends BaseDao {
             statement.executeUpdate();
             statement.close();
         } finally {
+        	statement.close();
             closeConnection();
         }
 	}
@@ -190,6 +161,7 @@ public class SBucketDao extends BaseDao {
             }
             return id;
         } finally {
+        	pstmt.close();
             closeConnection();
         }
 	}

@@ -44,9 +44,7 @@ public class CloudStackConfigurationDao extends BaseDao {
 				return rst.getString("value");
              }
 
-		/*} catch (Exception ex) {
-			logger.error("Error in reading configuration table", ex);
-		*/} finally {
+			} finally {
 			closeConnection();
 		}
 		return null;

@@ -35,12 +35,9 @@ public class SObjectDao extends BaseDao {
 	
 	private Connection conn= null;
 	public SObjectDao() {
-		//super(SObject.class);
 	}
 
 	public SObject getByNameKey(SBucket bucket, String nameKey) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-		/*return queryEntity("from SObject where bucket=? and nameKey=?", 
-				new Object[] { new EntityParam(bucket), nameKey });*/
 	    PreparedStatement statement = null;
 	    SObject sobject = null;
         openConnection();	
@@ -63,53 +60,23 @@ public class SObjectDao extends BaseDao {
 	        	sobject.setDeletionMark(rs.getString("DeletionMark"));
 	        	sobject.setCreateTime(rs.getTimestamp("CreateTime"));
 	        }
-	        /*
-	         *  | ID               | bigint(20)   | NO   | PRI | NULL    | auto_increment |
-				| SBucketID        | bigint(20)   | NO   | MUL | NULL    |                |
-				| NameKey          | varchar(255) | NO   |     | NULL    |                |
-				| OwnerCanonicalID | varchar(150) | NO   | MUL | NULL    |                |
-				| NextSequence     | int(11)      | NO   |     | 1       |                |
-				| DeletionMark     | varchar(150) | YES  |     | NULL    |                |
-				| CreateTime       | datetime     | YES  | MUL | NULL    |                |
-				+------------------+--------------+------+-----+---------+----------------+
-	         */
-	        
-            statement.close();	
+            	
             return sobject;
         } finally {
+        	statement.close();
             closeConnection();
         }
 	}
 	
-	public List<SObject> listBucketObjects(SBucket bucket, String prefix, String marker, int maxKeys) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-		StringBuffer sb = new StringBuffer();
-		List<Object> params = new ArrayList<Object>();
+	public List<SObject> listBucketObjects(SBucket bucket, String prefix,
+			String marker, int maxKeys) throws InstantiationException,
+			IllegalAccessException, ClassNotFoundException, SQLException {
+		
 		List<SObject> items = new ArrayList<SObject>();
-		/*
-		 *  select sobject0_.ID as ID5_0_, items1_.ID as ID6_1_, sobject0_.NameKey as NameKey5_0_, sobject0_.OwnerCanonicalId as OwnerCan3_5_0_, sobject0_.NextSequence as NextSequ4_5_0_, sobject0_.DeletionMark as Deletion5_5_0_, sobject0_.CreateTime as CreateTime5_0_, sobject0_.SBucketID as SBucketID5_0_, items1_.Version as Version6_1_, MD5 as MD3_6_1_, items1_.StoredPath as StoredPath6_1_, items1_.StoredSize as StoredSize6_1_, items1_.CreateTime as CreateTime6_1_, items1_.LastModifiedTime as LastModi7_6_1_, items1_.LastAccessTime as LastAcce8_6_1_, items1_.SObjectID as SObjectID6_1_, items1_.SObjectID as SObjectID5_0__, items1_.ID as ID0__ from sobject sobject0_ left outer join sobject_item items1_ on sobject0_.ID=items1_.SObjectID where (deletionMark is null) and sobject0_.SBucketID=1
-
-		 */
-		
-		/*sb.append("from sobject o left join fetch o.items where deletionMark is null and o.bucket=?");
-		params.add(new EntityParam(bucket));
-		
-		if(prefix!= null && !prefix.isEmpty()) {
-			sb.append(" and o.nameKey like ?");
-			params.add(new String(prefix + "%"));
-		}
-		
-		if(marker != null && !marker.isEmpty()) {
-			sb.append(" and o.nameKey > ?");
-			params.add(marker);
-		}*/
-		
 		PreparedStatement statement = null;
 	    SObject sobject = null;
 	    SObjectItemDao itemDao = new SObjectItemDao();
-        openConnection();
-        //sb = new StringBuffer("from sobject sobject0_ left outer join sobject_item items1_ on sobject0_.ID=items1_.SObjectID where (deletionMark is null) and sobject0_.SBucketID=?");
-        //sb.append("sobject0_.ID as ID5_0_, items1_.ID as ID6_1_, sobject0_.NameKey as NameKey5_0_, sobject0_.OwnerCanonicalId as OwnerCan3_5_0_, sobject0_.NextSequence as NextSequ4_5_0_, sobject0_.DeletionMark as Deletion5_5_0_, sobject0_.CreateTime as CreateTime5_0_, sobject0_.SBucketID as SBucketID5_0_, items1_.Version as Version6_1_, MD5 as MD3_6_1_, items1_.StoredPath as StoredPath6_1_, items1_.StoredSize as StoredSize6_1_, items1_.CreateTime as CreateTime6_1_, items1_.LastModifiedTime as LastModi7_6_1_, items1_.LastAccessTime as LastAcce8_6_1_, items1_.SObjectID as SObjectID6_1_, items1_.SObjectID as SObjectID5_0__, items1_.ID as ID0__ from sobject sobject0_ left outer join sobject_item items1_ on sobject0_.ID=items1_.SObjectID where (deletionMark is null) and sobject0_.SBucketID=?");
-        
+        openConnection();        
         try {            
             statement = conn.prepareStatement ( "SELECT * from sobject where SBucketID=? and DeletionMark is null" );
             statement.setLong( 1, bucket.getId());
@@ -128,31 +95,18 @@ public class SObjectDao extends BaseDao {
             }
             
         }finally {
+        	statement.close();
         	closeConnection();
         }
 		return items;
-		// return queryEntities(sb.toString(), 0, maxKeys, params.toArray());
 	}
 	
-	public List<SObject> listAllBucketObjects(SBucket bucket, String prefix, String marker, int maxKeys) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-		StringBuffer sb = new StringBuffer();
-		List<Object> params = new ArrayList<Object>();
+	public List<SObject> listAllBucketObjects(SBucket bucket, String prefix,
+			String marker, int maxKeys) throws InstantiationException,
+			IllegalAccessException, ClassNotFoundException, SQLException {
+		
 		List<SObject> items = new ArrayList<SObject>();
-/*		sb.append("from sobject o left join fetch o.items where o.bucket=?");
-		params.add(new EntityParam(bucket));
-		
-		if(prefix != null && !prefix.isEmpty()) {
-			sb.append(" and o.nameKey like ?");
-			params.add(new String(prefix + "%"));
-		}
-		
-		if(marker != null && !marker.isEmpty()) {
-			sb.append(" and o.nameKey > ?");
-			params.add(marker);
-		}
-*/		
 		SObjectItemDao itemDao = new SObjectItemDao();
-		sb.append("from sobject sobject0_ left outer join sobject_item items1_ on sobject0_.ID=items1_.SObjectID where (deletionMark is null) and sobject0_.SBucketID=?");
 		PreparedStatement statement = null;
 	    SObject sobject = null;
         openConnection();	
@@ -174,11 +128,10 @@ public class SObjectDao extends BaseDao {
             }
             
         }finally {
+        	statement.close();
         	closeConnection();
         }
 		return items;
-		
-		//return queryEntities(sb.toString(), 0, maxKeys, params.toArray());
 	}
 	
 	
@@ -245,7 +198,6 @@ public class SObjectDao extends BaseDao {
 		PreparedStatement pstmt = null;
         openConnection();
         long id = 0;
-		//Date tod = new Date();
         java.sql.Timestamp dateTime = new Timestamp( new Date().getTime());
 
         try {            
@@ -270,39 +222,6 @@ public class SObjectDao extends BaseDao {
         } finally {
         	closeConnection();
         }
-        /*
-		 * +------------------+--------------+------+-----+---------+----------------+
-| Field            | Type         | Null | Key | Default | Extra          |
-+------------------+--------------+------+-----+---------+----------------+
-| ID               | bigint(20)   | NO   | PRI | NULL    | auto_increment |
-| SBucketID        | bigint(20)   | NO   | MUL | NULL    |                |
-| NameKey          | varchar(255) | NO   |     | NULL    |                |
-| OwnerCanonicalID | varchar(150) | NO   | MUL | NULL    |                |
-| NextSequence     | int(11)      | NO   |     | 1       |                |
-| DeletionMark     | varchar(150) | YES  |     | NULL    |                |
-| CreateTime       | datetime     | YES  | MUL | NULL    |                |
-+------------------+--------------+------+-----+---------+----------------+
-		 */
-		
 	}
-
-	/*public void update(SObjectItem item) {
-		// TODO Auto-generated method stub
-		
-
-		PreparedStatement statement = null;
-        openConnection();	
-        try {            
-            statement = conn.prepareStatement ( "UPDATE sobject set DeletionMark=?" );
-            statement.setString(1, sobject.getDeletionMark());
-            statement.executeUpdate();
-        }finally {
-        	statement.close();
-        	closeConnection();
-        }
-		
-	}
-*/
-
 	
 }

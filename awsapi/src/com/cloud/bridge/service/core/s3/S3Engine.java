@@ -84,9 +84,6 @@ import com.cloud.bridge.util.Triple;
  */
 public class S3Engine {
     protected final static Logger logger = Logger.getLogger(S3Engine.class);
-    
-    private final int LOCK_ACQUIRING_TIMEOUT_SECONDS = 10;		// ten seconds
-
     private final Map<Integer, S3BucketAdapter> bucketAdapters = new HashMap<Integer, S3BucketAdapter>();
     
     public S3Engine() {
@@ -176,53 +173,45 @@ public class S3Engine {
 		if (PolicyAccess.DENY == verifyPolicy( context )) 
             throw new PermissionDeniedException( "Access Denied - bucket policy DENY result" );
    	
-/*		if (PersistContext.acquireNamedLock("bucket.creation", LOCK_ACQUIRING_TIMEOUT_SECONDS)) 
-		{
-*/			OrderedPair<SHost, String> shost_storagelocation_pair = null;
-			boolean success = false;
-			try {
-				SBucketDao bucketDao = new SBucketDao();
-				SAclDao    aclDao    = new SAclDao();
-				
-				if (bucketDao.getByName(request.getBucketName()) != null)
-					throw new ObjectAlreadyExistsException("Bucket already exists"); 
-					
-				shost_storagelocation_pair = allocBucketStorageHost(request.getBucketName(), null);
-				
-				SBucket sbucket = new SBucket();
-				sbucket.setName(request.getBucketName());
-				sbucket.setCreateTime(new Timestamp( new Date().getTime()));
-				sbucket.setOwnerCanonicalId( UserContext.current().getCanonicalUserId());
-				sbucket.setShost(shost_storagelocation_pair.getFirst());
-				shost_storagelocation_pair.getFirst().getBuckets().add(sbucket);
-				long id = bucketDao.save(sbucket);
-				sbucket.setId(id);
-				S3AccessControlList acl = request.getAcl();
-				
-				if ( null != cannedAccessPolicy ) 
-					 setCannedAccessControls( cannedAccessPolicy, "SBucket", sbucket.getId(), sbucket );
-				else if (null != acl) 
-					 aclDao.save(  "SBucket", sbucket.getId(), acl );
-				else setSingleAcl( "SBucket", sbucket.getId(), SAcl.PERMISSION_FULL ); 
+		OrderedPair<SHost, String> shost_storagelocation_pair = null;
+		boolean success = false;
+		try {
+			SBucketDao bucketDao = new SBucketDao();
+			SAclDao    aclDao    = new SAclDao();
 			
-				// explicitly commit the transaction
-				//PersistContext.commitTransaction();
-				success = true;				
-			} catch (Exception e){
-				logger.error( "Bucket Creation Failed " + e.getStackTrace());
-			}
-			finally 
-			{
-				if(!success && shost_storagelocation_pair != null) {
-					S3BucketAdapter bucketAdapter =  getStorageHostBucketAdapter(shost_storagelocation_pair.getFirst());
-					bucketAdapter.deleteContainer(shost_storagelocation_pair.getSecond(), request.getBucketName());
-				}
-			}
+			if (bucketDao.getByName(request.getBucketName()) != null)
+				throw new ObjectAlreadyExistsException("Bucket already exists"); 
+				
+			shost_storagelocation_pair = allocBucketStorageHost(request.getBucketName(), null);
 			
-/*		} else {
-			throw new OutOfServiceException("Unable to acquire synchronization lock");
+			SBucket sbucket = new SBucket();
+			sbucket.setName(request.getBucketName());
+			sbucket.setCreateTime(new Timestamp( new Date().getTime()));
+			sbucket.setOwnerCanonicalId( UserContext.current().getCanonicalUserId());
+			sbucket.setShost(shost_storagelocation_pair.getFirst());
+			shost_storagelocation_pair.getFirst().getBuckets().add(sbucket);
+			long id = bucketDao.save(sbucket);
+			sbucket.setId(id);
+			S3AccessControlList acl = request.getAcl();
+			
+			if ( null != cannedAccessPolicy ) 
+				 setCannedAccessControls( cannedAccessPolicy, "SBucket", sbucket.getId(), sbucket );
+			else if (null != acl) 
+				 aclDao.save(  "SBucket", sbucket.getId(), acl );
+			else setSingleAcl( "SBucket", sbucket.getId(), SAcl.PERMISSION_FULL ); 
+		
+			success = true;				
+		} catch (Exception e){
+			logger.error( "Bucket Creation Failed " + e.getStackTrace());
 		}
-*/		
+		finally 
+		{
+			if(!success && shost_storagelocation_pair != null) {
+				S3BucketAdapter bucketAdapter =  getStorageHostBucketAdapter(shost_storagelocation_pair.getFirst());
+				bucketAdapter.deleteContainer(shost_storagelocation_pair.getSecond(), request.getBucketName());
+			}
+		}
+			
 		return response;
     }
     
@@ -240,16 +229,16 @@ public class S3Engine {
 		try {
 			sbucket = bucketDao.getByName( bucketName );
 		} catch (InstantiationException e1) {
-			// TODO Auto-generated catch block
+			logger.warn("Error Occured " + e1.getMessage());
 			e1.printStackTrace();
 		} catch (IllegalAccessException e1) {
-			// TODO Auto-generated catch block
+			logger.warn("Error Occured " + e1.getMessage());
 			e1.printStackTrace();
 		} catch (ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
+			logger.warn("Error Occured " + e1.getMessage());
 			e1.printStackTrace();
 		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
+			logger.warn("Error Occured " + e1.getMessage());
 			e1.printStackTrace();
 		}
 		
@@ -315,17 +304,17 @@ public class S3Engine {
 			 try {
 				bucketDao.delete( sbucket );
 			} catch (InstantiationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			}		
 			 response.setResultCode(204);
 			 response.setResultDescription("OK");
@@ -360,17 +349,17 @@ public class S3Engine {
 		try {
 			sbucket = bucketDao.getByName(bucketName);
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
 		if (sbucket == null) throw new NoSuchObjectException("Bucket " + bucketName + " does not exist");
 		
@@ -390,33 +379,33 @@ public class S3Engine {
 			try {
 				l = sobjectDao.listAllBucketObjects( sbucket, prefix, marker, maxKeys+1 );
 			} catch (InstantiationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			}
 		else
 			try {
 				l = sobjectDao.listBucketObjects( sbucket, prefix, marker, maxKeys+1 );
 			} catch (InstantiationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			}   
 		
 		response.setBucketName(bucketName);
@@ -451,16 +440,16 @@ public class S3Engine {
 		try {
 			buckets = bucketDao.listBuckets(UserContext.current().getCanonicalUserId());
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			logger.warn("Error Occured " + e.getMessage());
 			logger.error("Error in getting the buckets list " +  e.getMessage());
 		}
     	S3CanonicalUser owner = new S3CanonicalUser();
@@ -502,17 +491,17 @@ public class S3Engine {
 		try {
 			sbucket = bucketDao.getByName(bucketName);
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
     	if(sbucket == null) {
     		response.setResultCode(404);
@@ -527,17 +516,17 @@ public class S3Engine {
     	try {
 			aclDao.save("SBucket", sbucket.getId(), request.getAcl());
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
    	
     	response.setResultCode(200);
@@ -560,17 +549,17 @@ public class S3Engine {
 		try {
 			sbucket = bucketDao.getByName( bucketName );
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
     	if (sbucket == null)
     		throw new NoSuchObjectException("Bucket " + bucketName + " does not exist");
@@ -588,17 +577,17 @@ public class S3Engine {
 		try {
 			grants = aclDao.listGrants("SBucket", sbucket.getId());
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
     	policy.setGrants(S3Grant.toGrants(grants));  	
     	return policy;
@@ -620,16 +609,16 @@ public class S3Engine {
 		try {
 			bucket = bucketDao.getByName(bucketName);
 		} catch (InstantiationException e1) {
-			// TODO Auto-generated catch block
+			logger.warn("Error Occured " + e1.getMessage());
 			e1.printStackTrace();
 		} catch (IllegalAccessException e1) {
-			// TODO Auto-generated catch block
+			logger.warn("Error Occured " + e1.getMessage());
 			e1.printStackTrace();
 		} catch (ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
+			logger.warn("Error Occured " + e1.getMessage());
 			e1.printStackTrace();
 		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
+			logger.warn("Error Occured " + e1.getMessage());
 			e1.printStackTrace();
 		}
 		if (bucket == null) {
@@ -700,16 +689,16 @@ public class S3Engine {
 		try {
 			bucket = bucketDao.getByName(bucketName);
 		} catch (InstantiationException e1) {
-			// TODO Auto-generated catch block
+			logger.warn("Error Occured " + e1.getMessage());
 			e1.printStackTrace();
 		} catch (IllegalAccessException e1) {
-			// TODO Auto-generated catch block
+			logger.warn("Error Occured " + e1.getMessage());
 			e1.printStackTrace();
 		} catch (ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
+			logger.warn("Error Occured " + e1.getMessage());
 			e1.printStackTrace();
 		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
+			logger.warn("Error Occured " + e1.getMessage());
 			e1.printStackTrace();
 		}
 		if (bucket == null) {
@@ -758,17 +747,13 @@ public class S3Engine {
 		try {
 			bucket = bucketDao.getByName(bucketName);
 		} catch (InstantiationException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (IllegalAccessException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		}
 		if (bucket == null) {
 			logger.error( "saveUploadedPart failed since " + bucketName + " does not exist" );
@@ -842,17 +827,13 @@ public class S3Engine {
 		try {
 			bucket = bucketDao.getByName(bucketName);
 		} catch (InstantiationException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (IllegalAccessException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		}
 		if (bucket == null) {
 			logger.error( "completeMultipartUpload( failed since " + bucketName + " does not exist" );
@@ -925,17 +906,13 @@ public class S3Engine {
 		try {
 			bucket = bucketDao.getByName(bucketName);
 		} catch (InstantiationException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (IllegalAccessException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		}
 		if (bucket == null) throw new NoSuchObjectException("Bucket " + bucketName + " does not exist");
 		
@@ -946,17 +923,13 @@ public class S3Engine {
 		try {
 			object_objectitem_pair = allocObjectItem(bucket, key, meta, acl, request.getCannedAccess());
 		} catch (InstantiationException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (IllegalAccessException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		}
 		OrderedPair<SHost, String> host_storagelocation_pair = getBucketStorageHost(bucket);		
 		
@@ -989,17 +962,13 @@ public class S3Engine {
 				}
 				
 			} catch (InstantiationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			}
 			
 			
@@ -1043,17 +1012,17 @@ public class S3Engine {
 		try {
 			bucket = bucketDao.getByName(bucketName);
 		} catch (InstantiationException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
+			//e1.printStackTrace();
 		} catch (IllegalAccessException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
+			//e1.printStackTrace();
 		} catch (ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
+			//e1.printStackTrace();
 		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
+			//e1.printStackTrace();
 		}
 		if(bucket == null) throw new NoSuchObjectException("Bucket " + bucketName + " does not exist");
 		
@@ -1084,17 +1053,17 @@ public class S3Engine {
 				//PersistContext.getSession().save(item);
 
 			} catch (InstantiationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			}
 			
 		} catch (OutOfStorageException e) {
@@ -1130,17 +1099,17 @@ public class S3Engine {
 		try {
 			sbucket = bucketDao.getByName( bucketName );
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
     	if(sbucket == null) {
     		response.setResultCode(404);
@@ -1154,17 +1123,17 @@ public class S3Engine {
 		try {
 			sobject = sobjectDao.getByNameKey( sbucket, nameKey );
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}   	
     	if(sobject == null) {
     		response.setResultCode(404);
@@ -1208,17 +1177,17 @@ public class S3Engine {
     	try {
 			aclDao.save("SObjectItem", item.getId(), request.getAcl());
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
     	
     	response.setResultCode(200);
@@ -1244,17 +1213,17 @@ public class S3Engine {
 		try {
 			sbucket = bucketDao.getByName( bucketName );
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
     	if (sbucket == null)
     		throw new NoSuchObjectException("Bucket " + bucketName + " does not exist");
@@ -1265,17 +1234,17 @@ public class S3Engine {
 		try {
 			sobject = sobjectDao.getByNameKey( sbucket, nameKey );
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
     	if (sobject == null)
     		throw new NoSuchObjectException("Object " + request.getKey() + " does not exist");
@@ -1324,17 +1293,17 @@ public class S3Engine {
 		try {
 			grants = aclDao.listGrants( "SObjectItem", item.getId());
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
     	policy.setGrants(S3Grant.toGrants(grants));    
     	return policy;
@@ -1361,17 +1330,17 @@ public class S3Engine {
 		try {
 			sbucket = bucketDao.getByName(bucketName);
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
 		if (sbucket == null) {
 			response.setResultCode(404);
@@ -1385,17 +1354,17 @@ public class S3Engine {
 		try {
 			sobject = objectDao.getByNameKey( sbucket, nameKey );
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
 		if (sobject == null) {
 			response.setResultCode(404);
@@ -1460,17 +1429,17 @@ public class S3Engine {
 		try {
 			itemMetaData = metaDao.getByTarget( "SObjectItem", item.getId());
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
 		if (null != itemMetaData) 
 		{
@@ -1530,17 +1499,17 @@ public class S3Engine {
 		try {
 			sbucket = bucketDao.getByName( bucketName );
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
 		if (sbucket == null) {
 			response.setResultCode(404);
@@ -1554,17 +1523,17 @@ public class S3Engine {
 		try {
 			sobject = objectDao.getByNameKey( sbucket, nameKey );
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
 		if (sobject == null) {
 			response.setResultCode(404);
@@ -1591,17 +1560,17 @@ public class S3Engine {
 				 try {
 					objectDao.update( sobject, "deletionmark" );
 				} catch (InstantiationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.warn("Error Occured " + e.getMessage());
+		
 				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.warn("Error Occured " + e.getMessage());
+		
 				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.warn("Error Occured " + e.getMessage());
+		
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.warn("Error Occured " + e.getMessage());
+		
 				}
 				 response.setResultDescription("<DeleteMarker>true</DeleteMarker><DeleteMarkerVersionId>"+ sobject.getDeletionMark() +"</DeleteMarkerVersionId>");
 			 }
@@ -1613,17 +1582,17 @@ public class S3Engine {
 			    	  try {
 						objectDao.update( sobject, "deletionmark" );
 					} catch (InstantiationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn("Error Occured " + e.getMessage());
+			
 					} catch (IllegalAccessException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn("Error Occured " + e.getMessage());
+			
 					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn("Error Occured " + e.getMessage());
+			
 					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn("Error Occured " + e.getMessage());
+			
 					}	
 			    	  response.setResultDescription("<VersionId>" + wantVersion +"</VersionId>");
 			    	  response.setResultDescription("<DeleteMarker>true</DeleteMarker><DeleteMarkerVersionId>"+ sobject.getDeletionMark() +"</DeleteMarkerVersionId>");
@@ -1645,17 +1614,17 @@ public class S3Engine {
 			    	   try {
 						itemDao.delete(item);
 					} catch (InstantiationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn("Error Occured " + e.getMessage());
+			
 					} catch (IllegalAccessException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn("Error Occured " + e.getMessage());
+			
 					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn("Error Occured " + e.getMessage());
+			
 					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn("Error Occured " + e.getMessage());
+			
 					}
 			    	   //objectDao.update(item );
 			    	   response.setResultDescription("<VersionId>" + wantVersion +"</VersionId>");
@@ -1684,17 +1653,17 @@ public class S3Engine {
 		    	      try {
 						objectDao.delete( sobject );
 					} catch (InstantiationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn("Error Occured " + e.getMessage());
+			
 					} catch (IllegalAccessException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn("Error Occured " + e.getMessage());
+			
 					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn("Error Occured " + e.getMessage());
+			
 					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.warn("Error Occured " + e.getMessage());
+			
 					}
 		    	  }
 		     }
@@ -1727,17 +1696,17 @@ public class S3Engine {
 		    }
 		}
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
 
 	}
@@ -1748,17 +1717,17 @@ public class S3Engine {
 		try {
 			itemAclData = aclDao.listGrants( target, itemId );
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
 	    if (null != itemAclData) 
 	    {
@@ -1768,17 +1737,17 @@ public class S3Engine {
 		       try {
 				aclDao.delete( oneTag );
 			} catch (InstantiationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			}
 		    }
 		}
@@ -1790,17 +1759,17 @@ public class S3Engine {
 		try {
 			bucketAclData = aclDao.listGrants( "SBucket", bucketId );
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+
 		}
 	    if (null != bucketAclData) 
 	    {
@@ -1810,17 +1779,17 @@ public class S3Engine {
 		       try {
 				aclDao.delete( oneTag );
 			} catch (InstantiationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
+	
 			}
 		    }
 		}
@@ -2101,17 +2070,14 @@ public class S3Engine {
 		try {
 			object = objectDao.getByNameKey(bucket, nameKey);
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
+			
 		}
 		if ( object != null ) 
 		{
@@ -2122,24 +2088,26 @@ public class S3Engine {
 			      versionSeq = object.getNextSequence();
 			      object.setNextSequence(versionSeq + 1);
 		      try {
-		    	  objectDao.updateVerionSeq(object);} catch (InstantiationException e) {	e.printStackTrace(); } catch (IllegalAccessException e) {e.printStackTrace();} catch (ClassNotFoundException e) {
-					e.printStackTrace();
+					objectDao.updateVerionSeq(object);
+				} catch (InstantiationException e) {
+					logger.warn("Error Occured " + e.getMessage());
+				} catch (IllegalAccessException e) {
+					logger.warn("Error Occured " + e.getMessage());
+				} catch (ClassNotFoundException e) {
+					logger.warn("Error Occured " + e.getMessage());
 				} catch (SQLException e) {
-					e.printStackTrace();
+					logger.warn("Error Occured " + e.getMessage());
 				}
-		 	      //session.save(object);
 			      item = new SObjectItem();
 			      item.setTheObject(object);
 			      object.getItems().add(item);
 			      item.setVersion(String.valueOf(versionSeq));
-			      // Date ts = DateHelper.currentGMTTime();
 			      java.sql.Timestamp ts = new Timestamp( new Date().getTime());
 			      item.setCreateTime(ts);
 			      item.setLastAccessTime(ts);
 			      item.setLastModifiedTime(ts);
 			      //Save the new version key
 			      item = objectItemDao.save(item); 
-			      //session.save(item);
 			 }
 			 else
 			 {    // -> find an object item with a null version, can be null
@@ -2147,10 +2115,16 @@ public class S3Engine {
 				 item = null;
 				  try {
 					item = objectItemDao.getByObjectIdNullVersion( object.getId());
-				} catch (InstantiationException e) {e.printStackTrace();} catch (IllegalAccessException e) {e.printStackTrace();} catch (ClassNotFoundException e) {e.printStackTrace();} catch (SQLException e) {
-					e.printStackTrace();
+				} catch (InstantiationException e) {
+					logger.warn("Error Occured " + e.getMessage());
+				} catch (IllegalAccessException e) {
+					logger.warn("Error Occured " + e.getMessage());
+				} catch (ClassNotFoundException e) {
+					logger.warn("Error Occured " + e.getMessage());
+				} catch (SQLException e) {
+					logger.warn("Error Occured " + e.getMessage());
 				}
-				  //boolean isAvailable = objectItemDao.getByObjectIdNullVersion( object.getId()); 
+				  
 				  if (item == null)
 				  {
 				      item = new SObjectItem();
@@ -2160,15 +2134,21 @@ public class S3Engine {
 				      item.setCreateTime(ts);
 				      item.setLastAccessTime(ts);
 				      item.setLastModifiedTime(ts);
-				      //session.save(item);
 				      try {
 						item = objectItemDao.save(item);
-					} catch (InstantiationException e) { e.printStackTrace();	} catch (IllegalAccessException e) {			e.printStackTrace();	} catch (ClassNotFoundException e) {e.printStackTrace();
-					} catch (SQLException e) {e.printStackTrace();}
+					} catch (InstantiationException e) {
+						logger.warn("Error Occured " + e.getMessage());
+					} catch (IllegalAccessException e) {
+						logger.warn("Error Occured " + e.getMessage());
+					} catch (ClassNotFoundException e) {
+						logger.warn("Error Occured " + e.getMessage());
+					} catch (SQLException e) {
+						logger.warn("Error Occured " + e.getMessage());
+					}
 				  }
 			 }
 		} 
-		else 
+		else 	
 		{    // -> there is no object nor an object item
 			 object = new SObject();
 			 object.setBucket(bucket);
@@ -2178,7 +2158,6 @@ public class S3Engine {
 			 object.setOwnerCanonicalId(UserContext.current().getCanonicalUserId());
 			 long id = objectDao.save(object);
 			 object.setId(id);
-			 //session.save(object);
 		
 		     item = new SObjectItem();
 		     item.setTheObject(object);
@@ -2188,8 +2167,6 @@ public class S3Engine {
 		     item.setLastAccessTime(new Timestamp( new Date().getTime()));
 		     item.setLastModifiedTime(new Timestamp( new Date().getTime()));
 		     item = objectItemDao.save(item);
-		     //session.save(item);
-		     
 		}
 			
 		
@@ -2205,17 +2182,13 @@ public class S3Engine {
 			//TODO find why this is not getting saved???
 			metaDao.save("SObjectItem", item.getId(), meta);
 		} catch (InstantiationException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (IllegalAccessException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.warn("Error Occured " + e1.getMessage());
 		}
 		
 		
@@ -2234,23 +2207,17 @@ public class S3Engine {
 			 try {
 				aclDao.save( "SObjectItem", item.getId(), acl );
 			} catch (InstantiationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			}
 		}
 		
-		// TODO We need to update this item instead of saving it !
-		objectItemDao.update(item, new String[]{"storedpath"});
-		//session.update(item);		
+		objectItemDao.update(item, new String[]{"storedpath"});		
 		return new OrderedPair<SObject, SObjectItem>(object, item);
 	}
 	
@@ -2294,17 +2261,13 @@ public class S3Engine {
             try {
 				aclDao.save( target, targetId, defaultAcl );
 			} catch (InstantiationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			}
         }
 	}
@@ -2339,17 +2302,13 @@ public class S3Engine {
         try {
 			aclDao.save( target, objectId, defaultAcl );
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn("Error Occured " + e.getMessage());
 		}
 	}
 
@@ -2404,17 +2363,13 @@ public class S3Engine {
              try {
 				accessAllowed( target, targetId, requestedPermission );
 			} catch (InstantiationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.warn("Error Occured " + e.getMessage());
 			}
              break;
         }

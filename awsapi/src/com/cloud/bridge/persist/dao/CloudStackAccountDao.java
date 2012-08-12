@@ -30,11 +30,9 @@ public class CloudStackAccountDao extends BaseDao {
 	private Connection conn = null;
 	
     public CloudStackAccountDao() {
-        //super(CloudStackAccount.class, true);
     }
 
     public CloudStackAccount getdefaultZoneId( String id ) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
-        //return queryEntity("from CloudStackAccount where id=?", new Object[] {id});
     	CloudStackAccount account = null;
 		openConnection();
 		try {

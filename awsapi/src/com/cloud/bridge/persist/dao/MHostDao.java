@@ -26,7 +26,6 @@ import java.util.Date;
 import org.apache.log4j.Logger;
 
 import com.cloud.bridge.model.MHost;
-import com.cloud.bridge.model.MHostMount;
 
 /**
  * @author Kelven Yang

@@ -20,8 +20,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Date;
 
 import com.cloud.bridge.model.SHost;
 
@@ -34,25 +32,13 @@ public class SHostDao extends BaseDao {
 	public SHostDao() {
 	}
 	
-/*	public SHost getByHost(String host) {
-		return queryEntity("from SHost where host=?", new Object[] { host });
-	}
-*/	
-
-	
-	
-/*	public SHost getLocalStorageHost(long mhostId, String storageRoot) {
-		return queryEntity("from SHost where mhost=? and exportRoot=?", 
-			new Object[] { new Long(mhostId), storageRoot});
-	}
-*/	
 	public SHost getById(Long hostId) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		
 		SHost shost = null;
 		openConnection();
-
+		PreparedStatement pstmt = null;
 		try { 
-			PreparedStatement pstmt = conn.prepareStatement ( "select * from shost where id=?");
+			pstmt = conn.prepareStatement ( "select * from shost where id=?");
 			pstmt.setLong(1, hostId);
 			
 			ResultSet rst = pstmt.executeQuery();
@@ -68,9 +54,8 @@ public class SHostDao extends BaseDao {
 				shost.setUserPassword(rst.getString("UserPassword"));
 				return shost;
 			}
-		}catch (Exception e) {
-			
 		} finally {
+			pstmt.close();
 			closeConnection();
 		}
 		
@@ -99,21 +84,12 @@ public class SHostDao extends BaseDao {
 				shost.setUserPassword(rst.getString("UserPassword"));
 				pstmt.close();
 				return shost;
-			/*				
-				--------------+--------------+------+-----+---------+----------------+
-				| ID           | bigint(20)   | NO   | PRI | NULL    | auto_increment |
-				| Host         | varchar(128) | NO   | MUL | NULL    |                |
-				| HostType     | int(11)      | NO   |     | 0       |                |
-				| ExportRoot   | varchar(128) | NO   |     | NULL    |                |
-				| MHostID      | bigint(20)   | YES  | MUL | NULL    |                |
-				| UserOnHost   | varchar(64)  | YES  |     | NULL    |                |
-				| UserPassword | varchar(128) | YES  |     | NULL    |                |
-			*/
-
 			}
+			
 		} catch(Exception e){
 			
 		}finally {
+			pstmt.close();
 			closeConnection();
 		}
 		
@@ -138,8 +114,9 @@ public class SHostDao extends BaseDao {
 	public void save(SHost shost) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException {
 		
 		openConnection();
+		PreparedStatement pstmt = null;
 		try {
-			PreparedStatement pstmt = conn.prepareStatement( "INSERT into shost (Host, HostType, ExportRoot, MHostID) VALUES(?,?,?,?)" );
+			pstmt = conn.prepareStatement( "INSERT into shost (Host, HostType, ExportRoot, MHostID) VALUES(?,?,?,?)" );
 			
 			pstmt.setString(1, shost.getHost());
 			pstmt.setInt(2, shost.getHostType());
@@ -148,6 +125,7 @@ public class SHostDao extends BaseDao {
 			pstmt.executeUpdate();
 			
 		} finally {
+			pstmt.close();
 			closeConnection();
 		}
 		
