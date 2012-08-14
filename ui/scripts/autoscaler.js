@@ -25,7 +25,7 @@
       $.ajax({
         url: createURL('listZones'),
         data: {
-          id: args.context.ipAddresses[0].zoneid,
+          id: args.context.networks[0].zoneid,
           listAll: true
         },
         async: false,
@@ -35,6 +35,8 @@
           if (zone.networktype == 'Advanced') {
             isAdvancedZone = true;
           }
+           else
+             isAdvancedZone = false;
         }
       });
 
