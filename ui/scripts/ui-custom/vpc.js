@@ -291,7 +291,9 @@
 
       return $config;
     },
-    router: function() {
+    router: function(args) {
+      var $browser = args.$browser;
+      var detailView = args.detailView;
       var $router = $('<li>').addClass('tier virtual-router');
       var $title = $('<span>').addClass('title').html('Virtual Router');
 
@@ -299,6 +301,15 @@
 
       // Append horizontal chart line
       $router.append($('<div>').addClass('connect-line'));
+
+      $router.click(function() {
+        $browser.cloudBrowser('addPanel', {
+          title: 'VPC router details',
+          complete: function($panel) {
+            $panel.detailView(detailView);
+          }
+        });
+      });
 
       return $router;
     },
@@ -462,7 +473,12 @@
       var context = args.context;
       var tierDetailView = args.tierDetailView;
       var $tiers = $('<ul>').addClass('tiers');
-      var $router = elems.router();
+      var $router = elems.router({
+        $browser: $browser,
+        detailView: $.extend(true, {}, args.routerDetailView(), {
+          context: context
+        })
+      });
       var $chart = $('<div>').addClass('vpc-chart');
       var $title = $('<div>').addClass('vpc-title')
             .append(
