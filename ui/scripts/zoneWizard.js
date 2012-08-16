@@ -512,6 +512,10 @@
                 }
               });
             }
+          },
+          localstorageenabled: {
+            label: 'label.local.storage.enabled',
+            isBoolean: true
           }
         }
       },
