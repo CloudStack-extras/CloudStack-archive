@@ -1044,6 +1044,7 @@
                         'autoScale': {
                           label: 'AutoScale',
                           custom: {
+                            requireValidation: true,
                             buttonLabel: 'label.configure',
                             action: cloudStack.uiCustom.autoscaler(cloudStack.autoscaler)
                           }
@@ -2647,7 +2648,7 @@
 
                             // Passing _hideFields array will disable specified fields for this row
                             //item._hideFields = ['autoScale'];
-
+                            
 														$.ajax({
 															url: createURL('listAutoScaleVmGroups'),
 															data: {
@@ -2666,7 +2667,7 @@
 															}
 														});
 																												
-                            // Get sticky data
+														// Get sticky data
                             $.ajax({
                               url: createURL('listLBStickinessPolicies'),
                               async: false,
