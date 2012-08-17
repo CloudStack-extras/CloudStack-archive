@@ -2363,7 +2363,7 @@
 																args.response.success({ data: items });																
                         }
                           });
-                        }
+                      }
                       }
                       }
                     },
@@ -2715,6 +2715,11 @@
                               success: function(data) {
                                 lbInstances = data.listloadbalancerruleinstancesresponse.loadbalancerruleinstance ?
                                   data.listloadbalancerruleinstancesresponse.loadbalancerruleinstance : [];
+																																																	
+                                $(lbInstances).each(function() {																  																
+																	if(this.name.indexOf('AutoScale-LB-') > -1) //autoscale VM is not allowed to be deleted manually. So, hide destroy button
+                                    this._hideActions = ['destroy'];	                                  																	
+																});                                				
                               },
                               error: function(data) {
                                 args.response.error(parseXMLHttpResponse(data));
@@ -2808,7 +2813,7 @@
 																args.response.success({ data: items });																
                         }
                           });
-                        }
+                      }
                       }
                       }
                     },
