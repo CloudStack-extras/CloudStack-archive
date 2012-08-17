@@ -1896,9 +1896,9 @@
                                     havingLbService = true;
                                 });
                               }
-                            });
-                          }
                         });
+                      }
+                    });
                       }
                     }
 
@@ -2309,12 +2309,20 @@
                                 data.listvirtualmachinesresponse.virtualmachine ?
                                   data.listvirtualmachinesresponse.virtualmachine : [],
                                 function(instance) {
-                                  var isActiveState = $.inArray(instance.state, ['Destroyed','Expunging']) == -1;
+                                 //Hiding the autoScale VMs
+                                 var nonAutoScale =0;
+                                 if(instance.name.match(/AutoScale-LB-/) == null)
+                                       nonAutoScale = 1;
+                                 else {
+                                     if( instance.name.match(/AutoScale-LB-/).length)          
+                                        nonAutoScale =0;
+                                   }
+                                  var isActiveState = $.inArray(instance.state, ['Destroyed','Expunging']) == -1;            
                                   var notExisting = !$.grep(itemData, function(item) {
                                     return item.id == instance.id;
                                   }).length;
 
-                                  return isActiveState && notExisting;
+                                  return nonAutoScale && isActiveState && notExisting;
                                 }
                               );
 
@@ -2349,7 +2357,7 @@
 														  $.extend(data, {
 															  id: args.context.ipAddresses[0].associatednetworkid
                           });
-                        }
+                      }
 													
 														$.ajax({
 															url: createURL("listNetworks"),															
@@ -2813,7 +2821,7 @@
 																args.response.success({ data: items });																
                         }
                           });
-                      }
+                        }
                       }
                       }
                     },
