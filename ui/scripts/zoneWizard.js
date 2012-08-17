@@ -1263,6 +1263,9 @@
 
           array1.push("&name=" + todb(args.data.zone.name));
 
+          if (args.data.zone.localstorageenabled == 'on') {
+            array1.push("&localstorageenabled=true");
+          }
           array1.push("&dns1=" + todb(args.data.zone.dns1));
 
           var dns2 = args.data.zone.dns2;
