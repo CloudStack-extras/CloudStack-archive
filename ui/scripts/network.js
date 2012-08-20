@@ -1003,9 +1003,15 @@
                                     data.listvirtualmachinesresponse.virtualmachine ?
                                       data.listvirtualmachinesresponse.virtualmachine : [],
                                     function(instance) {
-                                      return $.inArray(instance.state, [
-                                        'Destroyed','Expunging'
-                                      ]) == -1;
+                                          var nonAutoScale=0;
+                                          if( instance.displayname.match(/AutoScale-LB-/)==null)
+                                             nonAutoScale =1;
+                                          else {
+                                             if(instance.displayname.match(/AutoScale-LB-/).length)
+                                               nonAutoScale =0;
+                                             }
+                                      var isActiveState= $.inArray(instance.state, ['Destroyed' ,'Expunging']) == -1;
+                                      return nonAutoScale && isActiveState;
                                     }
                                   )
                                 });
@@ -1385,7 +1391,7 @@
 
                 if (ipAddress.isstaticnat == true || ipAddress.virtualmachineid != null) {
                   disableIpRules = true;
-                }
+              }
               }
 
               if (ipAddress.vpcid && ipAddress.issourcenat) {
@@ -3771,7 +3777,7 @@
 											if(domains != null && domains.length > 0) {
 												for(var i = 0; i < domains.length; i++) {
 													array1.push({id: domains[i].id, description: domains[i].path});
-    }
+      }
     }
 											args.response.success({
 												data: array1
