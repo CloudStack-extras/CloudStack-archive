@@ -2311,12 +2311,12 @@
                                 function(instance) {
                                  //Hiding the autoScale VMs
                                  var nonAutoScale =0;
-                                 if(instance.name.match(/AutoScale-LB-/) == null)
+                                 if(instance.displayname.match(/AutoScale-LB-/) == null)
                                        nonAutoScale = 1;
                                  else {
-                                     if( instance.name.match(/AutoScale-LB-/).length)          
+                                     if( instance.displayname.match(/AutoScale-LB-/).length)          
                                         nonAutoScale =0;
-                                   }
+                                   }            
                                   var isActiveState = $.inArray(instance.state, ['Destroyed','Expunging']) == -1;            
                                   var notExisting = !$.grep(itemData, function(item) {
                                     return item.id == instance.id;
@@ -2371,7 +2371,7 @@
 																args.response.success({ data: items });																
                         }
                           });
-                      }
+                        }
                       }
                       }
                     },
@@ -3771,7 +3771,7 @@
 											if(domains != null && domains.length > 0) {
 												for(var i = 0; i < domains.length; i++) {
 													array1.push({id: domains[i].id, description: domains[i].path});
-      }
+    }
     }
 											args.response.success({
 												data: array1
