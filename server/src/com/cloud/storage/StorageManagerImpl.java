@@ -312,6 +312,8 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
     private long _maxVolumeSizeInGb;
     private long _serverId;
 
+	private boolean _recreateSystemVmEnabled;
+
 
     public boolean share(VMInstanceVO vm, List<VolumeVO> vols, HostVO host, boolean cancelPreviousShare) throws StorageUnavailableException {
 
@@ -834,6 +836,9 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
         
         String time = configs.get("storage.cleanup.interval");
         _storageCleanupInterval = NumbersUtil.parseInt(time, 86400);
+        
+        value = configDao.getValue(Config.RecreateSystemVmEnabled.key());
+        _recreateSystemVmEnabled = Boolean.parseBoolean(value);
         
         s_logger.info("Storage cleanup enabled: " + _storageCleanupEnabled + ", interval: " + _storageCleanupInterval + ", template cleanup enabled: " + _templateCleanupEnabled);
 
@@ -2639,7 +2644,7 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
     }
 
     @Override
-    public void prepare(VirtualMachineProfile<? extends VirtualMachine> vm, DeployDestination dest, boolean recreate) throws StorageUnavailableException, InsufficientStorageCapacityException {
+    public void prepare(VirtualMachineProfile<? extends VirtualMachine> vm, DeployDestination dest) throws StorageUnavailableException, InsufficientStorageCapacityException {
 
         if (dest == null) {
             if (s_logger.isDebugEnabled()) {
@@ -2647,6 +2652,9 @@ public class StorageManagerImpl implements StorageManager, StorageService, Manag
             }
             throw new CloudRuntimeException("Unable to prepare Volume for vm because DeployDestination is null, vm:" + vm);
         }
+
+        boolean recreate = _recreateSystemVmEnabled;
+
         List<VolumeVO> vols = _volsDao.findUsableVolumesForInstance(vm.getId());
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Checking if we need to prepare " + vols.size() + " volumes for " + vm);

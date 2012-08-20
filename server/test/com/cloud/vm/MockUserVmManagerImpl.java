@@ -363,14 +363,7 @@ public class MockUserVmManagerImpl implements UserVmManager, UserVmService, Mana
         return null;
     }
 
-	@Override
-	public boolean recreateNeeded(VirtualMachineProfile<UserVmVO> profile,
-			long hostId, Commands cmds, ReservationContext context) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
+    @Override
 	public VirtualMachine migrateVirtualMachine(Long vmId, Host destinationHost)
 			throws ResourceUnavailableException, ConcurrentOperationException,
 			ManagementServerException, VirtualMachineMigrationException {

@@ -1179,13 +1179,4 @@ public class SecondaryStorageManagerImpl implements SecondaryStorageVmManager, V
     @Override
     public void onScanEnd() {
     }
-
-	@Override
-	public boolean recreateNeeded(
-			VirtualMachineProfile<SecondaryStorageVmVO> profile, long hostId,
-			Commands cmds, ReservationContext context) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 }
