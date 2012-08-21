@@ -562,7 +562,7 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
                 }
             }
         }
-
+        
         return discoverHostsFull(dcId, podId, clusterId, clusterName, url, username, password, cmd.getHypervisor(), hostTags, cmd.getFullUrlParams());
     }
 

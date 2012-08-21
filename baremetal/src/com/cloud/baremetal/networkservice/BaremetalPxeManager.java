@@ -30,6 +30,7 @@ import com.cloud.vm.VirtualMachineProfile;
 public interface BaremetalPxeManager extends Manager, PluggableService {
     public enum BaremetalPxeType {
         PING,
+        KICK_START,
     }
     
 	boolean prepare(VirtualMachineProfile profile, NicProfile nic, DeployDestination dest, ReservationContext context);

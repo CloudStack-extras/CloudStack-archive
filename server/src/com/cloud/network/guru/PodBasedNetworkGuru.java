@@ -48,7 +48,8 @@ import com.cloud.vm.VirtualMachineProfile;
 @Local(value={NetworkGuru.class})
 public class PodBasedNetworkGuru extends AdapterBase implements NetworkGuru {
     private static final Logger s_logger = Logger.getLogger(PodBasedNetworkGuru.class);
-    @Inject DataCenterDao _dcDao;
+    @Inject
+    protected DataCenterDao _dcDao;
     @Inject StorageNetworkManager _sNwMgr;
     Random _rand = new Random(System.currentTimeMillis());
     

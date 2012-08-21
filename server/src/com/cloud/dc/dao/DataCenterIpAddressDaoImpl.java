@@ -28,6 +28,9 @@ import com.cloud.utils.db.GenericSearchBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Func;
+import com.cloud.utils.db.SearchCriteria.Op;
+import com.cloud.utils.db.SearchCriteria2;
+import com.cloud.utils.db.SearchCriteriaService;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.NetUtils;
@@ -58,6 +61,25 @@ public class DataCenterIpAddressDaoImpl extends GenericDaoBase<DataCenterIpAddre
         vo.setReservationId(reservationId);
         update(vo.getId(), vo);
         txn.commit();
+        return vo;
+    }
+    
+    @DB
+    public DataCenterIpAddressVO takeIpAddress(long dcId, long podId, long instanceId, String reservationId, String ip) {
+        SearchCriteriaService<DataCenterIpAddressVO, DataCenterIpAddressVO> sc = SearchCriteria2.create(DataCenterIpAddressVO.class);
+        sc.addAnd(sc.getEntity().getPodId(), Op.EQ, podId);
+        sc.addAnd(sc.getEntity().getTakenAt(), Op.NULL);
+        sc.addAnd(sc.getEntity().getIpAddress(), Op.EQ, ip);
+        DataCenterIpAddressVO vo = sc.find();
+        if (vo != null) {
+            Transaction txn = Transaction.currentTxn();
+            txn.start();
+            vo.setTakenAt(new Date());
+            vo.setInstanceId(instanceId);
+            vo.setReservationId(reservationId);
+            update(vo.getId(), vo);
+            txn.commit();
+        }
         return vo;
     }
 

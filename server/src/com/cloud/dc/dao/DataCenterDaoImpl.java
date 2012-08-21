@@ -394,4 +394,13 @@ public class DataCenterDaoImpl extends GenericDaoBase<DataCenterVO, Long> implem
         txn.commit();
         return result;
     }
+
+    @Override
+    public Pair<String, Long> allocatePrivateIpAddress(long dcId, long podId, long instanceId, String reservationId, String ip) {
+        DataCenterIpAddressVO vo = _ipAllocDao.takeIpAddress(dcId, podId, instanceId, reservationId, ip);
+        if (vo == null) {
+            return null;
+        }
+        return new Pair<String, Long>(vo.getIpAddress(), vo.getMacAddress());
+    }
 }
