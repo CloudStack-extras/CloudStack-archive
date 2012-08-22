@@ -59,12 +59,12 @@ public class BaremetalKickStartPxeResource extends BaremetalPxeResourceBase {
             }
             scp.put(prepareScriptPath, "/usr/bin/", "0755");
 
-            String cpScript = "scripts/network/ping/prepare_kickstart_kerneal_initrd.py";
+            String cpScript = "scripts/network/ping/prepare_kickstart_kernel_initrd.py";
             String cpScriptPath = Script.findScript("", cpScript);
             if (cpScriptPath == null) {
-                throw new ConfigurationException("Can not find prepare_kickstart_kerneal_initrd.py at " + cpScriptPath);
+                throw new ConfigurationException("Can not find prepare_kickstart_kernel_initrd.py at " + cpScriptPath);
             }
-            scp.put(prepareScriptPath, "/usr/bin/", "0755");
+            scp.put(cpScriptPath, "/usr/bin/", "0755");
             
             String userDataScript = "scripts/network/ping/baremetal_user_data.py";
             String userDataScriptPath = Script.findScript("", userDataScript);
@@ -159,13 +159,20 @@ public class BaremetalKickStartPxeResource extends BaremetalPxeResourceBase {
             }
             
             String copyTo = String.format("%s/%s", _tftpDir, cmd.getTemplateUuid());
-            String script = String.format("python /usr/bin/prepare_kickstart_kerneal_initrd.py %s %s", cmd.getRepo(), copyTo);
+            String script = String.format("python /usr/bin/prepare_kickstart_kernel_initrd.py %s %s", cmd.getRepo(), copyTo);
             
             if (!SSHCmdHelper.sshExecuteCmd(sshConnection, script)) {
                 return new Answer(cmd, false, "prepare kickstart at pxe server " + _ip + " failed, command:" + script);
             }   
-            s_logger.debug("Prepare kickstart PXE server successfully");
             
+            String kernelPath = String.format("%s/vmlinuz", cmd.getTemplateUuid());
+            String initrdPath = String.format("%s/initrd.img", cmd.getTemplateUuid());
+            script = String.format("python /usr/bin/prepare_kickstart_bootfile.py %s %s %s %s %s %s", _tftpDir, cmd.getMac(), kernelPath, initrdPath, cmd.getKsFile(), "\"\"");
+            if (!SSHCmdHelper.sshExecuteCmd(sshConnection, script)) {
+                return new Answer(cmd, false, "prepare kickstart at pxe server " + _ip + " failed, command:" + script);
+            }   
+            
+            s_logger.debug("Prepare kickstart PXE server successfully");
             return new Answer(cmd, true, "Success");
         }  catch (Exception e){
             s_logger.debug("Prepare for kickstart server failed", e);

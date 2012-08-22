@@ -33,6 +33,7 @@ import com.cloud.utils.db.SearchCriteria2;
 import com.cloud.utils.db.SearchCriteriaService;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.SearchCriteria.Op;
+import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.NicProfile;
 import com.cloud.vm.NicVO;
 import com.cloud.vm.ReservationContext;
@@ -112,7 +113,9 @@ public class BaremetalPxeElement extends AdapterBase implements NetworkElement {
             txn.commit();
             
         	/*This vm is just being created */
-        	_pxeMgr.prepare(vm, nic, dest, context);
+        	if (!_pxeMgr.prepare(vm, nic, dest, context)) {
+        	    throw new CloudRuntimeException("Cannot prepare pxe server");
+        	}
         }
         
         return false;

@@ -163,6 +163,7 @@
         
         <adapters key="com.cloud.baremetal.networkservice.BaremetalPxeService">
             <adapter name="PING" class="com.cloud.baremetal.networkservice.BareMetalPingServiceImpl" />
+            <adapter name="KICK_START" class="com.cloud.baremetal.networkservice.BaremetalKickStartServiceImpl" />
         </adapters>
 
         <adapters key="com.cloud.template.TemplateAdapter">

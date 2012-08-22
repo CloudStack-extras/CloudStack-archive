@@ -32,7 +32,7 @@ public class AddBaremetalPxeCmd extends BaseAsyncCmd {
     private Long physicalNetworkId;
     
     @IdentityMapper(entityTableName="host_pod_ref")
-    @Parameter(name=ApiConstants.POD_ID, type=CommandType.LONG, required = true, description="Pod Id")
+    @Parameter(name=ApiConstants.POD_ID, type=CommandType.LONG, description="Pod Id")
     private Long podId;
     
     @Parameter(name=ApiConstants.URL, type=CommandType.STRING, required = true, description="URL of the external pxe device")

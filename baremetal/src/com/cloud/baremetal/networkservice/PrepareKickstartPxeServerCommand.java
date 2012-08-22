@@ -6,6 +6,7 @@ public class PrepareKickstartPxeServerCommand extends Command {
     private String ksFile;
     private String repo;
     private String templateUuid;
+    private String mac;
     
     @Override
     public boolean executeInSequence() {
@@ -35,4 +36,13 @@ public class PrepareKickstartPxeServerCommand extends Command {
     public void setTemplateUuid(String templateUuid) {
         this.templateUuid = templateUuid;
     }
+
+    public String getMac() {
+        return mac;
+    }
+
+    public void setMac(String mac) {
+        this.mac = mac;
+    }
+    
 }

@@ -4,4 +4,4 @@
 ### baremetal dhcp commands
 addBaremetalPxePingServer=com.cloud.baremetal.networkservice.AddBaremetalPxePingServerCmd;1
 listBaremetalPxePingServer=com.cloud.baremetal.networkservice.ListBaremetalPxePingServersCmd;1
-addBaremetalPxeKickStartServer=om.cloud.baremetal.networkservice.AddBaremetalKickStartPxeCmd;1
+addBaremetalPxeKickStartServer=com.cloud.baremetal.networkservice.AddBaremetalKickStartPxeCmd;1

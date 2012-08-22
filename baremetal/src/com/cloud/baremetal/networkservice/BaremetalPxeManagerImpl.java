@@ -106,7 +106,7 @@ public class BaremetalPxeManagerImpl implements BaremetalPxeManager, ResourceSta
 	@Override
 	public boolean prepare(VirtualMachineProfile profile, NicProfile nic, DeployDestination dest, ReservationContext context) {
 	    //TODO: select type from template
-	    BaremetalPxeType type = BaremetalPxeType.PING;
+	    BaremetalPxeType type = BaremetalPxeType.KICK_START;
 		return getServiceByType(type.toString()).prepare(profile, nic, dest, context);
 	}
 

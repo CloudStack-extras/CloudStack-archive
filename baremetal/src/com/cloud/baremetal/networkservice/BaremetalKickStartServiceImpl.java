@@ -11,6 +11,8 @@ import javax.ejb.Local;
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.api.Answer;
+import com.cloud.agent.api.baremetal.IpmISetBootDevCommand;
+import com.cloud.agent.api.baremetal.IpmISetBootDevCommand.BootDev;
 import com.cloud.baremetal.database.BaremetalPxeDao;
 import com.cloud.baremetal.database.BaremetalPxeVO;
 import com.cloud.baremetal.networkservice.BaremetalPxeManager.BaremetalPxeType;
@@ -19,15 +21,20 @@ import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDetailsDao;
+import com.cloud.network.NetworkVO;
 import com.cloud.network.PhysicalNetworkServiceProvider;
 import com.cloud.network.PhysicalNetworkVO;
+import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.PhysicalNetworkDao;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderDao;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderVO;
 import com.cloud.resource.ResourceManager;
 import com.cloud.resource.ServerResource;
+import com.cloud.storage.VMTemplateVO;
+import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.component.Inject;
+import com.cloud.utils.db.DB;
 import com.cloud.utils.db.SearchCriteria2;
 import com.cloud.utils.db.SearchCriteriaService;
 import com.cloud.utils.db.Transaction;
@@ -51,16 +58,22 @@ public class BaremetalKickStartServiceImpl extends BareMetalPxeServiceBase imple
     HostDetailsDao _hostDetailsDao;
     @Inject
     BaremetalPxeDao _pxeDao;
+    @Inject
+    NetworkDao _nwDao;
+    @Inject
+    VMTemplateDao _tmpDao;
 
     @Override
     public boolean prepare(VirtualMachineProfile<UserVmVO> profile, NicProfile nic, DeployDestination dest, ReservationContext context) {
+        NetworkVO nwVO = _nwDao.findById(nic.getNetworkId());
         SearchCriteriaService<BaremetalPxeVO, BaremetalPxeVO> sc = SearchCriteria2.create(BaremetalPxeVO.class);
         sc.addAnd(sc.getEntity().getDeviceType(), Op.EQ, BaremetalPxeType.KICK_START.toString());
-        sc.addAnd(sc.getEntity().getPodId(), Op.EQ, dest.getPod().getId());
+        sc.addAnd(sc.getEntity().getPhysicalNetworkId(), Op.EQ, nwVO.getPhysicalNetworkId());
         BaremetalPxeVO pxeVo = sc.find();
         if (pxeVo == null) {
             throw new CloudRuntimeException("No kickstart PXE server found in pod: " + dest.getPod().getId() + ", you need to add it before starting VM");
         }
+        VMTemplateVO template = _tmpDao.findById(profile.getTemplateId());
 
         try {
             String tpl = profile.getTemplate().getUrl();
@@ -70,12 +83,20 @@ public class BaremetalKickStartServiceImpl extends BareMetalPxeServiceBase imple
             PrepareKickstartPxeServerCommand cmd = new PrepareKickstartPxeServerCommand();
             cmd.setKsFile(tpls[0]);
             cmd.setRepo(tpls[1]);
-            Answer aws = _agentMgr.send(pxeVo.getId(), cmd);
+            cmd.setMac(nic.getMacAddress());
+            cmd.setTemplateUuid(template.getUuid());
+            Answer aws = _agentMgr.send(pxeVo.getHostId(), cmd);
             if (!aws.getResult()) {
-                if (!aws.getResult()) {
-                    s_logger.warn("Unable to set host: " + dest.getHost().getId() + " to PXE boot because " + aws.getDetails());
-                }
+                s_logger.warn("Unable to set host: " + dest.getHost().getId() + " to PXE boot because " + aws.getDetails());
+                return aws.getResult();
             }
+            
+            IpmISetBootDevCommand bootCmd = new IpmISetBootDevCommand(BootDev.pxe);
+            aws = _agentMgr.send(dest.getHost().getId(), bootCmd);
+            if (!aws.getResult()) {
+                s_logger.warn("Unable to set host: " + dest.getHost().getId() + " to PXE boot because " + aws.getDetails());
+            }
+            
             return aws.getResult();
         } catch (Exception e) {
             s_logger.warn("Cannot prepare PXE server", e);
@@ -90,6 +111,7 @@ public class BaremetalKickStartServiceImpl extends BareMetalPxeServiceBase imple
     }
 
     @Override
+    @DB
     public BaremetalPxeVO addPxeServer(AddBaremetalPxeCmd cmd) {
         AddBaremetalKickStartPxeCmd kcmd = (AddBaremetalKickStartPxeCmd)cmd;
         PhysicalNetworkVO pNetwork = null;
@@ -147,7 +169,7 @@ public class BaremetalKickStartServiceImpl extends BareMetalPxeServiceBase imple
         try {
             resource.configure("KickStart PXE resource", params);
         } catch (Exception e) {
-            throw new CloudRuntimeException(e.getMessage());
+            throw new CloudRuntimeException(e.getMessage(), e);
         }
         
         Host pxeServer = _resourceMgr.addHost(zoneId, resource, Host.Type.BaremetalPxe, params);

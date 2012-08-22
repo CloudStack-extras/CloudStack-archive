@@ -57,10 +57,6 @@ public class BaremetalPxeResourceBase implements ServerResource {
 			throw new ConfigurationException("No Zone specified");
 		}
 		
-		if (_podId == null) {
-			throw new ConfigurationException("No Pod specified");
-		}
-		
 		if (_ip == null) {
 			throw new ConfigurationException("No IP specified");
 		}

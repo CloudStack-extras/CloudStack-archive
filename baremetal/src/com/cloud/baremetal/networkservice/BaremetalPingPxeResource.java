@@ -61,6 +61,10 @@ public class BaremetalPingPxeResource extends BaremetalPxeResourceBase {
 		_cifsUserName = (String)params.get(BaremetalPxeService.PXE_PARAM_PING_STORAGE_SERVER_USERNAME);
 		_cifsPassword = (String)params.get(BaremetalPxeService.PXE_PARAM_PING_STORAGE_SERVER_PASSWORD);
 		
+		if (_podId == null) {
+		    throw new ConfigurationException("No Pod specified");
+		}
+		
 		if (_storageServer == null) {
 			throw new ConfigurationException("No stroage server specified");
 		}
