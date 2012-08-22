@@ -57,17 +57,17 @@ public class DirectPodBasedNetworkGuru extends DirectNetworkGuru {
     private static final Logger s_logger = Logger.getLogger(DirectPodBasedNetworkGuru.class);
 
     @Inject
-    DataCenterDao _dcDao;
+    protected DataCenterDao _dcDao;
     @Inject
-    VlanDao _vlanDao;
+    protected VlanDao _vlanDao;
     @Inject
-    NetworkManager _networkMgr;
+    protected NetworkManager _networkMgr;
     @Inject
-    IPAddressDao _ipAddressDao;
+    protected IPAddressDao _ipAddressDao;
     @Inject
-    NetworkOfferingDao _networkOfferingDao;
+    protected NetworkOfferingDao _networkOfferingDao;
     @Inject
-    PodVlanMapDao _podVlanDao;
+    protected PodVlanMapDao _podVlanDao;
 
     @Override
     protected boolean canHandle(NetworkOffering offering, DataCenter dc) {

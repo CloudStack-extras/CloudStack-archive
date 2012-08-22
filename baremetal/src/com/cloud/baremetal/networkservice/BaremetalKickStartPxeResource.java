@@ -167,7 +167,7 @@ public class BaremetalKickStartPxeResource extends BaremetalPxeResourceBase {
             
             String kernelPath = String.format("%s/vmlinuz", cmd.getTemplateUuid());
             String initrdPath = String.format("%s/initrd.img", cmd.getTemplateUuid());
-            script = String.format("python /usr/bin/prepare_kickstart_bootfile.py %s %s %s %s %s %s", _tftpDir, cmd.getMac(), kernelPath, initrdPath, cmd.getKsFile(), "\"\"");
+            script = String.format("python /usr/bin/prepare_kickstart_bootfile.py %s %s %s %s %s %s", _tftpDir, cmd.getMac(), kernelPath, initrdPath, cmd.getKsFile(), cmd.getMac());
             if (!SSHCmdHelper.sshExecuteCmd(sshConnection, script)) {
                 return new Answer(cmd, false, "prepare kickstart at pxe server " + _ip + " failed, command:" + script);
             }   

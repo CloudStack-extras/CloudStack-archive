@@ -74,9 +74,12 @@
             <adapter name="ExternalGuestNetworkGuru" class="com.cloud.network.guru.ExternalGuestNetworkGuru"/>
             <adapter name="PublicNetworkGuru" class="com.cloud.network.guru.PublicNetworkGuru"/>
             <adapter name="PodBasedNetworkGuru" class="com.cloud.network.guru.PodBasedNetworkGuru"/>
+            <adapter name="DirectPodBasedNetworkGuru" class="com.cloud.baremetal.networkservice.BaremetaNetworkGuru"/>
             <adapter name="ControlNetworkGuru" class="com.cloud.network.guru.ControlNetworkGuru"/>
             <adapter name="DirectNetworkGuru" class="com.cloud.network.guru.DirectNetworkGuru"/>
+            <!--
             <adapter name="DirectPodBasedNetworkGuru" class="com.cloud.network.guru.DirectPodBasedNetworkGuru"/>
+            -->
             <adapter name="OvsGuestNetworkGuru" class="com.cloud.network.guru.OvsGuestNetworkGuru"/>
         </adapters>
         <adapters key="com.cloud.cluster.ClusterServiceAdapter">
