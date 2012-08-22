@@ -14,6 +14,12 @@ def cmd(cmdstr, err=True):
     
 def prepare():
     try:
+        if os.path.exists(copy_to):
+            print "Having template(%s) prepared already, skip copying" % copy_to
+            return 0
+        else:
+            os.makedirs(copy_to)
+
         mnt_path = tempfile.mkdtemp()
         try:
             mnt = "mount %s %s" % (iso_folder, mnt_path)
@@ -21,9 +27,9 @@ def prepare():
             
             kernel = os.path.join(mnt_path, "vmlinuz")
             initrd = os.path.join(mnt_path, "initrd.img")
-            cp = "cp -f %s %s" % (kernel, copy_to)
+            cp = "cp -f %s %s/" % (kernel, copy_to)
             cmd(cp)
-            cp = "cp -f %s %s" % (initrd, copy_to)
+            cp = "cp -f %s %s/" % (initrd, copy_to)
             cmd(cp)
         finally:
             umnt = "umount %s" % mnt_path
