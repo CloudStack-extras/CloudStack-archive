@@ -1657,10 +1657,10 @@ public class EC2RestServlet extends HttpServlet {
         String[] version = request.getParameterValues( "Version" );
 		if ( null != version && 0 < version.length ) 
 		{
-			 if (!version[0].equals( wsdlVersion )) {
-			 	 response.sendError(531, "Unsupported Version value: " + version[0] + " expecting: " + wsdlVersion ); 
-			 	 return false;
-			 }
+            /*if (!version[0].equals( wsdlVersion )) {
+                response.sendError(531, "Unsupported Version value: " + version[0] + " expecting: " + wsdlVersion );
+                return false;
+            }*/
 		}
 		else { response.sendError(530, "Missing Version parameter" ); return false; }
 
@@ -1729,8 +1729,8 @@ public class EC2RestServlet extends HttpServlet {
                     String paramName = (String) params.nextElement();
                     // exclude the signature string obviously. ;)
                     if (paramName.equalsIgnoreCase("Signature")) continue;
-                    if (queryString == null) 
-                        queryString = paramName + "=" + request.getParameter(paramName);
+                    if (queryString == null)
+                        queryString = paramName + "=" + URLEncoder.encode(request.getParameter(paramName), "UTF-8");
                     else 
                         queryString = queryString + "&" + paramName + "=" + URLEncoder.encode(request.getParameter(paramName), "UTF-8"); 
                 }
