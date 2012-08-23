@@ -97,6 +97,12 @@
                       number: true
                     }
                   },
+                 trustedhost:{
+                   label:'Trusted Host',
+                   isBoolean: true,
+                   isChecked: false
+                  },
+
                   offerHA: {
                     label: 'label.offer.ha',
                     isBoolean: true,
@@ -154,7 +160,8 @@
                 if(args.data.networkRate != null && args.data.networkRate.length > 0)
                   array1.push("&networkrate=" + args.data.networkRate);
 
-                array1.push("&offerha=" + (args.data.offerHA == "on"));
+               array1.push("&trustedhost=" + (args.data.trustedhost == "on"));  
+               array1.push("&offerha=" + (args.data.offerHA == "on"));
 
                 if(args.data.storageTags != null && args.data.storageTags.length > 0)
                   array1.push("&tags=" + todb(args.data.storageTags));
@@ -307,6 +314,15 @@
                       }
                     },
                     networkrate: { label: 'label.network.rate' },
+                    trustedhost: {
+                     label:'Trusted Host',
+                     converter:function(booleanValue) {
+                                  if(booleanValue == true)
+                                  return "Yes";
+                                else if(booleanValue == false)
+                                    return "No";
+                                  }
+                     },
                     offerha: {
                       label: 'label.offer.ha',
                       converter: cloudStack.converters.toBooleanText
