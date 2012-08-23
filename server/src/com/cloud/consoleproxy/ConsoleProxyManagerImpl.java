@@ -1509,7 +1509,7 @@ public class ConsoleProxyManagerImpl implements ConsoleProxyManager, ConsoleProx
                 throw new ConfigurationException(msg);
             }
         } else {
-            _serviceOffering = new ServiceOfferingVO("System Offering For Console Proxy", 1, DEFAULT_PROXY_VM_RAMSIZE, DEFAULT_PROXY_VM_CPUMHZ, 0, 0, false, null, useLocalStorage, true, null, true, VirtualMachine.Type.ConsoleProxy, true);
+            _serviceOffering = new ServiceOfferingVO("System Offering For Console Proxy", 1, DEFAULT_PROXY_VM_RAMSIZE, DEFAULT_PROXY_VM_CPUMHZ, 0, 0, false, false, null, useLocalStorage, true, null, true, VirtualMachine.Type.ConsoleProxy, true);
             _serviceOffering.setUniqueName(ServiceOffering.consoleProxyDefaultOffUniqueName);
             _serviceOffering = _offeringDao.persistSystemServiceOffering(_serviceOffering);
 

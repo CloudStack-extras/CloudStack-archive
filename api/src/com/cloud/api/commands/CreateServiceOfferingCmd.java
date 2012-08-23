@@ -51,6 +51,9 @@ public class CreateServiceOfferingCmd extends BaseCmd {
     @Parameter(name=ApiConstants.OFFER_HA, type=CommandType.BOOLEAN, description="the HA for the service offering")
     private Boolean offerHa;
 
+    @Parameter(name=ApiConstants.TRUSTED_HOST, type=CommandType.BOOLEAN, description="deploy only on trusted hosts")
+    private Boolean trustedHost;
+
     @Parameter(name=ApiConstants.LIMIT_CPU_USE, type=CommandType.BOOLEAN, description="restrict the CPU usage to committed service offering")
     private Boolean limitCpuUse;
 
@@ -102,6 +105,10 @@ public class CreateServiceOfferingCmd extends BaseCmd {
 
     public Boolean getOfferHa() {
         return offerHa;
+    }
+
+    public Boolean getTrustedHost() {
+        return trustedHost;
     }
 
     public Boolean GetLimitCpuUse() {

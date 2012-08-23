@@ -493,6 +493,10 @@ public class ApiDBUtils {
         }
     }
 
+    public static boolean isTrustedHost(long hostId) {
+        return _resourceMgr.isTrustedHost(hostId);
+    }
+
     public static String getHostTags(long hostId) {
         return _resourceMgr.getHostTags(hostId);
     }

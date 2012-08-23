@@ -899,6 +899,7 @@ public class DatabaseConfig {
 //        int nwRate = Integer.parseInt(_currentObjectParams.get("nwRate"));
 //        int mcRate = Integer.parseInt(_currentObjectParams.get("mcRate"));
         boolean ha = Boolean.parseBoolean(_currentObjectParams.get("enableHA"));
+        boolean trustedHost = Boolean.parseBoolean(_currentObjectParams.get("trustedHost"));
         boolean mirroring = Boolean.parseBoolean(_currentObjectParams.get("mirrored"));
         
         boolean useLocalStorage;
@@ -912,7 +913,7 @@ public class DatabaseConfig {
         	useLocalStorage = false;
         }
         
-        ServiceOfferingVO serviceOffering = new ServiceOfferingVO(name, cpu, ramSize, speed, null, null, ha, displayText, useLocalStorage, false, null, false, null, false);
+        ServiceOfferingVO serviceOffering = new ServiceOfferingVO(name, cpu, ramSize, speed, null, null, ha, trustedHost, displayText, useLocalStorage, false, null, false, null, false);
         ServiceOfferingDaoImpl dao = ComponentLocator.inject(ServiceOfferingDaoImpl.class);
         try {
             dao.persist(serviceOffering);

@@ -20,10 +20,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -38,6 +45,19 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.net.MalformedURLException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.CertificateException;
+import java.util.Properties;
 
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
@@ -219,6 +239,11 @@ import com.cloud.utils.net.NetUtils;
 import com.cloud.vm.DiskProfile;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.State;
+import com.intel.mtwilson.ApiClient;
+import com.intel.mtwilson.ApiException;
+import com.intel.mtwilson.ConfigurationFactory;
+import com.intel.mtwilson.TrustAssertion;
+import com.intel.mtwilson.datatypes.Hostname;
 import com.trilead.ssh2.SCPClient;
 import com.xensource.xenapi.Bond;
 import com.xensource.xenapi.Connection;
@@ -247,6 +272,15 @@ import com.xensource.xenapi.VLAN;
 import com.xensource.xenapi.VM;
 import com.xensource.xenapi.VMGuestMetrics;
 import com.xensource.xenapi.XenAPIObject;
+
+import com.intel.mtwilson.ApiClient;
+import com.intel.mtwilson.ApiException;
+import com.intel.mtwilson.ConfigurationFactory;
+import com.intel.mtwilson.TrustAssertion;
+import com.intel.mtwilson.datatypes.Hostname;
+import com.intel.mtwilson.crypto.KeystoreUtil;
+import com.intel.mtwilson.crypto.SimpleKeystore;
+import com.intel.mtwilson.datatypes.Role;
 
 /**
  * CitrixResourceBase encapsulates the calls to the XenServer Xapi process
@@ -5314,6 +5348,65 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         return _connPool.connect(_host.uuid, _host.pool, _host.ip, _username, _password, _wait);
     }
 
+    private ApiClient getApiClient() {
+        ApiClient apiClient = null;
+        final String mtwilsonfile = "/root/mtwilson.properties";
+
+        try {
+            apiClient = new ApiClient(ConfigurationFactory.fromPropertiesFile(new File(mtwilsonfile)));
+        } catch (KeyManagementException e) {
+            s_logger.error(e.getMessage());
+        } catch (NoSuchAlgorithmException e) {
+            s_logger.error(e.getMessage());
+        } catch (MalformedURLException e) {
+            s_logger.error(e.getMessage());
+        } catch (KeyStoreException e) {
+            s_logger.error(e.getMessage());
+        } catch (CertificateException e) {
+            s_logger.error(e.getMessage());
+        } catch (UnrecoverableEntryException e) {
+            s_logger.error(e.getMessage());
+        } catch (IOException e) {
+            s_logger.error(e.getMessage());
+        } catch (Exception e) {
+            s_logger.error(e.getMessage());
+        }
+
+        return apiClient;
+    }
+
+    private boolean isTrusted(String host) {
+        boolean trusted = false;
+        ApiClient apiClient = getApiClient();
+
+        if (apiClient != null) {
+            try {
+                String samlForHost = apiClient.getSamlForHost(new Hostname(host));
+                TrustAssertion trustAssertion = apiClient.verifyTrustAssertion(samlForHost);
+                if (trustAssertion.isValid()) {
+                    trusted = true;
+                    for (String attr : trustAssertion.getAttributeNames()) {
+                        s_logger.info("Signed attribute: " + attr + ":" + trustAssertion.getStringAttribute(attr));
+                    }
+                } else {
+                    s_logger.info("Trust assertion failed for host " + host);
+                }
+            } catch (SignatureException e) {
+                s_logger.warn("SignatureException exceptions: " + e.toString(), e);
+            } catch (IOException e) {
+                s_logger.warn("IOException exceptions: " + e.toString(), e);
+            } catch (ApiException e) {
+                s_logger.warn("ApiException exceptions: " + e.toString(), e);
+            } catch (Exception e) {
+                s_logger.warn("other exceptions: " + e.toString(), e);
+            }
+        } else {
+            s_logger.error("Couldn't get the api client object to talk to mtw server.");
+        }
+
+        return trusted;
+    }
+
     protected void fillHostInfo(Connection conn, StartupRoutingCommand cmd) {
         final StringBuilder caps = new StringBuilder();
         try {
@@ -5336,6 +5429,9 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             if (_privateNetworkName != null) {
                 details.put("private.network.device", _privateNetworkName);
             }
+
+            // Is it a trusted host?
+            details.put("trusted", Boolean.toString(isTrusted(_host.ip)));
 
             details.put("can_bridge_firewall", Boolean.toString(_canBridgeFirewall));
             cmd.setHostDetails(details);

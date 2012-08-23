@@ -7253,7 +7253,21 @@
 								'Alert': 'off',
 								'Error': 'off'
 							}
-						}						
+						},
+           istrusted: { 
+             label: 'Trusted Host',
+             converter: function(booleanValue) {
+                    if(booleanValue == true)
+                      return "Yes";
+                    else if(booleanValue == false)
+                      return "No";
+                  },
+             indicator: {
+                 'true':'on',
+                 'false':'off'
+                 
+               } 
+             } 						
           },
 
           dataProvider: function(args) {
@@ -7865,6 +7879,14 @@
                     podname: { label: 'label.pod' },
                     clustername: { label: 'label.cluster' },
                     ipaddress: { label: 'label.ip.address' },
+                    istrusted: {label:'Trusted Host'  ,
+                    converter:function(booleanValue) {
+                                  if(booleanValue == true)
+                                  return "Yes";
+                                else if(booleanValue == false)
+                                  return "No";
+                        }
+                      } ,
                     version: { label: 'label.version' },
                     disconnected: { label: 'label.last.disconnected' }
                   }

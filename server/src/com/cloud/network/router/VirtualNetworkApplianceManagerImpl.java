@@ -612,7 +612,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
 
         boolean useLocalStorage = Boolean.parseBoolean(configs.get(Config.SystemVMUseLocalStorage.key()));
         _offering = new ServiceOfferingVO("System Offering For Software Router", 1, _routerRamSize, _routerCpuMHz, null,
-                null, true, null, useLocalStorage, true, null, true, VirtualMachine.Type.DomainRouter, true);
+                null, true, false, null, useLocalStorage, true, null, true, VirtualMachine.Type.DomainRouter, true);
         _offering.setUniqueName(ServiceOffering.routerDefaultOffUniqueName);
         _offering = _serviceOfferingDao.persistSystemServiceOffering(_offering);
 

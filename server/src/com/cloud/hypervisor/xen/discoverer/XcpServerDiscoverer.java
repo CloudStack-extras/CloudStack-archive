@@ -284,7 +284,7 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
                 details.put(HostInfo.HOST_OS_VERSION, hostOSVer);
                 details.put(HostInfo.HOST_OS_KERNEL_VERSION, hostKernelVer);
                 details.put(HostInfo.HYPERVISOR_VERSION, xenVersion);
-                
+
                 String privateNetworkLabel = _networkMgr.getDefaultManagementTrafficLabel(dcId, HypervisorType.XenServer);
                 String storageNetworkLabel = _networkMgr.getDefaultStorageTrafficLabel(dcId, HypervisorType.XenServer);
                 
@@ -416,6 +416,9 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
             return new XenServer602Resource();
 
         if (prodBrand.equals("XenServer") && prodVersion.startsWith("6.0.9"))
+            return new XenServer602Resource();
+        
+        if (prodBrand.equals("XenServer") && prodVersion.equals("6.1.0"))
             return new XenServer602Resource();
         
         if(prodBrand.equals("XenServer") && prodVersion.equals("5.6.100"))  {
@@ -564,6 +567,8 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
         } else if (prodBrand.equals("XenServer") && prodVersion.equals("6.0.2")) {
             resource = XenServer602Resource.class.getName();
         } else if (prodBrand.equals("XenServer") && prodVersion.startsWith("6.0.9")) {
+            resource = XenServer602Resource.class.getName();
+        } else if (prodBrand.equals("XenServer") && prodVersion.equals("6.1.0")) {
             resource = XenServer602Resource.class.getName();
         } else if(prodBrand.equals("XenServer") && prodVersion.equals("5.6.100"))  {
             String prodVersionTextShort = details.get("product_version_text_short").trim();

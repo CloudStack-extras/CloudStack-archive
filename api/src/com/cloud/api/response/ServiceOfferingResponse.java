@@ -46,6 +46,9 @@ public class ServiceOfferingResponse extends BaseResponse {
 
     @SerializedName("offerha") @Param(description="the ha support in the service offering")
     private Boolean offerHa;
+    
+    @SerializedName("trustedhost") @Param(description="restrict instance deployment to trusted hosts")
+    private Boolean trustedHost;
   
     @SerializedName("limitcpuuse") @Param(description="restrict the CPU usage to committed service offering")
     private Boolean limitCpuUse;
@@ -172,6 +175,10 @@ public class ServiceOfferingResponse extends BaseResponse {
 
     public void setOfferHa(Boolean offerHa) {
         this.offerHa = offerHa;
+    }
+
+    public void setTrustedHost(Boolean trustedHost) {
+        this.trustedHost = trustedHost;
     }
 
     public Boolean getLimitCpuUse() {

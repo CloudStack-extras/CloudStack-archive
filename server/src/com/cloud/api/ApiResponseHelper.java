@@ -526,6 +526,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         offeringResponse.setCreated(offering.getCreated());
         offeringResponse.setStorageType(offering.getUseLocalStorage() ? ServiceOffering.StorageType.local.toString() : ServiceOffering.StorageType.shared.toString());
         offeringResponse.setOfferHa(offering.getOfferHA());
+        offeringResponse.setTrustedHost(offering.getTrustedHost());
         offeringResponse.setLimitCpuUse(offering.getLimitCpuUse());
         offeringResponse.setTags(offering.getTags());
         if (offering.getDomainId() != null) {
@@ -704,6 +705,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         }
 
         hostResponse.setLocalStorageActive(ApiDBUtils.isLocalStorageActiveOnHost(host));
+        hostResponse.setTrustedHost(ApiDBUtils.isTrustedHost(host.getId()));
 
         if (details.contains(HostDetails.all) || details.contains(HostDetails.events)) {
             Set<com.cloud.host.Status.Event> possibleEvents = host.getStatus().getPossibleEvents();

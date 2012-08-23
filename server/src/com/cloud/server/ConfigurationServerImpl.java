@@ -192,8 +192,8 @@ public class ConfigurationServerImpl implements ConfigurationServer {
             s_logger.debug("ConfigurationServer made secondary storage copy use realhostip.");
 
             // Save default service offerings
-            createServiceOffering(User.UID_SYSTEM, "Small Instance", 1, 512, 500, "Small Instance", false, false, null);
-            createServiceOffering(User.UID_SYSTEM, "Medium Instance", 1, 1024, 1000, "Medium Instance", false, false, null);
+            createServiceOffering(User.UID_SYSTEM, "Small Instance", 1, 512, 500, "Small Instance", false, false, false, null);
+            createServiceOffering(User.UID_SYSTEM, "Medium Instance", 1, 1024, 1000, "Medium Instance", false, false, false, null);
             // Save default disk offerings
             createdefaultDiskOffering(null, "Small", "Small Disk, 5 GB", 5, null, false, false);
             createdefaultDiskOffering(null, "Medium", "Medium Disk, 20 GB", 20, null, false, false);
@@ -852,9 +852,9 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         return newDiskOffering;
     }
 
-    private ServiceOfferingVO createServiceOffering(long userId, String name, int cpu, int ramSize, int speed, String displayText, boolean localStorageRequired, boolean offerHA, String tags) {
+    private ServiceOfferingVO createServiceOffering(long userId, String name, int cpu, int ramSize, int speed, String displayText, boolean localStorageRequired, boolean offerHA, boolean trustedHost, String tags) {
         tags = cleanupTags(tags);
-        ServiceOfferingVO offering = new ServiceOfferingVO(name, cpu, ramSize, speed, null, null, offerHA, displayText, localStorageRequired, false, tags, false, null, false);
+        ServiceOfferingVO offering = new ServiceOfferingVO(name, cpu, ramSize, speed, null, null, offerHA, trustedHost, displayText, localStorageRequired, false, tags, false, null, false);
         offering.setUniqueName("Cloud.Com-" + name);
         offering = _serviceOfferingDao.persistSystemServiceOffering(offering);
         return offering;

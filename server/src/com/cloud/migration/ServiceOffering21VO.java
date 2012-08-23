@@ -27,23 +27,26 @@ import com.cloud.offering.ServiceOffering;
 @PrimaryKeyJoinColumn(name="id")
 public class ServiceOffering21VO extends DiskOffering21VO implements ServiceOffering {
     @Column(name="cpu")
-	private int cpu;
-    
+    private int cpu;
+
     @Column(name="speed")
     private int speed;
-    
+
     @Column(name="ram_size")
-	private int ramSize;
-    
+    private int ramSize;
+
     @Column(name="nw_rate")
     private Integer rateMbps;
-    
+
     @Column(name="mc_rate")
     private Integer multicastRateMbps;
-    
+
     @Column(name="ha_enabled")
     private boolean offerHA;
-    
+
+    @Column(name="trusted_host")
+    private boolean trustedHost;
+
     @Column(name="host_tag")
     private String hostTag;    
     
@@ -65,12 +68,16 @@ public class ServiceOffering21VO extends DiskOffering21VO implements ServiceOffe
     	this(name, cpu, ramSize, speed, rateMbps, multicastRateMbps, offerHA, displayText, useLocalStorage, recreatable, tags);
        	this.hostTag = hostTag;
     }
-    
 
-	@Override
-	public boolean getOfferHA() {
-	    return offerHA;
-	}
+    @Override
+    public boolean getOfferHA() {
+        return offerHA;
+    }
+
+    @Override
+    public boolean getTrustedHost() {
+        return trustedHost;
+    }
 
 	@Override	
 	public boolean getLimitCpuUse() {

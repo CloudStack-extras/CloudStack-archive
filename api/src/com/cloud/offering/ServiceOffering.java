@@ -67,6 +67,11 @@ public interface ServiceOffering {
     boolean getOfferHA();
 
     /**
+     * @return Does this service plan allows deployment only on trusted hosts?
+     */
+    boolean getTrustedHost();
+    
+    /**
      * @return Does this service plan offer VM to use CPU resources beyond the service offering limits?
      */
     boolean getLimitCpuUse();

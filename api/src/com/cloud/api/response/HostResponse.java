@@ -124,6 +124,9 @@ public class HostResponse extends BaseResponse {
 
     @SerializedName("islocalstorageactive") @Param(description="true if local storage is active, false otherwise")
     private Boolean localStorageActive;
+    
+    @SerializedName("istrusted") @Param(description="true if it is a trusted host, false otherwise")
+    private Boolean trustedHost;
 
     @SerializedName(ApiConstants.CREATED) @Param(description="the date and time the host was created")
     private Date created;
@@ -296,6 +299,10 @@ public class HostResponse extends BaseResponse {
 
     public void setLocalStorageActive(Boolean localStorageActive) {
         this.localStorageActive = localStorageActive;
+    }
+
+    public void setTrustedHost(Boolean trusted) {
+        this.trustedHost = trusted;
     }
 
     public void setCreated(Date created) {

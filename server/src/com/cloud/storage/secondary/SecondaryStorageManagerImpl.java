@@ -845,7 +845,7 @@ public class SecondaryStorageManagerImpl implements SecondaryStorageVmManager, V
             }
         } else {
             _useLocalStorage = Boolean.parseBoolean(configs.get(Config.SystemVMUseLocalStorage.key()));
-            _serviceOffering = new ServiceOfferingVO("System Offering For Secondary Storage VM", 1, DEFAULT_SS_VM_RAMSIZE, DEFAULT_SS_VM_CPUMHZ, null, null, false, null, _useLocalStorage, true, null, true, VirtualMachine.Type.SecondaryStorageVm, true);
+            _serviceOffering = new ServiceOfferingVO("System Offering For Secondary Storage VM", 1, DEFAULT_SS_VM_RAMSIZE, DEFAULT_SS_VM_CPUMHZ, null, null, false, false, null, _useLocalStorage, true, null, true, VirtualMachine.Type.SecondaryStorageVm, true);
             _serviceOffering.setUniqueName(ServiceOffering.ssvmDefaultOffUniqueName);
             _serviceOffering = _offeringDao.persistSystemServiceOffering(_serviceOffering);
             

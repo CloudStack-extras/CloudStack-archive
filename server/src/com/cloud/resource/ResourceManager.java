@@ -123,6 +123,8 @@ public interface ResourceManager extends ResourceService{
     
     Long getGuestOSCategoryId(long hostId);
     
+    boolean isTrustedHost(long hostId);
+    
     String getHostTags(long hostId);
     
     List<PodCluster> listByDataCenter(long dcId);

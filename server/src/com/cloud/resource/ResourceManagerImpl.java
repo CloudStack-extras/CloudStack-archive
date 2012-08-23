@@ -2295,6 +2295,20 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
     }
 
     @Override
+    public boolean isTrustedHost(long hostId) {
+        boolean trusted = false;
+        HostVO host = _hostDao.findById(hostId);
+        if (host != null) {
+            _hostDao.loadDetails(host);
+            DetailVO detail = _hostDetailsDao.findDetail(hostId, "trusted");
+            if (detail != null) {
+                trusted = Boolean.parseBoolean(detail.getValue());
+            }
+        }
+        return trusted;
+    }
+
+    @Override
     public String getHostTags(long hostId) {
         List<String> hostTags = _hostTagsDao.gethostTags(hostId);
         if (hostTags == null) {

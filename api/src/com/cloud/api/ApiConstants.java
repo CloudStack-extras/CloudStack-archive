@@ -115,6 +115,7 @@ public class ApiConstants {
     public static final String NEW_NAME = "newname";
     public static final String NUM_RETRIES = "numretries";
     public static final String OFFER_HA = "offerha";
+    public static final String TRUSTED_HOST = "trustedhost";
     public static final String IS_SYSTEM_OFFERING = "issystem";
     public static final String IS_DEFAULT_USE = "defaultuse";
     public static final String OP = "op";

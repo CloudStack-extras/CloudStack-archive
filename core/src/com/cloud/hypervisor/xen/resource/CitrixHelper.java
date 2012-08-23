@@ -459,7 +459,7 @@ public class CitrixHelper {
         _xenServer602GuestOsMap.put("CentOS 5.7 (64-bit)", "CentOS 5 (64-bit)");
         _xenServer602GuestOsMap.put("CentOS 6.0 (32-bit)", "CentOS 6.0 (32-bit)");
         _xenServer602GuestOsMap.put("CentOS 6.0 (64-bit)", "CentOS 6.0 (64-bit)");
-        _xenServer602GuestOsMap.put("Debian GNU/Linux 5.0 (32-bit)", "Debian Lenny 5.0 (32-bit)");
+        _xenServer602GuestOsMap.put("Debian GNU/Linux 5.0 (32-bit)", "Debian Squeeze 6.0 (32-bit)");
         _xenServer602GuestOsMap.put("Debian GNU/Linux 6(32-bit)", "Debian Squeeze 6.0 (32-bit)");
         _xenServer602GuestOsMap.put("Debian GNU/Linux 6(64-bit)", "Debian Squeeze 6.0 (64-bit)");
         _xenServer602GuestOsMap.put("Oracle Enterprise Linux 5.0 (32-bit)", "Oracle Enterprise Linux 5 (32-bit)");

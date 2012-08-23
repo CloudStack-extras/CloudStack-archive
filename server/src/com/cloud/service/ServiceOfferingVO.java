@@ -29,22 +29,25 @@ import com.cloud.vm.VirtualMachine;
 @PrimaryKeyJoinColumn(name="id")
 public class ServiceOfferingVO extends DiskOfferingVO implements ServiceOffering {
     @Column(name="cpu")
-	private int cpu;
-    
+    private int cpu;
+
     @Column(name="speed")
     private int speed;
-    
+
     @Column(name="ram_size")
-	private int ramSize;
-    
+    private int ramSize;
+
     @Column(name="nw_rate")
     private Integer rateMbps;
-    
+
     @Column(name="mc_rate")
     private Integer multicastRateMbps;
-    
+
     @Column(name="ha_enabled")
     private boolean offerHA;
+
+    @Column(name="trusted_host")
+    private boolean trustedHost;
 
     @Column(name="limit_cpu_use")
     private boolean limitCpuUse;    
@@ -65,7 +68,7 @@ public class ServiceOfferingVO extends DiskOfferingVO implements ServiceOffering
         super();
     }
 
-    public ServiceOfferingVO(String name, int cpu, int ramSize, int speed, Integer rateMbps, Integer multicastRateMbps, boolean offerHA, String displayText, boolean useLocalStorage, boolean recreatable, String tags, boolean systemUse, VirtualMachine.Type vm_type, boolean defaultUse) {
+    public ServiceOfferingVO(String name, int cpu, int ramSize, int speed, Integer rateMbps, Integer multicastRateMbps, boolean offerHA, boolean trustedHost, String displayText, boolean useLocalStorage, boolean recreatable, String tags, boolean systemUse, VirtualMachine.Type vm_type, boolean defaultUse) {
         super(name, displayText, false, tags, recreatable, useLocalStorage, systemUse, true);
         this.cpu = cpu;
         this.ramSize = ramSize;
@@ -73,12 +76,13 @@ public class ServiceOfferingVO extends DiskOfferingVO implements ServiceOffering
         this.rateMbps = rateMbps;
         this.multicastRateMbps = multicastRateMbps;
         this.offerHA = offerHA;
+        this.trustedHost = trustedHost;
         this.limitCpuUse = false; 
         this.default_use = defaultUse;
         this.vm_type = vm_type == null ? null : vm_type.toString().toLowerCase();
     }
 
-    public ServiceOfferingVO(String name, int cpu, int ramSize, int speed, Integer rateMbps, Integer multicastRateMbps, boolean offerHA, boolean limitCpuUse, String displayText, boolean useLocalStorage, boolean recreatable, String tags, boolean systemUse, VirtualMachine.Type vm_type, Long domainId) {
+    public ServiceOfferingVO(String name, int cpu, int ramSize, int speed, Integer rateMbps, Integer multicastRateMbps, boolean offerHA, boolean trustedHost, boolean limitCpuUse, String displayText, boolean useLocalStorage, boolean recreatable, String tags, boolean systemUse, VirtualMachine.Type vm_type, Long domainId) {
         super(name, displayText, false, tags, recreatable, useLocalStorage, systemUse, true, domainId);
         this.cpu = cpu;
         this.ramSize = ramSize;
@@ -86,12 +90,13 @@ public class ServiceOfferingVO extends DiskOfferingVO implements ServiceOffering
         this.rateMbps = rateMbps;
         this.multicastRateMbps = multicastRateMbps;
         this.offerHA = offerHA;
+        this.trustedHost = trustedHost;
         this.limitCpuUse = limitCpuUse;  
         this.vm_type = vm_type == null ? null : vm_type.toString().toLowerCase();
     }
 
-    public ServiceOfferingVO(String name, int cpu, int ramSize, int speed, Integer rateMbps, Integer multicastRateMbps, boolean offerHA, boolean limitResourceUse, String displayText, boolean useLocalStorage, boolean recreatable, String tags, boolean systemUse, VirtualMachine.Type vm_type, Long domainId, String hostTag) {
-        this(name, cpu, ramSize, speed, rateMbps, multicastRateMbps, offerHA, limitResourceUse, displayText, useLocalStorage, recreatable, tags, systemUse, vm_type, domainId);
+    public ServiceOfferingVO(String name, int cpu, int ramSize, int speed, Integer rateMbps, Integer multicastRateMbps, boolean offerHA, boolean trustedHost, boolean limitResourceUse, String displayText, boolean useLocalStorage, boolean recreatable, String tags, boolean systemUse, VirtualMachine.Type vm_type, Long domainId, String hostTag) {
+        this(name, cpu, ramSize, speed, rateMbps, multicastRateMbps, offerHA, trustedHost, limitResourceUse, displayText, useLocalStorage, recreatable, tags, systemUse, vm_type, domainId);
         this.hostTag = hostTag;
     }    
 
@@ -103,6 +108,15 @@ public class ServiceOfferingVO extends DiskOfferingVO implements ServiceOffering
 	public void setOfferHA(boolean offerHA) {
 		this.offerHA = offerHA;
 	}
+
+    @Override
+    public boolean getTrustedHost() {
+        return trustedHost;
+    }
+
+    public void setTrustedHost(boolean trustedHost) {
+        this.trustedHost = trustedHost;
+    }
 
     @Override	
 	public boolean getLimitCpuUse() {

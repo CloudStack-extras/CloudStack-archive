@@ -394,7 +394,7 @@ public class ElasticLoadBalancerManagerImpl implements
         _elasticLbvmCpuMHz = NumbersUtil.parseInt(configs.get(Config.ElasticLoadBalancerVmCpuMhz.key()), DEFAULT_ELB_VM_CPU_MHZ);
         _elasticLbvmNumCpu = NumbersUtil.parseInt(configs.get(Config.ElasticLoadBalancerVmNumVcpu.key()), 1);
         _elasticLbVmOffering = new ServiceOfferingVO("System Offering For Elastic LB VM", _elasticLbvmNumCpu,
-                _elasticLbVmRamSize, _elasticLbvmCpuMHz, 0, 0, true, null, useLocalStorage,
+                _elasticLbVmRamSize, _elasticLbvmCpuMHz, 0, 0, true, false, null, useLocalStorage,
                 true, null, true, VirtualMachine.Type.ElasticLoadBalancerVm, true);
         _elasticLbVmOffering.setUniqueName(ServiceOffering.elbVmDefaultOffUniqueName);
         _elasticLbVmOffering = _serviceOfferingDao.persistSystemServiceOffering(_elasticLbVmOffering);

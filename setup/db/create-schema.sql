@@ -1432,6 +1432,7 @@ CREATE TABLE  `cloud`.`service_offering` (
   `nw_rate` smallint unsigned default 200 COMMENT 'network rate throttle mbits/s',
   `mc_rate` smallint unsigned default 10 COMMENT 'mcast rate throttle mbits/s',
   `ha_enabled` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT 'Enable HA',
+  `trusted_host` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT 'Only deploy on trusted host',
   `limit_cpu_use` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT 'Limit the CPU usage to service offering',
   `host_tag` varchar(255) COMMENT 'host tag specified by the service_offering',
   `default_use` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT 'is this offering a default system offering',
