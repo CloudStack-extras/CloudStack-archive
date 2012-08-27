@@ -910,7 +910,7 @@ class StaticNATRule:
     def create(cls, apiclient, services, ipaddressid=None):
         """Creates static ip forwarding rule"""
 
-        cmd = createIpForwardingRule.createIpForwardingRuleCmd()
+        cmd = createFirewallRule.createFirewallRuleCmd()
         cmd.protocol = services["protocol"]
         cmd.startport = services["startport"]
 
@@ -925,7 +925,7 @@ class StaticNATRule:
         elif "ipaddressid" in services:
             cmd.ipaddressid = services["ipaddressid"]
 
-        return StaticNATRule(apiclient.createIpForwardingRule(cmd).__dict__)
+        return StaticNATRule(apiclient.createFirewallRule(cmd).__dict__)
 
     def delete(self, apiclient):
         """Delete IP forwarding rule"""
