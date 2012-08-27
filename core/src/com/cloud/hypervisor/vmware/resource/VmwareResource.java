@@ -1466,7 +1466,9 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
             }
 
             VirtualDevice nic = findVirtualNicDevice(vmMo, cmd.getNic().getMac());
-
+            if ( nic == null ) {
+                return new UnPlugNicAnswer(cmd, true, "success");
+            }
             VirtualMachineConfigSpec vmConfigSpec = new VirtualMachineConfigSpec();
             VirtualDeviceConfigSpec[] deviceConfigSpecArray = new VirtualDeviceConfigSpec[1];
             deviceConfigSpecArray[0] = new VirtualDeviceConfigSpec();
@@ -1855,8 +1857,12 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
         try {
             VmwareManager mgr = getServiceContext().getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
             String controlIp = getRouterSshControlIp(cmd);
-            result = SshHelper.sshExecute(controlIp, DEFAULT_DOMR_SSHPORT, "root", mgr.getSystemVMKeyFile(), null,
-                    "/opt/cloud/bin/checkbatchs2svpn.sh ");
+            String cmdline = "/opt/cloud/bin/checkbatchs2svpn.sh ";
+            for (String ip : cmd.getVpnIps()) {
+                cmdline += " " + ip;
+            }
+
+            result = SshHelper.sshExecute(controlIp, DEFAULT_DOMR_SSHPORT, "root", mgr.getSystemVMKeyFile(), null, cmdline);
 
             if (!result.first()) {
                 s_logger.error("check site-to-site vpn connections command on domR " + cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP) + " failed, message: " + result.second());

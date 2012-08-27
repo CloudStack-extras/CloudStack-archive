@@ -238,7 +238,7 @@ public class Upgrade304to305 extends Upgrade30xBase implements DbUpgrade {
                 s_logger.debug("Unique key already exists on host_details - not adding new one");
             }else{
                 //add the key
-                PreparedStatement pstmtUpdate = conn.prepareStatement("ALTER TABLE `cloud`.`host_details` ADD CONSTRAINT UNIQUE KEY `uk_host_id_name` (`host_id`, `name`)");
+                PreparedStatement pstmtUpdate = conn.prepareStatement("ALTER IGNORE TABLE `cloud`.`host_details` ADD CONSTRAINT UNIQUE KEY `uk_host_id_name` (`host_id`, `name`)");
                 pstmtUpdate.executeUpdate();
                 s_logger.debug("Unique key did not exist on host_details -  added new one");
                 pstmtUpdate.close();
@@ -391,7 +391,7 @@ public class Upgrade304to305 extends Upgrade30xBase implements DbUpgrade {
         //insert the keys anew
         try {
             PreparedStatement pstmt; pstmt = conn.prepareStatement("ALTER TABLE `cloud`.`ssh_keypairs` ADD " +
-            		"CONSTRAINT `fk_ssh_keypair__account_id` FOREIGN KEY `fk_ssh_keypair__account_id` (`account_id`)" +
+            		"CONSTRAINT `fk_ssh_keypairs__account_id` FOREIGN KEY `fk_ssh_keypairs__account_id` (`account_id`)" +
             		" REFERENCES `account` (`id`) ON DELETE CASCADE");
             pstmt.executeUpdate();
             pstmt.close();
@@ -401,7 +401,7 @@ public class Upgrade304to305 extends Upgrade30xBase implements DbUpgrade {
             
         try {
             PreparedStatement pstmt; pstmt = conn.prepareStatement("ALTER TABLE `cloud`.`ssh_keypairs` ADD CONSTRAINT" +
-            		" `fk_ssh_keypair__domain_id` FOREIGN KEY `fk_ssh_keypair__domain_id` (`domain_id`) " +
+            		" `fk_ssh_keypairs__domain_id` FOREIGN KEY `fk_ssh_keypairs__domain_id` (`domain_id`) " +
             		"REFERENCES `domain` (`id`) ON DELETE CASCADE");
             pstmt.executeUpdate();
             pstmt.close();
