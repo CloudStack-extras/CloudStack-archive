@@ -77,7 +77,7 @@ class Services:
                     "name": "testISO",
                     "url": "http://iso.linuxquestions.org/download/504/1819/http/gd4.tuwien.ac.at/dsl-4.4.10.iso",
                      # Source URL where ISO is located
-                    "ostypeid": '01853327-513e-4508-9628-f1f55db1946f',
+                    "ostypeid": 'bc66ada0-99e7-483b-befc-8fb0c2129b70',
                     "mode": 'HTTP_DOWNLOAD',    # Downloading existing ISO
                 },
                 "template": {
@@ -89,14 +89,14 @@ class Services:
                     "isextractable": True,
                     "displaytext": "Cent OS Template",
                     "name": "Cent OS Template",
-                    "ostypeid": '01853327-513e-4508-9628-f1f55db1946f',
+                    "ostypeid": 'bc66ada0-99e7-483b-befc-8fb0c2129b70',
                     "templatefilter": 'self',
                     "passwordenabled": True,
                 },
             "sleep": 60,
             "timeout": 10,
             #Migrate VM to hostid
-            "ostypeid": '01853327-513e-4508-9628-f1f55db1946f',
+            "ostypeid": 'bc66ada0-99e7-483b-befc-8fb0c2129b70',
             # CentOS 5.3 (64-bit)
         }
 
@@ -1888,4 +1888,146 @@ class TestUploadAttachVolume(cloudstackTestCase):
         with self.assertRaises(Exception):
             virtual_machine.attach_volume(self.apiclient, volume)
             self.debug("Failed to attach the volume as expected")
+        return
+
+
+class TestDeployOnSpecificHost(cloudstackTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.api_client = super(
+                               TestDeployOnSpecificHost,
+                               cls
+                               ).getClsTestClient().getApiClient()
+        cls.services = Services().services
+        # Get Zone, Domain and templates
+        cls.domain = get_domain(cls.api_client, cls.services)
+        cls.zone = get_zone(cls.api_client, cls.services)
+        cls.template = get_template(
+                            cls.api_client,
+                            cls.zone.id,
+                            cls.services["ostypeid"]
+                            )
+        cls.services["virtual_machine"]["zoneid"] = cls.zone.id
+        cls.services["virtual_machine"]["template"] = cls.template.id
+
+        cls.service_offering = ServiceOffering.create(
+                                            cls.api_client,
+                                            cls.services["service_offering"]
+                                            )
+
+        cls._cleanup = [
+                        cls.service_offering,
+                        ]
+        return
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            #Cleanup resources used
+            cleanup_resources(cls.api_client, cls._cleanup)
+        except Exception as e:
+            raise Exception("Warning: Exception during cleanup : %s" % e)
+        return
+
+    def setUp(self):
+        self.apiclient = self.testClient.getApiClient()
+        self.dbclient = self.testClient.getDbConnection()
+        self.account = Account.create(
+                                     self.apiclient,
+                                     self.services["account"],
+                                     admin=True,
+                                     domainid=self.domain.id
+                                     )
+        self.cleanup = []
+        return
+
+    def tearDown(self):
+        try:
+            self.account.delete(self.apiclient)
+            interval = list_configurations(
+                                    self.apiclient,
+                                    name='account.cleanup.interval'
+                                    )
+            # Sleep to ensure that all resources are deleted
+            time.sleep(int(interval[0].value) * 2)
+            #Clean up, terminate the created network offerings
+            cleanup_resources(self.apiclient, self.cleanup)
+        except Exception as e:
+            raise Exception("Warning: Exception during cleanup : %s" % e)
+        return
+
+    @attr(tags=["advanced", "advancedns", "simulator",
+                "api", "basic", "eip", "sg"])
+    def test_deployVmOnGivenHost(self):
+        """Test deploy VM on specific host
+        """
+
+        # Steps for validation
+        # 1. as admin list available hosts that are Up
+        # 2. deployVM with hostid=above host
+        # 3. listVirtualMachines
+        # 4. destroy VM
+        # Validate the following
+        # 1. listHosts returns at least one host in Up state
+        # 2. VM should be in Running
+        # 3. VM should be on the host that it was deployed on
+
+        hosts = Host.list(
+                          self.apiclient,
+                          zoneid=self.zone.id,
+                          type='Routing',
+                          state='Up',
+                          listall=True
+                          )
+
+        self.assertEqual(
+                         isinstance(hosts, list),
+                         True,
+                         "CS should have atleast one host Up and Running"
+                         )
+
+        host = hosts[0]
+        self.debug("Deploting VM on host: %s" % host.name)
+
+        try:
+            vm = VirtualMachine.create(
+                                    self.apiclient,
+                                    self.services["virtual_machine"],
+                                    templateid=self.template.id,
+                                    accountid=self.account.account.name,
+                                    domainid=self.account.account.domainid,
+                                    serviceofferingid=self.service_offering.id,
+                                    hostid=host.id
+                                    )
+            self.debug("Deploy VM succeeded")
+        except Exception as e:
+            self.fail("Deploy VM failed with exception: %s" % e)
+
+        self.debug("Cheking the state of deployed VM")
+        vms = VirtualMachine.list(
+                                self.apiclient,
+                                id=vm.id,
+                                listall=True,
+                                account=self.account.account.name,
+                                domainid=self.account.account.domainid
+                                )
+
+        self.assertEqual(
+                         isinstance(vms, list),
+                         True,
+                         "List Vm should return a valid response"
+                         )
+
+        vm_response = vms[0]
+        self.assertEqual(
+                         vm_response.state,
+                         "Running",
+                         "VM should be in running state after deployment"
+                         )
+        self.assertEqual(
+                         vm_response.hostid,
+                         host.id,
+                         "Host id where VM is deployed should match"
+                         )
         return

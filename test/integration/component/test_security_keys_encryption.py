@@ -31,8 +31,10 @@ class Services:
                                     "name": "Tiny Instance",
                                     "displaytext": "Tiny Instance",
                                     "cpunumber": 1,
-                                    "cpuspeed": 100, # in MHz
-                                    "memory": 64, # In MBs
+                                    "cpuspeed": 100,
+                                    # in MHz
+                                    "memory": 64,
+                                    # In MBs
                         },
                         "virtual_machine": {
                                     "displayname": "TestVM",
@@ -53,7 +55,7 @@ class Services:
                                    "password": "password",
                                 },
                          "globalconfig": {
-                                   "security.hash.key" : "test",
+                                   "security.hash.key": "test",
                                     "vmware.guest.vswitch" : "test",
                                     "vmware.public.vswitch" : "test",
                                     "vmware.private.vswitch" : "test",
@@ -71,7 +73,7 @@ class Services:
                                     "alert.smtp.password" : "test",
                                     "project.smtp.password" : "test",
                                 },
-                        "ostypeid": '01853327-513e-4508-9628-f1f55db1946f',
+                        "ostypeid": 'bc66ada0-99e7-483b-befc-8fb0c2129b70',
                         # Cent OS 5.3 (64 bit)
                         "sleep": 60,
                         "timeout": 10,
@@ -83,7 +85,10 @@ class TestSecurityKeysEncryption(cloudstackTestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.api_client = super(TestSecurityKeysEncryption, cls).getClsTestClient().getApiClient()
+        cls.api_client = super(
+                               TestSecurityKeysEncryption,
+                               cls
+                               ).getClsTestClient().getApiClient()
         cls.services = Services().services
         # Get Zone, Domain and templates
         cls.domain = get_domain(cls.api_client, cls.services)
@@ -370,4 +375,90 @@ class TestSecurityKeysEncryption(cloudstackTestCase):
 
             #Setting the configuration value back to None as default value
             Configurations.update(self.apiclient, k)
+        return
+
+
+class TestSingleSignOnEncryption(cloudstackTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.api_client = super(
+                               TestSingleSignOnEncryption,
+                               cls
+                               ).getClsTestClient().getApiClient()
+        cls.services = Services().services
+        # Get Zone, Domain and templates
+        cls.domain = get_domain(cls.api_client, cls.services)
+        cls.zone = get_zone(cls.api_client, cls.services)
+        cls._cleanup = []
+        return
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            #Cleanup resources used
+            cleanup_resources(cls.api_client, cls._cleanup)
+        except Exception as e:
+            raise Exception("Warning: Exception during cleanup : %s" % e)
+        return
+
+    def setUp(self):
+        self.apiclient = self.testClient.getApiClient()
+        self.dbclient = self.testClient.getDbConnection()
+        self.cleanup = []
+        return
+
+    def tearDown(self):
+        try:
+            #Clean up, terminate the created network offerings
+            cleanup_resources(self.apiclient, self.cleanup)
+        except Exception as e:
+            raise Exception("Warning: Exception during cleanup : %s" % e)
+        return
+
+    @attr(tags=["advanced", "configuration", "advancedns", "simulator",
+                "api", "basic", "eip", "sg"])
+    def test_SingleSignOnEncryption(self):
+        """List listConfigurations API should get decrypted
+            security.singlesignon.key
+        """
+
+        # Steps for validation
+        # 1. listConfigurations - security.singlesignon.key
+        # Validate the following
+        # 1. assert that the field is encrypted (value mismatch)
+        # 2. assert that section of the DB for this config is "Secure"
+        #    and not "Hidden"
+
+        config = Configurations.list(
+                                    self.apiclient,
+                                    name='security.singlesignon.key',
+                                    listall=True
+                                    )
+        self.assertEqual(
+                isinstance(config, list),
+                True,
+                "List configurations should have security.singlesignon.key"
+                )
+
+        config_value = config[0].value
+        config_category = config[0].category
+        qresultset = self.dbclient.execute(
+                        "select value from configuration where name='security.singlesignon.key';"
+                        )
+        self.assertEqual(
+                         isinstance(qresultset, list),
+                         True,
+                         "Check DB query result set for valid data"
+                         )
+        self.assertNotEqual(
+                         qresultset[0][0],
+                         config_value,
+                         "The security.singlesignon.key is not encrypted"
+                         )
+        self.assertEqual(
+                         config_category,
+                         "Secure",
+                         "The configuration category should be secure"
+                         )
         return
