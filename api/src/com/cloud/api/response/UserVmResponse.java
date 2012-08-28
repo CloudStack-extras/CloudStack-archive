@@ -73,6 +73,9 @@ public class UserVmResponse extends BaseResponse implements ControlledEntityResp
     @SerializedName("hostname") @Param(description="the name of the host for the virtual machine")
     private String hostName;
 
+    @SerializedName(ApiConstants.TRUSTED_HOST) @Param(description="the host for the virtual machine is trusted or not")
+    private Boolean hostIsTrusted;
+
     @SerializedName(ApiConstants.TEMPLATE_ID) @Param(description="the ID of the template for the virtual machine. A -1 is returned if the virtual machine was created from an ISO file.")
     private IdentityProxy templateId = new IdentityProxy("vm_template");
 
@@ -223,6 +226,10 @@ public class UserVmResponse extends BaseResponse implements ControlledEntityResp
 
     public void setHostName(String hostName) {
         this.hostName = hostName;
+    }
+
+    public void setHostIsTrusted(Boolean hostIsTrusted) {
+        this.hostIsTrusted = hostIsTrusted;
     }
 
     public void setTemplateId(Long templateId) {

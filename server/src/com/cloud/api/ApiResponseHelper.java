@@ -3263,6 +3263,7 @@ public class ApiResponseHelper implements ResponseGenerator {
             userVmResponse.setInstanceName(userVmData.getInstanceName());
             userVmResponse.setHostId(userVmData.getHostId());
             userVmResponse.setHostName(userVmData.getHostName());
+            userVmResponse.setHostIsTrusted(ApiDBUtils.isTrustedHost(userVmData.getHostId()));
         }
         userVmResponse.setTemplateId(userVmData.getTemplateId());
         userVmResponse.setTemplateName(userVmData.getTemplateName());
