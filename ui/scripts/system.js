@@ -9648,7 +9648,7 @@
     if (jsonObj.state == 'Running') {
       allowedActions.push("stop");
       			
-			if(jsonObj.vpcid != null) 
+		//	if(jsonObj.vpcid != null) 
         allowedActions.push("restart");
 				
       allowedActions.push("viewConsole");
