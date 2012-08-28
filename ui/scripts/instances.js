@@ -35,12 +35,14 @@
 				var hiddenFields = [];
 				if(!isAdmin()) {				
 					hiddenFields.push('instancename');
-				}			
-				return hiddenFields;
+                                        hiddenFields.push('trustedhost');
+				}
+                     
+				return hiddenFields; 
 			},			
       fields: {        
         displayname: { label: 'label.display.name' },
-				instancename: { label: 'label.internal.name' },
+	instancename: { label: 'label.internal.name' },
         zonename: { label: 'label.zone.name' },
         state: {
           label: 'label.state',         
@@ -50,7 +52,21 @@
             'Destroyed': 'off',
             'Error': 'off'
           }
-        }
+        },
+        
+        trustedhost:{
+            label: 'Compliant Host',
+             converter: function(booleanValue) {
+                    if(booleanValue == true)
+                      return "Yes";
+                    else if(booleanValue == false)
+                      return "No";
+                  },
+             indicator: {
+                 'true':'on',
+                 'false':'off'
+       }
+      } 
       },
 
       // List view actions
@@ -1138,7 +1154,17 @@
 								
 								group: { label: 'label.group', isEditable: true },
 								zonename: { label: 'label.zone.name', isEditable: false },
-								hostname: { label: 'label.host' },                
+								hostname: { label: 'label.host' },  
+                                                                trustedhost:{
+						                    label: 'Compliant Host',
+                  					            converter:function(booleanValue) {
+                                					  if(booleanValue == true)
+                                 						 return "Yes";
+                                					  else if(booleanValue == false)
+                                   						 return "No";
+                   								 }
+               								 },
+              
 								publicip: { label: 'label.public.ip' },  
                 domain: { label: 'label.domain' },
                 account: { label: 'label.account' },

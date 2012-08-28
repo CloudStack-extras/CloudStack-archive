@@ -7255,7 +7255,7 @@
 							}
 						},
            istrusted: { 
-             label: 'Trusted Host',
+             label: 'Compliant Host',
              converter: function(booleanValue) {
                     if(booleanValue == true)
                       return "Yes";
@@ -7879,7 +7879,7 @@
                     podname: { label: 'label.pod' },
                     clustername: { label: 'label.cluster' },
                     ipaddress: { label: 'label.ip.address' },
-                    istrusted: {label:'Trusted Host'  ,
+                    istrusted: {label:'Compliant Host'  ,
                     converter:function(booleanValue) {
                                   if(booleanValue == true)
                                   return "Yes";
