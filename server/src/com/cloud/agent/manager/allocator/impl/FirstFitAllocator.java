@@ -191,16 +191,16 @@ public class FirstFitAllocator implements HostAllocator {
         List<Host> suitableHosts = new ArrayList<Host>();
 
         for (HostVO host : hosts) {
-        	if(suitableHosts.size() == returnUpTo){
-        		break;
-        	}
+            if(suitableHosts.size() == returnUpTo){
+                break;
+            }
             if (avoid.shouldAvoid(host)) {
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Host name: " + host.getName() + ", hostId: "+ host.getId() +" is in avoid set, skipping this and trying other available hosts");
                 }
                 continue;
             }
-                        
+
             //find number of guest VMs occupying capacity on this host.
             Long vmCount = _vmInstanceDao.countRunningByHostId(host.getId());
             Long maxGuestLimit = getHostMaxGuestLimit(host);
@@ -211,24 +211,32 @@ public class FirstFitAllocator implements HostAllocator {
                 continue;
             }
 
+            boolean trustedHost = _resourceMgr.isTrustedHost(host.getId());;
             boolean numCpusGood = host.getCpus().intValue() >= offering.getCpu();
             boolean cpuFreqGood = host.getSpeed().intValue() >= offering.getSpeed();
-    		int cpu_requested = offering.getCpu() * offering.getSpeed();
-    		long ram_requested = offering.getRamSize() * 1024L * 1024L;	
-    		boolean hostHasCapacity = _capacityMgr.checkIfHostHasCapacity(host.getId(), cpu_requested, ram_requested, false, _factor, considerReservedCapacity);
+            int cpu_requested = offering.getCpu() * offering.getSpeed();
+            long ram_requested = offering.getRamSize() * 1024L * 1024L;	
+            boolean hostHasCapacity = _capacityMgr.checkIfHostHasCapacity(host.getId(), cpu_requested, ram_requested, false, _factor, considerReservedCapacity);
 
             if (numCpusGood && cpuFreqGood && hostHasCapacity) {
-                if (s_logger.isDebugEnabled()) {
-                    s_logger.debug("Found a suitable host, adding to list: " + host.getId());
+                // If the offering only requires compliant/trusted hosts the host is non compliant;
+                // don't add it to suitable hosts list.
+                if (!offering.getTrustedHost() || trustedHost) {
+                    if (s_logger.isDebugEnabled()) {
+                        s_logger.debug("Found a suitable host, adding to list: " + host.getId());
+                    }
+                    suitableHosts.add(host);
+                } else {
+                    s_logger.info("Not using host " + host.getId() + ". Host doesn't meet the compliance gurantees as" +
+                        " expected by the service offering (untrusted host).");
                 }
-                suitableHosts.add(host);
             } else {
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Not using host " + host.getId() + "; numCpusGood: " + numCpusGood + "; cpuFreqGood: " + cpuFreqGood + ", host has capacity?" + hostHasCapacity);
                 }
             }
         }
-        
+
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Host Allocator returning "+suitableHosts.size() +" suitable hosts");
         }

@@ -45,7 +45,6 @@
 	<classpathentry exported="true" kind="lib" path="cloud-netscaler-sdx.jar"/>
 	<classpathentry exported="true" kind="lib" path="cloud-commons-configuration-1.8.jar"/>
 	<classpathentry exported="true" kind="lib" path="cloud-commons-lang-2.6.jar"/>
-        <classpathentry exported="true" kind="lib" path="cloud-a.jar"/>
         <classpathentry exported="true" kind="lib" path="cloud-mtwilson-api-client.jar"/>
 	<classpathentry exported="true" kind="lib" path="awsapi-lib/axiom-api-1.2.8.jar"/>
 	<classpathentry exported="true" kind="lib" path="awsapi-lib/axiom-impl-1.2.8.jar"/>
