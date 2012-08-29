@@ -197,10 +197,11 @@
           }
         });
 
-        var sectionsToShow = ['networks', 'vpnCustomerGateway'];
+        var sectionsToShow = ['networks'];
 
         if (havingAdvancedZones) {
           sectionsToShow.push('vpc');
+          sectionsToShow.push('vpnCustomerGateway');
         }
 
         if(havingSecurityGroupNetwork == true)
@@ -3980,7 +3981,7 @@
                                   }
                               },
                           account: {label:'label.account'},
-                          domain: {label: 'label.domain'},
+                          domain: {label: 'label.domain'}
 
                         }
 
