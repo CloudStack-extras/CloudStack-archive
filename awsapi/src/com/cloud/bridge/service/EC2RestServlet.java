@@ -1765,10 +1765,10 @@ public class EC2RestServlet extends HttpServlet {
         String[] version = request.getParameterValues( "Version" );
 		if ( null != version && 0 < version.length ) 
 		{
-            /*if (!version[0].equals( wsdlVersion )) {
+            if (!version[0].equals( wsdlVersion )) {
                 response.sendError(531, "Unsupported Version value: " + version[0] + " expecting: " + wsdlVersion );
                 return false;
-            }*/
+            }
 		}
 		else { response.sendError(530, "Missing Version parameter" ); return false; }
 
