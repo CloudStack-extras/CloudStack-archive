@@ -146,6 +146,10 @@ public class HostResponse extends BaseResponse {
     @SerializedName("suitableformigration") @Param(description="true if this host is suitable(has enough capacity and satisfies all conditions like hosttags, max guests vm limit etc) to migrate a VM to it , false otherwise")
     private Boolean suitableForMigration;
 
+    @SerializedName("offeringallowsmigration") @Param(description="false if instance offering expects a trusted host and host is untrusted , true otherwise")
+    private Boolean offeringAllowsMigration;
+
+
     @SerializedName("resourcestate") @Param(description="the resource state of the host")
     private String resourceState;
 
@@ -328,7 +332,11 @@ public class HostResponse extends BaseResponse {
 
     public void setSuitableForMigration(Boolean suitableForMigration) {
         this.suitableForMigration = suitableForMigration;
-    }    
+    }
+
+    public void setOfferingAllowsMigration(Boolean offeringAllowsMigration) {
+        this.offeringAllowsMigration = offeringAllowsMigration;
+    }
 
     public String getResourceState() {
         return resourceState;

@@ -3350,7 +3350,14 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         //check if migrating to same host
         long srcHostId = vm.getHostId();
         if(destinationHost.getId() == srcHostId){
-            throw new InvalidParameterValueException("Cannot migrate VM, VM is already presnt on this host, please specify valid destination host to migrate the VM", null);
+            throw new InvalidParameterValueException("Cannot migrate VM, VM is already preswnt on this host, please specify valid destination host to migrate the VM", null);
+        }
+
+        //check if the offering the instance is created with allows running it on non compliant/untrusted hosts.
+        ServiceOfferingVO offering = _serviceOfferingDao.findById(vm.getServiceOfferingId());
+        if (offering.getTrustedHost() && !_resourceMgr.isTrustedHost(destinationHost.getId())) {
+            throw new InvalidParameterValueException("Cannot migrate VM. The destination host doesn't meet the " +
+                    "compliance requirements for the VM to run on it.", null);
         }
 
         //check if host is UP

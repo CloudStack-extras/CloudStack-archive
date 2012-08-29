@@ -58,6 +58,8 @@ import com.cloud.api.commands.UpdateTemplateCmd;
 import com.cloud.api.commands.UpdateVMGroupCmd;
 import com.cloud.api.commands.UpgradeSystemVMCmd;
 import com.cloud.api.commands.UploadCustomCertificateCmd;
+import com.cloud.api.response.HostResponse;
+import com.cloud.api.response.ListResponse;
 import com.cloud.async.AsyncJob;
 import com.cloud.capacity.Capacity;
 import com.cloud.configuration.Configuration;
@@ -438,6 +440,8 @@ public interface ManagementService {
     List<? extends HypervisorCapabilities> listHypervisorCapabilities(Long id, HypervisorType hypervisorType, String keyword, Long startIndex, Long pageSizeVal);
 
     HypervisorCapabilities updateHypervisorCapabilities(Long id, Long maxGuestsLimit, Boolean securityGroupEnabled);
+
+    List<HostResponse> updateHostSuitabilityForMigration(Long vmId, List<HostResponse> response); 
 
     /**
      * list all the top consumed resources across different capacity types

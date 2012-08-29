@@ -194,6 +194,11 @@ public class ConfigurationServerImpl implements ConfigurationServer {
             // Save default service offerings
             createServiceOffering(User.UID_SYSTEM, "Small Instance", 1, 512, 500, "Small Instance", false, false, false, null);
             createServiceOffering(User.UID_SYSTEM, "Medium Instance", 1, 1024, 1000, "Medium Instance", false, false, false, null);
+
+            // Save default service offerings for trusted/compliant hosts
+            createServiceOffering(User.UID_SYSTEM, "Small Instance - compliant host", 1, 512, 500, "Small Instance", false, false, true, null);
+            createServiceOffering(User.UID_SYSTEM, "Medium Instance - compliant host", 1, 1024, 1000, "Medium Instance", false, false, true, null);
+
             // Save default disk offerings
             createdefaultDiskOffering(null, "Small", "Small Disk, 5 GB", 5, null, false, false);
             createdefaultDiskOffering(null, "Medium", "Medium Disk, 20 GB", 20, null, false, false);

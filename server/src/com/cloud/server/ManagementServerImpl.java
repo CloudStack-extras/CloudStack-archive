@@ -94,6 +94,7 @@ import com.cloud.api.commands.UpdateVMGroupCmd;
 import com.cloud.api.commands.UpgradeSystemVMCmd;
 import com.cloud.api.commands.UploadCustomCertificateCmd;
 import com.cloud.api.response.ExtractResponse;
+import com.cloud.api.response.HostResponse;
 import com.cloud.async.AsyncJobExecutor;
 import com.cloud.async.AsyncJobManager;
 import com.cloud.async.AsyncJobResult;
@@ -880,6 +881,26 @@ public class ManagementServerImpl implements ManagementServer {
         Object haHosts = cmd.getHaHost();
 
         return searchForServers(cmd.getStartIndex(), cmd.getPageSizeVal(), name, type, state, zoneId, pod, cluster, id, keyword, resourceState, haHosts);
+    }
+
+    @Override
+    public List<HostResponse> updateHostSuitabilityForMigration(Long vmId, List<HostResponse> response) {
+        VMInstanceVO vm = _vmInstanceDao.findById(vmId);
+        if (vm == null) {
+            throw new InvalidParameterValueException("Unable to find the VM by id", null);
+        }
+
+        ServiceOfferingVO svcOffering = _offeringsDao.findById(vm.getServiceOfferingId());
+        for (HostResponse hostInfo : response) {
+            hostInfo.setOfferingAllowsMigration(true);
+            if (svcOffering.getTrustedHost()) {
+                if (!_resourceMgr.isTrustedHost(hostInfo.getId())) {
+                    hostInfo.setOfferingAllowsMigration(false);
+                }
+            }
+        }
+
+        return response;
     }
 
     @Override

@@ -182,6 +182,10 @@ public class ListHostsCmd extends BaseListCmd {
             hostResponses.add(hostResponse);
         }
 
+        if (getVirtualMachineId() != null) {
+            hostResponses = _mgr.updateHostSuitabilityForMigration(getVirtualMachineId(), hostResponses);
+        }
+
         response.setResponses(hostResponses);
         response.setResponseName(getCommandName());
         this.setResponseObject(response);
