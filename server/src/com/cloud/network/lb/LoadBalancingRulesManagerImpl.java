@@ -235,7 +235,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
                 serviceResponse.setName(service.getName());
                 if ("Lb".equalsIgnoreCase(service.getName())) {
                     Map<Capability, String> serviceCapabilities = serviceCapabilitiesMap
-                            .get(service);
+                    .get(service);
                     if (serviceCapabilities != null) {
                         for (Capability capability : serviceCapabilities
                                 .keySet()) {
@@ -972,7 +972,7 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
             try {
                 if (ipVO.getAssociatedWithNetworkId() == null) {
                     boolean assignToVpcNtwk = network.getVpcId() != null
-                            && ipVO.getVpcId() != null && ipVO.getVpcId().longValue() == network.getVpcId();
+                    && ipVO.getVpcId() != null && ipVO.getVpcId().longValue() == network.getVpcId();
                     if (assignToVpcNtwk) {
                         // set networkId just for verification purposes
                         _networkMgr.checkIpForService(ipVO, Service.Lb, lb.getNetworkId());
@@ -1432,14 +1432,6 @@ public class LoadBalancingRulesManagerImpl<Type> implements LoadBalancingRulesMa
         return loadBalancerInstances;
     }
 
-    public List<String> getSupportedAutoScaleCounters(long networkid)
-    {
-        String capability = getLBCapability(networkid, Capability.AutoScaleCounters.getName());
-        if (capability == null || capability.length() == 0) {
-            return null;
-        }
-        return Arrays.asList(capability.split(","));
-    }
 
     @Override
     public List<LbStickinessMethod> getStickinessMethods(long networkid)
