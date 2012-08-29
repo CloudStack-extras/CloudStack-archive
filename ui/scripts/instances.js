@@ -933,11 +933,20 @@
                       async: true,
                       success: function(json) {
                         var hosts = json.listhostsresponse.host;
+                        
                         var items = [];
                         $(hosts).each(function() {
-                          items.push({id: this.id, description: (this.name + " (" + (this.suitableformigration? "Suitable": "Not Suitable") + ")")});
+                          items.push({id: this.id, description: ( this.name + " (" + (this.suitableformigration? "Suitable": "Not Suitable")+ (this.offeringallowsmigration ? "":",Not Compliant")  + ")" )});
+                          
+
+                       });
+                        args.response.success({
+                                 
+                           data: items
+                                
                         });
-                        args.response.success({data: items});
+
+               
                       }
                     });
                   }
