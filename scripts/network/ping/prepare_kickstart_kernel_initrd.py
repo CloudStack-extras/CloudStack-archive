@@ -14,11 +14,14 @@ def cmd(cmdstr, err=True):
     
 def prepare():
     try:
-        if os.path.exists(copy_to):
+        kernel = os.path.join(copy_to, "vmlinuz")
+        initrd = os.path.join(copy_to, "initrd.img")
+        if os.path.exists(kernel) and os.path.exists(initrd):
             print "Having template(%s) prepared already, skip copying" % copy_to
             return 0
         else:
-            os.makedirs(copy_to)
+            if not os.path.exists(copy_to):
+                os.makedirs(copy_to)
 
         mnt_path = tempfile.mkdtemp()
         try:

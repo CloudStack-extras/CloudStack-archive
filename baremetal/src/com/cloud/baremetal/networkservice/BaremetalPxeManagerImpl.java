@@ -34,6 +34,8 @@ import com.cloud.exception.OperationTimedoutException;
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
+import com.cloud.network.PhysicalNetworkVO;
+import com.cloud.network.dao.PhysicalNetworkDao;
 import com.cloud.resource.ResourceManager;
 import com.cloud.resource.ResourceStateAdapter;
 import com.cloud.resource.ServerResource;
@@ -70,6 +72,7 @@ public class BaremetalPxeManagerImpl implements BaremetalPxeManager, ResourceSta
 	@Inject ServiceOfferingDao _serviceOfferingDao;
 	@Inject NicDao _nicDao;
 	@Inject ConfigurationDao _configDao;
+	@Inject PhysicalNetworkDao _phynwDao;
 	
 	@Override
 	public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -196,11 +199,22 @@ public class BaremetalPxeManagerImpl implements BaremetalPxeManager, ResourceSta
         }
         cmd.addVmData("metadata", "cloud-identifier", cloudIdentifier);
         
+        List<PhysicalNetworkVO> phys = _phynwDao.listByZone(vm.getDataCenterIdToDeployIn());
+        if (phys.isEmpty()) {
+            throw new CloudRuntimeException(String.format("Cannot find physical network in zone %s", vm.getDataCenterIdToDeployIn()));
+        }
+        if (phys.size() > 1) {
+            throw new CloudRuntimeException(String.format("Baremetal only supports one physical network in zone, but zone %s has %s physical networks", vm.getDataCenterIdToDeployIn(), phys.size()));
+        }
+        PhysicalNetworkVO phy = phys.get(0);
+        
         SearchCriteriaService<BaremetalPxeVO, BaremetalPxeVO> sc = SearchCriteria2.create(BaremetalPxeVO.class);
-        sc.addAnd(sc.getEntity().getPodId(), Op.EQ, vm.getPodIdToDeployIn());
+        //TODO: handle both kickstart and PING
+        //sc.addAnd(sc.getEntity().getPodId(), Op.EQ, vm.getPodIdToDeployIn());
+        sc.addAnd(sc.getEntity().getPhysicalNetworkId(), Op.EQ, phy.getId());
         BaremetalPxeVO pxeVo = sc.find();
         if (pxeVo == null) {
-            throw new CloudRuntimeException("No PING PXE server found in pod: " + vm.getPodIdToDeployIn() + ", you need to add it before starting VM");
+            throw new CloudRuntimeException("No PXE server found in pod: " + vm.getPodIdToDeployIn() + ", you need to add it before starting VM");
         }
         
         try {

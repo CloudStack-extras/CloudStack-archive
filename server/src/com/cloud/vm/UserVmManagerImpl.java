@@ -2868,7 +2868,15 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         State vmState = vm.getState();
 
         try {
-            status = _itMgr.destroy(vm, userCaller, caller);
+            if (vm.getHypervisorType() != HypervisorType.BareMetal) {
+                status = _itMgr.destroy(vm, userCaller, caller);
+            } else {
+                status = _itMgr.expunge(vm, userCaller, caller);
+                if (vmState != State.Error) {
+                    _resourceLimitMgr.decrementResourceCount(vm.getAccountId(), ResourceType.user_vm);
+                }
+                return vm;
+            }
         } catch (OperationTimedoutException e) {
             throw new CloudRuntimeException("Unable to destroy " + vm, e);
         }
