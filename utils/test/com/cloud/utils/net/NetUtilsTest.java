@@ -13,6 +13,7 @@
 package com.cloud.utils.net;
 
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import junit.framework.TestCase;
@@ -33,7 +34,7 @@ public class NetUtilsTest extends TestCase {
         ip = NetUtils.getRandomIpFromCidr(cidr, 8, new TreeSet<Long>());
         assertEquals("The ip " + NetUtils.long2Ip(ip) + " retrieved must be within the cidr " + cidr + "/8", cidr.substring(0, 4), NetUtils.long2Ip(ip).substring(0, 4));
 
-        Set<Long> avoid = new TreeSet<Long>();
+        SortedSet<Long> avoid = new TreeSet<Long>();
         ip = NetUtils.getRandomIpFromCidr(cidr, 30, avoid);
         assertTrue("We should be able to retrieve an ip on the first call.", ip != -1);
         avoid.add(ip);
