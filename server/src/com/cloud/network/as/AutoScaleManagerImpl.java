@@ -1144,7 +1144,6 @@ public class AutoScaleManagerImpl<Type> implements AutoScaleManager, AutoScaleSe
 
     public void cleanUpAutoScaleResources(Long accountId) {
         // cleans Autoscale VmProfiles, AutoScale Policies and Conditions belonging to an account
-        // boolean cleaned = true;
         int count = 0;
         count = _autoScaleVmProfileDao.removeByAccountId(accountId);
         if (count > 0) {
