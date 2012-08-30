@@ -338,8 +338,10 @@ function AjaxViewer(panelId, imageUrl, updateUrl, tileMap, width, height, tileWi
 	// trouble-shooting
 	g_logger = new Logger();
 	
-	// g_logger.enable(true);
-	// g_logger.open();
+	
+	// FANG - Open logger window
+	//g_logger.enable(true);
+	//g_logger.open();
 	
 	var ajaxViewer = this;
 	this.imageLoaded = false;
@@ -360,6 +362,9 @@ function AjaxViewer(panelId, imageUrl, updateUrl, tileMap, width, height, tileWi
 	this.maxTileZIndex = 1;
 	
 	this.hypervisorType = hypervisorType;
+	
+	// FANG hardcode to XenServer for XS testing, remove it after
+	// this.hypervisorType = "XenServer";
 	
 	this.currentKeyboard = AjaxViewer.KEYBOARD_TYPE_ENGLISH;
 	this.keyboardMappers = [];
@@ -704,6 +709,24 @@ AjaxViewer.prototype = {
 			}
 			mapper.jsX11KeysymMap[221] = 92;		// ] on JP keyboard
 			mapper.jsX11KeysymMap[222] = 61;		// ^ on JP keyboard
+
+			mapper.jsX11KeysymMap[220] = true;		// JP Yen mark
+			mapper.jsX11KeysymMap[226] = true;		// \_
+			mapper.jsKeyPressX11KeysymMap[92] = [
+	    	    {type: AjaxViewer.KEY_DOWN, code: 92, modifiers: 0, shift: false },
+	    	    {type: AjaxViewer.KEY_UP, code: 92, modifiers: 0, shift: false },
+	    	];
+
+			mapper.jsKeyPressX11KeysymMap[124] = [
+	    	    {type: AjaxViewer.KEY_DOWN, code: 124, modifiers: 0, shift: true },
+	    	    {type: AjaxViewer.KEY_UP, code: 124, modifiers: 0, shift: true }
+	    	];
+			
+			mapper.jsKeyPressX11KeysymMap[95] = [
+	    	    {type: AjaxViewer.KEY_DOWN, code: 95, modifiers: 0, shift: true },
+	    	    {type: AjaxViewer.KEY_UP, code: 95, modifiers: 0, shift: true }
+	    	];
+			
 			
 			// for keycode 106, keypress 42
 			mapper.jsX11KeysymMap[106] = true;
