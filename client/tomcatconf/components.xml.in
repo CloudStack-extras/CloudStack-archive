@@ -186,5 +186,6 @@
         <dao name="Site2SiteCustomerGatewayDao" class="com.cloud.network.dao.Site2SiteCustomerGatewayDaoImpl" singleton="false"/>
         <dao name="Site2SiteVpnGatewayDao" class="com.cloud.network.dao.Site2SiteVpnGatewayDaoImpl" singleton="false"/>
         <dao name="Site2SiteVpnConnectionDao" class="com.cloud.network.dao.Site2SiteVpnConnectionDaoImpl" singleton="false"/>
+        <dao name="SnmpManagersDao" class="com.cloud.alert.snmp.dao.SnmpManagersDaoImpl" singleton="false"/>
     </configuration-server>
 </components.xml>

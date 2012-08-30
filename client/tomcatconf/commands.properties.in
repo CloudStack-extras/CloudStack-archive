@@ -399,3 +399,11 @@ resetVpnConnection=com.cloud.api.commands.ResetVpnConnectionCmd;15
 listVpnCustomerGateways=com.cloud.api.commands.ListVpnCustomerGatewaysCmd;15
 listVpnGateways=com.cloud.api.commands.ListVpnGatewaysCmd;15
 listVpnConnections=com.cloud.api.commands.ListVpnConnectionsCmd;15
+
+### SNMP Commands
+registerSnmpManager=com.cloud.api.commands.RegisterSnmpManagerCmd;1
+enableSnmpManager=com.cloud.api.commands.EnableSnmpManagerCmd;1
+updateSnmpManager=com.cloud.api.commands.UpdateSnmpManagerCmd;1
+deleteSnmpManager=com.cloud.api.commands.DeleteSnmpManagerCmd;1
+listSnmpManagers=com.cloud.api.commands.ListSnmpManagersCmd;1
+

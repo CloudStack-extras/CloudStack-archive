@@ -20,6 +20,8 @@ import java.util.Map;
 import com.cloud.agent.manager.ClusteredAgentManagerImpl;
 import com.cloud.alert.AlertManagerImpl;
 import com.cloud.alert.dao.AlertDaoImpl;
+import com.cloud.alert.snmp.SnmpManagerImpl;
+import com.cloud.alert.snmp.dao.SnmpManagersDaoImpl;
 import com.cloud.async.AsyncJobExecutorContextImpl;
 import com.cloud.async.AsyncJobManagerImpl;
 import com.cloud.async.SyncQueueManagerImpl;
@@ -268,6 +270,7 @@ public class DefaultComponentLibrary extends ComponentLibraryBase implements Com
         addDao("SecurityGroupWorkDao", SecurityGroupWorkDaoImpl.class);
         addDao("VmRulesetLogDao", VmRulesetLogDaoImpl.class);
         addDao("AlertDao", AlertDaoImpl.class);
+        addDao("SnmpManagersDao", SnmpManagersDaoImpl.class);
         addDao("CapacityDao", CapacityDaoImpl.class);
         addDao("DomainDao", DomainDaoImpl.class);
         addDao("AccountDao", AccountDaoImpl.class);
@@ -396,6 +399,7 @@ public class DefaultComponentLibrary extends ComponentLibraryBase implements Com
         addManager("upgrade manager", UpgradeManagerImpl.class);
         addManager("StorageManager", StorageManagerImpl.class);
         addManager("Alert Manager", AlertManagerImpl.class);
+        addManager("SNMP Manager", SnmpManagerImpl.class);
         addManager("Template Manager", TemplateManagerImpl.class);
         addManager("Snapshot Manager", SnapshotManagerImpl.class);
         addManager("SnapshotScheduler", SnapshotSchedulerImpl.class);

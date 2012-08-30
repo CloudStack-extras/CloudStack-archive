@@ -10,5 +10,8 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/tools"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/vmware-base"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/agent"/>
+	<classpathentry kind="lib" path="/home/anshul/snmpjars/snmp4j-2.1.0.jar"/>
+	<classpathentry kind="lib" path="/home/anshul/snmpjars/snmp4j-2.1.0-javadoc.jar"/>
+	<classpathentry kind="lib" path="/home/anshul/snmpjars/snmp4j-agent-2.0.6.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
