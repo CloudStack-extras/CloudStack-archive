@@ -9,7 +9,7 @@ usage() {
 }
 
 
-system=
+system="x"
 router=
 all=
 db=localhost
@@ -19,7 +19,7 @@ password=
 help=
 maxthreads=10
 LOGFILE=cloud.log
-destroyssvm=
+destroyssvm="x"
 
 
 while getopts 'sarhncd:m:u:p:t:l:' OPTION
