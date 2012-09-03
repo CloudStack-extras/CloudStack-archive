@@ -5350,7 +5350,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
     private ApiClient getApiClient() {
         ApiClient apiClient = null;
-        final String mtwilsonfile = "/root/mtwilson.properties";
+        final String mtwilsonfile = "/home/mtwilson.properties";
 
         try {
             apiClient = new ApiClient(ConfigurationFactory.fromPropertiesFile(new File(mtwilsonfile)));

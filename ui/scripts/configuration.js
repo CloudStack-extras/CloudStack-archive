@@ -98,7 +98,7 @@
                     }
                   },
                  trustedhost:{
-                   label:'Compliant Host',
+                   label:'Trusted Host',
                    isBoolean: true,
                    isChecked: false
                   },
@@ -315,7 +315,7 @@
                     },
                     networkrate: { label: 'label.network.rate' },
                     trustedhost: {
-                     label:'Compliant Host',
+                     label:'Trusted Host',
                      converter:function(booleanValue) {
                                   if(booleanValue == true)
                                   return "Yes";

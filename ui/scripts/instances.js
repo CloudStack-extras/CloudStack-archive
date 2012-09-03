@@ -55,7 +55,7 @@
         },
         
         trustedhost:{
-            label: 'Compliant Host',
+            label: 'Trusted Host',
              converter: function(booleanValue) {
                     if(booleanValue == true)
                       return "Yes";
@@ -936,7 +936,7 @@
                         
                         var items = [];
                         $(hosts).each(function() {
-                          items.push({id: this.id, description: ( this.name + " (" + (this.suitableformigration? "Suitable": "Not Suitable")+ (this.offeringallowsmigration ? "":",Not Compliant")  + ")" )});
+                          items.push({id: this.id, description: ( this.name + " (" + (this.suitableformigration? "Suitable": "Not Suitable")+ (this.offeringallowsmigration ? "":",Not Trusted")  + ")" )});
                           
 
                        });
@@ -1165,7 +1165,7 @@
 								zonename: { label: 'label.zone.name', isEditable: false },
 								hostname: { label: 'label.host' },  
                                                                 trustedhost:{
-						                    label: 'Compliant Host',
+						                    label: 'Trusted Host',
                   					            converter:function(booleanValue) {
                                 					  if(booleanValue == true)
                                  						 return "Yes";
