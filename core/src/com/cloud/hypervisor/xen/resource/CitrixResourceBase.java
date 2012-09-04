@@ -5376,7 +5376,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
     }
 
     private boolean isTrusted(String host) {
-        boolean trusted = false;
+        boolean trustedHost = false;
         ApiClient apiClient = getApiClient();
 
         if (apiClient != null) {
@@ -5384,9 +5384,19 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                 String samlForHost = apiClient.getSamlForHost(new Hostname(host));
                 TrustAssertion trustAssertion = apiClient.verifyTrustAssertion(samlForHost);
                 if (trustAssertion.isValid()) {
-                    trusted = true;
                     for (String attr : trustAssertion.getAttributeNames()) {
                         s_logger.info("Signed attribute: " + attr + ":" + trustAssertion.getStringAttribute(attr));
+                    }
+
+                    // The host is trusted only if all three attributes are reported as true.
+                    String trustedBios = trustAssertion.getStringAttribute("Trusted_BIOS");
+                    String trustedVmm = trustAssertion.getStringAttribute("Trusted_VMM");
+                    String trusted = trustAssertion.getStringAttribute("Trusted");
+                    if (trustedBios != null && trustedBios.equalsIgnoreCase("true") &&
+                            trustedVmm != null && trustedVmm.equalsIgnoreCase("true") &&
+                            trusted != null && trusted.equalsIgnoreCase("true")) {
+                        trustedHost = true;
+                        s_logger.info("Trust assertion successful for host " + host);
                     }
                 } else {
                     s_logger.info("Trust assertion failed for host " + host);
@@ -5404,7 +5414,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             s_logger.error("Couldn't get the api client object to talk to mtw server.");
         }
 
-        return trusted;
+        return trustedHost;
     }
 
     protected void fillHostInfo(Connection conn, StartupRoutingCommand cmd) {
