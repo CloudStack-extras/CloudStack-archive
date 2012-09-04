@@ -363,12 +363,31 @@
         });
 
         var loadCloudStack = function() {
-          var plugins = $(cloudStack.plugins).map(function(index, plugin) {
-            return 'plugins/' + plugin.toString() + '/' + plugin.toString() + '.js';
-          }).toArray();
+          var loadCss = function(url) {
+            var link = document.createElement("link");
+            link.type = "text/css";
+            link.rel = "stylesheet";
+            link.href = url;
+            document.getElementsByTagName("head")[0].appendChild(link);
+          }
 
-          // Load plugins
-          require(plugins, function() {
+          var mapPluginPath = function(ext){
+            return $(cloudStack.plugins).map(function(index, pluginID) {
+              pluginID = pluginID.toString();
+
+              return 'plugins/' + pluginID + '/' + pluginID + '.' + ext;
+            }).toArray();
+          };
+
+          // Load plugin CSS
+          $(mapPluginPath('css')).each(function() {
+            var cssPath = this.toString();
+
+            loadCss(cssPath);
+          });
+
+          // Load plugin JS
+          require(mapPluginPath('js'), function() {
             // Show cloudStack main UI
             $container.cloudStack($.extend(cloudStackArgs, { hasLogo: loginArgs.eula }));
           });                        
