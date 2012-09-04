@@ -1532,6 +1532,7 @@
     <script src="lib/date.js" type="text/javascript"></script>
     <script src="lib/jquery.cookies.js" type="text/javascript"></script>
     <script src="lib/jquery.md5.js" type="text/javascript" ></script>
+    <script src="lib/require.js" type="text/javascript" ></script>
 		
     <script src="lib/excanvas.js"></script>
     <script src="lib/flot/jquery.flot.js" type="text/javascript"></script>
@@ -1551,6 +1552,7 @@
     <script type="text/javascript" src="scripts/ui/utils.js?t=<%=now%>"></script>
     <script type="text/javascript" src="scripts/ui/events.js?t=<%=now%>"></script>
     <script type="text/javascript" src="scripts/ui/dialog.js?t=<%=now%>"></script>
+    <script type="text/javascript" src="plugins/plugins.js?t=<%=now%>"></scrip>t
     
     <script type="text/javascript" src="scripts/ui/widgets/multiEdit.js?t=<%=now%>"></script>
     <script type="text/javascript" src="scripts/ui/widgets/overlay.js?t=<%=now%>"></script>
@@ -1598,8 +1600,6 @@
     <script type="text/javascript" src="scripts/ui-custom/zoneWizard.js?t=<%=now%>"></script>
     <script type="text/javascript" src="scripts/system.js?t=<%=now%>"></script>
     <script type="text/javascript" src="scripts/domains.js?t=<%=now%>"></script>
-
-    <script type="text/javascript" src="plugins/testPlugin/testPlugin.js?t=<%=now%>"></script>
   </body>
 </html>
 <jsp:include page="dictionary.jsp" />

@@ -35,9 +35,9 @@
           }) : null;
 
     $.each(args.sections, function(sectionID, args) {
-      if (preFilter && $.inArray(sectionID, preFilter) == -1) {
-        return true;
-      }
+      //if (preFilter && $.inArray(sectionID, preFilter) == -1) {
+      //  return true;
+      //}
 
       var $li = $('<li>')
             .addClass('navigation-item')

@@ -362,6 +362,18 @@
           context: context
         });
 
+        var loadCloudStack = function() {
+          var plugins = $(cloudStack.plugins).map(function(index, plugin) {
+            return 'plugins/' + plugin.toString() + '/' + plugin.toString() + '.js';
+          });
+          
+          // Load plugins
+          require(['plugins/testPlugin/testPlugin.js'], function() {
+            // Show cloudStack main UI
+            $container.cloudStack($.extend(cloudStackArgs, { hasLogo: loginArgs.eula }));
+          });                        
+        };
+
         // Check to invoke install wizard
         cloudStack.installWizard.check({
           context: context,
@@ -373,17 +385,13 @@
                     $container: $container,
                     context: context,
                     eula: eulaHTML,
-                    complete: function() {
-                      // Show cloudStack main UI
-                      $container.cloudStack($.extend(cloudStackArgs, { hasLogo: loginArgs.eula }));
-                    }
+                    complete: loadCloudStack
                   });
                 };
 
                 initInstallWizard(loginArgs.eula);
               } else {
-                // Show cloudStack main UI
-                $container.cloudStack($.extend(cloudStackArgs, { hasLogo: loginArgs.eula }));
+                loadCloudStack();
               }
             }
           }
