@@ -1133,6 +1133,7 @@
                  data[param+ '.name']=name;
                  data[param+ '.value']=value;
                  index++;
+                 delete data[name];
 
                  return true;
                });
@@ -1216,7 +1217,8 @@
                  data[param+ '.name']=name;
                  data[param+ '.value']=value;
                  index++;
-
+                 delete data[name];
+                 
                  return true;
                });
 
