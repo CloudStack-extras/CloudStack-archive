@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Version @VERSION@
+# Version 2.2.14.20120210101530
 #
 # A plugin for executing script needed by vmops cloud 
 
@@ -1063,10 +1063,8 @@ def cleanup_rules(session, args):
             util.SMlog("vm " + chain + " is not running, cleaning up")
             cleanup.append(chain)
                 
-    for vm_name in cleanup:
-        destroy_network_rules_for_vm(session, {'vmName':vm_name})
                     
-    util.SMlog("Cleaned up rules for " + str(len(cleanup)) + " chains")
+    util.SMlog("Did not clean up rules for " + str(len(cleanup)) + " chains")
     return str(len(cleanup))                
   except Exception, ex:
     util.SMlog("Failed to cleanup rules, reason= " + str(ex))
