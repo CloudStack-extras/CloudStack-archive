@@ -365,10 +365,10 @@
         var loadCloudStack = function() {
           var plugins = $(cloudStack.plugins).map(function(index, plugin) {
             return 'plugins/' + plugin.toString() + '/' + plugin.toString() + '.js';
-          });
-          
+          }).toArray();
+
           // Load plugins
-          require(['plugins/testPlugin/testPlugin.js'], function() {
+          require(plugins, function() {
             // Show cloudStack main UI
             $container.cloudStack($.extend(cloudStackArgs, { hasLogo: loginArgs.eula }));
           });                        
