@@ -1,3 +1,9 @@
+/*
+ * Put all your CSS customizations in here
+ * 
+ * -- this CSS file will be loaded after the main
+ *    CloudStack CSS is loaded
+ */
 #navigation ul li.testPlugin span.icon {
   background: url('icon.png') no-repeat 0 0;
 }

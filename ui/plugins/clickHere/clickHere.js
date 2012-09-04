@@ -4,6 +4,6 @@ cloudStack.sections.clickHere = {
   show: function() {
     window.open('http://www.google.com/', '_blank');
 
-    return $('<div>').html('Loading google...');
+    return 'Loading Google...';
   }
 };
