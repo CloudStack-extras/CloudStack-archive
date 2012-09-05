@@ -349,6 +349,7 @@
         // Tooltip
         $input.focus(function() {
           $input.toolTip({tooltip:'.tooltip-box',mode:'focus'});          
+
           console.log('tooltip init->' + $input.attr('name'));
         });
         $input.blur(function() {
