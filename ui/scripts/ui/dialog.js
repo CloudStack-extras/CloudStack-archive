@@ -341,8 +341,15 @@
 				if(field.validation != null)
           $input.data('validation-rules', field.validation);
 				else
-          $input.data('validation-rules', {});	
-					
+          $input.data('validation-rules', {});
+
+        // Tooltip
+        $input.focus(function() {
+          console.log('tooltip init->' + $input.attr('name'));
+        });
+        $input.blur(function() {
+          console.log('tooltip remove->' + $input.attr('name'));
+        });
       });
      
       var getFormValues = function() {
