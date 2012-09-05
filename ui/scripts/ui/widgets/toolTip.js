@@ -14,7 +14,13 @@
   
   $.widget("cloudStack.toolTip", {
     
-    _init: function() {
+    _init: function(args) {
+
+         var context = this.options.context;
+         var dataProvider = this.options.dataProvider;
+         var actions = this.options.actions;
+         var $tooltip = $('<div>').addClass('tooltip-box');
+
         if(this.options.mode == 'hover'){
             $(this.element).hover(hoverHandler,outHandler);
         }
@@ -45,7 +51,25 @@
 $.extend($.cloudStack.toolTip, {
     defaults: {
         toolTip: '',
-        onShow: undefined,
+        onShow: function(sender){
+          //Flipping arrow and text
+
+   var $tooltip = $('.tooltip-box');
+
+   //Switch styles based on how close to viewport border
+
+   if($(window).width()-sender.target.offset().left <= $tooltip.width()) {
+
+      $('.tooltiptextleft',$tooltip).removeClass('tooltiptextleft').addClass('tooltiptextright');
+      $('.tooltiparrowleft',$tooltip).removeClass('tooltiparrowleft').addClass('tooltiparrowright');
+
+   }
+   else{
+      $('.tooltiptextright',$tooltip).removeClass('tooltiptextright').addClass('tooltiptextleft');
+      $('.tooltiparrowright',$tooltip).removeClass('tooltiparrowright').addClass('tooltiparrowleft');
+         }
+
+        },
         onHide: undefined,
         mode: 'hover',
         // provide a speed for the animation
@@ -95,7 +119,7 @@ function outHandler(event)
     
     //Call Hide method of the tooltip Widget,
     //Hide method should play on any required animations
-    $.data(this,'tooltip').hide();
+    $.data(this,'toolTip').hide();
 };
 function prepare(jObj, options)
 {
