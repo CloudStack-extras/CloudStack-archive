@@ -34,7 +34,7 @@
       // The actions listed here will display in a separate column,
       // to the right of each row
       actions: {
-        launch: {
+        viewConsole: {
           label: 'Launch Group',
           action: {
             externalLink: {
