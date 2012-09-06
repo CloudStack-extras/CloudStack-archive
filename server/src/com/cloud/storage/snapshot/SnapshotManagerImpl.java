@@ -764,7 +764,7 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
 
         _accountMgr.checkAccess(caller, null, true, snapshotCheck);
 
-        if( !Status.BackedUp.equals(snapshotCheck.getStatus() ) ) {
+        if( Status.Error.equals(snapshotCheck.getStatus() ) ) {
         	_snapshotDao.remove(snapshotId);
         	return true;
         }
