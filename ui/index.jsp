@@ -1597,7 +1597,10 @@
     <script type="text/javascript" src="scripts/ui-custom/physicalResources.js?t=<%=now%>"></script>
     <script type="text/javascript" src="scripts/ui-custom/zoneWizard.js?t=<%=now%>"></script>
     <script type="text/javascript" src="scripts/system.js?t=<%=now%>"></script>
-    <script type="text/javascript" src="scripts/domains.js?t=<%=now%>"></script>   
+    <script type="text/javascript" src="scripts/domains.js?t=<%=now%>"></script>
+
+    <!-- Custom code -->
+    <script type="text/javascript" src="custom/customGroups.js"></script>
   </body>
 </html>
 <jsp:include page="dictionary.jsp" />
