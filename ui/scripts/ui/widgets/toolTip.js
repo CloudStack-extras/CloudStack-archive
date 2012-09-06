@@ -20,7 +20,8 @@
          var dataProvider = this.options.dataProvider;
          var actions = this.options.actions;
          var $tooltip = $('<div>').addClass('tooltip-box');
-
+         var $container = this.element.addClass('tooltip');
+         $tooltip.appendTo($container);
         if(this.options.mode == 'hover'){
             $(this.element).hover(hoverHandler,outHandler);
         }
