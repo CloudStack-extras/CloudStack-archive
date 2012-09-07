@@ -46,6 +46,8 @@ import com.cloud.host.Host;
 import com.cloud.host.HostStats;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
+import com.cloud.host.updates.HostUpdatesVO;
+import com.cloud.host.updates.dao.HostUpdatesDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.IPAddressVO;
 import com.cloud.network.IpAddress;
@@ -224,6 +226,7 @@ public class ApiDBUtils {
     private static CounterDao _counterDao;
     private static UserVmDetailsDao _userVmDetailsDao;
     private static SSHKeyPairDao _sshKeyPairDao;
+    private static HostUpdatesDao _hostUpdatesDao;
 
     static {
         _ms = (ManagementServer) ComponentLocator.getComponent(ManagementServer.Name);
@@ -290,6 +293,7 @@ public class ApiDBUtils {
         _counterDao = locator.getDao(CounterDao.class);
         _sshKeyPairDao = locator.getDao(SSHKeyPairDao.class);
         _userVmDetailsDao = locator.getDao(UserVmDetailsDao.class);
+        _hostUpdatesDao = locator.getDao(HostUpdatesDao.class);
 
 
         // Note: stats collector should already have been initialized by this time, otherwise a null instance is
@@ -882,5 +886,9 @@ public class ApiDBUtils {
 
     public static UserVmDetailVO  findPublicKeyByVmId(long vmId) {
         return _userVmDetailsDao.findDetail(vmId, "SSH.PublicKey");
+    }
+
+    public static HostUpdatesVO  findUpdateByPatchId(long patchId) {
+        return _hostUpdatesDao.findById(patchId);
     }
 }
