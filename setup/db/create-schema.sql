@@ -2462,5 +2462,20 @@ INSERT INTO `cloud`.`counter` (id, source, name, value,created) VALUES (2,'snmp'
 INSERT INTO `cloud`.`counter` (id, source, name, value,created) VALUES (3,'snmp','Linux CPU Idle - percentage', '1.3.6.1.4.1.2021.11.11.0', now());
 INSERT INTO `cloud`.`counter` (id, source, name, value,created) VALUES (100,'netscaler','Response Time - microseconds', 'RESPTIME', now());
 
+CREATE TABLE `cloud`.`host_updates` (
+  `id` bigint unsigned NOT NULL auto_increment,
+  `uuid` varchar(40),
+  `label` varchar(40),
+  `description` varchar(999),
+  `after_apply_guidance` varchar(40),
+  `host_id` bigint unsigned NOT NULL,
+  `update_applied` tinyint(1) NOT NULL default '0',
+  `URL` varchar(999),
+  `timestamp` varchar(90),
+  PRIMARY KEY  (`id`),
+  CONSTRAINT `uc_host_updates__uuid` UNIQUE (`uuid`),
+  CONSTRAINT `fk_host_updates__host_id` FOREIGN KEY (`host_id`) REFERENCES `host`(`id`) ON DELETE CASCADE,
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 SET foreign_key_checks = 1;
 
