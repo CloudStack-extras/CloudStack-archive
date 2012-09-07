@@ -60,6 +60,7 @@ import com.cloud.api.commands.DestroySystemVmCmd;
 import com.cloud.api.commands.ExtractVolumeCmd;
 import com.cloud.api.commands.GetVMPasswordCmd;
 import com.cloud.api.commands.ListAlertsCmd;
+import com.cloud.api.commands.ListHostUpdatesCmd;
 import com.cloud.api.commands.ListAsyncJobsCmd;
 import com.cloud.api.commands.ListCapabilitiesCmd;
 import com.cloud.api.commands.ListCapacityCmd;
@@ -147,6 +148,9 @@ import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.host.dao.HostDetailsDao;
 import com.cloud.host.dao.HostTagsDao;
+import com.cloud.host.updates.HostUpdates;
+import com.cloud.host.updates.HostUpdatesVO;
+import com.cloud.host.updates.dao.HostUpdatesDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.HypervisorCapabilities;
 import com.cloud.hypervisor.HypervisorCapabilitiesVO;
@@ -281,6 +285,7 @@ public class ManagementServerImpl implements ManagementServer {
     private final DomainDao _domainDao;
     private final AccountDao _accountDao;
     private final AlertDao _alertDao;
+    private final HostUpdatesDao _hostUpdatesDao;
     private final CapacityDao _capacityDao;
     private final GuestOSDao _guestOSDao;
     private final GuestOSCategoryDao _guestOSCategoryDao;
@@ -362,6 +367,7 @@ public class ManagementServerImpl implements ManagementServer {
         _domainDao = locator.getDao(DomainDao.class);
         _accountDao = locator.getDao(AccountDao.class);
         _alertDao = locator.getDao(AlertDao.class);
+        _hostUpdatesDao = locator.getDao(HostUpdatesDao.class);
         _capacityDao = locator.getDao(CapacityDao.class);
         _guestOSDao = locator.getDao(GuestOSDao.class);
         _guestOSCategoryDao = locator.getDao(GuestOSCategoryDao.class);
@@ -2070,6 +2076,32 @@ public class ManagementServerImpl implements ManagementServer {
         }
 
         return _alertDao.search(sc, searchFilter);
+    }
+
+    @Override
+    public List<? extends HostUpdates> searchForHostUpdates(ListHostUpdatesCmd cmd){
+        Filter searchFilter = new Filter(HostUpdatesVO.class, "timestamp", false, cmd.getStartIndex(), cmd.getPageSizeVal());
+        SearchCriteria<HostUpdatesVO> sc = _hostUpdatesDao.createSearchCriteria();
+
+        Long id = cmd.getId();
+        Long hostId = cmd.getHostId();
+        Boolean applied = cmd.isApplied();
+
+        _accountMgr.checkAccessAndSpecifyAuthority(UserContext.current().getCaller(), null);
+        if (id != null) {
+        	sc.addAnd("id", SearchCriteria.Op.EQ, id);
+        }
+        
+        if (hostId != null) {
+            sc.addAnd("hostId", SearchCriteria.Op.EQ, hostId);
+        }
+        
+        if (applied != null) {
+        	sc.addAnd("updateApplied", SearchCriteria.Op.EQ, applied);
+        }
+        	
+
+        return _hostUpdatesDao.search(sc, searchFilter);
     }
 
     @Override

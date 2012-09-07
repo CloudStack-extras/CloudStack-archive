@@ -271,6 +271,7 @@ public class ConfigurationManagerImpl implements ConfigurationManager, Configura
         configValuesForValidation.add("wait");
         configValuesForValidation.add("xen.heartbeat.interval");
         configValuesForValidation.add("vpc.max.networks");
+        configValuesForValidation.add("xen.update.check.interval");
     }
 
     @Override

@@ -7925,7 +7925,37 @@
 										}
 									});		
 								}
-							}
+							},
+							hostUpdates: {
+		            title: 'Updates',
+		            multiple: true,
+		            cache:false,
+		            fields: [
+		              {
+		                name: {label:'' , header: true},
+		                url: { label: 'URL' },
+		                timestamp: { label: 'Timestamp' },
+		              }
+		            ],
+		            dataProvider: function(args) {
+		             $.ajax({
+		                     url:createURL("listHostUpdates"),
+		                     dataType: "json",
+		                     success:function(json) {
+
+		                     args.response.success({
+		                     data: $.map(json.listhostupdatesresponse.update, function(update, index) {
+		                     var name = update.description;
+		                     return $.extend(update, {
+		                        name: name
+		                               });
+		                            })
+		                        });
+
+		                     }
+		                });
+		            }
+		          }
             }
           }
         }
