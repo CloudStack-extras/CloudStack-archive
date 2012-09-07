@@ -402,6 +402,9 @@ public class ApiConstants {
     public static final String CONDITION_ID = "conditionid";
     public static final String CONDITION_IDS = "conditionids";
     public static final String AUTOSCALE_USER_ID = "autoscaleuserid";
+    public static final String HOST_UPDATE_LABEL = "xenupdatelabel";
+    public static final String AFTER_APPLY_GUIDANCE = "afterapplyguidance";
+    public static final String TIMESTAMP = "timestamp";
 
     public enum HostDetails {
         all, capacity, events, stats, min;

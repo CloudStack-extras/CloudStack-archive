@@ -198,6 +198,7 @@ listEventTypes=com.cloud.api.commands.ListEventTypesCmd;15
 
 #### alerts commands
 listAlerts=com.cloud.api.commands.ListAlertsCmd;3
+listHostUpdates=com.cloud.api.commands.ListHostUpdatesCmd;15
 
 #### system capacity commands
 listCapacity=com.cloud.api.commands.ListCapacityCmd;3

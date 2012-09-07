@@ -38,6 +38,7 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Map.Entry;
 
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
@@ -91,6 +92,8 @@ import com.cloud.agent.api.GetVmStatsCommand;
 import com.cloud.agent.api.GetVncPortAnswer;
 import com.cloud.agent.api.GetVncPortCommand;
 import com.cloud.agent.api.HostStatsEntry;
+import com.cloud.agent.api.HostUpdatesAnswer;
+import com.cloud.agent.api.HostUpdatesCommand;
 import com.cloud.agent.api.MaintainAnswer;
 import com.cloud.agent.api.MaintainCommand;
 import com.cloud.agent.api.ManageSnapshotAnswer;
@@ -186,10 +189,10 @@ import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.HAProxyConfigurator;
 import com.cloud.network.LoadBalancerConfigurator;
 import com.cloud.network.Networks;
+import com.cloud.network.PhysicalNetworkSetupInfo;
 import com.cloud.network.Networks.BroadcastDomainType;
 import com.cloud.network.Networks.IsolationType;
 import com.cloud.network.Networks.TrafficType;
-import com.cloud.network.PhysicalNetworkSetupInfo;
 import com.cloud.network.ovs.OvsCreateGreTunnelAnswer;
 import com.cloud.network.ovs.OvsCreateGreTunnelCommand;
 import com.cloud.network.ovs.OvsCreateTunnelAnswer;
@@ -205,10 +208,10 @@ import com.cloud.network.ovs.OvsSetupBridgeCommand;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.hypervisor.HypervisorResource;
 import com.cloud.storage.Storage;
-import com.cloud.storage.Storage.ImageFormat;
-import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeVO;
+import com.cloud.storage.Storage.ImageFormat;
+import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.storage.template.TemplateInfo;
 import com.cloud.template.VirtualMachineTemplate.BootloaderType;
 import com.cloud.utils.NumbersUtil;
@@ -229,17 +232,12 @@ import com.xensource.xenapi.HostMetrics;
 import com.xensource.xenapi.Network;
 import com.xensource.xenapi.PBD;
 import com.xensource.xenapi.PIF;
-import com.xensource.xenapi.PIF.Record;
 import com.xensource.xenapi.Pool;
+import com.xensource.xenapi.PoolPatch;
 import com.xensource.xenapi.SR;
 import com.xensource.xenapi.Session;
 import com.xensource.xenapi.Task;
 import com.xensource.xenapi.Types;
-import com.xensource.xenapi.Types.BadServerResponse;
-import com.xensource.xenapi.Types.ConsoleProtocol;
-import com.xensource.xenapi.Types.IpConfigurationMode;
-import com.xensource.xenapi.Types.VmPowerState;
-import com.xensource.xenapi.Types.XenAPIException;
 import com.xensource.xenapi.VBD;
 import com.xensource.xenapi.VDI;
 import com.xensource.xenapi.VIF;
@@ -247,6 +245,12 @@ import com.xensource.xenapi.VLAN;
 import com.xensource.xenapi.VM;
 import com.xensource.xenapi.VMGuestMetrics;
 import com.xensource.xenapi.XenAPIObject;
+import com.xensource.xenapi.PIF.Record;
+import com.xensource.xenapi.Types.BadServerResponse;
+import com.xensource.xenapi.Types.ConsoleProtocol;
+import com.xensource.xenapi.Types.IpConfigurationMode;
+import com.xensource.xenapi.Types.VmPowerState;
+import com.xensource.xenapi.Types.XenAPIException;
 
 /**
  * CitrixResourceBase encapsulates the calls to the XenServer Xapi process
@@ -405,6 +409,8 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             return execute((CreateCommand) cmd);
         } else if (clazz == SetPortForwardingRulesCommand.class) {
             return execute((SetPortForwardingRulesCommand) cmd);
+        } else if (clazz == HostUpdatesCommand.class) {
+            return execute((HostUpdatesCommand) cmd);
         } else if (clazz == SetStaticNatRulesCommand.class) {
             return execute((SetStaticNatRulesCommand) cmd);
         }  else if (clazz == LoadBalancerConfigCommand.class) {
@@ -1156,6 +1162,31 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             s_logger.debug("Cannot destory CD-ROM device for VM " + vmName + " due to " + e.toString(), e);
         }
     }
+        
+	protected HostUpdatesAnswer execute(HostUpdatesCommand cmd){
+    	Connection conn = getConnection();
+   	
+    	List<String> appliedPatchesList = new ArrayList<String>();
+        Map<PoolPatch, com.xensource.xenapi.PoolPatch.Record> appliedPatches = null;
+		try {
+			appliedPatches = PoolPatch.getAllRecords(conn);
+		} catch (BadServerResponse e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (XenAPIException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (XmlRpcException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		for(Entry<PoolPatch, com.xensource.xenapi.PoolPatch.Record> appliedPatch : appliedPatches.entrySet())
+		{
+			String appliedPatchUuid = appliedPatch.getValue().uuid;
+			appliedPatchesList.add(appliedPatchUuid);
+		}
+        return new HostUpdatesAnswer(cmd, appliedPatchesList);
+	}
 
     protected CheckSshAnswer execute(CheckSshCommand cmd) {
         Connection conn = getConnection();
