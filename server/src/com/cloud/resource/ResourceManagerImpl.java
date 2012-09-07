@@ -84,14 +84,15 @@ import com.cloud.ha.HighAvailabilityManager;
 import com.cloud.ha.HighAvailabilityManager.WorkType;
 import com.cloud.host.DetailVO;
 import com.cloud.host.Host;
-import com.cloud.host.Host.Type;
 import com.cloud.host.HostStats;
 import com.cloud.host.HostVO;
 import com.cloud.host.Status;
+import com.cloud.host.Host.Type;
 import com.cloud.host.Status.Event;
 import com.cloud.host.dao.HostDao;
 import com.cloud.host.dao.HostDetailsDao;
 import com.cloud.host.dao.HostTagsDao;
+import com.cloud.host.updates.dao.HostUpdatesRefDao;
 import com.cloud.hypervisor.Hypervisor;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.kvm.resource.KvmDummyResourceBase;
@@ -101,8 +102,8 @@ import com.cloud.network.dao.CiscoNexusVSMDeviceDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.org.Cluster;
 import com.cloud.org.Grouping;
-import com.cloud.org.Grouping.AllocationState;
 import com.cloud.org.Managed;
+import com.cloud.org.Grouping.AllocationState;
 import com.cloud.service.ServiceOfferingVO;
 import com.cloud.storage.GuestOSCategoryVO;
 import com.cloud.storage.StorageManager;
@@ -135,10 +136,10 @@ import com.cloud.utils.component.Inject;
 import com.cloud.utils.component.Manager;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.SearchCriteria;
-import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.SearchCriteria2;
 import com.cloud.utils.db.SearchCriteriaService;
 import com.cloud.utils.db.Transaction;
+import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.net.Ip;
@@ -146,8 +147,8 @@ import com.cloud.utils.net.NetUtils;
 import com.cloud.utils.ssh.SSHCmdHelper;
 import com.cloud.utils.ssh.sshException;
 import com.cloud.vm.VMInstanceVO;
-import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.VirtualMachineManager;
+import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.dao.VMInstanceDao;
 
 @Local({ ResourceManager.class, ResourceService.class })
@@ -185,6 +186,8 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
     protected SwiftManager _swiftMgr;
     @Inject
     protected HostDetailsDao                 _hostDetailsDao;
+    @Inject
+    protected HostUpdatesRefDao                 _hostUpdatesRefDao;
     @Inject
     protected ConfigurationDao _configDao;
     @Inject
@@ -867,6 +870,9 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
 
         // delete host details
         _hostDetailsDao.deleteDetails(hostId);
+        
+        // delete host updates details
+        _hostUpdatesRefDao.deletePatchRef(hostId);
 
         host.setGuid(null);
         Long clusterId = host.getClusterId();

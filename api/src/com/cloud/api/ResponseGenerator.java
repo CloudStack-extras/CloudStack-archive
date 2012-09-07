@@ -38,6 +38,7 @@ import com.cloud.api.response.ExtractResponse;
 import com.cloud.api.response.FirewallResponse;
 import com.cloud.api.response.FirewallRuleResponse;
 import com.cloud.api.response.HostResponse;
+import com.cloud.api.response.HostUpdatesResponse;
 import com.cloud.api.response.HypervisorCapabilitiesResponse;
 import com.cloud.api.response.IPAddressResponse;
 import com.cloud.api.response.InstanceGroupResponse;
@@ -99,6 +100,7 @@ import com.cloud.dc.Vlan;
 import com.cloud.domain.Domain;
 import com.cloud.event.Event;
 import com.cloud.host.Host;
+import com.cloud.host.updates.HostUpdatesRef;
 import com.cloud.hypervisor.HypervisorCapabilities;
 import com.cloud.network.IpAddress;
 import com.cloud.network.Network;
@@ -360,4 +362,6 @@ public interface ResponseGenerator {
     AutoScaleVmProfileResponse createAutoScaleVmProfileResponse(AutoScaleVmProfile profile);
 
     AutoScaleVmGroupResponse createAutoScaleVmGroupResponse(AutoScaleVmGroup vmGroup);
+    
+    HostUpdatesResponse createHostUpdatesResponse(HostUpdatesRef update);
 }
