@@ -130,7 +130,6 @@ function JsX11KeyboardMapper() {
 	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F11] 				= AjaxViewer.X11_KEY_F11;
 	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F12] 				= AjaxViewer.X11_KEY_F12;
 	this.jsX11KeysymMap[AjaxViewer.JS_KEY_SHIFT] 			= AjaxViewer.X11_KEY_SHIFT;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_CTRL] 			= AjaxViewer.X11_KEY_CTRL;
 	this.jsX11KeysymMap[AjaxViewer.JS_KEY_ALT] 				= AjaxViewer.X11_KEY_ALT;
 	this.jsX11KeysymMap[AjaxViewer.JS_KEY_GRAVE_ACCENT] 	= AjaxViewer.X11_KEY_GRAVE_ACCENT;
 	this.jsX11KeysymMap[AjaxViewer.JS_KEY_SUBSTRACT] 		= AjaxViewer.X11_KEY_SUBSTRACT;
@@ -283,7 +282,15 @@ JsCookedKeyboardMapper.prototype.inputFeed = function(eventType, code, modifiers
 				return;
 			}
 		}
-		
+		//Fang
+		if(code == 67 || code == 68) {  //c, for ctrl-c or ctrl-d 
+			if((modifiers & AjaxViewer.CTRL_KEY_MASK) != 0) {
+				this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 67, modifiers: modifiers});
+		                this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 67, modifiers: modifiers});
+				// this.mappedInput.push({type : eventType, code: 0xffff, modifiers: modifiers});
+				return;
+			}
+		}
 		var X11Keysym = code;
 		if(this.jsX11KeysymMap[code] != undefined) {
 			X11Keysym = this.jsX11KeysymMap[code];
@@ -303,6 +310,7 @@ JsCookedKeyboardMapper.prototype.inputFeed = function(eventType, code, modifiers
 		// special handling for ALT/CTRL key
 		if(eventType == AjaxViewer.KEY_UP && (code == AjaxViewer.JS_KEY_ALT || code == code == AjaxViewer.JS_KEY_CTRL))
 			this.mappedInput.push({type : eventType, code: this.jsX11KeysymMap[code], modifiers: modifiers});
+	
 		
 	} else if(eventType == AjaxViewer.KEY_PRESS) {
 		var X11Keysym = code;
@@ -323,6 +331,11 @@ JsCookedKeyboardMapper.prototype.inputFeed = function(eventType, code, modifiers
 			this.mappedInput.push({type : AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: modifiers});
 			return;
 		}
+		//FANG
+		 
+		if(code == 13 || code == 8) {   // Enter Key 13, backspaceKey 8 
+		    return;
+		}    
 			
 		this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: X11Keysym, modifiers: modifiers});
 		this.mappedInput.push({type : AjaxViewer.KEY_UP, code: X11Keysym, modifiers: modifiers});
@@ -337,7 +350,6 @@ function AjaxViewer(panelId, imageUrl, updateUrl, tileMap, width, height, tileWi
 	// however, a back door key-sequence can trigger to open the logger window, it is designed to help
 	// trouble-shooting
 	g_logger = new Logger();
-	
 	
 	// FANG - Open logger window
 	//g_logger.enable(true);
