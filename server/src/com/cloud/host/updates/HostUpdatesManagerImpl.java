@@ -4,26 +4,23 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
@@ -35,18 +32,22 @@ import org.xml.sax.SAXException;
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.HostUpdatesAnswer;
 import com.cloud.agent.api.HostUpdatesCommand;
-import com.cloud.configuration.dao.ConfigurationDao;
+import com.cloud.configuration.Config;
+import com.cloud.ha.FenceBuilder;
+import com.cloud.ha.Investigator;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.host.dao.HostDetailsDao;
 import com.cloud.host.updates.dao.HostUpdatesDao;
-import com.cloud.utils.component.ComponentLocator;
+import com.cloud.utils.NumbersUtil;
+import com.cloud.utils.component.Adapters;
 import com.cloud.utils.component.Inject;
+import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.Transaction;
 
 @Local(value={HostUpdatesManager.class})
-public class HostUpdatesManagerImpl extends Xensdk implements HostUpdatesManager { 
+public class HostUpdatesManagerImpl implements HostUpdatesManager { 
 	
 	@Inject
 	protected AgentManager _agentMgr;
@@ -56,15 +57,19 @@ public class HostUpdatesManagerImpl extends Xensdk implements HostUpdatesManager
 	protected HostDetailsDao _hostDetailsDao;
 	@Inject
 	protected HostUpdatesDao _hostUpdatesDao;
+	
+    ScheduledExecutorService _executor;
 	private String _name;
 	private static final Logger s_logger = Logger.getLogger(HostUpdatesManagerImpl.class.getName());
-	private Timer _timer = null;
 	
 	public final static String HYPERVISOR_TYPE = "XenServer";
-	public final static long HEARTBEAT_INTERVAL = 10000;
-	
+	public final static int UPDATE_CHECK_INTERVAL = 10;
+	long _serverId;
+	boolean _stopped;
+	int _updateCheckInterval;
+	Adapters<Investigator> _investigators;
+	Adapters<FenceBuilder> _fenceBuilders;
 	HostUpdatesCommand cmd = null;
-	
 	
 
     private Document getHostVersionsFile(){
@@ -185,7 +190,7 @@ public class HostUpdatesManagerImpl extends Xensdk implements HostUpdatesManager
 		{
 			String patchId = appliedPatchList.get(counter);
     		HostUpdatesVO patch = _hostUpdatesDao.findByUUID(patchId);
-    		if(patch != null)
+    		if(patch != null && !patch.getUpdateApplied())
     		{
     			HostUpdatesVO update = _hostUpdatesDao.lockRow(patch.getId(), true);
     			update.setUpdateApplied(true);
@@ -197,9 +202,7 @@ public class HostUpdatesManagerImpl extends Xensdk implements HostUpdatesManager
     }
 
 	
-	private TimerTask checkHostUpdates() {
-		return new TimerTask() {
-			
+    protected class checkHostUpdates implements Runnable {    
 			@Override
 			public void run() {
 				
@@ -225,26 +228,23 @@ public class HostUpdatesManagerImpl extends Xensdk implements HostUpdatesManager
 								HostUpdatesAnswer updates = (HostUpdatesAnswer) _agentMgr.send(hostId, cmd);
 								List<String> appliedPatchList = updates.getAppliedPatchList();
 								updateAppliedField(appliedPatchList);
-								
-								//System.out.println(updates.getDetails());
 							}
 					}
 				} catch (Throwable e){s_logger.error("Exception in CapacityChecker", e);};
 			}
-		};
 	}
-	@Override
-	public boolean configure(String name, Map<String, Object> params)
-			throws ConfigurationException {
-		_name = name;
+    @Override
+    public boolean configure(final String name, final Map<String, Object> xmlParams) throws ConfigurationException {
+        _name = name;
+        Map<String, String> params = new HashMap<String, String>();
+        
+        _updateCheckInterval = NumbersUtil.parseInt(params.get(Config.XenUpdateCheckInterval.key()),UPDATE_CHECK_INTERVAL);
+        _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("HostUpdateCheck"));
 
-        ComponentLocator locator = ComponentLocator.getCurrentLocator();
-        ConfigurationDao configDao = locator.getDao(ConfigurationDao.class);
-        Map<String, String> configs = configDao.getConfiguration(params);
-        _timer = new Timer();
-		return false;
-	}
+        return true;
+    }
 	
+
 	@Override
 	public String getName() {
 		return _name;
@@ -252,13 +252,13 @@ public class HostUpdatesManagerImpl extends Xensdk implements HostUpdatesManager
 	
 	@Override
 	public boolean start() {
-		_timer.schedule(checkHostUpdates(), HEARTBEAT_INTERVAL, HEARTBEAT_INTERVAL);
+		_executor.scheduleAtFixedRate(new checkHostUpdates(), _updateCheckInterval, _updateCheckInterval, TimeUnit.SECONDS);
 		return true;
 	}
 	
 	@Override
 	public boolean stop() {
-		_timer.cancel();
+		_executor.shutdown();
 		return false;
 	}
 }
