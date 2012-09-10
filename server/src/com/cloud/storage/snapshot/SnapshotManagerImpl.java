@@ -764,6 +764,10 @@ public class SnapshotManagerImpl implements SnapshotManager, SnapshotService, Ma
 
         _accountMgr.checkAccess(caller, null, true, snapshotCheck);
 
+        if( Status.Error.equals(snapshotCheck.getStatus() ) ) {
+        	_snapshotDao.remove(snapshotId);
+        	return true;
+        }
         if( !Status.BackedUp.equals(snapshotCheck.getStatus() ) ) {
             List<IdentityProxy> idList = new ArrayList<IdentityProxy>();
             idList.add(new IdentityProxy(snapshotCheck, snapshotId, "snapshotId"));

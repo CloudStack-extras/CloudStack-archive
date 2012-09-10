@@ -54,7 +54,7 @@ create_acl_chain() {
 
 
 setup_apache2() {
-  logger_it "Setting up apache web server for $dev"
+  logger -t "Setting up apache web server for $dev"
   cp /etc/apache2/vhostexample.conf /etc/apache2/conf.d/vhost$dev.conf
   sed -i -e "s/<VirtualHost.*:80>/<VirtualHost $ip:80>/" /etc/apache2/conf.d/vhost$dev.conf
   sed -i -e "s/<VirtualHost.*:443>/<VirtualHost $ip:443>/" /etc/apache2/conf.d/vhost$dev.conf
@@ -66,7 +66,7 @@ setup_apache2() {
 }
 
 desetup_apache2() {
-  logger_it "Desetting up apache web server for $dev"
+  logger -t "Desetting up apache web server for $dev"
   rm -f /etc/apache2/conf.d/vhost$dev.conf
   service apache2 restart
   sudo iptables -D INPUT -i $dev -d $ip -p tcp -m state --state NEW --dport 80 -j ACCEPT
@@ -108,6 +108,10 @@ create_guest_network() {
   sudo iptables -D INPUT -i $dev -p udp -m udp --dport 53 -j ACCEPT
   sudo iptables -A INPUT -i $dev -p udp -m udp --dport 67 -j ACCEPT
   sudo iptables -A INPUT -i $dev -p udp -m udp --dport 53 -j ACCEPT
+  sudo iptables -D INPUT -i $dev -p tcp -m state --state NEW --dport 8080 -j ACCEPT
+  sudo iptables -D INPUT -i $dev -p tcp -m state --state NEW --dport 80 -j ACCEPT
+  sudo iptables -A INPUT -i $dev -p tcp -m state --state NEW --dport 8080 -j ACCEPT
+  sudo iptables -A INPUT -i $dev -p tcp -m state --state NEW --dport 80 -j ACCEPT
   # restore mark from  connection mark
   local tableName="Table_$dev"
   sudo ip route add $subnet/$mask dev $dev table $tableName proto static
@@ -125,6 +129,8 @@ destroy_guest_network() {
   sudo ip addr del dev $dev $ip/$mask
   sudo iptables -D INPUT -i $dev -p udp -m udp --dport 67 -j ACCEPT
   sudo iptables -D INPUT -i $dev -p udp -m udp --dport 53 -j ACCEPT
+  sudo iptables -D INPUT -i $dev -p tcp -m state --state NEW --dport 8080 -j ACCEPT
+  sudo iptables -D INPUT -i $dev -p tcp -m state --state NEW --dport 80 -j ACCEPT
   sudo iptables -t mangle -D PREROUTING -i $dev -m state --state ESTABLISHED,RELATED -j CONNMARK --restore-mark
   sudo iptables -t nat -A POSTROUTING -s $subnet/$mask -o $dev -j SNAT --to-source $ip
   destroy_acl_chain

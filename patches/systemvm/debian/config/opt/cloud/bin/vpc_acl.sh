@@ -108,7 +108,6 @@ acl_entry_for_guest_network() {
   
   # note that rules are inserted after the RELATED,ESTABLISHED rule 
   # but before the DROP rule
-  local egress=0
   for lcidr in $cidrs
   do
     [ "$prot" == "reverted" ] && continue;
@@ -146,13 +145,6 @@ acl_entry_for_guest_network() {
        break
   done
 
-  if [ $egress -eq 0 ]
-  then
-    sudo iptables -t mangle -A ACL_OUTBOUND_$dev -j ACCEPT 2>/dev/null
-  else
-    sudo iptables -t mangle -A ACL_OUTBOUND_$dev -j DROP 2>/dev/null
-  fi     
- 
   logger -t cloud "$(basename $0): exit apply acl rules for guest network : $gcidr"  
   return $result
 }
@@ -208,6 +200,7 @@ success=0
 
 acl_chain_for_guest_network
 
+egress=0
 for r in $rules_list
 do
   acl_entry_for_guest_network $r
@@ -227,6 +220,12 @@ then
   acl_restore
 else
   logger -t cloud "$(basename $0): deleting backup for guest network: $gcidr"
+  if [ $egress -eq 0 ]
+  then
+    sudo iptables -t mangle -A ACL_OUTBOUND_$dev -j ACCEPT 2>/dev/null
+  else
+    sudo iptables -t mangle -A ACL_OUTBOUND_$dev -j DROP 2>/dev/null
+  fi     
   acl_switch_to_new
 fi
 unlock_exit $success $lock $locked

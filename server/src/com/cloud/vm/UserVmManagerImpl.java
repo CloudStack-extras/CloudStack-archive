@@ -416,6 +416,8 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
                 userVm.setDetail("Encrypted.Password", encryptedPasswd);
                 _vmDao.saveDetails(userVm);
             }
+        } else {
+            throw new CloudRuntimeException("Failed to reset password for the virtual machine ");
         }
 
         return userVm;
@@ -445,15 +447,13 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             VirtualMachineProfile<VMInstanceVO> vmProfile = new VirtualMachineProfileImpl<VMInstanceVO>(vmInstance);
             vmProfile.setParameter(VirtualMachineProfile.Param.VmPassword, password);
 
-            List<? extends UserDataServiceProvider> elements = _networkMgr.getPasswordResetElements();
-
-            boolean result = false;
-            for (UserDataServiceProvider element : elements) {
-                if (element.savePassword(defaultNetwork, defaultNicProfile, vmProfile)) {
-                    result = true;
-                    break;
-                }
+            UserDataServiceProvider element = _networkMgr.getPasswordResetProvider(defaultNetwork);
+            if (element == null) {
+                throw new CloudRuntimeException("Can't find network element for " + Service.UserData.getName() + 
+                        " provider needed for password reset");
             }
+
+            boolean result = element.savePassword(defaultNetwork, defaultNicProfile, vmProfile);
 
             // Need to reboot the virtual machine so that the password gets redownloaded from the DomR, and reset on the VM
             if (!result) {

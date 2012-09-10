@@ -540,8 +540,6 @@ setup_router() {
     fi
   fi
   
-  
-  
   setup_dnsmasq
   
   NS=$NS1

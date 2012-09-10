@@ -104,7 +104,7 @@ class deployDataCenters():
             self.createClusters(pod.clusters, zoneId, podId)
 
     def createVlanIpRanges(self, mode, ipranges, zoneId, podId=None,\
-                           networkId=None):
+                           networkId=None, forvirtualnetwork=None):
         if ipranges is None:
             return
         for iprange in ipranges:
@@ -120,7 +120,10 @@ class deployDataCenters():
             vlanipcmd.zoneid = zoneId
             vlanipcmd.vlan = iprange.vlan
             if mode == "Basic":
-                vlanipcmd.forvirtualnetwork = "false"
+                if forvirtualnetwork:
+                    vlanipcmd.forvirtualnetwork = "true"
+                else:
+                    vlanipcmd.forvirtualnetwork = "false"
             else:
                 vlanipcmd.forvirtualnetwork = "true"
 
@@ -313,7 +316,7 @@ class deployDataCenters():
                 self.createpods(zone.pods, zoneId, networkid)
                 if self.isEipElbZone(zone):
                     self.createVlanIpRanges(zone.networktype, zone.ipranges, \
-                                        zoneId)
+                                        zoneId, forvirtualnetwork=True)
 
             if zone.networktype == "Advanced":
                 self.createpods(zone.pods, zoneId)
