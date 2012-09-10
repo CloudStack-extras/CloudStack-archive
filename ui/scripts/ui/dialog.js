@@ -342,19 +342,9 @@
           $input.data('validation-rules', field.validation);
 				else
           $input.data('validation-rules', {});	
-					
-     
-
 
         // Tooltip
-        $input.focus(function() {
-          $input.toolTip({tooltip:'.tooltip-box',mode:'focus'});          
-
-          console.log('tooltip init->' + $input.attr('name'));
-        });
-        $input.blur(function() {
-          console.log('tooltip remove->' + $input.attr('name'));
-        });
+        $input.toolTip({tooltip:'.tooltip-box',mode:'focus'});
       });
      
       var getFormValues = function() {
@@ -421,6 +411,7 @@
               if (!complete($formContainer)) { return false; }
 
               $('div.overlay').remove();
+              $('.tooltip-box').remove();
               $formContainer.remove();
               $(this).dialog('destroy');
 
@@ -432,6 +423,7 @@
             'class': 'cancel',
             click: function() {
               $('div.overlay').remove();
+              $('.tooltip-box').remove();
               $formContainer.remove();
               $(this).dialog('destroy');
             }
