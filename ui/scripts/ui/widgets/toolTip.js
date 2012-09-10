@@ -147,7 +147,7 @@ function prepare(jObj, options)
 
   // Fix overlay
   setTimeout(function() {
-    $('.tooltip-box').zIndex($('.overlay:last').zIndex() + 1);
+    $('.tooltip-box').zIndex($(':ui-dialog').zIndex() + 1);
   });
 };
 
