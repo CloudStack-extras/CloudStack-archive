@@ -139,8 +139,9 @@ function prepare(jObj, options)
 	    left = offset.left - $tooltip.width();
 	}	
 	else{
-	    left += 5;
+	    left += 35;
 	}
+        $tooltip.css('z-index', $('.overlay:last').attr('z-index') + 1);
 	$tooltip.css({position:'absolute', top:top+'px', left:left+'px'});
 };
 
