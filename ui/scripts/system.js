@@ -7939,7 +7939,7 @@
 		            ],
 		            dataProvider: function(args) {
 		             $.ajax({
-		                     url:createURL("listHostUpdates"),
+		                     url:createURL("listHostUpdates&hostid=" + args.context.hosts[0].id + "&applied=false"),
 		                     dataType: "json",
 		                     success:function(json) {
 
