@@ -104,6 +104,7 @@ function hoverHandler(event)
     //Call Show method of the tooltip Widget,
     //Show method should play on any required animations
     $.data(this,'toolTip').show();
+
 };
 function outHandler(event)
 {
@@ -141,8 +142,13 @@ function prepare(jObj, options)
 	else{
 	    left += 35;
 	}
-        $tooltip.css('z-index', $('.overlay:last').attr('z-index') + 1);
+  
 	$tooltip.css({position:'absolute', top:top+'px', left:left+'px'});
+
+  // Fix overlay
+  setTimeout(function() {
+    $('.tooltip-box').zIndex($('.overlay:last').zIndex() + 1);
+  });
 };
 
 
