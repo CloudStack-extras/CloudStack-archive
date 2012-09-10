@@ -230,7 +230,7 @@ public class HostUpdatesManagerImpl implements HostUpdatesManager {
 								updateAppliedField(appliedPatchList);
 							}
 					}
-				} catch (Throwable e){s_logger.error("Exception in CapacityChecker", e);};
+				} catch (Throwable e){s_logger.error("Exception in Host Update Checker", e);};
 			}
 	}
     @Override
