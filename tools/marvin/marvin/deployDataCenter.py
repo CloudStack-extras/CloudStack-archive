@@ -290,15 +290,24 @@ class deployDataCenters():
                         if len(filter(lambda x : x.typ == 'Public', zone.physical_networks[0].traffictypes)) > 0 \
                         else "DefaultSharedNetworkOfferingWithSGService"
 
+                listnetworkoffering.name = "DefaultSharedNetworkOfferingWithSGService" \
+                        if len(filter(lambda x : x.name == 'SecurityGroupProvider', zone.physical_networks[0].providers)) > 0 \
+                        else "DefaultSharedNetworkOffering"
+                
                 listnetworkofferingresponse = \
                 self.apiClient.listNetworkOfferings(listnetworkoffering)
-
+                    
                 guestntwrk = configGenerator.network()
                 guestntwrk.displaytext = "guestNetworkForBasicZone"
                 guestntwrk.name = "guestNetworkForBasicZone"
                 guestntwrk.zoneid = zoneId
-                guestntwrk.networkofferingid = \
+                if listnetworkoffering.name is "DefaultSharedNetworkOffering":
+                    guestntwrk.networkofferingid = \
+                        listnetworkofferingresponse[1].id
+                else:
+                    guestntwrk.networkofferingid = \
                         listnetworkofferingresponse[0].id
+                    
                         
                 networkid = self.createnetworks([guestntwrk], zoneId)
                 self.createpods(zone.pods, zoneId, networkid)
