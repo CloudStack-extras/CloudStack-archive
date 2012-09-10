@@ -2474,7 +2474,7 @@ CREATE TABLE `cloud`.`host_updates` (
   `timestamp` varchar(90),
   PRIMARY KEY  (`id`),
   CONSTRAINT `uc_host_updates__uuid` UNIQUE (`uuid`),
-  CONSTRAINT `fk_host_updates__host_id` FOREIGN KEY (`host_id`) REFERENCES `host`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_host_updates__host_id` FOREIGN KEY (`host_id`) REFERENCES `host`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 SET foreign_key_checks = 1;
