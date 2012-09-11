@@ -116,8 +116,7 @@ public class BaremetalUserdataElement extends AdapterBase implements NetworkElem
 
     @Override
     public boolean isReady(PhysicalNetworkServiceProvider provider) {
-        // TODO Auto-generated method stub
-        return false;
+        return true;
     }
 
     @Override
