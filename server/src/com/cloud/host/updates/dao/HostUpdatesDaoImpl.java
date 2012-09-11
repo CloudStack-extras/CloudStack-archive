@@ -7,12 +7,21 @@ import javax.ejb.Local;
 import com.cloud.host.updates.HostUpdatesVO;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.GenericDaoBase;
+import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 
 
 @Local(value = { HostUpdatesDao.class })
 public class HostUpdatesDaoImpl extends GenericDaoBase<HostUpdatesVO, Long> implements HostUpdatesDao {
-    @Override
+	protected final SearchBuilder<HostUpdatesVO> HostSearch;
+	
+	protected HostUpdatesDaoImpl() {
+        HostSearch = createSearchBuilder();
+        HostSearch.and("hostId", HostSearch.entity().getHostId(), SearchCriteria.Op.EQ);
+        HostSearch.done();
+    }
+	
+	@Override
     public HostUpdatesVO searchForUpdates(Long id,Long hostId) {
         Filter searchFilter = new Filter(HostUpdatesVO.class, "timestamp", Boolean.FALSE, Long.valueOf(0), Long.valueOf(1));
         SearchCriteria<HostUpdatesVO> sc = createSearchCriteria();
@@ -41,5 +50,16 @@ public class HostUpdatesDaoImpl extends GenericDaoBase<HostUpdatesVO, Long> impl
             return updates.get(0);
         }
         return null;
+    }
+    
+    @Override
+    public void deleteUpdates(long hostId) {
+        SearchCriteria<HostUpdatesVO> sc = HostSearch.create();
+        sc.setParameters("hostId", hostId);
+        
+        List<HostUpdatesVO> results = search(sc, null);
+        for (HostUpdatesVO result : results) {
+        	remove(result.getId());
+        }
     }
 }
