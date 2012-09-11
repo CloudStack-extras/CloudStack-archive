@@ -159,7 +159,6 @@ public class BareMetalDiscoverer extends DiscovererBase implements Discoverer, R
 			if (hostTags != null && hostTags.size() != 0) {
 			    details.put("hostTag", hostTags.get(0));
 			}
-			String vmIp = (String)params.get(ApiConstants.IP_ADDRESS);
 			details.put(ApiConstants.MEMORY, memCapacity);
 			details.put(ApiConstants.CPU_SPEED, cpuCapacity);
 			details.put(ApiConstants.CPU_NUMBER, cpuNum);
@@ -167,7 +166,10 @@ public class BareMetalDiscoverer extends DiscovererBase implements Discoverer, R
 			details.put(ApiConstants.USERNAME, username);
 			details.put(ApiConstants.PASSWORD, password);
 			details.put(ApiConstants.PRIVATE_IP, ipmiIp);
-			details.put(ApiConstants.IP_ADDRESS, vmIp);
+			String vmIp = (String)params.get(ApiConstants.IP_ADDRESS);
+			if (vmIp != null) {
+			    details.put(ApiConstants.IP_ADDRESS, vmIp);
+			}
 
 			resources.put(resource, details);
 			resource.start();
