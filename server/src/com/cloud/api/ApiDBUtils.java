@@ -65,13 +65,13 @@ import com.cloud.network.Site2SiteVpnGatewayVO;
 import com.cloud.network.as.AutoScalePolicy;
 import com.cloud.network.as.AutoScalePolicyConditionMapVO;
 import com.cloud.network.as.AutoScaleVmGroupPolicyMapVO;
-import com.cloud.network.as.CounterVO;
 import com.cloud.network.as.ConditionVO;
+import com.cloud.network.as.CounterVO;
 import com.cloud.network.as.dao.AutoScalePolicyConditionMapDao;
 import com.cloud.network.as.dao.AutoScalePolicyDao;
 import com.cloud.network.as.dao.AutoScaleVmGroupPolicyMapDao;
-import com.cloud.network.as.dao.CounterDao;
 import com.cloud.network.as.dao.ConditionDao;
+import com.cloud.network.as.dao.CounterDao;
 import com.cloud.network.dao.FirewallRulesCidrsDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.LoadBalancerDao;
@@ -873,7 +873,11 @@ public class ApiDBUtils {
 
     public static String getKeyPairName(String sshPublicKey) {
         SSHKeyPairVO sshKeyPair = _sshKeyPairDao.findByPublicKey(sshPublicKey);
-        return sshKeyPair.getName();
+        //key might be removed prior to this point
+        if (sshKeyPair != null) {
+            return sshKeyPair.getName();
+        }
+        return null;
     }
 
     public static UserVmDetailVO  findPublicKeyByVmId(long vmId) {
