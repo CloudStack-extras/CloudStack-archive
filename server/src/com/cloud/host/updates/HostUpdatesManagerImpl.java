@@ -33,6 +33,7 @@ import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.HostUpdatesAnswer;
 import com.cloud.agent.api.HostUpdatesCommand;
 import com.cloud.configuration.Config;
+import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.ha.FenceBuilder;
 import com.cloud.ha.Investigator;
 import com.cloud.host.HostVO;
@@ -50,23 +51,27 @@ import com.cloud.utils.db.Transaction;
 public class HostUpdatesManagerImpl implements HostUpdatesManager { 
 	
 	@Inject
-	protected AgentManager _agentMgr;
+	AgentManager _agentMgr;
 	@Inject
-	protected HostDao _hostDao;
+	HostDao _hostDao;
 	@Inject
-	protected HostDetailsDao _hostDetailsDao;
+	HostDetailsDao _hostDetailsDao;
 	@Inject
-	protected HostUpdatesDao _hostUpdatesDao;
+	HostUpdatesDao _hostUpdatesDao;
+	@Inject
+	ConfigurationDao _configDao;
 	
     ScheduledExecutorService _executor;
 	private String _name;
+	private Map<String, String> _configs;
 	private static final Logger s_logger = Logger.getLogger(HostUpdatesManagerImpl.class.getName());
 	
 	public final static String HYPERVISOR_TYPE = "XenServer";
-	public final static int UPDATE_CHECK_INTERVAL = 10;
+	public final static int UPDATE_CHECK_INTERVAL = 604800;
 	long _serverId;
 	boolean _stopped;
 	int _updateCheckInterval;
+	String _url;
 	Adapters<Investigator> _investigators;
 	Adapters<FenceBuilder> _fenceBuilders;
 	HostUpdatesCommand cmd = null;
@@ -80,17 +85,20 @@ public class HostUpdatesManagerImpl implements HostUpdatesManager {
 		} catch (IOException e) {
 			s_logger.debug("Cannot create a temp file.", e);
 		}
-        URL updates = null;
+		URL updates = null;
 		try {
-			updates = new URL("http://updates.xensource.com/XenServer/updates.xml");
+			if( _url == null)
+				updates = new URL("http://updates.xensource.com/XenServer/updates.xml");
+			else
+				updates = new URL(_url);
 		} catch (MalformedURLException e) {
-			s_logger.debug("Cannot download the file from Internet link.", e);
+			s_logger.debug("Cannot download the file from Internet link " , e);
 		}
         ReadableByteChannel fis = null;
 		try {
 			fis = Channels.newChannel(updates.openStream());
 		} catch (IOException e) {
-			s_logger.debug("Cannot open a channel for IO", e);
+			s_logger.debug("Cannot open a channel for IO, looks like the URL is not valid : " + _url);
 		}
         FileOutputStream fos = null;
 		try {
@@ -205,9 +213,8 @@ public class HostUpdatesManagerImpl implements HostUpdatesManager {
     protected class checkHostUpdates implements Runnable {    
 			@Override
 			public void run() {
-				
+				Document doc = null;
 				try {
-					Document doc = null;
 					doc = getHostVersionsFile(); 
 					List<HostVO> hosts = _hostDao.listAll();
 					if(hosts != null)
@@ -230,15 +237,20 @@ public class HostUpdatesManagerImpl implements HostUpdatesManager {
 								updateAppliedField(appliedPatchList);
 							}
 					}
-				} catch (Throwable e){s_logger.error("Exception in Host Update Checker", e);};
+				} catch (Throwable e){
+					s_logger.error("Exception in Host Update Checker");
+					if(doc == null)
+					{s_logger.error("Exception in Host Update Checker:  Pass the correct update location URL");}
+				};
 			}
 	}
     @Override
-    public boolean configure(final String name, final Map<String, Object> xmlParams) throws ConfigurationException {
+    public boolean configure(final String name, final Map<String, Object> params) throws ConfigurationException {
         _name = name;
-        Map<String, String> params = new HashMap<String, String>();
         
-        _updateCheckInterval = NumbersUtil.parseInt(params.get(Config.XenUpdateCheckInterval.key()),UPDATE_CHECK_INTERVAL);
+        _configs = _configDao.getConfiguration("management-server", params);
+        _updateCheckInterval = NumbersUtil.parseInt(_configs.get(Config.XenUpdateCheckInterval.key()),UPDATE_CHECK_INTERVAL);
+        _url = _configs.get(Config.XenUpdateURL.key()); 
         _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("HostUpdateCheck"));
 
         return true;

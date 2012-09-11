@@ -241,7 +241,7 @@ public enum Config {
     XenHeartBeatInterval("Advanced", ManagementServer.class, Integer.class, "xen.heartbeat.interval", "60", "heartbeat to use when implementing XenServer Self Fencing", null),
     XenGuestNetwork("Hidden", ManagementServer.class, String.class, "xen.guest.network.device", null, "Specify for guest network name label", null),
     XenUpdateURL("Advanced", ManagementServer.class, String.class, "xen.update.url", "http://updates.xensource.com/XenServer/updates.xml", "URL to get the latest XenServer updates", null),
-    XenUpdateCheckInterval("Advanced", ManagementServer.class, Integer.class, "xen.update.check.interval", "604800", "Interval to check XenServer updates", null),
+    XenUpdateCheckInterval("Advanced", ManagementServer.class, Integer.class, "xen.update.check.interval", "604800", "Interval to check XenServer updates(in sec)", null),
     
     // VMware
     VmwarePrivateNetworkVSwitch("Hidden", ManagementServer.class, String.class, "vmware.private.vswitch", null, "Specify the vSwitch on host for private network", null),
