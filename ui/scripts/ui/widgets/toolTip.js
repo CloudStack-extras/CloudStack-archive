@@ -19,8 +19,12 @@
          var context = this.options.context;
          var dataProvider = this.options.dataProvider;
          var actions = this.options.actions;
-         var $tooltip = $('<div>').addClass('tooltip-box');
-         var $container = $('#cloudStack3-container');
+         var docID = this.options.docID;
+         var text = cloudStack.docs[docID].desc;
+         var $text = $('<p>').html(text).appendTo($tooltip);
+	 var $tooltip = $('<div>').addClass('tooltip-box');
+         var $text = $('<p>').html(text).appendTo($tooltip);
+	 var $container = $('#cloudStack3-container');
          $tooltip.appendTo($container);
         if(this.options.mode == 'hover'){
             $(this.element).hover(hoverHandler,outHandler);
@@ -104,7 +108,6 @@ function hoverHandler(event)
     //Call Show method of the tooltip Widget,
     //Show method should play on any required animations
     $.data(this,'toolTip').show();
-
 };
 function outHandler(event)
 {
@@ -142,13 +145,12 @@ function prepare(jObj, options)
 	else{
 	    left += 35;
 	}
-  
 	$tooltip.css({position:'absolute', top:top+'px', left:left+'px'});
 
-  // Fix overlay
-  setTimeout(function() {
-    $('.tooltip-box').zIndex($(':ui-dialog').zIndex() + 1);
-  });
+     // Fix overlay
+    setTimeout(function() {
+    $('.tooltip-box').zIndex($(':ui-dialog').zIndex() + 1);  });
+
 };
 
 
