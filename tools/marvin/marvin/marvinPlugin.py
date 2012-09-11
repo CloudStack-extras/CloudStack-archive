@@ -1,4 +1,5 @@
 import marvin
+import sys
 import logging
 import nose.core
 from marvin.cloudstackTestCase import cloudstackTestCase
@@ -35,7 +36,7 @@ class MarvinPlugin(Plugin):
             self.logger.addHandler(ch)
             self.result_stream = open(options.result_log, "w")
         else:
-            self.result_stream = sys.stderr   
+            self.result_stream = sys.stdout
     
         deploy = deployDataCenter.deployDataCenters(options.config) 
         deploy.loadCfg() if options.load else deploy.deploy()
@@ -56,7 +57,7 @@ class MarvinPlugin(Plugin):
                           dest="config",
                           help="Marvin's configuration file where the datacenter information is specified [MARVIN_CONFIG]")
         parser.add_option("--result-log", action="store",
-                          default=env.get('RESULT_LOG', 'result.log'),
+                          default=env.get('RESULT_LOG', None),
                           dest="result_log",
                           help="The path to the results file where test summary will be written to [RESULT_LOG]")
         parser.add_option("--client-log", action="store",
