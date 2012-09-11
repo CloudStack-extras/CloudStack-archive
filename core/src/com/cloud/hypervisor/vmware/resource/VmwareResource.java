@@ -707,7 +707,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     }
 
     protected void assignPublicIpAddress(VirtualMachineMO vmMo, final String vmName, final String privateIpAddress, final String publicIpAddress, final boolean add, final boolean firstIP,
-            final boolean sourceNat, final String vlanId, final String vlanGateway, final String vlanNetmask, final String vifMacAddress, String guestIp) throws Exception {
+            final boolean sourceNat, final String vlanId, final String vlanGateway, final String vlanNetmask, final String vifMacAddress, String guestIp, String networkName, Integer networkRateMbps) throws Exception {
 
         String publicNeworkName = HypervisorHostHelper.getPublicNetworkNamePrefix(vlanId);
         Pair<Integer, VirtualDevice> publicNicInfo = vmMo.getNicDeviceIndex(publicNeworkName);
@@ -733,7 +733,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
         }
 
         if (addVif) {
-            plugPublicNic(vmMo, vlanId, vifMacAddress);
+            plugPublicNic(vmMo, vlanId, vifMacAddress, networkName, networkRateMbps);
             publicNicInfo = vmMo.getNicDeviceIndex(publicNeworkName);
             if (publicNicInfo.first().intValue() >= 0) {
                 networkUsage(privateIpAddress, "addVif", "eth" + publicNicInfo.first());
@@ -804,13 +804,13 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
         }
     }
 
-    private void plugPublicNic(VirtualMachineMO vmMo, final String vlanId, final String vifMacAddress) throws Exception {
+    private void plugPublicNic(VirtualMachineMO vmMo, final String vlanId, final String vifMacAddress, String networkName, Integer networkRateMbps) throws Exception {
         // TODO : probably need to set traffic shaping
         Pair<ManagedObjectReference, String> networkInfo = null;
         
         if (!_nexusVSwitch) {
-            networkInfo = HypervisorHostHelper.prepareNetwork(this._publicNetworkVSwitchName, "cloud.public",
-                    vmMo.getRunningHost(), vlanId, null, null, this._ops_timeout, true);
+            networkInfo = HypervisorHostHelper.prepareNetwork(networkName, "cloud.public",
+                    vmMo.getRunningHost(), vlanId, networkRateMbps, null, this._ops_timeout, true);
         } else {
             networkInfo = HypervisorHostHelper.prepareNetwork(this._publicNetworkVSwitchName, "cloud.public",
                     vmMo.getRunningHost(), vlanId, null, null, this._ops_timeout);
@@ -911,7 +911,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
 
             for (IpAddressTO ip : ips) {
                 assignPublicIpAddress(vmMo, routerName, controlIp, ip.getPublicIp(), ip.isAdd(), ip.isFirstIP(), ip.isSourceNat(), ip.getVlanId(), ip.getVlanGateway(), ip.getVlanNetmask(),
-                        ip.getVifMacAddress(), ip.getGuestIp());
+                        ip.getVifMacAddress(), ip.getGuestIp(), ip.getNetworkName(), ip.getNetworkRate());
                 results[i++] = ip.getPublicIp() + " - success";
             }
         } catch (Throwable e) {
