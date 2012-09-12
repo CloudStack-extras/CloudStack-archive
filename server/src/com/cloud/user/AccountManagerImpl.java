@@ -5,7 +5,7 @@
 // to you under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
-// 
+//
 //   http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
@@ -77,6 +77,7 @@ import com.cloud.network.RemoteAccessVpnVO;
 import com.cloud.network.Site2SiteCustomerGatewayVO;
 import com.cloud.network.Site2SiteVpnConnectionVO;
 import com.cloud.network.VpnUserVO;
+import com.cloud.network.as.AutoScaleManager;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.RemoteAccessVpnDao;
@@ -217,6 +218,8 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
     private VpcManager _vpcMgr;
     @Inject
     private DomainRouterDao _routerDao;
+    @Inject
+    private AutoScaleManager _autoscaleMgr;
     @Inject
     Site2SiteVpnManager _vpnMgr;
 
@@ -601,7 +604,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
                 s_logger.warn("Failed to cleanup remote access vpn resources as a part of account id=" + accountId + " cleanup due to Exception: ", ex);
                 accountCleanupNeeded = true;
             }
-            
+
             // Cleanup security groups
             int numRemoved = _securityGroupDao.removeByAccountId(accountId);
             s_logger.info("deleteAccount: Deleted " + numRemoved + " network groups for account " + accountId);
@@ -624,7 +627,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
                     }
                 }
             }
-            
+
             //Delete all VPCs
             boolean vpcsDeleted = true;
             s_logger.debug("Deleting vpcs for account " + account.getId());
@@ -641,21 +644,27 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             }
 
             if (vpcsDeleted) {
-                // release ip addresses belonging to the account
-                List<? extends IpAddress> ipsToRelease = _ipAddressDao.listByAccount(accountId);
-                for (IpAddress ip : ipsToRelease) {
-                    s_logger.debug("Releasing ip " + ip + " as a part of account id=" + accountId + " cleanup");
+            // release ip addresses belonging to the account
+            List<? extends IpAddress> ipsToRelease = _ipAddressDao.listByAccount(accountId);
+            for (IpAddress ip : ipsToRelease) {
+                s_logger.debug("Releasing ip " + ip + " as a part of account id=" + accountId + " cleanup");
                     if (!_networkMgr.disassociatePublicIpAddress(ip.getId(), callerUserId, caller)) {
-                    s_logger.warn("Failed to release ip address " + ip + " as a part of account id=" + accountId + " clenaup");
+                    s_logger.warn("Failed to release ip address " + ip + " as a part of account id=" + accountId + " cleanup");
                     accountCleanupNeeded = true;
-                    }
                 }
+            }
             }
 
             // Delete Site 2 Site VPN customer gateway
             s_logger.debug("Deleting site-to-site VPN customer gateways for account " + accountId);
             if (!_vpnMgr.deleteCustomerGatewayByAccount(accountId)) {
                 s_logger.warn("Fail to delete site-to-site VPN customer gateways for account " + accountId);
+            // Delete autoscale resources if any
+            try {
+                _autoscaleMgr.cleanUpAutoScaleResources(accountId);
+            } catch (CloudRuntimeException ex) {
+                s_logger.warn("Failed to cleanup AutoScale resources as a part of account id=" + accountId + " cleanup due to exception:", ex);
+                accountCleanupNeeded = true;
             }
 
             // delete account specific Virtual vlans (belong to system Public Network) - only when networks are cleaned
@@ -732,7 +741,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
                     } else if (vm.getType() == Type.DomainRouter) {
                         success = (success && _itMgr.advanceStop(_routerDao.findById(vm.getId()), false, getSystemUser(), getSystemAccount()));
                     } else {
-                        success = (success && _itMgr.advanceStop(vm, false, getSystemUser(), getSystemAccount()));
+                    success = (success && _itMgr.advanceStop(vm, false, getSystemUser(), getSystemAccount()));
                     }
                 } catch (OperationTimedoutException ote) {
                     s_logger.warn("Operation for stopping vm timed out, unable to stop vm " + vm.getHostName(), ote);
@@ -763,7 +772,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
         if (domainId == null) {
             domainId = DomainVO.ROOT_DOMAIN;
         }
-
+        
         if (userName.isEmpty()) {
             throw new InvalidParameterValueException("Username is empty");
         }
@@ -771,7 +780,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
         if (firstName.isEmpty()) {
             throw new InvalidParameterValueException("Firstname is empty");
         }
-
+        
         if (lastName.isEmpty()) {
             throw new InvalidParameterValueException("Lastname is empty");
         }
