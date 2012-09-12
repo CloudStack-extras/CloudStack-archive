@@ -28,7 +28,7 @@ TIMEOUT 26
 DISPLAY boot.msg
 LABEL default
 KERNEL %s
-APPEND ramdisk_size=66000 initrd=%s ks=%s ksdevice=%s
+APPEND ramdisk_size=66000 initrd=%s ksdevice=%s ks=%s 
 '''
 fmt2 = '''DEFAULT default
 PROMPT 1
