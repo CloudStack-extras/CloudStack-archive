@@ -632,6 +632,7 @@ fi
 %files baremetal-securitygroup-agent
 %defattr(0644,root,root,0775)
 %attr(0755,root,root) %{_initrddir}/cloud-security-group
+%attr(0755,root,root) %{_libdir}/%{name}/agent/scripts/network/security-group-agent/cs-securitygroup
 %{_libdir}/%{name}/agent/scripts/network/security-group-agent/*
 
 #%files test
