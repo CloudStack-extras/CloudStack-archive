@@ -109,6 +109,11 @@
           $formItem.attr({ title: _l(field.desc) });
         }
 
+       if(field.docID) {
+         $formItem.attr({ title: _l(field.docID) });
+
+        }
+
         // Input area
         var $value = $('<div>').addClass('value')
               .appendTo($formItem);
@@ -342,9 +347,20 @@
           $input.data('validation-rules', field.validation);
 				else
           $input.data('validation-rules', {});	
+					
+     
+
 
         // Tooltip
-        $input.toolTip({tooltip:'.tooltip-box',mode:'focus'});
+          $input.toolTip({
+             docID: args.form.docID,
+             tooltip:'.tooltip-box',
+             mode:'hover'
+          });
+          
+   /*     $input.blur(function() {
+          console.log('tooltip remove->' + $input.attr('name'));
+        });*/
       });
      
       var getFormValues = function() {

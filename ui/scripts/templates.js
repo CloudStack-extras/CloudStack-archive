@@ -54,7 +54,8 @@
                 }
               },
               createForm: {
-                title: 'label.action.register.template',                
+                title: 'label.action.register.template',
+                docID:'helpNetworkOfferingName',                
                 preFilter: cloudStack.preFilter.createTemplate,
                 fields: {
                   name: {
