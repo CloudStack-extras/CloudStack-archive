@@ -259,7 +259,7 @@ The CloudStack baremetal agent
 Summary: CloudStack baremetal security group agent
 Requires: chkconfig
 Requires: python >= 2.6
-Requires: python-cherrypy
+Requires: python-cherrypy2
 Requires: redhat-lsb
 Group:     System Environment/Libraries
 %description baremetal-securitygroup-agent

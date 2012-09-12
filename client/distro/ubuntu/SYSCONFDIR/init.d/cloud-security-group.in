@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# @PACKAGE@-management      This shell script takes care of starting and stopping Tomcat
+# cloud-management      This shell script takes care of starting and stopping Tomcat
 #
 # chkconfig: - 80 20
 #
@@ -58,21 +58,32 @@ set_ip_table_rule() {
     fi
 }
 
-start() {
-    pid=`cat /var/run/cs-securitygroup.pid`
+is_run() {
+    if [ -f /var/run/cs-securitygroup.pid ]; then
+        pid=`cat /var/run/cs-securitygroup.pid`
+    else
+        pid=''
+    fi
     ps -ae | grep $pid &>/dev/null
+}
+
+start() {
+    is_run
     if [ $? == 0 ]; then
         echo "CloudStack baremetal security group agent[pid:$pid] is still running ..."
     else
        set_ip_table_rule
-       /usr/lib/cloud/agent/scripts/network/security-group-agent/cs-securitygroup
-       log_success_msg "Starting cloud-security-group:"
+       /usr/lib64/cloud/agent/scripts/network/security-group-agent/cs-securitygroup
+       if [ $? == 0 ]; then
+           log_success_msg "Starting cloud-security-group:"
+       else
+           log_failure_msg "Starting cloud-security-group:"
+       fi
     fi
 }
 
 status() {
-    pid=`cat /var/run/cs-securitygroup.pid`
-    ps -ae | grep $pid &>/dev/null
+    is_run
     if [ $? == 0 ]; then
         echo "CloudStack baremetal security group agent[pid:$pid] is still running ..."
     else
