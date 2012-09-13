@@ -1205,15 +1205,13 @@
                      success:function(json) {
                      
                      args.response.success({
-                     data: $.map(args.context.instances[0].nic, function(nic, index) {
-                     var name = 'NIC ' + (index + 1);
-                     var networkname = json.listvirtualmachinesresponse.virtualmachine[0].nic[index].networkname;
+                     data: $.map(json.listvirtualmachinesresponse.virtualmachine[0].nic, function(nic, index) {
+                     var name = 'NIC ' + (index + 1);                    
                      if (nic.isdefault) {
                           name += ' (' + _l('label.default') + ')';
                           }
                      return $.extend(nic, {
-                        name: name,
-                        networkname: networkname
+                        name: name
                                });
                             })
                         });                     
