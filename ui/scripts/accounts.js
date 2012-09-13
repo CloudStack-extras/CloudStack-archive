@@ -78,6 +78,7 @@
               createForm: {
                 title: 'label.add.account',
                 desc: 'label.add.account',
+                docID:'helpVolumeName',
                 fields: {
                   username: {
                     label: 'label.username',
