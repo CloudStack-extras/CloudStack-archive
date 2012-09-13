@@ -52,7 +52,7 @@ stop() {
 
 
 set_ip_table_rule() {
-    iptables-save | grep "8899" &>/dev/null
+    iptables-save | grep "9988" &>/dev/null
     if [ $? != 0 ]; then
         iptables -A INPUT -p tcp -m tcp --dport 8899 -j ACCEPT
     fi
