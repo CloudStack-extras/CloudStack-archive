@@ -139,6 +139,7 @@
            if(window.fetchLatestflag == 1)
            {
               latestData = {
+
                   fetchLatest:true
                  }
             }
@@ -146,10 +147,9 @@
             {
               latestData = {
                 fetchLatest:false
-               }
+               }         
             }
-            window.fetchLatestflag = 0;
-
+	    window.fetchLatestflag = 0;          
             if (data.zones) {
               $.ajax({
                 url: createURL('listCapacity'),
@@ -254,7 +254,7 @@
             $.ajax({
               url: createURL('listCapacity'),
               data: {
-                fetchLatest: true,
+                fetchLatest: false,
                 sortBy: 'usage',
                 page: 0,
                 pagesize: 8
