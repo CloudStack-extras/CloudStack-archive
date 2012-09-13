@@ -413,7 +413,11 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
             }
             ClusterVO cluster = _clusterDao.findById(pool.getClusterId());
             if (type == cluster.getHypervisorType()) {
-                retPools.add(pool);
+                List<HostVO> hosts = _hostDao.listUpRoutingHostByZonePodCluster(cluster.getId(),
+            			cluster.getPodId(), cluster.getDataCenterId());
+                if( hosts != null && hosts.size() > 0 ) {
+            		retPools.add(pool);
+                }
             }
         }
         Collections.shuffle(retPools);
