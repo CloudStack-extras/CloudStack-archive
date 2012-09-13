@@ -420,6 +420,26 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         return listBy(sc);
     }
     
+    @Override
+    public List<HostVO> listUpRoutingHostByZonePodCluster( Long clusterId, Long podId, Long dcId) {
+        SearchBuilder<HostVO> hostSearch = createSearchBuilder();
+        HostVO entity = hostSearch.entity();
+        hostSearch.and("type", entity.getType(), SearchCriteria.Op.EQ);
+        hostSearch.and("cluster", entity.getClusterId(), SearchCriteria.Op.EQ);
+        hostSearch.and("pod", entity.getPodId(), SearchCriteria.Op.EQ);
+        hostSearch.and("dc", entity.getDataCenterId(), SearchCriteria.Op.EQ);
+        hostSearch.and("status", entity.getStatus(), SearchCriteria.Op.EQ);
+        hostSearch.and("resourceState", entity.getResourceState(), SearchCriteria.Op.EQ);
+        SearchCriteria<HostVO> sc = hostSearch.create();
+        sc.setParameters("type", Type.Routing.toString());
+        sc.setParameters("cluster", clusterId);
+        sc.setParameters("pod", podId);
+        sc.setParameters("dc", dcId);
+        sc.setParameters("status", Status.Up.toString());
+        sc.setParameters("resourceState", ResourceState.Enabled.toString());
+        return listBy(sc);
+    	
+    }
     
     @Override
     public List<HostVO> listAllUpAndEnabledNonHAHosts(Type type, Long clusterId, Long podId, long dcId, String haTag) {
