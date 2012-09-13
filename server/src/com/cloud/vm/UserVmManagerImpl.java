@@ -1585,7 +1585,10 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             }
             try {
                 answer = (CreatePrivateTemplateAnswer) _storageMgr.sendToPool(pool, cmd);
-            } catch (StorageUnavailableException e) {
+            } catch (Exception e) {
+            	String msg = "failed for command " + cmd + " due to " + e.toString();
+                s_logger.warn(msg, e);
+            	throw new CloudRuntimeException(msg, e);
             } finally {
                 if (snapshotId != null) {
                     _snapshotDao.unlockFromLockTable(snapshotId.toString());
@@ -1635,6 +1638,10 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
                 _usageEventDao.persist(usageEvent);
                 txn.commit();
             }
+        } catch (Exception e) {
+        	String msg = " failed to create a template for command " + command + " due to " + e.toString();
+            s_logger.warn(msg, e);
+        	throw new CloudRuntimeException(msg, e);
         } finally {
             if (snapshot != null && snapshot.getSwiftId() != null && secondaryStorageURL != null && zoneId != null && accountId != null && volumeId != null) {
                 _snapshotMgr.deleteSnapshotsForVolume (secondaryStorageURL, zoneId, accountId, volumeId);
