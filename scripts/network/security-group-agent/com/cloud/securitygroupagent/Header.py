@@ -23,7 +23,7 @@ XML_HYPERVISOR_TYPE = 'hypervisorType'
 VM_LOG_ROOT_TAG = 'SecurityGroupVmLog'
 RULE_SET_ROOT_TAG = 'SecurityGroupVmRuleSet'
 
-IPSET_TYPE = 'iptreemap'
+IPSET_TYPE = 'hash:ip,port'
 
 class RuleSet(object):
     def __init__(self):

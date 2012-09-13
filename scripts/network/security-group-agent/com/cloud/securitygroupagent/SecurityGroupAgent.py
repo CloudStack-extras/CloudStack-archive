@@ -64,7 +64,7 @@ class SecurityGroupAgent(object):
     def _getIpSetKeyWord(self):
         tmpname= 'ipsetqzvxtmp'
         try:
-            Utils.runBash('ipset -N %s iptreemap'%tmpname)
+            Utils.runBash('ipset -N %s hash:ip,port'%tmpname)
         except:
             Utils.runBash('ipset -F %s'%tmpname)
         
