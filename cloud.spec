@@ -261,6 +261,7 @@ Requires: chkconfig
 Requires: python >= 2.6
 Requires: python-cherrypy
 Requires: redhat-lsb
+Requires: ipset
 Group:     System Environment/Libraries
 %description baremetal-securitygroup-agent
 The CloudStack baremetal security group agent
