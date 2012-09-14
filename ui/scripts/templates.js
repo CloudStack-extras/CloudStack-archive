@@ -55,11 +55,12 @@
               },
               createForm: {
                 title: 'label.action.register.template',
-                docID:'helpNetworkOfferingName',                
+               // docID:'helpNetworkOfferingName',                
                 preFilter: cloudStack.preFilter.createTemplate,
                 fields: {
                   name: {
                     label: 'label.name',
+                    docID:'helpNetworkOfferingName',
                     validation: { required: true }
                   },
                   description: {
