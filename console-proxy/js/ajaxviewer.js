@@ -191,6 +191,24 @@ JsX11KeyboardMapper.prototype.inputFeed = function(eventType, code, modifiers) {
 				return;
 			}
 		}
+		if(code == 67) {  //c, for ctrl-c
+			if((modifiers & AjaxViewer.CTRL_KEY_MASK) != 0) {
+				this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 65507, modifiers: modifiers});
+				this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 67, modifiers: modifiers});
+				this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 67, modifiers: modifiers});
+				this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 65507, modifiers: modifiers});
+				return;
+			}
+		}
+		if(code == 68) {  //d, for ctrl-d
+			if((modifiers & AjaxViewer.CTRL_KEY_MASK) != 0) {
+				this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 65507, modifiers: modifiers});
+				this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 68, modifiers: modifiers});
+				this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 68, modifiers: modifiers});
+				this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 65507, modifiers: modifiers});
+				return;
+			}
+		}
 		
 		var X11Keysym = code;
 		if(this.jsX11KeysymMap[code] != undefined) {
@@ -283,11 +301,18 @@ JsCookedKeyboardMapper.prototype.inputFeed = function(eventType, code, modifiers
 			}
 		}
 		//Fang
-		if(code == 67 || code == 68) {  //c, for ctrl-c or ctrl-d 
+		if(code == 67) {  //c, for ctrl-c
 			if((modifiers & AjaxViewer.CTRL_KEY_MASK) != 0) {
 				this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 67, modifiers: modifiers});
-		                this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 67, modifiers: modifiers});
-				// this.mappedInput.push({type : eventType, code: 0xffff, modifiers: modifiers});
+				this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 67, modifiers: modifiers});
+				return;
+			}
+		}
+
+		if(code == 68) {  //d, ctrl-d
+			if((modifiers & AjaxViewer.CTRL_KEY_MASK) != 0) {
+				this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 68, modifiers: modifiers});
+				this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 68, modifiers: modifiers});
 				return;
 			}
 		}
