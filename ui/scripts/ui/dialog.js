@@ -353,7 +353,7 @@
 
         // Tooltip
           $input.toolTip({
-             docID: field.docID,
+             docID: args.form.docID,
              tooltip:'.tooltip-box',
              mode:'hover'
           });
