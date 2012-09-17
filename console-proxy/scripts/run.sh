@@ -22,12 +22,16 @@
  
 while true
 do
-  ./_run.sh "$@" &
-  wait
-  ex=$?
-  if [ $ex -eq 0 ] || [ $ex -eq 1 ] || [ $ex -eq 66 ] || [ $ex -gt 128 ]; then
-      # permanent errors
-      sleep 5
+  pid=`/etc/init.d/cloud status > /usr/local/cloud/systemvm/running_status`
+  grep 'process id' /usr/local/cloud/systemvm/running_status &>/dev/null
+  if [ $? -ne 0 ]; then
+      ./_run.sh "$@" &
+      wait
+      ex=$?
+      if [ $ex -eq 0 ] || [ $ex -eq 1 ] || [ $ex -eq 66 ] || [ $ex -gt 128 ]; then
+          # permanent errors
+          sleep 5
+      fi
   fi
 
   # user stop agent by service cloud stop
