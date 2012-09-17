@@ -28,6 +28,8 @@ import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
 import com.cloud.api.ApiConstants;
 import com.cloud.baremetal.networkservice.BareMetalResourceBase;
+import com.cloud.configuration.Config;
+import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.dc.ClusterVO;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.dao.ClusterDao;
@@ -62,6 +64,7 @@ public class BareMetalDiscoverer extends DiscovererBase implements Discoverer, R
 	@Inject DataCenterDao _dcDao;
     @Inject VMInstanceDao _vmDao = null;
     @Inject ResourceManager _resourceMgr;
+    @Inject ConfigurationDao _configDao;
 	
     @Override
     public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
@@ -170,6 +173,8 @@ public class BareMetalDiscoverer extends DiscovererBase implements Discoverer, R
 			if (vmIp != null) {
 			    details.put(ApiConstants.IP_ADDRESS, vmIp);
 			}
+			String isEchoScAgent = _configDao.getValue(Config.EnableBaremetalSecurityGroupAgentEcho.key());
+			details.put(BaremetalManager.EchoSecurityGroupAgent, isEchoScAgent);
 
 			resources.put(resource, details);
 			resource.start();

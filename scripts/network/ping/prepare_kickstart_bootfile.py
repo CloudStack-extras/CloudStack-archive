@@ -58,7 +58,7 @@ def prepare():
         if ks_device == '':
             stuff = fmt2 % (kernel, initrd, ks_file)
         else:
-            stuff = fmt1 % (kernel, initrd, ks_file, ks_device)
+            stuff = fmt1 % (kernel, initrd, ks_device, ks_file)
         f.write(stuff)
         f.close()
         return 0

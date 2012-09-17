@@ -19,6 +19,8 @@ import com.cloud.network.security.schema.SecurityGroupVmRuleSet;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.NetUtils;
 
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -65,13 +67,13 @@ public class SecurityGroupHttpClient {
 		return rules;
 	}
 
-    public boolean echo(String agentIp, int timeout, int interval) {
+    public boolean echo(String agentIp, long l, long m) {
         HttpClient httpClient = new HttpClient();
         boolean ret = false;
         int count = 1;
         while (true) {
             try {
-                Thread.sleep(interval);
+                Thread.sleep(m);
                 count++;
             } catch (InterruptedException e1) {
                 logger.warn("", e1);
@@ -88,8 +90,11 @@ public class SecurityGroupHttpClient {
                 }
                 break;
             } catch (Exception e) {
-                if (count*interval >= timeout) {
+                if (count*m >= l) {
+                    logger.debug(String.format("ping security group agent on vm[%s] timeout after %s minutes, starting vm failed, count=%s", agentIp, TimeUnit.MILLISECONDS.toSeconds(l), count));
                     break;
+                } else {
+                    logger.debug(String.format("Having pinged security group agent on vm[%s] %s times, continue to wait...", agentIp, count));
                 }
             }
         }

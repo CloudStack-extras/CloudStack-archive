@@ -63,7 +63,10 @@ import com.cloud.utils.script.Script2.ParamType;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.agent.api.SecurityGroupRulesCmd;
+import com.cloud.baremetal.manager.BaremetalManager;
 import com.cloud.network.security.SecurityGroupHttpClient;
+
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 
 @Local(value = ServerResource.class)
 public class BareMetalResourceBase implements ServerResource {
@@ -81,6 +84,7 @@ public class BareMetalResourceBase implements ServerResource {
 	protected String _username;
 	protected String _password;
 	protected String _ip;
+	protected boolean _isEchoScAgent;
 	protected IAgentControl _agentControl;
 	protected Script2 _pingCommand;
 	protected Script2 _setPxeBootCommand;
@@ -127,6 +131,7 @@ public class BareMetalResourceBase implements ServerResource {
 		_username = (String) params.get(ApiConstants.USERNAME);
 		_password = (String) params.get(ApiConstants.PASSWORD);
 		_vmName = (String) params.get("vmName");
+		String echoScAgent = (String) params.get(BaremetalManager.EchoSecurityGroupAgent);
 
 		if (_pod == null) {
 			throw new ConfigurationException("Unable to get the pod");
@@ -151,6 +156,10 @@ public class BareMetalResourceBase implements ServerResource {
 
 		if (_uuid == null) {
 			throw new ConfigurationException("Unable to get the uuid");
+		}
+		
+		if (echoScAgent != null) {
+		    _isEchoScAgent = Boolean.valueOf(echoScAgent);
 		}
 
 		String injectScript = "scripts/util/ipmi.py";
@@ -495,6 +504,14 @@ public class BareMetalResourceBase implements ServerResource {
 				if (!doScript(_powerOnCommand)) {
 					return new StartAnswer(cmd, "IPMI power on failed");
 				}
+			}
+			
+			if (_isEchoScAgent) {
+			    SecurityGroupHttpClient hc = new SecurityGroupHttpClient();
+			    boolean echoRet = hc.echo(vm.getNics()[0].getIp(), TimeUnit.MINUTES.toMillis(30), TimeUnit.MINUTES.toMillis(1));
+			    if (!echoRet) {
+			        return new StartAnswer(cmd, String.format("Call security group agent on vm[%s] timeout", vm.getNics()[0].getIp()));
+			    }
 			}
 
 			s_logger.debug("Start bare metal vm " + vm.getName() + "successfully");
