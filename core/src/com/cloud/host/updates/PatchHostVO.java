@@ -8,85 +8,85 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 /**
-* Join table for updates hosts and patches
-* @author sanjay
-*
-*/
+ * Join table for updates hosts and patches
+ * @author sanjay
+ *
+ */
 @Entity
 @Table(name="patch_host_ref")
 public class PatchHostVO implements PatchHostRef{
-	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	Long id;
-	
-	@Column(name="host_id")
-	private long hostId;
-	
-	@Column(name="patch_id")
-	private long patchId;
-	
-	@Column(name="update_applied")
-	private boolean isApplied;
+    @Id
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    Long id;
 
-	@Override
-	public long getHostId() {
-		return hostId;
-	}
+    @Column(name="host_id")
+    private long hostId;
 
-	public void setHostId(long hostId) {
-		this.hostId = hostId;
-	}
+    @Column(name="patch_id")
+    private long patchId;
 
-	@Override
-	public long getPatchId() {
-		return patchId;
-	}
+    @Column(name="update_applied")
+    private boolean isApplied;
 
-	public void setPatchId(long patchId) {
-		this.patchId = patchId;
-	}
+    @Override
+    public long getHostId() {
+        return hostId;
+    }
 
-	public long getId() {
-		return id;
-	}
-	
-	@Override
-	public boolean getUpdateApplied() {
-		return isApplied;
-	}
+    public void setHostId(long hostId) {
+        this.hostId = hostId;
+    }
 
-	public void setUpdateApplied(boolean value) {
-		isApplied = value;
-	}
+    @Override
+    public long getPatchId() {
+        return patchId;
+    }
 
-	@Override
-	public String getAfterApplyGuidance() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public void setPatchId(long patchId) {
+        this.patchId = patchId;
+    }
 
-	@Override
-	public String getDescription() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public long getId() {
+        return id;
+    }
 
-	@Override
-	public String getLabel() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public boolean getUpdateApplied() {
+        return isApplied;
+    }
 
-	@Override
-	public String getTimestamp() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public void setUpdateApplied(boolean value) {
+        isApplied = value;
+    }
 
-	@Override
-	public String getURL() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public String getAfterApplyGuidance() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getDescription() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getLabel() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getTimestamp() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String getURL() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }

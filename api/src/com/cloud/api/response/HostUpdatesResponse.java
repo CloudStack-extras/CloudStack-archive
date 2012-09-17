@@ -22,60 +22,60 @@ import com.google.gson.annotations.SerializedName;
 
 @SuppressWarnings("unused")
 public class HostUpdatesResponse extends BaseResponse {
- @SerializedName(ApiConstants.ID) @Param(description="the id of the patch")
- private IdentityProxy id = new IdentityProxy("host_updates");
+    @SerializedName(ApiConstants.ID) @Param(description="the id of the patch")
+    private IdentityProxy id = new IdentityProxy("host_updates");
 
- @SerializedName(ApiConstants.HOST_UPDATE_LABEL) @Param(description="the label of the update")
- private String label;
+    @SerializedName(ApiConstants.HOST_UPDATE_LABEL) @Param(description="the label of the update")
+    private String label;
 
- @SerializedName(ApiConstants.DESCRIPTION) @Param(description="description of the update")
- private String description;
+    @SerializedName(ApiConstants.DESCRIPTION) @Param(description="description of the update")
+    private String description;
 
- @SerializedName(ApiConstants.HOST_ID) @Param(description="host ID")
- private long hostId;
+    @SerializedName(ApiConstants.HOST_ID) @Param(description="host ID")
+    private long hostId;
 
- @SerializedName(ApiConstants.AFTER_APPLY_GUIDANCE) @Param(description="guidance after applying the update")
- private String afterApplyGuidance;
- 
- @SerializedName(ApiConstants.APPLIED) @Param(description="if the update has been applied or not")
- private Boolean applied;
- 
- @SerializedName(ApiConstants.URL) @Param(description="URL of the availabel update")
- private String URL;
+    @SerializedName(ApiConstants.AFTER_APPLY_GUIDANCE) @Param(description="guidance after applying the update")
+    private String afterApplyGuidance;
 
- @SerializedName(ApiConstants.TIMESTAMP) @Param(description="release time of the update")
- private String timestamp;
+    @SerializedName(ApiConstants.APPLIED) @Param(description="if the update has been applied or not")
+    private Boolean applied;
 
- 
- public void setId(Long id) {
-     this.id.setValue(id);
- }
+    @SerializedName(ApiConstants.URL) @Param(description="URL of the availabel update")
+    private String URL;
 
- public void setLable(String label) {
-     this.label = label;
- }
- 
- public void setDescription(String description) {
-     this.description = description;
- }
+    @SerializedName(ApiConstants.TIMESTAMP) @Param(description="release time of the update")
+    private String timestamp;
 
- public void setHostId(Long hostId) {
-     this.hostId = hostId;
- }
- 
- public void setAfterApplyGuidance(String afterApplyGuidance) {
-     this.afterApplyGuidance = afterApplyGuidance;
- }
- 
- public void setUpdateApplied(Boolean applied) {
-     this.applied = applied;
- }
- 
- public void setURL(String URL) {
-     this.URL = URL;
- }
- 
- public void setTimestamp(String timestamp) {
-     this.timestamp = timestamp;
- }
+
+    public void setId(Long id) {
+        this.id.setValue(id);
+    }
+
+    public void setLable(String label) {
+        this.label = label;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setHostId(Long hostId) {
+        this.hostId = hostId;
+    }
+
+    public void setAfterApplyGuidance(String afterApplyGuidance) {
+        this.afterApplyGuidance = afterApplyGuidance;
+    }
+
+    public void setUpdateApplied(Boolean applied) {
+        this.applied = applied;
+    }
+
+    public void setURL(String URL) {
+        this.URL = URL;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
+    }
 }

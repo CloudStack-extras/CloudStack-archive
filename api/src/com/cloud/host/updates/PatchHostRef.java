@@ -5,16 +5,14 @@ package com.cloud.host.updates;
  *
  */
 public interface PatchHostRef {
-	
-    long getId();
-	long getHostId();
-	long getPatchId();
 
-	boolean getUpdateApplied();
-    
-	String getLabel();
-	String getDescription();
-	String getURL();
-	String getAfterApplyGuidance();
-	String getTimestamp();
+    long getId();
+    long getHostId();
+    long getPatchId();
+    boolean getUpdateApplied();
+    String getLabel();
+    String getDescription();
+    String getURL();
+    String getAfterApplyGuidance();
+    String getTimestamp();
 }

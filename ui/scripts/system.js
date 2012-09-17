@@ -7927,34 +7927,35 @@
 								}
 							},
 							hostUpdates: {
-		            title: 'Updates',
-		            multiple: true,
-		            cache:false,
-		            fields: [
-		              {
-		                name: {label:'' , header: true},
-		                url: { label: 'URL' },
-		                timestamp: { label: 'Timestamp' },
-		              }
-		            ],
-		            dataProvider: function(args) {
-		             $.ajax({
-		                     url:createURL("listHostUpdates&hostid=" + args.context.hosts[0].id + "&applied=false"),
-		                     dataType: "json",
-		                     success:function(json) {
+								title: 'Updates',
+								multiple: true,
+								cache:false,
+								fields: [
+								         {
+								        	 name: {label:'' , header: true},
+								        	 url: { label: 'URL' },
+								        	 timestamp: { label: 'Timestamp' },
+								         }
+								         ],
+								         dataProvider: function(args) {
+								$.ajax({
+									url:createURL("listHostUpdates&hostid=" + args.context.hosts[0].id + "&applied=false"),
+									dataType: "json",
+									success:function(json) {
+										
+									updates = json.listhostupdatesresponse.update? json.listhostupdatesresponse.update :[];
+									args.response.success({
+										data: $.map(updates, function(update, index) {
+											var name = update.description;
+											return $.extend(update, {
+												name: name
+											});
+										})
+									});
 
-		                     args.response.success({
-		                     data: $.map(json.listhostupdatesresponse.update, function(update, index) {
-		                     var name = update.description;
-		                     return $.extend(update, {
-		                        name: name
-		                               });
-		                            })
-		                        });
-
-		                     }
-		                });
-		            }
+								}
+								});
+							}
 		          }
             }
           }
