@@ -9,7 +9,7 @@ public interface PatchHostRef {
     long getId();
     long getHostId();
     long getPatchId();
-    boolean getUpdateApplied();
+    boolean getIsApplied();
     String getLabel();
     String getDescription();
     String getURL();

@@ -51,11 +51,11 @@ public class PatchHostVO implements PatchHostRef{
     }
 
     @Override
-    public boolean getUpdateApplied() {
+    public boolean getIsApplied() {
         return isApplied;
     }
 
-    public void setUpdateApplied(boolean value) {
+    public void setIsApplied(boolean value) {
         isApplied = value;
     }
 

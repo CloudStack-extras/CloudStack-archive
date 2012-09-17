@@ -2459,7 +2459,7 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
                         PatchHostVO newEntry = new PatchHostVO();
                         newEntry.setHostId(hostId);
                         newEntry.setPatchId(patch.getId());
-                        newEntry.setUpdateApplied(false);
+                        newEntry.setIsApplied(false);
                         _patchHostRefDao.persist(newEntry);
                     }
                 }
@@ -2480,9 +2480,9 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
                 patchHostRef  = _patchHostRefDao.findUpdate(hostId, patch.getId());
             }
 
-            if(patchHostRef != null && !patchHostRef.getUpdateApplied()) {
+            if(patchHostRef != null && !patchHostRef.getIsApplied()) {
                 PatchHostVO patchRef = _patchHostRefDao.lockRow(patchHostRef.getId(), true);
-                patchRef.setUpdateApplied(true);
+                patchRef.setIsApplied(true);
                 _patchHostRefDao.update(patchHostRef.getId(), patchRef);
                 txn.commit();
             }

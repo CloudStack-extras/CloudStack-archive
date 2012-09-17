@@ -4045,7 +4045,7 @@ public class ApiResponseHelper implements ResponseGenerator {
 		// TODO Auto-generated method stub
 		HostUpdatesResponse hostUpdatesResponse = new HostUpdatesResponse();
 		
-		hostUpdatesResponse.setUpdateApplied(update.getUpdateApplied());
+		hostUpdatesResponse.setUpdateApplied(update.getIsApplied());
 		
 		HostUpdatesVO updateDetail = ApiDBUtils.findUpdateByPatchId(update.getPatchId());
 		if(updateDetail != null)
