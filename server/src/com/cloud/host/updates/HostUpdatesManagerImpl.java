@@ -9,7 +9,6 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -40,6 +39,7 @@ import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.host.dao.HostDetailsDao;
 import com.cloud.host.updates.dao.HostUpdatesDao;
+import com.cloud.host.updates.dao.PatchHostRefDao;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.component.Adapters;
 import com.cloud.utils.component.Inject;
@@ -58,6 +58,8 @@ public class HostUpdatesManagerImpl implements HostUpdatesManager {
 	HostDetailsDao _hostDetailsDao;
 	@Inject
 	HostUpdatesDao _hostUpdatesDao;
+	@Inject
+	PatchHostRefDao _patchHostRefDao;
 	@Inject
 	ConfigurationDao _configDao;
 	
@@ -173,17 +175,26 @@ public class HostUpdatesManagerImpl implements HostUpdatesManager {
 	        		HostUpdatesVO patch = _hostUpdatesDao.findByUUID(patchId);
 	        		if(patch == null)
 	        		{
-	        			//insert new update
+	        			//insert new patch info into host_updates table 
 	        			HostUpdatesVO newUpdate = new HostUpdatesVO();
 	        			newUpdate.setUuid(patchInfo.getAttribute("uuid"));
 	        			newUpdate.setLable(patchInfo.getAttribute("name-label"));
 	        			newUpdate.setDescription(patchInfo.getAttribute("name-description"));
-	        			newUpdate.setHostId(hostId);
 	        			newUpdate.setAfterApplyGuidance(patchInfo.getAttribute("after-apply-guidance"));
 	        			newUpdate.setURL(patchInfo.getAttribute("url"));
-	        			newUpdate.setUpdateApplied(false);
 	        			newUpdate.setTimestamp(patchInfo.getAttribute("timestamp"));
 	        			_hostUpdatesDao.persist(newUpdate);
+	        		}
+	        		patch = _hostUpdatesDao.findByUUID(patchId);
+	       
+	        		//insert entry into patch_host_ref table 
+	        		if( _patchHostRefDao.findUpdate(hostId, patch.getId()) == null)
+	        		{
+	        			PatchHostVO newEntry = new PatchHostVO();
+	        			newEntry.setHostId(hostId);
+	        			newEntry.setPatchId(patch.getId());
+	        			newEntry.setUpdateApplied(false);
+	        			_patchHostRefDao.persist(newEntry);
 	        		}
 	        	}
 	        }
@@ -191,18 +202,22 @@ public class HostUpdatesManagerImpl implements HostUpdatesManager {
     }
     
     @DB
-    public void updateAppliedField(List<String> appliedPatchList){
+    public void updateAppliedField(List<String> appliedPatchList, long hostId){
 		Transaction txn = Transaction.currentTxn();
     	txn.start();
     	for(int counter = 0; counter < appliedPatchList.size(); counter++)
 		{
 			String patchId = appliedPatchList.get(counter);
     		HostUpdatesVO patch = _hostUpdatesDao.findByUUID(patchId);
-    		if(patch != null && !patch.getUpdateApplied())
+    		PatchHostVO patchHostRef = null;
+			if(patch != null)
+    			patchHostRef  = _patchHostRefDao.findUpdate(hostId, patch.getId());
+    		
+    		if(patchHostRef != null && !patchHostRef.getUpdateApplied())
     		{
-    			HostUpdatesVO update = _hostUpdatesDao.lockRow(patch.getId(), true);
-    			update.setUpdateApplied(true);
-    			_hostUpdatesDao.update(patch.getId(), update);
+    			PatchHostVO patchRef = _patchHostRefDao.lockRow(patchHostRef.getId(), true);
+    			patchRef.setUpdateApplied(true);
+    			_patchHostRefDao.update(patchHostRef.getId(), patchRef);
     			txn.commit();
     		}
 		}
@@ -234,11 +249,11 @@ public class HostUpdatesManagerImpl implements HostUpdatesManager {
 								cmd = new HostUpdatesCommand();
 								HostUpdatesAnswer updates = (HostUpdatesAnswer) _agentMgr.send(hostId, cmd);
 								List<String> appliedPatchList = updates.getAppliedPatchList();
-								updateAppliedField(appliedPatchList);
+								updateAppliedField(appliedPatchList, hostId);
 							}
 					}
 				} catch (Throwable e){
-					s_logger.error("Exception in Host Update Checker");
+					s_logger.error("Exception in Host Update Checker",e);
 					if(doc == null)
 					{s_logger.error("Exception in Host Update Checker:  Pass the correct update location URL");}
 				};

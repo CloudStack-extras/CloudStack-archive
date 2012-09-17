@@ -24,8 +24,7 @@ import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.response.HostUpdatesResponse;
 import com.cloud.api.response.ListResponse;
-import com.cloud.async.AsyncJob;
-import com.cloud.host.updates.HostUpdates;
+import com.cloud.host.updates.PatchHostRef;
 
 @Implementation(description="Lists Host Updates.", responseObject=HostUpdatesResponse.class)
 public class ListHostUpdatesCmd extends BaseListCmd {
@@ -42,7 +41,7 @@ public class ListHostUpdatesCmd extends BaseListCmd {
     private Long id;
     
     @IdentityMapper(entityTableName="host")
-    @Parameter(name=ApiConstants.HOST_ID, type=CommandType.LONG, description="the id of the host")
+    @Parameter(name=ApiConstants.HOST_ID, type=CommandType.LONG, required=true, description="the id of the host")
     private Long hostId;
 
     @Parameter(name=ApiConstants.APPLIED, type=CommandType.BOOLEAN, description="update applied or not (true, false)")
@@ -72,30 +71,14 @@ public class ListHostUpdatesCmd extends BaseListCmd {
     public String getCommandName() {
         return s_name;
     }    
-    /*
-    public String getHostID() {
-        Host host = _responseGenerator.findHostById(hostId)
-        if (host != null) {
-            return host.getPrivateIpAddress();
-        }
-		return null;
-    }*/
 
     @Override
     public void execute(){
-        List<? extends HostUpdates> result = _mgr.searchForHostUpdates(this);
+        List<? extends PatchHostRef> result = _mgr.searchForHostUpdates(this);
         ListResponse<HostUpdatesResponse> response = new ListResponse<HostUpdatesResponse>();
         List<HostUpdatesResponse> hostUpdatesResponseList = new ArrayList<HostUpdatesResponse>();
-        for (HostUpdates update : result) {
-            HostUpdatesResponse hostUpdatesResponse = new HostUpdatesResponse();
-            hostUpdatesResponse.setId(update.getId());
-            hostUpdatesResponse.setLable(update.getLabel());
-            hostUpdatesResponse.setDescription(update.getDescription());
-            hostUpdatesResponse.setHostId(update.getHostId());
-            hostUpdatesResponse.setAfterApplyGuidance(update.getAfterApplyGuidance());
-            hostUpdatesResponse.setURL(update.getURL());
-            hostUpdatesResponse.setTimestamp(update.getTimestamp());
-
+        for (PatchHostRef update : result) {
+        	HostUpdatesResponse hostUpdatesResponse = _responseGenerator.createHostUpdatesResponse(update);
             hostUpdatesResponse.setObjectName("update");
             hostUpdatesResponseList.add(hostUpdatesResponse);
         }

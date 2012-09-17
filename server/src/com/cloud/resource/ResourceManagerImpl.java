@@ -93,6 +93,7 @@ import com.cloud.host.dao.HostDao;
 import com.cloud.host.dao.HostDetailsDao;
 import com.cloud.host.dao.HostTagsDao;
 import com.cloud.host.updates.dao.HostUpdatesDao;
+import com.cloud.host.updates.dao.PatchHostRefDao;
 import com.cloud.hypervisor.Hypervisor;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.kvm.resource.KvmDummyResourceBase;
@@ -187,7 +188,7 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
     @Inject
     protected HostDetailsDao                 _hostDetailsDao;
     @Inject
-    protected HostUpdatesDao                 _hostUpdatesDao;
+    protected PatchHostRefDao                 _patchHostRefDao;
     @Inject
     protected ConfigurationDao _configDao;
     @Inject
@@ -872,7 +873,7 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
         _hostDetailsDao.deleteDetails(hostId);
         
         // delete host updates details
-        _hostUpdatesDao.deleteUpdates(hostId);
+        _patchHostRefDao.deletePatchRef(hostId);
 
         host.setGuid(null);
         Long clusterId = host.getClusterId();

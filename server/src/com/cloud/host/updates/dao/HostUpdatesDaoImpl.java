@@ -13,13 +13,6 @@ import com.cloud.utils.db.SearchCriteria;
 
 @Local(value = { HostUpdatesDao.class })
 public class HostUpdatesDaoImpl extends GenericDaoBase<HostUpdatesVO, Long> implements HostUpdatesDao {
-	protected final SearchBuilder<HostUpdatesVO> HostSearch;
-	
-	protected HostUpdatesDaoImpl() {
-        HostSearch = createSearchBuilder();
-        HostSearch.and("hostId", HostSearch.entity().getHostId(), SearchCriteria.Op.EQ);
-        HostSearch.done();
-    }
 	
 	@Override
     public HostUpdatesVO searchForUpdates(Long id,Long hostId) {
@@ -52,14 +45,4 @@ public class HostUpdatesDaoImpl extends GenericDaoBase<HostUpdatesVO, Long> impl
         return null;
     }
     
-    @Override
-    public void deleteUpdates(long hostId) {
-        SearchCriteria<HostUpdatesVO> sc = HostSearch.create();
-        sc.setParameters("hostId", hostId);
-        
-        List<HostUpdatesVO> results = search(sc, null);
-        for (HostUpdatesVO result : results) {
-        	remove(result.getId());
-        }
-    }
 }

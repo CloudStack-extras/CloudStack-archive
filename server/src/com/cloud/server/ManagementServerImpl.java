@@ -60,7 +60,6 @@ import com.cloud.api.commands.DestroySystemVmCmd;
 import com.cloud.api.commands.ExtractVolumeCmd;
 import com.cloud.api.commands.GetVMPasswordCmd;
 import com.cloud.api.commands.ListAlertsCmd;
-import com.cloud.api.commands.ListHostUpdatesCmd;
 import com.cloud.api.commands.ListAsyncJobsCmd;
 import com.cloud.api.commands.ListCapabilitiesCmd;
 import com.cloud.api.commands.ListCapacityCmd;
@@ -70,6 +69,7 @@ import com.cloud.api.commands.ListDiskOfferingsCmd;
 import com.cloud.api.commands.ListEventsCmd;
 import com.cloud.api.commands.ListGuestOsCategoriesCmd;
 import com.cloud.api.commands.ListGuestOsCmd;
+import com.cloud.api.commands.ListHostUpdatesCmd;
 import com.cloud.api.commands.ListHostsCmd;
 import com.cloud.api.commands.ListIsosCmd;
 import com.cloud.api.commands.ListPodsByCmd;
@@ -115,8 +115,8 @@ import com.cloud.dc.ClusterVO;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.HostPodVO;
 import com.cloud.dc.PodVlanMapVO;
-import com.cloud.dc.Vlan.VlanType;
 import com.cloud.dc.VlanVO;
+import com.cloud.dc.Vlan.VlanType;
 import com.cloud.dc.dao.AccountVlanMapDao;
 import com.cloud.dc.dao.ClusterDao;
 import com.cloud.dc.dao.DataCenterDao;
@@ -142,18 +142,18 @@ import com.cloud.exception.StorageUnavailableException;
 import com.cloud.ha.HighAvailabilityManager;
 import com.cloud.host.DetailVO;
 import com.cloud.host.Host;
-import com.cloud.host.Host.Type;
 import com.cloud.host.HostTagVO;
 import com.cloud.host.HostVO;
+import com.cloud.host.Host.Type;
 import com.cloud.host.dao.HostDao;
 import com.cloud.host.dao.HostDetailsDao;
 import com.cloud.host.dao.HostTagsDao;
-import com.cloud.host.updates.HostUpdates;
-import com.cloud.host.updates.HostUpdatesVO;
+import com.cloud.host.updates.PatchHostVO;
 import com.cloud.host.updates.dao.HostUpdatesDao;
-import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.host.updates.dao.PatchHostRefDao;
 import com.cloud.hypervisor.HypervisorCapabilities;
 import com.cloud.hypervisor.HypervisorCapabilitiesVO;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.dao.HypervisorCapabilitiesDao;
 import com.cloud.info.ConsoleProxyInfo;
 import com.cloud.keystore.KeystoreManager;
@@ -166,8 +166,8 @@ import com.cloud.network.dao.NetworkDao;
 import com.cloud.org.Cluster;
 import com.cloud.org.Grouping.AllocationState;
 import com.cloud.projects.Project;
-import com.cloud.projects.Project.ListProjectResourcesCriteria;
 import com.cloud.projects.ProjectManager;
+import com.cloud.projects.Project.ListProjectResourcesCriteria;
 import com.cloud.resource.ResourceManager;
 import com.cloud.server.ResourceTag.TaggedResourceType;
 import com.cloud.service.ServiceOfferingVO;
@@ -176,15 +176,15 @@ import com.cloud.storage.DiskOfferingVO;
 import com.cloud.storage.GuestOSCategoryVO;
 import com.cloud.storage.GuestOSVO;
 import com.cloud.storage.Storage;
-import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.StorageManager;
 import com.cloud.storage.StoragePoolVO;
 import com.cloud.storage.Upload;
-import com.cloud.storage.Upload.Mode;
 import com.cloud.storage.UploadVO;
 import com.cloud.storage.VMTemplateVO;
 import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeVO;
+import com.cloud.storage.Storage.ImageFormat;
+import com.cloud.storage.Upload.Mode;
 import com.cloud.storage.dao.DiskOfferingDao;
 import com.cloud.storage.dao.GuestOSCategoryDao;
 import com.cloud.storage.dao.GuestOSDao;
@@ -224,10 +224,10 @@ import com.cloud.utils.db.DB;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.db.JoinBuilder;
-import com.cloud.utils.db.JoinBuilder.JoinType;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.Transaction;
+import com.cloud.utils.db.JoinBuilder.JoinType;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.MacAddress;
 import com.cloud.utils.net.NetUtils;
@@ -240,10 +240,10 @@ import com.cloud.vm.SecondaryStorageVmVO;
 import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachine;
-import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.VirtualMachineManager;
 import com.cloud.vm.VirtualMachineProfile;
 import com.cloud.vm.VirtualMachineProfileImpl;
+import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.dao.ConsoleProxyDao;
 import com.cloud.vm.dao.DomainRouterDao;
 import com.cloud.vm.dao.InstanceGroupDao;
@@ -286,6 +286,7 @@ public class ManagementServerImpl implements ManagementServer {
     private final AccountDao _accountDao;
     private final AlertDao _alertDao;
     private final HostUpdatesDao _hostUpdatesDao;
+    private final PatchHostRefDao _patchHostRefDao;
     private final CapacityDao _capacityDao;
     private final GuestOSDao _guestOSDao;
     private final GuestOSCategoryDao _guestOSCategoryDao;
@@ -368,6 +369,7 @@ public class ManagementServerImpl implements ManagementServer {
         _accountDao = locator.getDao(AccountDao.class);
         _alertDao = locator.getDao(AlertDao.class);
         _hostUpdatesDao = locator.getDao(HostUpdatesDao.class);
+        _patchHostRefDao = locator.getDao(PatchHostRefDao.class);
         _capacityDao = locator.getDao(CapacityDao.class);
         _guestOSDao = locator.getDao(GuestOSDao.class);
         _guestOSCategoryDao = locator.getDao(GuestOSCategoryDao.class);
@@ -2079,29 +2081,10 @@ public class ManagementServerImpl implements ManagementServer {
     }
 
     @Override
-    public List<? extends HostUpdates> searchForHostUpdates(ListHostUpdatesCmd cmd){
-        Filter searchFilter = new Filter(HostUpdatesVO.class, "timestamp", false, cmd.getStartIndex(), cmd.getPageSizeVal());
-        SearchCriteria<HostUpdatesVO> sc = _hostUpdatesDao.createSearchCriteria();
-
-        Long id = cmd.getId();
-        Long hostId = cmd.getHostId();
-        Boolean applied = cmd.isApplied();
-
-        _accountMgr.checkAccessAndSpecifyAuthority(UserContext.current().getCaller(), null);
-        if (id != null) {
-        	sc.addAnd("id", SearchCriteria.Op.EQ, id);
-        }
-        
-        if (hostId != null) {
-            sc.addAnd("hostId", SearchCriteria.Op.EQ, hostId);
-        }
-        
-        if (applied != null) {
-        	sc.addAnd("updateApplied", SearchCriteria.Op.EQ, applied);
-        }
-        	
-
-        return _hostUpdatesDao.search(sc, searchFilter);
+    public List<PatchHostVO> searchForHostUpdates(ListHostUpdatesCmd cmd){
+    	Long hostId = cmd.getHostId();
+    	Boolean isApplied = cmd.isApplied();
+    	return _patchHostRefDao.searchByHostId(hostId, isApplied);
     }
 
     @Override

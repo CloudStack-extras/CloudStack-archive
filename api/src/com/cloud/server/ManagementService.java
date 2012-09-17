@@ -72,7 +72,7 @@ import com.cloud.exception.InternalErrorException;
 import com.cloud.exception.PermissionDeniedException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.host.Host;
-import com.cloud.host.updates.HostUpdates;
+import com.cloud.host.updates.PatchHostRef;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.HypervisorCapabilities;
 import com.cloud.network.IpAddress;
@@ -241,7 +241,7 @@ public interface ManagementService {
      * @param c
      * @return List of Host updates
      */
-    List<? extends HostUpdates> searchForHostUpdates(ListHostUpdatesCmd cmd);
+    List<? extends PatchHostRef> searchForHostUpdates(ListHostUpdatesCmd cmd);
     
     /**
      * list all the capacity rows in capacity operations table

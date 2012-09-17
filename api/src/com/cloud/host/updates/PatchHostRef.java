@@ -1,10 +1,17 @@
 package com.cloud.host.updates;
 
-
-public interface HostUpdates {
+/**
+ * @author sanjay
+ *
+ */
+public interface PatchHostRef {
 	
     long getId();
 	long getHostId();
+	long getPatchId();
+
+	boolean getUpdateApplied();
+    
 	String getLabel();
 	String getDescription();
 	String getURL();

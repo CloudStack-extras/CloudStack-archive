@@ -25,7 +25,7 @@ import com.cloud.api.Identity;
 
 @Entity
 @Table(name="host_updates")
-public class HostUpdatesVO implements HostUpdates, Identity {
+public class HostUpdatesVO {
  @Id
  @GeneratedValue(strategy=GenerationType.IDENTITY)
  @Column(name="id")
@@ -46,12 +46,6 @@ public class HostUpdatesVO implements HostUpdates, Identity {
  @Column(name="URL", length=999)
  private String URL;
  
- @Column(name="host_id")
- private long hostId;
-
- @Column(name="update_applied")
- private boolean updateApplied = false;
- 
  @Column(name="timestamp")
  private String timestamp;
  
@@ -63,12 +57,10 @@ public class HostUpdatesVO implements HostUpdates, Identity {
  	this.uuid = UUID.randomUUID().toString();
  }
 
- @Override
  public long getId() {
      return id;
  }
 
- @Override
  public String getUuid() {
  	return this.uuid;
  }
@@ -77,7 +69,6 @@ public class HostUpdatesVO implements HostUpdates, Identity {
  	this.uuid = uuid;
  }
  
- @Override
  public String getLabel() {
      return label;
  }
@@ -86,7 +77,6 @@ public class HostUpdatesVO implements HostUpdates, Identity {
      this.label = label;
  }
 
- @Override
  public String getDescription() {
      return description;
  }
@@ -95,7 +85,6 @@ public class HostUpdatesVO implements HostUpdates, Identity {
      this.description = description;
  }
 
- @Override
  public String getURL() {
      return URL;
  }
@@ -104,7 +93,6 @@ public class HostUpdatesVO implements HostUpdates, Identity {
      this.URL = URL;
  }
  
- @Override
  public String getAfterApplyGuidance() {
      return afterApplyGuidance;
  }
@@ -112,25 +100,7 @@ public class HostUpdatesVO implements HostUpdates, Identity {
  public void setAfterApplyGuidance(String afterApplyGuidance) {
      this.afterApplyGuidance = afterApplyGuidance;
  }
-
- @Override
- public long getHostId() {
- 	return hostId;
- }
  
- public void setHostId(Long hostId) {
- 	this.hostId = hostId;
- }
- 
- public boolean getUpdateApplied() {
- 	return updateApplied;
- }
-
- public void setUpdateApplied(boolean value) {
- 	updateApplied = value;
- }
- 
- @Override
  public String getTimestamp() {
  	return this.timestamp;
  }
