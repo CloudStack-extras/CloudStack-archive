@@ -1985,6 +1985,11 @@ public class VirtualMachineManagerImpl implements VirtualMachineManager, Listene
                     s_logger.info("CloudStack is starting VM on host " + vm.getHostId() + ", but status report comes from a different host " + hostId + ", skip status sync for vm: "
                             + vm.getInstanceName());
                     return null;
+                }               
+                // if VM in Staring state is less than 10 minute , skip this VM
+                long curMilliSeconds = System.currentTimeMillis();
+                if ( curMilliSeconds - vm.getUpdateTime().getTime() < 10 * 60 *1000 ) {
+                    return null;               	
                 }
             }
             if (vm.getHostId() == null || hostId != vm.getHostId()) {
