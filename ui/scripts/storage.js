@@ -66,11 +66,13 @@
                 desc: 'message.add.volume',
                 fields: {
                   name: {
+                    docID: 'helpVolumeName',
                     label: 'label.name',
                     validation: { required: true }
                   },
                   availabilityZone: {
                     label: 'label.availability.zone',
+                    docID: 'helpVolumeAvailabilityZone',
                     select: function(args) {
                       $.ajax({
                         url: createURL("listZones&available=true"),
@@ -85,6 +87,7 @@
                   },
                   diskOffering: {
                     label: 'label.disk.offering',
+                    docID: 'helpVolumeDiskOffering',
                     select: function(args) {
                       $.ajax({
                         url: createURL("listDiskOfferings"),
