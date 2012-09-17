@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
 import com.cloud.dc.DataCenterVO;
@@ -145,4 +148,25 @@ public interface ResourceManager extends ResourceService{
      * @return
      */
     List<HostVO> listAllUpAndEnabledNonHAHosts(Type type, Long clusterId, Long podId, long dcId);
+
+    /**
+     * to get the latest updates for Xenserver
+     * @param url: location of updates 
+     * @return Document of updates
+     */
+    public Document getHostVersionsFile(String url);
+
+    /**
+     * Get released patches for a xenserver Version
+     * @param node of server verions 
+     * @param hypervisorVersion
+     * @return List of released patches
+     */
+    public List<String> getReleasedPatches(Element serverVersionsNode,String hypervisorVersion);
+
+    public void fillUpdates(Element patchDetailsNode, List<String> releasedPatches, long hostId);
+
+    public void updateAppliedField(List<String> appliedPatchList, long hostId);
+    
+    public void hostUpdateChecker(String url, String XYPERVISOR_TYPE);
 }

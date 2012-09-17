@@ -39,14 +39,14 @@ public class ListHostUpdatesCmd extends BaseListCmd {
     @IdentityMapper(entityTableName="host_updates")
     @Parameter(name=ApiConstants.ID, type=CommandType.LONG, description="the update uuid")
     private Long id;
-    
+
     @IdentityMapper(entityTableName="host")
     @Parameter(name=ApiConstants.HOST_ID, type=CommandType.LONG, required=true, description="the id of the host")
     private Long hostId;
 
     @Parameter(name=ApiConstants.APPLIED, type=CommandType.BOOLEAN, description="update applied or not (true, false)")
     private Boolean applied;
-    
+
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
@@ -58,11 +58,11 @@ public class ListHostUpdatesCmd extends BaseListCmd {
     public Long getHostId() {
         return hostId;
     }
-    
+
     public Boolean isApplied() {
         return applied;
     }
-    
+
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -78,7 +78,7 @@ public class ListHostUpdatesCmd extends BaseListCmd {
         ListResponse<HostUpdatesResponse> response = new ListResponse<HostUpdatesResponse>();
         List<HostUpdatesResponse> hostUpdatesResponseList = new ArrayList<HostUpdatesResponse>();
         for (PatchHostRef update : result) {
-        	HostUpdatesResponse hostUpdatesResponse = _responseGenerator.createHostUpdatesResponse(update);
+            HostUpdatesResponse hostUpdatesResponse = _responseGenerator.createHostUpdatesResponse(update);
             hostUpdatesResponse.setObjectName("update");
             hostUpdatesResponseList.add(hostUpdatesResponse);
         }
