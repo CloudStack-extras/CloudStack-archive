@@ -49,6 +49,7 @@ public class ApiConstants {
     public static final String DISK_OFFERING_ID = "diskofferingid";
     public static final String DISK_SIZE = "disksize";
     public static final String DISPLAY_NAME = "displayname";
+    public static final String INTERNAL_NAME_FLAG = "internalnameflag";
     public static final String DISPLAY_TEXT = "displaytext";
     public static final String DNS1 = "dns1";
     public static final String DNS2 = "dns2";

@@ -63,7 +63,9 @@ public interface VMInstanceDao extends GenericDao<VMInstanceVO, Long>, StateDao<
     List<VMInstanceVO> listByTypes(VirtualMachine.Type... types);
     
     VMInstanceVO findByIdTypes(long id, VirtualMachine.Type... types);
-    
+
+    VMInstanceVO findVMByInstanceName(String name);
+
     void updateProxyId(long id, Long proxyId, Date time);
 
     List<VMInstanceVO> listByHostIdTypes(long hostid, VirtualMachine.Type... types);

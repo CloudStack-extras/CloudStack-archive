@@ -46,7 +46,6 @@ import com.cloud.template.VirtualMachineTemplate;
 import com.cloud.user.Account;
 import com.cloud.user.UserContext;
 import com.cloud.uservm.UserVm;
-import com.cloud.utils.IdentityProxy;
 
 @Implementation(description="Creates and automatically starts a virtual machine based on a service offering, disk offering, and template.", responseObject=UserVmResponse.class)
 public class DeployVMCmd extends BaseAsyncCreateCmd {
@@ -75,6 +74,9 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
 
     @Parameter(name=ApiConstants.DISPLAY_NAME, type=CommandType.STRING, description="an optional user generated name for the virtual machine")
     private String displayName;
+
+    @Parameter(name=ApiConstants.INTERNAL_NAME_FLAG, type=CommandType.BOOLEAN, required=false, description="an optional flag that if set to true, sets the VM's internal name to the VM's display name")
+    private Boolean internalNameFlag;
 
     //Owner information
     @Parameter(name=ApiConstants.ACCOUNT, type=CommandType.STRING, description="an optional account for the virtual machine. Must be used with domainId.")
@@ -247,6 +249,10 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
         return startVm == null ? true : startVm;
     }
 
+    public boolean getInternalNameFlag() {
+        return internalNameFlag;
+    }
+
     private Map<Long, String> getIpToNetworkMap() {
         if ((networkIds != null || ipAddress != null) && ipToNetworkList != null) {
             throw new InvalidParameterValueException("NetworkIds and ipAddress can't be specified along with ipToNetworkMap parameter", null);
@@ -381,6 +387,10 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
                 }
             }
 
+            if (internalNameFlag == null) {
+                internalNameFlag = false;
+            }
+
             if (!zone.isLocalStorageEnabled()) {
                 if (serviceOffering.getUseLocalStorage()) {
                     throw new InvalidParameterValueException("Zone is not configured to use local storage but service offering " + serviceOffering.getName() + " uses it", null);
@@ -399,18 +409,18 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
                         throw new InvalidParameterValueException("Can't specify network Ids in Basic zone", null);
                     } else {
                         vm = _userVmService.createBasicSecurityGroupVirtualMachine(zone, serviceOffering, template, getSecurityGroupIdList(), owner, name,
-                                displayName, diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, getIpToNetworkMap(), ipAddress, keyboard);
+                                displayName, internalNameFlag, diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, getIpToNetworkMap(), ipAddress, keyboard);
                     }
                 } else {
                     if (zone.isSecurityGroupEnabled())  {
                         vm = _userVmService.createAdvancedSecurityGroupVirtualMachine(zone, serviceOffering, template, getNetworkIds(), getSecurityGroupIdList(),
-                                owner, name, displayName, diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, getIpToNetworkMap(), ipAddress, keyboard);
+                                owner, name, displayName, internalNameFlag, diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, getIpToNetworkMap(), ipAddress, keyboard);
                     } else {
                         if (getSecurityGroupIdList() != null && !getSecurityGroupIdList().isEmpty()) {
                             throw new InvalidParameterValueException("Can't create vm with security groups; security group feature is not enabled per zone", null);
                         }
                         vm = _userVmService.createAdvancedVirtualMachine(zone, serviceOffering, template, getNetworkIds(), owner, name, displayName,
-                                diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, getIpToNetworkMap(), ipAddress, keyboard);
+                                internalNameFlag, diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, getIpToNetworkMap(), ipAddress, keyboard);
                     }
                 }
             }

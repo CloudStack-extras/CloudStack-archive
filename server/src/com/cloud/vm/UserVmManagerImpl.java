@@ -1152,12 +1152,12 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         String time = configs.get("expunge.interval");
         _expungeInterval = NumbersUtil.parseInt(time, 86400);
         if ( _expungeInterval < 600 ) {
-        	_expungeInterval = 600;
+            _expungeInterval = 600;
         }
         time = configs.get("expunge.delay");
         _expungeDelay = NumbersUtil.parseInt(time, _expungeInterval);
         if ( _expungeDelay < 600 ) {
-        	_expungeDelay = 600;
+            _expungeDelay = 600;
         }
         _executor = Executors.newScheduledThreadPool(wrks, new NamedThreadFactory("UserVm-Scavenger"));
 
@@ -2050,7 +2050,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
 
     @Override
     public UserVm createBasicSecurityGroupVirtualMachine(DataCenter zone, ServiceOffering serviceOffering, VirtualMachineTemplate template, List<Long> securityGroupIdList, Account owner,
-            String hostName, String displayName, Long diskOfferingId, Long diskSize, String group, HypervisorType hypervisor, String userData, String sshKeyPair, Map<Long, String> requestedIps, String defaultIp, String keyboard)
+            String hostName, String displayName, boolean nameFlag, Long diskOfferingId, Long diskSize, String group, HypervisorType hypervisor, String userData, String sshKeyPair, Map<Long, String> requestedIps, String defaultIp, String keyboard)
                     throws InsufficientCapacityException, ConcurrentOperationException, ResourceUnavailableException, StorageUnavailableException, ResourceAllocationException {
 
         Account caller = UserContext.current().getCaller();
@@ -2092,13 +2092,13 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             }
         }
 
-        return createVirtualMachine(zone, serviceOffering, template, hostName, displayName, owner, diskOfferingId,
+        return createVirtualMachine(zone, serviceOffering, template, hostName, displayName, nameFlag, owner, diskOfferingId,
                 diskSize, networkList, securityGroupIdList, group, userData, sshKeyPair, hypervisor, caller, requestedIps, defaultIp, keyboard);
     }
 
     @Override
     public UserVm createAdvancedSecurityGroupVirtualMachine(DataCenter zone, ServiceOffering serviceOffering, VirtualMachineTemplate template, List<Long> networkIdList,
-            List<Long> securityGroupIdList, Account owner, String hostName, String displayName, Long diskOfferingId, Long diskSize, String group, HypervisorType hypervisor, String userData,
+            List<Long> securityGroupIdList, Account owner, String hostName, String displayName, boolean nameFlag, Long diskOfferingId, Long diskSize, String group, HypervisorType hypervisor, String userData,
             String sshKeyPair, Map<Long, String> requestedIps, String defaultIp, String keyboard) throws InsufficientCapacityException, ConcurrentOperationException, ResourceUnavailableException, StorageUnavailableException,
             ResourceAllocationException {
 
@@ -2201,13 +2201,13 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             }
         }
 
-        return createVirtualMachine(zone, serviceOffering, template, hostName, displayName, owner, diskOfferingId,
+        return createVirtualMachine(zone, serviceOffering, template, hostName, displayName, nameFlag, owner, diskOfferingId,
                 diskSize, networkList, securityGroupIdList, group, userData, sshKeyPair, hypervisor, caller, requestedIps, defaultIp, keyboard);
     }
 
     @Override
     public UserVm createAdvancedVirtualMachine(DataCenter zone, ServiceOffering serviceOffering, VirtualMachineTemplate template, List<Long> networkIdList, Account owner, String hostName,
-            String displayName, Long diskOfferingId, Long diskSize, String group, HypervisorType hypervisor, String userData, String sshKeyPair, Map<Long, String> requestedIps, String defaultIp, String keyboard)
+            String displayName, boolean nameFlag, Long diskOfferingId, Long diskSize, String group, HypervisorType hypervisor, String userData, String sshKeyPair, Map<Long, String> requestedIps, String defaultIp, String keyboard)
                     throws InsufficientCapacityException, ConcurrentOperationException, ResourceUnavailableException, StorageUnavailableException, ResourceAllocationException {
 
         Account caller = UserContext.current().getCaller();
@@ -2275,7 +2275,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
                     }
 
                 }
-                
+
                 _networkMgr.checkNetworkPermissions(owner, network);
 
                 //don't allow to use system networks 
@@ -2289,11 +2289,11 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             }
         }
 
-        return createVirtualMachine(zone, serviceOffering, template, hostName, displayName, owner, diskOfferingId, diskSize, networkList, null, group, userData, sshKeyPair, hypervisor, caller, requestedIps, defaultIp, keyboard);
+        return createVirtualMachine(zone, serviceOffering, template, hostName, displayName, nameFlag, owner, diskOfferingId, diskSize, networkList, null, group, userData, sshKeyPair, hypervisor, caller, requestedIps, defaultIp, keyboard);
     }
 
     @DB @ActionEvent(eventType = EventTypes.EVENT_VM_CREATE, eventDescription = "deploying Vm", create = true)
-    protected UserVm createVirtualMachine(DataCenter zone, ServiceOffering serviceOffering, VirtualMachineTemplate template, String hostName, String displayName, Account owner, Long diskOfferingId,
+    protected UserVm createVirtualMachine(DataCenter zone, ServiceOffering serviceOffering, VirtualMachineTemplate template, String hostName, String displayName, boolean nameFlag, Account owner, Long diskOfferingId,
             Long diskSize, List<NetworkVO> networkList, List<Long> securityGroupIdList, String group, String userData, String sshKeyPair, HypervisorType hypervisor, Account caller, Map<Long, String> requestedIps, String defaultNetworkIp, String keyboard) throws InsufficientCapacityException, ResourceUnavailableException, ConcurrentOperationException, StorageUnavailableException, ResourceAllocationException {
 
         _accountMgr.checkAccess(caller, null, true, owner);
@@ -2478,7 +2478,18 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
 
         long id = _vmDao.getNextInSequence(Long.class, "id");
 
-        String instanceName = VirtualMachineName.getVmName(id, owner.getId(), _instance);
+        String instanceName;
+        if (nameFlag && displayName != null) {
+            // Search whether there is already an instance with the same instance name
+            // that is not in the destroyed or expunging state.
+            VMInstanceVO vm = _vmInstanceDao.findVMByInstanceName(displayName);
+            if (vm != null && (vm.getState() != VirtualMachine.State.Destroyed || vm.getState() != VirtualMachine.State.Expunging)) {
+                throw new InvalidParameterValueException("There already exists a VM by the display name supplied", null);
+            }
+            instanceName = displayName;
+        } else {
+            instanceName = VirtualMachineName.getVmName(id, owner.getId(), _instance);
+        }
 
         String uuidName = UUID.randomUUID().toString();
 
@@ -3459,7 +3470,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             idList.add(new IdentityProxy(oldAccount, oldAccount.getAccountId(), "accountId"));
             throw new InvalidParameterValueException("The account with the specified id should be same domain for moving VM between two accounts.", idList);
         }
-        
+
         // don't allow to move the vm if there are existing PF/LB/Static Nat rules, or vm is assigned to static Nat ip
         List<PortForwardingRuleVO> pfrules = _portForwardingDao.listByVm(cmd.getVmId());
         if (pfrules != null && pfrules.size() > 0){
@@ -3529,10 +3540,10 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             //snapshots: mark these removed in db
             List<SnapshotVO> snapshots =  _snapshotDao.listByVolumeIdIncludingRemoved(volume.getId());
             for (SnapshotVO snapshot: snapshots){
-            	_snapshotDao.remove(snapshot.getId());
+                _snapshotDao.remove(snapshot.getId());
             }
         }
-        
+
         _resourceLimitMgr.incrementResourceCount(newAccount.getAccountId(), ResourceType.user_vm);
         //generate usage events to account for this change
         _usageEventDao.persist(new UsageEventVO(EventTypes.EVENT_VM_CREATE, vm.getAccountId(), vm.getDataCenterIdToDeployIn(), vm.getId(), 
