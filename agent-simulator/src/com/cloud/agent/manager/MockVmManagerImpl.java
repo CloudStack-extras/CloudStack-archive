@@ -103,6 +103,7 @@ public class MockVmManagerImpl implements MockVmManager {
             vm.setName(vmName);
             vm.setVncPort(vncPort);
             vm.setHostId(host.getId());
+            vm.setBootargs(bootArgs);
             if(vmName.startsWith("s-")) {
             	vm.setType("SecondaryStorageVm");
             } else if (vmName.startsWith("v-")) {
@@ -161,6 +162,7 @@ public class MockVmManagerImpl implements MockVmManager {
             String name = null;
             String vmType = null;
             String url = null;
+
             String[] args = bootArgs.trim().split(" ");
             for (String arg : args) {
                 String[] params = arg.split("=");
@@ -234,14 +236,15 @@ public class MockVmManagerImpl implements MockVmManager {
     @Override
     public CheckRouterAnswer checkRouter(CheckRouterCommand cmd) {
         String router_name = cmd.getAccessDetail(NetworkElementCommand.ROUTER_NAME);
-        int router_id = Integer.parseInt(router_name.split("-")[1]);
-        if (router_id % 2 == 0) {
-            s_logger.debug("Found even routerId, making it MASTER in RvR");
+        MockVm vm = _mockVmDao.findByVmName(router_name);
+        String args = vm.getBootargs();
+        if (args.indexOf("router_pr=100") > 0) {
+            s_logger.debug("Router priority is for MASTER");
             CheckRouterAnswer ans = new CheckRouterAnswer(cmd, "Status: MASTER & Bumped: NO", true);
             ans.setState(VirtualRouter.RedundantState.MASTER);
             return ans;
         } else {
-            s_logger.debug("Found odd routerId, making it BACKUP in RvR");
+            s_logger.debug("Router priority is for BACKUP");
             CheckRouterAnswer ans = new CheckRouterAnswer(cmd, "Status: MASTER & Bumped: NO", true);
             ans.setState(VirtualRouter.RedundantState.BACKUP);
             return ans;
@@ -251,11 +254,12 @@ public class MockVmManagerImpl implements MockVmManager {
     @Override
     public Answer bumpPriority(BumpUpPriorityCommand cmd) {
         String router_name = cmd.getAccessDetail(NetworkElementCommand.ROUTER_NAME);
-        int router_id = Integer.parseInt(router_name.split("-")[1]);
-        if (router_id % 2 == 0) {
-            return new Answer(cmd, true, "Status: MASTER & Bumped: YES");
-        } else {
+        MockVm vm = _mockVmDao.findByVmName(router_name);
+        String args = vm.getBootargs();
+        if (args.indexOf("router_pr=100") > 0) {
             return new Answer(cmd, true, "Status: BACKUP & Bumped: YES");
+        } else {
+            return new Answer(cmd, true, "Status: MASTER & Bumped: YES");
         }
 
     }
