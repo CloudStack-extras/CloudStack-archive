@@ -259,6 +259,25 @@
                     }, {
                       'wizard-field': 'template'
                     });
+                    var $templateHypervisor = $step.find('input[type=hidden][wizard-field=hypervisor]');
+
+                    // Get hypervisor from template
+                    if (type == 'featuredtemplates' || type == 'communitytemplates' || type == 'mytemplates') {                    
+                      $selects.each(function() {
+                        var $select = $(this);
+                        var template = $.grep(args.data.templates[type], function(tmpl, v) {
+                          return tmpl.id == $select.find('input').val();
+                        })[0];
+
+                        $select.change(function() {
+                          $templateHypervisor
+                            .attr('disabled', false)
+                            .val(template.hypervisor);
+                        });
+                      });
+                    } else {
+                      $templateHypervisor.attr('disabled', 'disabled');
+                    }
 
                     if (type == 'featuredisos' || type == 'communityisos' || type == 'myisos') {
                       // Create hypervisor select
@@ -634,7 +653,10 @@
               var field = $(this).attr('wizard-field');
               var fieldName;
               var $input = $wizard.find('[wizard-field=' + field + ']').filter(function() {
-                return $(this).is(':selected') || $(this).is(':checked');
+                return ($(this).is(':selected') ||
+                        $(this).is(':checked') ||
+                        $(this).attr('type') == 'hidden') &&
+                  $(this).is(':not(:disabled)');
               });
 
               if ($input.is('option')) {
@@ -643,7 +665,7 @@
                 // Choosen New network as default
                 if ($input.parents('div.new-network').size()) {
                   fieldName = $input.closest('div.new-network').find('input[name="new-network-name"]').val();
-                // Choosen Network from existed
+                  // Choosen Network from existed
                 } else if ($input.parents('div.my-networks').size()) {
                   fieldName = $input.closest('div.select').find('.select-desc .name').html();
                 } else {
@@ -655,6 +677,8 @@
                   if (index != 0) fieldName += '<br />';
                   fieldName += $(this).next('div.select-desc').find('.name').html();
                 });
+              } else if ($input.is('input[type=hidden]')) {
+                fieldName = $input.val();
               }
 
               if (fieldName) {
@@ -662,13 +686,13 @@
               } else {
                 $(this).html('(' + _l('label.none') + ')');
               }
-              
+
               var conditionalFieldFrom = $(this).attr('conditional-field');
               if (conditionalFieldFrom) {
                 if ($wizard.find('.'+conditionalFieldFrom).css('display') == 'block') {
-                    $(this).closest('div.select').show();
+                  $(this).closest('div.select').show();
                 } else {
-                    $(this).closest('div.select').hide();
+                  $(this).closest('div.select').hide();
                 }
               }
             });
