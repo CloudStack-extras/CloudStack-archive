@@ -8591,6 +8591,9 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   position: relative;
   left: 5px;
   top: 8px;
+  display: inline-block;
+  padding-bottom: 13px;
+  max-width: 171px;
 }
 
 .info-boxes .info-box ul li .total span {
