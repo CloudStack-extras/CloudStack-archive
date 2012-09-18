@@ -51,6 +51,7 @@ import com.cloud.agent.api.routing.IpAssocAnswer;
 import com.cloud.agent.api.routing.IpAssocCommand;
 import com.cloud.agent.api.routing.NetworkElementCommand;
 import com.cloud.agent.api.routing.RemoteAccessVpnCfgCommand;
+import com.cloud.agent.api.routing.SetFirewallRulesCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesCommand;
 import com.cloud.agent.api.routing.SetStaticNatRulesCommand;
 import com.cloud.agent.api.routing.VpnUsersCfgCommand;
@@ -60,6 +61,7 @@ import com.cloud.agent.api.to.IpAddressTO;
 import com.cloud.agent.api.to.PortForwardingRuleTO;
 import com.cloud.agent.api.to.StaticNatRuleTO;
 import com.cloud.host.Host;
+import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.FirewallRule.Purpose;
 import com.cloud.resource.ServerResource;
 import com.cloud.utils.NumbersUtil;
@@ -227,7 +229,7 @@ public class JuniperSrxResource implements ServerResource {
     }	
 
     private enum SrxCommand {
-        LOGIN, OPEN_CONFIGURATION, CLOSE_CONFIGURATION, COMMIT, ROLLBACK, CHECK_IF_EXISTS, CHECK_IF_IN_USE, ADD, DELETE, GET_ALL;
+        LOGIN, OPEN_CONFIGURATION, CLOSE_CONFIGURATION, COMMIT, ROLLBACK, CHECK_IF_EXISTS, CHECK_IF_IN_USE, ADD, DELETE, GET_ALL, DELETE_FORCE;
     }
 
     private enum Protocol {
@@ -272,6 +274,8 @@ public class JuniperSrxResource implements ServerResource {
             return execute((SetStaticNatRulesCommand) cmd);
         } else if (cmd instanceof SetPortForwardingRulesCommand) {
             return execute((SetPortForwardingRulesCommand) cmd);
+        } else if (cmd instanceof SetFirewallRulesCommand) {
+            return execute((SetFirewallRulesCommand) cmd);
         } else if (cmd instanceof ExternalNetworkResourceUsageCommand) {
             return execute((ExternalNetworkResourceUsageCommand) cmd);
         } else if (cmd instanceof RemoteAccessVpnCfgCommand) {
@@ -701,6 +705,59 @@ public class JuniperSrxResource implements ServerResource {
         msg += type.equals(GuestNetworkType.SOURCE_NAT) ? ", source NAT IP: " + sourceNatIpAddress : "";
         s_logger.debug(msg);
     }
+    
+    
+    /* security policies */
+    private synchronized Answer execute(SetFirewallRulesCommand cmd) {
+        refreshSrxConnection();
+        return execute(cmd, _numRetries);
+    }
+    
+    private Answer execute(SetFirewallRulesCommand cmd, int numRetries) {
+        FirewallRuleTO[] allRules = cmd.getRules();
+        Map<String, ArrayList<FirewallRuleTO>> activeRules = getActiveRulesForFirewall(allRules);
+        FirewallRule.Purpose purpose = allRules[0].getPurpose();
+        try {
+            openConfiguration();
+
+            Set<String> ipPairs = activeRules.keySet();
+            for (String ip : ipPairs) {
+
+                String privateIp = ip;
+
+                List<FirewallRuleTO> activeRulesForIp = activeRules.get(ip);
+                if (purpose == Purpose.StaticNat) {
+                    //firewallrules specific to staticnat
+                    removeSecurityPolicyAndApplications(SecurityPolicyType.STATIC_NAT, privateIp);
+                    if (activeRulesForIp.size() > 0) {
+                        addSecurityPolicyAndApplications(SecurityPolicyType.STATIC_NAT, privateIp, extractApplications(activeRulesForIp));
+                    }
+                } else if (purpose == Purpose.PortForwarding) {
+                    //firewall rules specific port forwarding rules
+                    removeSecurityPolicyAndApplications(SecurityPolicyType.DESTINATION_NAT, privateIp);
+                    if (activeRulesForIp.size() > 0) {
+                        addSecurityPolicyAndApplications(SecurityPolicyType.DESTINATION_NAT, privateIp, extractApplications(activeRulesForIp));
+                    }
+
+                }
+            }
+
+            commitConfiguration();
+            return new Answer(cmd);
+        } catch (ExecutionException e) {
+            s_logger.error(e);
+            closeConfiguration();
+
+            if (numRetries > 0 && refreshSrxConnection()) {
+                int numRetriesRemaining = numRetries - 1;
+                s_logger.debug("Retrying SetFirewallRulesCommand. Number of retries remaining: " + numRetriesRemaining);
+                return execute(cmd, numRetriesRemaining);
+            } else {
+                return new Answer(cmd, e);
+            }
+        }
+
+    }
 
     /*
      * Static NAT
@@ -759,9 +816,6 @@ public class JuniperSrxResource implements ServerResource {
         manageUsageFilter(SrxCommand.ADD, _usageFilterIPInput, publicIp, null, genIpFilterTermName(publicIp));		
         manageAddressBookEntry(SrxCommand.ADD, _privateZone, privateIp, null);
 
-        // Add a new security policy with the current set of applications
-        addSecurityPolicyAndApplications(SecurityPolicyType.STATIC_NAT, privateIp, extractApplications(rules));
-
         s_logger.debug("Added static NAT rule for public IP " + publicIp + ", and private IP " + privateIp);
     }		
 
@@ -769,10 +823,6 @@ public class JuniperSrxResource implements ServerResource {
         manageStaticNatRule(SrxCommand.DELETE, publicIp, privateIp);
         manageProxyArp(SrxCommand.DELETE, publicVlanTag, publicIp);   
         manageUsageFilter(SrxCommand.DELETE, _usageFilterIPInput, publicIp, null, genIpFilterTermName(publicIp));
-
-        // Remove any existing security policy and clean up applications
-        removeSecurityPolicyAndApplications(SecurityPolicyType.STATIC_NAT, privateIp);
-
         manageAddressBookEntry(SrxCommand.DELETE, _privateZone, privateIp, null);     
 
         s_logger.debug("Removed static NAT rule for public IP " + publicIp + ", and private IP " + privateIp);
@@ -1041,7 +1091,7 @@ public class JuniperSrxResource implements ServerResource {
 
         List<Object[]> applications = new ArrayList<Object[]>();
         applications.add(new Object[]{protocol, destPortStart, destPortEnd});
-        addSecurityPolicyAndApplications(SecurityPolicyType.DESTINATION_NAT, privateIp, applications);
+       
 
         String srcPortRange = srcPortStart + "-" + srcPortEnd;
         String destPortRange = destPortStart + "-" + destPortEnd;
@@ -1052,8 +1102,6 @@ public class JuniperSrxResource implements ServerResource {
         manageDestinationNatRule(SrxCommand.DELETE, publicIp, privateIp, srcPort, destPort);
         manageDestinationNatPool(SrxCommand.DELETE, privateIp, destPort);   
         manageProxyArp(SrxCommand.DELETE, publicVlanTag, publicIp);    
-
-        removeSecurityPolicyAndApplications(SecurityPolicyType.DESTINATION_NAT, privateIp);
 
         manageAddressBookEntry(SrxCommand.DELETE, _privateZone, privateIp, null);             
 
@@ -1139,6 +1187,31 @@ public class JuniperSrxResource implements ServerResource {
 
         return activeRules;
     }
+
+    private Map<String, ArrayList<FirewallRuleTO>> getActiveRulesForFirewall(FirewallRuleTO[] allRules) {
+        Map<String, ArrayList<FirewallRuleTO>> activeRules = new HashMap<String, ArrayList<FirewallRuleTO>>();
+
+        for (FirewallRuleTO rule : allRules) {
+            String ipPair;    		 
+            ipPair = rule.getSrcIp();
+
+            ArrayList<FirewallRuleTO> activeRulesForIpPair = activeRules.get(ipPair);
+
+            if (activeRulesForIpPair == null) {
+                activeRulesForIpPair = new ArrayList<FirewallRuleTO>();
+            }
+
+            if (!rule.revoked() || rule.isAlreadyAdded()) {
+                activeRulesForIpPair.add(rule);
+            }
+
+            activeRules.put(ipPair, activeRulesForIpPair);
+        }
+
+        return activeRules;
+
+    }
+
     
     private Map<String, String> getVlanTagMap(FirewallRuleTO[] allRules) {
     	Map<String, String> vlanTagMap = new HashMap<String, String>();
@@ -2581,12 +2654,15 @@ public class JuniperSrxResource implements ServerResource {
             }
 
         case DELETE:
+        case DELETE_FORCE:
             if (!manageSecurityPolicy(type, SrxCommand.CHECK_IF_EXISTS, null, null, privateIp, applicationNames, ipsecVpnName)) {
                 return true;
             }
 
-            if (manageSecurityPolicy(type, SrxCommand.CHECK_IF_IN_USE, null, null, privateIp, applicationNames, ipsecVpnName)) {
+            if (command != SrxCommand.DELETE_FORCE ) {
+                if (manageSecurityPolicy(type, SrxCommand.CHECK_IF_IN_USE, null, null, privateIp, applicationNames, ipsecVpnName)) {
                 return true;
+            	}
             }
 
             xml = SrxXml.SECURITY_POLICY_GETONE.getXml();
@@ -2660,15 +2736,11 @@ public class JuniperSrxResource implements ServerResource {
             return true;
         }
 
-        if (manageSecurityPolicy(type, SrxCommand.CHECK_IF_IN_USE, null, null, privateIp, null, null)) {
-            return true;
-        }
-
         // Get a list of applications for this security policy
         List<String> applications = getApplicationsForSecurityPolicy(type, privateIp);
 
-        // Remove the security policy 
-        manageSecurityPolicy(type, SrxCommand.DELETE, null, null, privateIp, null, null);
+        // Remove the security policy even if it is in use 
+        manageSecurityPolicy(type, SrxCommand.DELETE_FORCE, null, null, privateIp, null, null);
 
         // Remove any applications for the removed security policy that are no longer in use
         List<String> unusedApplications = getUnusedApplications(applications);

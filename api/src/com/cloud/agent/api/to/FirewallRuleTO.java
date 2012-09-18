@@ -88,6 +88,15 @@ public class FirewallRuleTO {
         this(rule.getId(),null, srcIp, rule.getProtocol(), rule.getSourcePortStart(), rule.getSourcePortEnd(), rule.getState()==State.Revoke, rule.getState()==State.Active, rule.getPurpose(),rule.getSourceCidrList(),rule.getIcmpType(),rule.getIcmpCode());
     }
     
+    public FirewallRuleTO(FirewallRule rule, String srcVlanTag, String srcIp, FirewallRule.Purpose purpose) {
+        this(rule.getId(),srcVlanTag, srcIp, rule.getProtocol(), rule.getSourcePortStart(), rule.getSourcePortEnd(), rule.getState()==State.Revoke, rule.getState()==State.Active, purpose,rule.getSourceCidrList(),rule.getIcmpType(),rule.getIcmpCode());
+    }
+    
+    public FirewallRuleTO(FirewallRule rule, String srcVlanTag, String srcIp, FirewallRule.Purpose purpose, boolean revokeState, boolean alreadyAdded) {
+        this(rule.getId(),srcVlanTag, srcIp, rule.getProtocol(), rule.getSourcePortStart(), rule.getSourcePortEnd(), revokeState, alreadyAdded, purpose,rule.getSourceCidrList(),rule.getIcmpType(),rule.getIcmpCode());
+    }
+    
+    
     public long getId() {
         return id;
     }
