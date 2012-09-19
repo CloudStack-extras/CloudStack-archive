@@ -268,7 +268,20 @@
               //pick the network offering including SecurityGroup, but excluding Lb and StaticNat. (bug 13665)
               return (($.inArray('SecurityGroup', services) != -1) && ($.inArray('Lb', services) == -1) && ($.inArray('StaticNat', services) == -1)) ;
             }
-          )[0];					
+          )[0];		
+						
+					$(selectedNetworkOffering.service).each(function(){					  
+						var thisService = this;														
+						$(thisService.provider).each(function(){	
+							if(this.name == "VirtualRouter") {
+								if(selectedNetworkOffering.VirtualRouterServices == null)
+									selectedNetworkOffering.VirtualRouterServices = [];	
+								if($.inArray(thisService.name, selectedNetworkOffering.VirtualRouterServices) == -1) {
+									selectedNetworkOffering.VirtualRouterServices.push(thisService.name);
+								}														
+							} 
+						});								
+					});	          							
         }
       });
      
@@ -281,6 +294,7 @@
           },
 					pluginFrom: {
 					  name: 'installWizard',
+						selectedNetworkOffering: selectedNetworkOffering,
 						selectedNetworkOfferingHavingSG: true
 					}						
         },

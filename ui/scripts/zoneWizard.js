@@ -1742,6 +1742,11 @@
 																			
                                       if (result.jobstatus == 1) {
                                         //alert("configureVirtualRouterElement succeeded.");
+																				
+																				if(args.data.pluginFrom != null && args.data.pluginFrom.name == "installWizard") {
+																				  selectedNetworkOfferingObj = args.data.pluginFrom.selectedNetworkOffering;
+																				}
+																				
                                         $.ajax({
                                           url: createURL("updateNetworkServiceProvider"),
                                           data: {
