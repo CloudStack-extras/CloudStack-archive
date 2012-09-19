@@ -118,6 +118,9 @@
                     <li class="last"><a href="#instance-wizard-my-templates"><fmt:message key="label.my.templates"/></a></li>
                   </ul>
 
+                  <!-- Used for Select Template only -->
+                  <input type="hidden" wizard-field="hypervisor" name="hypervisor" value="" disabled="disabled"/>
+
                   <div id="instance-wizard-featured-templates">
                     <div class="select-container">
                     </div>
@@ -262,7 +265,7 @@
                                 </div>
 
                                 <div class="secondary-input hide-if-unselected">
-                                  <input type="radio" name="defaultNetwork" value="new-network" />
+                                  <input type="radio" name="defaultNetwork" value="new-network" wizard-field="default-network" />
                                   <div class="name"><fmt:message key="label.default"/></div>
                                 </div>
                               </div>
@@ -331,7 +334,7 @@
                       <span wizard-field="hypervisor"></span>
                     </div>
                     <div class="edit">
-                      <a href="1"><fmt:message key="label.edit"/></a>
+                      <a href="2"><fmt:message key="label.edit"/></a>
                     </div>
                   </div>
                   <!-- Template -->
@@ -376,7 +379,20 @@
                       <span><fmt:message key="label.network"/></span>
                     </div>
                     <div class="value">
-                      <span wizard-field="default-network"></span>
+                      <span wizard-field="default-network" conditional-field="select-network"></span>
+                    </div>
+                    <div class="edit">
+                      <a href="5"><fmt:message key="label.edit"/></a>
+                    </div>
+                  </div>
+                  
+                  <!-- Security groups -->
+                  <div class="select odd">
+                    <div class="name">
+                      <span><fmt:message key="label.security.groups"/></span>
+                    </div>
+                    <div class="value">
+                      <span wizard-field="security-groups" conditional-field="select-security-group"></span>
                     </div>
                     <div class="edit">
                       <a href="5"><fmt:message key="label.edit"/></a>
