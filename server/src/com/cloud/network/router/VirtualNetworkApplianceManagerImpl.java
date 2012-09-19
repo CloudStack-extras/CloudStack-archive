@@ -479,6 +479,11 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         if (virtualRouter == null) {
             throw new CloudRuntimeException("Failed to stop router with id " + routerId);
         }
+        
+        // Clear stop pending flag after stopped successfully
+        router.setStopPending(false);
+        router = _routerDao.persist(router);
+        virtualRouter.setStopPending(false);
         return virtualRouter;
     }
 
@@ -3365,6 +3370,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         List<DomainRouterVO> routers = _routerDao.listIsolatedByHostId(host.getId());
         for (DomainRouterVO router : routers) {
             if (router.isStopPending()) {
+                s_logger.info("Stopping router " + router.getInstanceName() + " due to stop pending flag found!");
                 State state = router.getState();
                 if (state != State.Stopped && state != State.Destroyed) {
                     try {
