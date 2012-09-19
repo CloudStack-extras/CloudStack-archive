@@ -864,7 +864,10 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             throw new InvalidParameterException("There is no new provider for IP " + publicIp.getAddress() + " of service " + service.getName() + "!");
         }
         Provider newProvider = (Provider) newProviders.toArray()[0];
-        if (!oldProvider.equals(newProvider)) {
+        Network network = _networksDao.findById(networkId);
+        IpDeployer oldIpDeployer = getElementImplementingProvider(oldProvider.getName()).getIpDeployer(network);
+        IpDeployer newIpDeployer = getElementImplementingProvider(newProvider.getName()).getIpDeployer(network);
+        if (!oldIpDeployer.getProvider().getName().equals(newIpDeployer.getProvider().getName())) {
             throw new InvalidParameterException("There would be multiple providers for IP " + publicIp.getAddress() + "!");
         }
         return true;
@@ -936,17 +939,8 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 }
                 IpDeployer deployer = null;
                 NetworkElement element = getElementImplementingProvider(provider.getName());
-                if (element instanceof SourceNatServiceProvider) {
-                    deployer = ((SourceNatServiceProvider) element).getIpDeployer(network);
-                } else if (element instanceof StaticNatServiceProvider) {
-                    deployer = ((StaticNatServiceProvider) element).getIpDeployer(network);
-                } else if (element instanceof LoadBalancingServiceProvider) {
-                    deployer = ((LoadBalancingServiceProvider) element).getIpDeployer(network);
-                } else if (element instanceof PortForwardingServiceProvider) {
-                    deployer = ((PortForwardingServiceProvider) element).getIpDeployer(network);
-                } else if (element instanceof RemoteAccessVPNServiceProvider) {
-                    deployer = ((RemoteAccessVPNServiceProvider) element).getIpDeployer(network);
-                } else {
+                deployer = element.getIpDeployer(network);
+                if (deployer == null) {
                     throw new CloudRuntimeException("Fail to get ip deployer for element: " + element);
                 }
                 Set<Service> services = new HashSet<Service>();
@@ -7362,6 +7356,13 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     @Override
     public int getNetworkLockTimeout() {
         return _networkLockTimeout;
+    }
+
+    @Override
+    public List<Provider> getProvidersForServiceInNetwork(Network network, Service service) {
+        Map<Service, Set<Provider>> service2ProviderMap = getServiceProvidersMap(network.getId());
+        List<Provider> providers = new ArrayList<Provider>(service2ProviderMap.get(service));
+        return providers;
     }
 
 }

@@ -495,7 +495,7 @@ public abstract class ExternalFirewallDeviceManagerImpl extends AdapterBase impl
             }
             
             List<FirewallRule> pfRules = new ArrayList<FirewallRule>();
-            pfRules.addAll(_fwRulesDao.listByIpAndPurpose(rule.getSourceIpAddressId(), Purpose.PortForwarding));
+            pfRules.addAll(_fwRulesDao.listByIpAndPurpose(sourceIp.getId(), Purpose.PortForwarding));
             if (pfRules.size() > 0) {
                 Set<String> existedDstIps = new HashSet<String>();
                 for (FirewallRule fwRule : pfRules) {
@@ -507,6 +507,17 @@ public abstract class ExternalFirewallDeviceManagerImpl extends AdapterBase impl
                         firewallRules.add(fwRuleTO);
                     }
                 }
+            }
+            
+            // For load balancing inline-mode support
+            List<FirewallRule> lbRules = new ArrayList<FirewallRule>();
+            lbRules.addAll(_fwRulesDao.listByIpAndPurpose(sourceIp.getId(), Purpose.LoadBalancing));
+            if (lbRules.size() > 0) {
+                InlineLoadBalancerNicMapVO mapping = _inlineLoadBalancerNicMapDao.findByPublicIpAddress(sourceIp.getAddress().addr());
+                NicVO nic = _nicDao.findById(mapping.getNicId());
+                String dstIp = nic.getIp4Address();
+                FirewallRuleTO fwRuleTO = new FirewallRuleTO(rule, vlan.getVlanTag(), dstIp, Purpose.StaticNat);
+                firewallRules.add(fwRuleTO);
             }
         }
 

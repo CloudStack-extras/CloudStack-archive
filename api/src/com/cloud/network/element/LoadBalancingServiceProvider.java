@@ -28,7 +28,6 @@ public interface LoadBalancingServiceProvider extends NetworkElement {
      */
     boolean applyLBRules(Network network, List<LoadBalancingRule> rules) throws ResourceUnavailableException;
 
-    IpDeployer getIpDeployer(Network network);
     /**
      * Validate rules
      * @param network

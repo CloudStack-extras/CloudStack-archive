@@ -236,4 +236,9 @@ public class CiscoNexusVSMElement extends CiscoNexusVSMDeviceManagerImpl impleme
     public String getPropertiesFile() {
     	return "cisconexusvsm_commands.properties";
     }
+
+    @Override
+    public IpDeployer getIpDeployer(Network network) {
+        return null;
+    }
 }
