@@ -326,13 +326,31 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
     @Override @DB
     public List<HostVO> findAndUpdateDirectAgentToLoad(long lastPingSecondsAfter, Long limit, long managementServerId) {
         Transaction txn = Transaction.currentTxn();
-        txn.start();       
-    	SearchCriteria<HostVO> sc = UnmanagedDirectConnectSearch.create();
+        txn.start();
+        // find hosts which is in Disconnected, Down, Alert and ping timeout and server is not null, set server to null
+        SearchBuilder<HostVO> hostSearch = createSearchBuilder();
+        hostSearch.and("resource", hostSearch.entity().getResource(), SearchCriteria.Op.NNULL);
+        hostSearch.and("server", hostSearch.entity().getManagementServerId(),SearchCriteria.Op.EQ);
+        hostSearch.and("lastPinged", hostSearch.entity().getLastPinged(), SearchCriteria.Op.LTEQ);
+        hostSearch.and("resourceStates", hostSearch.entity().getResourceState(), SearchCriteria.Op.NIN);
+        hostSearch.and("cluster", hostSearch.entity().getClusterId(), SearchCriteria.Op.NNULL);
+        hostSearch.and("status", hostSearch.entity().getStatus(), SearchCriteria.Op.IN);
+        hostSearch.done();
+        SearchCriteria<HostVO> hsc = hostSearch.create();
+        hsc.setParameters("server", managementServerId);
+        hsc.setParameters("lastPinged", lastPingSecondsAfter);
+        hsc.setParameters("status", Status.Disconnected, Status.Down, Status.Alert);
+        List<HostVO> hosts = lockRows(hsc,  null, true);
+        for (HostVO host : hosts) {
+            host.setManagementServerId(null);
+            update(host.getId(), host);
+        }      
+        
+        SearchCriteria<HostVO> sc = UnmanagedDirectConnectSearch.create();
     	sc.setParameters("lastPinged", lastPingSecondsAfter);
         //sc.setParameters("resourceStates", ResourceState.ErrorInMaintenance, ResourceState.Maintenance, ResourceState.PrepareForMaintenance, ResourceState.Disabled);
         sc.setJoinParameters("ClusterManagedSearch", "managed", Managed.ManagedState.Managed);
-        List<HostVO> hosts = lockRows(sc, new Filter(HostVO.class, "clusterId", true, 0L, limit), true);
-        
+        hosts = lockRows(sc, new Filter(HostVO.class, "clusterId", true, 0L, limit), true);
         for (HostVO host : hosts) {
             host.setManagementServerId(managementServerId);
             update(host.getId(), host);
@@ -348,10 +366,29 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
     	Transaction txn = Transaction.currentTxn();
     	
     	txn.start();
+        // find hosts which is in Disconnected, Down, Alert and ping timeout and server is not null, set server to null
+        SearchBuilder<HostVO> hostSearch = createSearchBuilder();
+        hostSearch.and("resource", hostSearch.entity().getResource(), SearchCriteria.Op.NNULL);
+        hostSearch.and("server", hostSearch.entity().getManagementServerId(), SearchCriteria.Op.EQ);
+        hostSearch.and("types", hostSearch.entity().getType(), SearchCriteria.Op.IN);
+        hostSearch.and("lastPinged", hostSearch.entity().getLastPinged(), SearchCriteria.Op.LTEQ);
+        hostSearch.and("status", hostSearch.entity().getStatus(), SearchCriteria.Op.IN);
+        hostSearch.done();
+        SearchCriteria<HostVO> hsc = hostSearch.create();
+        hsc.setParameters("server", managementServerId);
+        hsc.setParameters("types", Type.ExternalDhcp, Type.ExternalFirewall, Type.ExternalLoadBalancer, Type.PxeServer, Type.TrafficMonitor);
+        hsc.setParameters("lastPinged", lastPingSecondsAfter);
+        hsc.setParameters("status", Status.Disconnected, Status.Down, Status.Alert);
+        List<HostVO> hosts = lockRows(hsc,  null, true);
+        for (HostVO host : hosts) {
+            host.setManagementServerId(null);
+            update(host.getId(), host);
+        }    	
+    	
     	SearchCriteria<HostVO> sc = UnmanagedApplianceSearch.create();
     	sc.setParameters("lastPinged", lastPingSecondsAfter);
     	sc.setParameters("types", Type.ExternalDhcp, Type.ExternalFirewall, Type.ExternalLoadBalancer, Type.PxeServer, Type.TrafficMonitor);
-    	List<HostVO> hosts = lockRows(sc, null, true);
+    	hosts = lockRows(sc, null, true);
     	
     	for (HostVO host : hosts) {
     		host.setManagementServerId(managementServerId);
@@ -420,6 +457,26 @@ public class HostDaoImpl extends GenericDaoBase<HostVO, Long> implements HostDao
         return listBy(sc);
     }
     
+    @Override
+    public List<HostVO> listUpRoutingHostByZonePodCluster( Long clusterId, Long podId, Long dcId) {
+        SearchBuilder<HostVO> hostSearch = createSearchBuilder();
+        HostVO entity = hostSearch.entity();
+        hostSearch.and("type", entity.getType(), SearchCriteria.Op.EQ);
+        hostSearch.and("cluster", entity.getClusterId(), SearchCriteria.Op.EQ);
+        hostSearch.and("pod", entity.getPodId(), SearchCriteria.Op.EQ);
+        hostSearch.and("dc", entity.getDataCenterId(), SearchCriteria.Op.EQ);
+        hostSearch.and("status", entity.getStatus(), SearchCriteria.Op.EQ);
+        hostSearch.and("resourceState", entity.getResourceState(), SearchCriteria.Op.EQ);
+        SearchCriteria<HostVO> sc = hostSearch.create();
+        sc.setParameters("type", Type.Routing.toString());
+        sc.setParameters("cluster", clusterId);
+        sc.setParameters("pod", podId);
+        sc.setParameters("dc", dcId);
+        sc.setParameters("status", Status.Up.toString());
+        sc.setParameters("resourceState", ResourceState.Enabled.toString());
+        return listBy(sc);
+    	
+    }
     
     @Override
     public List<HostVO> listAllUpAndEnabledNonHAHosts(Type type, Long clusterId, Long podId, long dcId, String haTag) {

@@ -21,43 +21,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
+import com.cloud.agent.api.*;
+import com.cloud.agent.api.routing.*;
+import com.cloud.network.router.VirtualRouter;
 import org.apache.log4j.Logger;
 
-import com.cloud.agent.api.Answer;
-import com.cloud.agent.api.CheckVirtualMachineAnswer;
-import com.cloud.agent.api.CheckVirtualMachineCommand;
-import com.cloud.agent.api.CleanupNetworkRulesCmd;
-import com.cloud.agent.api.GetDomRVersionAnswer;
-import com.cloud.agent.api.GetDomRVersionCmd;
-import com.cloud.agent.api.GetVmStatsAnswer;
-import com.cloud.agent.api.GetVmStatsCommand;
-import com.cloud.agent.api.GetVncPortAnswer;
-import com.cloud.agent.api.GetVncPortCommand;
-import com.cloud.agent.api.MigrateAnswer;
-import com.cloud.agent.api.MigrateCommand;
-import com.cloud.agent.api.NetworkUsageAnswer;
-import com.cloud.agent.api.NetworkUsageCommand;
-import com.cloud.agent.api.RebootAnswer;
-import com.cloud.agent.api.RebootCommand;
-import com.cloud.agent.api.SecurityGroupRuleAnswer;
-import com.cloud.agent.api.SecurityGroupRulesCmd;
-import com.cloud.agent.api.StartAnswer;
-import com.cloud.agent.api.StartCommand;
-import com.cloud.agent.api.StopAnswer;
-import com.cloud.agent.api.StopCommand;
-import com.cloud.agent.api.VmStatsEntry;
 import com.cloud.agent.api.check.CheckSshAnswer;
 import com.cloud.agent.api.check.CheckSshCommand;
 import com.cloud.agent.api.proxy.CheckConsoleProxyLoadCommand;
 import com.cloud.agent.api.proxy.WatchConsoleProxyLoadCommand;
-import com.cloud.agent.api.routing.DhcpEntryCommand;
-import com.cloud.agent.api.routing.IpAssocCommand;
-import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
-import com.cloud.agent.api.routing.SavePasswordCommand;
-import com.cloud.agent.api.routing.SetFirewallRulesCommand;
-import com.cloud.agent.api.routing.SetPortForwardingRulesCommand;
-import com.cloud.agent.api.routing.SetStaticNatRulesCommand;
-import com.cloud.agent.api.routing.VmDataCommand;
 import com.cloud.agent.api.to.NicTO;
 import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.network.Networks.TrafficType;
@@ -131,6 +103,7 @@ public class MockVmManagerImpl implements MockVmManager {
             vm.setName(vmName);
             vm.setVncPort(vncPort);
             vm.setHostId(host.getId());
+            vm.setBootargs(bootArgs);
             if(vmName.startsWith("s-")) {
             	vm.setType("SecondaryStorageVm");
             } else if (vmName.startsWith("v-")) {
@@ -189,6 +162,7 @@ public class MockVmManagerImpl implements MockVmManager {
             String name = null;
             String vmType = null;
             String url = null;
+
             String[] args = bootArgs.trim().split(" ");
             for (String arg : args) {
                 String[] params = arg.split("=");
@@ -258,8 +232,39 @@ public class MockVmManagerImpl implements MockVmManager {
             txn.close();
 		}
 	}
-	
-	@Override
+
+    @Override
+    public CheckRouterAnswer checkRouter(CheckRouterCommand cmd) {
+        String router_name = cmd.getAccessDetail(NetworkElementCommand.ROUTER_NAME);
+        MockVm vm = _mockVmDao.findByVmName(router_name);
+        String args = vm.getBootargs();
+        if (args.indexOf("router_pr=100") > 0) {
+            s_logger.debug("Router priority is for MASTER");
+            CheckRouterAnswer ans = new CheckRouterAnswer(cmd, "Status: MASTER & Bumped: NO", true);
+            ans.setState(VirtualRouter.RedundantState.MASTER);
+            return ans;
+        } else {
+            s_logger.debug("Router priority is for BACKUP");
+            CheckRouterAnswer ans = new CheckRouterAnswer(cmd, "Status: MASTER & Bumped: NO", true);
+            ans.setState(VirtualRouter.RedundantState.BACKUP);
+            return ans;
+        }
+    }
+
+    @Override
+    public Answer bumpPriority(BumpUpPriorityCommand cmd) {
+        String router_name = cmd.getAccessDetail(NetworkElementCommand.ROUTER_NAME);
+        MockVm vm = _mockVmDao.findByVmName(router_name);
+        String args = vm.getBootargs();
+        if (args.indexOf("router_pr=100") > 0) {
+            return new Answer(cmd, true, "Status: BACKUP & Bumped: YES");
+        } else {
+            return new Answer(cmd, true, "Status: MASTER & Bumped: YES");
+        }
+
+    }
+
+    @Override
 	public Map<String, State> getVmStates(String hostGuid) {
 		Transaction txn = Transaction.open(Transaction.SIMULATOR_DB);
 		try {
