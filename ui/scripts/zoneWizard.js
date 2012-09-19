@@ -17,7 +17,8 @@
 	var selectedNetworkOfferingHavingNetscaler = false;
   var returnedPublicVlanIpRanges = []; //public VlanIpRanges returned by API
   var configurationUseLocalStorage = false;
-
+  var selectedNetworkOfferingObj = {};
+	
   // Makes URL string for traffic label
   var trafficLabelParam = function(trafficTypeID, data, physicalNetworkID) {
     var zoneType = data.zone.networkType;
@@ -360,8 +361,7 @@
           networkOfferingId: {
             label: 'label.network.offering',
 						dependsOn: 'hypervisor',
-            select: function(args) {
-              var selectedNetworkOfferingObj = {};
+            select: function(args) {              
               var networkOfferingObjs = [];
               
 							args.$select.unbind("change").bind("change", function(){									  
@@ -405,8 +405,15 @@
 											$(thisService.provider).each(function(){										
 												if(this.name == "Netscaler") {
 													thisNetworkOffering.havingNetscaler = true;
-													return false; //break each loop
+													return true;
 												}
+												if(this.name == "VirtualRouter") {
+												  if(thisNetworkOffering.VirtualRouterServices == null)
+													  thisNetworkOffering.VirtualRouterServices = [];	
+													if($.inArray(thisService.name, thisNetworkOffering.VirtualRouterServices) == -1) {
+														thisNetworkOffering.VirtualRouterServices.push(thisService.name);
+													}														
+                        } 
 											});			
 											
 											if(thisService.name == "SecurityGroup") {
@@ -1657,10 +1664,13 @@
                                       $("body").stopTime(configureVirtualRouterElementTimer);
                                       if (result.jobstatus == 1) {
                                         //alert("configureVirtualRouterElement succeeded.");
-
                                         $.ajax({
-                                          url: createURL("updateNetworkServiceProvider&state=Enabled&id=" + virtualRouterProviderId),
-                                          dataType: "json",
+                                          url: createURL("updateNetworkServiceProvider"),
+                                          data: {
+																					  id: virtualRouterProviderId,
+																					  state: 'Enabled',
+																						servicelist: selectedNetworkOfferingObj.VirtualRouterServices.join(",")
+																					},
                                           async: false,
                                           success: function(json) {
                                             //var jobId = json.updatenetworkserviceproviderresponse.jobid;
