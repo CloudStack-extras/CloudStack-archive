@@ -75,6 +75,7 @@ public class KvmServerDiscoverer extends DiscovererBase implements Discoverer,
 	 private String _hostIp;
 	 private int _waitTime = 5; /*wait for 5 minutes*/
 	 private String _kvmPrivateNic;
+	 private String _storageCache;
 	 private String _kvmPublicNic;
 	 private String _kvmGuestNic;
 	 @Inject HostDao _hostDao = null;
@@ -193,7 +194,7 @@ public class KvmServerDiscoverer extends DiscovererBase implements Discoverer,
 			    }
 			}
 
-            String parameters = " -m " + _hostIp + " -z " + dcId + " -p " + podId + " -c " + clusterId + " -g " + guid + " -a";
+            String parameters = " -m " + _hostIp + " -z " + dcId + " -p " + podId + " -c " + clusterId + " -g " + guid + " -a" + " -C " + _storageCache;
 			
 			if (kvmPublicNic != null) {
 				parameters += " --pubNic=" + kvmPublicNic;
@@ -293,6 +294,12 @@ public class KvmServerDiscoverer extends DiscovererBase implements Discoverer,
 		_kvmGuestNic = _configDao.getValue(Config.KvmGuestNetwork.key());
 		if (_kvmGuestNic == null) {
 		    _kvmGuestNic = _kvmPrivateNic;
+		}
+		
+		_storageCache = _configDao.getValue(Config.KvmStorageCache.key());
+		if (_storageCache == null || !(_storageCache.equalsIgnoreCase("writethrough") || _storageCache.equalsIgnoreCase("writeback") || 
+				_storageCache.equalsIgnoreCase("directsync") || _storageCache.equalsIgnoreCase("unsafe"))) {
+			_storageCache = "none";
 		}
 		
 		if (_setupAgentPath == null) {

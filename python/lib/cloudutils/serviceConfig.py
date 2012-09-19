@@ -630,6 +630,7 @@ class cloudAgentConfig(serviceCfgBase):
             cfo.addEntry("public.network.device", self.syscfg.env.nics[1])
             cfo.addEntry("guest.network.device", self.syscfg.env.nics[2])
             cfo.addEntry("guid", str(self.syscfg.env.uuid))
+            cfo.addEntry("storage.cache", str(self.syscfg.env.cache))
             if cfo.getEntry("local.storage.uuid") == "":
                 cfo.addEntry("local.storage.uuid", str(bash("uuidgen").getStdout()))
             cfo.addEntry("resource", "com.cloud.agent.resource.computing.LibvirtComputingResource")

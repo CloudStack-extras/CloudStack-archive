@@ -74,6 +74,7 @@ if __name__ == '__main__':
     parser.add_option("-p", "--pod", dest="pod", help="pod id")
     parser.add_option("-c", "--cluster", dest="cluster", help="cluster id")
     parser.add_option("-g", "--guid", dest="guid", help="guid")
+    parser.add_option("-C", "--cache", dest="cache", help="cache")
     parser.add_option("--pubNic", dest="pubNic", help="public nic")
     parser.add_option("--prvNic", dest="prvNic", help="private nic")
     parser.add_option("--guestNic", dest="guestNic", help="guest nic")
@@ -102,6 +103,7 @@ if __name__ == '__main__':
         glbEnv.zone = options.zone
         glbEnv.pod = options.pod
         glbEnv.cluster = options.cluster
+        glbEnv.cache = options.cache
         glbEnv.nics.append(options.prvNic)
         glbEnv.nics.append(options.pubNic)
         glbEnv.nics.append(options.guestNic)

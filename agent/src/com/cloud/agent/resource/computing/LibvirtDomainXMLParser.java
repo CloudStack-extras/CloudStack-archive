@@ -75,7 +75,7 @@ public class LibvirtDomainXMLParser {
 				String type = disk.getAttribute("type");
 				String device = disk.getAttribute("device");
 
-				DiskDef def = new DiskDef();
+				DiskDef def = new DiskDef(null);
 				if (type.equalsIgnoreCase("file")) {
 					if (device.equalsIgnoreCase("disk")) {
 						DiskDef.diskFmtType fmt = null;

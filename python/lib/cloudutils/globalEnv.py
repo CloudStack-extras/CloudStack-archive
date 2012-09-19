@@ -36,3 +36,5 @@ class globalEnv:
         self.privateNet = "cloudbr0"
         #distribution
         self.distribution = None
+        #storage cache
+        self.cache = "none"

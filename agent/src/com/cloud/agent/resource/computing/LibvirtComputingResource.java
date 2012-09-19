@@ -302,6 +302,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements
 	protected String _privateIp;
 	protected String _pool;
 	protected String _localGateway;
+	protected String _storageCache;
 	private boolean _can_bridge_firewall;
 	protected String _localStoragePath;
 	protected String _localStorageUUID;
@@ -615,6 +616,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements
 			} else {
 				_privNwName = "cloud-private";
 			}
+		}
+		
+		_storageCache = (String)params.get("storage.cache");
+		if (_storageCache == null) {
+			_storageCache = "none";
 		}
 
 		_localStoragePath = (String) params.get("local.storage.path");
@@ -2585,7 +2591,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements
 			}
 
 			DiskDef.diskBus diskBusType = getGuestDiskModel(vmSpec.getOs());
-			DiskDef disk = new DiskDef();
+			DiskDef disk = new DiskDef(_storageCache);
 			if (volume.getType() == Volume.Type.ISO) {
 				if (volPath == null) {
 					/* Add iso as placeholder */
@@ -2612,7 +2618,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements
 
 		if (vmSpec.getType() != VirtualMachine.Type.User) {
 			if (_sysvmISOPath != null) {
-				DiskDef iso = new DiskDef();
+				DiskDef iso = new DiskDef(_storageCache);
 				iso.defISODisk(_sysvmISOPath);
 				vm.getDevices().addDevice(iso);
 			}
@@ -2655,7 +2661,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements
 		String datadiskPath = disk.getPath();
 
 		/* add patch disk */
-		DiskDef patchDisk = new DiskDef();
+		DiskDef patchDisk = new DiskDef(_storageCache);
 
 		patchDisk.defFileBasedDisk(datadiskPath, 1, rootDisk.getBusType(),
 				DiskDef.diskFmtType.RAW);
@@ -2791,11 +2797,11 @@ public class LibvirtComputingResource extends ServerResourceBase implements
 			KVMPhysicalDisk isoVol = secondaryPool.getPhysicalDisk(name);
 			isoPath = isoVol.getPath();
 
-			DiskDef iso = new DiskDef();
+			DiskDef iso = new DiskDef(_storageCache);
 			iso.defISODisk(isoPath);
 			isoXml = iso.toString();
 		} else {
-			DiskDef iso = new DiskDef();
+			DiskDef iso = new DiskDef(_storageCache);
 			iso.defISODisk(null);
 			isoXml = iso.toString();
 		}
@@ -2842,7 +2848,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements
 							+ " is not attached before");
 				}
 			} else {
-				diskdef = new DiskDef();
+				diskdef = new DiskDef(_storageCache);
 				if (attachingDisk.getFormat() == PhysicalDiskFormat.QCOW2) {
 					diskdef.defFileBasedDisk(attachingDisk.getPath(), devId,
 							DiskDef.diskBus.VIRTIO, DiskDef.diskFmtType.QCOW2);

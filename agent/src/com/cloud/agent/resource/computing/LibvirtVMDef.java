@@ -375,12 +375,60 @@ public class LibvirtVMDef {
 				return _fmtType;
 			}
 		}
+		
+		enum DiskCacheType {
+			NONE("none"),
+			WRITETHROUGH("writethrough"),
+			WRITEBACK("writeback"),
+			DIRECTSYNC("directsync"),
+			UNSAFE("unsafe"),
+			DEFAULT("default");
+			
+			String _type;
+			
+			DiskCacheType(String type) {
+				_type = type;
+			}
+			
+			@Override
+			public String toString() {
+				return _type;
+			}
+			
+			public static DiskCacheType getType(String type) {
+				if (type == null) {
+					return NONE;
+				}
+				
+				if (type.equalsIgnoreCase("none")) {
+					return NONE;
+				} else if (type.equalsIgnoreCase("writethrough")) {
+					return WRITETHROUGH;
+				} else if (type.equalsIgnoreCase("writeback")) {
+					return WRITEBACK;
+				} else if (type.equalsIgnoreCase("directsync")) {
+					return DIRECTSYNC;
+				} else if (type.equalsIgnoreCase("unsafe")) {
+					return UNSAFE;
+				} else if (type.equalsIgnoreCase("default")) {
+					return DEFAULT;
+				} else {
+					return NONE;
+				}
+				
+			}
+		}
+		
+		public DiskDef(String cacheType) {
+			_cacheType = DiskCacheType.getType(cacheType);
+		}
 
 		private deviceType _deviceType; /* floppy, disk, cdrom */
 		private diskType _diskType;
 		private String _sourcePath;
 		private String _diskLabel;
 		private diskBus _bus;
+		private DiskCacheType _cacheType;
 		private diskFmtType _diskFmtType; /* qcow2, raw etc. */
 		private boolean _readonly = false;
 		private boolean _shareable = false;
@@ -508,7 +556,7 @@ public class LibvirtVMDef {
 			diskBuilder.append(" type='" + _diskType + "'");
 			diskBuilder.append(">\n");
 			diskBuilder.append("<driver name='qemu'" + " type='" + _diskFmtType
-					+ "' cache='none' " + "/>\n");
+					+ "' cache='" + _cacheType +"' " + "/>\n");
 			if (_diskType == diskType.FILE) {
 				diskBuilder.append("<source ");
 				if (_sourcePath != null) {
@@ -852,12 +900,12 @@ public class LibvirtVMDef {
 		DevicesDef devices = new DevicesDef();
 		devices.setEmulatorPath("/usr/bin/cloud-qemu-system-x86_64");
 
-		DiskDef hda = new DiskDef();
+		DiskDef hda = new DiskDef("none");
 		hda.defFileBasedDisk("/path/to/hda1", 0, DiskDef.diskBus.VIRTIO,
 				DiskDef.diskFmtType.QCOW2);
 		devices.addDevice(hda);
 
-		DiskDef hdb = new DiskDef();
+		DiskDef hdb = new DiskDef("writeback");
 		hdb.defFileBasedDisk("/path/to/hda2", 1, DiskDef.diskBus.VIRTIO,
 				DiskDef.diskFmtType.QCOW2);
 		devices.addDevice(hdb);
