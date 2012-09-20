@@ -174,8 +174,7 @@ public class ConsoleProxyAjaxHandler implements HttpHandler {
 		
 				String title = queryMap.get("t");
 				String guest = queryMap.get("guest");
-				String hv = queryMap.get("hv");
-				handleClientStart(t, viewer, title != null ? title : "", guest, hv);
+				handleClientStart(t, viewer, title != null ? title : "", guest);
 			} else {
 				
 				if(s_logger.isTraceEnabled())
@@ -369,7 +368,11 @@ public class ConsoleProxyAjaxHandler implements HttpHandler {
 			
 			if(s_logger.isDebugEnabled())
 				s_logger.debug("Handle client keyboard event. event: " + event + ", code: " + code + ", modifier: " + modifiers);
-			viewer.sendClientRawKeyboardEvent(event, code, modifiers);
+
+			if(ConsoleProxy.keyboardType == ConsoleProxy.KEYBOARD_RAW)
+				viewer.sendClientRawKeyboardEvent(event, code, modifiers);
+			else
+				viewer.sendClientKeyboardEvent(event, code, modifiers);
 			break;
 			
 		default :
@@ -388,9 +391,9 @@ public class ConsoleProxyAjaxHandler implements HttpHandler {
 		}
 	}
 	
-	private void handleClientStart(HttpExchange t, ConsoleProxyViewer viewer, String title, String guest, String hypervisorType) throws IOException {
+	private void handleClientStart(HttpExchange t, ConsoleProxyViewer viewer, String title, String guest) throws IOException {
 		List<String> languages = t.getRequestHeaders().get("Accept-Language");
-		String response = viewer.onAjaxClientStart(title, languages, guest, hypervisorType);
+		String response = viewer.onAjaxClientStart(title, languages, guest);
 		
 		Headers hds = t.getResponseHeaders();
 		hds.set("Content-Type", "text/html");

@@ -921,7 +921,7 @@ public class ConsoleProxyViewer implements java.lang.Runnable, RfbViewer, RfbPro
 			"</p></div></body></html>";
 	}
 	
-	public String onAjaxClientStart(String title, List<String> languages, String guest, String hypervisorType) {
+	public String onAjaxClientStart(String title, List<String> languages, String guest) {
 		if(!waitForViewerReady())
 			return onAjaxClientConnectFailed();
 
@@ -1002,12 +1002,11 @@ public class ConsoleProxyViewer implements java.lang.Runnable, RfbViewer, RfbPro
 	*/
 		return getAjaxViewerPageContent(sbTileSequence.toString(), imgUrl, 
 				updateUrl, width, height, tileWidth, tileHeight, title, 
-				ConsoleProxy.keyboardType == ConsoleProxy.KEYBOARD_RAW, languages, guest, hypervisorType);
+				ConsoleProxy.keyboardType == ConsoleProxy.KEYBOARD_RAW, languages, guest);
 	}
 	
 	private String getAjaxViewerPageContent(String tileSequence, String imgUrl, String updateUrl, int width,
-		int height, int tileWidth, int tileHeight, String title, 
-		boolean rawKeyboard, List<String> languages, String guest, String hypervisorType) {
+		int height, int tileWidth, int tileHeight, String title, boolean rawKeyboard, List<String> languages, String guest) {
 
 		StringBuffer sbLanguages = new StringBuffer("");
 		if(languages != null) {
@@ -1018,6 +1017,10 @@ public class ConsoleProxyViewer implements java.lang.Runnable, RfbViewer, RfbPro
 				sbLanguages.append(lang);
 			}
 		}
+		
+		boolean linuxGuest = true;
+		if(guest != null && guest.equalsIgnoreCase("windows"))
+			linuxGuest = false;
 		
 		String[] content = new String[] {
 			"<html>",
@@ -1049,8 +1052,11 @@ public class ConsoleProxyViewer implements java.lang.Runnable, RfbViewer, RfbPro
 						"<span><img align=\"left\" src=\"/resource/images/winlog.png\" alt=\"Keyboard\" style=\"width:16px;height:16px\"/>Keyboard</span>",
 					"</a>", 
 					"<ul>",
-		    			"<li><a href=\"#\" cmd=\"keyboard_us\"><span>Standard (US) keyboard</span></a></li>",
-		    			"<li><a href=\"#\" cmd=\"keyboard_jp\"><span>Japanese keyboard</span></a></li>",
+		    			"<li><a href=\"#\" cmd=\"keyboard_en\"><span>Standard (US) keyboard</span></a></li>",
+		    			"<li><a href=\"#\" cmd=\"keyboard_jp_en_os_to_en_vm\"><span>Japanese keyboard EN OS -> EN VM</span></a></li>",
+		    			"<li><a href=\"#\" cmd=\"keyboard_jp_jp_os_to_en_vm\"><span>Japanese keyboard JP OS -> EN VM</span></a></li>",
+			    		"<li><a href=\"#\" cmd=\"keyboard_jp_en_os_to_jp_vm\"><span>Japanese keyboard EN OS -> JP VM</span></a></li>",
+			    		"<li><a href=\"#\" cmd=\"keyboard_jp_jp_os_to_jp_vm\"><span>Japanese keyboard JP OS -> JP VM</span></a></li>",
 					"</ul>",
 				"</li>",
 			"</ul>",
@@ -1061,7 +1067,8 @@ public class ConsoleProxyViewer implements java.lang.Runnable, RfbViewer, RfbPro
 			"var acceptLanguages = '" + sbLanguages.toString() + "';",
 			"var tileMap = [ " + tileSequence + " ];",
 			"var ajaxViewer = new AjaxViewer('main_panel', '" + imgUrl + "', '" + updateUrl + "', tileMap, ", 
-				String.valueOf(width) + ", " + String.valueOf(height) + ", " + String.valueOf(tileWidth) + ", " + String.valueOf(tileHeight) + (hypervisorType != null ? (", '" + hypervisorType) + "'" : "") + ");",
+				String.valueOf(width) + ", " + String.valueOf(height) + ", " + String.valueOf(tileWidth) + ", " + String.valueOf(tileHeight) 
+					+ ", " + (rawKeyboard ? "true" : "false") + ", " + (linuxGuest ? "true" : "false") + ");",
 
 			"$(function() {",
 				"ajaxViewer.start();",
@@ -1273,30 +1280,158 @@ public class ConsoleProxyViewer implements java.lang.Runnable, RfbViewer, RfbPro
 	}
 
 	public void sendClientRawKeyboardEvent(int event, int code, int modifiers) {
+		code = ConsoleProxyAjaxKeyMapper.getInstance().getJvmKeyCode(code);
+		switch(event) {
+		case 4 : 	// Key press
+			//
+			// special handling for ' and " (keycode: 222, char code : 39 and 34)
+			//
+			if(code == 39 || code == 34) {
+				writeKeyboardEvent(KeyEvent.KEY_PRESSED, 222, (char)code, getAwtModifiers(modifiers));
+			}
+			break;
+
+		case 5 :	// Key down
+			if((modifiers & ConsoleProxyViewer.CTRL_KEY_MASK) != 0 && (modifiers & ConsoleProxyViewer.ALT_KEY_MASK) != 0 && code == KeyEvent.VK_INSERT) {
+				code = KeyEvent.VK_DELETE;
+			}
+			
+			if(code != 222) {
+				writeKeyboardEvent(KeyEvent.KEY_PRESSED, code, 
+					ConsoleProxyAjaxKeyMapper.getInstance().shiftedKeyCharFromKeyCode(code, (modifiers & ConsoleProxyViewer.SHIFT_KEY_MASK) != 0), 
+					getAwtModifiers(modifiers));
+			}
+			break;
+			
+		case 6 :	// Key Up
+			writeKeyboardEvent(KeyEvent.KEY_RELEASED, code, 
+				ConsoleProxyAjaxKeyMapper.getInstance().shiftedKeyCharFromKeyCode(code, (modifiers & ConsoleProxyViewer.SHIFT_KEY_MASK) != 0), 
+				getAwtModifiers(modifiers));
+			break;
+		}
+	}
+	
+/*
+	public void sendClientRawKeyboardEvent(int event, int code, int modifiers) {
+		// code = ConsoleProxyAjaxKeyMapper.getInstance().getJvmKeyCode(code);
 		switch(event) {
 		case 4 : 	// Key press
 			break;
 
 		case 5 :	// Key down
-		    writeRawKeyboardEvent(code, true);
+			if((modifiers & ConsoleProxyViewer.CTRL_KEY_MASK) != 0 && (modifiers & ConsoleProxyViewer.ALT_KEY_MASK) != 0 && code == KeyEvent.VK_INSERT) {
+				code = KeyEvent.VK_DELETE;
+			}
+			
+			writeKeyboardEvent(KeyEvent.KEY_PRESSED, code, 
+				(char)code, 
+				getAwtModifiers(modifiers));
 			break;
 			
 		case 6 :	// Key Up
-            writeRawKeyboardEvent(code, false);
+			writeKeyboardEvent(KeyEvent.KEY_RELEASED, code, 
+				(char)code,  
+				getAwtModifiers(modifiers));
+			break;
+		}
+	}
+*/
+	public void sendClientKeyboardEvent(int event, int code, int modifiers) {
+		int vkCode;
+		switch(event) {
+		case 4 : 	// Key press
+			if(code == 0 || (modifiers & (ConsoleProxyViewer.CTRL_KEY_MASK | ConsoleProxyViewer.META_KEY_MASK | ConsoleProxyViewer.ALT_KEY_MASK)) != 0) {
+				// if code is extend keys or has ctrl, alt, meta being pressed, ignore javascript key-press event
+				return;
+			}
+			
+			vkCode = ConsoleProxyAjaxKeyMapper.getInstance().getRegularCharVkCode(code);
+			if(vkCode > 0) {
+				writeKeyboardEvent(KeyEvent.KEY_PRESSED, vkCode, (char)code, 0); 
+				writeKeyboardEvent(KeyEvent.KEY_RELEASED, vkCode, (char)code, 0);
+			}
+			break;
+
+		case 5 :	// Key down
+			vkCode = ConsoleProxyAjaxKeyMapper.getInstance().getActionCharVkCode(code);
+			if(vkCode >= 0 || (modifiers & (ConsoleProxyViewer.CTRL_KEY_MASK | ConsoleProxyViewer.META_KEY_MASK | ConsoleProxyViewer.ALT_KEY_MASK)) != 0) {
+				if(vkCode < 0) {
+					vkCode = ConsoleProxyAjaxKeyMapper.getInstance().getRegularCharVkCode(code);
+					
+					if((modifiers & ConsoleProxyViewer.CTRL_KEY_MASK) != 0) {  	// if control-key is pressed, always use lower-case char-code
+						if(vkCode >= (int)'A' && vkCode <= (int)'Z')
+							vkCode = (int)'a' + (vkCode - (int)'A');
+					}
+				}
+				
+				if((modifiers & ConsoleProxyViewer.CTRL_KEY_MASK) != 0 && (modifiers & ConsoleProxyViewer.ALT_KEY_MASK) != 0 && vkCode == KeyEvent.VK_INSERT) {
+					vkCode = KeyEvent.VK_DELETE;
+				}
+				
+				writeKeyboardEvent(KeyEvent.KEY_PRESSED, vkCode, (char)vkCode,
+					getAwtModifiers(modifiers));
+			}
+			break;
+			
+		case 6 :	// Key Up
+			vkCode = ConsoleProxyAjaxKeyMapper.getInstance().getActionCharVkCode(code);
+			if(vkCode >= 0 || (modifiers & (ConsoleProxyViewer.CTRL_KEY_MASK | ConsoleProxyViewer.META_KEY_MASK | ConsoleProxyViewer.ALT_KEY_MASK)) != 0) {
+				if(vkCode < 0) {
+					vkCode = ConsoleProxyAjaxKeyMapper.getInstance().getRegularCharVkCode(code);
+
+					if((modifiers & ConsoleProxyViewer.CTRL_KEY_MASK) != 0) {	// if control-key is pressed, always use lower-case char-code
+						if(vkCode >= (int)'A' && vkCode <= (int)'Z')
+							vkCode = (int)'a' + (vkCode - (int)'A');
+					}
+					
+					if((modifiers & ConsoleProxyViewer.CTRL_KEY_MASK) != 0 && (modifiers & ConsoleProxyViewer.ALT_KEY_MASK) != 0 && vkCode == KeyEvent.VK_INSERT) {
+						vkCode = KeyEvent.VK_DELETE;
+					}
+				}
+
+				writeKeyboardEvent(KeyEvent.KEY_RELEASED, vkCode, (char)vkCode,
+					getAwtModifiers(modifiers));
+			}
 			break;
 		}
 	}
 	
-	private void writeRawKeyboardEvent(int keysym, boolean down) {
-        synchronized (this) {
-            if (rfb != null && !rfb.closed()) {
-                try {
-                    rfb.writeKeyEvent(keysym, down);
-                    rfb.flushEventBuffer();
-                } catch (IOException e) {
-                    s_logger.warn("Exception while sending keyboard event. ", e);
-                }
-            }
-        }
+	private static int getAwtModifiers(int jsModifiers) {
+		int awtModifiers = 0;
+		
+		if((jsModifiers & ConsoleProxyViewer.SHIFT_KEY_MASK) != 0) {
+			awtModifiers |= InputEvent.SHIFT_DOWN_MASK;
+		}
+		
+		if((jsModifiers & ConsoleProxyViewer.CTRL_KEY_MASK) != 0) {
+			awtModifiers |= InputEvent.CTRL_DOWN_MASK;
+		}
+		
+		if((jsModifiers & ConsoleProxyViewer.ALT_KEY_MASK) != 0) {
+			awtModifiers |= InputEvent.ALT_DOWN_MASK;
+		}
+		
+		return awtModifiers;
+	}
+	
+	private void writeKeyboardEvent(int keyEventType, int code, char keyChar, int modifiers) {
+		KeyEvent keyEvent;
+		try {
+			keyEvent = new KeyEvent(vc, keyEventType, 
+				System.currentTimeMillis(), modifiers, code, keyChar);
+		} catch(Exception e) {
+			s_logger.warn("Unable to construct KeyEvent object, key code: " + code + ", keyChar: " + keyChar + " ", e);
+			return;
+		}
+		
+		synchronized (this) {
+			if (rfb != null && !rfb.closed()) {
+				try {
+					rfb.writeKeyEvent(keyEvent);
+				} catch (IOException e) {
+					s_logger.warn("Exception while sending keyboard event. ", e);
+				}
+			}
+		}
 	}
 }

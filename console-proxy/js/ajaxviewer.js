@@ -21,18 +21,13 @@
 // Author
 //		Kelven Yang
 //
-//		11/18/2009		Created
-//		05/09/2011		Add keyboard type support
-//		12/13/2011		Refactor console proxy/console viewer handling
-//						1) Javascript will always send raw KEY-DOWN/KEY-UP events, 
-//							no KEY-PRESS translation at console proxy
-//						2) No keyboard event translation in console proxy, make
-//							it transparent between the VM and console viewer
-//						3) Pure javascript keyboard layout mapping, make it independent
-//							of browser/guest OS/host OS
+//		11/18/2009						Created
+//
+//		05/09/2011						Add keyboard type support
 //
 var g_logger;
 
+//
 /////////////////////////////////////////////////////////////////////////////
 // class StringBuilder
 //
@@ -75,13 +70,119 @@ function getCurrentLanguage() {
 /////////////////////////////////////////////////////////////////////////////
 // class KeyboardMapper
 //
-function KeyboardMapper() {
+function KeyboardMapper(nativeKeypress, keyCodeMap, shiftedKeyCodeMap, charCodeMap, shiftedCharCodeMap) {
+	this.nativeKeypress = nativeKeypress;
+	this.keyCodeMap = keyCodeMap;
+	this.shiftedKeyCodeMap = shiftedKeyCodeMap;
+	this.charCodeMap = charCodeMap;
+	this.shiftedCharCodeMap = shiftedCharCodeMap;
+	
 	this.mappedInput = [];
 }
 
 KeyboardMapper.prototype = {
+	supportNativeKeypress : function() {
+		return this.nativeKeypress;
+	},
+	
 	inputFeed : function(eventType, code, modifiers) {
-		this.mappedInput.push({type: eventType, code: code, modifiers: modifiers});
+		if(this.nativeKeypress) {
+			this.mappedInput.push({type: eventType, code: code, modifiers: modifiers});
+			return;
+		}
+		
+		if(code == AjaxViewer.SHIFT_KEY && eventType == AjaxViewer.KEY_DOWN)
+			return;
+		
+		if(eventType == AjaxViewer.KEY_PRESS) {
+			var mappedEntry = null;
+			if((modifiers & AjaxViewer.SHIFT_KEY) != 0) {
+				if(this.shiftedCharCodeMap && this.shiftedCharCodeMap[code])
+					mappedEntry = this.shiftedCharCodeMap[code];
+			} else {
+				if(this.charCodeMap && this.charCodeMap[code])
+					mappedEntry = this.charCodeMap[code];
+			}
+
+			// reset deferred charCode->keyCode resolution
+			this.lastDeferedKeyCode = 0;
+			if(mappedEntry) {
+				if(mappedEntry.shift) {
+					if(mappedEntry.keyCode) {
+						this.mappedInput.push({type: AjaxViewer.KEY_DOWN, code: AjaxViewer.KEYCODE_SHIFT, modifiers: modifiers | AjaxViewer.SHIFT_KEY});
+						this.mappedInput.push({type: AjaxViewer.KEY_DOWN, code: mappedEntry.keyCode, modifiers: modifiers | AjaxViewer.SHIFT_KEY});
+						this.lastDeferedKeyCode = mappedEntry.keyCode;
+					}
+					this.mappedInput.push({type: eventType, code: mappedEntry.code, modifiers: modifiers | AjaxViewer.SHIFT_KEY});
+					
+					if((modifiers & AjaxViewer.SHIFT_KEY) != 0)
+						g_logger.log(Logger.LEVEL_INFO, "map SHIFTED char code " + code + " to SHIFTED " +  mappedEntry.code + ", modifiers: " + modifiers + ', char: ' + String.fromCharCode(code));
+					else
+						g_logger.log(Logger.LEVEL_INFO, "map char code " + code + " to SHIFTED " +  mappedEntry.code + ", modifiers: " + modifiers + ', char: ' + String.fromCharCode(code));
+				} else {
+					if(mappedEntry.keyCode) {
+						this.mappedInput.push({type: AjaxViewer.KEY_DOWN, code: mappedEntry.keyCode, modifiers: modifiers & ~AjaxViewer.SHIFT_KEY});
+						this.lastDeferedKeyCode = mappedEntry.keyCode;
+					}
+					this.mappedInput.push({type: eventType, code: mappedEntry.code, modifiers: modifiers & ~AjaxViewer.SHIFT_KEY});
+	
+					if((modifiers & AjaxViewer.SHIFT_KEY) != 0)
+						g_logger.log(Logger.LEVEL_INFO, "map SHIFTED char code " + code + " to " +  mappedEntry.code + ", modifiers: " + modifiers + ', char: ' + String.fromCharCode(code));
+					else
+						g_logger.log(Logger.LEVEL_INFO, "map char code " + code + " to " +  mappedEntry.code + ", modifiers: " + modifiers + ', char: ' + String.fromCharCode(code));
+				}
+			} else {
+				if(code != 0)
+					this.mappedInput.push({type: eventType, code: code, modifiers: modifiers});
+			}
+		} else {
+			var mappedEntry = null;
+			if((modifiers & AjaxViewer.SHIFT_KEY) != 0) {
+				if(this.shiftedKeyCodeMap && this.shiftedKeyCodeMap[code])
+					mappedEntry = this.shiftedKeyCodeMap[code];
+			} else {
+				if(this.keyCodeMap && this.keyCodeMap[code])
+					mappedEntry = this.keyCodeMap[code];
+			}
+			
+			if(mappedEntry) {
+				if(mappedEntry.shift) {
+					if(eventType == AjaxViewer.KEY_DOWN) {
+						if(!mappedEntry.defer) {
+							this.mappedInput.push({type: AjaxViewer.KEY_DOWN, code: AjaxViewer.KEYCODE_SHIFT, modifiers: modifiers | AjaxViewer.SHIFT_KEY});
+							this.mappedInput.push({type: eventType, code: mappedEntry.code, modifiers: modifiers | AjaxViewer.SHIFT_KEY});
+							
+							if(mappedEntry.charCode)
+								this.mappedInput.push({type: AjaxViewer.KEY_PRESS, code: mappedEntry.charCode, modifiers: modifiers | AjaxViewer.SHIFT_KEY});
+						}
+					} else {
+						if(!mappedEntry.defer) {
+							this.mappedInput.push({type: eventType, code: mappedEntry.code, modifiers: modifiers & ~AjaxViewer.SHIFT_KEY});
+						} else {
+							this.mappedInput.push({type: eventType, code: this.lastDeferedKeyCode, modifiers: modifiers & ~AjaxViewer.SHIFT_KEY});
+						}
+						
+						this.mappedInput.push({type: AjaxViewer.KEY_UP, code: AjaxViewer.KEYCODE_SHIFT, modifiers: modifiers & ~AjaxViewer.SHIFT_KEY});
+					}
+					
+					if((modifiers & AjaxViewer.SHIFT_KEY) != 0)
+						g_logger.log(Logger.LEVEL_INFO, "map SHIFTED key code " + code + " to SHIFTED " +  mappedEntry.code + ", modifiers: " + modifiers + ', char: ' + String.fromCharCode(code));
+					else
+						g_logger.log(Logger.LEVEL_INFO, "map key code " + code + " to SHIFTED " +  mappedEntry.code + ", modifiers: " + modifiers + ', char: ' + String.fromCharCode(code));
+				} else {
+					if(eventType != AjaxViewer.KEY_DOWN || !mappedEntry.defer) {
+						this.mappedInput.push({type: eventType, code: mappedEntry.code, modifiers: modifiers & ~AjaxViewer.SHIFT_KEY});
+					}
+						
+					if((modifiers & AjaxViewer.SHIFT_KEY) != 0)
+						g_logger.log(Logger.LEVEL_INFO, "map SHIFTED key code " + code + " to " +  mappedEntry.code + ", modifiers: " + modifiers + ', char: ' + String.fromCharCode(code));
+					else
+						g_logger.log(Logger.LEVEL_INFO, "map key code " + code + " to " +  mappedEntry.code + ", modifiers: " + modifiers + ', char: ' + String.fromCharCode(code));
+				}
+			} else {
+				this.mappedInput.push({type: eventType, code: code, modifiers: modifiers});
+			}
+		}
 	},
 	
 	getMappedInput : function() {
@@ -91,296 +192,24 @@ KeyboardMapper.prototype = {
 	},
 	
 	isModifierInput : function(code) {
-		return $.inArray(code, [AjaxViewer.ALT_KEY_MASK, AjaxViewer.SHIFT_KEY_MASK, AjaxViewer.CTRL_KEY_MASK, AjaxViewer.META_KEY_MASK]) >= 0;
+		return $.inArray(code, [AjaxViewer.ALT_KEY, AjaxViewer.SHIFT_KEY, AjaxViewer.CTRL_KEY, AjaxViewer.META_KEY]) >= 0;
 	}
 };
 
 /////////////////////////////////////////////////////////////////////////////
-// JsX11KeyboardMapper
-//
-function JsX11KeyboardMapper() {
-	KeyboardMapper.apply(this, arguments);
-	
-	this.jsX11KeysymMap = [];
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_CAPSLOCK] 		= AjaxViewer.X11_KEY_CAPSLOCK;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_BACKSPACE] 		= AjaxViewer.X11_KEY_BACKSPACE;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_TAB] 				= AjaxViewer.X11_KEY_TAB;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_ENTER] 			= AjaxViewer.X11_KEY_ENTER;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_ESCAPE] 			= AjaxViewer.X11_KEY_ESCAPE;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_INSERT] 			= AjaxViewer.X11_KEY_INSERT;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_DELETE] 			= AjaxViewer.X11_KEY_DELETE;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_HOME] 			= AjaxViewer.X11_KEY_HOME;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_END] 				= AjaxViewer.X11_KEY_END;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_PAGEUP] 			= AjaxViewer.X11_KEY_PAGEUP;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_PAGEDOWN] 		= AjaxViewer.X11_KEY_PAGEDOWN;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_LEFT] 			= AjaxViewer.X11_KEY_LEFT;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_UP] 				= AjaxViewer.X11_KEY_UP;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_RIGHT] 			= AjaxViewer.X11_KEY_RIGHT;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_DOWN] 			= AjaxViewer.X11_KEY_DOWN;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F1] 				= AjaxViewer.X11_KEY_F1;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F2] 				= AjaxViewer.X11_KEY_F2;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F3] 				= AjaxViewer.X11_KEY_F3;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F4] 				= AjaxViewer.X11_KEY_F4;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F5] 				= AjaxViewer.X11_KEY_F5;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F6] 				= AjaxViewer.X11_KEY_F6;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F7] 				= AjaxViewer.X11_KEY_F7;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F8] 				= AjaxViewer.X11_KEY_F8;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F9] 				= AjaxViewer.X11_KEY_F9;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F10] 				= AjaxViewer.X11_KEY_F10;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F11] 				= AjaxViewer.X11_KEY_F11;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F12] 				= AjaxViewer.X11_KEY_F12;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_SHIFT] 			= AjaxViewer.X11_KEY_SHIFT;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_ALT] 				= AjaxViewer.X11_KEY_ALT;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_GRAVE_ACCENT] 	= AjaxViewer.X11_KEY_GRAVE_ACCENT;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_SUBSTRACT] 		= AjaxViewer.X11_KEY_SUBSTRACT;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_ADD] 				= AjaxViewer.X11_KEY_ADD;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_OPEN_BRACKET] 	= AjaxViewer.X11_KEY_OPEN_BRACKET;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_CLOSE_BRACKET] 	= AjaxViewer.X11_KEY_CLOSE_BRACKET;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_BACK_SLASH] 		= AjaxViewer.X11_KEY_BACK_SLASH;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_SINGLE_QUOTE] 	= AjaxViewer.X11_KEY_SINGLE_QUOTE;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_COMMA] 			= AjaxViewer.X11_KEY_COMMA;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_PERIOD] 			= AjaxViewer.X11_KEY_PERIOD;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_FORWARD_SLASH] 	= AjaxViewer.X11_KEY_FORWARD_SLASH;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_DASH] 			= AjaxViewer.X11_KEY_DASH;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_SEMI_COLON] 		= AjaxViewer.X11_KEY_SEMI_COLON;
-
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_NUMPAD0] 			= AjaxViewer.X11_KEY_NUMPAD0;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_NUMPAD1] 			= AjaxViewer.X11_KEY_NUMPAD1;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_NUMPAD2] 			= AjaxViewer.X11_KEY_NUMPAD2;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_NUMPAD3] 			= AjaxViewer.X11_KEY_NUMPAD3;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_NUMPAD4] 			= AjaxViewer.X11_KEY_NUMPAD4;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_NUMPAD5] 			= AjaxViewer.X11_KEY_NUMPAD5;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_NUMPAD6] 			= AjaxViewer.X11_KEY_NUMPAD6;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_NUMPAD7] 			= AjaxViewer.X11_KEY_NUMPAD7;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_NUMPAD8] 			= AjaxViewer.X11_KEY_NUMPAD8;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_NUMPAD9] 			= AjaxViewer.X11_KEY_NUMPAD9;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_DECIMAL_POINT] 	= AjaxViewer.X11_KEY_DECIMAL_POINT;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_DIVIDE] 			= AjaxViewer.X11_KEY_DIVIDE;
-	
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_MULTIPLY] = [
-	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0 },
-	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_ASTERISK, modifiers: 0 },
-	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_ASTERISK, modifiers: 0 },
-	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0 }
-	];
-	
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_ADD] = false;
-	this.jsKeyPressX11KeysymMap = [];
-	this.jsKeyPressX11KeysymMap[61] = [
-	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: false },
-	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: false }
-	];
-	this.jsKeyPressX11KeysymMap[43] = [
-	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
-	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: false },
-	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: false },
-	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
-	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: true },
-	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: true }
-	];
-}
-
-JsX11KeyboardMapper.prototype = new KeyboardMapper();
-JsX11KeyboardMapper.prototype.inputFeed = function(eventType, code, modifiers) {
-	if(eventType == AjaxViewer.KEY_DOWN || eventType == AjaxViewer.KEY_UP) {
-		
-		// special handling for Alt + Ctrl + Ins, convert it into Alt-Ctrl-Del
-		if(code == AjaxViewer.JS_KEY_INSERT) {
-			if((modifiers & AjaxViewer.ALT_KEY_MASK) != 0 && (modifiers & AjaxViewer.CTRL_KEY_MASK) != 0) {
-				this.mappedInput.push({type : eventType, code: 0xffff, modifiers: modifiers});
-				return;
-			}
-		}
-		if(code == 67) {  //c, for ctrl-c
-			if((modifiers & AjaxViewer.CTRL_KEY_MASK) != 0) {
-				this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 65507, modifiers: modifiers});
-				this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 67, modifiers: modifiers});
-				this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 67, modifiers: modifiers});
-				this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 65507, modifiers: modifiers});
-				return;
-			}
-		}
-		if(code == 68) {  //d, for ctrl-d
-			if((modifiers & AjaxViewer.CTRL_KEY_MASK) != 0) {
-				this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 65507, modifiers: modifiers});
-				this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 68, modifiers: modifiers});
-				this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 68, modifiers: modifiers});
-				this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 65507, modifiers: modifiers});
-				return;
-			}
-		}
-		
-		var X11Keysym = code;
-		if(this.jsX11KeysymMap[code] != undefined) {
-			X11Keysym = this.jsX11KeysymMap[code];
-			if(typeof this.jsX11KeysymMap[code] == "boolean") {
-				return;
-			} else if($.isArray(X11Keysym)) {
-				for(var i = 0; i < X11Keysym.length; i++) {
-					if(X11Keysym[i].type == eventType) {
-						this.mappedInput.push(X11Keysym[i]);
-					}
-				}
-			} else {
-				this.mappedInput.push({type : eventType, code: X11Keysym, modifiers: modifiers});
-			}
-		} else {
-			this.mappedInput.push({type : eventType, code: X11Keysym, modifiers: modifiers});
-		}
-
-		// special handling for ALT/CTRL key
-		if(eventType == AjaxViewer.KEY_UP && (code == AjaxViewer.JS_KEY_ALT || code == code == AjaxViewer.JS_KEY_CTRL))
-			this.mappedInput.push({type : eventType, code: this.jsX11KeysymMap[code], modifiers: modifiers});
-		
-	} else if(eventType == AjaxViewer.KEY_PRESS) {
-		var X11Keysym = code;
-		X11Keysym = this.jsKeyPressX11KeysymMap[code];
-		if(X11Keysym) {
-			if($.isArray(X11Keysym)) {
-				for(var i = 0; i < X11Keysym.length; i++) {
-					var shift = ((modifiers & AjaxViewer.SHIFT_KEY_MASK) != 0 ? true : false); 
-					if(!(X11Keysym[i].shift ^ shift))
-						this.mappedInput.push(X11Keysym[i]);
-				}
-			} else {
-				this.mappedInput.push({type : eventType, code: X11Keysym, modifiers: modifiers});
-			}
-		}
-	}
-}
-
-/////////////////////////////////////////////////////////////////////////////
-//JsCookedKeyboardMapper
-// For Xen/KVM hypervisors, it accepts "cooked" keyborad events
-//
-function JsCookedKeyboardMapper() {
-	KeyboardMapper.apply(this, arguments);
-	
-	this.jsX11KeysymMap = [];
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_CAPSLOCK] 		= AjaxViewer.X11_KEY_CAPSLOCK;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_BACKSPACE] 		= AjaxViewer.X11_KEY_BACKSPACE;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_TAB] 				= AjaxViewer.X11_KEY_TAB;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_ENTER] 			= AjaxViewer.X11_KEY_ENTER;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_ESCAPE] 			= AjaxViewer.X11_KEY_ESCAPE;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_INSERT] 			= AjaxViewer.X11_KEY_INSERT;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_DELETE] 			= AjaxViewer.X11_KEY_DELETE;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_HOME] 			= AjaxViewer.X11_KEY_HOME;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_END] 				= AjaxViewer.X11_KEY_END;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_PAGEUP] 			= AjaxViewer.X11_KEY_PAGEUP;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_PAGEDOWN] 		= AjaxViewer.X11_KEY_PAGEDOWN;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_LEFT] 			= AjaxViewer.X11_KEY_LEFT;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_UP] 				= AjaxViewer.X11_KEY_UP;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_RIGHT] 			= AjaxViewer.X11_KEY_RIGHT;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_DOWN] 			= AjaxViewer.X11_KEY_DOWN;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F1] 				= AjaxViewer.X11_KEY_F1;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F2] 				= AjaxViewer.X11_KEY_F2;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F3] 				= AjaxViewer.X11_KEY_F3;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F4] 				= AjaxViewer.X11_KEY_F4;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F5] 				= AjaxViewer.X11_KEY_F5;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F6] 				= AjaxViewer.X11_KEY_F6;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F7] 				= AjaxViewer.X11_KEY_F7;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F8] 				= AjaxViewer.X11_KEY_F8;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F9] 				= AjaxViewer.X11_KEY_F9;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F10] 				= AjaxViewer.X11_KEY_F10;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F11] 				= AjaxViewer.X11_KEY_F11;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_F12] 				= AjaxViewer.X11_KEY_F12;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_SHIFT] 			= AjaxViewer.X11_KEY_SHIFT;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_CTRL] 			= AjaxViewer.X11_KEY_CTRL;
-	this.jsX11KeysymMap[AjaxViewer.JS_KEY_ALT] 				= AjaxViewer.X11_KEY_ALT;
-}
-
-JsCookedKeyboardMapper.prototype = new KeyboardMapper();
-JsCookedKeyboardMapper.prototype.inputFeed = function(eventType, code, modifiers) {
-	if(eventType == AjaxViewer.KEY_DOWN || eventType == AjaxViewer.KEY_UP) {
-		
-		// special handling for Alt + Ctrl + Ins, convert it into Alt-Ctrl-Del
-		if(code == AjaxViewer.JS_KEY_INSERT) {
-			if((modifiers & AjaxViewer.ALT_KEY_MASK) != 0 && (modifiers & AjaxViewer.CTRL_KEY_MASK) != 0) {
-				this.mappedInput.push({type : eventType, code: 0xffff, modifiers: modifiers});
-				return;
-			}
-		}
-		//Fang
-		if(code == 67) {  //c, for ctrl-c
-			if((modifiers & AjaxViewer.CTRL_KEY_MASK) != 0) {
-				this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 67, modifiers: modifiers});
-				this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 67, modifiers: modifiers});
-				return;
-			}
-		}
-
-		if(code == 68) {  //d, ctrl-d
-			if((modifiers & AjaxViewer.CTRL_KEY_MASK) != 0) {
-				this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 68, modifiers: modifiers});
-				this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 68, modifiers: modifiers});
-				return;
-			}
-		}
-		var X11Keysym = code;
-		if(this.jsX11KeysymMap[code] != undefined) {
-			X11Keysym = this.jsX11KeysymMap[code];
-			if(typeof this.jsX11KeysymMap[code] == "boolean") {
-				return;
-			} else if($.isArray(X11Keysym)) {
-				for(var i = 0; i < X11Keysym.length; i++) {
-					if(X11Keysym[i].type == eventType) {
-						this.mappedInput.push(X11Keysym[i]);
-					}
-				}
-			} else {
-				this.mappedInput.push({type : eventType, code: X11Keysym, modifiers: modifiers});
-			}
-		} 
-
-		// special handling for ALT/CTRL key
-		if(eventType == AjaxViewer.KEY_UP && (code == AjaxViewer.JS_KEY_ALT || code == code == AjaxViewer.JS_KEY_CTRL))
-			this.mappedInput.push({type : eventType, code: this.jsX11KeysymMap[code], modifiers: modifiers});
-	
-		
-	} else if(eventType == AjaxViewer.KEY_PRESS) {
-		var X11Keysym = code;
-		
-		// special handling for * and + key on number pad
-		if(code == AjaxViewer.JS_NUMPAD_MULTIPLY) {
-			this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: modifiers});
-			this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 42, modifiers: modifiers});
-			this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 42, modifiers: modifiers});
-			this.mappedInput.push({type : AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: modifiers});
-			return;
-		}
-		
-		if(code == AjaxViewer.JS_NUMPAD_PLUS) {
-			this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: modifiers});
-			this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: 43, modifiers: modifiers});
-			this.mappedInput.push({type : AjaxViewer.KEY_UP, code: 43, modifiers: modifiers});
-			this.mappedInput.push({type : AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: modifiers});
-			return;
-		}
-		//FANG
-		 
-		if(code == 13 || code == 8) {   // Enter Key 13, backspaceKey 8 
-		    return;
-		}    
-			
-		this.mappedInput.push({type : AjaxViewer.KEY_DOWN, code: X11Keysym, modifiers: modifiers});
-		this.mappedInput.push({type : AjaxViewer.KEY_UP, code: X11Keysym, modifiers: modifiers});
-	}
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // class AjaxViewer
 //
-function AjaxViewer(panelId, imageUrl, updateUrl, tileMap, width, height, tileWidth, tileHeight, hypervisorType) {
+function AjaxViewer(panelId, imageUrl, updateUrl, tileMap, width, height, tileWidth, tileHeight, rawKeyboard, linuxGuest) {
 	// logging is disabled by default so that it won't have negative impact on performance
 	// however, a back door key-sequence can trigger to open the logger window, it is designed to help
 	// trouble-shooting
 	g_logger = new Logger();
-	
-	// FANG - Open logger window
-	//g_logger.enable(true);
-	//g_logger.open();
+	g_logger.enable(true);
+	// g_logger.open();
+	// g_logger.log(Logger.LEVEL_INFO, 'rawKeyboard: ' + rawKeyboard);
 	
 	var ajaxViewer = this;
+	this.rawKeyboard = rawKeyboard;
 	this.imageLoaded = false;
 	this.fullImage = true;
 	this.imgUrl = imageUrl;
@@ -398,13 +227,10 @@ function AjaxViewer(panelId, imageUrl, updateUrl, tileMap, width, height, tileWi
 	this.tileHeight = tileHeight;
 	this.maxTileZIndex = 1;
 	
-	this.hypervisorType = hypervisorType;
-	
-	// FANG hardcode to XenServer for XS testing, remove it after
-	// this.hypervisorType = "XenServer";
-	
-	this.currentKeyboard = AjaxViewer.KEYBOARD_TYPE_ENGLISH;
+	this.currentKeyboard = 0;
 	this.keyboardMappers = [];
+	
+	this.linuxGuest = linuxGuest;
 	
 	this.timer = 0;
 	this.eventQueue = [];
@@ -417,6 +243,7 @@ function AjaxViewer(panelId, imageUrl, updateUrl, tileMap, width, height, tileWi
 	
 	this.panel = this.generateCanvas(panelId, width, height, tileWidth, tileHeight);
 	
+	this.setupKeyCodeTranslationTable();
 	this.setupKeyboardTranslationTable();
 	this.setupUIController();
 }
@@ -432,13 +259,22 @@ AjaxViewer.EVENT_BAG = 7;
 AjaxViewer.MOUSE_DBLCLK = 8;
 
 // use java AWT key modifier masks 
-AjaxViewer.SHIFT_KEY_MASK = 64;
-AjaxViewer.CTRL_KEY_MASK = 128;
-AjaxViewer.META_KEY_MASK = 256;
-AjaxViewer.ALT_KEY_MASK = 512;
-AjaxViewer.LEFT_SHIFT_MASK = 1024;
-AjaxViewer.LEFT_CTRL_MASK = 2048;
-AjaxViewer.LEFT_ALT_MASK = 4096;
+AjaxViewer.SHIFT_KEY = 64;
+AjaxViewer.CTRL_KEY = 128;
+AjaxViewer.META_KEY = 256;
+AjaxViewer.ALT_KEY = 512;
+AjaxViewer.SHIFT_LEFT = 1024;
+AjaxViewer.CTRL_LEFT = 2048;
+AjaxViewer.ALT_LEFT = 4096;
+
+// keycode
+AjaxViewer.KEYCODE_SHIFT = 16;
+AjaxViewer.KEYCODE_MULTIPLY = 106;
+AjaxViewer.KEYCODE_ADD = 107;
+AjaxViewer.KEYCODE_8 = 56;
+
+AjaxViewer.CHARCODE_NUMPAD_MULTIPLY = 42;
+AjaxViewer.CHARCODE_NUMPAD_ADD = 43;
 
 AjaxViewer.EVENT_QUEUE_MOUSE_EVENT = 1;
 AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT = 2;
@@ -448,147 +284,11 @@ AjaxViewer.STATUS_RECEIVED = 2;
 AjaxViewer.STATUS_SENDING = 3;
 AjaxViewer.STATUS_SENT = 4;
 
-AjaxViewer.KEYBOARD_TYPE_ENGLISH = "us";
-AjaxViewer.KEYBOARD_TYPE_JAPANESE = "jp";
-
-AjaxViewer.JS_KEY_BACKSPACE = 8;
-AjaxViewer.JS_KEY_TAB = 9;
-AjaxViewer.JS_KEY_ENTER = 13;
-AjaxViewer.JS_KEY_SHIFT = 16;
-AjaxViewer.JS_KEY_CTRL = 17;
-AjaxViewer.JS_KEY_ALT = 18;
-AjaxViewer.JS_KEY_PAUSE = 19;
-AjaxViewer.JS_KEY_CAPSLOCK = 20;
-AjaxViewer.JS_KEY_ESCAPE = 27;
-AjaxViewer.JS_KEY_PAGEUP = 33;
-AjaxViewer.JS_KEY_PAGEDOWN = 34;
-AjaxViewer.JS_KEY_END = 35;
-AjaxViewer.JS_KEY_HOME = 36;
-AjaxViewer.JS_KEY_LEFT = 37;
-AjaxViewer.JS_KEY_UP = 38;
-AjaxViewer.JS_KEY_RIGHT = 39;
-AjaxViewer.JS_KEY_DOWN = 40;
-AjaxViewer.JS_KEY_INSERT = 45;
-AjaxViewer.JS_KEY_DELETE = 46;
-AjaxViewer.JS_KEY_LEFT_WINDOW_KEY = 91;
-AjaxViewer.JS_KEY_RIGHT_WINDOW_KEY = 92;
-AjaxViewer.JS_KEY_SELECT_KEY = 93;
-AjaxViewer.JS_KEY_NUMPAD0 = 96;
-AjaxViewer.JS_KEY_NUMPAD1 = 97;
-AjaxViewer.JS_KEY_NUMPAD2 = 98;
-AjaxViewer.JS_KEY_NUMPAD3 = 99;
-AjaxViewer.JS_KEY_NUMPAD4 = 100;
-AjaxViewer.JS_KEY_NUMPAD5 = 101;
-AjaxViewer.JS_KEY_NUMPAD6 = 102;
-AjaxViewer.JS_KEY_NUMPAD7 = 103;
-AjaxViewer.JS_KEY_NUMPAD8 = 104;
-AjaxViewer.JS_KEY_NUMPAD9 = 105;
-AjaxViewer.JS_KEY_MULTIPLY = 106;
-AjaxViewer.JS_KEY_ADD = 107;
-AjaxViewer.JS_KEY_SUBSTRACT = 109;
-AjaxViewer.JS_KEY_DECIMAL_POINT = 110;
-AjaxViewer.JS_KEY_DIVIDE = 111;
-AjaxViewer.JS_KEY_F1 = 112;
-AjaxViewer.JS_KEY_F2 = 113;
-AjaxViewer.JS_KEY_F3 = 114;
-AjaxViewer.JS_KEY_F4 = 115;
-AjaxViewer.JS_KEY_F5 = 116;
-AjaxViewer.JS_KEY_F6 = 117;
-AjaxViewer.JS_KEY_F7 = 118;
-AjaxViewer.JS_KEY_F8 = 119;
-AjaxViewer.JS_KEY_F9 = 120;
-AjaxViewer.JS_KEY_F10 = 121;
-AjaxViewer.JS_KEY_F11 = 122;
-AjaxViewer.JS_KEY_F12 = 123;
-AjaxViewer.JS_KEY_NUMLOCK = 144;
-AjaxViewer.JS_KEY_SCROLLLOCK = 145;
-AjaxViewer.JS_KEY_SEMI_COLON = 186;			// ;
-AjaxViewer.JS_KEY_EQUAL_SIGN = 187;			// =
-AjaxViewer.JS_KEY_COMMA = 188;				// ,
-AjaxViewer.JS_KEY_DASH = 189;				// -
-AjaxViewer.JS_KEY_PERIOD = 190;				// .
-AjaxViewer.JS_KEY_FORWARD_SLASH = 191;		// /
-AjaxViewer.JS_KEY_GRAVE_ACCENT = 192;		// `				
-AjaxViewer.JS_KEY_OPEN_BRACKET = 219;		// [
-AjaxViewer.JS_KEY_BACK_SLASH = 220;			// \
-AjaxViewer.JS_KEY_CLOSE_BRACKET = 221;		// ]
-AjaxViewer.JS_KEY_SINGLE_QUOTE = 222;		// '
-AjaxViewer.JS_NUMPAD_PLUS = 43;
-AjaxViewer.JS_NUMPAD_MULTIPLY = 42;
-AjaxViewer.JS_KEY_NUM8 = 56;
-
-// keycode from Japanese keyboard
-AjaxViewer.JS_KEY_JP_COLON = 222;			// :* on JP keyboard
-AjaxViewer.JS_KEY_JP_CLOSE_BRACKET = 220;	// [{ on JP keyboard
-AjaxViewer.JS_KEY_JP_AT_SIGN = 219;			// @` on JP keyboard
-AjaxViewer.JS_KEY_JP_OPEN_BRACKET = 221;	// [{ on JP keyboard
-AjaxViewer.JS_KEY_JP_BACK_SLASH = 193;		// \| on JP keyboard
-AjaxViewer.JS_KEY_JP_YEN_MARK = 255;
-
-AjaxViewer.JS_KEY_JP_EQUAL = 109;			// -= ON JP keyboard
-AjaxViewer.JS_KEY_JP_ACUTE = 107;			// ^~ on JP keyboard
-
-// X11 keysym definitions
-AjaxViewer.X11_KEY_CAPSLOCK = 0xffe5;
-AjaxViewer.X11_KEY_BACKSPACE = 0xff08;
-AjaxViewer.X11_KEY_TAB = 0xff09;
-AjaxViewer.X11_KEY_ENTER = 0xff0d;
-AjaxViewer.X11_KEY_ESCAPE = 0xff1b;
-AjaxViewer.X11_KEY_INSERT = 0xff63;
-AjaxViewer.X11_KEY_DELETE = 0xffff;
-AjaxViewer.X11_KEY_HOME = 0xff50;
-AjaxViewer.X11_KEY_END = 0xff57;
-AjaxViewer.X11_KEY_PAGEUP = 0xff55;
-AjaxViewer.X11_KEY_PAGEDOWN = 0xff56;
-AjaxViewer.X11_KEY_LEFT = 0xff51;
-AjaxViewer.X11_KEY_UP = 0xff52;
-AjaxViewer.X11_KEY_RIGHT = 0xff53;
-AjaxViewer.X11_KEY_DOWN = 0xff54;
-AjaxViewer.X11_KEY_F1 = 0xffbe;
-AjaxViewer.X11_KEY_F2 = 0xffbf;
-AjaxViewer.X11_KEY_F3 = 0xffc0;
-AjaxViewer.X11_KEY_F4 = 0xffc1;
-AjaxViewer.X11_KEY_F5 = 0xffc2;
-AjaxViewer.X11_KEY_F6 = 0xffc3;
-AjaxViewer.X11_KEY_F7 = 0xffc4;
-AjaxViewer.X11_KEY_F8 = 0xffc5;
-AjaxViewer.X11_KEY_F9 = 0xffc6;
-AjaxViewer.X11_KEY_F10 = 0xffc7;
-AjaxViewer.X11_KEY_F11 = 0xffc8;
-AjaxViewer.X11_KEY_F12 = 0xffc9;
-AjaxViewer.X11_KEY_SHIFT = 0xffe1;
-AjaxViewer.X11_KEY_CTRL = 0xffe3;
-AjaxViewer.X11_KEY_ALT = 0xffe9;
-AjaxViewer.X11_KEY_GRAVE_ACCENT = 0x60;
-AjaxViewer.X11_KEY_SUBSTRACT = 0x2d;
-AjaxViewer.X11_KEY_ADD = 0x2b;
-AjaxViewer.X11_KEY_OPEN_BRACKET = 0x5b;
-AjaxViewer.X11_KEY_CLOSE_BRACKET = 0x5d;
-AjaxViewer.X11_KEY_BACK_SLASH = 0x7c;
-AjaxViewer.X11_KEY_REVERSE_SOLIUS = 0x5c;			// another back slash (back slash on JP keyboard)
-AjaxViewer.X11_KEY_SINGLE_QUOTE = 0x22;
-AjaxViewer.X11_KEY_COMMA = 0x3c;
-AjaxViewer.X11_KEY_PERIOD = 0x3e;
-AjaxViewer.X11_KEY_FORWARD_SLASH = 0x3f;
-AjaxViewer.X11_KEY_DASH = 0x2d;
-AjaxViewer.X11_KEY_COLON = 0x3a;
-AjaxViewer.X11_KEY_SEMI_COLON = 0x3b;
-AjaxViewer.X11_KEY_NUMPAD0 = 0x30;
-AjaxViewer.X11_KEY_NUMPAD1 = 0x31;
-AjaxViewer.X11_KEY_NUMPAD2 = 0x32;
-AjaxViewer.X11_KEY_NUMPAD3 = 0x33;
-AjaxViewer.X11_KEY_NUMPAD4 = 0x34;
-AjaxViewer.X11_KEY_NUMPAD5 = 0x35;
-AjaxViewer.X11_KEY_NUMPAD6 = 0x36;
-AjaxViewer.X11_KEY_NUMPAD7 = 0x37;
-AjaxViewer.X11_KEY_NUMPAD8 = 0x38;
-AjaxViewer.X11_KEY_NUMPAD9 = 0x39;
-AjaxViewer.X11_KEY_DECIMAL_POINT = 0x2e;
-AjaxViewer.X11_KEY_DIVIDE = 0x3f;
-AjaxViewer.X11_KEY_TILDE = 0x7e;				// ~
-AjaxViewer.X11_KEY_CIRCUMFLEX_ACCENT = 0x5e;	// ^
-AjaxViewer.X11_KEY_YEN_MARK = 0xa5;				// Japanese YEN mark
-AjaxViewer.X11_KEY_ASTERISK = 0x2a;
+AjaxViewer.KEYBOARD_TYPE_ENGLISH = 0;
+AjaxViewer.KEYBOARD_TYPE_JAPAN_EN_OS_TO_EN_VM = 1;
+AjaxViewer.KEYBOARD_TYPE_JAPAN_JP_OS_TO_EN_VM = 2;
+AjaxViewer.KEYBOARD_TYPE_JAPAN_EN_OS_TO_JP_VM = 3;
+AjaxViewer.KEYBOARD_TYPE_JAPAN_JP_OS_TO_JP_VM = 4;
 
 AjaxViewer.getEventName = function(type) {
 	switch(type) {
@@ -701,132 +401,476 @@ AjaxViewer.prototype = {
 		this.checkEventQueue();
 	},
 	
+	setupKeyCodeTranslationTable: function() {
+		this.keyCodeMap = {};
+		for(var i = 'a'.charCodeAt(); i < 'z'.charCodeAt(); i++)
+			this.keyCodeMap[i] = { code: 65 + i - 'a'.charCodeAt(), shift: false };
+		for(i = 'A'.charCodeAt(); i < 'Z'.charCodeAt(); i++)
+			this.keyCodeMap[i] = { code: 65 + i - 'A'.charCodeAt(), shift: true };
+		for(i = '0'.charCodeAt(); i < '9'.charCodeAt(); i++)
+			this.keyCodeMap[i] = { code: 48 + i - '0'.charCodeAt(), shift: false };
+		
+		this.keyCodeMap['`'.charCodeAt()] = { code : 192, shift : false };
+		this.keyCodeMap['~'.charCodeAt()] = { code : 192, shift : true };
+		
+		this.keyCodeMap[')'.charCodeAt()] = { code : 48, shift : true };
+		this.keyCodeMap['!'.charCodeAt()] = { code : 49, shift : true };
+		this.keyCodeMap['@'.charCodeAt()] = { code : 50, shift : true };
+		this.keyCodeMap['#'.charCodeAt()] = { code : 51, shift : true };
+		this.keyCodeMap['$'.charCodeAt()] = { code : 52, shift : true };
+		this.keyCodeMap['%'.charCodeAt()] = { code : 53, shift : true };
+		this.keyCodeMap['^'.charCodeAt()] = { code : 54, shift : true };
+		this.keyCodeMap['&'.charCodeAt()] = { code : 55, shift : true };
+		this.keyCodeMap['*'.charCodeAt()] = { code : 56, shift : true };
+		this.keyCodeMap['('.charCodeAt()] = { code : 57, shift : true };
+		
+		this.keyCodeMap['-'.charCodeAt()] = { code : 109, shift : false };
+		this.keyCodeMap['_'.charCodeAt()] = { code : 109, shift : true };
+		this.keyCodeMap['='.charCodeAt()] = { code : 107, shift : false };
+		this.keyCodeMap['+'.charCodeAt()] = { code : 107, shift : true };
+
+		this.keyCodeMap['['.charCodeAt()] = { code : 219, shift : false };
+		this.keyCodeMap['{'.charCodeAt()] = { code : 219, shift : true };
+		this.keyCodeMap[']'.charCodeAt()] = { code : 221, shift : false };
+		this.keyCodeMap['}'.charCodeAt()] = { code : 221, shift : true };
+		this.keyCodeMap['\\'.charCodeAt()] = { code : 220, shift : false };
+		this.keyCodeMap['|'.charCodeAt()] = { code : 220, shift : true };
+		this.keyCodeMap[';'.charCodeAt()] = { code : 59, shift : false };
+		this.keyCodeMap[':'.charCodeAt()] = { code : 59, shift : true };
+		this.keyCodeMap['\''.charCodeAt()] = { code : 222 , shift : false };
+		this.keyCodeMap['"'.charCodeAt()] = { code : 222, shift : true };
+		this.keyCodeMap[','.charCodeAt()] = { code : 188 , shift : false };
+		this.keyCodeMap['<'.charCodeAt()] = { code : 188, shift : true };
+		this.keyCodeMap['.'.charCodeAt()] = { code : 190, shift : false };
+		this.keyCodeMap['>'.charCodeAt()] = { code : 190, shift : true };
+		this.keyCodeMap['/'.charCodeAt()] = { code : 191, shift : false };
+		this.keyCodeMap['?'.charCodeAt()] = { code : 191, shift : true };
+	},
+	
 	setupKeyboardTranslationTable : function() {
 		this.keyboardMappers = [];
-		// this.keyboardMappers[AjaxViewer.KEYBOARD_TYPE_ENGLISH] = new JsX11KeyboardMapper();
-		this.keyboardMappers[AjaxViewer.KEYBOARD_TYPE_ENGLISH] = new JsCookedKeyboardMapper();
-
-		// setup Japanese keyboard translation table
-		var mapper = new JsX11KeyboardMapper();
-		this.keyboardMappers[AjaxViewer.KEYBOARD_TYPE_JAPANESE] = mapper;
+		this.keyboardMappers[AjaxViewer.KEYBOARD_TYPE_ENGLISH] = new KeyboardMapper(true, null, null, null, null);
+		this.setJapaneseKeyboardOnEnglishOsToEnglishVmMapping();
+		this.setJapaneseKeyboardOnJapaneseOsToEnglishVmMapping();
+		this.setJapaneseKeyboardOnEnglishOsToJapaneseVmMapping();
+		this.setJapaneseKeyboardOnJapaneseOsToJapaneseVmMapping();
+	},
+	
+	setJapaneseKeyboardOnEnglishOsToEnglishVmMapping : function () {
+		var keyCodeMap = [];
+		var shiftedKeyCodeMap = [];
+		var charCodeMap = [];
+		var shiftedCharCodeMap = [];
 		
-		// JP keyboard plugged in a English host OS
-/*		
-		mapper.jsX11KeysymMap[AjaxViewer.JS_KEY_JP_COLON] = AjaxViewer.X11_KEY_COLON;
-		mapper.jsX11KeysymMap[AjaxViewer.JS_KEY_JP_CLOSE_BRACKET] = AjaxViewer.X11_KEY_CLOSE_BRACKET;
-		mapper.jsX11KeysymMap[AjaxViewer.JS_KEY_JP_AT_SIGN] = AjaxViewer.X11_KEY_GRAVE_ACCENT;
-		mapper.jsX11KeysymMap[AjaxViewer.JS_KEY_JP_OPEN_BRACKET] = AjaxViewer.X11_KEY_OPEN_BRACKET;
-		mapper.jsX11KeysymMap[AjaxViewer.JS_KEY_JP_BACK_SLASH] = AjaxViewer.X11_KEY_REVERSE_SOLIUS;		// X11 REVERSE SOLIDUS
-		mapper.jsX11KeysymMap[AjaxViewer.JS_KEY_JP_YEN_MARK] = AjaxViewer.X11_KEY_YEN_MARK;				// X11 YEN SIGN
-		mapper.jsKeyPressX11KeysymMap[61] = [
-    	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_CIRCUMFLEX_ACCENT, modifiers: 0 },
-    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_CIRCUMFLEX_ACCENT, modifiers: 0 },
-    	];
+		shiftedKeyCodeMap[50] 	= { code: 222, shift: 1 } ;						// JP SHIFT + 2 -> "
+		shiftedCharCodeMap[64] 	= { code: 34, shift: 1 };
 		
-		mapper.jsKeyPressX11KeysymMap[43] = [
-    	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
-    	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: false },
-    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: false },
-    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
-    	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_TILDE, modifiers: 0, shift: true },
-    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_TILDE, modifiers: 0, shift: true }
-        ];
-*/		
+		shiftedKeyCodeMap[54] = { code: 55, shift : 1 };						// JP SHIFT + 6 -> &
+		shiftedCharCodeMap[94] = { code: 38, shift : 1 };
+		
+		shiftedKeyCodeMap[55] = { code: 222, shift : 0 };						// JP SHIFT + 7 -> '
+		shiftedCharCodeMap[38] = { code: 39, shift : 0 };
+		
+		shiftedKeyCodeMap[56] = { code: 57, shift : 1 };						// JP SHIFT + 8 -> (
+		shiftedCharCodeMap[42] = { code: 40, shift : 1 };
+		
+		shiftedKeyCodeMap[57] = { code: 48, shift : 1 };						// JP SHIFT + 9 -> )
+		shiftedCharCodeMap[40] = { code: 41, shift : 1 };
 
-		if(this.hypervisorType && this.hypervisorType == "XenServer") {
-			// XenServer hypervisor
-			
-			mapper.jsX11KeysymMap[192] = 91;		// @ on JP keyboard
-			mapper.jsX11KeysymMap[219] = 93;		// [ on JP keyboard
-			if($.browser.mozilla) {
-				mapper.jsX11KeysymMap[59] = 39;			// : on JP keyboard
-			} else {
-				mapper.jsX11KeysymMap[187] = 59;		// ; on JP keyboard
-				mapper.jsX11KeysymMap[186] = 39;		// : on JP keyboard
-			}
-			mapper.jsX11KeysymMap[221] = 92;		// ] on JP keyboard
-			mapper.jsX11KeysymMap[222] = 61;		// ^ on JP keyboard
+		shiftedKeyCodeMap[48] = { code: 192, shift : 1 };						// JP SHIFT + 0 -> ~
+		shiftedCharCodeMap[41] = { code: 126, shift : 1 };
 
-			mapper.jsX11KeysymMap[220] = true;		// JP Yen mark
-			mapper.jsX11KeysymMap[226] = true;		// \_
-			mapper.jsKeyPressX11KeysymMap[92] = [
-	    	    {type: AjaxViewer.KEY_DOWN, code: 92, modifiers: 0, shift: false },
-	    	    {type: AjaxViewer.KEY_UP, code: 92, modifiers: 0, shift: false },
-	    	];
+		shiftedKeyCodeMap[109] = { code: 107, shift : 0 };						// JP SHIFT + (-=), keycode/charcode(109, 95) from Firefox
+		shiftedCharCodeMap[95] = { code: 61, shift : 0 };
+		
+		shiftedKeyCodeMap[189] = { code: 107, shift : 0 };						// JP SHIFT + (-=), keycode/charcode(109, 95) from Chrome/Safari/MSIE
+		shiftedCharCodeMap[95] = { code: 61, shift : 0 };
 
-			mapper.jsKeyPressX11KeysymMap[124] = [
-	    	    {type: AjaxViewer.KEY_DOWN, code: 124, modifiers: 0, shift: true },
-	    	    {type: AjaxViewer.KEY_UP, code: 124, modifiers: 0, shift: true }
-	    	];
+		if($.browser.mozilla) {
+			keyCodeMap[107] = { code: 107, shift : 1, defer : true };			// JP NUM +, keycode/charcode (107, 43) from Firefox
+			charCodeMap[43] = { code: 43, shift : 1, keyCode: 107 };
+			charCodeMap[61] = { code: 94, shift : 1, keyCode: 54 };				// JP (~^), keycode/charcode (107, 61) from Firefox
 			
-			mapper.jsKeyPressX11KeysymMap[95] = [
-	    	    {type: AjaxViewer.KEY_DOWN, code: 95, modifiers: 0, shift: true },
-	    	    {type: AjaxViewer.KEY_UP, code: 95, modifiers: 0, shift: true }
-	    	];
-			
-			
-			// for keycode 106, keypress 42
-			mapper.jsX11KeysymMap[106] = true;
-			mapper.jsKeyPressX11KeysymMap[42] = [
-	      	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
-	    	    {type: AjaxViewer.KEY_DOWN, code: 34, modifiers: 0, shift: false },
-	    	    {type: AjaxViewer.KEY_UP, code: 34, modifiers: 0, shift: false },
-	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
-	    	];
-			
-			mapper.jsX11KeysymMap[107] = true;
-			mapper.jsKeyPressX11KeysymMap[43] = [
-	      	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
-	    	    {type: AjaxViewer.KEY_DOWN, code: 59, modifiers: 0, shift: false },
-	    	    {type: AjaxViewer.KEY_UP, code: 59, modifiers: 0, shift: false },
-	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
-	    	];
-			if($.browser.mozilla) {
-				mapper.jsKeyPressX11KeysymMap[59] = [
-     	    	    {type: AjaxViewer.KEY_DOWN, code: 59, modifiers: 0, shift: false },
-     	    	    {type: AjaxViewer.KEY_UP, code: 59, modifiers: 0, shift: false },
-     	    	];
-				
-				mapper.jsKeyPressX11KeysymMap[43] = [
-     	      	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: true },
-     	    	    {type: AjaxViewer.KEY_DOWN, code: 59, modifiers: 0, shift: true },
-     	    	    {type: AjaxViewer.KEY_UP, code: 59, modifiers: 0, shift: true },
-     	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: true },
-     	    	];
-			}
+			shiftedKeyCodeMap[107] = { code: 192, shift : 1 };					// JP SHIFT + (!^)				
+			shiftedCharCodeMap[43] = { code: 126, shift : 1 };
 		} else {
-			// for VMware hypervisor
+			keyCodeMap[187] = { code: 54, shift: 1};							// JP ~^
+			charCodeMap[61] = { code: 94, shift: 1};
 			
-			// JP keyboard plugged in a Japanese host OS
-			mapper.jsX11KeysymMap[222] = AjaxViewer.X11_KEY_CIRCUMFLEX_ACCENT;
-			mapper.jsX11KeysymMap[220] = AjaxViewer.X11_KEY_YEN_MARK;
-			mapper.jsX11KeysymMap[219] = AjaxViewer.X11_KEY_OPEN_BRACKET;
-			mapper.jsX11KeysymMap[221] = AjaxViewer.X11_KEY_CLOSE_BRACKET;
-			mapper.jsX11KeysymMap[59] = AjaxViewer.X11_KEY_COLON;					// Firefox
-			mapper.jsX11KeysymMap[186] = AjaxViewer.X11_KEY_COLON;					// Chrome
-			mapper.jsX11KeysymMap[226] = AjaxViewer.X11_KEY_REVERSE_SOLIUS;			// \| key left to right SHIFT on JP keyboard
-			mapper.jsX11KeysymMap[240] = [
-	      	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_CAPSLOCK, modifiers: 0 },
-	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_CAPSLOCK, modifiers: 0 },
-	    	];
-				
-			// for keycode 107, keypress 59
-			mapper.jsKeyPressX11KeysymMap[59] = [
-	    	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SEMI_COLON, modifiers: 0 },
-	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SEMI_COLON, modifiers: 0 },
-	    	];
-			
-			// for keycode 107, keypress 43
-			mapper.jsKeyPressX11KeysymMap[43] = [
-	     	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
-	    	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: false },
-	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: false },
-	    	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_SHIFT, modifiers: 0, shift: false },
-	       	    {type: AjaxViewer.KEY_DOWN, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: true },
-	       	    {type: AjaxViewer.KEY_UP, code: AjaxViewer.X11_KEY_ADD, modifiers: 0, shift: true },
-	        ];
+			shiftedKeyCodeMap[187] = { code: 192, shift : 1 };					// JP SHIFT + (~^)				
+			shiftedCharCodeMap[43] = { code: 126, shift : 1 };
 		}
 		
+		shiftedKeyCodeMap[255] = { code: 220, shift : 1, charCode: 124 };		// JP (|-, key before backspace), Japanese Yen mark
+		
+		keyCodeMap[219] = { code: 50, shift : 1 };								// JP @`
+		charCodeMap[91] = { code: 64, shift : 1 };
+		shiftedKeyCodeMap[219] = { code: 192, shift : 0 };						// JP SHIFT + (@`)
+		shiftedCharCodeMap[123] = { code: 96, shift : 0 };
+		
+		keyCodeMap[221] = { code: 219, shift : 0 };								// JP [{
+		charCodeMap[93] = { code: 91, shift : 0 };
+		shiftedKeyCodeMap[221] = { code: 219, shift : 1 };
+		shiftedCharCodeMap[125] = { code: 123, shift : 1 };
+
+		if($.browser.mozilla) {
+			shiftedKeyCodeMap[59] = { code: 107, shift : 1 };					// JP ;+
+			shiftedCharCodeMap[58] = { code: 43, shift : 1 };
+		} else {
+			shiftedKeyCodeMap[186] = { code: 107, shift : 1 };					// JP ;+
+			shiftedCharCodeMap[58] = { code: 43, shift : 1 };
+		}
+		
+		keyCodeMap[222] = { code: 59, shift : 1 };								// JP :*
+		charCodeMap[39] = { code: 58, shift : 1 };
+		shiftedKeyCodeMap[222] = { code: 56, shift : 1 };
+		shiftedCharCodeMap[34] = { code: 42, shift : 1 };
+		
+		keyCodeMap[220] = { code: 221, shift : 0 };								// JP ]}
+		charCodeMap[92] = { code: 93, shift : 0 };
+		shiftedKeyCodeMap[220] = { code: 221, shift : 1 };
+		shiftedCharCodeMap[124] = { code: 125, shift : 1 };
+		
+		keyCodeMap[193] = { code: 220, shift : 0, charCode: 92 };				// JP \_
+		shiftedKeyCodeMap[193] = { code: 109, shift : 1, charCode: 95 };
+		
+		keyCodeMap[106] = { code: 56, shift : 1 };								// JP NUM *
+		charCodeMap[42] = { code: 42, shift : 1 };
+		
+		keyCodeMap[110] = { code: 190, shift : 0 };								// JP NUM .
+		charCodeMap[46] = { code: 46, shift : 0 };
+		this.keyboardMappers[AjaxViewer.KEYBOARD_TYPE_JAPAN_EN_OS_TO_EN_VM] = new KeyboardMapper(false, keyCodeMap, shiftedKeyCodeMap, 
+			charCodeMap, shiftedCharCodeMap);
+	},
+	
+	setJapaneseKeyboardOnJapaneseOsToEnglishVmMapping : function () {
+		var keyCodeMap = [];
+		var shiftedKeyCodeMap = [];
+		var charCodeMap = [];
+		var shiftedCharCodeMap = [];
+		
+		shiftedKeyCodeMap[50] 	= { code: 222, shift: 1, defer: true };			// JP SHIFT + 2 -> "
+		shiftedCharCodeMap[34] = { code: 34, shift : 1, keyCode: 222 };
+		
+		shiftedKeyCodeMap[54] = { code: 55, shift : 1 };						// JP SHIFT + 6 -> &
+		
+		shiftedKeyCodeMap[55] = { code: 222, shift : 0 };						// JP SHIFT + 7 -> '
+		shiftedCharCodeMap[39] = { code: 39, shift : 0 };
+		
+		shiftedKeyCodeMap[56] = { code: 57, shift : 1 };						// JP SHIFT + 8 -> (
+		shiftedCharCodeMap[42] = { code: 40, shift : 1 };
+		
+		shiftedKeyCodeMap[57] = { code: 48, shift : 1 };						// JP SHIFT + 9 -> )
+		shiftedCharCodeMap[40] = { code: 41, shift : 1 };
+
+		shiftedKeyCodeMap[48] = { code: 192, shift : 1 };						// JP SHIFT + 0 -> ~
+		shiftedCharCodeMap[41] = { code: 126, shift : 1 };
+
+		shiftedKeyCodeMap[109] = { code: 107, shift : 0 };						// JP SHIFT + (-=), keycode/charcode(109, 95) from Firefox
+		shiftedCharCodeMap[95] = { code: 61, shift : 0 };
+		
+		shiftedKeyCodeMap[189] = { code: 107, shift : 0 };						// JP SHIFT + (-=), keycode/charcode(109, 95) from Chrome/Safari/MSIE
+		shiftedCharCodeMap[95] = { code: 61, shift : 0 };
+
+		keyCodeMap[222] = { code: 54, shift: 1};								// JP ~^
+		charCodeMap[94] = { code: 94, shift: 1};
+		
+		shiftedKeyCodeMap[222] = { code: 192, shift : 1 };						// JP SHIFT + (~^)				
+		shiftedCharCodeMap[126] = { code: 126, shift : 1 };
+		
+		shiftedKeyCodeMap[220] = { code: 220, shift : 1, charCode: 124 };		// JP (|-, key before backspace)
+		
+		keyCodeMap[192] = { code: 50, shift : 1 };								// JP @`
+		charCodeMap[64] = { code: 64, shift : 1 };
+		shiftedKeyCodeMap[192] = { code: 192, shift : 0 };						// JP SHIFT + (@`)
+		shiftedCharCodeMap[96] = { code: 96, shift : 0 };
+
+		if($.browser.mozilla) {
+			keyCodeMap[107] = { code: 59, shift : 0 };							// JP ;+
+			charCodeMap[59] = { code: 59, shift : 0 };
+		} else {
+			keyCodeMap[187] = { code: 59, shift : 0 };							// JP ;+
+			charCodeMap[59] = { code: 59, shift : 0 };
+		}
+		
+		if($.browser.mozilla) {
+			keyCodeMap[59] = { code: 59, shift : 1 };							// JP :*
+			charCodeMap[58] = { code: 58, shift : 1 };
+			shiftedKeyCodeMap[59] = { code: 56, shift : 1 };
+			shiftedCharCodeMap[42] = { code: 42, shift : 1 };
+		} else {
+			keyCodeMap[186] = { code: 59, shift : 1 };							// JP :*
+			charCodeMap[58] = { code: 58, shift : 1 };
+			shiftedKeyCodeMap[186] = { code: 56, shift : 1 };
+			shiftedCharCodeMap[42] = { code: 42, shift : 1 };
+		}
+		
+		keyCodeMap[226] = { code: 220, shift : 0 };								// JP \_
+		shiftedKeyCodeMap[226] = { code: 109, shift : 1 };
+		
+		keyCodeMap[106] = { code: 56, shift : 1 };								// JP NUM *
+		charCodeMap[42] = { code: 42, shift : 1 };
+		
+		keyCodeMap[110] = { code: 190, shift : 0 };								// JP NUM .
+		charCodeMap[46] = { code: 46, shift : 0 };
+		 
+		this.keyboardMappers[AjaxViewer.KEYBOARD_TYPE_JAPAN_JP_OS_TO_EN_VM] = new KeyboardMapper(false, keyCodeMap, shiftedKeyCodeMap, 
+			charCodeMap, shiftedCharCodeMap);
+	},
+	
+	setJapaneseKeyboardOnEnglishOsToJapaneseVmMapping : function () {
+		
+		var keyCodeMap = [];
+		var shiftedKeyCodeMap = [];
+		var charCodeMap = [];
+		var shiftedCharCodeMap = [];
+		
+		if(this.linuxGuest) {
+			// for LINUX guest OSes
+			
+			shiftedKeyCodeMap[50] 	= { code: 222, shift: 1 } ;						// JP SHIFT + 2 -> "
+			shiftedCharCodeMap[64] 	= { code: 34, shift: 1 };
+			
+			shiftedKeyCodeMap[54] = { code: 55, shift : 1 };						// JP SHIFT + 6 -> &
+			shiftedCharCodeMap[94] = { code: 38, shift : 1 };
+			
+			shiftedKeyCodeMap[55] = { code: 222, shift : 0 };						// JP SHIFT + 7 -> '
+			shiftedCharCodeMap[38] = { code: 39, shift : 1 };
+			
+			shiftedKeyCodeMap[56] = { code: 57, shift : 1 };						// JP SHIFT + 8 -> (
+			shiftedCharCodeMap[42] = { code: 40, shift : 1 };
+			
+			shiftedKeyCodeMap[57] = { code: 48, shift : 1 };						// JP SHIFT + 9 -> )
+			shiftedCharCodeMap[40] = { code: 41, shift : 1 };
+
+			shiftedKeyCodeMap[48] = { code: 192, shift : 1 };						// JP SHIFT + 0 -> ~
+			shiftedCharCodeMap[41] = { code: 126, shift : 1 };
+
+			shiftedKeyCodeMap[109] = { code: 107, shift : 1 };						// JP SHIFT + (-=), keycode/charcode(109, 95) from Firefox
+			shiftedCharCodeMap[95] = { code: 61, shift : 0 };
+			
+			shiftedKeyCodeMap[189] = { code: 107, shift : 1 };						// JP SHIFT + (-=), keycode/charcode(109, 95) from Chrome/Safari/MSIE
+			shiftedCharCodeMap[95] = { code: 61, shift : 0 };
+
+			shiftedKeyCodeMap[222] = { code: 192, shift : 1 };						// JP SHIFT + (~^)				
+			shiftedCharCodeMap[126] = { code: 126, shift : 1 };
+			
+			if($.browser.mozilla) {
+				keyCodeMap[107] = { code: 107, shift : 1, defer : true };			// JP NUM +, keycode/charcode (107, 43) from Firefox
+				charCodeMap[43] = { code: 43, shift : 1, keyCode: 43 };
+				charCodeMap[61] = { code: 94, shift : 0, keyCode: 94 };				// JP (~^), keycode/charcode (107, 61) from Firefox
+				
+				shiftedKeyCodeMap[107] = { code: 192, shift : 1 };					// JP SHIFT + (!^)				
+				shiftedCharCodeMap[43] = { code: 126, shift : 1 };
+			} else {
+				keyCodeMap[187] = { code: 54, shift: 1, defer: true };				// JP ~^
+				charCodeMap[61] = { code: 94, shift: 0, keyCode: 94 };
+				
+				shiftedKeyCodeMap[187] = { code: 192, shift : 1 };					// JP SHIFT + (~^)
+				shiftedCharCodeMap[43] = { code: 126, shift : 1 };
+				
+				keyCodeMap[107] = { code: 107, shift : 0, defer: true };			// JP NUM +, keycode/charcode(107, 43)				
+				charCodeMap[43] = { code: 43, shift : 1, keyCode: 43 };
+			}
+			
+			shiftedKeyCodeMap[255] = { code: 220, shift : 1, charCode: 124 };		// JP (|-, key before backspace), Japanese Yen mark
+
+			keyCodeMap[219] = { code: 192, shift : 0 };								// JP @`
+			charCodeMap[91] = { code: 96, shift : 0 };
+			shiftedKeyCodeMap[219] = { code: 50, shift : 1 };						// JP SHIFT + (@`)
+			shiftedCharCodeMap[123] = { code: 64, shift : 1 };
+			
+			keyCodeMap[221] = { code: 219, shift : 0 };								// JP [{
+			charCodeMap[93] = { code: 91, shift : 0 };
+			shiftedKeyCodeMap[221] = { code: 219, shift : 1 };
+			shiftedCharCodeMap[125] = { code: 123, shift : 1 };
+
+			if($.browser.mozilla) {
+				shiftedKeyCodeMap[59] = { code: 107, shift : 1, defer: true };		// JP ;+
+				shiftedCharCodeMap[58] = { code: 43, shift : 1, keyCode: 43 };
+			} else {
+				shiftedKeyCodeMap[186] = { code: 107, shift : 1, defer: true };		// JP ;+
+				shiftedCharCodeMap[58] = { code: 43, shift : 1, keyCode: 43 };
+			}
+			
+			keyCodeMap[222] = { code: 59, shift : 0, defer : true };				// JP :*
+			charCodeMap[39] = { code: 59, shift : 0, keyCode: 58 };
+			shiftedKeyCodeMap[222] = { code: 56, shift : 1 };
+			shiftedCharCodeMap[34] = { code: 42, shift : 1 };
+			
+			keyCodeMap[220] = { code: 221, shift : 0 };								// JP ]}
+			charCodeMap[92] = { code: 93, shift : 0 };
+			shiftedKeyCodeMap[220] = { code: 221, shift : 1 };
+			shiftedCharCodeMap[124] = { code: 125, shift : 1 };
+
+			keyCodeMap[106] = { code: 222, shift : 1, defer: true };				// JP NUM *
+			charCodeMap[42] = { code: 42, shift : 1, keyCode: 42 };
+			
+			keyCodeMap[110] = { code: 190, shift : 0 };								// JP NUM .
+			charCodeMap[46] = { code: 46, shift : 0 };
+	
+			keyCodeMap[193] = { code: 220, shift : 0, charCode: 92 };				// JP key left to right shift on JP keyboard
+			shiftedKeyCodeMap[193] = { code: 189, shift: 1, charCode: 64 };
+			
+			keyCodeMap[255] = { code: 220, shift : 0, charCode: 92 };				// JP Japanese Yen mark on JP keyboard
+			shiftedKeyCodeMap[255] = { code: 220, shift: 1, charCode: 95 };
+			
+		} else {
+			// for windows guest OSes
+			keyCodeMap[106] = { code: 222, shift : 1 };								// JP NUM *
+			charCodeMap[42] = { code: 34, shift : 1 };
+			
+			keyCodeMap[110] = { code: 190, shift : 0 };								// JP NUM .
+			charCodeMap[46] = { code: 46, shift : 0 };
+	
+			keyCodeMap[193] = { code: 220, shift : 0, charCode: 92 };				// JP key left to right shift on JP keyboard
+			shiftedKeyCodeMap[193] = { code: 189, shift: 1, charCode: 64 };
+			
+			keyCodeMap[255] = { code: 220, shift : 0, charCode: 92 };				// JP Japanese Yen mark on JP keyboard
+			shiftedKeyCodeMap[255] = { code: 220, shift: 1, charCode: 95 };
+		}
+		this.keyboardMappers[AjaxViewer.KEYBOARD_TYPE_JAPAN_EN_OS_TO_JP_VM] = new KeyboardMapper(false, keyCodeMap, shiftedKeyCodeMap, 
+				charCodeMap, shiftedCharCodeMap);
+	},
+	
+	setJapaneseKeyboardOnJapaneseOsToJapaneseVmMapping : function () {
+		var keyCodeMap = [];
+		var shiftedKeyCodeMap = [];
+		var charCodeMap = [];
+		var shiftedCharCodeMap = [];
+		
+		if(this.linuxGuest) {
+			shiftedKeyCodeMap[50] 	= { code: 50, shift: 1, defer: true };			// JP SHIFT + 2 -> "
+			shiftedCharCodeMap[34] = { code: 34, shift : 1, keyCode: 34 };
+			
+			shiftedKeyCodeMap[54] = { code: 55, shift : 1 };						// JP SHIFT + 6 -> &
+			shiftedCharCodeMap[94] = { code: 38, shift : 1 };
+
+			shiftedKeyCodeMap[55] = { code: 222, shift : 0, defer:true };			// JP SHIFT + 7 -> '
+			shiftedCharCodeMap[39] = { code: 39, shift : 1, keyCode: 39 };
+			
+			shiftedKeyCodeMap[56] = { code: 57, shift : 1 };						// JP SHIFT + 8 -> (
+			shiftedCharCodeMap[42] = { code: 40, shift : 1 };
+			
+			shiftedKeyCodeMap[57] = { code: 48, shift : 1 };						// JP SHIFT + 9 -> )
+			shiftedCharCodeMap[40] = { code: 41, shift : 1 };
+
+			shiftedKeyCodeMap[48] = { code: 192, shift : 1 };						// JP SHIFT + 0 -> ~
+			shiftedCharCodeMap[41] = { code: 126, shift : 1 };
+
+			keyCodeMap[222] = { code: 107, shift: 0, defer: true };					// JP ~^
+			charCodeMap[94] = { code: 94, shift: 0, keyCode: 94 };
+			shiftedKeyCodeMap[222] = { code: 192, shift : 1, defer: true };			// JP SHIFT + (~^)				
+			shiftedCharCodeMap[126] = { code: 126, shift : 1 };
+
+			shiftedKeyCodeMap[192] = { code: 50, shift : 1 };						// JP SHIFT + (@`)
+			shiftedCharCodeMap[96] = { code: 64, shift : 1 };
+			
+			if($.browser.mozilla) {
+				shiftedKeyCodeMap[109] = { code: 107, shift : 1 };					// JP SHIFT + (-=), keycode/charcode(109, 95) from Firefox
+
+				// Note, keycode 107 is duplicated with "+" key at NUM pad
+				keyCodeMap[107] = { code: 59, shift : 0, defer: true };				// JP ;+
+				charCodeMap[59] = { code: 58, shift : 0, keyCode: 59 };
+				charCodeMap[43] = { code: 43, shift : 1, keyCode: 43 };				// JP NUM +
+				
+				shiftedKeyCodeMap[107] = { code: 59, shift : 0, defer: true };		// JP ;+
+				shiftedCharCodeMap[43] = { code: 43, shift : 1, keyCode: 43 };
+
+				keyCodeMap[59] = { code: 59, shift : 0, defer : true };				// JP :*
+				charCodeMap[58] = { code: 58, shift : 0, keyCode: 58 };
+			} else {
+				shiftedKeyCodeMap[189] = { code: 107, shift : 1 };					// JP SHIFT + (-=), keycode/charcode(109, 95) from Chrome/Safari/MSIE
+				shiftedCharCodeMap[95] = { code: 61, shift : 0 };
+				
+				keyCodeMap[187] = { code: 59, shift : 0, defer: true };				// JP ;+
+				charCodeMap[59] = { code: 58, shift : 0, keyCode: 59 };
+				shiftedKeyCodeMap[187] = { code: 59, shift : 1, defer: true };
+				shiftedCharCodeMap[43] = { code: 43, shift : 1, keyCode: 43 };
+	
+				keyCodeMap[107] = { code: 59, shift : 0, defer: true };							// JP NUM +
+				charCodeMap[43] = { code: 43, shift : 1, keyCode: 43};
+
+				keyCodeMap[186] = { code: 59, shift : 0, defer: true };				// JP :*
+				charCodeMap[58] = { code: 58, shift : 0, keyCode: 58 };
+			}
+
+			keyCodeMap[226] = { code: 220, shift : 0, charCode: 92 };				// JP key left to right shift on JP keyboard
+			shiftedKeyCodeMap[226] = { code: 189, shift: 1 };
+			
+		} else {
+			// windows guest
+			shiftedKeyCodeMap[50] 	= { code: 50, shift: 1, defer: true };			// JP SHIFT + 2 -> "
+			shiftedCharCodeMap[34] = { code: 0, shift : 1, keyCode: 50 };
+	
+			shiftedKeyCodeMap[55] = { code: 222, shift : 0, defer:true };			// JP SHIFT + 7 -> '
+			shiftedCharCodeMap[39] = { code: 0, shift : 1, keyCode: 55 };
+			
+			keyCodeMap[222] = { code: 107, shift: 0 };								// JP ~^
+			charCodeMap[94] = { code: 59, shift: 0 };
+			
+			shiftedKeyCodeMap[222] = { code: 107, shift : 1 };						// JP SHIFT + (~^)				
+			shiftedCharCodeMap[126] = { code: 43, shift : 1 };
+	
+			keyCodeMap[192] = { code: 219, shift : 0 };								// JP @`
+			charCodeMap[64] = { code: 91, shift : 0 };
+			shiftedKeyCodeMap[192] = { code: 219, shift : 1 };						// JP SHIFT + (@`)
+			shiftedCharCodeMap[96] = { code: 123, shift : 1 };
+	
+			keyCodeMap[219] = { code: 221, shift : 0 };								// JP [{
+			charCodeMap[91] = { code: 93, shift : 0 };
+			shiftedKeyCodeMap[219] = { code: 221, shift : 1 };
+			shiftedCharCodeMap[123] = { code: 125, shift : 1 };
+			
+			if($.browser.mozilla) {
+				// Note, keycode 107 is duplicated with "+" key at NUM pad
+				keyCodeMap[107] = { code: 59, shift : 0, defer: true };				// JP ;+
+				charCodeMap[59] = { code: 58, shift : 0, keyCode: 59 };
+				shiftedKeyCodeMap[107] = { code: 59, shift : 0 };
+				shiftedCharCodeMap[43] = { code: 42, shift : 0 };
+		
+				charCodeMap[43] = { code: 42, shift : 1, keyCode: 59 };
+			} else {
+				keyCodeMap[187] = { code: 59, shift : 0, defer: true };				// JP ;+
+				charCodeMap[59] = { code: 58, shift : 0, keyCode: 59 };
+				shiftedKeyCodeMap[187] = { code: 59, shift : 1 };
+				shiftedCharCodeMap[43] = { code: 42, shift : 1 };
+	
+				keyCodeMap[107] = { code: 59, shift : 1 };							// JP NUM +
+				charCodeMap[43] = { code: 42, shift : 1 };
+			}
+			
+			if($.browser.mozilla) {
+				keyCodeMap[59] = { code: 222, shift : 0 };							// JP :*
+				charCodeMap[58] = { code: 39, shift : 0 };
+				shiftedKeyCodeMap[59] = { code: 222, shift : 1 };
+				shiftedCharCodeMap[42] = { code: 34, shift : 1 };
+			} else {
+				keyCodeMap[186] = { code: 222, shift : 0 };							// JP :*
+				charCodeMap[58] = { code: 39, shift : 0 };
+				shiftedKeyCodeMap[186] = { code: 222, shift : 1 };
+				shiftedCharCodeMap[42] = { code: 34, shift : 1 };
+			}
+			
+			keyCodeMap[221] = { code: 220, shift : 0 };								// JP ]}
+			charCodeMap[93] = { code: 92, shift : 0 };
+			shiftedKeyCodeMap[221] = { code: 220, shift : 1 };
+			shiftedCharCodeMap[125] = { code: 124, shift : 1 };
+			
+			keyCodeMap[106] = { code: 222, shift : 1 };								// JP NUM *
+			charCodeMap[42] = { code: 34, shift : 1 };
+	
+			keyCodeMap[110] = { code: 190, shift : 0 };								// JP NUM .
+			charCodeMap[46] = { code: 46, shift : 0 };
+				
+			keyCodeMap[193] = { code: 220, shift : 0, charCode: 92 };				// JP key left to right shift on JP keyboard
+			shiftedKeyCodeMap[193] = { code: 189, shift: 1, charCode: 64 };
+			
+			keyCodeMap[255] = { code: 220, shift : 0, charCode: 92 };				// JP Japanese Yen mark on JP keyboard
+			shiftedKeyCodeMap[255] = { code: 220, shift: 1, charCode: 95 };
+		}
+		this.keyboardMappers[AjaxViewer.KEYBOARD_TYPE_JAPAN_JP_OS_TO_JP_VM] = new KeyboardMapper(false, keyCodeMap, shiftedKeyCodeMap, 
+				charCodeMap, shiftedCharCodeMap);
 	},
 	
 	getCurrentKeyboardMapper : function() {
@@ -843,7 +887,7 @@ AjaxViewer.prototype = {
 				subMenu.css("left", offset.left);
 			
 				$("li.current").removeClass("current");
-				$("li:has(a[cmd$=" + ajaxViewer.currentKeyboard + "])", subMenu).addClass("current");
+				$("li:eq(" + ajaxViewer.currentKeyboard + ")", subMenu).addClass("current");
 				subMenu.css("z-index", "" + ajaxViewer.maxTileZIndex + 1).show();
 				return false;
 			},
@@ -872,24 +916,29 @@ AjaxViewer.prototype = {
 	},
 	
 	onCommand : function(cmd) {
-		if(cmd == "keyboard_jp") {
+		if(cmd == "keyboard_jp_en_os_to_en_vm") {
 			$("#toolbar").find(".pulldown").find("ul").hide();
-			this.currentKeyboard = AjaxViewer.KEYBOARD_TYPE_JAPANESE;
-		} else if(cmd == "keyboard_us") {
+			this.currentKeyboard = AjaxViewer.KEYBOARD_TYPE_JAPAN_EN_OS_TO_EN_VM;
+		} else if(cmd == "keyboard_jp_jp_os_to_en_vm") {
+			$("#toolbar").find(".pulldown").find("ul").hide();
+			this.currentKeyboard = AjaxViewer.KEYBOARD_TYPE_JAPAN_JP_OS_TO_EN_VM;
+		} else if(cmd == "keyboard_jp_en_os_to_jp_vm") {
+			$("#toolbar").find(".pulldown").find("ul").hide();
+			this.currentKeyboard = AjaxViewer.KEYBOARD_TYPE_JAPAN_EN_OS_TO_JP_VM;
+		} else if(cmd == "keyboard_jp_jp_os_to_jp_vm") {
+			$("#toolbar").find(".pulldown").find("ul").hide();
+			this.currentKeyboard = AjaxViewer.KEYBOARD_TYPE_JAPAN_JP_OS_TO_JP_VM;
+		} else if(cmd == "keyboard_en") {
 			$("#toolbar").find(".pulldown").find("ul").hide();
 			this.currentKeyboard = AjaxViewer.KEYBOARD_TYPE_ENGLISH;
 		} else if(cmd == "sendCtrlAltDel") {
-			this.sendKeyboardEvent(AjaxViewer.KEY_DOWN, 0xffe9, 0);		// X11 Alt
-			this.sendKeyboardEvent(AjaxViewer.KEY_DOWN, 0xffe3, 0);		// X11 Ctrl
-			this.sendKeyboardEvent(AjaxViewer.KEY_DOWN, 0xffff, 0);		// X11 Del
-			this.sendKeyboardEvent(AjaxViewer.KEY_UP, 0xffff, 0);
-			this.sendKeyboardEvent(AjaxViewer.KEY_UP, 0xffe3, 0);
-			this.sendKeyboardEvent(AjaxViewer.KEY_UP, 0xffe9, 0);
+			this.sendKeyboardEvent(AjaxViewer.KEY_DOWN, 45, AjaxViewer.CTRL_KEY | AjaxViewer.ALT_KEY);
+			this.sendKeyboardEvent(AjaxViewer.KEY_UP, 45, AjaxViewer.CTRL_KEY | AjaxViewer.ALT_KEY);
 		} else if(cmd == "sendCtrlEsc") {
-			this.sendKeyboardEvent(AjaxViewer.KEY_DOWN, 0xffe3, 0);		// X11 Ctrl
-			this.sendKeyboardEvent(AjaxViewer.KEY_DOWN, 0xff1b, 0);		// X11 ESC
-			this.sendKeyboardEvent(AjaxViewer.KEY_UP, 0xff1b, 0);
-			this.sendKeyboardEvent(AjaxViewer.KEY_UP, 0xffe3, 0);
+			this.sendKeyboardEvent(AjaxViewer.KEY_DOWN, 17, 0);
+			this.sendKeyboardEvent(AjaxViewer.KEY_DOWN, 27, AjaxViewer.CTRL_KEY);
+			this.sendKeyboardEvent(AjaxViewer.KEY_UP, 27, AjaxViewer.CTRL_KEY);
+			this.sendKeyboardEvent(AjaxViewer.KEY_UP, 17, 0);
 		} else if(cmd == "toggle_logwin") {
 			if(!g_logger.isOpen()) {
 				g_logger.enable(true);
@@ -901,10 +950,87 @@ AjaxViewer.prototype = {
 		}
 	},
 	
+	// Firefox on Mac OS X does not generate key-code for following keys 
+	translateZeroKeycode: function() {
+		var len = this.eventQueue.length;
+		if(len > 1 && this.eventQueue[len - 2].type == AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT && this.eventQueue[len - 2].code == 0) {
+			switch(this.eventQueue[len - 1].code) {
+			case 95 :	// underscore _
+				this.eventQueue[len - 2].code = 109;
+				break;
+				
+			case 58 :	// colon :
+				this.eventQueue[len - 2].code = 59;
+				break;
+				
+			case 60 : 	// <
+				this.eventQueue[len - 2].code = 188;
+				break;
+				
+			case 62 : 	// >
+				this.eventQueue[len - 2].code = 190;
+				break;
+			
+			case 63 :	// ?
+				this.eventQueue[len - 2].code = 191;
+				break;
+				
+			case 124 : 	// |
+				this.eventQueue[len - 2].code = 220;
+				break;
+				
+			case 126 :	// ~
+				this.eventQueue[len - 2].code = 192;
+				break;
+				
+			default :
+				g_logger.log(Logger.LEVEL_WARN, "Zero keycode detected for KEY-PRESS char code " + this.eventQueue[len - 1].code);
+				break;
+			}
+		}
+	},
+
+	//
+	// Firefox on Mac OS X does not send KEY-DOWN for repeated KEY-PRESS event
+	// IE on windows, when typing is fast, it will omit issuing KEY-DOWN event
+	//
+	translateImcompletedKeypress : function() {
+		var len = this.eventQueue.length;
+		if(len == 1 || !(this.eventQueue[len - 2].type == AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT && this.eventQueue[len - 2].event == AjaxViewer.KEY_DOWN)) {
+			var nSplicePos = Math.max(0, len - 2);
+			var keyPressEvent = this.eventQueue[len - 1];
+			if(!!this.keyCodeMap[keyPressEvent.code]) {
+				if(this.keyCodeMap[keyPressEvent.code].shift) {
+					this.eventQueue.splice(nSplicePos, 0, {
+						type: AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT,
+						event: AjaxViewer.KEY_DOWN,
+						code: this.keyCodeMap[keyPressEvent.code].code,
+						modifiers: AjaxViewer.SHIFT_KEY
+					});
+				} else {
+					this.eventQueue.splice(nSplicePos, 0, {
+						type: AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT,
+						event: AjaxViewer.KEY_DOWN,
+						code: this.keyCodeMap[keyPressEvent.code].code,
+						modifiers: 0
+					});
+				}
+			} else {
+				g_logger.log(Logger.LEVEL_WARN, "Keycode mapping is not defined to translate KEY-PRESS event for char code : " + keyPressEvent.code);
+				this.eventQueue.splice(nSplicePos, 0, {
+					type: AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT,
+					event: AjaxViewer.KEY_DOWN,
+					code: keyPressEvent.code,
+					modifiers: keyPressEvent.modifiers
+				});
+			}
+		}
+	},
+	
 	sendKeyboardEvent: function(event, code, modifiers) {
 		// back door to open logger window - CTRL-ATL-SHIFT+SPACE
 		if(code == 32 && 
-			(modifiers & AjaxViewer.SHIFT_KEY_MASK | AjaxViewer.CTRL_KEY_MASK | AjaxViewer.ALT_KEY_MASK) == (AjaxViewer.SHIFT_KEY_MASK | AjaxViewer.CTRL_KEY_MASK | AjaxViewer.ALT_KEY_MASK)) {
+			(modifiers & AjaxViewer.SHIFT_KEY | AjaxViewer.CTRL_KEY | AjaxViewer.ALT_KEY) == (AjaxViewer.SHIFT_KEY | AjaxViewer.CTRL_KEY | AjaxViewer.ALT_KEY)) {
 			
 			if(!g_logger.isOpen()) {
 				g_logger.enable(true);
@@ -924,8 +1050,84 @@ AjaxViewer.prototype = {
 			modifiers: modifiers
 		});
 
-		if(event != AjaxViewer.KEY_DOWN)
+		if(event == AjaxViewer.KEY_PRESS) {
+			this.translateZeroKeycode();
+			this.translateImcompletedKeypress();
+		}
+		
+		if(this.rawKeyboard) {
+			if(event == AjaxViewer.KEY_PRESS) {
+				// special handling for key * in numeric pad area
+				if(code == AjaxViewer.CHARCODE_NUMPAD_MULTIPLY) {
+					len = this.eventQueue.length;
+					if(len >= 2) {
+						var origKeyDown = this.eventQueue[len - 2];
+						if(origKeyDown.type == AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT && 
+							origKeyDown.code == AjaxViewer.KEYCODE_MULTIPLY) {
+							
+							this.eventQueue.splice(len - 2, 2, {
+								type: AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT,
+								event: AjaxViewer.KEY_DOWN,
+								code: AjaxViewer.KEYCODE_SHIFT,
+								modifiers: 0
+							},
+							{
+								type: AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT,
+								event: AjaxViewer.KEY_DOWN,
+								code: AjaxViewer.KEYCODE_8,
+								modifiers: AjaxViewer.SHIFT_KEY
+							},
+							{
+								type: AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT,
+								event: AjaxViewer.KEY_UP,
+								code: AjaxViewer.KEYCODE_8,
+								modifiers: AjaxViewer.SHIFT_KEY
+							},
+							{
+								type: AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT,
+								event: AjaxViewer.KEY_UP,
+								code: AjaxViewer.KEYCODE_SHIFT,
+								modifiers: 0
+							}
+							);
+						}
+					}
+					return;
+				}
+				
+				// special handling for key + in numeric pad area
+				if(code == AjaxViewer.CHARCODE_NUMPAD_ADD) {
+					len = this.eventQueue.length;
+					if(len >= 2) {
+						var origKeyDown = this.eventQueue[len - 2];
+						if(origKeyDown.type == AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT && 
+							origKeyDown.code == AjaxViewer.KEYCODE_ADD) {
+
+							g_logger.log(Logger.LEVEL_INFO, "Detected + on numeric pad area, fake it");
+							this.eventQueue[len - 2].modifiers = AjaxViewer.SHIFT_KEY;	
+							this.eventQueue[len - 1].modifiers = AjaxViewer.SHIFT_KEY;	
+							this.eventQueue.splice(len - 2, 0, {
+								type: AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT,
+								event: AjaxViewer.KEY_DOWN,
+								code: AjaxViewer.KEYCODE_SHIFT,
+								modifiers: AjaxViewer.SHIFT_KEY
+							});
+							this.eventQueue.push({
+								type: AjaxViewer.EVENT_QUEUE_KEYBOARD_EVENT,
+								event: AjaxViewer.KEY_UP,
+								code: AjaxViewer.KEYCODE_SHIFT,
+								modifiers: AjaxViewer.SHIFT_KEY
+							});
+						}
+					}
+				}
+			} 
+			
+			if(event != AjaxViewer.KEY_DOWN)
+				this.checkEventQueue();
+		} else {
 			this.checkEventQueue();
+		}
 	},
 	
 	aggregateEvents: function() {
@@ -1302,7 +1504,7 @@ AjaxViewer.prototype = {
 			return false;
 		}
 		
-		if(this.getKeyModifiers(e) == AjaxViewer.SHIFT_KEY_MASK)
+		if(this.getKeyModifiers(e) == AjaxViewer.SHIFT_KEY)
 			return true;
 		
 		if(this.getKeyModifiers(e) != 0)
@@ -1385,20 +1587,14 @@ AjaxViewer.prototype = {
 	},
 	
 	onKeyPress: function(code, modifiers) {
-		g_logger.log(Logger.LEVEL_WARN, "RAW KEYBOARD EVENT. KEY-PRESS: " + code + ", modifers: " + modifiers);
-		
 		this.dispatchKeyboardInput(AjaxViewer.KEY_PRESS, code, modifiers);
 	},
 	
 	onKeyDown: function(code, modifiers) {
-		g_logger.log(Logger.LEVEL_WARN, "RAW KEYBOARD EVENT. KEY-DOWN: " + code + ", modifers: " + modifiers);
-		
 		this.dispatchKeyboardInput(AjaxViewer.KEY_DOWN, code, modifiers);
 	},
 	
 	onKeyUp: function(code, modifiers) {
-		g_logger.log(Logger.LEVEL_WARN, "RAW KEYBOARD EVENT. KEY-UP: " + code + ", modifers: " + modifiers);
-		
 		this.dispatchKeyboardInput(AjaxViewer.KEY_UP, code, modifiers);
 	},
 	
@@ -1429,27 +1625,26 @@ AjaxViewer.prototype = {
 	getKeyModifiers: function(e) {
 		var modifiers = 0;
 		if(e.altKey)
-			modifiers |= AjaxViewer.ALT_KEY_MASK;
+			modifiers |= AjaxViewer.ALT_KEY;
 		
 		if(e.altLeft)
-			modifiers |= AjaxViewer.LEFT_ALT_MASK;
+			modifiers |= AjaxViewer.ALT_LEFT;
 		
 		if(e.ctrlKey)
-			modifiers |= AjaxViewer.CTRL_KEY_MASK;
+			modifiers |= AjaxViewer.CTRL_KEY;
 		
 		if(e.ctrlLeft)
-			modifiers |=  AjaxViewer.LEFT_CTRL_MASK;
+			modifiers |=  AjaxViewer.CTRL_LEFT;
 		
 		if(e.shiftKey)
-			modifiers |=  AjaxViewer.SHIFT_KEY_MASK;
+			modifiers |=  AjaxViewer.SHIFT_KEY;
 		
 		if(e.shiftLeft)
-			modifiers |= AjaxViewer.LEFT_SHIFT_MASK;
+			modifiers |= AjaxViewer.SHIFT_LEFT;
 		
 		if(e.metaKey)
-			modifiers |= AjaxViewer.META_KEY_MASK;
+			modifiers |= AjaxViewer.META_KEY;
 		
 		return modifiers;
 	}
 };
-
