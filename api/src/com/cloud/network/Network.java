@@ -282,6 +282,8 @@ public interface Network extends ControlledEntity {
 
     void setPhysicalNetworkId(Long physicalNetworkId);
 
+    public void setTrafficType(TrafficType type);
+
 	ACLType getAclType();
 	
 	boolean isRestartRequired();

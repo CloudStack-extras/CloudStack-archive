@@ -30,7 +30,7 @@ public class NetworkProfile implements Network {
     private final String name;
     private final Mode mode;
     private final BroadcastDomainType broadcastDomainType;
-    private final TrafficType trafficType;
+    private TrafficType trafficType;
     private final String gateway;
     private final String cidr;
     private final long networkOfferingId;
@@ -189,6 +189,11 @@ public class NetworkProfile implements Network {
     @Override
     public void setPhysicalNetworkId(Long physicalNetworkId) {
         this.physicalNetworkId = physicalNetworkId;
+    }
+
+    @Override
+    public void setTrafficType(TrafficType type) {
+        this.trafficType = type;
     }
 
     @Override
