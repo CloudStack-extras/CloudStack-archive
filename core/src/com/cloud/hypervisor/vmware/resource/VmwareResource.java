@@ -1107,7 +1107,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
             int ethDeviceNum = findRouterEthDeviceIndex(domrName, routerIp, nic.getMac());
             s_logger.info("find interface index. routerIp: " + routerIp + ", mac: " + nic.getMac() + ", index: " + ethDeviceNum);
 
-            String args = "-C ";
+            String args =(cmd.isAdd()?"-C":"-D");
             String dev = "eth" + ethDeviceNum;
             args += " -d " + dev;
             args += " -i " + domrGIP;
