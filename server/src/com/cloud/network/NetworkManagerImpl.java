@@ -6594,7 +6594,15 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
 
         Long physicalNetworkId = null;
         if (effectiveTrafficType != TrafficType.Guest) {
+            TrafficType oldValue = network.getTrafficType();
+            if (hType == HypervisorType.VMware && effectiveTrafficType == TrafficType.Management) {
+                network.setTrafficType(effectiveTrafficType);
+            }
             physicalNetworkId = getNonGuestNetworkPhysicalNetworkId(network);
+            if (hType == HypervisorType.VMware && effectiveTrafficType == TrafficType.Management) {
+                network.setTrafficType(oldValue);
+            }
+
         } else {
             NetworkOffering offering = _configMgr.getNetworkOffering(network.getNetworkOfferingId());
             physicalNetworkId = network.getPhysicalNetworkId();
