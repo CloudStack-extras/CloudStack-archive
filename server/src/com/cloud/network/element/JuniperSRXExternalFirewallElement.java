@@ -298,7 +298,7 @@ PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer, Junip
             return false;
         }
 
-        return applyFirewallRules(network, rules);
+        return applyPortForwardingRules(network, rules);
     }
 
     @Override
@@ -558,7 +558,6 @@ PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer, Junip
         if (!canHandle(config, Service.StaticNat)) {
             return false;
         }
-        return applyStaticNatFirewallRules (config, rules);	
+        return applyStaticNatRules(config, rules);
     }
-
 }

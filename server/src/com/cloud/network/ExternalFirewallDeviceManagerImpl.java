@@ -15,8 +15,10 @@ package com.cloud.network;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.naming.ConfigurationException;
 
@@ -70,6 +72,7 @@ import com.cloud.network.dao.PhysicalNetworkDao;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderDao;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderVO;
 import com.cloud.network.dao.VpnUserDao;
+import com.cloud.network.lb.LoadBalancingRule;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.FirewallRule.Purpose;
 import com.cloud.network.rules.PortForwardingRule;
@@ -467,91 +470,53 @@ public abstract class ExternalFirewallDeviceManagerImpl extends AdapterBase impl
             return true;
         }
 
-        List<StaticNatRuleTO> staticNatRules = new ArrayList<StaticNatRuleTO>();
-        List<PortForwardingRuleTO> portForwardingRules = new ArrayList<PortForwardingRuleTO>();
         List<FirewallRuleTO> firewallRules = new ArrayList<FirewallRuleTO>();
 
+        // Firewall rule need to be apply only if there is correlative pf/static nat rule
         for (FirewallRule rule : rules) {
             IpAddress sourceIp = _networkMgr.getIp(rule.getSourceIpAddressId());
             Vlan vlan = _vlanDao.findById(sourceIp.getVlanId());
 
-            if (rule.getPurpose() == Purpose.StaticNat) {
-                StaticNatRule staticNatRule = (StaticNatRule) rule;
-                StaticNatRuleTO ruleTO = new StaticNatRuleTO(staticNatRule, vlan.getVlanTag(), sourceIp.getAddress().addr(), staticNatRule.getDestIpAddress());
-                staticNatRules.add(ruleTO);
-            } else if (rule.getPurpose() == Purpose.PortForwarding) {
-                PortForwardingRuleTO ruleTO = new PortForwardingRuleTO((PortForwardingRule) rule, vlan.getVlanTag(), sourceIp.getAddress().addr());
-                portForwardingRules.add(ruleTO);
+            assert rule.getPurpose() == Purpose.Firewall;
+            
+            boolean oneToOneNat = sourceIp.isOneToOneNat();
 
-                // apply firewall rules which are configured for PF
-                String dstIp = ((PortForwardingRule)rule).getDestinationIpAddress().addr();
-                boolean revokeState = ((PortForwardingRule)rule).getState() == FirewallRule.State.Revoke ? true : false;
-
-                List<FirewallRule> fwRules = new ArrayList<FirewallRule>();
-                fwRules.addAll(_fwRulesDao.listByIpAndPurpose(rule.getSourceIpAddressId(), Purpose.Firewall));
-
-                for (FirewallRule fwRuleForPF : fwRules) {
-                    FirewallRuleTO fwRulesTO;
-
-                    if (revokeState) {
-                        fwRulesTO = new FirewallRuleTO(fwRuleForPF, vlan.getVlanTag(), dstIp, Purpose.PortForwarding, revokeState, false);
-                        } else {
-                            fwRulesTO = new FirewallRuleTO(fwRuleForPF, vlan.getVlanTag(), dstIp, Purpose.PortForwarding, revokeState, true);
-                            }
-                    firewallRules.add(fwRulesTO);
-                    }
-            }
-            else if (rule.getPurpose() == Purpose.Firewall) {
-                Long ipAddrId = rule.getSourceIpAddressId();
-                IPAddressVO ipAddress = _ipAddressDao.findById(ipAddrId);
-                List<FirewallRule> fwRules = new ArrayList<FirewallRule>();
-                fwRules.addAll(_fwRulesDao.listByIpAndPurpose(rule.getSourceIpAddressId(), Purpose.PortForwarding));
-                boolean oneToOneNat = ipAddress.isOneToOneNat();String dstIp; 
-
-                if (oneToOneNat) {
-
-                    if (rule.getState() == rule.getState().Revoke) {
-                        dstIp = _networkMgr.getIpInNetworkIncludingRemoved(sourceIp.getAssociatedWithVmId(), network.getId());
-                    } else {
-                        // associated vm ip is placed in dstIp
-                        dstIp = _networkMgr.getIpInNetwork(sourceIp.getAssociatedWithVmId(), network.getId());
-                    }
-
-                    FirewallRuleTO fwRulesTO = new FirewallRuleTO(rule, vlan.getVlanTag(), dstIp, Purpose.StaticNat);
-                    firewallRules.add(fwRulesTO);
-
-                } else if (fwRules.size() > 0) {
-                    // check for port forwarding
-                    //If there is purpose port forwarding is present, that means port forwarding is enabled on that 
-                    // public IP, otherwise there is no way to see whether PF is set or not
-                    long ruleId = fwRules.get(0).getId();
-                    PortForwardingRule porwardingRulesVO = _portForwardingRulesDao.findById(ruleId);
-                    Ip ip = porwardingRulesVO.getDestinationIpAddress();
-                    dstIp = ip.toString();
-
-                    FirewallRuleTO fwRulesTO = new FirewallRuleTO(rule, vlan.getVlanTag(), dstIp, Purpose.PortForwarding);
-                    firewallRules.add(fwRulesTO);
-
+            if (oneToOneNat) {
+                String dstIp;
+                if (rule.getState() == FirewallRule.State.Revoke) {
+                    dstIp = _networkMgr.getIpInNetworkIncludingRemoved(sourceIp.getAssociatedWithVmId(), network.getId());
                 } else {
-                    return true;
+                    dstIp = _networkMgr.getIpInNetwork(sourceIp.getAssociatedWithVmId(), network.getId());
+                }
+
+                FirewallRuleTO fwRuleTO = new FirewallRuleTO(rule, vlan.getVlanTag(), dstIp, Purpose.StaticNat);
+                firewallRules.add(fwRuleTO);
+                continue;
+            }
+            
+            List<FirewallRule> pfRules = new ArrayList<FirewallRule>();
+            pfRules.addAll(_fwRulesDao.listByIpAndPurpose(rule.getSourceIpAddressId(), Purpose.PortForwarding));
+            if (pfRules.size() > 0) {
+                Set<String> existedDstIps = new HashSet<String>();
+                for (FirewallRule fwRule : pfRules) {
+                    PortForwardingRule pfRule = _portForwardingRulesDao.findById(fwRule.getId());
+                    String dstIp = pfRule.getDestinationIpAddress().toString();
+                    if (!existedDstIps.contains(dstIp)) {
+                        existedDstIps.add(dstIp);
+                        FirewallRuleTO fwRuleTO = new FirewallRuleTO(rule, vlan.getVlanTag(), dstIp, Purpose.PortForwarding);
+                        firewallRules.add(fwRuleTO);
+                    }
                 }
             }
         }
 
-        // Apply static nat rules
-        applyStaticNatRules(staticNatRules, zone, externalFirewall.getId());
-
-        // apply port forwarding rules
-        applyPortForwardingRules(portForwardingRules, zone, externalFirewall.getId());
-        
         //Firewall rules configured for staticNAT/PF
-        applyNatFirewallRules(firewallRules, zone, externalFirewall.getId());
+        sendFirewallRules(firewallRules, zone, externalFirewall.getId());
 
         return true;
     }
     
-    public boolean applyStaticNatFirewallRules(Network network, List<? extends StaticNat> rules) throws ResourceUnavailableException {
-     	
+    public boolean applyStaticNatRules(Network network, List<? extends StaticNat> rules) throws ResourceUnavailableException {
         long zoneId = network.getDataCenterId();
         DataCenterVO zone = _dcDao.findById(zoneId);
         ExternalFirewallDeviceVO fwDeviceVO = getExternalFirewallForNetwork(network);
@@ -563,61 +528,56 @@ public abstract class ExternalFirewallDeviceManagerImpl extends AdapterBase impl
             s_logger.debug("External firewall was asked to apply firewall rules for network with ID " + network.getId() + "; this network is not implemented. Skipping backend commands.");
             return true;
         }
-        
-        List<FirewallRule> firewallRules = new ArrayList<FirewallRule>();
-        for (StaticNat rule : rules) {        
-        	firewallRules.addAll(_fwRulesDao.listByIpAndPurpose(rule.getSourceIpAddressId(), Purpose.Firewall));
-        }
-        
 
         List<StaticNatRuleTO> staticNatRules = new ArrayList<StaticNatRuleTO>();
-        IpAddress sourceIp;
-        Vlan vlan;
+        List<FirewallRuleTO> fwRules = new ArrayList<FirewallRuleTO>();
+        
+        // Firewall rule need to be apply if there is correlative pf/static nat rule
         for (StaticNat rule : rules) {
-            sourceIp = _networkMgr.getIp(rule.getSourceIpAddressId());
-            vlan = _vlanDao.findById(sourceIp.getVlanId());           
+            IpAddress sourceIp = _networkMgr.getIp(rule.getSourceIpAddressId());
+            Vlan vlan = _vlanDao.findById(sourceIp.getVlanId());           
 
             StaticNatRuleTO ruleTO = new StaticNatRuleTO(0,vlan.getVlanTag(), sourceIp.getAddress().addr(), null, null, rule.getDestIpAddress(), null, null, null, rule.isForRevoke(), false);
             staticNatRules.add(ruleTO);
-            }
+            fwRules.addAll(getFirewallRuleList(network, rule));
+        }
         
-        applyStaticNatRules(staticNatRules, zone, externalFirewall.getId());
+        sendStaticNatRules(staticNatRules, zone, externalFirewall.getId());
+        sendFirewallRules(fwRules, zone, externalFirewall.getId());
         
-        // If there are any firewall rules apply those.
-        // Enable static nat with all firewall rules.
-        List<FirewallRuleTO> firewallRulesForStnat = new ArrayList<FirewallRuleTO>(); 
-      
-        for (FirewallRule fwRule: firewallRules) {
+        return true;
+    }
+    
+    protected List<FirewallRuleTO> getFirewallRuleList(Network network, StaticNat rule) {
+        List<FirewallRuleTO> result = new ArrayList<FirewallRuleTO>();
+        
+        List<FirewallRule> fwRules = new ArrayList<FirewallRule>();
+        fwRules.addAll(_fwRulesDao.listByIpAndPurpose(rule.getSourceIpAddressId(), Purpose.Firewall));
+        
+        for (FirewallRule fwRule: fwRules) {
+            IPAddressVO ipAddress = _ipAddressDao.findById(fwRule.getSourceIpAddressId());
+
+            assert ipAddress.isOneToOneNat();
+
+            Vlan vlan = _vlanDao.findById(ipAddress.getVlanId());     
+
             String dstIp;
-            Long ipAddrId = fwRule.getSourceIpAddressId();
-            IPAddressVO ipAddress = _ipAddressDao.findById(ipAddrId);
-
-            if (!ipAddress.isOneToOneNat()) {
-                break;
-            }
-
-            sourceIp = _networkMgr.getIp(fwRule.getSourceIpAddressId());
-            vlan = _vlanDao.findById(sourceIp.getVlanId());     
-
-            if (fwRule.getState() == fwRule.getState().Revoke) {
-                dstIp = _networkMgr.getIpInNetworkIncludingRemoved(sourceIp.getAssociatedWithVmId(), network.getId());
+            if (fwRule.getState() == FirewallRule.State.Revoke) {
+                dstIp = _networkMgr.getIpInNetworkIncludingRemoved(ipAddress.getAssociatedWithVmId(), network.getId());
             } else {
-                // associated vm ip is placed in dstIp
-                dstIp = _networkMgr.getIpInNetwork(sourceIp.getAssociatedWithVmId(), network.getId());
+                dstIp = _networkMgr.getIpInNetwork(ipAddress.getAssociatedWithVmId(), network.getId());
             }
 
             FirewallRuleTO fwRulesTO = new FirewallRuleTO(fwRule, vlan.getVlanTag(), dstIp, Purpose.StaticNat);
-            firewallRulesForStnat.add(fwRulesTO);
+            result.add(fwRulesTO);
         }
         
-        applyNatFirewallRules(firewallRulesForStnat, zone, externalFirewall.getId());
-        
-        return true;
+        return result;
      }
 
-    protected void applyNatFirewallRules(List<FirewallRuleTO> FirewallRules, DataCenter zone, long externalFirewallId) throws ResourceUnavailableException {
-        if (!FirewallRules.isEmpty()) {
-        	SetFirewallRulesCommand cmd = new SetFirewallRulesCommand(FirewallRules);
+    protected void sendFirewallRules(List<FirewallRuleTO> firewallRules, DataCenter zone, long externalFirewallId) throws ResourceUnavailableException {
+        if (!firewallRules.isEmpty()) {
+        	SetFirewallRulesCommand cmd = new SetFirewallRulesCommand(firewallRules);
             Answer answer = _agentMgr.easySend(externalFirewallId, cmd);
             if (answer == null || !answer.getResult()) {
                 String details = (answer != null) ? answer.getDetails() : "details unavailable";
@@ -628,7 +588,7 @@ public abstract class ExternalFirewallDeviceManagerImpl extends AdapterBase impl
         }
     }
 
-    protected void applyStaticNatRules(List<StaticNatRuleTO> staticNatRules, DataCenter zone, long externalFirewallId) throws ResourceUnavailableException {
+    protected void sendStaticNatRules(List<StaticNatRuleTO> staticNatRules, DataCenter zone, long externalFirewallId) throws ResourceUnavailableException {
         if (!staticNatRules.isEmpty()) {
             SetStaticNatRulesCommand cmd = new SetStaticNatRulesCommand(staticNatRules, null);
             Answer answer = _agentMgr.easySend(externalFirewallId, cmd);
@@ -641,7 +601,7 @@ public abstract class ExternalFirewallDeviceManagerImpl extends AdapterBase impl
         }
     }
 
-    protected void applyPortForwardingRules(List<PortForwardingRuleTO> portForwardingRules, DataCenter zone, long externalFirewallId) throws ResourceUnavailableException {
+    protected void sendPortForwardingRules(List<PortForwardingRuleTO> portForwardingRules, DataCenter zone, long externalFirewallId) throws ResourceUnavailableException {
         if (!portForwardingRules.isEmpty()) {
             SetPortForwardingRulesCommand cmd = new SetPortForwardingRulesCommand(portForwardingRules);
             Answer answer = _agentMgr.easySend(externalFirewallId, cmd);
@@ -784,5 +744,62 @@ public abstract class ExternalFirewallDeviceManagerImpl extends AdapterBase impl
     public DeleteHostAnswer deleteHost(HostVO host, boolean isForced, boolean isForceDeleteStorage) throws UnableDeleteHostException {
         // TODO Auto-generated method stub
         return null;
+    }
+    
+    @Override
+    public boolean applyPortForwardingRules(Network network, List<? extends PortForwardingRule> rules) throws ResourceUnavailableException {
+        // Find the external firewall in this zone
+        long zoneId = network.getDataCenterId();
+        DataCenterVO zone = _dcDao.findById(zoneId);
+        ExternalFirewallDeviceVO fwDeviceVO = getExternalFirewallForNetwork(network);
+        HostVO externalFirewall = _hostDao.findById(fwDeviceVO.getHostId());
+
+        assert(externalFirewall != null);
+
+        if (network.getState() == Network.State.Allocated) {
+            s_logger.debug("External firewall was asked to apply firewall rules for network with ID " + network.getId() + "; this network is not implemented. Skipping backend commands.");
+            return true;
+        }
+
+        List<PortForwardingRuleTO> pfRules = new ArrayList<PortForwardingRuleTO>();
+        List<FirewallRuleTO> fwRules = new ArrayList<FirewallRuleTO>();
+
+        // Firewall rule need to be apply if there is correlative pf/static nat rule
+        for (PortForwardingRule rule : rules) {
+            IpAddress sourceIp = _networkMgr.getIp(rule.getSourceIpAddressId());
+            Vlan vlan = _vlanDao.findById(sourceIp.getVlanId());
+
+            PortForwardingRuleTO ruleTO = new PortForwardingRuleTO(rule, vlan.getVlanTag(), sourceIp.getAddress().addr());
+            pfRules.add(ruleTO);
+            fwRules.addAll(getFirewallRuleList(network, rule));
+        }
+        
+        sendPortForwardingRules(pfRules, zone, externalFirewall.getId());
+        sendFirewallRules(fwRules, zone, externalFirewall.getId());
+        return true;
+    }
+    
+    protected List<FirewallRuleTO> getFirewallRuleList(Network network, PortForwardingRule rule) {
+        List<FirewallRuleTO> result = new ArrayList<FirewallRuleTO>();
+        
+        IpAddress sourceIp = _networkMgr.getIp(rule.getSourceIpAddressId());
+        Vlan vlan = _vlanDao.findById(sourceIp.getVlanId());
+        String dstIp = rule.getDestinationIpAddress().addr();
+        boolean revokeState = (rule.getState() == FirewallRule.State.Revoke ? true : false);
+
+        List<FirewallRule> fwRules = new ArrayList<FirewallRule>();
+        fwRules.addAll(_fwRulesDao.listByIpAndPurpose(rule.getSourceIpAddressId(), Purpose.Firewall));
+
+        for (FirewallRule fwRuleForPF : fwRules) {
+            FirewallRuleTO fwRulesTO;
+
+            if (revokeState) {
+                fwRulesTO = new FirewallRuleTO(fwRuleForPF, vlan.getVlanTag(), dstIp, Purpose.PortForwarding, revokeState, false);
+            } else {
+                fwRulesTO = new FirewallRuleTO(fwRuleForPF, vlan.getVlanTag(), dstIp, Purpose.PortForwarding, revokeState, true);
+            }
+            result.add(fwRulesTO);
+        }
+        return result;
     }
 }
