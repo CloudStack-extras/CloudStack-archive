@@ -906,7 +906,7 @@ class NATRule:
 
     @classmethod
     def create(cls, apiclient, virtual_machine, services, ipaddressid=None,
-                                                            projectid=None):
+                                        projectid=None, openfirewall=False):
         """Create Port forwarding rule"""
         cmd = createPortForwardingRule.createPortForwardingRuleCmd()
 
@@ -922,6 +922,9 @@ class NATRule:
 
         if projectid:
             cmd.projectid = projectid
+
+        if openfirewall:
+            cmd.openfirewall = True
 
         return NATRule(apiclient.createPortForwardingRule(cmd).__dict__)
 
@@ -1228,7 +1231,7 @@ class LoadBalancerRule:
 
     @classmethod
     def create(cls, apiclient, services, ipaddressid=None, accountid=None,
-                            networkid=None, projectid=None, domainid=None):
+               networkid=None, projectid=None, domainid=None):
         """Create Load balancing Rule"""
 
         cmd = createLoadBalancerRule.createLoadBalancerRuleCmd()
@@ -1524,7 +1527,8 @@ class Network:
 
     @classmethod
     def create(cls, apiclient, services, accountid=None, domainid=None,
-               networkofferingid=None, projectid=None, zoneid=None):
+               networkofferingid=None, projectid=None, zoneid=None,
+               guestcidr=None):
         """Create Network for account"""
         cmd = createNetwork.createNetworkCmd()
         cmd.name = services["name"]
@@ -1559,6 +1563,8 @@ class Network:
             cmd.domainid = domainid
         if projectid:
             cmd.projectid = projectid
+        if guestcidr:
+            cmd.guestcidr = guestcidr
 
         return Network(apiclient.createNetwork(cmd).__dict__)
 
@@ -2284,3 +2290,147 @@ class Router:
         cmd = listRouters.listRoutersCmd()
         [setattr(cmd, k, v) for k, v in kwargs.items()]
         return(apiclient.listRouters(cmd))
+
+
+class Tag:
+    """Manage tags"""
+
+    def __init__(self, items):
+        self.__dict__.update(items)
+
+    @classmethod
+    def create(cls, apiclient, resourceIds, resourceType, tags):
+        """Create tags"""
+
+        cmd = createTags.createTagsCmd()
+        cmd.resourceIds = resourceIds
+        cmd.resourcetype = resourceType
+        cmd.tags = []
+        for key, value in tags.items():
+            cmd.tags.append({
+                             'key': key,
+                             'value': value
+                            })
+        return Tag(apiclient.createTags(cmd).__dict__)
+
+    def delete(self, apiclient, resourceIds, resourceType, tags):
+        """Delete tags"""
+
+        cmd = deleteTags.deleteTagsCmd()
+        cmd.resourceIds = resourceIds
+        cmd.resourcetype = resourceType
+        cmd.tags = []
+        for key, value in tags.items():
+            cmd.tags.append({
+                             'key': key,
+                             'value': value
+                             })
+        apiclient.deleteTags(cmd)
+
+    @classmethod
+    def list(cls, apiclient, **kwargs):
+        """List all tags matching the criteria"""
+
+        cmd = listTags.listTagsCmd()
+        [setattr(cmd, k, v) for k, v in kwargs.items()]
+        return(apiclient.listTags(cmd))
+
+
+class VpcOffering:
+    """Manage VPC offerings"""
+
+    def __init__(self, items):
+        self.__dict__.update(items)
+
+    @classmethod
+    def create(cls, apiclient, services):
+        """Create vpc offering"""
+
+        cmd = createVPCOffering.createVPCOfferingCmd()
+        cmd.name = "-".join([services["name"], random_gen()])
+        cmd.displaytext = services["displaytext"]
+        cmd.supportedServices = services["supportedservices"]
+        return VpcOffering(apiclient.createVPCOffering(cmd).__dict__)
+
+    def update(self, apiclient, name=None, displaytext=None, state=None):
+        """Updates existing VPC offering"""
+
+        cmd = updateVPCOffering.updateVPCOfferingCmd()
+        cmd.id = self.id
+        if name:
+            cmd.name = name
+        if displaytext:
+            cmd.displaytext = displaytext
+        if state:
+            cmd.state = state
+        return apiclient.updateVPCOffering(cmd)
+
+    @classmethod
+    def list(cls, apiclient, **kwargs):
+        """List the VPC offerings based on criteria specified"""
+
+        cmd = listVPCOfferings.listVPCOfferingsCmd()
+        [setattr(cmd, k, v) for k, v in kwargs.items()]
+        return(apiclient.listVPCOfferings(cmd))
+
+    def delete(self, apiclient):
+        """Deletes existing VPC offering"""
+
+        cmd = deleteVPCOffering.deleteVPCOfferingCmd()
+        cmd.id = self.id
+        return apiclient.deleteVPCOffering(cmd)
+
+
+class VPC:
+    """Manage Virtual Private Connection"""
+
+    @classmethod
+    def create(cls, apiclient, services, zoneid, networkDomain=None,
+                                            account=None, domainid=None):
+        """Creates the virtual provate connection (VPC)"""
+
+        cmd = createVPC.createVPCCmd()
+        cmd.name = "-".join([services["name"], random_gen()])
+        cmd.displaytext = services["displaytext"]
+        cmd.zoneid = zoneid
+        cmd.cidr = services["cidr"]
+        if account:
+            cmd.account = account
+        if domainid:
+            cmd.domainid = domainid
+        if networkDomain:
+            cmd.networkDomain = networkDomain
+        return VPC(apiclient.createVPC(cmd).__dict__)
+
+    def update(self, apiclient, name=None, displaytext=None):
+        """Updates VPC configurations"""
+
+        cmd = updateVPC.updateVPCCmd()
+        cmd.id = self.id
+        if name:
+            cmd.name = name
+        if displaytext:
+            cmd.displaytext = displaytext
+        return (apiclient.updateVPC(cmd))
+
+    def delete(self, apiclient):
+        """Delete VPC network"""
+
+        cmd = deleteVPC.deleteVPCCmd()
+        cmd.id = self.id
+        return apiclient.deleteVPC(cmd)
+
+    def restart(self, apiclient):
+        """Restarts the VPC connections"""
+
+        cmd = restartVPC.restartVPCCmd()
+        cmd.id = self.id
+        return apiclient.restartVPC(cmd)
+
+    @classmethod
+    def list(cls, apiclient, **kwargs):
+        """List VPCs"""
+
+        cmd = listVPCs.listVPCsCmd()
+        [setattr(cmd, k, v) for k, v in kwargs.items()]
+        return(apiclient.listVPCs(cmd))
