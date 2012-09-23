@@ -433,6 +433,7 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
                 SearchBuilder<VolumeVO> volumeSB = _volsDao.createSearchBuilder();
                 volumeSB.and("poolId", volumeSB.entity().getPoolId(), SearchCriteria.Op.EQ);
                 volumeSB.and("removed", volumeSB.entity().getRemoved(), SearchCriteria.Op.NULL);
+                volumeSB.and("state", volumeSB.entity().getState(), SearchCriteria.Op.NIN);
 
                 SearchBuilder<VMInstanceVO> activeVmSB = _vmInstanceDao.createSearchBuilder();
                 activeVmSB.and("state", activeVmSB.entity().getState(), SearchCriteria.Op.IN);
@@ -440,6 +441,7 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
 
                 SearchCriteria<VolumeVO> volumeSC = volumeSB.create();
                 volumeSC.setParameters("poolId", storagePool.getId());
+                volumeSC.setParameters("state", Volume.State.Expunging, Volume.State.Destroy );
                 volumeSC.setJoinParameters("activeVmSB", "state", State.Starting, State.Running, State.Stopping, State.Migrating);
 
                 List<VolumeVO> volumes = _volsDao.search(volumeSC, null);
@@ -1008,6 +1010,7 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
         SearchBuilder<VolumeVO> volumeSearch = _volumeDao.createSearchBuilder();
         volumeSearch.and("volumeType", volumeSearch.entity().getVolumeType(), SearchCriteria.Op.EQ);
         volumeSearch.and("poolId", volumeSearch.entity().getPoolId(), SearchCriteria.Op.EQ);
+        volumeSearch.and("state", volumeSearch.entity().getState(), SearchCriteria.Op.EQ);
         StoragePoolSearch.join("vmVolume", volumeSearch, volumeSearch.entity().getInstanceId(), StoragePoolSearch.entity().getId(), JoinBuilder.JoinType.INNER);
         StoragePoolSearch.done();
 
@@ -3736,6 +3739,7 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
         SearchCriteria<VMInstanceVO> sc = StoragePoolSearch.create();
         sc.setJoinParameters("vmVolume", "volumeType", Volume.Type.ROOT);
         sc.setJoinParameters("vmVolume", "poolId", storagePoolId);
+        sc.setJoinParameters("vmVolume", "state", Volume.State.Ready);
         return _vmInstanceDao.search(sc, null);
     }
 
