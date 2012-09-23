@@ -2486,7 +2486,9 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
 
             // TODO, check if iso is already attached, or if there is a previous
             // attachment
-            String isoDatastorePath = String.format("[%s] %s%s", getSecondaryDatastoreUUID(storeUrl), isoStorePathFromRoot, isoFileName);
+            DatastoreMO secondaryDsMo = new DatastoreMO(getServiceContext(), morSecondaryDs);
+            String storeName = secondaryDsMo.getName();
+            String isoDatastorePath = String.format("[%s] %s%s", storeName, isoStorePathFromRoot, isoFileName);
 
             if (cmd.isAttach()) {
                 vmMo.attachIso(isoDatastorePath, morSecondaryDs, true, false);
