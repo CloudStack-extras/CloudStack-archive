@@ -32,33 +32,33 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     private List<LbDestination> destinations;
     private List<LbStickinessPolicy> stickinessPolicies;
     private LbAutoScaleVmGroup autoScaleVmGroup;
-    
-    public LoadBalancingRule(LoadBalancer lb, List<LbDestination> destinations, List<LbStickinessPolicy> stickinessPolicies) { 
+
+    public LoadBalancingRule(LoadBalancer lb, List<LbDestination> destinations, List<LbStickinessPolicy> stickinessPolicies) {
         this.lb = lb;
         this.destinations = destinations;
         this.stickinessPolicies = stickinessPolicies;
     }
-    
+
     @Override
     public long getId() {
         return lb.getId();
     }
-    
+
     @Override
     public long getAccountId() {
         return lb.getAccountId();
     }
-    
+
     @Override
     public long getDomainId() {
         return lb.getDomainId();
     }
-    
+
     @Override
     public String getName() {
         return lb.getName();
     }
-    
+
     @Override
     public String getDescription() {
         return lb.getDescription();
@@ -68,7 +68,7 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     public int getDefaultPortStart() {
         return lb.getDefaultPortStart();
     }
-    
+
     @Override
     public int getDefaultPortEnd() {
         return lb.getDefaultPortEnd();
@@ -78,22 +78,22 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     public String getAlgorithm() {
         return lb.getAlgorithm();
     }
-    
+
     @Override
     public String getXid() {
         return lb.getXid();
     }
-    
+
     @Override
     public Long getSourceIpAddressId() {
         return lb.getSourceIpAddressId();
     }
-    
+
     @Override
     public Integer getSourcePortStart() {
         return lb.getSourcePortStart();
     }
-    
+
     @Override
     public Integer getSourcePortEnd() {
         return lb.getSourcePortEnd();
@@ -103,22 +103,22 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     public String getProtocol() {
         return lb.getProtocol();
     }
-    
+
     @Override
     public Purpose getPurpose() {
         return Purpose.LoadBalancing;
     }
-    
+
     @Override
     public State getState() {
         return lb.getState();
     }
-    
+
     @Override
     public long getNetworkId() {
         return lb.getNetworkId();
     }
-    
+
     public LoadBalancer getLb() {
         return lb;
     }
@@ -126,12 +126,12 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     public List<LbDestination> getDestinations() {
         return destinations;
     }
-    
+
     public List<LbStickinessPolicy> getStickinessPolicies() {
         return stickinessPolicies;
     }
-    
-    
+
+
     public interface Destination {
         String getIpAddress();
         int getDestinationPortStart();
@@ -155,7 +155,7 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
             this._params = params;
             this._revoke = false;
         }
-        
+
         public String getMethodName() {
             return _methodName;
         }
@@ -168,20 +168,20 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
             return _revoke;
         }
     }
-    
+
     public static class LbDestination implements Destination {
         private int portStart;
         private int portEnd;
         private String ip;
         boolean revoked;
-        
+
         public LbDestination(int portStart, int portEnd, String ip, boolean revoked) {
             this.portStart = portStart;
             this.portEnd = portEnd;
             this.ip = ip;
             this.revoked = revoked;
         }
-        
+
         @Override
         public String getIpAddress() {
             return ip;
@@ -194,41 +194,41 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
         public int getDestinationPortEnd() {
             return portEnd;
         }
-        
+
         @Override
         public boolean isRevoked() {
             return revoked;
         }
-       
+
         public void setRevoked(boolean revoked) {
             this.revoked = revoked;
         }
     }
-    
+
     @Override
     public Integer getIcmpCode() {
         return null;
     }
-    
+
     @Override
     public Integer getIcmpType() {
         return null;
     }
-    
+
     @Override
     public List<String> getSourceCidrList() {
         return null;
     }
-    
+
     @Override
     public Long getRelated() {
         return null;
     }
 
-	@Override
-	public FirewallRuleType getType() {
-		return FirewallRuleType.User;
-	}
+    @Override
+    public FirewallRuleType getType() {
+        return FirewallRuleType.User;
+    }
 	
     @Override
     public TrafficType getTrafficType() {
@@ -325,11 +325,13 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
         AutoScaleVmGroup vmGroup;
         private final List<LbAutoScalePolicy> policies;
         private final LbAutoScaleVmProfile profile;
+        private final String currentState;
 
-        public LbAutoScaleVmGroup(AutoScaleVmGroup vmGroup, List<LbAutoScalePolicy> policies, LbAutoScaleVmProfile profile) {
+        public LbAutoScaleVmGroup(AutoScaleVmGroup vmGroup, List<LbAutoScalePolicy> policies, LbAutoScaleVmProfile profile, String currentState) {
             this.vmGroup = vmGroup;
             this.policies = policies;
             this.profile = profile;
+            this.currentState = currentState;
         }
 
         public AutoScaleVmGroup getVmGroup() {
@@ -342,6 +344,10 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
 
         public LbAutoScaleVmProfile getProfile() {
             return profile;
+        }
+
+        public String getCurrentState() {
+            return currentState;
         }
     }
 }
