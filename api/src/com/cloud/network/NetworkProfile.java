@@ -19,31 +19,31 @@ import com.cloud.network.Networks.Mode;
 import com.cloud.network.Networks.TrafficType;
 
 public class NetworkProfile implements Network {
-    private long id;
-    private long dataCenterId;
-    private long ownerId;
-    private long domainId;
+    private final long id;
+    private final long dataCenterId;
+    private final long ownerId;
+    private final long domainId;
     private String dns1;
     private String dns2;
     private URI broadcastUri;
-    private State state;
-    private String name;
-    private Mode mode;
-    private BroadcastDomainType broadcastDomainType;
+    private final State state;
+    private final String name;
+    private final Mode mode;
+    private final BroadcastDomainType broadcastDomainType;
     private TrafficType trafficType;
-    private String gateway;
-    private String cidr;
-    private long networkOfferingId;
-    private long related;
-    private String displayText;
-    private String reservationId;
-    private String networkDomain;
-    private Network.GuestType guestType;
+    private final String gateway;
+    private final String cidr;
+    private final long networkOfferingId;
+    private final long related;
+    private final String displayText;
+    private final String reservationId;
+    private final String networkDomain;
+    private final Network.GuestType guestType;
     private Long physicalNetworkId;
-    private ACLType aclType;
-    private boolean restartRequired;
-    private boolean specifyIpRanges;
-    private Long vpcId;
+    private final ACLType aclType;
+    private final boolean restartRequired;
+    private final boolean specifyIpRanges;
+    private final Long vpcId;
 
     public NetworkProfile(Network network) {
         this.id = network.getId();
@@ -189,6 +189,11 @@ public class NetworkProfile implements Network {
     @Override
     public void setPhysicalNetworkId(Long physicalNetworkId) {
         this.physicalNetworkId = physicalNetworkId;
+    }
+
+    @Override
+    public void setTrafficType(TrafficType type) {
+        this.trafficType = type;
     }
 
     @Override

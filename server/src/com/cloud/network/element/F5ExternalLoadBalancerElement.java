@@ -470,6 +470,14 @@ public class F5ExternalLoadBalancerElement extends ExternalLoadBalancerDeviceMan
 
     @Override
     public IpDeployer getIpDeployer(Network network) {
+        ExternalLoadBalancerDeviceVO lbDevice = getExternalLoadBalancerForNetwork(network);
+        if (lbDevice == null) {
+            s_logger.error("Cannot find external load balanacer for network " + network.getName());
+            return null;
+        }
+        if (lbDevice.getIsInLineMode()) {
+            return getIpDeployerForInlineMode(network);
+        }
         return this;
     }
 }

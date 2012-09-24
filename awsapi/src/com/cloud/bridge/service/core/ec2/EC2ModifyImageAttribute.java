@@ -16,6 +16,7 @@
 package com.cloud.bridge.service.core.ec2;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.cloud.bridge.service.core.ec2.EC2ImageAttributes.ImageAttribute;
@@ -27,14 +28,7 @@ public class EC2ModifyImageAttribute {
 	private String  description;
 	private Boolean isPublic = null;
 	
-	private Operation launchPermOperation = null;
-	public enum Operation{
-	    add,
-	    remove,
-	    reset;
-	}
-	
-	private List<String>  launchPermissionAccountsOrGroupList;
+    private List<EC2ImageLaunchPermission> launchPermissionList = new ArrayList<EC2ImageLaunchPermission>();
 	
 	public EC2ModifyImageAttribute() {
 	}
@@ -63,32 +57,21 @@ public class EC2ModifyImageAttribute {
     public String getDescription() {
         return this.description;
     }
-    
-    public void setLaunchPermissionAccountsOrGroupList(List<String> launchPermissionAccountsOrGroupList) {
-        this.launchPermissionAccountsOrGroupList = launchPermissionAccountsOrGroupList;
-    }
-
-    public List<String> getLaunchPermissionAccountsList() {
-        return launchPermissionAccountsOrGroupList;
-    }
-    
-    public void setLaunchPermOperation( Operation launchPermOperation ) {
-        this.launchPermOperation = launchPermOperation;
-    }
-    
-    public Operation getLaunchPermOperation() {
-        return this.launchPermOperation;
-    }
-
 
     public void setIsPublic(Boolean isPublic) {
         this.isPublic = isPublic;
     }
 
-
     public Boolean getIsPublic() {
         return isPublic;
     }
-    
-	
+
+    public void addLaunchPermission( EC2ImageLaunchPermission param ) {
+        launchPermissionList.add( param );
+    }
+
+    public EC2ImageLaunchPermission[] getLaunchPermissionSet() {
+        return launchPermissionList.toArray(new EC2ImageLaunchPermission[0]);
+    }
+
 }

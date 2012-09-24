@@ -476,4 +476,5 @@ public interface NetworkManager extends NetworkService {
      */
     int getNetworkLockTimeout();
 
+    List<Provider> getProvidersForServiceInNetwork(Network network, Service service);
 }

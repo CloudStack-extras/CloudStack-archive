@@ -261,4 +261,8 @@ public class CloudZonesNetworkElement extends AdapterBase implements NetworkElem
         return true;
     }
 
+    @Override
+    public IpDeployer getIpDeployer(Network network) {
+        return null;
+    }
 }

@@ -1506,4 +1506,9 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager{
         return 0;
     }
 
+    @Override
+    public List<Provider> getProvidersForServiceInNetwork(Network network, Service service) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

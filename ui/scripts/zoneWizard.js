@@ -18,6 +18,9 @@
   var returnedPublicVlanIpRanges = []; //public VlanIpRanges returned by API
   var configurationUseLocalStorage = false;
 	var skipGuestTrafficStep = false;
+  var selectedNetworkOfferingObj = {};	
+	var baremetalProviders = ["BaremetalDhcpProvider", "BaremetalPxeProvider", "BaremetaUserdataProvider"];
+	var selectedBaremetalProviders = [];	
 
   // Makes URL string for traffic label
   var trafficLabelParam = function(trafficTypeID, data, physicalNetworkID) {
@@ -358,8 +361,7 @@
           networkOfferingId: {
             label: 'label.network.offering',
 						dependsOn: 'hypervisor',
-            select: function(args) {
-              var selectedNetworkOfferingObj = {};
+            select: function(args) {              
               var networkOfferingObjs = [];
               
 							args.$select.unbind("change").bind("change", function(){									  
@@ -402,11 +404,20 @@
 																			
 											$(thisService.provider).each(function(){										
 												if(this.name == "Netscaler") {
-													thisNetworkOffering.havingNetscaler = true;
-													return false; //break each loop
+													thisNetworkOffering.havingNetscaler = true;													
+												}
+												else if(this.name == "VirtualRouter") {
+												  if(thisNetworkOffering.VirtualRouterServices == null)
+													  thisNetworkOffering.VirtualRouterServices = [];	
+													if($.inArray(thisService.name, thisNetworkOffering.VirtualRouterServices) == -1) {
+														thisNetworkOffering.VirtualRouterServices.push(thisService.name);
+													}														
+                        } 
+												else if($.inArray(this.name, baremetalProviders) != -1) {												
+												  selectedBaremetalProviders.push(this.name);
 												}
 											});			
-											
+										
 											if(thisService.name == "SecurityGroup") {
 												thisNetworkOffering.havingSG = true;
 											}
@@ -1735,10 +1746,24 @@
 																			
                                       if (result.jobstatus == 1) {
                                         //alert("configureVirtualRouterElement succeeded.");
-
+																				
+																				if(args.data.pluginFrom != null && args.data.pluginFrom.name == "installWizard") {
+																				  selectedNetworkOfferingObj = args.data.pluginFrom.selectedNetworkOffering;
+																				}
+																																							
+																				var data = {
+																				  id: virtualRouterProviderId,
+																					state: 'Enabled'																					
+																				};																				
+																				if(selectedNetworkOfferingObj.VirtualRouterServices != null) {
+																				  $.extend(data, {
+																					  servicelist: selectedNetworkOfferingObj.VirtualRouterServices.join(",")
+																					});
+																				}
+																				
                                         $.ajax({
-                                          url: createURL("updateNetworkServiceProvider&state=Enabled&id=" + virtualRouterProviderId),
-                                          dataType: "json",
+                                          url: createURL("updateNetworkServiceProvider"),
+                                          data: data,
                                           async: false,
                                           success: function(json) {    
 																						var enableVirtualRouterProviderIntervalID = setInterval(function() { 	
@@ -1754,7 +1779,59 @@
 																										clearInterval(enableVirtualRouterProviderIntervalID); 
 																										
                                                     if (result.jobstatus == 1) {
-                                                      //alert("Virtual Router Provider is enabled");
+                                                      //alert("Virtual Router Provider is enabled");																																																			
+																										
+																											for(var i = 0; i < selectedBaremetalProviders.length; i++) {																											 
+																												$.ajax({
+																													url: createURL("listNetworkServiceProviders"),
+																													data: {
+																													  name: selectedBaremetalProviders[i],
+																														physicalNetworkId: args.data.returnedBasicPhysicalNetwork.id 
+																													},
+																													async: false,
+																													success: function(json) {																													  
+																														var items = json.listnetworkserviceprovidersresponse.networkserviceprovider;
+																														if(items != null && items.length > 0) {																														 
+																															var providerId = items[0].id;																																																											
+																															$.ajax({
+																																url: createURL("updateNetworkServiceProvider"),
+																																data: {
+																																	id: providerId,
+																																	state: 'Enabled'																														
+																																},
+																																async: false,
+																																success: function(json) {																																  
+																																	var updateNetworkServiceProviderTimer = "asyncJob_" + json.updatenetworkserviceproviderresponse.jobid;
+																																	$("body").everyTime(2000, updateNetworkServiceProviderTimer, function() {
+																																		$.ajax({
+																																			url: createURL("queryAsyncJobResult&jobId=" + json.updatenetworkserviceproviderresponse.jobid),
+																																			dataType: "json",
+																																			success: function(json) {																																			  
+																																				var result = json.queryasyncjobresultresponse;
+																																				if (result.jobstatus == 0) {
+																																					return; //Job has not completed
+																																				}
+																																				else {
+																																					$("body").stopTime(updateNetworkServiceProviderTimer);
+																																					if (result.jobstatus == 1) { //baremetal provider has been enabled successfully      
+																																																																							
+																																					}
+																																					else if (result.jobstatus == 2) {
+																																						alert( _s(result.jobresult.errortext));
+																																					}
+																																				}
+																																			},
+																																			error: function(XMLHttpResponse) {																																				
+																																				alert(parseXMLHttpResponse(XMLHttpResponse));
+																																			}
+																																		});
+																																	});
+																																}
+																															});																															
+																														}
+																													}
+																												});																												
+																											}																											
 																											
 																											if(args.data.pluginFrom != null && args.data.pluginFrom.name == "installWizard") {
 																											  selectedNetworkOfferingHavingSG = args.data.pluginFrom.selectedNetworkOfferingHavingSG;
