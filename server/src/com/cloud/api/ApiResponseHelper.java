@@ -250,129 +250,131 @@ public class ApiResponseHelper implements ResponseGenerator {
         accountResponse.setNetworkDomain(account.getNetworkDomain());
         accountResponse.setDefaultZone(account.getDefaultZoneId());
 
-        // get network stat
-        List<UserStatisticsVO> stats = ApiDBUtils.listUserStatsBy(account.getId());
-        if (stats == null) {
-            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Internal error searching for user stats");
-        }
-
-        Long bytesSent = 0L;
-        Long bytesReceived = 0L;
-        for (UserStatisticsVO stat : stats) {
-            Long rx = stat.getNetBytesReceived() + stat.getCurrentBytesReceived();
-            Long tx = stat.getNetBytesSent() + stat.getCurrentBytesSent();
-            bytesReceived = bytesReceived + Long.valueOf(rx);
-            bytesSent = bytesSent + Long.valueOf(tx);
-        }
-        accountResponse.setBytesReceived(bytesReceived);
-        accountResponse.setBytesSent(bytesSent);
-
-        // Get resource limits and counts
-
-        Long vmLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.user_vm, account.getId());
-        String vmLimitDisplay = (accountIsAdmin || vmLimit == -1) ? "Unlimited" : String.valueOf(vmLimit);
-        Long vmTotal = ApiDBUtils.getResourceCount(ResourceType.user_vm, account.getId());
-        String vmAvail = (accountIsAdmin || vmLimit == -1) ? "Unlimited" : String.valueOf(vmLimit - vmTotal);
-        accountResponse.setVmLimit(vmLimitDisplay);
-        accountResponse.setVmTotal(vmTotal);
-        accountResponse.setVmAvailable(vmAvail);
-
-        Long ipLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.public_ip, account.getId());
-        String ipLimitDisplay = (accountIsAdmin || ipLimit == -1) ? "Unlimited" : String.valueOf(ipLimit);
-        Long ipTotal = ApiDBUtils.getResourceCount(ResourceType.public_ip, account.getId());
-
-        Long ips = ipLimit - ipTotal;
-        // check how many free ips are left, and if it's less than max allowed number of ips from account - use this
-        // value
-        Long ipsLeft = ApiDBUtils.countFreePublicIps();
-        boolean unlimited = true;
-        if (ips.longValue() > ipsLeft.longValue()) {
-            ips = ipsLeft;
-            unlimited = false;
-        }
-
-        String ipAvail = ((accountIsAdmin || ipLimit == -1) && unlimited) ? "Unlimited" : String.valueOf(ips);
-
-        accountResponse.setIpLimit(ipLimitDisplay);
-        accountResponse.setIpTotal(ipTotal);
-        accountResponse.setIpAvailable(ipAvail);
-
-        Long volumeLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.volume, account.getId());
-        String volumeLimitDisplay = (accountIsAdmin || volumeLimit == -1) ? "Unlimited" : String.valueOf(volumeLimit);
-        Long volumeTotal = ApiDBUtils.getResourceCount(ResourceType.volume, account.getId());
-        String volumeAvail = (accountIsAdmin || volumeLimit == -1) ? "Unlimited" : String.valueOf(volumeLimit - volumeTotal);
-        accountResponse.setVolumeLimit(volumeLimitDisplay);
-        accountResponse.setVolumeTotal(volumeTotal);
-        accountResponse.setVolumeAvailable(volumeAvail);
-
-        Long snapshotLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.snapshot, account.getId());
-        String snapshotLimitDisplay = (accountIsAdmin || snapshotLimit == -1) ? "Unlimited" : String.valueOf(snapshotLimit);
-        Long snapshotTotal = ApiDBUtils.getResourceCount(ResourceType.snapshot, account.getId());
-        String snapshotAvail = (accountIsAdmin || snapshotLimit == -1) ? "Unlimited" : String.valueOf(snapshotLimit - snapshotTotal);
-        accountResponse.setSnapshotLimit(snapshotLimitDisplay);
-        accountResponse.setSnapshotTotal(snapshotTotal);
-        accountResponse.setSnapshotAvailable(snapshotAvail);
-
-        Long templateLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.template, account.getId());
-        String templateLimitDisplay = (accountIsAdmin || templateLimit == -1) ? "Unlimited" : String.valueOf(templateLimit);
-        Long templateTotal = ApiDBUtils.getResourceCount(ResourceType.template, account.getId());
-        String templateAvail = (accountIsAdmin || templateLimit == -1) ? "Unlimited" : String.valueOf(templateLimit - templateTotal);
-        accountResponse.setTemplateLimit(templateLimitDisplay);
-        accountResponse.setTemplateTotal(templateTotal);
-        accountResponse.setTemplateAvailable(templateAvail);
-
-        // Get stopped and running VMs
-        int vmStopped = 0;
-        int vmRunning = 0;
-
-        List<Long> permittedAccounts = new ArrayList<Long>();
-        permittedAccounts.add(account.getId());
-
-        List<? extends UserVm> virtualMachines = ApiDBUtils.searchForUserVMs(new Criteria(), permittedAccounts);
-
-        // get Running/Stopped VMs
-        for (Iterator<? extends UserVm> iter = virtualMachines.iterator(); iter.hasNext();) {
-            // count how many stopped/running vms we have
-            UserVm vm = iter.next();
-
-            if (vm.getState() == State.Stopped) {
-                vmStopped++;
-            } else if (vm.getState() == State.Running) {
-                vmRunning++;
-            }
-        }
-
-        accountResponse.setVmStopped(vmStopped);
-        accountResponse.setVmRunning(vmRunning);
-        accountResponse.setObjectName("account");
+        if(details.contains(Details.all)){
         
-        //get resource limits for projects
-        Long projectLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.project, account.getId());
-        String projectLimitDisplay = (accountIsAdmin || projectLimit == -1) ? "Unlimited" : String.valueOf(projectLimit);
-        Long projectTotal = ApiDBUtils.getResourceCount(ResourceType.project, account.getId());
-        String projectAvail = (accountIsAdmin || projectLimit == -1) ? "Unlimited" : String.valueOf(projectLimit - projectTotal);
-        accountResponse.setProjectLimit(projectLimitDisplay);
-        accountResponse.setProjectTotal(projectTotal);
-        accountResponse.setProjectAvailable(projectAvail);
-        
-        //get resource limits for networks
-        Long networkLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.network, account.getId());
-        String networkLimitDisplay = (accountIsAdmin || networkLimit == -1) ? "Unlimited" : String.valueOf(networkLimit);
-        Long networkTotal = ApiDBUtils.getResourceCount(ResourceType.network, account.getId());
-        String networkAvail = (accountIsAdmin || networkLimit == -1) ? "Unlimited" : String.valueOf(networkLimit - networkTotal);
-        accountResponse.setNetworkLimit(networkLimitDisplay);
-        accountResponse.setNetworkTotal(networkTotal);
-        accountResponse.setNetworkAvailable(networkAvail);
-      
-        // adding all the users for an account as part of the response obj
-        List<UserVO> usersForAccount = ApiDBUtils.listUsersByAccount(account.getAccountId());
-        List<UserResponse> userResponseList = new ArrayList<UserResponse>();
-        for (UserVO user : usersForAccount) {
-            UserResponse userResponse = createUserResponse(user);
-            userResponseList.add(userResponse);
+	        // get network stat
+	        List<UserStatisticsVO> stats = ApiDBUtils.listUserStatsBy(account.getId());
+	        if (stats == null) {
+	            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Internal error searching for user stats");
+	        }
+	
+	        Long bytesSent = 0L;
+	        Long bytesReceived = 0L;
+	        for (UserStatisticsVO stat : stats) {
+	            Long rx = stat.getNetBytesReceived() + stat.getCurrentBytesReceived();
+	            Long tx = stat.getNetBytesSent() + stat.getCurrentBytesSent();
+	            bytesReceived = bytesReceived + Long.valueOf(rx);
+	            bytesSent = bytesSent + Long.valueOf(tx);
+	        }
+	        accountResponse.setBytesReceived(bytesReceived);
+	        accountResponse.setBytesSent(bytesSent);
+	
+	        // Get resource limits and counts
+	
+	        Long vmLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.user_vm, account.getId());
+	        String vmLimitDisplay = (accountIsAdmin || vmLimit == -1) ? "Unlimited" : String.valueOf(vmLimit);
+	        Long vmTotal = ApiDBUtils.getResourceCount(ResourceType.user_vm, account.getId());
+	        String vmAvail = (accountIsAdmin || vmLimit == -1) ? "Unlimited" : String.valueOf(vmLimit - vmTotal);
+	        accountResponse.setVmLimit(vmLimitDisplay);
+	        accountResponse.setVmTotal(vmTotal);
+	        accountResponse.setVmAvailable(vmAvail);
+	
+	        Long ipLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.public_ip, account.getId());
+	        String ipLimitDisplay = (accountIsAdmin || ipLimit == -1) ? "Unlimited" : String.valueOf(ipLimit);
+	        Long ipTotal = ApiDBUtils.getResourceCount(ResourceType.public_ip, account.getId());
+	
+	        Long ips = ipLimit - ipTotal;
+	        // check how many free ips are left, and if it's less than max allowed number of ips from account - use this
+	        // value
+	        Long ipsLeft = ApiDBUtils.countFreePublicIps();
+	        boolean unlimited = true;
+	        if (ips.longValue() > ipsLeft.longValue()) {
+	            ips = ipsLeft;
+	            unlimited = false;
+	        }
+	
+	        String ipAvail = ((accountIsAdmin || ipLimit == -1) && unlimited) ? "Unlimited" : String.valueOf(ips);
+	
+	        accountResponse.setIpLimit(ipLimitDisplay);
+	        accountResponse.setIpTotal(ipTotal);
+	        accountResponse.setIpAvailable(ipAvail);
+	
+	        Long volumeLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.volume, account.getId());
+	        String volumeLimitDisplay = (accountIsAdmin || volumeLimit == -1) ? "Unlimited" : String.valueOf(volumeLimit);
+	        Long volumeTotal = ApiDBUtils.getResourceCount(ResourceType.volume, account.getId());
+	        String volumeAvail = (accountIsAdmin || volumeLimit == -1) ? "Unlimited" : String.valueOf(volumeLimit - volumeTotal);
+	        accountResponse.setVolumeLimit(volumeLimitDisplay);
+	        accountResponse.setVolumeTotal(volumeTotal);
+	        accountResponse.setVolumeAvailable(volumeAvail);
+	
+	        Long snapshotLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.snapshot, account.getId());
+	        String snapshotLimitDisplay = (accountIsAdmin || snapshotLimit == -1) ? "Unlimited" : String.valueOf(snapshotLimit);
+	        Long snapshotTotal = ApiDBUtils.getResourceCount(ResourceType.snapshot, account.getId());
+	        String snapshotAvail = (accountIsAdmin || snapshotLimit == -1) ? "Unlimited" : String.valueOf(snapshotLimit - snapshotTotal);
+	        accountResponse.setSnapshotLimit(snapshotLimitDisplay);
+	        accountResponse.setSnapshotTotal(snapshotTotal);
+	        accountResponse.setSnapshotAvailable(snapshotAvail);
+	
+	        Long templateLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.template, account.getId());
+	        String templateLimitDisplay = (accountIsAdmin || templateLimit == -1) ? "Unlimited" : String.valueOf(templateLimit);
+	        Long templateTotal = ApiDBUtils.getResourceCount(ResourceType.template, account.getId());
+	        String templateAvail = (accountIsAdmin || templateLimit == -1) ? "Unlimited" : String.valueOf(templateLimit - templateTotal);
+	        accountResponse.setTemplateLimit(templateLimitDisplay);
+	        accountResponse.setTemplateTotal(templateTotal);
+	        accountResponse.setTemplateAvailable(templateAvail);
+	
+	        // Get stopped and running VMs
+	        int vmStopped = 0;
+	        int vmRunning = 0;
+	
+	        List<Long> permittedAccounts = new ArrayList<Long>();
+	        permittedAccounts.add(account.getId());
+	
+	        List<? extends UserVm> virtualMachines = ApiDBUtils.searchForUserVMs(new Criteria(), permittedAccounts);
+	
+	        // get Running/Stopped VMs
+	        for (Iterator<? extends UserVm> iter = virtualMachines.iterator(); iter.hasNext();) {
+	            // count how many stopped/running vms we have
+	            UserVm vm = iter.next();
+	
+	            if (vm.getState() == State.Stopped) {
+	                vmStopped++;
+	            } else if (vm.getState() == State.Running) {
+	                vmRunning++;
+	            }
+	        }
+	
+	        accountResponse.setVmStopped(vmStopped);
+	        accountResponse.setVmRunning(vmRunning);
+	        accountResponse.setObjectName("account");
+	        
+	        //get resource limits for projects
+	        Long projectLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.project, account.getId());
+	        String projectLimitDisplay = (accountIsAdmin || projectLimit == -1) ? "Unlimited" : String.valueOf(projectLimit);
+	        Long projectTotal = ApiDBUtils.getResourceCount(ResourceType.project, account.getId());
+	        String projectAvail = (accountIsAdmin || projectLimit == -1) ? "Unlimited" : String.valueOf(projectLimit - projectTotal);
+	        accountResponse.setProjectLimit(projectLimitDisplay);
+	        accountResponse.setProjectTotal(projectTotal);
+	        accountResponse.setProjectAvailable(projectAvail);
+	        
+	        //get resource limits for networks
+	        Long networkLimit = ApiDBUtils.findCorrectResourceLimit(ResourceType.network, account.getId());
+	        String networkLimitDisplay = (accountIsAdmin || networkLimit == -1) ? "Unlimited" : String.valueOf(networkLimit);
+	        Long networkTotal = ApiDBUtils.getResourceCount(ResourceType.network, account.getId());
+	        String networkAvail = (accountIsAdmin || networkLimit == -1) ? "Unlimited" : String.valueOf(networkLimit - networkTotal);
+	        accountResponse.setNetworkLimit(networkLimitDisplay);
+	        accountResponse.setNetworkTotal(networkTotal);
+	        accountResponse.setNetworkAvailable(networkAvail);
+	      
+	        // adding all the users for an account as part of the response obj
+	        List<UserVO> usersForAccount = ApiDBUtils.listUsersByAccount(account.getAccountId());
+	        List<UserResponse> userResponseList = new ArrayList<UserResponse>();
+	        for (UserVO user : usersForAccount) {
+	            UserResponse userResponse = createUserResponse(user);
+	            userResponseList.add(userResponse);
+	        }
+	        accountResponse.setUsers(userResponseList);
         }
-
-        accountResponse.setUsers(userResponseList);
         accountResponse.setDetails(ApiDBUtils.getAccountDetails(account.getId()));
         return accountResponse;
     }
