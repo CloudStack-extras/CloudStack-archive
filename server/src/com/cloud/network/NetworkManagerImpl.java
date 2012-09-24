@@ -885,7 +885,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     protected boolean applyIpAssociations(Network network, boolean rulesRevoked, boolean continueOnError, List<PublicIp> publicIps) throws ResourceUnavailableException {
         boolean success = true;
 
-        Map<PublicIp, Set<Service>> ipToServices = getIpToServices(publicIps, rulesRevoked, false);
+        Map<PublicIp, Set<Service>> ipToServices = getIpToServices(publicIps, rulesRevoked, true);
         Map<Provider, ArrayList<PublicIp>> providerToIpList = getProviderToIpList(network, ipToServices);
 
         for (Provider provider : providerToIpList.keySet()) {
