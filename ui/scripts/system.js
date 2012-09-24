@@ -251,10 +251,10 @@
 
           virtualRouterCount: function(data) {
             $.ajax({
-              url: createURL('listRouters'),
-              data: {
+              url: createURL('listRouters&details=min'),
+             /* data: {
                 listAll: true
-              },
+              },*/
               success: function(json) {
                 dataFns.capacity($.extend(data, {
                   virtualRouterCount: json.listroutersresponse.count ?
