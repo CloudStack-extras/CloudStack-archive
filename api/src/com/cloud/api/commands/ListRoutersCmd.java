@@ -13,11 +13,14 @@
 package com.cloud.api.commands;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiConstants;
+import com.cloud.api.ApiConstants.Details;
+import com.cloud.api.ApiConstants.HostDetails;
 import com.cloud.api.BaseCmd.CommandType;
 import com.cloud.api.BaseListProjectAndAccountResourcesCmd;
 import com.cloud.api.IdentityMapper;
@@ -26,6 +29,7 @@ import com.cloud.api.Parameter;
 import com.cloud.api.response.DomainRouterResponse;
 import com.cloud.api.response.ListResponse;
 import com.cloud.async.AsyncJob;
+import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.network.router.VirtualRouter;
 
 @Implementation(description="List routers.", responseObject=DomainRouterResponse.class)
@@ -63,6 +67,11 @@ public class ListRoutersCmd extends BaseListProjectAndAccountResourcesCmd {
     @IdentityMapper(entityTableName="networks")
     @Parameter(name=ApiConstants.NETWORK_ID, type=CommandType.LONG, description="list by network id")
     private Long networkId;
+    
+    
+    @Parameter(name=ApiConstants.DETAILS, type=CommandType.LIST, collectionType=CommandType.STRING, description="comma separated list of details requested, value can be [ min, all]" )
+    private List<String> viewDetails;
+    
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
@@ -96,6 +105,27 @@ public class ListRoutersCmd extends BaseListProjectAndAccountResourcesCmd {
         return networkId;
     }
 
+    
+    public EnumSet<Details> getDetails() throws InvalidParameterValueException {
+        EnumSet<Details> dv;
+        if (viewDetails==null || viewDetails.size() <=0){
+            dv = EnumSet.of(Details.all);
+        }
+        else {
+            try {
+                ArrayList<Details> dc = new ArrayList<Details>();
+                for (String detail: viewDetails){
+                    dc.add(Details.valueOf(detail));
+                }
+                dv = EnumSet.copyOf(dc);
+            }
+            catch (IllegalArgumentException e){
+                throw new InvalidParameterValueException("The details parameter contains a non permitted value. The allowed values are " + EnumSet.allOf(Details.class));
+            }
+        }
+        return dv;
+    }
+    
     /////////////////////////////////////////////////////
     /////////////// API Implementation///////////////////
     /////////////////////////////////////////////////////
@@ -115,7 +145,7 @@ public class ListRoutersCmd extends BaseListProjectAndAccountResourcesCmd {
         ListResponse<DomainRouterResponse> response = new ListResponse<DomainRouterResponse>();
         List<DomainRouterResponse> routerResponses = new ArrayList<DomainRouterResponse>();
         for (VirtualRouter router : result) {
-            DomainRouterResponse routerResponse = _responseGenerator.createDomainRouterResponse(router);
+            DomainRouterResponse routerResponse = _responseGenerator.createDomainRouterResponse(router, getDetails());
             routerResponse.setObjectName("router");
             routerResponses.add(routerResponse);
         }

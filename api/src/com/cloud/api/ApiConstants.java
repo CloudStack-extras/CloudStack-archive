@@ -352,6 +352,11 @@ public class ApiConstants {
     public static final String VSM_CONFIG_STATE = "vsmconfigstate";
     public static final String VSM_DEVICE_STATE = "vsmdevicestate";
     
+
+    public enum Details {
+        all, min;
+    }
+    
     public enum HostDetails {
         all, capacity, events, stats, min;
     }

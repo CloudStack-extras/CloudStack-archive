@@ -16,6 +16,7 @@ import java.text.DecimalFormat;
 import java.util.EnumSet;
 import java.util.List;
 
+import com.cloud.api.ApiConstants.Details;
 import com.cloud.api.ApiConstants.HostDetails;
 import com.cloud.api.ApiConstants.VMDetails;
 import com.cloud.api.commands.QueryAsyncJobResultCmd;
@@ -128,6 +129,8 @@ public interface ResponseGenerator {
 
     AccountResponse createAccountResponse(Account account);
 
+	AccountResponse createAccountResponse(Account account, EnumSet<Details> details);
+	
     DomainResponse createDomainResponse(Domain domain);
 
     DiskOfferingResponse createDiskOfferingResponse(DiskOffering offering);
@@ -151,6 +154,8 @@ public interface ResponseGenerator {
     SystemVmResponse createSystemVmResponse(VirtualMachine systemVM);
 
     DomainRouterResponse createDomainRouterResponse(VirtualRouter router);
+    
+	DomainRouterResponse createDomainRouterResponse(VirtualRouter router, EnumSet<Details> details);
 
     HostResponse createHostResponse(Host host, EnumSet<HostDetails> details);
 
@@ -276,4 +281,6 @@ public interface ResponseGenerator {
      * @return
      */
     Long getIdentiyId(String tableName, String token);
+
+
 }
