@@ -56,6 +56,7 @@ body.install-wizard {
   display: none;
 }
 
+/*Table*/
 table {
   width: 740px;
   max-width: 777px;
@@ -122,6 +123,7 @@ table tbody td.loading {
   border-top: 1px solid #FBFBFB;
 }
 
+/** Actions table cell*/
 table tbody td.actions {
   width: 155px;
   max-width: 155px !important;
@@ -137,6 +139,7 @@ table tbody td.actions input {
   margin: 11px 0 0px;
 }
 
+/** Quick view table cell*/
 table tbody td.quick-view,
 table thead th.quick-view {
   max-width: 70px !important;
@@ -158,6 +161,7 @@ table tbody td.quick-view:hover .icon {
   background-position: -44px -644px;
 }
 
+/** Row styling*/
 table tbody tr {
   border-left: 1px solid #C4C5C5;
   border-right: 1px solid #C4C5C5;
@@ -223,6 +227,7 @@ table th div.ui-resizable-handle {
   float: right;
 }
 
+/** Header, misc*/
 #header,
 #navigation {
   /*+text-shadow:0px -1px 1px #000000;*/
