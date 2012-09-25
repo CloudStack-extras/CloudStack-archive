@@ -407,14 +407,7 @@
 											$(thisService.provider).each(function(){										
 												if(this.name == "Netscaler") {
 													thisNetworkOffering.havingNetscaler = true;													
-												}
-												else if(this.name == "VirtualRouter") {
-												  if(thisNetworkOffering.VirtualRouterServices == null)
-													  thisNetworkOffering.VirtualRouterServices = [];	
-													if($.inArray(thisService.name, thisNetworkOffering.VirtualRouterServices) == -1) {
-														thisNetworkOffering.VirtualRouterServices.push(thisService.name);
-													}														
-                        } 
+												}												
 												else if($.inArray(this.name, baremetalProviders) != -1) {												
 												  selectedBaremetalProviders.push(this.name);
 												}
@@ -1677,12 +1670,7 @@
 																				  id: virtualRouterProviderId,
 																					state: 'Enabled'																					
 																				};																				
-																				if(selectedNetworkOfferingObj.VirtualRouterServices != null) {
-																				  $.extend(data, {
-																					  servicelist: selectedNetworkOfferingObj.VirtualRouterServices.join(",")
-																					});
-																				}
-																				
+																																								
                                         $.ajax({
                                           url: createURL("updateNetworkServiceProvider"),
                                           data: data,
