@@ -1012,13 +1012,14 @@
           function() {
             var $quickViewTooltip = $('<div>').addClass('quick-view-tooltip');
             var $tr = $quickView.closest('tr');
+            var $detailsContainer = $('<div>').addClass('container').appendTo($quickViewTooltip);
 
             $quickViewTooltip.appendTo('#container');
             $quickViewTooltip.css({
               position: 'absolute',
               left: $tr.width() + ($quickViewTooltip.width() -
                                    ($quickViewTooltip.width() / 2)),
-              top: $quickView.offset().top,
+              top: $quickView.offset().top - 50,
               zIndex: 10000
             });
             $quickViewTooltip.mouseout(function() {
