@@ -977,6 +977,8 @@
     var tabFilter = options.tabFilter;
     var context = options.context ? options.context : {};
     var updateContext = $detailView.data('view-args').updateContext;
+    var compact = options.compact;
+    var tabTotal = 0;
 
     if (updateContext) {
       $.extend($detailView.data('view-args').context, updateContext({
@@ -1001,6 +1003,7 @@
     $.each(tabs, function(key, value) {
       // Don't render tab, if filtered out
       if ($.inArray(key, removedTabs) > -1) return true;
+      if (compact && tabTotal) return true;
 
       var propGroup = key;
       var prop = value;
@@ -1017,6 +1020,8 @@
 
       $tabContent.data('detail-view-tab-id', key);
       $tabContent.data('detail-view-tab-data', value);
+
+      tabTotal++;
 
       return true;
     });
@@ -1050,9 +1055,12 @@
 
   $.fn.detailView = function(args, options) {
     var $detailView = this;
-    
+    var compact = args.compact;
+    var $toolbar = makeToolbar();
+    var $tabs;
+
     if (options == 'refresh') {
-      var $tabs = replaceTabs($detailView, args.tabs, {
+      $tabs = replaceTabs($detailView, args.tabs, {
         context: args.context,
         tabFilter: args.tabFilter
       });
@@ -1064,18 +1072,22 @@
         $detailView.data('list-view-row', args.$listViewRow);
       }
 
-      // Create toolbar
-      var $toolbar = makeToolbar().appendTo($detailView);
-
-      // Create tabs
-      var $tabs = makeTabs($detailView, args.tabs, {
+      $tabs = makeTabs($detailView, args.tabs, {
+        compact: compact,
         context: args.context,
         tabFilter: args.tabFilter
-      }).appendTo($detailView);
+      });
+
+      $tabs.appendTo($detailView);
+      
+      // Create toolbar
+      if (!compact) {
+        $toolbar.appendTo($detailView);
+      }
     }
 
     $detailView.tabs();
-
+    
     return $detailView;
   };
 

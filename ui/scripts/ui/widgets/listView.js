@@ -769,7 +769,7 @@
   /**
    * Initialize detail view for specific ID from list view
    */
-  var createDetailView = function(args, complete, $row) {
+  var createDetailView = function(args, complete, $row, options) {
     var $panel = args.$panel;
     var title = args.title;
     var id = args.id;
@@ -779,9 +779,10 @@
       jsonObj: args.jsonObj,
       section: args.section,
       context: args.context,
-      $listViewRow: $row
+      $listViewRow: $row,
+      compact: options ? options.compact : false
     });
-
+    var noPanel = options ? options.noPanel : false;
     var $detailView, $detailsPanel;
     var panelArgs = {
       title: title,
@@ -802,8 +803,11 @@
       }
     };
 
-    // Create panel
-    $detailsPanel = data.$browser.cloudBrowser('addPanel', panelArgs);
+    if (noPanel) {
+      return $('<div>').detailView(data);
+    } else {
+      $detailsPanel = data.$browser.cloudBrowser('addPanel', panelArgs);
+    }
   };
 
   var addTableRows = function(preFilter, fields, data, $tbody, actions, options) {
@@ -1013,6 +1017,7 @@
             var $quickViewTooltip = $('<div>').addClass('quick-view-tooltip');
             var $tr = $quickView.closest('tr');
             var $detailsContainer = $('<div>').addClass('container').appendTo($quickViewTooltip);
+            var context = $.extend(true, {}, options.context);
 
             $quickViewTooltip.hide().appendTo('#container').fadeIn('fast');
             $quickViewTooltip.css({
@@ -1022,7 +1027,27 @@
               top: $quickView.offset().top - 50,
               zIndex: 10000
             });
-            $quickViewTooltip.mouseout(function() {
+
+            // Init detail view
+            createDetailView(
+              {
+                data: detailView,
+                id: 'instances',
+                jsonObj: $tr.data('json-obj'),
+                section: 'instances',
+                context: $.extend(context, { instances: [$tr.data('json-obj')] }),
+                $listViewRow: $tr
+              },
+              function($detailView) { //complete(), callback funcion
+                $detailView.data('list-view', $listView);
+              }, $tr,
+              {
+                compact: true,
+                noPanel: true
+              }
+            ).appendTo($detailsContainer);
+            
+            $quickViewTooltip.mouseleave(function() {
               $quickViewTooltip.remove();
             });
           }

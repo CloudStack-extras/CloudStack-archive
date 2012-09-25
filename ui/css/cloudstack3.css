@@ -1286,11 +1286,68 @@ div.list-view td.state.off span {
   background: #CCCFD6;
   width: 400px;
   height: 400px;
+  overflow: auto;
   /*+box-shadow:0px 7px 9px #676F76;*/
   -moz-box-shadow: 0px 7px 9px #676F76;
   -webkit-box-shadow: 0px 7px 9px #676F76;
   -o-box-shadow: 0px 7px 9px #676F76;
   box-shadow: 0px 7px 9px #676F76;
+}
+
+/*** Quick view detail view*/
+.quick-view-tooltip .detail-view {
+}
+
+.quick-view-tooltip .detail-view .main-groups {
+  height: 252px;
+}
+
+.quick-view-tooltip .detail-view .actions {
+  height: 57px !important;
+}
+
+.quick-view-tooltip .detail-view .tagger {
+  display: none;
+}
+
+.quick-view-tooltip .detail-view ul {
+  display: none !important;
+}
+
+.quick-view-tooltip .detail-view .detail-group {
+  width: 365px;
+  height: 394px;
+  margin: 0;
+  padding: 0;
+  left: 0;
+  background: none;
+  border: none;
+}
+
+.quick-view-tooltip .detail-view .detail-group table {
+  margin: 0;
+  border: none;
+  background: none;
+}
+
+.quick-view-tooltip .detail-view .detail-group table tr {
+  background: none;
+}
+
+.quick-view-tooltip .detail-view .detail-group table td.name {
+  color: #4E5F6F !important;
+  padding: 0px 29px 0px 0px !important;
+  font-size: 13px;
+  /*+text-shadow:0px 1px #DBDBDB;*/
+  -moz-text-shadow: 0px 1px #DBDBDB;
+  -webkit-text-shadow: 0px 1px #DBDBDB;
+  -o-text-shadow: 0px 1px #DBDBDB;
+  text-shadow: 0px 1px #DBDBDB;
+}
+
+.quick-view-tooltip .detail-view .detail-group .main-groups table td.value span {
+  height: 15px;
+  top: 0px;
 }
 
 /*Details page*/
