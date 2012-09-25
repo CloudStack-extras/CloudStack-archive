@@ -145,6 +145,7 @@ table thead th.quick-view {
   max-width: 70px !important;
   min-width: 70px !important;
   width: 70px !important;
+  height: 14px !important;
 }
 
 table tbody td.quick-view {
@@ -1270,6 +1271,19 @@ div.list-view td.state.off span {
   background-repeat: no-repeat;
   color: #B90606;
   background-position: 1px -496px;
+}
+
+/** Quick view tooltip*/
+.quick-view-tooltip {
+  background: #CCCFD6;
+  width: 400px;
+  height: 400px;
+  border: 1px solid #9EA2A5;
+  /*+box-shadow:0px 7px 9px #676F76;*/
+  -moz-box-shadow: 0px 7px 9px #676F76;
+  -webkit-box-shadow: 0px 7px 9px #676F76;
+  -o-box-shadow: 0px 7px 9px #676F76;
+  box-shadow: 0px 7px 9px #676F76;
 }
 
 /*Details page*/

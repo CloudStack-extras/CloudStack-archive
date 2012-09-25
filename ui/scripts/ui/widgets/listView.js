@@ -829,6 +829,7 @@
     $(data).each(function() {
       var dataItem = this;
       var id = dataItem.id;
+      var $quickView;
 
       var $tr = $('<tr>');
       rows.push($tr);
@@ -1001,11 +1002,30 @@
 
       // Add quick view
       if (detailView) {
-        $('<td>').addClass('quick-view reduced-hide')
+        $quickView = $('<td>').addClass('quick-view reduced-hide')
           .append(
             $('<span>').addClass('icon').html('&nbsp;')
           )
           .appendTo($tr);
+        $quickView.mouseover(
+          // Show quick view
+          function() {
+            var $quickViewTooltip = $('<div>').addClass('quick-view-tooltip');
+            var $tr = $quickView.closest('tr');
+
+            $quickViewTooltip.appendTo('#container');
+            $quickViewTooltip.css({
+              position: 'absolute',
+              left: $tr.width() + ($quickViewTooltip.width() -
+                                   ($quickViewTooltip.width() / 2)),
+              top: $quickView.offset().top,
+              zIndex: 10000
+            });
+            $quickViewTooltip.mouseout(function() {
+              $quickViewTooltip.remove();
+            });
+          }
+        );
       }
     });
 
