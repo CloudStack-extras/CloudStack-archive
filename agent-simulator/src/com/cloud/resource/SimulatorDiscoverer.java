@@ -326,6 +326,10 @@ public class SimulatorDiscoverer extends DiscovererBase implements Discoverer, L
 	public DeleteHostAnswer deleteHost(HostVO host, boolean isForced,
 			boolean isForceDeleteStorage) throws UnableDeleteHostException {
 	    
+       if (host.getType() != com.cloud.host.Host.Type.Routing || host.getHypervisorType() != HypervisorType.Simulator) {
+            return null;
+        }
+	       
 	    _resourceMgr.deleteRoutingHost(host, isForced, isForceDeleteStorage);
 	    return new DeleteHostAnswer(true);
 	}

@@ -30,6 +30,7 @@ import com.cloud.agent.manager.MockStorageManager;
 import com.cloud.exception.ConnectionException;
 import com.cloud.host.HostVO;
 import com.cloud.host.Status;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.storage.SnapshotVO;
 import com.cloud.storage.dao.SnapshotDao;
 import com.cloud.storage.secondary.SecondaryStorageDiscoverer;
@@ -80,6 +81,9 @@ public class SimulatorSecondaryDiscoverer extends SecondaryStorageDiscoverer imp
 	@Override
 	public DeleteHostAnswer deleteHost(HostVO host, boolean isForced,
 			boolean isForceDeleteStorage) throws UnableDeleteHostException {
+        if (host.getType() != com.cloud.host.Host.Type.Routing || host.getHypervisorType() != HypervisorType.Simulator) {
+            return null;
+        }
 		long hostId = host.getId();
 		List<SnapshotVO> snapshots = _snapshotDao.listByHostId(hostId);
 		if (snapshots != null && !snapshots.isEmpty()) {
