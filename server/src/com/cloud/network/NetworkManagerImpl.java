@@ -887,7 +887,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         boolean success = true;
 
 
-        Map<PublicIp, Set<Service>> ipToServices = getIpToServices(publicIps, postApplyRules, false);
+        Map<PublicIp, Set<Service>> ipToServices = getIpToServices(publicIps, postApplyRules, true);
         Map<Provider, ArrayList<PublicIp>> providerToIpList = getProviderToIpList(network, ipToServices);
 
         for (Provider provider : providerToIpList.keySet()) {
