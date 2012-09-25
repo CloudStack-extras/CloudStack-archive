@@ -137,6 +137,13 @@ table tbody td.actions input {
   margin: 11px 0 0px;
 }
 
+table tbody td.quick-view,
+table thead th.quick-view {
+  max-width: 70px !important;
+  min-width: 70px !important;
+  width: 70px !important;
+}
+
 table tbody tr {
   border-left: 1px solid #C4C5C5;
   border-right: 1px solid #C4C5C5;

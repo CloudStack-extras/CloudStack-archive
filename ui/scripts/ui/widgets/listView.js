@@ -605,6 +605,7 @@
 
     var $thead = $('<thead>').prependTo($table).append($('<tr>'));
     var reorder = options.reorder;
+    var detailView = options.detailView;
 
     var hiddenFields = [];
     if(preFilter != null)
@@ -619,19 +620,32 @@
       if ($th.index()) $th.addClass('reduced-hide');
 
       $th.html(_l(field.label));
+
+      return true;
     });
 
+    // Re-order row buttons
     if (reorder) {
       $thead.find('tr').append(
         $('<th>').html(_l('label.order')).addClass('reorder-actions reduced-hide')
       );
     }
 
+    // Actions column
     if (actions && renderActionCol(actions)) {
       $thead.find('tr').append(
         $('<th></th>')
           .html(_l('label.actions'))
           .addClass('actions reduced-hide')
+      );
+    }
+
+    // Quick view
+    if (detailView) {
+      $thead.find('tr').append(
+        $('<th></th>')
+          .html('Quick view')
+          .addClass('quick-view reduced-hide')
       );
     }
 
@@ -656,6 +670,8 @@
         }).html(_l(this.label));
 
         $option.appendTo($filterSelect);
+
+        return true
       });
 
     return $filters.appendTo($toolbar);
@@ -794,6 +810,7 @@
     if (!options) options = {};
     var rows = [];
     var reorder = options.reorder;
+    var detailView = options.detailView;
 
     if (!data || ($.isArray(data) && !data.length)) {
       if (!$tbody.find('tr').size()) {
@@ -981,6 +998,11 @@
           }
         );
       }
+
+      // Add quick view
+      if (detailView) {
+        $('<td>').addClass('quick-view reduced-hide').appendTo($tr);
+      }
     });
 
     return rows;
@@ -1041,7 +1063,8 @@
             addTableRows(preFilter, fields, args.data, $tbody, actions, {
               actionFilter: args.actionFilter,
               context: context,
-              reorder: reorder
+              reorder: reorder,
+              detailView: options.detailView
             });
             $table.dataTable(null, { noSelect: uiCustom });
 
@@ -1262,7 +1285,10 @@
                  listViewData.fields,
                  $table,
                  listViewData.actions,
-                 { reorder: reorder });
+                 {
+                   reorder: reorder,
+                   detailView: listViewData.detailView
+                 });
     createFilters($toolbar, listViewData.filters);
     createSearchBar($toolbar);
 
@@ -1286,7 +1312,8 @@
       listViewData.actions,
       {
         context: args.context,
-        reorder: reorder
+        reorder: reorder,
+        detailView: listViewData.detailView
       }
     );
 
@@ -1543,7 +1570,8 @@
       {
         prepend: true,
         actionFilter: actionFilter,
-        reorder: reorder
+        reorder: reorder,
+        detailView: targetArgs.detailView
       }
     )[0];
     listView.find('table').dataTable('refresh');
@@ -1574,7 +1602,8 @@
       targetArgs.actions,
       {
         actionFilter: actionFilter ? actionFilter : defaultActionFilter,
-        reorder: reorder
+        reorder: reorder,
+        detailView: targetArgs.detailView
       }
     )[0];
 
