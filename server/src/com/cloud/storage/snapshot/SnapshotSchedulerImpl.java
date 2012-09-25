@@ -42,10 +42,7 @@ import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.SnapshotDao;
 import com.cloud.storage.dao.SnapshotPolicyDao;
 import com.cloud.storage.dao.SnapshotScheduleDao;
-import com.cloud.storage.dao.StoragePoolHostDao;
 import com.cloud.storage.dao.VolumeDao;
-import com.cloud.user.Account;
-import com.cloud.user.AccountManager;
 import com.cloud.user.User;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.DateUtil.IntervalType;
@@ -57,9 +54,7 @@ import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.db.SearchCriteria;
 
-/**
- *
- */
+
 @Local(value={SnapshotScheduler.class})
 public class SnapshotSchedulerImpl implements SnapshotScheduler {
     private static final Logger s_logger = Logger.getLogger(SnapshotSchedulerImpl.class);
@@ -70,9 +65,6 @@ public class SnapshotSchedulerImpl implements SnapshotScheduler {
     @Inject protected SnapshotScheduleDao     _snapshotScheduleDao;
     @Inject protected SnapshotPolicyDao       _snapshotPolicyDao;
     @Inject protected AsyncJobManager         _asyncMgr;
-    @Inject protected SnapshotManager         _snapshotManager;
-    @Inject protected AccountManager          _accntManager;
-    @Inject protected StoragePoolHostDao      _poolHostDao;
     @Inject protected VolumeDao               _volsDao;
 
     private static final int ACQUIRE_GLOBAL_LOCK_TIMEOUT_FOR_COOPERATION = 5;    // 5 seconds
