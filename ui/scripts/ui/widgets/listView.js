@@ -1014,7 +1014,7 @@
             var $tr = $quickView.closest('tr');
             var $detailsContainer = $('<div>').addClass('container').appendTo($quickViewTooltip);
 
-            $quickViewTooltip.appendTo('#container');
+            $quickViewTooltip.hide().appendTo('#container').fadeIn('fast');
             $quickViewTooltip.css({
               position: 'absolute',
               left: $tr.width() + ($quickViewTooltip.width() -
