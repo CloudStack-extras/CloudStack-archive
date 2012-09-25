@@ -148,10 +148,6 @@ table tbody td.quick-view {
   cursor: pointer;
 }
 
-table tbody td.quick-view:hover {
-  background: #ECECEC;
-}
-
 table tbody td.quick-view .icon {
   margin-left: 27px;
   padding: 0px 0px 6px 12px;
