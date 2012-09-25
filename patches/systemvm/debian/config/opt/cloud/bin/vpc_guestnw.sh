@@ -54,7 +54,7 @@ create_acl_chain() {
 
 
 setup_apache2() {
-  logger -t "Setting up apache web server for $dev"
+  logger -t cloud "Setting up apache web server for $dev"
   cp /etc/apache2/vhostexample.conf /etc/apache2/conf.d/vhost$dev.conf
   sed -i -e "s/<VirtualHost.*:80>/<VirtualHost $ip:80>/" /etc/apache2/conf.d/vhost$dev.conf
   sed -i -e "s/<VirtualHost.*:443>/<VirtualHost $ip:443>/" /etc/apache2/conf.d/vhost$dev.conf
@@ -66,7 +66,7 @@ setup_apache2() {
 }
 
 desetup_apache2() {
-  logger -t "Desetting up apache web server for $dev"
+  logger -t cloud "Desetting up apache web server for $dev"
   rm -f /etc/apache2/conf.d/vhost$dev.conf
   service apache2 restart
   sudo iptables -D INPUT -i $dev -d $ip -p tcp -m state --state NEW --dport 80 -j ACCEPT
@@ -85,7 +85,7 @@ setup_dnsmasq() {
   echo "dhcp-option=tag:interface-$dev,15,$DOMAIN" >> /etc/dnsmasq.d/cloud.conf
   service dnsmasq restart
   sleep 1
-}
+} 
 
 desetup_dnsmasq() {
   logger -t cloud "Desetting up dnsmasq for network $ip/$mask "
