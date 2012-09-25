@@ -484,42 +484,23 @@ public class CapacityManagerImpl implements CapacityManager, StateListener<State
     @DB
     @Override
 	public void updateCapacityForHost(HostVO host){
-    	// prepare the service offerings
-        List<ServiceOfferingVO> offerings = _offeringsDao.listAllIncludingRemoved();
-        Map<Long, ServiceOfferingVO> offeringsMap = new HashMap<Long, ServiceOfferingVO>();
-        for (ServiceOfferingVO offering : offerings) {
-            offeringsMap.put(offering.getId(), offering);
-        }
         
         long usedCpu = 0;
         long usedMemory = 0;
         long reservedMemory = 0;
         long reservedCpu = 0;
+        long hostId = host.getId();        
 
-        List<VMInstanceVO> vms = _vmDao.listUpByHostId(host.getId());
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Found " + vms.size() + " VMs on host " + host.getId());
-        }
+        // Get the total compute for the host with running vm's
+        Pair<Long, Long> compute = _vmDao.listComputeByHostId(hostId); 
+        usedMemory = compute.first() != null ? compute.first() : 0;
+        usedCpu = compute.second() != null ? compute.second() : 0;        
 
-        for (VMInstanceVO vm : vms) {
-            ServiceOffering so = offeringsMap.get(vm.getServiceOfferingId());
-            usedMemory += so.getRamSize() * 1024L * 1024L;
-            usedCpu += so.getCpu() * so.getSpeed();
-        }
-
-        List<VMInstanceVO> vmsByLastHostId = _vmDao.listByLastHostId(host.getId());
-        if (s_logger.isDebugEnabled()) {
-            s_logger.debug("Found " + vmsByLastHostId.size() + " VM, not running on host " + host.getId());
-        }
-        for (VMInstanceVO vm : vmsByLastHostId) {
-            long secondsSinceLastUpdate = (DateUtil.currentGMTTime().getTime() - vm.getUpdateTime().getTime()) / 1000;
-            if (secondsSinceLastUpdate < _vmCapacityReleaseInterval) {
-                ServiceOffering so = offeringsMap.get(vm.getServiceOfferingId());
-                reservedMemory += so.getRamSize() * 1024L * 1024L;
-                reservedCpu += so.getCpu() * so.getSpeed();
-            }
-        }
-
+        // Get the total compute for the stopped vm's on the host within the skip counting hours limit
+        Pair<Long, Long> reservedCompute = _vmDao.listComputeByLastHostId(hostId, _vmCapacityReleaseInterval); 
+        reservedMemory = reservedCompute.first() != null ? reservedCompute.first() : 0;
+        reservedCpu = reservedCompute.second() != null ? reservedCompute.second() : 0;
+        
         CapacityVO cpuCap = _capacityDao.findByHostIdType(host.getId(), CapacityVO.CAPACITY_TYPE_CPU);
         CapacityVO memCap = _capacityDao.findByHostIdType(host.getId(), CapacityVO.CAPACITY_TYPE_MEMORY);
 
