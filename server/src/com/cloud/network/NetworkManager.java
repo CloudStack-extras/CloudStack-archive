@@ -183,6 +183,8 @@ public interface NetworkManager extends NetworkService {
 
     UserDataServiceProvider getPasswordResetProvider(Network network);
 
+    UserDataServiceProvider getSSHKeyResetProvider(Network network);
+
     boolean networkIsConfiguredForExternalNetworking(long zoneId, long networkId);
 
     Map<Capability, String> getNetworkServiceCapabilities(long networkId, Service service);
