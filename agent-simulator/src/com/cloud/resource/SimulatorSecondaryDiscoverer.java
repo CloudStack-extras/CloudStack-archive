@@ -81,7 +81,7 @@ public class SimulatorSecondaryDiscoverer extends SecondaryStorageDiscoverer imp
 	@Override
 	public DeleteHostAnswer deleteHost(HostVO host, boolean isForced,
 			boolean isForceDeleteStorage) throws UnableDeleteHostException {
-        if (host.getType() != com.cloud.host.Host.Type.Routing || host.getHypervisorType() != HypervisorType.Simulator) {
+        if (host.getType() != com.cloud.host.Host.Type.SecondaryStorage || host.getHypervisorType() != HypervisorType.Simulator) {
             return null;
         }
 		long hostId = host.getId();
