@@ -1001,7 +1001,11 @@
 
       // Add quick view
       if (detailView) {
-        $('<td>').addClass('quick-view reduced-hide').appendTo($tr);
+        $('<td>').addClass('quick-view reduced-hide')
+          .append(
+            $('<span>').addClass('icon').html('&nbsp;')
+          )
+          .appendTo($tr);
       }
     });
 
