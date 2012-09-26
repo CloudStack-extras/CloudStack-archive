@@ -1285,7 +1285,7 @@ div.list-view td.state.off span {
   border: 1px solid #9EA2A5;
   background: #CCCFD6;
   width: 400px;
-  height: 400px;
+  height: 325px;
   overflow: auto;
   /*+box-shadow:0px 7px 9px #676F76;*/
   -moz-box-shadow: 0px 7px 9px #676F76;
@@ -1300,7 +1300,20 @@ div.list-view td.state.off span {
 }
 
 .quick-view-tooltip .detail-view .main-groups {
-  height: 324px;
+  width: 394px;
+  height: 132px;
+  position: absolute;
+  top: 55px;
+  padding-top: 7px;
+  border: 1px solid #808080;
+  border-left: none;
+  border-right: none;
+  overflow: hidden;
+  /*+box-shadow:0px 1px #E6E6E6;*/
+  -moz-box-shadow: 0px 1px #E6E6E6;
+  -webkit-box-shadow: 0px 1px #E6E6E6;
+  -o-box-shadow: 0px 1px #E6E6E6;
+  box-shadow: 0px 1px #E6E6E6;
 }
 
 .quick-view-tooltip .detail-view .actions {
@@ -1316,14 +1329,15 @@ div.list-view td.state.off span {
 }
 
 .quick-view-tooltip .detail-view .ui-tabs-panel {
-  height: 400px;
+  width: 100% !important;
+  height: 315px;
 }
 
 .quick-view-tooltip .detail-view .detail-group {
   width: 365px;
   margin: 0;
   padding: 0;
-  left: 0;
+  left: -9px;
   background: none;
   border: none;
 }
@@ -1339,7 +1353,7 @@ div.list-view td.state.off span {
 }
 
 .quick-view-tooltip .detail-view .detail-group table td.name {
-  color: #4E5F6F !important;
+  color: #3E5F7F !important;
   padding: 0px 29px 0px 0px !important;
   font-size: 13px;
   /*+text-shadow:0px 1px #DBDBDB;*/
@@ -1349,9 +1363,50 @@ div.list-view td.state.off span {
   text-shadow: 0px 1px #DBDBDB;
 }
 
+.quick-view-tooltip .detail-view .detail-group table td.value {
+  font-size: 12px;
+  /*+text-shadow:0px 1px #EAEAEA;*/
+  -moz-text-shadow: 0px 1px #EAEAEA;
+  -webkit-text-shadow: 0px 1px #EAEAEA;
+  -o-text-shadow: 0px 1px #EAEAEA;
+  text-shadow: 0px 1px #EAEAEA;
+}
+
 .quick-view-tooltip .detail-view .detail-group .main-groups table td.value span {
   height: 15px;
   top: 0px;
+}
+
+.quick-view-tooltip .detail-view .detail-group.actions {
+  position: absolute;
+  width: 100%;
+  top: 198px;
+}
+
+.quick-view-tooltip .detail-view .detail-group.actions .detail-actions {
+  width: 1005px;
+  height: 57px;
+  vertical-align: top;
+}
+
+.quick-view-tooltip .detail-view .detail-group.actions td.view-all {
+  position: absolute;
+  top: 77px;
+  left: 0px;
+  float: right;
+  width: 394px;
+  height: 22px;
+  border-top: 1px solid #808080;
+  /*+box-shadow:inset 0px 1px #FFFFFF;*/
+  -moz-box-shadow: inset 0px 1px #FFFFFF;
+  -webkit-box-shadow: inset 0px 1px #FFFFFF;
+  -o-box-shadow: inset 0px 1px #FFFFFF;
+  box-shadow: inset 0px 1px #FFFFFF;
+}
+
+.quick-view-tooltip .detail-view .detail-actions a {
+  background: none;
+  width: 30px;
 }
 
 /*Details page*/
