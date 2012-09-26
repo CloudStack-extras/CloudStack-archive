@@ -27,7 +27,7 @@ import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.LoadBalancer;
 import com.cloud.utils.Pair;
 
-public class LoadBalancingRule implements FirewallRule, LoadBalancer{
+public class LoadBalancingRule implements FirewallRule, LoadBalancer {
     private LoadBalancer lb;
     private List<LbDestination> destinations;
     private List<LbStickinessPolicy> stickinessPolicies;
@@ -77,6 +77,11 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
     @Override
     public String getAlgorithm() {
         return lb.getAlgorithm();
+    }
+
+    @Override
+    public String getUuid() {
+        return lb.getUuid();
     }
 
     @Override
@@ -297,12 +302,20 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
         private final String autoScaleUserApiKey;
         private final String autoScaleUserSecretKey;
         private final String csUrl;
+        private final String zoneId;
+        private final String domainId;
+        private final String serviceOfferingId;
+        private final String templateId;
 
-        public LbAutoScaleVmProfile(AutoScaleVmProfile profile, String autoScaleUserApiKey, String autoScaleUserSecretKey, String csUrl) {
+        public LbAutoScaleVmProfile(AutoScaleVmProfile profile, String autoScaleUserApiKey, String autoScaleUserSecretKey, String csUrl, String zoneId, String domainId, String serviceOfferingId, String templateId) {
             this.profile = profile;
             this.autoScaleUserApiKey = autoScaleUserApiKey;
             this.autoScaleUserSecretKey = autoScaleUserSecretKey;
             this.csUrl = csUrl;
+            this.zoneId = zoneId;
+            this.domainId = domainId;
+            this.serviceOfferingId = serviceOfferingId;
+            this.templateId = templateId;
         }
 
         public AutoScaleVmProfile getProfile() {
@@ -316,8 +329,25 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
         public String getAutoScaleUserSecretKey() {
             return autoScaleUserSecretKey;
         }
+
         public String getCsUrl() {
             return csUrl;
+        }
+
+        public String getZoneId() {
+            return zoneId;
+        }
+
+        public String getDomainId() {
+            return domainId;
+        }
+
+        public String getServiceOfferingId() {
+            return serviceOfferingId;
+        }
+
+        public String getTemplateId() {
+            return templateId;
         }
     }
 
@@ -350,4 +380,5 @@ public class LoadBalancingRule implements FirewallRule, LoadBalancer{
             return currentState;
         }
     }
+
 }
