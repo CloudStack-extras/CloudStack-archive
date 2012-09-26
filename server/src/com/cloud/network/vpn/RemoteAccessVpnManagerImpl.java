@@ -415,7 +415,7 @@ public class RemoteAccessVpnManagerImpl implements RemoteAccessVpnService, Manag
 
     @DB
     @Override
-    public boolean applyVpnUsers(long vpnOwnerId) {
+    public boolean applyVpnUsers(long vpnOwnerId, String userName) {
         Account caller = UserContext.current().getCaller();
         Account owner = _accountDao.findById(vpnOwnerId);
         _accountMgr.checkAccess(caller, null, true, owner);
@@ -478,7 +478,7 @@ public class RemoteAccessVpnManagerImpl implements RemoteAccessVpnService, Manag
                     _vpnUsersDao.remove(user.getId());
                 }
             } else {
-            	if (user.getState() == State.Add) {
+            	if (user.getState() == State.Add && (user.getUsername()).equals(userName)) {
                     Transaction txn = Transaction.currentTxn();
                     txn.start();            		
                     _vpnUsersDao.remove(user.getId());
