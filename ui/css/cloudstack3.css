@@ -1296,10 +1296,11 @@ div.list-view td.state.off span {
 
 /*** Quick view detail view*/
 .quick-view-tooltip .detail-view {
+  height: 23px;
 }
 
 .quick-view-tooltip .detail-view .main-groups {
-  height: 252px;
+  height: 324px;
 }
 
 .quick-view-tooltip .detail-view .actions {
@@ -1314,9 +1315,12 @@ div.list-view td.state.off span {
   display: none !important;
 }
 
+.quick-view-tooltip .detail-view .ui-tabs-panel {
+  height: 400px;
+}
+
 .quick-view-tooltip .detail-view .detail-group {
   width: 365px;
-  height: 394px;
   margin: 0;
   padding: 0;
   left: 0;
