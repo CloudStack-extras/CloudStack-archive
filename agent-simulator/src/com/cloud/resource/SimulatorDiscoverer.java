@@ -44,6 +44,7 @@ import com.cloud.host.HostVO;
 import com.cloud.host.Status;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.resource.ResourceStateAdapter.DeleteHostAnswer;
 import com.cloud.storage.VMTemplateHostVO;
 import com.cloud.storage.VMTemplateVO;
 import com.cloud.storage.VMTemplateZoneVO;
@@ -324,7 +325,13 @@ public class SimulatorDiscoverer extends DiscovererBase implements Discoverer, L
 	@Override
 	public DeleteHostAnswer deleteHost(HostVO host, boolean isForced,
 			boolean isForceDeleteStorage) throws UnableDeleteHostException {
-		return null;
+	    
+       if (host.getType() != com.cloud.host.Host.Type.Routing || host.getHypervisorType() != HypervisorType.Simulator) {
+            return null;
+        }
+	       
+	    _resourceMgr.deleteRoutingHost(host, isForced, isForceDeleteStorage);
+	    return new DeleteHostAnswer(true);
 	}
 	
     @Override

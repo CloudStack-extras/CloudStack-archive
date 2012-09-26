@@ -86,6 +86,7 @@ public class FirewallRulesDaoImpl extends GenericDaoBase<FirewallRuleVO, Long> i
         RulesByIpCount = createSearchBuilder(Long.class);
         RulesByIpCount.select(null, Func.COUNT, RulesByIpCount.entity().getId());
         RulesByIpCount.and("ipAddressId", RulesByIpCount.entity().getSourceIpAddressId(), Op.EQ);
+        RulesByIpCount.and("state", RulesByIpCount.entity().getState(), Op.EQ);
         RulesByIpCount.done();
     }
 
@@ -262,6 +263,17 @@ public class FirewallRulesDaoImpl extends GenericDaoBase<FirewallRuleVO, Long> i
     public long countRulesByIpId(long sourceIpId) {
         SearchCriteria<Long> sc = RulesByIpCount.create();
         sc.setParameters("ipAddressId", sourceIpId);
+        return customSearch(sc, null).get(0);
+    }
+    
+    @Override
+    public long countRulesByIpIdAndState(long sourceIpId, FirewallRule.State state) {
+        SearchCriteria<Long> sc = RulesByIpCount.create();
+        sc.setParameters("ipAddressId", sourceIpId);
+        if (state != null) {
+            sc.setParameters("state", state);
+        }
+        
         return customSearch(sc, null).get(0);
     }
 
