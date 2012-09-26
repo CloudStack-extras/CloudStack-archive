@@ -229,6 +229,7 @@ import com.xensource.xenapi.Console;
 import com.xensource.xenapi.Host;
 import com.xensource.xenapi.HostCpu;
 import com.xensource.xenapi.HostMetrics;
+import com.xensource.xenapi.HostPatch;
 import com.xensource.xenapi.Network;
 import com.xensource.xenapi.PBD;
 import com.xensource.xenapi.PIF;
@@ -1162,31 +1163,42 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             s_logger.debug("Cannot destory CD-ROM device for VM " + vmName + " due to " + e.toString(), e);
         }
     }
-        
-	protected HostUpdatesAnswer execute(HostUpdatesCommand cmd){
-    	Connection conn = getConnection();
-   	
-    	List<String> appliedPatchesList = new ArrayList<String>();
-        Map<PoolPatch, com.xensource.xenapi.PoolPatch.Record> appliedPatches = null;
-		try {
-			appliedPatches = PoolPatch.getAllRecords(conn);
-		} catch (BadServerResponse e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (XenAPIException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (XmlRpcException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		for(Entry<PoolPatch, com.xensource.xenapi.PoolPatch.Record> appliedPatch : appliedPatches.entrySet())
-		{
-			String appliedPatchUuid = appliedPatch.getValue().uuid;
-			appliedPatchesList.add(appliedPatchUuid);
-		}
+
+    protected HostUpdatesAnswer execute(HostUpdatesCommand cmd){
+        Connection conn = getConnection();
+        List<String> appliedPatchesList = new ArrayList<String>();
+        Map<HostPatch, com.xensource.xenapi.HostPatch.Record> appliedPatches = null;
+        try {
+            appliedPatches = HostPatch.getAllRecords(conn);
+        } catch (BadServerResponse e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (XenAPIException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (XmlRpcException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        for(Entry<HostPatch, com.xensource.xenapi.HostPatch.Record> appliedPatch : appliedPatches.entrySet()) {
+            try {
+                if(appliedPatch.getValue().host.getUuid(conn).equals(_host.uuid)) {
+                    String appliedPatchUuid = appliedPatch.getValue().poolPatch.getUuid(conn);
+                    appliedPatchesList.add(appliedPatchUuid);
+                }
+            } catch (BadServerResponse e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (XenAPIException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (XmlRpcException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
         return new HostUpdatesAnswer(cmd, appliedPatchesList);
-	}
+    }
 
     protected CheckSshAnswer execute(CheckSshCommand cmd) {
         Connection conn = getConnection();
