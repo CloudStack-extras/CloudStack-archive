@@ -1016,8 +1016,12 @@
           function() {
             var $quickViewTooltip = $('<div>').addClass('quick-view-tooltip');
             var $tr = $quickView.closest('tr');
+            var $listView = $tr.closest('.list-view');
             var $detailsContainer = $('<div>').addClass('container').appendTo($quickViewTooltip);
             var context = $.extend(true, {}, options.context);
+            var activeSection = $listView.data('view-args').activeSection;
+            var itemID = $tr.data('list-view-item-id');
+            var jsonObj = $tr.data('json-obj');
 
             $quickViewTooltip.hide().appendTo('#container').fadeIn('fast');
             $quickViewTooltip.css({
@@ -1029,13 +1033,14 @@
             });
 
             // Init detail view
+            context[activeSection] = [jsonObj];
             createDetailView(
               {
                 data: detailView,
-                id: 'instances',
-                jsonObj: $tr.data('json-obj'),
-                section: 'instances',
-                context: $.extend(context, { instances: [$tr.data('json-obj')] }),
+                id: itemID,
+                jsonObj: jsonObj,
+                section: activeSection,
+                context: context,
                 $listViewRow: $tr
               },
               function($detailView) { //complete(), callback funcion
