@@ -1573,7 +1573,7 @@ public class NetscalerResource implements ServerResource {
             disableAutoScaleConfig(loadBalancerTO, false);
         }
 
-        if (isServiceGroupBoundToVirtualServer(nsVirtualServerName, serviceGroupName)) {
+        if(isServiceGroupBoundToVirtualServer(nsVirtualServerName, serviceGroupName)) {
             // UnBind autoscale service group
             // unbind lb vserver lb lb_autoscaleGroup
             lbvserver_servicegroup_binding vserver_servicegroup_binding = new lbvserver_servicegroup_binding();
@@ -1713,6 +1713,7 @@ public class NetscalerResource implements ServerResource {
                 ApiConstants.ZONE_ID + "=" + profileTO.getZoneId()+ "&" +
                 ApiConstants.SERVICE_OFFERING_ID + "=" + profileTO.getServiceOfferingId()+ "&" +
                 ApiConstants.TEMPLATE_ID + "=" + profileTO.getTemplateId()+ "&" +
+                ((profileTO.getNetworkId() == null)? "" : (ApiConstants.NETWORK_IDS + "=" + profileTO.getNetworkId()+ "&")) +
                 ((profileTO.getOtherDeployParams() == null)? "" : (profileTO.getOtherDeployParams() + "&")) +
                         "lbruleid=" + loadBalancerTO.getUuid();
                 scaleUpAction.set_parameters(scaleUpParameters);
