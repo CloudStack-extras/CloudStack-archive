@@ -1044,7 +1044,8 @@
               position: 'absolute',
               left: $tr.width() + ($quickViewTooltip.width() -
                                    ($quickViewTooltip.width() / 2)),
-              top: $quickView.offset().top - 50
+              top: $quickView.offset().top - 50,
+              zIndex: $tr.closest('.panel').zIndex() + 1
             });
 
             // Init detail view
