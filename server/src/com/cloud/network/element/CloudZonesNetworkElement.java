@@ -261,4 +261,16 @@ public class CloudZonesNetworkElement extends AdapterBase implements NetworkElem
         return true;
     }
 
+    @Override
+    public IpDeployer getIpDeployer(Network network) {
+        return null;
+    }
+
+	@Override
+	public boolean saveSSHKey(Network network,
+			NicProfile nic, VirtualMachineProfile<? extends VirtualMachine> vm,
+			String SSHPublicKey) throws ResourceUnavailableException {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

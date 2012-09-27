@@ -299,7 +299,7 @@ public class EC2Engine {
 				throw new EC2ServiceException(ClientError.InvalidGroup_NotFound, "Cannot find matching ruleid.");
 
 			CloudStackInfoResponse resp = getApi().revokeSecurityGroupIngress(ruleId);
-			if (resp != null && resp.getId() != null) {
+            if (resp != null) {
 				return resp.getSuccess();
 			}
 			return false;
@@ -330,7 +330,7 @@ public class EC2Engine {
 					pair.setKeyValue(group.getAccount(), group.getName());
 					secGroupList.add(pair);
 				}
-				CloudStackSecurityGroupIngress resp = null;
+                CloudStackSecurityGroup resp = null;
 				if (ipPerm.getProtocol().equalsIgnoreCase("icmp")) {
 					resp = getApi().authorizeSecurityGroupIngress(null, constructList(ipPerm.getIpRangeSet()), null, null, 
 							ipPerm.getIcmpCode(), ipPerm.getIcmpType(), ipPerm.getProtocol(), null, 
@@ -340,10 +340,13 @@ public class EC2Engine {
 							ipPerm.getToPort().longValue(), null, null, ipPerm.getProtocol(), null, request.getName(), 
 							ipPerm.getFromPort().longValue(), secGroupList);
 				}
-				if (resp != null && resp.getRuleId() != null) {
-					return true;
-				}
-				return false;
+                if (resp != null ){
+                    List<CloudStackIngressRule> ingressRules = resp.getIngressRules();
+                    for (CloudStackIngressRule ingressRule : ingressRules)
+                        if (ingressRule.getRuleId() == null) return false;
+                } else {
+                    return false;
+                }
 			}
 		} catch(Exception e) {
 			logger.error( "EC2 AuthorizeSecurityGroupIngress - ", e);
@@ -509,32 +512,6 @@ public class EC2Engine {
 	}
 	
 	
-	/** REST API calls this method.
-     * Modify an existing template
-     * 
-     * @param request
-     * @return
-     */
-    public boolean modifyImageAttribute( EC2Image request ) 
-    {
-        // TODO: This is incomplete
-        EC2DescribeImagesResponse images = new EC2DescribeImagesResponse();
-
-        try {
-            images = listTemplates( request.getId(), images );
-            EC2Image[] imageSet = images.getImageSet();
-            
-            CloudStackTemplate resp = getApi().updateTemplate(request.getId(), null, request.getDescription(), null, imageSet[0].getName(), null, null);
-            if (resp != null) {
-                return true;
-            }
-            return false;
-        } catch( Exception e ) {
-            logger.error( "EC2 ModifyImage - ", e);
-            throw new EC2ServiceException(ServerError.InternalError, e.getMessage());
-        }
-    }
-
 
 	/**
 	 * Modify an existing template
@@ -546,32 +523,35 @@ public class EC2Engine {
 	{
         try {
             if(request.getAttribute().equals(ImageAttribute.launchPermission)){
-                
-                String accounts = "";
-                Boolean isPublic = null;
-                EC2ModifyImageAttribute.Operation operation = request.getLaunchPermOperation();
-                
-                List<String> accountOrGroupList = request.getLaunchPermissionAccountsList();
-                if(accountOrGroupList != null && !accountOrGroupList.isEmpty()){
-                    boolean first = true;
-                    for(String accountOrGroup : accountOrGroupList){
-                        if("all".equalsIgnoreCase(accountOrGroup)){
-                            if(operation.equals(EC2ModifyImageAttribute.Operation.add)){
-                                isPublic = true;
+                EC2ImageLaunchPermission[] launchPermissions = request.getLaunchPermissionSet();
+                for (EC2ImageLaunchPermission launchPermission : launchPermissions) {
+                    String accounts = "";
+                    Boolean isPublic = null;
+                    EC2ImageLaunchPermission.Operation operation =  launchPermission.getLaunchPermOp();
+                    List<String> accountOrGroupList = launchPermission.getLaunchPermissionList();
+                    if(accountOrGroupList != null && !accountOrGroupList.isEmpty()){
+                        boolean first = true;
+                        for(String accountOrGroup : accountOrGroupList){
+                            if("all".equalsIgnoreCase(accountOrGroup)){
+                                if(operation.equals(EC2ImageLaunchPermission.Operation.add)){
+                                    isPublic = true;
+                                }else{
+                                    isPublic = false;
+                                }
                             }else{
-                                isPublic = false;
+                                if(!first){
+                                    accounts = accounts + ",";
+                                }
+                                accounts = accounts + accountOrGroup;
+                                first = false;
                             }
-                        }else{
-                            if(!first){
-                                accounts = accounts + ",";
-                            }
-                            accounts = accounts + accountOrGroup;
-                            first = false;
                         }
                     }
+                    CloudStackInfoResponse resp = getApi().updateTemplatePermissions(request.getImageId(), accounts, null, null, isPublic, operation.toString());
+                    if (!resp.getSuccess())
+                        return false;
                 }
-                CloudStackInfoResponse resp = getApi().updateTemplatePermissions(request.getImageId(), accounts, null, null, isPublic, operation.toString());
-                return resp.getSuccess();
+                return true;
             }else if(request.getAttribute().equals(ImageAttribute.description)){
                 CloudStackTemplate resp = getApi().updateTemplate(request.getImageId(), null, request.getDescription(), null, null, null, null);
                 if (resp != null) {

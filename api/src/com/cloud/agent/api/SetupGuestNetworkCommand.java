@@ -32,6 +32,10 @@ public class SetupGuestNetworkCommand extends NetworkElementCommand{
         return nic;
     }
 
+    public boolean isAdd() {
+    	return add;
+    }
+
     public String getDefaultDns1() {
         return defaultDns1;
     }

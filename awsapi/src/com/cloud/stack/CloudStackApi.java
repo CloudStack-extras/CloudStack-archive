@@ -1110,7 +1110,7 @@ public class CloudStackApi {
 	 * @return
 	 * @throws Exception
 	 */
-	public CloudStackSecurityGroupIngress authorizeSecurityGroupIngress(String account, String cidrList, String domainId, Long endPort, 
+    public CloudStackSecurityGroup authorizeSecurityGroupIngress(String account, String cidrList, String domainId, Long endPort, 
 			String icmpCode, String icmpType, String protocol, String securityGroupId, String securityGroupName, Long startPort, 
 			List<CloudStackKeyValue> userSecurityGroupList) throws Exception {
 		CloudStackCommand cmd = new CloudStackCommand(ApiConstants.AUTHORIZE_SECURITY_GROUP_INGRESS);
@@ -1134,7 +1134,8 @@ public class CloudStackApi {
 				}				
 			}
 		}
-		return _client.call(cmd, apiKey, secretKey, true, ApiConstants.AUTHORIZE_SECURITY_GROUP_INGRESS_RESPONSE, ApiConstants.SECURITY_GROUP, CloudStackSecurityGroupIngress.class);
+        return _client.call(cmd, apiKey, secretKey, true, ApiConstants.AUTHORIZE_SECURITY_GROUP_INGRESS_RESPONSE,
+                ApiConstants.SECURITY_GROUP, CloudStackSecurityGroup.class);
 	}
 
 	/**

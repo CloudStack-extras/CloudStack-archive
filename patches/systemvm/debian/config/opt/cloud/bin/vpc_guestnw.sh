@@ -44,7 +44,7 @@ destroy_acl_chain() {
 create_acl_chain() {
   destroy_acl_chain
   sudo iptables -t mangle -N ACL_OUTBOUND_$dev 2>/dev/null
-  sudo iptables -t mangle -A ACL_OUTBOUND_$dev -j DROP 2>/dev/null
+  sudo iptables -t mangle -A ACL_OUTBOUND_$dev -j ACCEPT 2>/dev/null
   sudo iptables -t mangle -A PREROUTING -m state --state NEW -i $dev -s $subnet/$mask ! -d $ip -j ACL_OUTBOUND_$dev  2>/dev/null
   sudo iptables -N ACL_INBOUND_$dev 2>/dev/null
   # drop if no rules match (this will be the last rule in the chain)
@@ -54,7 +54,7 @@ create_acl_chain() {
 
 
 setup_apache2() {
-  logger -t "Setting up apache web server for $dev"
+  logger -t cloud "Setting up apache web server for $dev"
   cp /etc/apache2/vhostexample.conf /etc/apache2/conf.d/vhost$dev.conf
   sed -i -e "s/<VirtualHost.*:80>/<VirtualHost $ip:80>/" /etc/apache2/conf.d/vhost$dev.conf
   sed -i -e "s/<VirtualHost.*:443>/<VirtualHost $ip:443>/" /etc/apache2/conf.d/vhost$dev.conf
@@ -66,7 +66,7 @@ setup_apache2() {
 }
 
 desetup_apache2() {
-  logger -t "Desetting up apache web server for $dev"
+  logger -t cloud "Desetting up apache web server for $dev"
   rm -f /etc/apache2/conf.d/vhost$dev.conf
   service apache2 restart
   sudo iptables -D INPUT -i $dev -d $ip -p tcp -m state --state NEW --dport 80 -j ACCEPT
@@ -85,16 +85,30 @@ setup_dnsmasq() {
   echo "dhcp-option=tag:interface-$dev,15,$DOMAIN" >> /etc/dnsmasq.d/cloud.conf
   service dnsmasq restart
   sleep 1
-}
+} 
 
 desetup_dnsmasq() {
-  logger -t cloud "Setting up dnsmasq for network $ip/$mask "
+  logger -t cloud "Desetting up dnsmasq for network $ip/$mask "
   
   sed -i -e "/^[#]*dhcp-option=tag:interface-$dev,option:router.*$/d" /etc/dnsmasq.d/cloud.conf
   sed -i -e "/^[#]*dhcp-option=tag:interface-$dev,6.*$/d" /etc/dnsmasq.d/cloud.conf
   sed -i -e "/^[#]*dhcp-range=interface:$dev/d" /etc/dnsmasq.d/cloud.conf
   service dnsmasq restart
   sleep 1
+}
+
+setup_passwdsvcs() {
+  logger -t cloud "Setting up password service for network $ip/$mask, eth $dev "
+  nohup bash /opt/cloud/bin/vpc_passwd_server $ip >/dev/null 2>&1 &
+}
+
+desetup_passwdsvcs() {
+  logger -t cloud "Desetting up password service for network $ip/$mask, eth $dev "
+  pid=`ps -ef | grep socat | grep $ip | grep -v grep | awk '{print $2}'`
+  if [ -n "$pid" ]
+  then
+    kill -9 $pid
+  fi 
 }
 
 create_guest_network() {
@@ -121,6 +135,7 @@ create_guest_network() {
   create_acl_chain
   setup_dnsmasq
   setup_apache2
+  setup_passwdsvcs
 }
 
 destroy_guest_network() {
@@ -136,6 +151,7 @@ destroy_guest_network() {
   destroy_acl_chain
   desetup_dnsmasq
   desetup_apache2
+  desetup_passwdsvcs
 }
 
 #set -x

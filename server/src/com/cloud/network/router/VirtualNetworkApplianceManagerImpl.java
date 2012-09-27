@@ -479,6 +479,11 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         if (virtualRouter == null) {
             throw new CloudRuntimeException("Failed to stop router with id " + routerId);
         }
+        
+        // Clear stop pending flag after stopped successfully
+        router.setStopPending(false);
+        router = _routerDao.persist(router);
+        virtualRouter.setStopPending(false);
         return virtualRouter;
     }
 
@@ -3365,6 +3370,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         List<DomainRouterVO> routers = _routerDao.listIsolatedByHostId(host.getId());
         for (DomainRouterVO router : routers) {
             if (router.isStopPending()) {
+                s_logger.info("Stopping router " + router.getInstanceName() + " due to stop pending flag found!");
                 State state = router.getState();
                 if (state != State.Stopped && state != State.Destroyed) {
                     try {
@@ -3531,4 +3537,31 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             }
         }
     }
+
+	@Override
+	public boolean saveSSHPublicKeyToRouter(
+			Network network, final NicProfile nic,
+			VirtualMachineProfile<UserVm> profile,
+			List<? extends VirtualRouter> routers, final String SSHPublicKey)
+			throws ResourceUnavailableException {
+		_userVmDao.loadDetails((UserVmVO) profile.getVirtualMachine());
+
+		final VirtualMachineProfile<UserVm> updatedProfile = profile;
+		
+		return applyRules(network, routers, "save SSHkey entry", false, null, false, new RuleApplier() {
+			@Override
+			public boolean execute(Network network, VirtualRouter router) throws ResourceUnavailableException {
+				// for basic zone, send vm data/password information only to the router in the same pod
+				Commands cmds = new Commands(OnError.Stop);
+				NicVO nicVo = _nicDao.findById(nic.getId());
+				VMTemplateVO template = _templateDao.findByIdIncludingRemoved(updatedProfile.getTemplateId());
+				if(template != null && template.getEnablePassword()) {
+					createPasswordCommand(router, updatedProfile, nicVo, cmds);
+				}
+				createVmDataCommand(router, updatedProfile.getVirtualMachine(), nicVo, SSHPublicKey, cmds);
+				return sendCommandsToRouter(router, cmds);
+			}
+		});
+	}
+
 }

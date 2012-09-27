@@ -60,6 +60,7 @@ import com.cloud.host.dao.HostDetailsDao;
 import com.cloud.network.ExternalLoadBalancerDeviceVO.LBDeviceAllocationState;
 import com.cloud.network.ExternalLoadBalancerDeviceVO.LBDeviceState;
 import com.cloud.network.ExternalNetworkDeviceManager.NetworkDevice;
+import com.cloud.network.Network.Provider;
 import com.cloud.network.Network.Service;
 import com.cloud.network.Networks.TrafficType;
 import com.cloud.network.addr.PublicIp;
@@ -75,6 +76,8 @@ import com.cloud.network.dao.NetworkServiceMapDao;
 import com.cloud.network.dao.PhysicalNetworkDao;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderDao;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderVO;
+import com.cloud.network.element.IpDeployer;
+import com.cloud.network.element.NetworkElement;
 import com.cloud.network.lb.LoadBalancingRule;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
 import com.cloud.network.resource.CreateLoadBalancerApplianceAnswer;
@@ -1041,4 +1044,26 @@ public abstract class ExternalLoadBalancerDeviceManagerImpl extends AdapterBase 
         return new DeleteHostAnswer(true);
     }
 
+
+    protected IpDeployer getIpDeployerForInlineMode(Network network) {
+        //We won't deploy IP, instead the firewall in front of us would do it
+        List<Provider> providers = _networkMgr.getProvidersForServiceInNetwork(network, Service.Firewall);
+        //Only support one provider now
+        if (providers == null)  {
+            s_logger.error("Cannot find firewall provider for network " + network.getId());
+            return null;
+        }
+        if (providers.size() != 1) {
+            s_logger.error("Found " + providers.size() + " firewall provider for network " + network.getId());
+            return null;
+        }
+
+        NetworkElement element = _networkMgr.getElementImplementingProvider(providers.get(0).getName());
+        if (!(element instanceof IpDeployer)) {
+            s_logger.error("The firewall provider for network " + network.getName() + " don't have ability to deploy IP address!");
+            return null;
+        }
+        s_logger.info("Let " + element.getName() + " handle ip association for " + getName() + " in network " + network.getId());
+        return (IpDeployer)element;
+    }
 }

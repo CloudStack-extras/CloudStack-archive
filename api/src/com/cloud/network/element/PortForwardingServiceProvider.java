@@ -27,6 +27,4 @@ public interface PortForwardingServiceProvider extends NetworkElement {
      * @throws ResourceUnavailableException
      */
     boolean applyPFRules(Network network, List<PortForwardingRule> rules) throws ResourceUnavailableException;
-
-    IpDeployer getIpDeployer(Network network);
 }

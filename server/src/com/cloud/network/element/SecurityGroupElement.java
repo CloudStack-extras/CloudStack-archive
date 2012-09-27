@@ -105,4 +105,9 @@ public class SecurityGroupElement extends AdapterBase implements NetworkElement 
     public boolean verifyServicesCombination(Set<Service> services) {
         return true;
     }
+
+    @Override
+    public IpDeployer getIpDeployer(Network network) {
+        return null;
+    }
 }

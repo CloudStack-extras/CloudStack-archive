@@ -1090,4 +1090,9 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager, NetworkS
         // TODO Auto-generated method stub
         return 0;
     }
+
+    @Override
+    public IpDeployer getIpDeployer(Network network) {
+        return null;
+    }
 }
