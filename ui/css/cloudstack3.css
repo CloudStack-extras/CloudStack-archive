@@ -125,9 +125,9 @@ table tbody td.loading {
 
 /** Actions table cell*/
 table tbody td.actions {
-  width: 155px;
-  max-width: 155px !important;
-  min-width: 155px !important;
+  width: 130px;
+  max-width: 130px !important;
+  min-width: 130px !important;
   vertical-align: middle;
 }
 
@@ -142,9 +142,9 @@ table tbody td.actions input {
 /** Quick view table cell*/
 table tbody td.quick-view,
 table thead th.quick-view {
-  max-width: 70px !important;
-  min-width: 70px !important;
-  width: 70px !important;
+  min-width: 73px;
+  max-width: 73px !important;
+  width: 73px !important;
   height: 14px !important;
 }
 
@@ -153,7 +153,8 @@ table tbody td.quick-view {
 }
 
 table tbody td.quick-view .icon {
-  margin-left: 27px;
+  margin-left: 31px;
+  margin-top: 3px;
   padding: 0px 0px 6px 12px;
   background: url(../images/sprites.png) no-repeat -44px -62px;
 }
@@ -1236,7 +1237,6 @@ div.panel div.list-view div.fixed-header table {
 }
 
 div.list-view td.state {
-  width: 129px;
 }
 
 div.list-view td.first {
@@ -1248,7 +1248,7 @@ div.list-view td.first:hover {
 }
 
 div.list-view td.state span {
-  padding: 0 0 0 26px;
+  padding: 0 0 0 11px;
   text-align: center;
   width: 80px;
   /*+text-shadow:0px 1px 1px #FFFFFF;*/
@@ -2988,7 +2988,7 @@ table td.actions span {
 table td.actions .action span.icon {
   background-image: url(../images/sprites.png);
   cursor: pointer;
-  width: 28px;
+  width: 23px;
   height: 21px;
   float: left;
 }
