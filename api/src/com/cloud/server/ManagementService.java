@@ -26,7 +26,6 @@ import com.cloud.api.commands.DestroySystemVmCmd;
 import com.cloud.api.commands.ExtractVolumeCmd;
 import com.cloud.api.commands.GetVMPasswordCmd;
 import com.cloud.api.commands.ListAlertsCmd;
-import com.cloud.api.commands.ListHostUpdatesCmd;
 import com.cloud.api.commands.ListAsyncJobsCmd;
 import com.cloud.api.commands.ListCapabilitiesCmd;
 import com.cloud.api.commands.ListCapacityCmd;
@@ -72,9 +71,8 @@ import com.cloud.exception.InternalErrorException;
 import com.cloud.exception.PermissionDeniedException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.host.Host;
-import com.cloud.host.updates.PatchHostRef;
-import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.HypervisorCapabilities;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.IpAddress;
 import com.cloud.network.router.VirtualRouter;
 import com.cloud.offering.DiskOffering;
@@ -235,14 +233,6 @@ public interface ManagementService {
      */
     List<? extends Alert> searchForAlerts(ListAlertsCmd cmd);
 
-    /**
-     * Searches for Host updates
-     * 
-     * @param c
-     * @return List of Host updates
-     */
-    List<? extends PatchHostRef> searchForHostUpdates(ListHostUpdatesCmd cmd);
-    
     /**
      * list all the capacity rows in capacity operations table
      * 

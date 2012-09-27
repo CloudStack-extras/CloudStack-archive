@@ -69,7 +69,6 @@ import com.cloud.api.commands.ListDiskOfferingsCmd;
 import com.cloud.api.commands.ListEventsCmd;
 import com.cloud.api.commands.ListGuestOsCategoriesCmd;
 import com.cloud.api.commands.ListGuestOsCmd;
-import com.cloud.api.commands.ListHostUpdatesCmd;
 import com.cloud.api.commands.ListHostsCmd;
 import com.cloud.api.commands.ListIsosCmd;
 import com.cloud.api.commands.ListPodsByCmd;
@@ -148,9 +147,6 @@ import com.cloud.host.Host.Type;
 import com.cloud.host.dao.HostDao;
 import com.cloud.host.dao.HostDetailsDao;
 import com.cloud.host.dao.HostTagsDao;
-import com.cloud.host.updates.PatchHostVO;
-import com.cloud.host.updates.dao.HostUpdatesDao;
-import com.cloud.host.updates.dao.PatchHostRefDao;
 import com.cloud.hypervisor.HypervisorCapabilities;
 import com.cloud.hypervisor.HypervisorCapabilitiesVO;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
@@ -285,8 +281,6 @@ public class ManagementServerImpl implements ManagementServer {
     private final DomainDao _domainDao;
     private final AccountDao _accountDao;
     private final AlertDao _alertDao;
-    private final HostUpdatesDao _hostUpdatesDao;
-    private final PatchHostRefDao _patchHostRefDao;
     private final CapacityDao _capacityDao;
     private final GuestOSDao _guestOSDao;
     private final GuestOSCategoryDao _guestOSCategoryDao;
@@ -368,8 +362,6 @@ public class ManagementServerImpl implements ManagementServer {
         _domainDao = locator.getDao(DomainDao.class);
         _accountDao = locator.getDao(AccountDao.class);
         _alertDao = locator.getDao(AlertDao.class);
-        _hostUpdatesDao = locator.getDao(HostUpdatesDao.class);
-        _patchHostRefDao = locator.getDao(PatchHostRefDao.class);
         _capacityDao = locator.getDao(CapacityDao.class);
         _guestOSDao = locator.getDao(GuestOSDao.class);
         _guestOSCategoryDao = locator.getDao(GuestOSCategoryDao.class);
@@ -2078,13 +2070,6 @@ public class ManagementServerImpl implements ManagementServer {
         }
 
         return _alertDao.search(sc, searchFilter);
-    }
-
-    @Override
-    public List<PatchHostVO> searchForHostUpdates(ListHostUpdatesCmd cmd){
-    	Long hostId = cmd.getHostId();
-    	Boolean isApplied = cmd.isApplied();
-    	return _patchHostRefDao.searchByHostId(hostId, isApplied);
     }
 
     @Override

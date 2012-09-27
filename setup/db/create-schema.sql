@@ -1889,6 +1889,8 @@ CREATE TABLE  `cloud`.`project_account` (
 
 
 
+
+
 CREATE TABLE  `cloud`.`project_invitations` (
   `id` bigint unsigned NOT NULL auto_increment,
   `uuid` varchar(40),
@@ -2470,12 +2472,12 @@ CREATE TABLE `cloud`.`host_updates` (
   `description` varchar(999),
   `after_apply_guidance` varchar(40),
   `URL` varchar(999),
-  `timestamp` varchar(90),
+  `timestamp` varchar(80),
   PRIMARY KEY  (`id`),
   CONSTRAINT `uc_host_updates__uuid` UNIQUE (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `cloud`.`patch_host_ref` (
+CREATE TABLE `cloud`.`host_updates_ref` (
   `id` bigint unsigned NOT NULL auto_increment,
   `host_id` bigint unsigned NOT NULL,
   `patch_id` bigint unsigned NOT NULL,

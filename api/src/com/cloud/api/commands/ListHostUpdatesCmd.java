@@ -24,7 +24,7 @@ import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.response.HostUpdatesResponse;
 import com.cloud.api.response.ListResponse;
-import com.cloud.host.updates.PatchHostRef;
+import com.cloud.host.updates.HostUpdatesRef;
 
 @Implementation(description="Lists Host Updates.", responseObject=HostUpdatesResponse.class)
 public class ListHostUpdatesCmd extends BaseListCmd {
@@ -74,10 +74,10 @@ public class ListHostUpdatesCmd extends BaseListCmd {
 
     @Override
     public void execute(){
-        List<? extends PatchHostRef> result = _mgr.searchForHostUpdates(this);
+        List<? extends HostUpdatesRef> result = _hostUpdatesService.searchForHostUpdates(this);
         ListResponse<HostUpdatesResponse> response = new ListResponse<HostUpdatesResponse>();
         List<HostUpdatesResponse> hostUpdatesResponseList = new ArrayList<HostUpdatesResponse>();
-        for (PatchHostRef update : result) {
+        for (HostUpdatesRef update : result) {
             HostUpdatesResponse hostUpdatesResponse = _responseGenerator.createHostUpdatesResponse(update);
             hostUpdatesResponse.setObjectName("update");
             hostUpdatesResponseList.add(hostUpdatesResponse);

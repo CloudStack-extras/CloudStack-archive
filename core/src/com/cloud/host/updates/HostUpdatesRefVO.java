@@ -13,8 +13,8 @@ import javax.persistence.Table;
  *
  */
 @Entity
-@Table(name="patch_host_ref")
-public class PatchHostVO implements PatchHostRef{
+@Table(name="host_updates_ref")
+public class HostUpdatesRefVO implements HostUpdatesRef{
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     Long id;

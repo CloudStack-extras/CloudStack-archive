@@ -100,7 +100,7 @@ import com.cloud.dc.Vlan;
 import com.cloud.domain.Domain;
 import com.cloud.event.Event;
 import com.cloud.host.Host;
-import com.cloud.host.updates.PatchHostRef;
+import com.cloud.host.updates.HostUpdatesRef;
 import com.cloud.hypervisor.HypervisorCapabilities;
 import com.cloud.network.IpAddress;
 import com.cloud.network.Network;
@@ -363,5 +363,5 @@ public interface ResponseGenerator {
 
     AutoScaleVmGroupResponse createAutoScaleVmGroupResponse(AutoScaleVmGroup vmGroup);
     
-    HostUpdatesResponse createHostUpdatesResponse(PatchHostRef update);
+    HostUpdatesResponse createHostUpdatesResponse(HostUpdatesRef update);
 }
