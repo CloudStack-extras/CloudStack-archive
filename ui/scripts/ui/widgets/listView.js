@@ -644,7 +644,7 @@
     if (detailView) {
       $thead.find('tr').append(
         $('<th></th>')
-          .html('Quick view')
+          .html('Quickview')
           .addClass('quick-view reduced-hide')
       );
     }
@@ -1017,12 +1017,25 @@
             var $quickViewTooltip = $('<div>').addClass('quick-view-tooltip');
             var $tr = $quickView.closest('tr');
             var $listView = $tr.closest('.list-view');
+            var $title = $('<div>').addClass('title');
             var $detailsContainer = $('<div>').addClass('container').appendTo($quickViewTooltip);
             var context = $.extend(true, {}, options.context);
             var activeSection = $listView.data('view-args').activeSection;
             var itemID = $tr.data('list-view-item-id');
             var jsonObj = $tr.data('json-obj');
 
+            // Title
+            $title.append(
+              $('<span>').html('Quickview: '),
+              $('<span>').addClass('title').html(
+                cloudStack.concat(
+                  $tr.find('td:first span').html(), 30
+                )
+              )
+            );
+            $quickViewTooltip.append($title);
+
+            // Setup positioning
             $quickViewTooltip.hide().appendTo('#container').fadeIn('fast');
             $quickViewTooltip.css({
               position: 'absolute',

@@ -142,10 +142,11 @@ table tbody td.actions input {
 /** Quick view table cell*/
 table tbody td.quick-view,
 table thead th.quick-view {
-  min-width: 73px;
-  max-width: 73px !important;
-  width: 73px !important;
+  min-width: 58px;
+  max-width: 58px !important;
+  width: 58px !important;
   height: 14px !important;
+  text-indent: 7px;
 }
 
 table tbody td.quick-view {
@@ -153,7 +154,7 @@ table tbody td.quick-view {
 }
 
 table tbody td.quick-view .icon {
-  margin-left: 31px;
+  margin-left: 26px;
   margin-top: 3px;
   padding: 0px 0px 6px 12px;
   background: url(../images/sprites.png) no-repeat -44px -62px;
@@ -1281,6 +1282,22 @@ div.list-view td.state.off span {
   padding-top: 50px;
 }
 
+.quick-view-tooltip > div.title {
+  width: 376px;
+  position: absolute;
+  top: 71px;
+  left: 10px;
+  color: #5A6977;
+  /*+text-shadow:0px 1px #EAEAEA;*/
+  -moz-text-shadow: 0px 1px #EAEAEA;
+  -webkit-text-shadow: 0px 1px #EAEAEA;
+  -o-text-shadow: 0px 1px #EAEAEA;
+  text-shadow: 0px 1px #EAEAEA;
+}
+
+.quick-view-tooltip > div.title span.title {
+}
+
 .quick-view-tooltip .container {
   border: 1px solid #9EA2A5;
   background: #CCCFD6;
@@ -1354,7 +1371,7 @@ div.list-view td.state.off span {
 
 .quick-view-tooltip .detail-view .detail-group table td.name {
   color: #3E5F7F !important;
-  padding: 0px 29px 0px 0px !important;
+  padding: 0px 29px 0px 5px !important;
   font-size: 13px;
   /*+text-shadow:0px 1px #DBDBDB;*/
   -moz-text-shadow: 0px 1px #DBDBDB;
