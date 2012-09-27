@@ -782,6 +782,7 @@
       $listViewRow: $row,
       compact: options ? options.compact : false
     });
+
     var noPanel = options ? options.noPanel : false;
     var $detailView, $detailsPanel;
     var panelArgs = {
@@ -1024,6 +1025,8 @@
             var itemID = $tr.data('list-view-item-id');
             var jsonObj = $tr.data('json-obj');
 
+            if ($tr.hasClass('loading')) return;
+
             // Title
             $title.append(
               $('<span>').html('Quickview: '),
@@ -1041,15 +1044,23 @@
               position: 'absolute',
               left: $tr.width() + ($quickViewTooltip.width() -
                                    ($quickViewTooltip.width() / 2)),
-              top: $quickView.offset().top - 50,
-              zIndex: 10000
+              top: $quickView.offset().top - 50
             });
 
             // Init detail view
             context[activeSection] = [jsonObj];
             createDetailView(
               {
-                data: detailView,
+                data: $.extend(true, {}, detailView, {
+                  onPerformAction: function() {
+                    $tr.addClass('loading').find('td:last').prepend($('<div>').addClass('loading'));
+                    $quickViewTooltip.hide();
+                  },
+                  onActionComplete: function() {
+                    $tr.removeClass('loading').find('td:last .loading').remove();
+                    $quickViewTooltip.remove();
+                  }
+                }),
                 id: itemID,
                 jsonObj: jsonObj,
                 section: activeSection,
@@ -1066,7 +1077,9 @@
             ).appendTo($detailsContainer);
             
             $quickViewTooltip.mouseleave(function() {
-              $quickViewTooltip.remove();
+              if (!$('.overlay:visible').size()) {
+                $quickViewTooltip.remove();
+              }
             });
           }
         );

@@ -90,6 +90,7 @@
         if (!options) options = {};
 
         var $form = options.$form;
+        var viewArgs = $detailView.data('view-args');
 
         if (customAction && !noAdd) {
           customAction({
@@ -115,7 +116,7 @@
 
                 // Success
                 function(args) {
-                  if (!$detailView.is(':visible')) return;
+                  if (!$detailView.parents('html').size()) return;
 
                   $loading.remove();
                   replaceListViewItem($detailView, args.data);
@@ -158,10 +159,10 @@
                 cloudStack.ui.notifications.add(
                   notification,
                   function(args2) { //name parameter as "args2" instead of "args" to avoid override "args" from success: function(args) {
-                    if ($detailView.is(':visible')) {
+                    if ($detailView.parents('html').size()) {
                       $loading.remove();
 
-                      if (!noRefresh) {
+                      if (!noRefresh && !viewArgs.compact) {
                         updateTabContent(args.data? args.data : args2.data);
                       }
                     }
@@ -176,6 +177,10 @@
                     }));
 
                     replaceListViewItem($detailView, args.data ? args.data : args2.data);
+
+                    if (viewArgs && viewArgs.onActionComplete) {
+                      viewArgs.onActionComplete();
+                    }
                   },
 
                   {},
@@ -196,6 +201,10 @@
               }
             }
           });
+        }
+
+        if (viewArgs && viewArgs.onPerformAction) {
+          viewArgs.onPerformAction();
         }
       };
 
@@ -261,7 +270,7 @@
           var $browser = $('#browser .container');
           var $panel = $detailView.closest('.panel');
 
-          if ($detailView.is(':visible')) {
+          if ($detailView.parents('html').size()) {
             $browser.cloudBrowser('selectPanel', {
               panel: $panel.prev()
             });
