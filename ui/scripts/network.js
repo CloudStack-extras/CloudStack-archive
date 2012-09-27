@@ -866,6 +866,88 @@
                 }
               },
 
+              egressRules: {
+                title:'Egress Rules',
+                 custom:function(args) {
+                    var context = args.context;
+                    return $('<div>').multiEdit({
+                          context:context,
+                          multipleAdd: true,
+                          fields:{
+                            'cidrlist': { edit: true, label: 'label.cidr' },
+      'protocol': {
+        label: 'label.protocol',
+        select: function(args) {
+          args.$select.change(function() {
+            var $inputs = args.$form.find('input');
+            var $icmpFields = $inputs.filter(function() {
+              var name = $(this).attr('name');
+
+              return $.inArray(name, [
+                'icmptype',
+                'icmpcode'
+              ]) > -1;
+            });
+            var $otherFields = $inputs.filter(function() {
+              var name = $(this).attr('name');
+
+              return name != 'icmptype' && name != 'icmpcode' && name != 'cidrlist';
+            });
+
+            if ($(this).val() == 'icmp') {
+              $icmpFields.show();
+              $icmpFields.attr('disabled', false);
+              $otherFields.attr('disabled', 'disabled');
+              $otherFields.hide();
+              $otherFields.parent().find('label.error').hide();
+            } else {
+              $otherFields.show();
+              $otherFields.parent().find('label.error').hide();
+              $otherFields.attr('disabled', false);
+              $icmpFields.attr('disabled', 'disabled');
+              $icmpFields.hide();
+              $icmpFields.parent().find('label.error').hide();
+            }
+          });
+
+          args.response.success({
+             data: [
+              { name: 'tcp', description: 'TCP' },
+              { name: 'udp', description: 'UDP' },
+              { name: 'icmp', description: 'ICMP' }
+            ]
+          });
+        }
+      },
+
+                             
+                            'startport': { edit: true, label: 'label.start.port' },
+                            'endport': { edit: true, label: 'label.end.port' },
+                            'icmptype': { edit: true, label: 'ICMP.type', isHidden: false },
+                            'icmpcode': { edit: true, label: 'ICMP.code', isHidden: false },
+                            'cidr': { edit: true, label: 'label.cidr', isHidden: true },
+                             'add-vm': {
+                          label: 'label.add.vms',
+                          addButton: true
+                        }      
+                         },
+
+                    add:{
+
+
+                     },
+
+                     dataProvider: function(args) {
+                        args.response.success({
+                          data: []
+                        })
+                     }
+                 
+                   })
+               }                
+
+             },
+
               addloadBalancer: {
                 title: 'label.add.load.balancer',
                 custom: function(args) {
