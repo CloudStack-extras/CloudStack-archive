@@ -1249,7 +1249,7 @@ div.list-view td.first:hover {
 }
 
 div.list-view td.state span {
-  padding: 0 0 0 11px;
+  padding: 1px 0 0 18px;
   text-align: center;
   width: 80px;
   /*+text-shadow:0px 1px 1px #FFFFFF;*/
@@ -1277,7 +1277,7 @@ div.list-view td.state.off span {
 /** Quick view tooltip*/
 .quick-view-tooltip {
   width: 400px;
-  height: 400px;
+  display: inline-block;
   margin-left: -359px;
   padding-top: 50px;
 }
@@ -1302,8 +1302,9 @@ div.list-view td.state.off span {
   border: 1px solid #9EA2A5;
   background: #CCCFD6;
   width: 400px;
-  height: 325px;
+  height: 400px;
   overflow: auto;
+  display: inline-block;
   /*+box-shadow:0px 7px 9px #676F76;*/
   -moz-box-shadow: 0px 7px 9px #676F76;
   -webkit-box-shadow: 0px 7px 9px #676F76;
@@ -1313,7 +1314,6 @@ div.list-view td.state.off span {
 
 /*** Quick view detail view*/
 .quick-view-tooltip .detail-view {
-  height: 23px;
 }
 
 .quick-view-tooltip .detail-view .main-groups {
@@ -1334,7 +1334,6 @@ div.list-view td.state.off span {
 }
 
 .quick-view-tooltip .detail-view .actions {
-  height: 57px !important;
 }
 
 .quick-view-tooltip .detail-view .tagger {
@@ -1347,7 +1346,8 @@ div.list-view td.state.off span {
 
 .quick-view-tooltip .detail-view .ui-tabs-panel {
   width: 100% !important;
-  height: 315px;
+  float: left;
+  height: 400px;
 }
 
 .quick-view-tooltip .detail-view .detail-group {
@@ -1389,28 +1389,82 @@ div.list-view td.state.off span {
   text-shadow: 0px 1px #EAEAEA;
 }
 
+.quick-view-tooltip .detail-view .detail-group table td.value input[type=text] {
+  width: 258px;
+  height: 10px;
+  margin-left: 0px;
+}
+
 .quick-view-tooltip .detail-view .detail-group .main-groups table td.value span {
   height: 15px;
   top: 0px;
 }
 
 .quick-view-tooltip .detail-view .detail-group.actions {
-  position: absolute;
+  position: relative;
+  top: 202px;
+  float: left;
   width: 100%;
-  top: 198px;
+  height: 148px;
+}
+
+.quick-view-tooltip .detail-view .detail-group.actions .button {
+  top: 160px;
+}
+
+.quick-view-tooltip .detail-view .detail-group.actions .action.text {
+  width: 112px;
+  height: 41px;
+  background: none;
+  border: none;
+  float: left;
+  margin-left: 5px;
+  display: inline-block;
+}
+
+.quick-view-tooltip .detail-view .detail-group.actions .action.text:hover {
+  /*+box-shadow:none;*/
+  -moz-box-shadow: none;
+  -webkit-box-shadow: none;
+  -o-box-shadow: none;
+  box-shadow: none;
+}
+
+.quick-view-tooltip .detail-view .detail-group.actions .action.text .icon {
+  display: block;
+  float: left;
+  width: 4px;
+}
+
+.quick-view-tooltip .detail-view .detail-group.actions .action.text .label {
+  width: 81px;
+  display: block;
+  float: right;
+  font-size: 11px;
+  color: #454C53;
+  /*+text-shadow:0px 1px #FFFFFF;*/
+  -moz-text-shadow: 0px 1px #FFFFFF;
+  -webkit-text-shadow: 0px 1px #FFFFFF;
+  -o-text-shadow: 0px 1px #FFFFFF;
+  text-shadow: 0px 1px #FFFFFF;
+  text-indent: 0px;
+}
+
+.quick-view-tooltip .detail-view .detail-group.actions .action.text:hover .label {
+  color: #000000;
 }
 
 .quick-view-tooltip .detail-view .detail-group.actions .detail-actions {
-  width: 1005px;
-  height: 57px;
+  width: 400px;
+  height: 136px;
   vertical-align: top;
+  float: left;
 }
 
 .quick-view-tooltip .detail-view .detail-group.actions td.view-all {
-  position: absolute;
-  top: 77px;
+  position: relative;
   left: 0px;
-  float: right;
+  float: left;
   width: 394px;
   height: 22px;
   border-top: 1px solid #808080;

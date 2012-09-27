@@ -658,11 +658,15 @@
               )
               .appendTo($action);
 
-        if (value.textLabel) {
+        if (value.textLabel || options.compact) {
           $action
             .addClass('single text')
             .prepend(
-              $('<span>').addClass('label').html(_l(value.textLabel))
+              $('<span>').addClass('label').html(
+                _l(
+                  options.compact ? value.label : value.textLabel
+                )
+              )
             );
         }
 
@@ -829,7 +833,8 @@
         $actions = makeActionButtons(detailViewArgs.actions, {
           actionFilter: actionFilter,
           data: data,
-          context: $detailView.data('view-args').context
+          context: $detailView.data('view-args').context,
+          compact: detailViewArgs.compact
         }).prependTo($firstRow.closest('div.detail-group').closest('.details'));
 
       // 'View all' button
