@@ -3285,16 +3285,19 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             if (ip.isSourceNat()) {
                 continue;
             } else if (ip.isOneToOneNat()) { 
-                return true;
+                continue;
             } else {
                 Long totalCount = null;
                 Long revokeCount = null;
                 Long activeCount = null;
+                Long addCount = null;
+
                 totalCount = _firewallDao.countRulesByIpId(ip.getId());
                 if (postApplyRules) {
                     revokeCount = _firewallDao.countRulesByIpIdAndState(ip.getId(), FirewallRule.State.Revoke);
                 } else {
                     activeCount = _firewallDao.countRulesByIpIdAndState(ip.getId(), FirewallRule.State.Active);
+                    addCount = _firewallDao.countRulesByIpIdAndState(ip.getId(), FirewallRule.State.Add);
                 }
 
                 if (totalCount == null || totalCount.longValue() == 0L) {
@@ -3302,18 +3305,24 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 }
 
                 if (postApplyRules) {
-                	if (revokeCount.longValue() == totalCount.longValue()) {
-                	    s_logger.trace("All rules are in Revoke state, have to apply the rules on the backend");
-                		return true;
-                	}
+                    if (revokeCount != null && revokeCount.longValue() == totalCount.longValue()) {
+                        s_logger.trace("All rules are in Revoke state, have to dis-assiciate IP from the backend");
+                        return true;
+                    }
                 } else {
                     if (activeCount != null && activeCount > 0) {
                         continue;
+                    } else if (addCount != null && addCount.longValue() == totalCount.longValue()) {
+			s_logger.trace("All rules are in Add state, have to assiciate IP with the backend");
+                        return true;
+                    } else {
+                        continue;
                     }
-                    return true;
                 }
             }
         }
+
+        // there are no IP's corresponding to this network that need to be associated with provider
         return false;
     }
 
@@ -4414,7 +4423,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     }
 
     @Override
-    public boolean applyStaticNats(List<? extends StaticNat> staticNats, boolean continueOnError) throws ResourceUnavailableException {
+    public boolean applyStaticNats(List<? extends StaticNat> staticNats, boolean continueOnError, boolean forRevoke) throws ResourceUnavailableException {
         Network network = _networksDao.findById(staticNats.get(0).getNetworkId());
         boolean success = true;
 
@@ -4433,10 +4442,10 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             }
         }
 
-        // static NAT rules can not programmed unless IP is associated with network service provider, so run IP
-        // association for the network so as to ensure IP is associated before applying rules (in add state)
-        if (checkIfIpAssocRequired(network, false, publicIps)) {
-            applyIpAssociations(network, false, continueOnError, publicIps);
+        // static NAT rules can not programmed unless IP is associated with source NAT service provider, so run IP
+        // association for the network so as to ensure IP is associated before applying rules
+        if (checkStaticNatIPAssocRequired(network, false, forRevoke, publicIps)) {
+		    applyIpAssociations(network, false, continueOnError, publicIps);
         }
 
         // get provider
@@ -4476,12 +4485,36 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             }
         }
         
-        // if all the rules configured on public IP are revoked then, dis-associate IP with network service provider
-        if (checkIfIpAssocRequired(network, true, publicIps)) {
+        // if the static NAT rules configured on public IP is revoked then, dis-associate IP with static NAT service provider
+        if (checkStaticNatIPAssocRequired(network, true, forRevoke, publicIps)) {
             applyIpAssociations(network, true, continueOnError, publicIps);
         }
 
         return success;
+    }
+
+    // checks if there are any public IP assigned to network, that are marked for one-to-one NAT that
+    // needs to be associated/dis-associated with static-nat provider
+    boolean checkStaticNatIPAssocRequired(Network network, boolean postApplyRules, boolean forRevoke, List<PublicIp> publicIps) {
+        for (PublicIp ip : publicIps) {
+            if (ip.isOneToOneNat()) {
+                Long activeFwCount = null;
+                activeFwCount =  _firewallDao.countRulesByIpIdAndState(ip.getId(), FirewallRule.State.Active);
+
+                if (!postApplyRules && !forRevoke) {
+                    if (activeFwCount > 0) {
+                        continue;
+                    } else {
+                        return true;
+                    }
+                } else if (postApplyRules && forRevoke) {
+                    return true;
+                }
+            } else {
+                continue;
+            }
+        }
+        return false;
     }
 
     @Override

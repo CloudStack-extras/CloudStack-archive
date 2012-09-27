@@ -177,6 +177,8 @@ public interface ResponseGenerator {
 
     VolumeResponse createVolumeResponse(Volume volume);
 
+	VolumeResponse createVolumeResponse(Volume volume, EnumSet<HostDetails> details);
+    
     InstanceGroupResponse createInstanceGroupResponse(InstanceGroup group);
 
     StoragePoolResponse createStoragePoolResponse(StoragePool pool);
@@ -281,6 +283,7 @@ public interface ResponseGenerator {
      * @return
      */
     Long getIdentiyId(String tableName, String token);
+
 
 
 }

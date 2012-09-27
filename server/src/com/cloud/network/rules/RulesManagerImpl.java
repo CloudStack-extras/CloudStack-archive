@@ -773,7 +773,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
         }
 
         try {
-            if (!_networkMgr.applyStaticNats(staticNats, continueOnError)) {
+            if (!_networkMgr.applyStaticNats(staticNats, continueOnError, false)) {
                 return false;
             }
         } catch (ResourceUnavailableException ex) {
@@ -1185,7 +1185,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
         staticNats.add(staticNat);
 
         try {
-            if (!_networkMgr.applyStaticNats(staticNats, continueOnError)) {
+            if (!_networkMgr.applyStaticNats(staticNats, continueOnError, forRevoke)) {
                 return false;
             }
         } catch (ResourceUnavailableException ex) {
