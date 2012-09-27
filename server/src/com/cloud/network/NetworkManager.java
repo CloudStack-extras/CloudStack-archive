@@ -216,7 +216,7 @@ public interface NetworkManager extends NetworkService {
 
     String getStartIpAddress(long networkId);
 
-    boolean applyStaticNats(List<? extends StaticNat> staticNats, boolean continueOnError) throws ResourceUnavailableException;
+    boolean applyStaticNats(List<? extends StaticNat> staticNats, boolean continueOnError, boolean forRevoke) throws ResourceUnavailableException;
 
     String getIpInNetwork(long vmId, long networkId);
 
