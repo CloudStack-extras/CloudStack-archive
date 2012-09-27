@@ -917,9 +917,11 @@
       { activeTab: targetTabID }
     );
 
-    $tabContent.append(
-      $('<div>').addClass('loading-overlay')
-    );
+    if (!$detailView.data('view-args').compact) {
+      $tabContent.append(
+        $('<div>').addClass('loading-overlay')
+      );
+    }
 
     return dataProvider({
       tab: targetTabID,
