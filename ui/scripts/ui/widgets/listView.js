@@ -1039,7 +1039,38 @@
             $quickViewTooltip.append($title);
 
             // Setup positioning
-            $quickViewTooltip.hide().appendTo('#container').fadeIn('fast');
+            $quickViewTooltip.hide().appendTo('#container').fadeIn(200, function() {
+              if (!$quickViewTooltip.is(':visible')) return;
+              
+              // Init detail view
+              context[activeSection] = [jsonObj];
+              createDetailView(
+                {
+                  data: $.extend(true, {}, detailView, {
+                    onPerformAction: function() {
+                      $tr.addClass('loading').find('td:last').prepend($('<div>').addClass('loading'));
+                      $quickViewTooltip.hide();
+                    },
+                    onActionComplete: function() {
+                      $tr.removeClass('loading').find('td:last .loading').remove();
+                      $quickViewTooltip.remove();
+                    }
+                  }),
+                  id: itemID,
+                  jsonObj: jsonObj,
+                  section: activeSection,
+                  context: context,
+                  $listViewRow: $tr
+                },
+                function($detailView) { //complete(), callback funcion
+                  $detailView.data('list-view', $listView);
+                }, $tr,
+                {
+                  compact: true,
+                  noPanel: true
+                }
+              ).appendTo($detailsContainer);
+            });
             $quickViewTooltip.css({
               position: 'absolute',
               left: $tr.width() + ($quickViewTooltip.width() -
@@ -1047,35 +1078,6 @@
               top: $quickView.offset().top - 50,
               zIndex: $tr.closest('.panel').zIndex() + 1
             });
-
-            // Init detail view
-            context[activeSection] = [jsonObj];
-            createDetailView(
-              {
-                data: $.extend(true, {}, detailView, {
-                  onPerformAction: function() {
-                    $tr.addClass('loading').find('td:last').prepend($('<div>').addClass('loading'));
-                    $quickViewTooltip.hide();
-                  },
-                  onActionComplete: function() {
-                    $tr.removeClass('loading').find('td:last .loading').remove();
-                    $quickViewTooltip.remove();
-                  }
-                }),
-                id: itemID,
-                jsonObj: jsonObj,
-                section: activeSection,
-                context: context,
-                $listViewRow: $tr
-              },
-              function($detailView) { //complete(), callback funcion
-                $detailView.data('list-view', $listView);
-              }, $tr,
-              {
-                compact: true,
-                noPanel: true
-              }
-            ).appendTo($detailsContainer);
             
             $quickViewTooltip.mouseleave(function() {
               if (!$('.overlay:visible').size()) {
