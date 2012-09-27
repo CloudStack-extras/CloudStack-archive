@@ -201,10 +201,10 @@
               }
             }
           });
-        }
 
-        if (viewArgs && viewArgs.onPerformAction) {
-          viewArgs.onPerformAction();
+          if (viewArgs && viewArgs.onPerformAction) {
+            viewArgs.onPerformAction();
+          }
         }
       };
 
@@ -270,7 +270,7 @@
           var $browser = $('#browser .container');
           var $panel = $detailView.closest('.panel');
 
-          if ($detailView.parents('html').size()) {
+          if ($detailView.is(':visible')) {
             $browser.cloudBrowser('selectPanel', {
               panel: $panel.prev()
             });
