@@ -410,8 +410,6 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             return execute((CreateCommand) cmd);
         } else if (clazz == SetPortForwardingRulesCommand.class) {
             return execute((SetPortForwardingRulesCommand) cmd);
-        } else if (clazz == HostUpdatesCommand.class) {
-            return execute((HostUpdatesCommand) cmd);
         } else if (clazz == SetStaticNatRulesCommand.class) {
             return execute((SetStaticNatRulesCommand) cmd);
         }  else if (clazz == LoadBalancerConfigCommand.class) {
@@ -556,6 +554,8 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             return execute((Site2SiteVpnCfgCommand) cmd);
         } else if (clazz == CheckS2SVpnConnectionsCommand.class) {
             return execute((CheckS2SVpnConnectionsCommand) cmd);
+        } else if (clazz == HostUpdatesCommand.class) {
+            return execute((HostUpdatesCommand) cmd);
         } else {
             return Answer.createUnsupportedCommandAnswer(cmd);
         }
@@ -1169,33 +1169,26 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         List<String> appliedPatchesList = new ArrayList<String>();
         Map<HostPatch, com.xensource.xenapi.HostPatch.Record> appliedPatches = null;
         try {
+            /*
+             * 1.Getting details of all the patches applied to a pool.
+             * 2.Comparing the value of host from the patchValue to the caller host.
+             * 3.Getting the original patchId from the PoolPatch class.
+             * 4.Returning the list of patches applied to the caller host.
+             */
             appliedPatches = HostPatch.getAllRecords(conn);
-        } catch (BadServerResponse e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (XenAPIException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (XmlRpcException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        for(Entry<HostPatch, com.xensource.xenapi.HostPatch.Record> appliedPatch : appliedPatches.entrySet()) {
-            try {
-                if(appliedPatch.getValue().host.getUuid(conn).equals(_host.uuid)) {
-                    String appliedPatchUuid = appliedPatch.getValue().poolPatch.getUuid(conn);
+            for(Entry<HostPatch, com.xensource.xenapi.HostPatch.Record> appliedPatch : appliedPatches.entrySet()) {
+                com.xensource.xenapi.HostPatch.Record patchValue = appliedPatch.getValue();
+                if(patchValue != null && patchValue.host.getUuid(conn).equals(_host.uuid)) {
+                    String appliedPatchUuid = patchValue.poolPatch.getUuid(conn);
                     appliedPatchesList.add(appliedPatchUuid);
                 }
-            } catch (BadServerResponse e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (XenAPIException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (XmlRpcException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
             }
+        } catch (BadServerResponse e) {
+            s_logger.debug("Not able to retrieve applied patch details " + e);
+        } catch (XenAPIException e) {
+            s_logger.debug("Not able to retrieve applied patch details " + e);
+        } catch (XmlRpcException e) {
+            s_logger.debug("Not able to retrieve applied patch details " + e);
         }
         return new HostUpdatesAnswer(cmd, appliedPatchesList);
     }

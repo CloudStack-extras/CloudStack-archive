@@ -8,10 +8,8 @@ import com.cloud.host.updates.HostUpdatesRef;
 public interface HostUpdatesService {
     /**
      * Searches for Host updates
-     * 
-     * @param c
+     * @param hostupdatesCommand
      * @return List of Host updates
      */
     List<? extends HostUpdatesRef> searchForHostUpdates(ListHostUpdatesCmd cmd);
-
 }

@@ -227,7 +227,9 @@ public enum Config {
     EnableS3API("Advanced", ManagementServer.class, Boolean.class, "enable.s3.api", "false", "enable Amazon S3 API on CloudStack", null),
     RecreateSystemVmEnabled("Advanced", ManagementServer.class, Boolean.class, "recreate.systemvm.enabled", "false", "If true, will recreate system vm root disk whenever starting system vm", "true,false"),
     SetVmHostnameAndInternalNameToDisplayName("Advanced", ManagementServer.class, Boolean.class, "vm.hostname.flag", "false", "If true, will set guest VM's display Name (if set) as its hostname and internal VM name", "true,false"),
-    
+    UpdateCheckInterval("Advanced", ManagementServer.class, Integer.class, "update.check.interval", "604800", "Interval to check XenServer updates(in sec)", null),
+    HostUpdatesEnable("Advanced", ManagementServer.class, Boolean.class, "host.updates.enable", "true", "Enable/Disable Host updates checker", null),
+
     // Ovm
     OvmPublicNetwork("Hidden", ManagementServer.class, String.class, "ovm.public.network.device", null, "Specify the public bridge on host for public network", null),
     OvmPrivateNetwork("Hidden", ManagementServer.class, String.class, "ovm.private.network.device", null, "Specify the private bridge on host for private network", null),
@@ -244,8 +246,6 @@ public enum Config {
     XenHeartBeatInterval("Advanced", ManagementServer.class, Integer.class, "xen.heartbeat.interval", "60", "heartbeat to use when implementing XenServer Self Fencing", null),
     XenGuestNetwork("Hidden", ManagementServer.class, String.class, "xen.guest.network.device", null, "Specify for guest network name label", null),
     XenUpdateURL("Advanced", ManagementServer.class, String.class, "xen.update.url", "http://updates.xensource.com/XenServer/updates.xml", "URL to get the latest XenServer updates", null),
-    UpdateCheckInterval("Advanced", ManagementServer.class, Integer.class, "update.check.interval", "604800", "Interval to check XenServer updates(in sec)", null),
-    HostUpdatesEnable("Advanced", ManagementServer.class, Boolean.class, "host.updates.enable", "true", "Enable/Disable Host updates checker", null),
 
     // VMware
     VmwarePrivateNetworkVSwitch("Hidden", ManagementServer.class, String.class, "vmware.private.vswitch", null, "Specify the vSwitch on host for private network", null),
