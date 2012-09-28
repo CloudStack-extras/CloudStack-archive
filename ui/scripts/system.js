@@ -308,6 +308,11 @@
           });
         };
 
+        //  re: CS-16413 -- Disable API calls
+        return args.response.success({
+          data: {}
+        });
+
         dataFns.zoneCount({});
       }
     },

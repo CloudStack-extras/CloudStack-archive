@@ -8806,6 +8806,15 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   background: #DFE1E3;
 }
 
+/*CS-16413: Disable infrastructure totals*/
+.system-dashboard.zone .status_box li span.header {
+  display: block;
+  width: 156px;
+  font-size: 16px;
+  text-align: center;
+  top: 31px;
+}
+
 /*Action icons*/
 .action.edit .icon {
   background-position: 1px -1px;
