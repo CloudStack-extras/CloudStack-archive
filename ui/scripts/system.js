@@ -212,7 +212,7 @@
 
           primaryStorageCount: function(data) {
             $.ajax({
-              url: createURL('listStoragePools'),
+              url: createURL('listStoragePools&details=min'),
               success: function(json) {
                 dataFns.secondaryStorageCount($.extend(data, {
                   primaryStorageCount: json.liststoragepoolsresponse.count ?
@@ -224,7 +224,7 @@
 
           secondaryStorageCount: function(data) {
             $.ajax({
-              url: createURL('listHosts'),
+              url: createURL('listHosts&details=min'),
               data: {
                 type: 'SecondaryStorage'
               },
@@ -239,7 +239,7 @@
 
           systemVmCount: function(data) {
             $.ajax({
-              url: createURL('listSystemVms'),
+              url: createURL('listSystemVms&details=min'),
               success: function(json) {
                 dataFns.virtualRouterCount($.extend(data, {
                   systemVmCount: json.listsystemvmsresponse.count ?
