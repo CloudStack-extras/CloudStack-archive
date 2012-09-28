@@ -1698,9 +1698,9 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             try {
                 answer = (CreatePrivateTemplateAnswer) _storageMgr.sendToPool(pool, cmd);
             } catch (Exception e) {
-            	String msg = "failed for command " + cmd + " due to " + e.toString();
+                String msg = "failed for command " + cmd + " due to " + e.toString();
                 s_logger.warn(msg, e);
-            	throw new CloudRuntimeException(msg, e);
+                throw new CloudRuntimeException(msg, e);
             } finally {
                 if (snapshotId != null) {
                     _snapshotDao.unlockFromLockTable(snapshotId.toString());
@@ -1751,9 +1751,9 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
                 txn.commit();
             }
         } catch (Exception e) {
-        	String msg = " failed to create a template for command " + command + " due to " + e.toString();
+            String msg = " failed to create a template for command " + command + " due to " + e.toString();
             s_logger.warn(msg, e);
-        	throw new CloudRuntimeException(msg, e);
+            throw new CloudRuntimeException(msg, e);
         } finally {
             if (snapshot != null && snapshot.getSwiftId() != null && secondaryStorageURL != null && zoneId != null && accountId != null && volumeId != null) {
                 _snapshotMgr.deleteSnapshotsForVolume (secondaryStorageURL, zoneId, accountId, volumeId);
@@ -2607,7 +2607,11 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
 
         //verify hostname information
         if (hostName == null) {
-            hostName = uuidName;
+            if (displayName != null && nameFlag) {
+                hostName = displayName;
+            } else {
+                hostName = uuidName;
+            }
         } else {
             //1) check is hostName is RFC complient
             if (!NetUtils.verifyDomainNameLabel(hostName, true)) {
