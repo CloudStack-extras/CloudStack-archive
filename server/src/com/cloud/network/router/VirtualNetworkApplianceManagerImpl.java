@@ -482,9 +482,12 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         }
         
         // Clear stop pending flag after stopped successfully
-        router.setStopPending(false);
-        router = _routerDao.persist(router);
-        virtualRouter.setStopPending(false);
+        if (router.isStopPending()) {
+            s_logger.info("Clear the stop pending flag of router " + router.getHostName());
+            router.setStopPending(false);
+            router = _routerDao.persist(router);
+            virtualRouter.setStopPending(false);
+        }
         return virtualRouter;
     }
 
