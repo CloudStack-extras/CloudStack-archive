@@ -78,6 +78,7 @@ import com.cloud.network.dao.PhysicalNetworkServiceProviderDao;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderVO;
 import com.cloud.network.element.IpDeployer;
 import com.cloud.network.element.NetworkElement;
+import com.cloud.network.element.StaticNatServiceProvider;
 import com.cloud.network.lb.LoadBalancingRule;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
 import com.cloud.network.resource.CreateLoadBalancerApplianceAnswer;
@@ -85,6 +86,8 @@ import com.cloud.network.resource.DestroyLoadBalancerApplianceAnswer;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.FirewallRule.Purpose;
 import com.cloud.network.rules.FirewallRuleVO;
+import com.cloud.network.rules.StaticNat;
+import com.cloud.network.rules.StaticNatImpl;
 import com.cloud.network.rules.StaticNatRule;
 import com.cloud.network.rules.StaticNatRuleImpl;
 import com.cloud.network.rules.dao.PortForwardingRulesDao;
@@ -735,30 +738,13 @@ public abstract class ExternalLoadBalancerDeviceManagerImpl extends AdapterBase 
     }
 
     private void applyStaticNatRuleForInlineLBRule(DataCenterVO zone, Network network, HostVO firewallHost, boolean revoked, String publicIp, String privateIp) throws ResourceUnavailableException {
-        List<StaticNatRuleTO> staticNatRules = new ArrayList<StaticNatRuleTO>();
+        List<StaticNat> staticNats = new ArrayList<StaticNat>();
         IPAddressVO ipVO = _ipAddressDao.listByDcIdIpAddress(zone.getId(), publicIp).get(0);
-        VlanVO vlan = _vlanDao.findById(ipVO.getVlanId());
-        FirewallRuleVO fwRule = new FirewallRuleVO(null, ipVO.getId(), -1, -1, "any", network.getId(), network.getAccountId(), network.getDomainId(), Purpose.StaticNat, null, null, null, null, null);
-        FirewallRule.State state = !revoked ? FirewallRule.State.Add : FirewallRule.State.Revoke;
-        fwRule.setState(state);
-        StaticNatRule rule = new StaticNatRuleImpl(fwRule, privateIp);
-        StaticNatRuleTO ruleTO = new StaticNatRuleTO(rule, vlan.getVlanTag(), publicIp, privateIp);
-        staticNatRules.add(ruleTO);
-
-        applyStaticNatRules(staticNatRules, network, firewallHost.getId());
-    }
-
-    protected void applyStaticNatRules(List<StaticNatRuleTO> staticNatRules, Network network, long firewallHostId) throws ResourceUnavailableException {
-        if (!staticNatRules.isEmpty()) {
-            SetStaticNatRulesCommand cmd = new SetStaticNatRulesCommand(staticNatRules, null);
-            Answer answer = _agentMgr.easySend(firewallHostId, cmd);
-            if (answer == null || !answer.getResult()) {
-                String details = (answer != null) ? answer.getDetails() : "details unavailable";
-                String msg = "firewall provider for the network was unable to apply static nat rules due to: " + details + ".";
-                s_logger.error(msg);
-                throw new ResourceUnavailableException(msg, Network.class, network.getId());
-            }
-        }
+        StaticNatImpl staticNat = new StaticNatImpl(ipVO.getAllocatedToAccountId(), ipVO.getAllocatedInDomainId(),
+                network.getId(), ipVO.getId(), privateIp, revoked);
+        staticNats.add(staticNat);
+        StaticNatServiceProvider element = getStaticNatProviderForInlineMode(network);
+        element.applyStaticNats(network, staticNats);
     }
 
     @Override
@@ -1045,6 +1031,24 @@ public abstract class ExternalLoadBalancerDeviceManagerImpl extends AdapterBase 
     }
 
 
+    protected StaticNatServiceProvider getStaticNatProviderForInlineMode(Network network) {
+        List<Provider> providers = _networkMgr.getProvidersForServiceInNetwork(network, Service.StaticNat);
+        //Only support one provider now
+        if (providers == null)  {
+            s_logger.error("Cannot find firewall provider for network " + network.getId());
+            return null;
+        }
+        if (providers.size() != 1) {
+            s_logger.error("Found " + providers.size() + " firewall provider for network " + network.getId());
+            return null;
+        }
+
+        NetworkElement element = _networkMgr.getElementImplementingProvider(providers.get(0).getName());
+        assert element instanceof StaticNatServiceProvider;
+        s_logger.info("Let " + element.getName() + " handle static nat for " + getName() + " in network " + network.getId());
+        return (StaticNatServiceProvider)element;
+    }
+    
     protected IpDeployer getIpDeployerForInlineMode(Network network) {
         //We won't deploy IP, instead the firewall in front of us would do it
         List<Provider> providers = _networkMgr.getProvidersForServiceInNetwork(network, Service.Firewall);

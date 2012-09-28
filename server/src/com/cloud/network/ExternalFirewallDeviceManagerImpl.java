@@ -568,17 +568,25 @@ public abstract class ExternalFirewallDeviceManagerImpl extends AdapterBase impl
         for (FirewallRule fwRule: fwRules) {
             IPAddressVO ipAddress = _ipAddressDao.findById(fwRule.getSourceIpAddressId());
 
-            assert ipAddress.isOneToOneNat();
-
             Vlan vlan = _vlanDao.findById(ipAddress.getVlanId());     
+            String dstIp = null;
+            if (ipAddress.isOneToOneNat()) {
 
-            String dstIp;
-            if (fwRule.getState() == FirewallRule.State.Revoke) {
-                dstIp = _networkMgr.getIpInNetworkIncludingRemoved(ipAddress.getAssociatedWithVmId(), network.getId());
+                if (fwRule.getState() == FirewallRule.State.Revoke) {
+                    dstIp = _networkMgr.getIpInNetworkIncludingRemoved(ipAddress.getAssociatedWithVmId(), network.getId());
+                } else {
+                    dstIp = _networkMgr.getIpInNetwork(ipAddress.getAssociatedWithVmId(), network.getId());
+                }
             } else {
-                dstIp = _networkMgr.getIpInNetwork(ipAddress.getAssociatedWithVmId(), network.getId());
+                // It comes from static nat rule of inline mode load balancing
+                InlineLoadBalancerNicMapVO mapping = _inlineLoadBalancerNicMapDao.findByPublicIpAddress(ipAddress.getAddress().addr());
+                
+                assert mapping != null;
+                
+                NicVO nic = _nicDao.findById(mapping.getNicId());
+                dstIp = nic.getIp4Address();
             }
-
+            
             FirewallRuleTO fwRulesTO = new FirewallRuleTO(fwRule, vlan.getVlanTag(), dstIp, Purpose.StaticNat);
             result.add(fwRulesTO);
         }
