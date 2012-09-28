@@ -197,7 +197,7 @@
 
           hostCount: function(data) {
             $.ajax({
-              url: createURL('listHosts'),
+              url: createURL('listHosts&details=min'),
               data: {
                 type: 'routing'
               },
