@@ -868,7 +868,7 @@
             fields: [
               {  
                 displayname: { label: 'label.display.name', isEditable: true },		
-                instancename: { label: 'label.internal.name' },								
+                name: { label: 'label.host.name' },								
                 state: { 
 								  label: 'label.state',
 									pollAgainIfValueIsIn: { 
