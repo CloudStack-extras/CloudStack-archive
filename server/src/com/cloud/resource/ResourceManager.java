@@ -148,4 +148,10 @@ public interface ResourceManager extends ResourceService{
      * @return
      */
     List<HostVO> listAllUpAndEnabledNonHAHosts(Type type, Long clusterId, Long podId, long dcId);
+    /**
+     * @param hypervisorType
+     * @param management serverId
+     * @return list of Hosts
+     */
+    List<HostVO> listAllUpAndEnabledHostsByHypervisor(HypervisorType hypervisorType, Long msId);
 }

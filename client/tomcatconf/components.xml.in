@@ -160,7 +160,7 @@
             <adapter name="BasicAgentAuthorizer" class="com.cloud.agent.manager.authn.impl.BasicAgentAuthManager"/>
         </adapters>
         <adapters key="com.cloud.maint.HostUpdatesMonitor">
-            <adapter name="XenserverUpdatesMonitor" class="com.cloud.maint.XenserverUpdatesMonitor"/>
+            <adapter name="XenServerUpdatesMonitor" class="com.cloud.maint.XenServerUpdatesMonitor"/>
         </adapters>
         <pluggableservice name="VirtualRouterElementService" key="com.cloud.network.element.VirtualRouterElementService" class="com.cloud.network.element.VirtualRouterElement"/>
     </management-server>

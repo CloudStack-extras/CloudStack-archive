@@ -2328,4 +2328,16 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
         }
         return pcs;
     }
+
+    @Override
+    public List<HostVO> listAllUpAndEnabledHostsByHypervisor(
+            HypervisorType hypervisorType, Long msId) {
+        SearchCriteriaService<HostVO, HostVO> sc = SearchCriteria2.create(HostVO.class);
+        if (msId != null) {
+            sc.addAnd(sc.getEntity().getManagementServerId(), Op.EQ, msId);
+        }
+        sc.addAnd(sc.getEntity().getType(), Op.EQ, Host.Type.Routing);
+        sc.addAnd(sc.getEntity().getHypervisorType(), Op.EQ, hypervisorType); 
+        return sc.list();
+    }
 }
