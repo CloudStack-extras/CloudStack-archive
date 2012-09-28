@@ -201,6 +201,11 @@ remove_snat() {
 }
 add_first_ip() {
   local pubIp=$1
+  sudo ip addr show dev $ethDev | grep "inet $pubIp"
+  if [ $? -eq 0 ]
+  then
+    return 0
+  fi
   logger -t cloud "$(basename $0):Adding first ip $pubIp on interface $ethDev"
   local ipNoMask=$(echo $1 | awk -F'/' '{print $1}')
   local mask=$(echo $1 | awk -F'/' '{print $2}')
@@ -261,6 +266,11 @@ remove_first_ip() {
 
 add_an_ip () {
   local pubIp=$1
+  sudo ip addr show dev $ethDev | grep "inet $pubIp"
+  if [ $? -eq 0 ]
+  then
+    return 0
+  fi
   logger -t cloud "$(basename $0):Adding ip $pubIp on interface $ethDev"
   local ipNoMask=$(echo $1 | awk -F'/' '{print $1}')
   sudo ip link show $ethDev | grep "state DOWN" > /dev/null
