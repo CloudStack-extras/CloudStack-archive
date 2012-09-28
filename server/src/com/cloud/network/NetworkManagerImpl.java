@@ -7365,4 +7365,15 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         return providers;
     }
 
+	@Override
+	public UserDataServiceProvider getSSHKeyResetProvider(Network network) {
+		String SSHKeyProvider = _ntwkSrvcDao.getProviderForServiceInNetwork(network.getId(), Service.UserData);
+    	
+    	if (SSHKeyProvider == null) {
+    		s_logger.debug("Network " + network + " doesn't support service " + Service.UserData.getName());
+    		return null;
+    	}
+    	return (UserDataServiceProvider)getElementImplementingProvider(SSHKeyProvider);
+    }
+
 }

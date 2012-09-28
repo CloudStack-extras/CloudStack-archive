@@ -666,8 +666,7 @@
     var $searchBar = $('<div></div>').addClass('search-bar reduced hide').appendTo($search);
     $searchBar.append('<input type="text" />');
     $search.append('<div id="basic_search" class="button search"></div>');
-		//$search.append('<div id="advanced_search" class="button search"></div>');
-
+		//$search.append('<div id="advanced_search" class="button search"></div>'); 
     return $search.appendTo($toolbar);
   };
 
@@ -1315,6 +1314,7 @@
       return true;
     });
 
+		//basic search
     var basicSearch = function() {
       page = 1;
       loadBody(
@@ -1340,8 +1340,7 @@
         }
       );
     };
-		
-		//basic search
+				
     $listView.find('.search-bar input[type=text]').keyup(function(event) {	
 			if(event.keyCode == 13) //13 is keycode of Enter key		
         basicSearch();
@@ -1365,13 +1364,44 @@
       return true;
     });
    		
-		//advanced search 
-		/*
+		//advanced search 	
+		var advancedSearch = function(args) {		  
+      page = 1;			
+      loadBody(
+        $table,
+        listViewData.dataProvider,
+        listViewData.preFilter,
+        listViewData.fields,
+        false,
+        {
+          page: page,
+          filterBy: {
+            kind: $listView.find('select[id=filterBy]').val(),
+            advSearch: args.data            
+          }
+        },
+        listViewData.actions,
+        {
+          context: $listView.data('view-args').context,
+          reorder: listViewData.reorder
+        }
+      );
+    };
+				
     $listView.find('.button.search#advanced_search').bind('click', function(event) {	
-      return true;
+			cloudStack.dialog.createForm({
+				form: {
+					title: 'Advanced Search',					
+					fields: listViewData.advSearchFields
+				},
+				after: function(args) {				  
+					advancedSearch(args);					
+				}
+			});
+					
+      return false;
     });		
-		*/
-		
+				
     // Infinite scrolling event
     $listView.bind('scroll', function(event) {
       if (args.listView && args.listView.disableInfiniteScrolling) return false;

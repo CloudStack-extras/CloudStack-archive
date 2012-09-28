@@ -28,6 +28,7 @@ import com.cloud.api.commands.DetachVolumeCmd;
 import com.cloud.api.commands.ListVMsCmd;
 import com.cloud.api.commands.RebootVMCmd;
 import com.cloud.api.commands.RecoverVMCmd;
+import com.cloud.api.commands.ResetSSHKeyCmd;
 import com.cloud.api.commands.ResetVMPasswordCmd;
 import com.cloud.api.commands.RestoreVMCmd;
 import com.cloud.api.commands.StartVMCmd;
@@ -84,6 +85,15 @@ public interface UserVmService {
      * @return the VM if reset worked successfully, null otherwise
      */
     UserVm resetVMPassword(ResetVMPasswordCmd cmd, String password) throws ResourceUnavailableException, InsufficientCapacityException;
+
+    /**
+     * Resets the SSH Key of a virtual machine.
+     * 
+     * @param cmd
+     *            - the command specifying vmId, Keypair name
+     * @return the VM if reset worked successfully, null otherwise
+     */
+    UserVm resetSSHKey(ResetSSHKeyCmd cmd) throws ResourceUnavailableException, InsufficientCapacityException;
 
     /**
      * Attaches the specified volume to the specified VM
