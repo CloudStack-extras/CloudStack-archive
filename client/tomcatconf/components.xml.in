@@ -144,6 +144,7 @@
             <adapter name="SecurityGroupProvider" class="com.cloud.network.element.SecurityGroupElement"/>
             <adapter name="CiscoNexus1000vVSM" class="com.cloud.network.element.CiscoNexusVSMElement"/>
             <adapter name="VpcVirtualRouter" class="com.cloud.network.element.VpcVirtualRouterElement"/>
+            <adapter name="VpcJuniperSRX" class="com.cloud.network.element.VpcJuniperSRXExternalFirewallElement"/>
         </adapters>
         <adapters key="com.cloud.cluster.agentlb.AgentLoadBalancerPlanner">
             <adapter name="ClusterBasedAgentLbPlanner" class="com.cloud.cluster.agentlb.ClusterBasedAgentLoadBalancerPlanner"/>

@@ -2270,6 +2270,17 @@ CREATE TABLE  `cloud`.`vpc_offering_service_map` (
   UNIQUE (`vpc_offering_id`, `service`, `provider`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE  `vpc_service_map` (
+  `id` bigint unsigned NOT NULL auto_increment,
+  `vpc_id` bigint unsigned NOT NULL COMMENT 'vpc_id',
+  `service` varchar(255) NOT NULL COMMENT 'service',
+  `provider` varchar(255) COMMENT 'service provider',
+  `created` datetime COMMENT 'date created',
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_vpc_service_map__vpc_id` FOREIGN KEY(`vpc_id`) REFERENCES `vpc`(`id`) ON DELETE CASCADE,
+  UNIQUE (`vpc_id`, `service`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 CREATE TABLE `cloud`.`router_network_ref` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
