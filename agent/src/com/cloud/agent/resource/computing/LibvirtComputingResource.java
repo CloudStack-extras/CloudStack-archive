@@ -2012,7 +2012,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements
 			 * Hard code lm flags: VIR_MIGRATE_LIVE(1<<0) and
 			 * VIR_MIGRATE_PERSIST_DEST(1<<3)
 			 */
-			destDomain = dm.migrate(dconn, (1 << 0) | (1 << 3), vmName, "tcp:"
+			destDomain = dm.migrate(dconn, (1 << 0) | (1 << 3) | (1 << 9), vmName, "tcp:"
 					+ cmd.getDestinationIp(), _migrateSpeed);
 		} catch (LibvirtException e) {
 			s_logger.debug("Can't migrate domain: " + e.getMessage());
