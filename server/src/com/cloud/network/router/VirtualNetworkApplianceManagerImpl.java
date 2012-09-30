@@ -1426,11 +1426,6 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             return this.start(router, user, caller, params, null);
         }
 
-        if (router.getState() == State.Running) {
-            s_logger.debug("Redundant router " + router.getInstanceName() + " is already running!");
-            return router;
-        }
-
         DataCenterDeployment plan = new DataCenterDeployment(0, null, null, null, null, null);
         DomainRouterVO result = null;
         assert router.getIsRedundantRouter();
@@ -1438,6 +1433,11 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         DomainRouterVO routerToBeAvoid = null;
         for (DomainRouterVO rrouter : routerList) {
             if (rrouter.getHostId() != null && rrouter.getIsRedundantRouter() && rrouter.getState() == State.Running) {
+                if (rrouter.getId() == router.getId()) {
+                    s_logger.debug("Redundant router " + router.getInstanceName() + " is already running!");
+                    return router;
+                }
+
                 if (routerToBeAvoid != null) {
                     throw new ResourceUnavailableException("Try to start router " + router.getInstanceName() + "(" + router.getId() + ")"
                             + ", but there are already two redundant routers with IP " + router.getPublicIpAddress()
