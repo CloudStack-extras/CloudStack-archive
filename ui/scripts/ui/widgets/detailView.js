@@ -673,7 +673,9 @@
             .prepend(
               $('<span>').addClass('label').html(
                 _l(
-                  options.compact ? value.label : value.textLabel
+                  options.compact ?
+                    (value.compactLabel ?
+                     value.compactLabel : value.label) : value.textLabel
                 )
               )
             );
