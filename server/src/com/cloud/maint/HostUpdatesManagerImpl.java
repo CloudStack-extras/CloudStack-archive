@@ -43,7 +43,7 @@ public class HostUpdatesManagerImpl implements HostUpdatesManager, HostUpdatesSe
     public final static int UPDATE_CHECK_INTERVAL = 604800; // 1*7*24*60*60 (1 week in seconds)
     boolean _stopped;
     int _updateCheckInterval;
-    int _initialDelay = 10;
+    int _initialDelay = 600; // 10 minutes
 
     @Override
     public List<HostUpdatesRefVO> searchForHostUpdates(ListHostUpdatesCmd cmd){
