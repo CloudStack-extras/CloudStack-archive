@@ -114,6 +114,7 @@ public interface Network extends ControlledEntity {
         public static final Provider ElasticLoadBalancerVm = new Provider("ElasticLoadBalancerVm", false);
         public static final Provider SecurityGroupProvider = new Provider("SecurityGroupProvider", false);
         public static final Provider VPCVirtualRouter = new Provider("VpcVirtualRouter", false);
+        public static final Provider VPCJuniperSRX = new Provider("VPCJuniperSRX", true);
         public static final Provider None = new Provider("None", false);
 
         private String name;

@@ -56,6 +56,7 @@ import com.cloud.network.dao.FirewallRulesDao;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.PhysicalNetworkDao;
+import com.cloud.network.element.StaticNatServiceProvider;
 import com.cloud.network.element.VpcProvider;
 import com.cloud.network.vpc.VpcOffering.State;
 import com.cloud.network.vpc.dao.PrivateIpDao;
@@ -64,6 +65,7 @@ import com.cloud.network.vpc.dao.VpcDao;
 import com.cloud.network.vpc.dao.VpcGatewayDao;
 import com.cloud.network.vpc.dao.VpcOfferingDao;
 import com.cloud.network.vpc.dao.VpcOfferingServiceMapDao;
+import com.cloud.network.vpc.dao.VpcServiceMapDao;
 import com.cloud.network.vpn.Site2SiteVpnManager;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offerings.NetworkOfferingServiceMapVO;
@@ -99,8 +101,6 @@ import com.cloud.vm.DomainRouterVO;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.ReservationContextImpl;
 import com.cloud.vm.dao.DomainRouterDao;
-
-
 
 
 /**
@@ -152,9 +152,11 @@ public class VpcManagerImpl implements VpcManager, Manager{
     VlanDao _vlanDao = null;
     @Inject
     ResourceLimitService _resourceLimitMgr;
+    @Inject
+    VpcServiceMapDao _vpcSrvcDao;    
 
     private final ScheduledExecutorService _executor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("VpcChecker"));
-    private VpcProvider vpcElement = null;
+    private List<VpcProvider> vpcElements = null;
     private final List<Service> nonSupportedServices = Arrays.asList(Service.SecurityGroup, Service.Firewall);
  
     String _name;
@@ -243,7 +245,7 @@ public class VpcManagerImpl implements VpcManager, Manager{
 
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_VPC_OFFERING_CREATE, eventDescription = "creating vpc offering", create=true)
-    public VpcOffering createVpcOffering(String name, String displayText, List<String> supportedServices) {
+    public VpcOffering createVpcOffering(String name, String displayText, List<String> supportedServices, Map<String, List<String>> serviceProviders) {
         Map<Network.Service, Set<Network.Provider>> svcProviderMap = new HashMap<Network.Service, Set<Network.Provider>>();
         Set<Network.Provider> defaultProviders = new HashSet<Network.Provider>();
         defaultProviders.add(Provider.VPCVirtualRouter);
@@ -280,6 +282,33 @@ public class VpcManagerImpl implements VpcManager, Manager{
 
         svcProviderMap.put(Service.Gateway, defaultProviders);
 
+        if (serviceProviders != null) {
+            for (String serviceStr : serviceProviders.keySet()) {
+                Network.Service service = Network.Service.getService(serviceStr);
+                if (svcProviderMap.containsKey(service)) {
+                    Set<Provider> providers = new HashSet<Provider>();
+                    // don't allow to specify more than 1 provider per service
+                    if (serviceProviders.get(serviceStr) != null && serviceProviders.get(serviceStr).size() > 1) {
+                        throw new InvalidParameterValueException("In the current release only one provider can be " +
+                                "specified for the service", null);
+                    }
+                    for (String prvNameStr : serviceProviders.get(serviceStr)) {
+                        // check if provider is supported
+                        Network.Provider provider = Network.Provider.getProvider(prvNameStr);
+                        if (provider == null) {
+                            throw new InvalidParameterValueException("Invalid service provider: " + prvNameStr, null);
+                        }
+
+                        providers.add(provider);
+                    }
+                    svcProviderMap.put(service, providers);
+                } else {
+                    throw new InvalidParameterValueException("Service " + serviceStr + " is not enabled for the network " +
+                            "offering, can't add a provider to it", null);
+                }
+            }
+        }
+        
         return createVpcOffering(name, displayText, svcProviderMap, false, null);
     }
 
@@ -543,11 +572,11 @@ public class VpcManagerImpl implements VpcManager, Manager{
     }
 
     @Override
-    public boolean vpcProviderEnabledInZone(long zoneId)
+    public boolean vpcProviderEnabledInZone(long zoneId, String provider)
     {
         //the provider has to be enabled at least in one network in the zone
         for (PhysicalNetwork pNtwk : _pNtwkDao.listByZone(zoneId)) {
-            if (_ntwkMgr.isProviderEnabledInPhysicalNetwork(pNtwk.getId(), Provider.VPCVirtualRouter.getName())) {
+            if (_ntwkMgr.isProviderEnabledInPhysicalNetwork(pNtwk.getId(), provider)) {
                 return true;
             }
         }
@@ -558,11 +587,6 @@ public class VpcManagerImpl implements VpcManager, Manager{
     @DB
     protected Vpc createVpc(long zoneId, long vpcOffId, Account vpcOwner, String vpcName, String displayText, String cidr, 
             String networkDomain) {
-
-        if (!vpcProviderEnabledInZone(zoneId)) {
-            throw new InvalidParameterValueException("Provider " + Provider.VPCVirtualRouter.getName() +
-                    " should be enabled in at least one physical network of the zone specified", null);
-        }
 
         //Validate CIDR
         if (!NetUtils.isValidCIDR(cidr)) {
@@ -587,7 +611,7 @@ public class VpcManagerImpl implements VpcManager, Manager{
         txn.start();
         VpcVO vpc = new VpcVO (zoneId, vpcName, displayText, vpcOwner.getId(), vpcOwner.getDomainId(), vpcOffId, cidr, 
                 networkDomain);
-        vpc = _vpcDao.persist(vpc);
+        vpc = _vpcDao.persist(vpc, finalizeServicesAndProvidersForVpc(zoneId, vpcOffId));
         _resourceLimitMgr.incrementResourceCount(vpcOwner.getId(), ResourceType.vpc);
         txn.commit();
 
@@ -596,6 +620,44 @@ public class VpcManagerImpl implements VpcManager, Manager{
         return vpc; 
     }
 
+    private Map<String, String> finalizeServicesAndProvidersForVpc(long zoneId, long offeringId) {
+        Map<String, String> svcProviders = new HashMap<String, String>();
+        Map<String, List<String>> providerSvcs = new HashMap<String, List<String>>();
+        List<VpcOfferingServiceMapVO> servicesMap = _vpcOffSvcMapDao.listByVpcOffId(offeringId);
+
+        for (VpcOfferingServiceMapVO serviceMap : servicesMap) {
+            if (svcProviders.containsKey(serviceMap.getService())) {
+                // FIXME - right now we pick up the first provider from the list, need to add more logic based on
+                // provider load, etc
+                continue;
+            }
+
+            String service = serviceMap.getService();
+            String provider = serviceMap.getProvider();
+
+            if (provider == null) {
+            	// Default to VPCVirtualRouter
+                provider = Provider.VPCVirtualRouter.getName();
+            }
+
+
+            if (!vpcProviderEnabledInZone(zoneId, provider)) {
+                throw new InvalidParameterValueException("Provider " + provider +
+                        " should be enabled in at least one physical network of the zone specified", null);
+            }
+
+            svcProviders.put(service, provider);
+            List<String> l = providerSvcs.get(provider);
+            if (l == null) {
+                providerSvcs.put(provider, l = new ArrayList<String>());
+            }
+            l.add(service);
+        }
+
+        return svcProviders;
+    }
+
+    
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_VPC_DELETE, eventDescription = "deleting VPC")
     public boolean deleteVpc(long vpcId) throws ConcurrentOperationException, ResourceUnavailableException {
@@ -889,13 +951,19 @@ public class VpcManagerImpl implements VpcManager, Manager{
     protected boolean startVpc(Vpc vpc, DeployDestination dest, ReservationContext context) 
             throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException {
         //deploy provider
-        if (getVpcElement().implementVpc(vpc, dest, context)) {
-            s_logger.debug("Vpc " + vpc + " has started succesfully");
-            return true;
-        } else {
-            s_logger.warn("Vpc " + vpc + " failed to start");
-            return false;
-        }
+    	boolean success = true;
+    	List<Provider> providersToImplement = getVpcProviders(vpc.getId());
+    	for (VpcProvider element: getVpcElements()){
+    		if(providersToImplement.contains(element.getProvider())){
+    			if (element.implementVpc(vpc, dest, context)) {
+    				s_logger.debug("Vpc " + vpc + " has started succesfully");
+    			} else {
+    				s_logger.warn("Vpc " + vpc + " failed to start");
+    				success = false;
+    			}
+    		}
+    	}
+    	return success;
     }
 
     @Override
@@ -914,15 +982,22 @@ public class VpcManagerImpl implements VpcManager, Manager{
 
         //shutdown provider
         s_logger.debug("Shutting down vpc " + vpc);
-        boolean success = getVpcElement().shutdownVpc(vpc);
-
         //TODO - shutdown all vpc resources here (ACLs, gateways, etc)
-        if (success) {
-            s_logger.debug("Vpc " + vpc + " has been shutdown succesfully");
-        } else {
-            s_logger.warn("Vpc " + vpc + " failed to shutdown");
-        }
-        return success;
+        
+    	boolean success = true;
+    	List<Provider> providersToImplement = getVpcProviders(vpc.getId());
+    	for (VpcProvider element: getVpcElements()){
+    		if(providersToImplement.contains(element.getProvider())){
+    			if (element.shutdownVpc(vpc)) {
+    				s_logger.debug("Vpc " + vpc + " has been shutdown succesfully");
+    			} else {
+    				s_logger.warn("Vpc " + vpc + " failed to shutdown");
+    				success = false;
+    			}
+    		}
+    	}
+    	
+    	return success;
     }
 
     @Override
@@ -1086,16 +1161,18 @@ public class VpcManagerImpl implements VpcManager, Manager{
     }
 
 
-    protected VpcProvider getVpcElement() {
-        if (vpcElement == null) {
-            vpcElement = ((VpcProvider)_ntwkMgr.getElementImplementingProvider(Provider.VPCVirtualRouter.getName()));
+    protected List<VpcProvider> getVpcElements() {
+        if (vpcElements == null) {
+        	vpcElements = new ArrayList<VpcProvider>();
+            vpcElements.add((VpcProvider)_ntwkMgr.getElementImplementingProvider(Provider.VPCVirtualRouter.getName()));
+            vpcElements.add((VpcProvider)_ntwkMgr.getElementImplementingProvider(Provider.VPCJuniperSRX.getName()));
         }
 
-        if (vpcElement == null) {
-            throw new CloudRuntimeException("Failed to initialize vpc element");
+        if (vpcElements == null) {
+            throw new CloudRuntimeException("Failed to initialize vpc elements");
         }
 
-        return vpcElement;
+        return vpcElements;
     }
 
     @Override
@@ -1273,10 +1350,14 @@ public class VpcManagerImpl implements VpcManager, Manager{
     public PrivateGateway applyVpcPrivateGateway(long gatewayId, boolean destroyOnFailure) throws ConcurrentOperationException, ResourceUnavailableException {
         VpcGatewayVO vo = _vpcGatewayDao.findById(gatewayId);
 
-        boolean success = false;
+        boolean success = true;
         try {
             PrivateGateway gateway = getVpcPrivateGateway(gatewayId);
-            success = getVpcElement().createPrivateGateway(gateway);
+            for (VpcProvider provider: getVpcElements()){
+            	if(!provider.createPrivateGateway(gateway)){
+            		success = false;
+            	}
+            }
             if (success) {
                 s_logger.debug("Private gateway " + gateway + " was applied succesfully on the backend");
                 if (vo.getState() != VpcGateway.State.Ready) {
@@ -1332,11 +1413,13 @@ public class VpcManagerImpl implements VpcManager, Manager{
 
             //1) delete the gateway on the backend
             PrivateGateway gateway = getVpcPrivateGateway(gatewayId);
-            if (getVpcElement().deletePrivateGateway(gateway)) {
-                s_logger.debug("Private gateway " + gateway + " was applied succesfully on the backend");
-            } else {
-                s_logger.warn("Private gateway " + gateway + " failed to apply on the backend");
-                return false;
+            for (VpcProvider provider: getVpcElements()){
+            	if (provider.deletePrivateGateway(gateway)) {
+                    s_logger.debug("Private gateway " + gateway + " was applied succesfully on the backend");
+                } else {
+                    s_logger.warn("Private gateway " + gateway + " failed to apply on the backend");
+                    return false;
+                }	
             }
 
             //2) Delete private gateway from the DB
@@ -1504,11 +1587,20 @@ public class VpcManagerImpl implements VpcManager, Manager{
         Vpc vpc = getVpc(routes.get(0).getVpcId());
 
         s_logger.debug("Applying static routes for vpc " + vpc);
-        if (getVpcElement().applyStaticRoutes(vpc, routes)) {
-            s_logger.debug("Applied static routes for vpc " + vpc);
-        } else {
-            s_logger.warn("Failed to apply static routes for vpc " + vpc);
-            return false;
+        
+        String staticNatProvider = _vpcSrvcDao.getProviderForServiceInVpc(vpc.getId(), Service.StaticNat);
+
+        for (VpcProvider provider: getVpcElements()){
+        	   if (!(provider instanceof StaticNatServiceProvider && provider.getName().equalsIgnoreCase(staticNatProvider))) {
+                   continue;
+               }
+
+        	if (provider.applyStaticRoutes(vpc, routes)) {
+        		s_logger.debug("Applied static routes for vpc " + vpc);
+        	} else {
+        		s_logger.warn("Failed to apply static routes for vpc " + vpc);
+        		return false;
+        	}
         }
 
         return true;
@@ -1959,5 +2051,17 @@ public class VpcManagerImpl implements VpcManager, Manager{
         hTypes.add(HypervisorType.XenServer);
         hTypes.add(HypervisorType.VMware);
         return hTypes;
+    }
+    
+    private List<Provider> getVpcProviders(long vpcId) {
+        List<String> providerNames = _vpcSrvcDao.getDistinctProviders(vpcId);
+        Map<String, Provider> providers = new HashMap<String, Provider>();
+        for (String providerName : providerNames) {
+            if(!providers.containsKey(providerName)){
+                providers.put(providerName, Network.Provider.getProvider(providerName));
+            }
+        }
+
+        return new ArrayList<Provider>(providers.values());
     }
 }

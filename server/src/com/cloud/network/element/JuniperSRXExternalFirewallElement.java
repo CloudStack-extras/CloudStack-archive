@@ -91,7 +91,7 @@ PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer, Junip
 
     private static final Logger s_logger = Logger.getLogger(JuniperSRXExternalFirewallElement.class);
 
-    private static final Map<Service, Map<Capability, String>> capabilities = setCapabilities();
+    protected static final Map<Service, Map<Capability, String>> capabilities = setCapabilities();
 
     @Inject
     NetworkManager _networkManager;
