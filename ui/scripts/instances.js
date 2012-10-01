@@ -191,6 +191,7 @@
           },
           stop: {
             label: 'label.action.stop.instance',
+            compactLabel: 'label.stop',
             createForm: {
               title: 'Stop instance',
               desc: 'message.action.stop.instance',
@@ -240,6 +241,7 @@
           },
           restart: {
             label: 'label.action.reboot.instance',
+            compactLabel: 'label.reboot',
             action: function(args) {
               $.ajax({
                 url: createURL("rebootVirtualMachine&id=" + args.context.instances[0].id),
@@ -276,6 +278,7 @@
           },
           destroy: {
             label: 'label.action.destroy.instance',
+            compactLabel: 'label.destroy',
             messages: {
               confirm: function(args) {
                 return 'message.action.destroy.instance';
@@ -312,6 +315,7 @@
           },
           restore: {
             label: 'label.action.restore.instance',
+            compactLabel: 'label.restore',
             messages: {
               confirm: function(args) {
                 return 'message.action.restore.instance';
@@ -339,7 +343,7 @@
           },
 
           edit: {
-            label: 'Edit',
+            label: 'label.edit',
             action: function(args) {
               var array1 = [];							
 							if(args.data.displayname != args.context.instances[0].displayname)
@@ -686,6 +690,7 @@
 
           migrate: {
             label: 'label.migrate.instance.to.host',
+            compactLabel: 'label.migrate.to.host',
             messages: {
               confirm: function(args) {
                 return 'message.migrate.instance.to.host';
@@ -764,6 +769,7 @@
 
           migrateToAnotherStorage: {
             label: 'label.migrate.instance.to.ps',
+            compactLabel: 'label.migrate.to.storage',
             messages: {
               confirm: function(args) {
                 return 'message.migrate.instance.to.ps';
