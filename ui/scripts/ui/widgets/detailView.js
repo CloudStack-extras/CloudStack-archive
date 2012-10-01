@@ -649,7 +649,8 @@
         });
 
       $.each(actions, function(key, value) {
-        if ($.inArray(key, allowedActions) == -1) return true;
+        if ($.inArray(key, allowedActions) == -1 ||
+           (key == 'edit' && options.compact)) return true;
 
         var $action = $('<div></div>')
               .addClass('action').addClass(key)
