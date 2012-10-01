@@ -653,7 +653,11 @@
 
         var $action = $('<div></div>')
               .addClass('action').addClass(key)
-              .appendTo($actions.find('div.buttons'));
+              .appendTo($actions.find('div.buttons'))
+              .attr({
+                title: _l(value.label),
+                alt: _l(value.label)
+              });
         var $actionLink = $('<a></a>')
               .attr({
                 href: '#',
