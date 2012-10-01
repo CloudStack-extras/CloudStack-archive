@@ -1298,6 +1298,14 @@ div.list-view td.state.off span {
   text-shadow: 0px 1px #EAEAEA;
 }
 
+.quick-view-tooltip > div.title .icon {
+  position: relative;
+  top: -3px;
+  background: url(../images/sprites.png) no-repeat -42px -67px;
+  float: right;
+  padding: 5px 17px 0 1px;
+}
+
 .quick-view-tooltip .loading-overlay {
   top: 94px;
   height: 57px;
