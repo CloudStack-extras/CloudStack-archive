@@ -1305,6 +1305,7 @@ div.list-view td.state.off span {
   border: 1px solid #9EA2A5;
   background: #CCCFD6;
   width: 400px;
+  min-height: 100px;
   height: auto;
   overflow: auto;
   display: inline-block;
