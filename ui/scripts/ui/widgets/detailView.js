@@ -981,6 +981,10 @@
             ).appendTo($detailView.find('.main-groups'));
           }
 
+          if ($detailView.data('view-args').onLoad) {
+            $detailView.data('view-args').onLoad($detailView);
+          }
+
           return true;
         },
         error: function() {

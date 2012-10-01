@@ -1024,6 +1024,7 @@
             var activeSection = $listView.data('view-args').activeSection;
             var itemID = $tr.data('list-view-item-id');
             var jsonObj = $tr.data('json-obj');
+            var $loading = $('<div>').addClass('loading-overlay').appendTo($detailsContainer);
 
             if ($tr.hasClass('loading')) return;
 
@@ -1047,6 +1048,10 @@
               createDetailView(
                 {
                   data: $.extend(true, {}, detailView, {
+                    onLoad: function($detailView) {
+                      $loading.remove();
+                      $detailView.slideToggle('fast');
+                    },
                     onPerformAction: function() {
                       $tr.addClass('loading').find('td:last').prepend($('<div>').addClass('loading'));
                       $quickViewTooltip.hide();
@@ -1069,7 +1074,7 @@
                   compact: true,
                   noPanel: true
                 }
-              ).appendTo($detailsContainer);
+              ).appendTo($detailsContainer).hide();
             });
             $quickViewTooltip.css({
               position: 'absolute',

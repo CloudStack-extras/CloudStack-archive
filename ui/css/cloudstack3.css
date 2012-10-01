@@ -1298,6 +1298,17 @@ div.list-view td.state.off span {
   text-shadow: 0px 1px #EAEAEA;
 }
 
+.quick-view-tooltip .loading-overlay {
+  top: 94px;
+  height: 57px;
+  left: 1px;
+  /*+opacity:35%;*/
+  filter: alpha(opacity=35);
+  -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=35);
+  -moz-opacity: 0.35;
+  opacity: 0.35;
+}
+
 .quick-view-tooltip > div.title span.title {
 }
 
