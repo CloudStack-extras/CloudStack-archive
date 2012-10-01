@@ -177,7 +177,7 @@ public interface ResponseGenerator {
 
     VolumeResponse createVolumeResponse(Volume volume);
 
-	VolumeResponse createVolumeResponse(Volume volume, EnumSet<HostDetails> details);
+	VolumeResponse createVolumeResponse(Volume volume, EnumSet<Details> details);
     
     InstanceGroupResponse createInstanceGroupResponse(InstanceGroup group);
 

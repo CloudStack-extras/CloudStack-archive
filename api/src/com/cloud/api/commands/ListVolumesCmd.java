@@ -19,11 +19,11 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiConstants;
+import com.cloud.api.ApiConstants.Details;
 import com.cloud.api.BaseListProjectAndAccountResourcesCmd;
 import com.cloud.api.IdentityMapper;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
-import com.cloud.api.ApiConstants.HostDetails;
 import com.cloud.api.BaseCmd.CommandType;
 import com.cloud.api.response.ListResponse;
 import com.cloud.api.response.VolumeResponse;
@@ -105,21 +105,21 @@ public class ListVolumesCmd extends BaseListProjectAndAccountResourcesCmd {
     }
     
     
-    public EnumSet<HostDetails> getDetails() throws InvalidParameterValueException {
-        EnumSet<HostDetails> dv;
+    public EnumSet<Details> getDetails() throws InvalidParameterValueException {
+        EnumSet<Details> dv;
         if (viewDetails==null || viewDetails.size() <=0){
-            dv = EnumSet.of(HostDetails.all);
+            dv = EnumSet.of(Details.all);
         }
         else {
             try {
-                ArrayList<HostDetails> dc = new ArrayList<HostDetails>();
+                ArrayList<Details> dc = new ArrayList<Details>();
                 for (String detail: viewDetails){
-                    dc.add(HostDetails.valueOf(detail));
+                    dc.add(Details.valueOf(detail));
                 }
                 dv = EnumSet.copyOf(dc);
             }
             catch (IllegalArgumentException e){
-                throw new InvalidParameterValueException("The details parameter contains a non permitted value. The allowed values are " + EnumSet.allOf(HostDetails.class));
+                throw new InvalidParameterValueException("The details parameter contains a non permitted value. The allowed values are " + EnumSet.allOf(Details.class));
             }
         }
         return dv;

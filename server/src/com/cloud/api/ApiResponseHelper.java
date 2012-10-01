@@ -989,11 +989,11 @@ public class ApiResponseHelper implements ResponseGenerator {
 
     @Override
     public VolumeResponse createVolumeResponse(Volume volume) {
-    	return createVolumeResponse(volume, EnumSet.of(HostDetails.all));
+    	return createVolumeResponse(volume, EnumSet.of(Details.all));
     }
 
     @Override
-    public VolumeResponse createVolumeResponse(Volume volume, EnumSet<HostDetails> details) {
+    public VolumeResponse createVolumeResponse(Volume volume, EnumSet<Details> details) {
         VolumeResponse volResponse = new VolumeResponse();
         volResponse.setId(volume.getId());
 
