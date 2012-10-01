@@ -278,25 +278,16 @@
                     total = items.length;
                   else
                     total = 0;
-                  domainObj["accountTotal"] = total;
-                  var itemsAcc;
-                  var totalVMs=0;
-                  var totalVolumes=0;
-                  for(var i=0;i<total;i++) {
-                        itemsAcc = json.listaccountsresponse.account[i];
-                        totalVMs = totalVMs + itemsAcc.vmtotal;
-                        totalVolumes = totalVolumes + itemsAcc.volumetotal;
-                  }
-                  domainObj["vmTotal"] = totalVMs;
-                  domainObj["volumeTotal"] = totalVolumes;
-
+                  domainObj["accountTotal"] = total;  
                 }
               });
-
-              /* $.ajax({
-                url: createURL("listVirtualMachines&details=min&domainid=" + domainObj.id),
+              
+							$.ajax({
+                url: createURL("listVirtualMachines&domainid=" + domainObj.id),
                 async: false,
-                dataType: "json",
+                data: {
+								  details: 'min'
+								},
                 success: function(json) {
                   var items = json.listvirtualmachinesresponse.virtualmachine;
                   var total;
@@ -311,7 +302,9 @@
               $.ajax({
                 url: createURL("listVolumes&domainid=" + domainObj.id),
                 async: false,
-                dataType: "json",
+                data: {
+								  details: 'min'
+								},
                 success: function(json) {
                   var items = json.listvolumesresponse.volume;
                   var total;
@@ -321,7 +314,7 @@
                     total = 0;
                   domainObj["volumeTotal"] = total;
                 }
-              });*/
+              });
 
               $.ajax({
                 url: createURL("listResourceLimits&domainid=" + domainObj.id),
