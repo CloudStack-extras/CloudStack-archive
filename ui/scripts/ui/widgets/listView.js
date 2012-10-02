@@ -671,10 +671,10 @@
     var $searchBar = $('<div></div>').addClass('search-bar reduced hide').appendTo($search);
     $searchBar.append('<input type="text" />');
     $search.append('<div id="basic_search" class="button search"></div>');
-		/*		
+		/*	
 		if(listViewData.advSearchFields != null)
 		  $search.append('<div id="advanced_search" class="button search"></div>'); 
-		*/	
+		*/
     return $search.appendTo($toolbar);
   };
 
@@ -1403,7 +1403,8 @@
 					fields: listViewData.advSearchFields
 				},
 				after: function(args) {				  
-					advancedSearch(args);					
+					advancedSearch(args);	
+					$listView.find('.button.search#basic_search').siblings('.search-bar').find('input').val(''); //clear basic search input field to avoid confusion of search result   
 				}
 			});
 					
