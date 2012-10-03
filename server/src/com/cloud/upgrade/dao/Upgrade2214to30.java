@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
@@ -154,10 +153,9 @@ public class Upgrade2214to30 extends Upgrade30xBase implements DbUpgrade {
                 String removed = rs.getString(6);
                 
                 //set uuid for the zone
-                String uuid = UUID.randomUUID().toString();
                 String updateUuid = "UPDATE `cloud`.`data_center` SET uuid = ? WHERE id = ?";
                 pstmtUpdate = conn.prepareStatement(updateUuid);
-                pstmtUpdate.setString(1, uuid);
+                pstmtUpdate.setString(1, String.valueOf(zoneId));
                 pstmtUpdate.setLong(2, zoneId);
                 pstmtUpdate.executeUpdate();
                 pstmtUpdate.close();
