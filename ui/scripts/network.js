@@ -205,7 +205,7 @@
           sectionsToShow.push('vpnCustomerGateway');
         }
 
-        //if(havingSecurityGroupNetwork == true)//uncomment it before check in
+        if(havingSecurityGroupNetwork == true)
           sectionsToShow.push('securityGroups');
 
         return sectionsToShow;
