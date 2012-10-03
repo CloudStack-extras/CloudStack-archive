@@ -196,7 +196,7 @@ public class EC2RestServlet extends HttpServlet {
 		   }
 	       String keystore  = EC2Prop.getProperty( "keystore" );
 	       keystorePassword = EC2Prop.getProperty( "keystorePass" );
-	   	   wsdlVersion      = EC2Prop.getProperty( "WSDLVersion", "2010-11-15" );
+           wsdlVersion      = EC2Prop.getProperty( "WSDLVersion", "2012-08-15" );
            version = EC2Prop.getProperty( "cloudbridgeVersion", "UNKNOWN VERSION" );
 	       
 	       String installedPath = System.getenv("CATALINA_HOME");
@@ -1859,10 +1859,10 @@ public class EC2RestServlet extends HttpServlet {
         String[] version = request.getParameterValues( "Version" );
 		if ( null != version && 0 < version.length ) 
 		{
-           /* if (!version[0].equals( wsdlVersion )) {
+            if (!version[0].equals( wsdlVersion )) {
                 response.sendError(531, "Unsupported Version value: " + version[0] + " expecting: " + wsdlVersion );
                 return false;
-            }*/
+            }
 		}
 		else { response.sendError(530, "Missing Version parameter" ); return false; }
 
