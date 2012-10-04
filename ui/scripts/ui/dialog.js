@@ -197,8 +197,7 @@
           $input = $('<select>')
             .attr({ name: key })
             .data('dialog-select-fn', function(args) {								
-              if((field.isHidden == null) || (typeof(field.isHidden) == 'boolean' && field.isHidden == false) || (typeof(field.isHidden) == 'function' && field.isHidden() == false)) 			
-                selectFn(args ? $.extend(true, {}, selectArgs, args) : selectArgs);
+              selectFn(args ? $.extend(true, {}, selectArgs, args) : selectArgs);
             })
             .appendTo($value);
 
@@ -223,19 +222,16 @@
 
               dependsOnArgs[dependsOn] = $target.val();
 							
-							if((field.isHidden == null) || (typeof(field.isHidden) == 'boolean' && field.isHidden == false) || (typeof(field.isHidden) == 'function' && field.isHidden() == false)) 						
-                selectFn($.extend(selectArgs, dependsOnArgs));
+							selectFn($.extend(selectArgs, dependsOnArgs));
 
               return true;
             });
 
             if (!$dependsOn.is('select')) {
-						  if((field.isHidden == null) || (typeof(field.isHidden) == 'boolean' && field.isHidden == false) || (typeof(field.isHidden) == 'function' && field.isHidden() == false)) 			
-                selectFn(selectArgs);
+						  selectFn(selectArgs);
             }
           } else {
-					  if((field.isHidden == null) || (typeof(field.isHidden) == 'boolean' && field.isHidden == false) || (typeof(field.isHidden) == 'function' && field.isHidden() == false)) 			
-              selectFn(selectArgs);
+					  selectFn(selectArgs);
           }
         } else if (field.isBoolean) {
           if (field.multiArray) {
