@@ -870,7 +870,7 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
 
         // delete host details
         _hostDetailsDao.deleteDetails(hostId);
-        
+
         // delete host updates details
         _hostUpdatesRefDao.deletePatchRef(hostId);
 
@@ -2330,14 +2330,16 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
     }
 
     @Override
-    public List<HostVO> listAllUpAndEnabledHostsByHypervisor(
-            HypervisorType hypervisorType, Long msId) {
+    public List<HostVO> listAllUpAndEnabledHostsByHypervisor(HypervisorType hypervisorType, Long msId) {
         SearchCriteriaService<HostVO, HostVO> sc = SearchCriteria2.create(HostVO.class);
+
+        sc.addAnd(sc.getEntity().getType(), Op.EQ, Host.Type.Routing);
+        sc.addAnd(sc.getEntity().getHypervisorType(), Op.EQ, hypervisorType); 
+        sc.addAnd(sc.getEntity().getStatus(), Op.EQ, Status.Up);
+        sc.addAnd(sc.getEntity().getResourceState(), Op.EQ, ResourceState.Enabled); 
         if (msId != null) {
             sc.addAnd(sc.getEntity().getManagementServerId(), Op.EQ, msId);
         }
-        sc.addAnd(sc.getEntity().getType(), Op.EQ, Host.Type.Routing);
-        sc.addAnd(sc.getEntity().getHypervisorType(), Op.EQ, hypervisorType); 
         return sc.list();
     }
 }
