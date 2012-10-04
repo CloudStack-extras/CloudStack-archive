@@ -17,7 +17,7 @@ import java.util.List;
 import com.cloud.utils.component.Manager;
 
 public interface SyncQueueManager extends Manager {
-    public SyncQueueVO queue(String syncObjType, long syncObjId, String itemType, long itemId);
+    public SyncQueueVO queue(String syncObjType, long syncObjId, String itemType, long itemId, long queueSizeLimit);
     public SyncQueueItemVO dequeueFromOne(long queueId, Long msid);
     public List<SyncQueueItemVO> dequeueFromAny(Long msid, int maxItems);
     public void purgeItem(long queueItemId);
@@ -25,5 +25,4 @@ public interface SyncQueueManager extends Manager {
     
 	public List<SyncQueueItemVO> getActiveQueueItems(Long msid, boolean exclusive);
     public List<SyncQueueItemVO> getBlockedQueueItems(long thresholdMs, boolean exclusive);
-	public void resetQueueProcess(long msid);
 }

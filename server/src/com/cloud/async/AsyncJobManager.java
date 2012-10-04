@@ -35,7 +35,7 @@ public interface AsyncJobManager extends Manager {
    
     public void releaseSyncSource(AsyncJobExecutor executor);
     
-    public void syncAsyncJobExecution(AsyncJob job, String syncObjType, long syncObjId);
+    public void syncAsyncJobExecution(AsyncJob job, String syncObjType, long syncObjId, long queueSizeLimit);
     
     /**
      * Queries for the status or final result of an async job.

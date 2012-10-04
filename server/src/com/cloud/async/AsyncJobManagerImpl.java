@@ -86,8 +86,9 @@ public class AsyncJobManagerImpl implements AsyncJobManager, ClusterManagerListe
     private AccountManager _accountMgr;
     private AccountDao _accountDao;
     private AsyncJobDao _jobDao;
-    private long _jobExpireSeconds = 86400;						// 1 day
-    private long _jobCancelThresholdSeconds = 3600;             // 1 hour
+    private long _jobExpireSeconds = 86400;                 // 1 day
+    private long _jobCancelThresholdSeconds = 3600;         // 1 hour (for cancelling the jobs blocking other jobs)
+    
     private ApiDispatcher _dispatcher;
 
     private final ScheduledExecutorService _heartbeatScheduler =
@@ -243,7 +244,7 @@ public class AsyncJobManagerImpl implements AsyncJobManager, ClusterManagerListe
     }
 
     @Override
-    public void syncAsyncJobExecution(AsyncJob job, String syncObjType, long syncObjId) {
+    public void syncAsyncJobExecution(AsyncJob job, String syncObjType, long syncObjId, long queueSizeLimit) {
         // This method is re-entrant.  If an API developer wants to synchronized on an object, e.g. the router,
         // when executing business logic, they will call this method (actually a method in BaseAsyncCmd that calls this).
         // This method will get called every time their business logic executes.  The first time it exectues for a job
@@ -264,7 +265,7 @@ public class AsyncJobManagerImpl implements AsyncJobManager, ClusterManagerListe
         Random random = new Random();
 
         for(int i = 0; i < 5; i++) {
-            queue = _queueMgr.queue(syncObjType, syncObjId, "AsyncJob", job.getId());
+            queue = _queueMgr.queue(syncObjType, syncObjId, "AsyncJob", job.getId(), queueSizeLimit);
             if(queue != null) {
                 break;
             }
@@ -682,7 +683,7 @@ public class AsyncJobManagerImpl implements AsyncJobManager, ClusterManagerListe
         if (configDao == null) {
             throw new ConfigurationException("Unable to get the configuration dao.");
         }
-
+        
         int expireMinutes = NumbersUtil.parseInt(
                 configDao.getValue(Config.JobExpireMinutes.key()), 24*60);
         _jobExpireSeconds = (long)expireMinutes*60;
@@ -750,7 +751,6 @@ public class AsyncJobManagerImpl implements AsyncJobManager, ClusterManagerListe
                 txn.start();
                 List<SyncQueueItemVO> items = _queueMgr.getActiveQueueItems(msHost.getId(), true);
                 cleanupPendingJobs(items);
-                _queueMgr.resetQueueProcess(msHost.getId());
                 _jobDao.resetJobProcess(msHost.getId(), BaseCmd.INTERNAL_ERROR, getSerializedErrorMessage("job cancelled because of management server restart"));
                 txn.commit();
             } catch(Throwable e) {
@@ -771,7 +771,6 @@ public class AsyncJobManagerImpl implements AsyncJobManager, ClusterManagerListe
         try {
             List<SyncQueueItemVO> l = _queueMgr.getActiveQueueItems(getMsid(), false);
             cleanupPendingJobs(l);
-            _queueMgr.resetQueueProcess(getMsid());
             _jobDao.resetJobProcess(getMsid(), BaseCmd.INTERNAL_ERROR, getSerializedErrorMessage("job cancelled because of management server restart"));
         } catch(Throwable e) {
             s_logger.error("Unexpected exception " + e.getMessage(), e);
