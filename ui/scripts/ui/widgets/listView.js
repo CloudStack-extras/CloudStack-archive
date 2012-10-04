@@ -1323,7 +1323,9 @@
     });
 
 		//basic search
-    var basicSearch = function() {
+    var basicSearch = function() {		 
+			$listView.removeData('advSearch');
+		
       page = 1;
       loadBody(
         $table,
@@ -1373,7 +1375,9 @@
     });
    		
 		//advanced search 	
-		var advancedSearch = function(args) {		  
+		var advancedSearch = function(args) {		     
+			$listView.data('advSearch', args.data);
+				
       page = 1;			
       loadBody(
         $table,
@@ -1423,17 +1427,24 @@
 
         if (loadMoreData) {
           page = page + 1;
-
+					
+					var filterBy = {
+					  kind: $listView.find('select[id=filterBy]').length > 0? $listView.find('select[id=filterBy]').val(): 'all'
+					};				
+					if($listView.data('advSearch') == null) {
+					  filterBy.search = {
+							value: $listView.find('input[type=text]').length > 0? $listView.find('input[type=text]').val(): '',
+							by: 'name'
+						};
+					}
+					else {
+					  filterBy.advSearch = $listView.data('advSearch');
+					}
+					
           loadBody($table, listViewData.dataProvider, listViewData.preFilter, listViewData.fields, true, {
             context: context,
             page: page,
-            filterBy: {	
-							kind: $listView.find('select[id=filterBy]').length > 0? $listView.find('select[id=filterBy]').val(): 'all',
-							search: {
-								value: $listView.find('input[type=text]').length > 0? $listView.find('input[type=text]').val(): '',
-								by: 'name'
-							}
-            }
+            filterBy: filterBy
           }, actions, {
             reorder: listViewData.reorder
           });
