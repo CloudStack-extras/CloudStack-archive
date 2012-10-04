@@ -17,6 +17,9 @@
     if (!$row) return;
 
     var $listView = $row.closest('.list-view');
+
+    if (!$listView.parents('html').size()) return;
+
     var $newRow;
     var jsonObj = $row.data('json-obj');
 
