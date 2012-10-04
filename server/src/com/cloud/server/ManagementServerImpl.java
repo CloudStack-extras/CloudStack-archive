@@ -1258,7 +1258,6 @@ public class ManagementServerImpl implements ManagementServer {
     public Set<Pair<Long, Long>> listTemplates(ListTemplatesCmd cmd) throws IllegalArgumentException, InvalidParameterValueException {
         TemplateFilter templateFilter = TemplateFilter.valueOf(cmd.getTemplateFilter());
         Long id = cmd.getId();
-
         Account caller = UserContext.current().getCaller();
         
         boolean listAll = false;
