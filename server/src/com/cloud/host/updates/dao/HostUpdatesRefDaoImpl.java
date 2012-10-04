@@ -24,26 +24,10 @@ public class HostUpdatesRefDaoImpl extends GenericDaoBase<HostUpdatesRefVO, Long
         SearchCriteria<HostUpdatesRefVO> sc = createSearchCriteria();
 
         sc.addAnd("hostId", SearchCriteria.Op.EQ, String.valueOf(hostId));
-
         if(isApplied != null) {
             sc.addAnd("isApplied", SearchCriteria.Op.EQ, Boolean.valueOf(isApplied));
         }
         return listBy(sc);
-    }    
-
-    @Override
-    public HostUpdatesRefVO searchByPatchId(Long patchId) {
-        SearchCriteria<HostUpdatesRefVO> sc = createSearchCriteria();
-
-        if(patchId != null) {
-            sc.addAnd("patchId", SearchCriteria.Op.EQ, String.valueOf(patchId));
-        }
-        List<HostUpdatesRefVO> updates = listBy(sc);
-
-        if ((updates != null) && !updates.isEmpty()) {
-            return updates.get(0);
-        }
-        return null;
     }
 
     @Override

@@ -1,13 +1,6 @@
 package com.cloud.maint;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -65,20 +58,12 @@ public class XenServerUpdatesMonitor implements HostUpdatesMonitor {
     private String _name;
     private static final Logger s_logger = Logger.getLogger(XenServerUpdatesMonitor.class);
 
-    public Document getHostVersionsFile(String url) {
+    private Document getHostVersionsFile() {
         Document doc = null;
         try {
-            File updatesFile = File.createTempFile("host_updates", ".xml");
-            URL updates = new URL(_url);
-            ReadableByteChannel fis = Channels.newChannel(updates.openStream());
-            FileOutputStream fos = new FileOutputStream(updatesFile);
-            fos.getChannel().transferFrom(fis, 0, 1 << 24);
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder docBuilder = null;
-            docBuilder = docFactory.newDocumentBuilder();
-            doc = docBuilder.parse(updatesFile);
-            doc.getDocumentElement().normalize();
-            updatesFile.delete();
+            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+            doc = docBuilder.parse(_url);
         } catch (IOException e) {
             s_logger.debug("Cannot able to find input or output stream file.", e);
         }
@@ -91,7 +76,7 @@ public class XenServerUpdatesMonitor implements HostUpdatesMonitor {
         return doc;
     }
 
-    public List<String> getReleasedPatches(Element serverVersionsNode,String hypervisorVersion) {
+    private List<String> getReleasedPatches(Element serverVersionsNode,String hypervisorVersion) {
         Element version = null;
         List<String> releasedPatches = new ArrayList<String>();
         NodeList versionList = serverVersionsNode.getElementsByTagName("version");
@@ -112,7 +97,7 @@ public class XenServerUpdatesMonitor implements HostUpdatesMonitor {
         return releasedPatches;
     }
 
-    public void fillUpdates(Element patchDetailsNode, List<String> releasedPatches, long hostId) {
+    private void fillUpdates(Element patchDetailsNode, List<String> releasedPatches, long hostId) {
         NodeList patchDetails = patchDetailsNode.getElementsByTagName("patch");
         for (int patchCounter = 0; patchCounter < releasedPatches.size(); patchCounter++) {
             for (int counter = 0; counter < patchDetails.getLength(); counter++) {
@@ -131,8 +116,8 @@ public class XenServerUpdatesMonitor implements HostUpdatesMonitor {
                         newUpdate.setURL(patchInfo.getAttribute("url"));
                         newUpdate.setTimestamp(patchInfo.getAttribute("timestamp"));
                         _hostUpdatesDao.persist(newUpdate);
+                        patch = _hostUpdatesDao.findByUUID(patchId);
                     }
-                    patch = _hostUpdatesDao.findByUUID(patchId);
 
                     //insert entry into host_updates_ref table 
                     if ( _hostUpdatesRefDao.findUpdate(hostId, patch.getId()) == null) {
@@ -148,7 +133,7 @@ public class XenServerUpdatesMonitor implements HostUpdatesMonitor {
     }
 
     @DB
-    public void updateAppliedField(List<String> appliedPatchList, long hostId) {
+    private void updateAppliedField(List<String> appliedPatchList, long hostId) {
         Transaction txn = Transaction.currentTxn();
         txn.start();
         for (int counter = 0; counter < appliedPatchList.size(); counter++) {
@@ -175,34 +160,32 @@ public class XenServerUpdatesMonitor implements HostUpdatesMonitor {
         HostUpdatesCommand cmd = null;
         List<HostVO> hosts = _resourceMgr.listAllUpAndEnabledHostsByHypervisor(HypervisorType.XenServer, _serverId);
         try {
-            if (hosts != null) {
-                for (HostVO host : hosts) {
-                    long hostId = host.getId();
-                    if (doc == null) {
-                        doc = getHostVersionsFile(_url);
+            if (hosts != null && !hosts.isEmpty()) {
+                doc = getHostVersionsFile();
+                if (doc != null) {
+                    for (HostVO host : hosts) {
+                        long hostId = host.getId();
+                        String hypervisorVersion = _hostDetailsDao.findDetail(hostId, "product_version").getValue();
+                        Element serverVersionsNode = (Element) doc.getElementsByTagName("serverversions").item(0);
+                        List<String> releasedPatches = getReleasedPatches(serverVersionsNode, hypervisorVersion);
+
+                        Element patchDetailsNode = (Element) doc.getElementsByTagName("patches").item(0);
+                        fillUpdates(patchDetailsNode, releasedPatches, hostId);
+
+                        cmd = new HostUpdatesCommand();
+                        HostUpdatesAnswer updates = (HostUpdatesAnswer) _agentMgr.send(hostId, cmd);
+                        List<String> appliedPatchList = updates.getAppliedPatchList();
+                        updateAppliedField(appliedPatchList, hostId);
                     }
-                    String hypervisorVersion = _hostDetailsDao.findDetail(hostId, "product_version").getValue();
-                    Element serverVersionsNode = (Element) doc.getElementsByTagName("serverversions").item(0);
-                    List<String> releasedPatches = getReleasedPatches(serverVersionsNode, hypervisorVersion);
-
-                    Element patchDetailsNode = (Element) doc.getElementsByTagName("patches").item(0);
-                    fillUpdates(patchDetailsNode, releasedPatches, hostId);
-
-                    cmd = new HostUpdatesCommand();
-                    HostUpdatesAnswer updates = (HostUpdatesAnswer) _agentMgr.send(hostId, cmd);
-                    List<String> appliedPatchList = updates.getAppliedPatchList();
-                    updateAppliedField(appliedPatchList, hostId);
+                } else {
+                    s_logger.error("Couldn't download the xen updates file from " + _url);
                 }
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             if (doc == null) {
                 s_logger.error("Exception in Host Update Checker:  Pass the correct update location URL" +  e);
             }
         }
-    }
-
-    public XenServerUpdatesMonitor() {
-        super();
     }
 
     @Override

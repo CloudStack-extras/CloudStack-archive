@@ -9,12 +9,10 @@ import javax.persistence.Table;
 
 /**
  * Join table for updates hosts and patches
- * @author sanjay
- *
  */
 @Entity
 @Table(name="host_updates_ref")
-public class HostUpdatesRefVO implements HostUpdatesRef{
+public class HostUpdatesRefVO implements HostUpdatesRef {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     Long id;
@@ -61,32 +59,26 @@ public class HostUpdatesRefVO implements HostUpdatesRef{
 
     @Override
     public String getAfterApplyGuidance() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public String getDescription() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public String getLabel() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public String getTimestamp() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public String getURL() {
-        // TODO Auto-generated method stub
         return null;
     }
-
 }
