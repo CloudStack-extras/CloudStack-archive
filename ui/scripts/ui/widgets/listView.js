@@ -464,7 +464,12 @@
       };
 
       if (args.cancel) {  //click Cancel button
-        showLabel();
+       // showLabel();
+          var oldVal = $label.html();
+          $edit.hide();
+          $label.fadeIn();
+          $instanceRow.closest('div.data-table').dataTable('refresh');
+          $editInput.val(_s(oldVal));
         return false;
       }
 
@@ -677,12 +682,15 @@
     return $filters.appendTo($toolbar);
   };
 
-  var createSearchBar = function($toolbar) {
+  var createSearchBar = function($toolbar, listViewData) {
     var $search = $('<div></div>').addClass('text-search reduced-hide');
     var $searchBar = $('<div></div>').addClass('search-bar reduced hide').appendTo($search);
     $searchBar.append('<input type="text" />');
     $search.append('<div id="basic_search" class="button search"></div>');
-		//$search.append('<div id="advanced_search" class="button search"></div>'); 
+		
+		if(listViewData.advSearchFields != null)
+		  $search.append('<div id="advanced_search" class="button search"></div>'); 
+		
     return $search.appendTo($toolbar);
   };
 
@@ -1380,7 +1388,7 @@
                    detailView: listViewData.detailView
                  });
     createFilters($toolbar, listViewData.filters);
-    createSearchBar($toolbar);
+    createSearchBar($toolbar, listViewData);
 
     loadBody(
       $table,
@@ -1512,7 +1520,8 @@
 					fields: listViewData.advSearchFields
 				},
 				after: function(args) {				  
-					advancedSearch(args);					
+					advancedSearch(args);	
+					$listView.find('.button.search#basic_search').siblings('.search-bar').find('input').val(''); //clear basic search input field to avoid confusion of search result   
 				}
 			});
 					

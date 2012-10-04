@@ -61,9 +61,14 @@
         var $formItem = $('<div>')
               .addClass('form-item')
               .attr({ rel: key });
-
-        if (field.hidden || field.isHidden) $formItem.hide();
-
+											
+        if(field.isHidden != null) {
+					if (typeof(field.isHidden) == 'boolean' && field.isHidden == true) 
+						$formItem.hide();
+					else if (typeof(field.isHidden) == 'function' && field.isHidden() == true) 
+						$formItem.hide();
+        }
+				
         $formItem.appendTo($form);
 
         //Handling Escape KeyPress events
@@ -87,10 +92,7 @@
          closeOnEscape: false
          }); */
         // Label field
-				
-				//if( field.label == 'label.network.offering' || field.label == 'label.guest.gateway')
-				//  debugger;
-				
+								
         var $name = $('<div>').addClass('name')
               .appendTo($formItem)
               .append(
@@ -194,9 +196,9 @@
           selectFn = field.select;
           $input = $('<select>')
             .attr({ name: key })
-            .data('dialog-select-fn', function(args) {
-              selectFn(args ?
-                       $.extend(true, {}, selectArgs, args) : selectArgs);
+            .data('dialog-select-fn', function(args) {								
+              if((field.isHidden == null) || (typeof(field.isHidden) == 'boolean' && field.isHidden == false) || (typeof(field.isHidden) == 'function' && field.isHidden() == false)) 			
+                selectFn(args ? $.extend(true, {}, selectArgs, args) : selectArgs);
             })
             .appendTo($value);
 
@@ -220,16 +222,20 @@
               if (!$target.children().size()) return true;
 
               dependsOnArgs[dependsOn] = $target.val();
-              selectFn($.extend(selectArgs, dependsOnArgs));
+							
+							if((field.isHidden == null) || (typeof(field.isHidden) == 'boolean' && field.isHidden == false) || (typeof(field.isHidden) == 'function' && field.isHidden() == false)) 						
+                selectFn($.extend(selectArgs, dependsOnArgs));
 
               return true;
             });
 
             if (!$dependsOn.is('select')) {
-              selectFn(selectArgs);
+						  if((field.isHidden == null) || (typeof(field.isHidden) == 'boolean' && field.isHidden == false) || (typeof(field.isHidden) == 'function' && field.isHidden() == false)) 			
+                selectFn(selectArgs);
             }
           } else {
-            selectFn(selectArgs);
+					  if((field.isHidden == null) || (typeof(field.isHidden) == 'boolean' && field.isHidden == false) || (typeof(field.isHidden) == 'function' && field.isHidden() == false)) 			
+              selectFn(selectArgs);
           }
         } else if (field.isBoolean) {
           if (field.multiArray) {

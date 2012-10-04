@@ -132,7 +132,6 @@ import com.cloud.network.element.NetworkElement;
 import com.cloud.network.element.PortForwardingServiceProvider;
 import com.cloud.network.element.RemoteAccessVPNServiceProvider;
 import com.cloud.network.element.Site2SiteVpnServiceProvider;
-import com.cloud.network.element.SourceNatServiceProvider;
 import com.cloud.network.element.StaticNatServiceProvider;
 import com.cloud.network.element.UserDataServiceProvider;
 import com.cloud.network.element.VirtualRouterElement;
@@ -879,7 +878,8 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         NetworkOffering offering = _networkOfferingDao.findById(network.getNetworkOfferingId());
         if (!offering.isConserveMode()) {
             for (PublicIp ip : ipToServices.keySet()) {
-                Set<Service> services = ipToServices.get(ip);
+                Set<Service> services = new HashSet<Service>() ;
+                services.addAll(ipToServices.get(ip));
                 if (services != null && services.contains(Service.Firewall)) {
                     services.remove(Service.Firewall);
                 }
@@ -1132,7 +1132,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
 
         Network network = _networksDao.findById(networkId);
         if (network != null) {
-            _accountMgr.checkAccess(caller, AccessType.UseNetwork, false, network);
+            _accountMgr.checkAccess(owner, AccessType.UseNetwork, false, network);
         } else {
             s_logger.debug("Unable to find ip address by id: " + ipId);
             return null;

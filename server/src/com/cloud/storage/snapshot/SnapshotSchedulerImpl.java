@@ -24,6 +24,7 @@ import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 
+import com.cloud.api.ApiConstants;
 import com.cloud.api.ApiDispatcher;
 import com.cloud.api.ApiGsonHelper;
 import com.cloud.api.commands.CreateSnapshotCmd;
@@ -31,6 +32,7 @@ import com.cloud.async.AsyncJobManager;
 import com.cloud.async.AsyncJobResult;
 import com.cloud.async.AsyncJobVO;
 import com.cloud.async.dao.AsyncJobDao;
+import com.cloud.configuration.Config;
 import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.event.EventTypes;
 import com.cloud.event.EventUtils;
@@ -224,10 +226,10 @@ public class SnapshotSchedulerImpl implements SnapshotScheduler {
                         EventTypes.EVENT_SNAPSHOT_CREATE, "creating snapshot for volume Id:"+volumeId,0);
 
                 Map<String, String> params = new HashMap<String, String>();
-                params.put("volumeid", ""+volumeId);
-                params.put("policyid", ""+policyId);
+                params.put(ApiConstants.VOLUME_ID, "" + volumeId);
+                params.put(ApiConstants.POLICY_ID, "" + policyId);
                 params.put("ctxUserId", "1");
-                params.put("ctxAccountId", ""+volume.getAccountId());
+                params.put("ctxAccountId", "" + volume.getAccountId());
                 params.put("ctxStartEventId", String.valueOf(eventId));
 
                 CreateSnapshotCmd cmd = new CreateSnapshotCmd();
@@ -235,13 +237,10 @@ public class SnapshotSchedulerImpl implements SnapshotScheduler {
                 params.put("id", ""+cmd.getEntityId());
                 params.put("ctxStartEventId", "1");
 
-                AsyncJobVO job = new AsyncJobVO();
-                job.setUserId(User.UID_SYSTEM);
-                job.setAccountId(volume.getAccountId());
-                job.setCmd(CreateSnapshotCmd.class.getName());
-                job.setInstanceId(cmd.getEntityId());
-                job.setCmdInfo(ApiGsonHelper.getBuilder().create().toJson(params));
-
+                AsyncJobVO job = new AsyncJobVO(User.UID_SYSTEM, volume.getAccountId(), CreateSnapshotCmd.class.getName(),
+                        ApiGsonHelper.getBuilder().create().toJson(params), cmd.getEntityId(),
+                        cmd.getInstanceType());
+                
                 long jobId = _asyncMgr.submitAsyncJob(job);
 
                 tmpSnapshotScheduleVO.setAsyncJobId(jobId);
@@ -346,6 +345,7 @@ public class SnapshotSchedulerImpl implements SnapshotScheduler {
             _testTimerTask = new TestClock(this, minutesPerHour, hoursPerDay, daysPerWeek, daysPerMonth, weeksPerMonth, monthsPerYear);
         }
         _currentTimestamp = new Date();
+        
         s_logger.info("Snapshot Scheduler is configured.");
 
         return true;
