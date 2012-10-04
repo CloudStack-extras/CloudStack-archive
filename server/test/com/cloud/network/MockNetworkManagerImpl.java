@@ -1092,7 +1092,14 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager, NetworkS
     }
 
     @Override
-    public IpDeployer getIpDeployer(Network network) {
+    public UserDataServiceProvider getSSHKeyResetProvider(Network network) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List<Provider> getProvidersForServiceInNetwork(Network network, Service service) {
+        // TODO Auto-generated method stub
         return null;
     }
 }
