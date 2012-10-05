@@ -1070,12 +1070,8 @@ public class EC2Engine {
             EC2AvailabilityZonesFilterSet azfs = request.getFilterSet();
             if ( null == azfs )
                 return availableZones;
-            else {
-                List<String> matchedAvailableZones = azfs.evaluate(availableZones);
-                if (matchedAvailableZones.isEmpty())
-                    return new EC2DescribeAvailabilityZonesResponse();
-                return listZones(matchedAvailableZones.toArray(new String[0]), null);
-            }
+            else
+                return azfs.evaluate(availableZones);
 		} catch( EC2ServiceException error ) {
 			logger.error( "EC2 DescribeAvailabilityZones - ", error);
 			throw error;
@@ -1139,6 +1135,7 @@ public class EC2Engine {
 				resp.setState(vol.getState());
 				resp.setType(vol.getVolumeType());
 				resp.setVMState(vol.getVirtualMachineState());
+                resp.setAttachmentState(mapToAmazonVolumeAttachmentState(vol.getVirtualMachineState()));
 				resp.setZoneName(vol.getZoneName());
 				return resp;
 			}
@@ -1173,6 +1170,7 @@ public class EC2Engine {
 				resp.setState(vol.getState());
 				resp.setType(vol.getVolumeType());
 				resp.setVMState(vol.getVirtualMachineState());
+                resp.setAttachmentState("detached");
 				resp.setZoneName(vol.getZoneName());
 				return resp;
 			}
@@ -1649,11 +1647,15 @@ public class EC2Engine {
 				ec2Vol.setSize(vol.getSize());
 				ec2Vol.setType(vol.getVolumeType());
 
-				if(vol.getVirtualMachineId() != null)
-					ec2Vol.setInstanceId(vol.getVirtualMachineId());
+                if(vol.getVirtualMachineId() != null) {
+                    ec2Vol.setInstanceId(vol.getVirtualMachineId());
+                    if (vol.getVirtualMachineState() != null) {
+                        ec2Vol.setAttachmentState(mapToAmazonVolumeAttachmentState(vol.getVirtualMachineState()));
+                    }
+                } else {
+                	ec2Vol.setAttachmentState("detached");
+                }
 
-				if(vol.getVirtualMachineState() != null)
-					ec2Vol.setVMState(vol.getVirtualMachineState());
 				ec2Vol.setZoneName(vol.getZoneName());
 
                 List<CloudStackKeyValue> resourceTags = vol.getTags();
@@ -1697,10 +1699,12 @@ public class EC2Engine {
 
 		zones = listZones(interestedZones, domainId);
 
-		if (zones == null || zones.getZoneIdAt( 0 ) == null) 
+        if (zones == null || zones.getAvailabilityZoneSet().length == 0)
 			throw new EC2ServiceException(ClientError.InvalidParameterValue, "Unknown zoneName value - " + zoneName);
-		return zones.getZoneIdAt(0);
-	}
+
+        EC2AvailabilityZone[] zoneSet = zones.getAvailabilityZoneSet();
+        return zoneSet[0].getId();
+    }
 
 	
 	/**
@@ -1779,28 +1783,35 @@ public class EC2Engine {
 	 * 
 	 * @return EC2DescribeAvailabilityZonesResponse
 	 */
-	private EC2DescribeAvailabilityZonesResponse listZones(String[] interestedZones, String domainId) throws Exception 
-	{    
-		EC2DescribeAvailabilityZonesResponse zones = new EC2DescribeAvailabilityZonesResponse();
+    private EC2DescribeAvailabilityZonesResponse listZones(String[] interestedZones, String domainId)
+            throws Exception  {
+        EC2DescribeAvailabilityZonesResponse zones = new EC2DescribeAvailabilityZonesResponse();
 
-		List<CloudStackZone> cloudZones = getApi().listZones(true, domainId, null, null);
+        List<CloudStackZone> cloudZones = getApi().listZones(true, domainId, null, null);
+        if(cloudZones != null && cloudZones.size() > 0) {
+            for(CloudStackZone cloudZone : cloudZones) {
+                boolean matched = false;
+                if (interestedZones.length > 0) {
+                    for (String zoneName : interestedZones){
+                        if (zoneName.equalsIgnoreCase( cloudZone.getName())) {
+                            matched = true;
+                            break;
+                        }
+                    }
+                } else {
+                    matched = true;
+                }
+                if (!matched) continue;
+                EC2AvailabilityZone ec2Zone = new EC2AvailabilityZone();
+                ec2Zone.setId(cloudZone.getId().toString());
+                ec2Zone.setMessage(cloudZone.getAllocationState());
+                ec2Zone.setName(cloudZone.getName());
 
-		if(cloudZones != null) {
-			for(CloudStackZone cloudZone : cloudZones) {
-				if ( null != interestedZones && 0 < interestedZones.length ) {
-					for( int j=0; j < interestedZones.length; j++ ) {
-						if (interestedZones[j].equalsIgnoreCase( cloudZone.getName())) {
-							zones.addZone(cloudZone.getId().toString(), cloudZone.getName());
-							break;
-						}
-					}
-				} else { 
-					zones.addZone(cloudZone.getId().toString(), cloudZone.getName());
-				}
-			}
-		}
-		return zones;
-	}
+                zones.addAvailabilityZone(ec2Zone);
+            }
+        }
+        return zones;
+    }
 
 
 	/**
@@ -1960,7 +1971,7 @@ public class EC2Engine {
 	 * @throws ParserConfigurationException
 	 * @throws ParseException
 	 */
-	public EC2DescribeSecurityGroupsResponse listSecurityGroups( String[] interestedGroups ) throws Exception {
+    private EC2DescribeSecurityGroupsResponse listSecurityGroups( String[] interestedGroups ) throws Exception {
 		try {
 			EC2DescribeSecurityGroupsResponse groupSet = new EC2DescribeSecurityGroupsResponse();
 
@@ -2361,6 +2372,25 @@ public class EC2Engine {
 
 		return "error"; 
 	}
+
+    /**
+     * Map CloudStack VM state to Amazon volume attachment state
+     *
+     * @param CloudStack VM state
+     * @return Amazon Volume attachment state
+     */
+    private String mapToAmazonVolumeAttachmentState (String vmState) {
+        if ( vmState.equalsIgnoreCase("Running") || vmState.equalsIgnoreCase("Stopping") ||
+                vmState.equalsIgnoreCase("Stopped") ) {
+            return "attached";
+        }
+        else if (vmState.equalsIgnoreCase("Starting")) {
+            return "attaching";
+        }
+        else { // VM state is 'destroyed' or 'error' or other
+            return "detached";
+        }
+    }
 
     /**
      * Map Amazon resourceType to CloudStack resourceType

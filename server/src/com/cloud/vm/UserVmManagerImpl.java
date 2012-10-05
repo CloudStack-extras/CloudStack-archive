@@ -2970,6 +2970,11 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         if (ip != null && ip.getSystem()) {
             UserContext ctx = UserContext.current();
             try {
+            	long networkId = ip.getAssociatedWithNetworkId();
+            	Network guestNetwork = _networkMgr.getNetwork(networkId);
+            	NetworkOffering offering = _configMgr.getNetworkOffering(guestNetwork.getNetworkOfferingId());
+            	assert (offering.getAssociatePublicIP() == true) : "User VM should not have system owned public IP associated with it when offering configured not to associate public IP.";
+
                 _rulesMgr.disableStaticNat(ip.getId(), ctx.getCaller(), ctx.getCallerUserId(), true);
             } catch (Exception ex) {
                 s_logger.warn("Failed to disable static nat and release system ip " + ip + " as a part of vm " + profile.getVirtualMachine() + " stop due to exception ", ex);

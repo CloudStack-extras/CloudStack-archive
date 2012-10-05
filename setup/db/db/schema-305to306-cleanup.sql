@@ -14,5 +14,5 @@
 #Schema cleanup from 3.0.5 to 3.0.6;
 
 
-DELETE FROM configuration where `cloud`.`configuration`.`name`="vm.hostname.flag";
+DELETE FROM `cloud`.`configuration` where `cloud`.`configuration`.`name`="vm.hostname.flag";
 
