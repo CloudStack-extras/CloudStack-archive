@@ -297,7 +297,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
 
     @Override
     public boolean isAdmin(short accountType) {
-        return ((accountType == Account.ACCOUNT_TYPE_ADMIN) || (accountType == Account.ACCOUNT_TYPE_RESOURCE_DOMAIN_ADMIN) 
+        return ((accountType == Account.ACCOUNT_TYPE_ADMIN) || (accountType == Account.ACCOUNT_TYPE_RESOURCE_DOMAIN_ADMIN)
                 || (accountType == Account.ACCOUNT_TYPE_DOMAIN_ADMIN) || (accountType == Account.ACCOUNT_TYPE_READ_ONLY_ADMIN));
     }
 
@@ -350,7 +350,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
         for (ControlledEntity entity : entities) {
             long domainId = entity.getDomainId();
             if (entity.getAccountId() != -1 && domainId == -1) { // If account exists domainId should too so calculate
-// it. This condition might be hit for templates or entities which miss domainId in their tables
+                // it. This condition might be hit for templates or entities which miss domainId in their tables
                 Account account = ApiDBUtils.findAccountById(entity.getAccountId());
                 domainId = account != null ? account.getDomainId() : -1;
             }
@@ -385,7 +385,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
 
             if (!granted) {
                 assert false : "How can all of the security checkers pass on checking this check: " + entity;
-                throw new PermissionDeniedException("There's no way to confirm " + caller + " has access to " + entity);
+            throw new PermissionDeniedException("There's no way to confirm " + caller + " has access to " + entity);
             }
         }
 
@@ -447,7 +447,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
                 user.setState(State.disabled.toString());
             }
             _userAccountDao.update(id, user);
-             txn.commit();
+            txn.commit();
         } catch (Exception e) {
             s_logger.error("Failed to update login attempts for user with id " + id );
         }
@@ -495,7 +495,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
     @Override
     public boolean deleteAccount(AccountVO account, long callerUserId, Account caller) {
         long accountId = account.getId();
-        
+
         //delete the account record
         if (!_accountDao.remove(accountId)) {
             s_logger.error("Unable to delete account " + accountId);
@@ -513,7 +513,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
     public boolean cleanupAccount(AccountVO account, long callerUserId, Account caller) {
         long accountId = account.getId();
         boolean accountCleanupNeeded = false;
-        
+
         try {
             //cleanup the users from the account
             List<UserVO> users = _userDao.listByAccount(accountId);
@@ -523,10 +523,10 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
                     accountCleanupNeeded = true;
                 }
             }
-            
+
             //delete the account from project accounts
             _projectAccountDao.removeAccountFromProjects(accountId);
-            
+
             // delete all vm groups belonging to accont
             List<InstanceGroupVO> groups = _vmGroupDao.listByAccountId(accountId);
             for (InstanceGroupVO group : groups) {
@@ -644,21 +644,22 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             }
 
             if (vpcsDeleted) {
-            // release ip addresses belonging to the account
-            List<? extends IpAddress> ipsToRelease = _ipAddressDao.listByAccount(accountId);
-            for (IpAddress ip : ipsToRelease) {
-                s_logger.debug("Releasing ip " + ip + " as a part of account id=" + accountId + " cleanup");
+                // release ip addresses belonging to the account
+                List<? extends IpAddress> ipsToRelease = _ipAddressDao.listByAccount(accountId);
+                for (IpAddress ip : ipsToRelease) {
+                    s_logger.debug("Releasing ip " + ip + " as a part of account id=" + accountId + " cleanup");
                     if (!_networkMgr.disassociatePublicIpAddress(ip.getId(), callerUserId, caller)) {
-                    s_logger.warn("Failed to release ip address " + ip + " as a part of account id=" + accountId + " cleanup");
-                    accountCleanupNeeded = true;
+                        s_logger.warn("Failed to release ip address " + ip + " as a part of account id=" + accountId + " cleanup");
+                        accountCleanupNeeded = true;
+                    }
                 }
-            }
             }
 
             // Delete Site 2 Site VPN customer gateway
             s_logger.debug("Deleting site-to-site VPN customer gateways for account " + accountId);
             if (!_vpnMgr.deleteCustomerGatewayByAccount(accountId)) {
                 s_logger.warn("Fail to delete site-to-site VPN customer gateways for account " + accountId);
+            }
             // Delete autoscale resources if any
             try {
                 _autoscaleMgr.cleanUpAutoScaleResources(accountId);
@@ -741,7 +742,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
                     } else if (vm.getType() == Type.DomainRouter) {
                         success = (success && _itMgr.advanceStop(_routerDao.findById(vm.getId()), false, getSystemUser(), getSystemAccount()));
                     } else {
-                    success = (success && _itMgr.advanceStop(vm, false, getSystemUser(), getSystemAccount()));
+                        success = (success && _itMgr.advanceStop(vm, false, getSystemUser(), getSystemAccount()));
                     }
                 } catch (OperationTimedoutException ote) {
                     s_logger.warn("Operation for stopping vm timed out, unable to stop vm " + vm.getHostName(), ote);
@@ -772,15 +773,15 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
         if (domainId == null) {
             domainId = DomainVO.ROOT_DOMAIN;
         }
-        
+
         if (userName.isEmpty()) {
             throw new InvalidParameterValueException("Username is empty");
         }
-        
+
         if (firstName.isEmpty()) {
             throw new InvalidParameterValueException("Firstname is empty");
         }
-        
+
         if (lastName.isEmpty()) {
             throw new InvalidParameterValueException("Lastname is empty");
         }
@@ -802,7 +803,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             if (!NetUtils.verifyDomainName(networkDomain)) {
                 throw new InvalidParameterValueException(
                         "Invalid network domain. Total length shouldn't exceed 190 chars. Each domain label must be between 1 and 63 characters long, can contain ASCII letters 'a' through 'z', the digits '0' through '9', "
-                                + "and the hyphen ('-'); can't start or end with \"-\"");
+                        + "and the hyphen ('-'); can't start or end with \"-\"");
             }
         }
 
@@ -900,21 +901,21 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             if (firstName.isEmpty()) {
                 throw new InvalidParameterValueException("Firstname is empty");
             }
-            
+
             user.setFirstname(firstName);
         }
         if (lastName != null) {
             if (lastName.isEmpty()) {
                 throw new InvalidParameterValueException("Lastname is empty");
             }
-            
+
             user.setLastname(lastName);
         }
         if (userName != null) {
             if (userName.isEmpty()) {
                 throw new InvalidParameterValueException("Username is empty");
             }
-            
+
             // don't allow to have same user names in the same domain
             List<UserVO> duplicatedUsers = _userDao.findUsersByName(userName);
             for (UserVO duplicatedUser : duplicatedUsers) {
@@ -928,7 +929,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
 
             user.setUsername(userName);
         }
-        
+
         if (password != null) {
             user.setPassword(password);
         }
@@ -1077,7 +1078,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
 
         // make sure the account is enabled too
         // if the user is either locked already or disabled already, don't change state...only lock currently enabled
-// users
+        // users
         boolean success = true;
         if (user.getState().equals(State.locked)) {
             // already locked...no-op
@@ -1275,11 +1276,11 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
         // check if the given account name is unique in this domain for updating
         Account duplicateAcccount = _accountDao.findActiveAccount(newAccountName, domainId);
         if (duplicateAcccount != null && duplicateAcccount.getId() != account.getId()) {// allow
-                                                                                        // same
-                                                                                        // account
-                                                                                        // to
-                                                                                        // update
-                                                                                        // itself
+            // same
+            // account
+            // to
+            // update
+            // itself
             throw new InvalidParameterValueException("There already exists an account with the name:" + newAccountName + " in the domain:" + domainId + " with existing account id:"
                     + duplicateAcccount.getId());
         }
@@ -1288,7 +1289,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             if (!NetUtils.verifyDomainName(networkDomain)) {
                 throw new InvalidParameterValueException(
                         "Invalid network domain. Total length shouldn't exceed 190 chars. Each domain label must be between 1 and 63 characters long, can contain ASCII letters 'a' through 'z', the digits '0' through '9', "
-                                + "and the hyphen ('-'); can't start or end with \"-\"");
+                        + "and the hyphen ('-'); can't start or end with \"-\"");
             }
         }
 
@@ -1378,7 +1379,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
                     s_logger.info("Found " + removedAccounts.size() + " removed accounts to cleanup");
                     for (AccountVO account : removedAccounts) {
                         s_logger.debug("Cleaning up " + account.getId());
-                        cleanupAccount(account, getSystemUser().getId(), getSystemAccount());      
+                        cleanupAccount(account, getSystemUser().getId(), getSystemAccount());
                     }
 
                     // cleanup disabled accounts
@@ -1628,7 +1629,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             if (!NetUtils.verifyDomainName(networkDomain)) {
                 throw new InvalidParameterValueException(
                         "Invalid network domain. Total length shouldn't exceed 190 chars. Each domain label must be between 1 and 63 characters long, can contain ASCII letters 'a' through 'z', the digits '0' through '9', "
-                                + "and the hyphen ('-'); can't start or end with \"-\"");
+                        + "and the hyphen ('-'); can't start or end with \"-\"");
             }
         }
 
@@ -1722,7 +1723,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             String singleSignOnTolerance = _configDao.getValue("security.singlesignon.tolerance.millis");
             if (singleSignOnTolerance == null) {
                 // the SSO tolerance is gone (how much time before/after system time we'll allow the login request to be
-// valid),
+                // valid),
                 // don't authenticate
                 return null;
             }
@@ -1815,7 +1816,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
                         "user has logged in from IP Address " + loginIpAddress);
             } else {
                 EventUtils.saveEvent(user.getId(), user.getAccountId(), user.getDomainId(), EventTypes.EVENT_USER_LOGIN,
-                        "user has logged in. The IP Address cannot be determined");
+                "user has logged in. The IP Address cannot be determined");
             }
             return user;
         } else {
@@ -1883,7 +1884,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
                         } else {
                             updateLoginAttempts(userAccount.getId(), _allowedLoginAttempts, true);
                             s_logger.warn("User " + user.getUsername() + " has been disabled due to multiple failed login attempts." +
-                                    " Please contact admin.");
+                            " Please contact admin.");
                         }
                     }
                 } else {
@@ -2257,9 +2258,9 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
     }
 
     @Override
-    public void buildACLSearchParameters(Account caller, Long id, String accountName, Long projectId, List<Long> 
+    public void buildACLSearchParameters(Account caller, Long id, String accountName, Long projectId, List<Long>
     permittedAccounts, Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject,
-            boolean listAll, boolean forProjectInvitation) {
+    boolean listAll, boolean forProjectInvitation) {
         Long domainId = domainIdRecursiveListProject.first();
 
         if (domainId != null) {
@@ -2337,8 +2338,8 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
         }
     }
 
-	@Override
-	public UserAccount getUserByApiKey(String apiKey) {
-		return _userAccountDao.getUserByApiKey(apiKey);
-	}
+    @Override
+    public UserAccount getUserByApiKey(String apiKey) {
+        return _userAccountDao.getUserByApiKey(apiKey);
+    }
 }
