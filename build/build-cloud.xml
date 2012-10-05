@@ -117,16 +117,16 @@
   <property name="vmware-base.jar" value="cloud-vmware-base.jar" />
 
   <!--
-		Import information about the build version and company information
-	-->
+        Import information about the build version and company information
+    -->
   <property name="version" value="${company.major.version}.${company.minor.version}.${company.patch.version}" />
 
   <!-- Class paths -->
   <path id="prod.src.path">
-    <pathelement location="${server.dir}/src" />
-    <pathelement location="${utils.dir}/src" />
-    <pathelement location="${core.dir}/src" />
-    <pathelement location="${agent.dir}/src" />
+      <pathelement location="${server.dir}/src" />
+      <pathelement location="${utils.dir}/src" />
+      <pathelement location="${core.dir}/src" />
+      <pathelement location="${agent.dir}/src" />
   </path>
 
   <path id="src.classpath">
@@ -139,421 +139,421 @@
   </path>
 
   <path id="deps.classpath">
-    <!--filelist files="${deps.classpath}" /-->
-    <fileset dir="${deps.dir}" erroronmissingdir="false">
-      <include name="*.jar" />
-    </fileset>
-    <path refid="compile.deps.classpath" />
+      <!--filelist files="${deps.classpath}" /-->
+      <fileset dir="${deps.dir}" erroronmissingdir="false">
+          <include name="*.jar" />
+      </fileset>
+      <path refid="compile.deps.classpath" />
   </path>
 
   <path id="dist.classpath">
-    <fileset dir="${target.dir}">
-      <include name="**/*.jar" />
-    </fileset>
-    <fileset dir="${target.dir}/jar">
-        <include name="**/*.jar" />
-    </fileset>
+      <fileset dir="${target.dir}">
+          <include name="**/*.jar" />
+      </fileset>
+      <fileset dir="${target.dir}/jar">
+          <include name="**/*.jar" />
+      </fileset>
   </path>
 
   <path id="test.classpath">
-    <fileset dir="${dist.dir}">
-      <include name="**/*.jar" />
-    </fileset>
+      <fileset dir="${dist.dir}">
+          <include name="**/*.jar" />
+      </fileset>
   </path>
 
   <!-- directories for util code compilation-->
   <property name="utils.dir" location="${base.dir}/utils" />
   <property name="utils.test.dir" location="${utils.dir}/test/" />
   <path id="utils.classpath">
-    <path refid="deps.classpath" />
+      <path refid="deps.classpath" />
   </path>
   <target name="compile-utils" depends="-init" description="Compile the utilities jar that is shared.">
-    <compile-java jar.name="${utils.jar}" top.dir="${utils.dir}" classpath="utils.classpath" >
-      <include-files>
-        <fileset dir="${utils.dir}/certs">
-          <include name="*.keystore" />
-        </fileset>
-      </include-files>
-    </compile-java>
+      <compile-java jar.name="${utils.jar}" top.dir="${utils.dir}" classpath="utils.classpath" >
+          <include-files>
+              <fileset dir="${utils.dir}/certs">
+                  <include name="*.keystore" />
+              </fileset>
+          </include-files>
+      </compile-java>
   </target>
 
   <property name="api.dir" location="${base.dir}/api" />
   <property name="api.test.dir" location="${api.dir}/test/" />
   <path id="api.classpath">
-    <path refid="deps.classpath" />
-    <path refid="dist.classpath"/>
+      <path refid="deps.classpath" />
+      <path refid="dist.classpath"/>
   </path>
   <target name="compile-api" depends="-init, compile-utils" description="Compile the utilities jar that is shared.">
-    <compile-java jar.name="${api.jar}" top.dir="${api.dir}" classpath="api.classpath" />
+      <compile-java jar.name="${api.jar}" top.dir="${api.dir}" classpath="api.classpath" />
   </target>
 
   <path id="core.classpath">
-    <path refid="deps.classpath" />
-    <path refid="dist.classpath" />
+      <path refid="deps.classpath" />
+      <path refid="dist.classpath" />
   </path>
   <target name="compile-core" depends="-init, compile-utils, compile-api, compile-vmware-base" description="Compile the core business logic.">
-    <compile-java jar.name="${core.jar}" top.dir="${core.dir}" classpath="core.classpath" />
+      <compile-java jar.name="${core.jar}" top.dir="${core.dir}" classpath="core.classpath" />
   </target>
 
   <path id="vmware-base.classpath">
-    <path refid="deps.classpath" />
-    <path refid="dist.classpath" />
+      <path refid="deps.classpath" />
+      <path refid="dist.classpath" />
   </path>
   <target name="compile-vmware-base" depends="-init, compile-utils" description="Compile the VMware support library">
-    <compile-java jar.name="${vmware-base.jar}" top.dir="${vmware-base.dir}" classpath="vmware-base.classpath" />
+      <compile-java jar.name="${vmware-base.jar}" top.dir="${vmware-base.dir}" classpath="vmware-base.classpath" />
   </target>
-	
+
   <path id="server.classpath">
-    <path refid="deps.classpath" />
-    <path refid="dist.classpath" />
+      <path refid="deps.classpath" />
+      <path refid="dist.classpath" />
   </path>
   <target name="compile-server" depends="-init, compile-utils, compile-core, compile-agent" description="Compile the management server.">
-    <compile-java jar.name="${server.jar}" top.dir="${server.dir}" classpath="server.classpath" />
+      <compile-java jar.name="${server.jar}" top.dir="${server.dir}" classpath="server.classpath" />
   </target>
 
   <path id="client.classpath">
-    <path refid="deps.classpath" />
-    <path refid="dist.classpath" />
+      <path refid="deps.classpath" />
+      <path refid="dist.classpath" />
   </path>
 
   <target name="build-scripts" depends="-init">
-    <copy todir="${scripts.target.dir}">
-      <fileset dir="${scripts.dir}">
-        <include name="**/*"/>
-	<exclude name="**/fsimage.so"/>
-	<exclude name="**/ping.tar.bz2"/>
-	<exclude name="**/vhd-util"/>
-        <exclude name="**/.*" />
-      </fileset>
-      <filterset>
-        <filter token="VERSION" value="${impl.version}"/>
-      </filterset>
-   </copy>
-   <copy todir="${scripts.target.dir}">
-      <fileset dir="${scripts.dir}">
-        <include name="**/fsimage.so"/>
-		<include name="**/ping.tar.bz2"/>
-		<include name="**/vhd-util"/>
-      </fileset>
-   </copy>
+      <copy todir="${scripts.target.dir}">
+          <fileset dir="${scripts.dir}">
+              <include name="**/*"/>
+              <exclude name="**/fsimage.so"/>
+              <exclude name="**/ping.tar.bz2"/>
+              <exclude name="**/vhd-util"/>
+              <exclude name="**/.*" />
+          </fileset>
+          <filterset>
+              <filter token="VERSION" value="${impl.version}"/>
+          </filterset>
+      </copy>
+      <copy todir="${scripts.target.dir}">
+          <fileset dir="${scripts.dir}">
+              <include name="**/fsimage.so"/>
+              <include name="**/ping.tar.bz2"/>
+              <include name="**/vhd-util"/>
+          </fileset>
+      </copy>
   </target>
 
   <target name="build-ui" depends="-init" description="Builds the UI">
-    <mkdir dir="${client.target.dir}" />
-    <copy todir="${client.target.dir}">
-      <fileset dir="${ui.user.dir}">
-        <include name="**/*.html" />
-        <include name="**/*.js"/>
-        <include name="**/*.jsp"/>
-        <exclude name="**/.classpath" />
-        <exclude name="**/.project" />
-      </fileset>
-      <filterset>
-        <filter token="VERSION" value="${impl.version}"/>
-      </filterset>
-    </copy>
-    <copy todir="${client.target.dir}">
-      <fileset dir="${ui.user.dir}">
-        <include name="**/*"/>
-        <exclude name="**/*.html" />
-        <exclude name="**/*.js"/>
-        <exclude name="**/*.jsp"/>
-        <exclude name="**/.classpath" />
-        <exclude name="**/.project" />
-      </fileset>
-    </copy>
-    <copy todir="${client.target.dir}">
-      <fileset dir="${client.dir}/WEB-INF/classes">
-        <include name="**/*.properties"/>
-      </fileset>
-    </copy>
+      <mkdir dir="${client.target.dir}" />
+      <copy todir="${client.target.dir}">
+          <fileset dir="${ui.user.dir}">
+              <include name="**/*.html" />
+              <include name="**/*.js"/>
+              <include name="**/*.jsp"/>
+              <exclude name="**/.classpath" />
+              <exclude name="**/.project" />
+          </fileset>
+          <filterset>
+              <filter token="VERSION" value="${impl.version}"/>
+          </filterset>
+      </copy>
+      <copy todir="${client.target.dir}">
+          <fileset dir="${ui.user.dir}">
+              <include name="**/*"/>
+              <exclude name="**/*.html" />
+              <exclude name="**/*.js"/>
+              <exclude name="**/*.jsp"/>
+              <exclude name="**/.classpath" />
+              <exclude name="**/.project" />
+          </fileset>
+      </copy>
+      <copy todir="${client.target.dir}">
+          <fileset dir="${client.dir}/WEB-INF/classes">
+              <include name="**/*.properties"/>
+          </fileset>
+      </copy>
   </target>
 
   <target name="build-ovm" depends="compile-ovm" />
 
   <target name="build-server" depends="compile-server">
-    <mkdir dir="${server.dist.dir}" />
-    <mkdir dir="${server.dist.dir}/lib" />
-    <mkdir dir="${server.dist.dir}/conf" />
+      <mkdir dir="${server.dist.dir}" />
+      <mkdir dir="${server.dist.dir}/lib" />
+      <mkdir dir="${server.dist.dir}/conf" />
 
-    <copy todir="${jar.dir}">
-      <fileset dir="${deps.dir}">
-		<include name="cloud-*.jar"/>
-      </fileset>
-    </copy>
+      <copy todir="${jar.dir}">
+          <fileset dir="${deps.dir}">
+              <include name="cloud-*.jar"/>
+          </fileset>
+      </copy>
 
-    <copy overwrite="true" todir="${server.dist.dir}/conf">
-      <fileset dir="${base.dir}/client/tomcatconf">
-        <include name="*.in" />
-      </fileset>
-      <globmapper from="*.in" to="*" />
-      <filterchain>
-        <filterreader classname="org.apache.tools.ant.filters.ReplaceTokens">
-          <param type="propertiesfile" value="${override.file}" />
-        </filterreader>
-      </filterchain>
-    </copy>
+      <copy overwrite="true" todir="${server.dist.dir}/conf">
+          <fileset dir="${base.dir}/client/tomcatconf">
+              <include name="*.in" />
+          </fileset>
+          <globmapper from="*.in" to="*" />
+          <filterchain>
+              <filterreader classname="org.apache.tools.ant.filters.ReplaceTokens">
+                  <param type="propertiesfile" value="${override.file}" />
+              </filterreader>
+          </filterchain>
+      </copy>
 
-    <copy overwrite="true" todir="${server.dist.dir}/conf">
-      <fileset dir="${server.dir}/src/com/cloud/migration">
-        <include name="*.xml" />
-      </fileset>
-    </copy>
-    
-    <copy overwrite="true" todir="${db.scripts.dir}">
-      <fileset dir="${setup.db.dir}">
-        <include name="**/*"/>
-      </fileset>
-      <filterset>
-        <filter token="VERSION" value="${impl.version}"/>
-      </filterset>
-    </copy>
+      <copy overwrite="true" todir="${server.dist.dir}/conf">
+          <fileset dir="${server.dir}/src/com/cloud/migration">
+              <include name="*.xml" />
+          </fileset>
+      </copy>
+
+      <copy overwrite="true" todir="${db.scripts.dir}">
+          <fileset dir="${setup.db.dir}">
+              <include name="**/*"/>
+          </fileset>
+          <filterset>
+              <filter token="VERSION" value="${impl.version}"/>
+          </filterset>
+      </copy>
   </target>
 
   <path id="console-proxy.classpath">
-    <path refid="deps.classpath" />
-    <path refid="dist.classpath" />
+      <path refid="deps.classpath" />
+      <path refid="dist.classpath" />
   </path>
   <target name="compile-console-proxy" depends="-init" description="Compile the console proxy.">
-    <compile-java jar.name="${console-proxy.jar}" top.dir="${console-proxy.dir}" classpath="console-proxy.classpath" >
-      <include-files>
-        <fileset dir="${console-proxy.dir}/certs">
-          <include name="*.keystore" />
-          <include name="*.crt" />
-          <include name="*.key" />
-        </fileset>
-      </include-files>
-    </compile-java>
+      <compile-java jar.name="${console-proxy.jar}" top.dir="${console-proxy.dir}" classpath="console-proxy.classpath" >
+          <include-files>
+              <fileset dir="${console-proxy.dir}/certs">
+                  <include name="*.keystore" />
+                  <include name="*.crt" />
+                  <include name="*.key" />
+              </fileset>
+          </include-files>
+      </compile-java>
   </target>
 
   <target name="copy-console-proxy" depends="-init">
-    <property name="copyto.dir" value="${console-proxy.dist.dir}" />
-    <mkdir dir="${copyto.dir}" />
-    <mkdir dir="${copyto.dir}/conf" />
-    <mkdir dir="${copyto.dir}/logs" />
-    <mkdir dir="${copyto.dir}/applet" />
-    <mkdir dir="${copyto.dir}/images" />
-    <mkdir dir="${copyto.dir}/js" />
-    <mkdir dir="${copyto.dir}/ui" />
-    <mkdir dir="${copyto.dir}/css" />
-    <mkdir dir="${copyto.dir}/certs" />
+      <property name="copyto.dir" value="${console-proxy.dist.dir}" />
+      <mkdir dir="${copyto.dir}" />
+      <mkdir dir="${copyto.dir}/conf" />
+      <mkdir dir="${copyto.dir}/logs" />
+      <mkdir dir="${copyto.dir}/applet" />
+      <mkdir dir="${copyto.dir}/images" />
+      <mkdir dir="${copyto.dir}/js" />
+      <mkdir dir="${copyto.dir}/ui" />
+      <mkdir dir="${copyto.dir}/css" />
+      <mkdir dir="${copyto.dir}/certs" />
 
-    <copy todir="${copyto.dir}">
-      <fileset dir="${deps.dir}">
-        <include name="log4j-1.2.15.jar" />
-        <include name="apache-log4j-extras-1.0.jar" />
-        <include name="gson.jar" />
-      </fileset>
-    </copy>
+      <copy todir="${copyto.dir}">
+          <fileset dir="${deps.dir}">
+              <include name="log4j-1.2.15.jar" />
+              <include name="apache-log4j-extras-1.0.jar" />
+              <include name="gson.jar" />
+          </fileset>
+      </copy>
 
-    <copy todir="${copyto.dir}">
-      <fileset dir="${jar.dir}">
-        <include name="cloud-console-proxy.jar" />
-      </fileset>
-    </copy>
-    <copy todir="${copyto.dir}/conf">
-      <fileset dir="${production.dir}/consoleproxy/conf">
-        <include name="log4j-cloud.xml" />
-        <include name="consoleproxy.properties" />
-      </fileset>
-    </copy>
-    <copy todir="${copyto.dir}/images">
-      <fileset dir="${console-proxy.dir}/images">
-        <include name="*.jpg" />
-        <include name="*.gif" />
-        <include name="*.png" />
-        <include name="*.cur" />
-      </fileset>
-    </copy>
-    <copy todir="${copyto.dir}/js">
-      <fileset dir="${console-proxy.dir}/js">
-        <include name="*.js" />
-      </fileset>
-    </copy>
-    <copy todir="${copyto.dir}/ui">
-      <fileset dir="${console-proxy.dir}/ui">
-        <include name="*.ftl" />
-      </fileset>
-    </copy>
-    <copy todir="${copyto.dir}/css">
-      <fileset dir="${console-proxy.dir}/css">
-        <include name="*.css" />
-      </fileset>
-    </copy>
-    <copy todir="${copyto.dir}/certs">
-      <fileset dir="${console-proxy.dir}/certs">
-          <include name="*.keystore" />
-          <include name="*.crt" />
-          <include name="*.key" />
-      </fileset>
-    </copy>
+      <copy todir="${copyto.dir}">
+          <fileset dir="${jar.dir}">
+              <include name="cloud-console-proxy.jar" />
+          </fileset>
+      </copy>
+      <copy todir="${copyto.dir}/conf">
+          <fileset dir="${production.dir}/consoleproxy/conf">
+              <include name="log4j-cloud.xml" />
+              <include name="consoleproxy.properties" />
+          </fileset>
+      </copy>
+      <copy todir="${copyto.dir}/images">
+          <fileset dir="${console-proxy.dir}/images">
+              <include name="*.jpg" />
+              <include name="*.gif" />
+              <include name="*.png" />
+              <include name="*.cur" />
+          </fileset>
+      </copy>
+      <copy todir="${copyto.dir}/js">
+          <fileset dir="${console-proxy.dir}/js">
+              <include name="*.js" />
+          </fileset>
+      </copy>
+      <copy todir="${copyto.dir}/ui">
+          <fileset dir="${console-proxy.dir}/ui">
+              <include name="*.ftl" />
+          </fileset>
+      </copy>
+      <copy todir="${copyto.dir}/css">
+          <fileset dir="${console-proxy.dir}/css">
+              <include name="*.css" />
+          </fileset>
+      </copy>
+      <copy todir="${copyto.dir}/certs">
+          <fileset dir="${console-proxy.dir}/certs">
+              <include name="*.keystore" />
+              <include name="*.crt" />
+              <include name="*.key" />
+          </fileset>
+      </copy>
   </target>
 
   <target name="build-console-proxy" depends="-init, compile-console-proxy, copy-console-proxy">
-    <copy todir="${console-proxy.dist.dir}">
-      <fileset dir="${console-proxy.dir}/scripts">
-      </fileset>
-    </copy>
-    <copy todir="${console-proxy.dist.dir}/conf">
-      <fileset dir="${console-proxy.dir}/conf">
-      </fileset>
-    </copy>
+      <copy todir="${console-proxy.dist.dir}">
+          <fileset dir="${console-proxy.dir}/scripts">
+          </fileset>
+      </copy>
+      <copy todir="${console-proxy.dist.dir}/conf">
+          <fileset dir="${console-proxy.dir}/conf">
+          </fileset>
+      </copy>
   </target>
 
   <path id="agent.classpath">
-    <path refid="deps.classpath" />
-    <fileset dir="${target.dir}">
-      <include name="**/${core.jar}" />
-      <include name="**/${utils.jar}" />
-      <include name="**/${api.jar}"/>
-    </fileset>
+      <path refid="deps.classpath" />
+      <fileset dir="${target.dir}">
+          <include name="**/${core.jar}" />
+          <include name="**/${utils.jar}" />
+          <include name="**/${api.jar}"/>
+      </fileset>
   </path>
   <target name="compile-agent" depends="-init, compile-utils, compile-core, compile-api" description="Compile the management agent.">
-    <compile-java jar.name="${agent.jar}" top.dir="${agent.dir}" classpath="agent.classpath" />
+      <compile-java jar.name="${agent.jar}" top.dir="${agent.dir}" classpath="agent.classpath" />
   </target>
 
   <target name="build-agent" depends="-init, build-console-proxy, compile-agent">
-    <mkdir dir="${agent.dist.dir}" />
-    <mkdir dir="${agent.dist.dir}/scripts" />
-    <mkdir dir="${agent.dist.dir}/conf" />
-    <mkdir dir="${agent.dist.dir}/logs" />
-    <mkdir dir="${agent.dist.dir}/db" />
-    <mkdir dir="${agent.dist.dir}/storagehdpatch" />
+      <mkdir dir="${agent.dist.dir}" />
+      <mkdir dir="${agent.dist.dir}/scripts" />
+      <mkdir dir="${agent.dist.dir}/conf" />
+      <mkdir dir="${agent.dist.dir}/logs" />
+      <mkdir dir="${agent.dist.dir}/db" />
+      <mkdir dir="${agent.dist.dir}/storagehdpatch" />
 
-    <condition property="agent.properties" value="override/agent.properties" else="agent.properties">
-      <available file="${agent.dir}/conf/override/agent.properties" />
-    </condition>
+      <condition property="agent.properties" value="override/agent.properties" else="agent.properties">
+          <available file="${agent.dir}/conf/override/agent.properties" />
+      </condition>
 
-    <condition property="developer.properties" value="override/developer.properties" else="developer.properties">
-      <available file="${agent.dir}/conf/override/developer.properties" />
-    </condition>
+      <condition property="developer.properties" value="override/developer.properties" else="developer.properties">
+          <available file="${agent.dir}/conf/override/developer.properties" />
+      </condition>
 
-    <copy overwrite="true" todir="${agent.dist.dir}/conf" flatten="true">
-      <fileset dir="${agent.dir}/conf">
-        <include name="${agent.properties}" />
-        <include name="${developer.properties}" />
-      </fileset>
-      <filterchain>
-        <filterreader classname="org.apache.tools.ant.filters.ReplaceTokens">
-          <param type="propertiesfile" value="${override.file}" />
-        </filterreader>
-      </filterchain>
-    </copy>
+      <copy overwrite="true" todir="${agent.dist.dir}/conf" flatten="true">
+          <fileset dir="${agent.dir}/conf">
+              <include name="${agent.properties}" />
+              <include name="${developer.properties}" />
+          </fileset>
+          <filterchain>
+              <filterreader classname="org.apache.tools.ant.filters.ReplaceTokens">
+                  <param type="propertiesfile" value="${override.file}" />
+              </filterreader>
+          </filterchain>
+      </copy>
 
-    <copy overwrite="true" todir="${agent.dist.dir}/conf" flatten="true">
-      <fileset dir="${agent.dir}/conf">
-        <include name="log4j-cloud.xml.in" />
-      </fileset>
-      <globmapper from="*.in" to="*" />
-      <filterchain>
-        <filterreader classname="org.apache.tools.ant.filters.ReplaceTokens">
-          <param type="propertiesfile" value="${override.file}" />
-        </filterreader>
-      </filterchain>
-    </copy>
-    <delete file="${agent.dist.dir}/conf/log4j-cloud.xml.in"/>
+      <copy overwrite="true" todir="${agent.dist.dir}/conf" flatten="true">
+          <fileset dir="${agent.dir}/conf">
+              <include name="log4j-cloud.xml.in" />
+          </fileset>
+          <globmapper from="*.in" to="*" />
+          <filterchain>
+              <filterreader classname="org.apache.tools.ant.filters.ReplaceTokens">
+                  <param type="propertiesfile" value="${override.file}" />
+              </filterreader>
+          </filterchain>
+      </copy>
+      <delete file="${agent.dist.dir}/conf/log4j-cloud.xml.in"/>
 
-    <copy todir="${agent.dist.dir}">
-      <fileset dir="${agent.dir}/scripts">
-        <include name="agent.sh" />
-        <include name="run.sh" />
-      </fileset>
-    </copy>
+      <copy todir="${agent.dist.dir}">
+          <fileset dir="${agent.dir}/scripts">
+              <include name="agent.sh" />
+              <include name="run.sh" />
+          </fileset>
+      </copy>
   </target>
 
   <target name="build-servers" depends="-init, build-server" />
 
   <target name="build-opensource" depends="-init, build-server, build-agent, build-console-proxy, build-scripts, build-ui, build-ovm, package-oss-systemvm-iso">
-    <copy overwrite="true" todir="${dist.dir}">
-      <fileset dir="${base.dir}/build/deploy/">
-        <include name="deploy-agent.sh" />
-        <include name="deploy-server.sh" />
-        <include name="deploy-console-proxy.sh" />
-        <include name="install.sh" />
-      </fileset>
-      <fileset dir="${base.dir}/client">
-        <include name="setup/**/*" />
-      </fileset>
-    </copy>
-    
-    <copy overwrite="true" todir="${jar.dir}">
-      <fileset dir="${deps.dir}">
-        <include name="vmware-*.jar" />
-      </fileset>
-    </copy>
-    
-    <chmod file="${dist.dir}/deploy-agent.sh" perm="uog+xr" />
-    <chmod file="${dist.dir}/deploy-server.sh" perm="uog+xr" />
+      <copy overwrite="true" todir="${dist.dir}">
+          <fileset dir="${base.dir}/build/deploy/">
+              <include name="deploy-agent.sh" />
+              <include name="deploy-server.sh" />
+              <include name="deploy-console-proxy.sh" />
+              <include name="install.sh" />
+          </fileset>
+          <fileset dir="${base.dir}/client">
+              <include name="setup/**/*" />
+          </fileset>
+      </copy>
+
+      <copy overwrite="true" todir="${jar.dir}">
+          <fileset dir="${deps.dir}">
+              <include name="vmware-*.jar" />
+          </fileset>
+      </copy>
+
+      <chmod file="${dist.dir}/deploy-agent.sh" perm="uog+xr" />
+      <chmod file="${dist.dir}/deploy-server.sh" perm="uog+xr" />
   </target>
 
 
   <target name="build-systemvm-patch" depends="-init">
-    <mkdir dir="${dist.dir}" />
-    <mkdir dir="${dist.dir}/build-patch" />
-    <mkdir dir="${dist.dir}/build-patch/usr/sbin" />
-    <copy overwrite="true" todir="${dist.dir}/build-patch">
-      <fileset dir="${base.dir}/patches/systemvm/debian/config/" >
-        <include name="**/*"/>
-      </fileset>
-      <fileset dir="${base.dir}/patches/systemvm/debian/vpn/" >
-        <include name="**/*"/>
-      </fileset>
-      <fileset dir="${base.dir}/patches/systemvm/debian/xe/" >
-        <include name="**/*"/>
-        <exclude name="**/xe-*" />
-        <exclude name="**/xen-*" />
-      </fileset>
-    </copy>
-    <copy overwrite="true" todir="${dist.dir}/build-patch/usr/sbin/">
-      <fileset dir="${base.dir}/patches/systemvm/debian/xe/" >
-        <include name="**/xe-*" />
-        <include name="**/xen-*" />
-      </fileset>
-    </copy>
-    <tar destfile="${dist.dir}/patch.tar">
-      <tarfileset dir="${dist.dir}/build-patch/" filemode="755">
-        <include name="**/*"/>
-        <exclude name="**/.classpath" />
-        <exclude name="**/.project" />
-        <exclude name="**/wscript_build" />
-      </tarfileset>
-    </tar>
-    <copy file="${base.dir}/patches/systemvm/debian/config/root/.ssh/authorized_keys" todir="${dist.dir}/"/>
-    <gzip destfile="${dist.dir}/cloud-scripts.tgz" src="${dist.dir}/patch.tar"/>
-    <delete file="${dist.dir}/patch.tar"/>
-    <delete dir="${dist.dir}/build-patch"/>
+      <mkdir dir="${dist.dir}" />
+      <mkdir dir="${dist.dir}/build-patch" />
+      <mkdir dir="${dist.dir}/build-patch/usr/sbin" />
+      <copy overwrite="true" todir="${dist.dir}/build-patch">
+          <fileset dir="${base.dir}/patches/systemvm/debian/config/" >
+              <include name="**/*"/>
+          </fileset>
+          <fileset dir="${base.dir}/patches/systemvm/debian/vpn/" >
+              <include name="**/*"/>
+          </fileset>
+          <fileset dir="${base.dir}/patches/systemvm/debian/xe/" >
+              <include name="**/*"/>
+              <exclude name="**/xe-*" />
+              <exclude name="**/xen-*" />
+          </fileset>
+      </copy>
+      <copy overwrite="true" todir="${dist.dir}/build-patch/usr/sbin/">
+          <fileset dir="${base.dir}/patches/systemvm/debian/xe/" >
+              <include name="**/xe-*" />
+              <include name="**/xen-*" />
+          </fileset>
+      </copy>
+      <tar destfile="${dist.dir}/patch.tar">
+          <tarfileset dir="${dist.dir}/build-patch/" filemode="755">
+              <include name="**/*"/>
+              <exclude name="**/.classpath" />
+              <exclude name="**/.project" />
+              <exclude name="**/wscript_build" />
+          </tarfileset>
+      </tar>
+      <copy file="${base.dir}/patches/systemvm/debian/config/root/.ssh/authorized_keys" todir="${dist.dir}/"/>
+      <gzip destfile="${dist.dir}/cloud-scripts.tgz" src="${dist.dir}/patch.tar"/>
+      <delete file="${dist.dir}/patch.tar"/>
+      <delete dir="${dist.dir}/build-patch"/>
   </target>
 
   <target name="help">
-    <echo level="info" message="Ant Build File for CloudStack" />
-    <echo level="info" message="Type 'ant -projecthelp' to get a list of targets and their descriptions." />
+      <echo level="info" message="Ant Build File for CloudStack" />
+      <echo level="info" message="Type 'ant -projecthelp' to get a list of targets and their descriptions." />
   </target>
   <target name="usage" depends="help" />
 
   <target name="-init">
-    <mkdir dir="${dist.dir}" />
-    <mkdir dir="${target.dir}" />
-    <record name="${build.log}" loglevel="verbose" action="start" />
+      <mkdir dir="${dist.dir}" />
+      <mkdir dir="${target.dir}" />
+      <record name="${build.log}" loglevel="verbose" action="start" />
 
-    <!-- create a UTC build timestamp using ISO 8601 formatting -->
-    <tstamp>
-      <format property="utc.build.timestamp" pattern="yyyy-MM-dd'T'HH:mm:ss'Z'" timezone="GMT" />
-    </tstamp>
+      <!-- create a UTC build timestamp using ISO 8601 formatting -->
+      <tstamp>
+          <format property="utc.build.timestamp" pattern="yyyy-MM-dd'T'HH:mm:ss'Z'" timezone="GMT" />
+      </tstamp>
 
-    <!-- remember who/where did the build -->
-    <exec executable="hostname" outputproperty="host.name" />
-    <property name="builder.at" value="${user.name} at ${host.name}" />
-    <property name="builder.id" value="${builder.at}, on ${utc.build.timestamp}" />
-    <property name="built.by" value="${builder.at}, ${utc.build.timestamp}" />
-    <echo level="info" message="builder: ${builder.id}" />
+      <!-- remember who/where did the build -->
+      <exec executable="hostname" outputproperty="host.name" />
+      <property name="builder.at" value="${user.name} at ${host.name}" />
+      <property name="builder.id" value="${builder.at}, on ${utc.build.timestamp}" />
+      <property name="built.by" value="${builder.at}, ${utc.build.timestamp}" />
+      <echo level="info" message="builder: ${builder.id}" />
 
-    <!-- set build.number property, stored in eponymous file -->
-    <buildnumber file="${build.dir}/build.number" />
-    <condition property="impl.version" value="${version}.${manual.build.number}" else="${version}.${utc.build.timestamp}">
-      <isset property="manual.build.number"/>
-    </condition>
+      <!-- set build.number property, stored in eponymous file -->
+      <buildnumber file="${build.dir}/build.number" />
+      <condition property="impl.version" value="${version}.${manual.build.number}" else="${version}.${utc.build.timestamp}">
+          <isset property="manual.build.number"/>
+      </condition>
 
-    <echo message="Build number is ${impl.version}" />
+      <echo message="Build number is ${impl.version}" />
 
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${jar.dir}" />
@@ -580,13 +580,28 @@
   </path>
   <target name="compile-ovm" depends="-init, compile-server" description="Compile OVM">
     <compile-java jar.name="${ovm.jar}" top.dir="${ovm.dir}" classpath="ovm.classpath" />
-  </target>
+</target>
 
-  <target name="compile-all" description="Compile all of the jars" depends="compile-utils, compile-api, compile-core, compile-server, compile-ovm"/>
+<target name="compile-all" description="Compile all of the jars" depends="compile-utils, compile-api, compile-core, compile-server, compile-ovm"/>
 
-  <target name="clean-all" depends="clean, clean-awsapi" description="Clean all of the generated files, including dependency cache and javadoc">
+
+<target name="build-ucs" depends="compile-ucs" />
+
+<!-- ===================== Baremetal.Jar ===================== -->
+        <property name="ucs.jar" value="cloud-ucs.jar" />
+        <property name="ucs.dir" location="${base.dir}/ucs" />
+        <path id="ucs.classpath" >
+            <path refid="deps.classpath" />
+            <path refid="dist.classpath" />
+        </path>
+        <target name="compile-ucs" depends="-init, compile-server" description="Compile ucs">
+            <compile-java jar.name="${ucs.jar}" top.dir="${ucs.dir}" classpath="ucs.classpath" />
+        </target>
+
+<target name="clean-all" depends="clean, clean-awsapi" description="Clean all of the generated files, including dependency cache and javadoc">
     <delete dir="${target.dir}" />
-  </target>
+</target>
+
 </project>
 
 
