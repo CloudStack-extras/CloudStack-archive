@@ -870,7 +870,10 @@
 
         if (field.indicator) {
           $td.addClass('state').addClass(field.indicator[content]);
+          $tr.find('td:first').addClass('item-state-' + field.indicator[content]);
+
         }
+        
         if (field.id == true) id = field.id;
         if ($td.index()) $td.addClass('reduced-hide');
         if (field.action) {
