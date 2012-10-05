@@ -197,8 +197,7 @@
           $input = $('<select>')
             .attr({ name: key })
             .data('dialog-select-fn', function(args) {								
-              if((field.isHidden == null) || (typeof(field.isHidden) == 'boolean' && field.isHidden == false) || (typeof(field.isHidden) == 'function' && field.isHidden() == false)) 			
-                selectFn(args ? $.extend(true, {}, selectArgs, args) : selectArgs);
+              selectFn(args ? $.extend(true, {}, selectArgs, args) : selectArgs);
             })
             .appendTo($value);
 
@@ -223,19 +222,16 @@
 
               dependsOnArgs[dependsOn] = $target.val();
 							
-							if((field.isHidden == null) || (typeof(field.isHidden) == 'boolean' && field.isHidden == false) || (typeof(field.isHidden) == 'function' && field.isHidden() == false)) 						
-                selectFn($.extend(selectArgs, dependsOnArgs));
+							selectFn($.extend(selectArgs, dependsOnArgs));
 
               return true;
             });
 
             if (!$dependsOn.is('select')) {
-						  if((field.isHidden == null) || (typeof(field.isHidden) == 'boolean' && field.isHidden == false) || (typeof(field.isHidden) == 'function' && field.isHidden() == false)) 			
-                selectFn(selectArgs);
+						  selectFn(selectArgs);
             }
           } else {
-					  if((field.isHidden == null) || (typeof(field.isHidden) == 'boolean' && field.isHidden == false) || (typeof(field.isHidden) == 'function' && field.isHidden() == false)) 			
-              selectFn(selectArgs);
+					  selectFn(selectArgs);
           }
         } else if (field.isBoolean) {
           if (field.multiArray) {
@@ -308,39 +304,52 @@
           if (field.defaultValue) {
             $input.val(field.defaultValue);
           }
-        } else {
-          // Text field
-          if (field.range) {
-            $input = $.merge(
-              // Range start
-              $('<input>').attr({
-                type: 'text',
-                name: field.range[0]
-              }),
+        } else if (field.isDatepicker) { //jQuery datepicker				
+				  $input = $('<input>').attr({
+						name: key,
+						type: 'text'
+					}).appendTo($value);
 
-              // Range end
-              $('<input>').attr({
-                type: 'text',
-                name: field.range[1]
-              })
-            ).appendTo(
-              $('<div>').addClass('range-edit').appendTo($value)
-            );
+					if (field.defaultValue) {
+						$input.val(field.defaultValue);
+					}
+					if (field.id) {
+						$input.attr('id', field.id);
+					}          
+          $input.addClass("disallowSpecialCharacters"); 										
+					$input.datepicker({dateFormat: 'yy-mm-dd'});	
+				
+				} else if(field.range) {	//2 text fields on the same line (e.g. port range: startPort - endPort)			
+				  $input = $.merge(
+						// Range start
+						$('<input>').attr({
+							type: 'text',
+							name: field.range[0]
+						}),
 
-            $input.wrap($('<div>').addClass('range-item'));
-          } else {
-            $input = $('<input>').attr({
-              name: key,
-              type: field.password || field.isPassword ? 'password' : 'text'
-            }).appendTo($value);
+						// Range end
+						$('<input>').attr({
+							type: 'text',
+							name: field.range[1]
+						})
+					).appendTo(
+						$('<div>').addClass('range-edit').appendTo($value)
+					);
+					$input.wrap($('<div>').addClass('range-item'));					
+					$input.addClass("disallowSpecialCharacters");
+				
+				} else { //text field                  
+					$input = $('<input>').attr({
+						name: key,
+						type: field.password || field.isPassword ? 'password' : 'text'
+					}).appendTo($value);
 
-            if (field.defaultValue) {
-              $input.val(field.defaultValue);
-            }
-			if (field.id) {
-              $input.attr('id', field.id);
-            }
-          }
+					if (field.defaultValue) {
+						$input.val(field.defaultValue);
+					}
+					if (field.id) {
+						$input.attr('id', field.id);
+					}          
           $input.addClass("disallowSpecialCharacters");
         }
 
