@@ -399,3 +399,9 @@ resetVpnConnection=com.cloud.api.commands.ResetVpnConnectionCmd;15
 listVpnCustomerGateways=com.cloud.api.commands.ListVpnCustomerGatewaysCmd;15
 listVpnGateways=com.cloud.api.commands.ListVpnGatewaysCmd;15
 listVpnConnections=com.cloud.api.commands.ListVpnConnectionsCmd;15
+
+
+### UCS manager ###
+addUcsCluster=com.cloud.ucs.manager.AddUcsClusterCmd
+addUcsManager=com.cloud.ucs.manager.AddUcsManagerCmd
+associateProfileToBladesInCluster=com.cloud.ucs.manager.AssociateUcsProfileToBladesInClusterCmd

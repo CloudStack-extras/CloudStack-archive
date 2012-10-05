@@ -25,6 +25,7 @@ public class Hypervisor {
         BareMetal,
         Simulator,
         Ovm,
+        ManagedHost,
 
         Any; /*If you don't care about the hypervisor type*/
 
@@ -52,6 +53,8 @@ public class Hypervisor {
                 return HypervisorType.Ovm;
             } else if (hypervisor.equalsIgnoreCase("Any")) {
                 return HypervisorType.Any;
+            } else if (HypervisorType.ManagedHost.toString().equals(hypervisor)) {
+            	return HypervisorType.ManagedHost;
             } else {
                 return HypervisorType.None;
             }

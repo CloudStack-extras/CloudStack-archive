@@ -2462,5 +2462,16 @@ INSERT INTO `cloud`.`counter` (id, source, name, value,created) VALUES (2,'snmp'
 INSERT INTO `cloud`.`counter` (id, source, name, value,created) VALUES (3,'snmp','Linux CPU Idle - percentage', '1.3.6.1.4.1.2021.11.11.0', now());
 INSERT INTO `cloud`.`counter` (id, source, name, value,created) VALUES (100,'netscaler','Response Time - microseconds', 'RESPTIME', now());
 
+CREATE TABLE  `cloud`.`ucs_manager` (
+  `id` bigint unsigned NOT NULL auto_increment,
+  `zone_id` bigint unsigned NOT NULL,
+  `uuid` varchar(40) NOT NULL,
+  `name` varchar(128) DEFAULT NULL,
+  `url` varchar(255) NOT NULL,
+  `username` varchar(255) NOT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 SET foreign_key_checks = 1;
 

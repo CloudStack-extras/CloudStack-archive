@@ -1,0 +1,5 @@
+<configConfMo dn="" cookie="[cookie]" inHierarchical="false">
+    <inConfig>
+        <lsBinding name="testBinding" assignedToDn="[pdn]" computeEpDn="[cdn]"/>
+    </inConfig>
+</configConfMo>
