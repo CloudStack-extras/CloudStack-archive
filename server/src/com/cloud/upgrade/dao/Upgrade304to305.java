@@ -13,7 +13,6 @@ limitations under the License.*/
 package com.cloud.upgrade.dao;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,7 +23,6 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
-import com.cloud.utils.crypt.DBEncryptionUtil;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.Script;
 

@@ -30,7 +30,7 @@ public class Upgrade304to305Test extends TestCase{
     @Override
     @Before
     public void setUp() throws Exception {
-        DbTestUtils.executeScript("test/dbupgrade/cloud_304.sql", false, true);
+        //DbTestUtils.executeScript("test/dbupgrade/cloud_304.sql", false, true);
     }
 
     @Override
@@ -44,9 +44,9 @@ public class Upgrade304to305Test extends TestCase{
         DatabaseUpgradeChecker checker = ComponentLocator.inject(DatabaseUpgradeChecker.class);
 
         String version = dao.getCurrentVersion();
-        assert version.equals("3.0.4") : "Version returned is not 3.0.4 but " + version;
+        assert version.equals("3.0.5") : "Version returned is not 3.0.5 but " + version;
 
-        checker.upgrade("3.0.4", "3.0.5");
+        checker.upgrade("3.0.5", "3.0.6");
     }
 
 }
