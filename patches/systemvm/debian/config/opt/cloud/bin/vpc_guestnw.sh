@@ -116,7 +116,8 @@ create_guest_network() {
   # setup ip configuration
   sudo ip addr add dev $dev $ip/$mask brd +
   sudo ip link set $dev up
-  sudo arping -c 3 -I $dev -A -U -s $ip $ip
+  sudo arping -c 1 -I $dev -A $ip
+  sudo arping -c 1 -I $dev -A $ip
   # setup rules to allow dhcp/dns request
   sudo iptables -D INPUT -i $dev -p udp -m udp --dport 67 -j ACCEPT
   sudo iptables -D INPUT -i $dev -p udp -m udp --dport 53 -j ACCEPT
