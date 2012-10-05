@@ -1511,4 +1511,13 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager{
         // TODO Auto-generated method stub
         return null;
     }
+
+    /* (non-Javadoc)
+     * @see com.cloud.network.NetworkManager#getSSHKeyResetProvider(com.cloud.network.Network)
+     */
+    @Override
+    public UserDataServiceProvider getSSHKeyResetProvider(Network network) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

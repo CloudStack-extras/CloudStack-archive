@@ -35,6 +35,7 @@ import com.cloud.api.commands.DetachVolumeCmd;
 import com.cloud.api.commands.ListVMsCmd;
 import com.cloud.api.commands.RebootVMCmd;
 import com.cloud.api.commands.RecoverVMCmd;
+import com.cloud.api.commands.ResetSSHKeyCmd;
 import com.cloud.api.commands.ResetVMPasswordCmd;
 import com.cloud.api.commands.RestoreVMCmd;
 import com.cloud.api.commands.StartVMCmd;
@@ -434,6 +435,15 @@ public class MockUserVmManagerImpl implements UserVmManager, UserVmService, Mana
     public void prepareStop(VirtualMachineProfile<UserVmVO> profile) {
         // TODO Auto-generated method stub
         
+    }
+
+    /* (non-Javadoc)
+     * @see com.cloud.vm.UserVmService#resetSSHKey(com.cloud.api.commands.ResetSSHKeyCmd)
+     */
+    @Override
+    public UserVm resetSSHKey(ResetSSHKeyCmd cmd) throws ResourceUnavailableException, InsufficientCapacityException {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
