@@ -2470,7 +2470,7 @@ CREATE TABLE  `cloud`.`ucs_manager` (
   `url` varchar(255) NOT NULL,
   `username` varchar(255) NOT NULL,
   `password` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`),
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 SET foreign_key_checks = 1;

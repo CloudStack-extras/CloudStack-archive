@@ -463,7 +463,7 @@
 
   <target name="build-servers" depends="-init, build-server" />
 
-  <target name="build-opensource" depends="-init, build-server, build-agent, build-console-proxy, build-scripts, build-ui, build-ovm, package-oss-systemvm-iso">
+  <target name="build-opensource" depends="-init, build-server, build-agent, build-console-proxy, build-scripts, build-ui, build-ovm, package-oss-systemvm-iso, build-ucs">
       <copy overwrite="true" todir="${dist.dir}">
           <fileset dir="${base.dir}/build/deploy/">
               <include name="deploy-agent.sh" />
@@ -582,7 +582,7 @@
     <compile-java jar.name="${ovm.jar}" top.dir="${ovm.dir}" classpath="ovm.classpath" />
 </target>
 
-<target name="compile-all" description="Compile all of the jars" depends="compile-utils, compile-api, compile-core, compile-server, compile-ovm"/>
+<target name="compile-all" description="Compile all of the jars" depends="compile-utils, compile-api, compile-core, compile-server, compile-ovm, compile-ucs"/>
 
 
 <target name="build-ucs" depends="compile-ucs" />

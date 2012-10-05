@@ -404,4 +404,5 @@ listVpnConnections=com.cloud.api.commands.ListVpnConnectionsCmd;15
 ### UCS manager ###
 addUcsCluster=com.cloud.ucs.manager.AddUcsClusterCmd
 addUcsManager=com.cloud.ucs.manager.AddUcsManagerCmd
+listUcsProfiles=com.cloud.ucs.manager.ListUcsProfileCmd
 associateProfileToBladesInCluster=com.cloud.ucs.manager.AssociateUcsProfileToBladesInClusterCmd
