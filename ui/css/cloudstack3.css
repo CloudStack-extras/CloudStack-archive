@@ -10032,12 +10032,12 @@ div.container div.panel div#details-tab-network.detail-group div div.multi-edit 
 }
 
 
-div.container div.panel div.view div.data-table table.body tbody tr.even .displayname.item-state-on.first {
+div.container div.panel div.view div.data-table table.body tbody .item-state-on.first {
    background: #5EFB6E;
 
 }
 
-div.container div.panel div.view div.data-table table.body tbody tr.even .displayname.item-state-off.first {
+div.container div.panel div.view div.data-table table.body tbody .item-state-off.first {
    background:#F84A21;
 
 }
