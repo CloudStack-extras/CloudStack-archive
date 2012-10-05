@@ -43,6 +43,7 @@ import com.cloud.bridge.service.core.ec2.EC2DescribeAvailabilityZones;
 import com.cloud.bridge.service.core.ec2.EC2DescribeAvailabilityZonesResponse;
 import com.cloud.bridge.service.core.ec2.EC2DescribeImageAttribute;
 
+import com.cloud.bridge.service.core.ec2.EC2AvailabilityZone;
 import com.cloud.bridge.service.core.ec2.EC2DescribeImages;
 import com.cloud.bridge.service.core.ec2.EC2DescribeImagesResponse;
 import com.cloud.bridge.service.core.ec2.EC2DescribeInstances;
@@ -1279,7 +1280,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 	        	param5.setInstanceId(vol.getInstanceId().toString());
 	        	String devicePath = engine.cloudDeviceIdToDevicePath( vol.getHypervisor(), vol.getDeviceId());
 	        	param5.setDevice( devicePath );
-	        	param5.setStatus( toVolumeAttachmentState( vol.getInstanceId(), vol.getVMState()));
+                param5.setStatus(vol.getAttachmentState());
                 if (vol.getAttached() == null) {
                     param5.setAttachTime( cal );
                 } else {
@@ -1535,25 +1536,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 		else if (cloudState.equalsIgnoreCase( "Expunging" )) return new String( "terminated");
 		else return new String( "running" );
 	}
-	
-	/**
-	 * We assume a state for the volume based on what its associated VM is doing.
-	 * 
-	 * @param vmId
-	 * @param vmState
-	 * @return
-	 */
-	public static String toVolumeAttachmentState(String instanceId, String vmState ) {
-		if (null == instanceId || null == vmState) return "detached";
-		
-		     if (vmState.equalsIgnoreCase( "Destroyed" )) return "detached";
-		else if (vmState.equalsIgnoreCase( "Stopped"   )) return "attached";
-		else if (vmState.equalsIgnoreCase( "Running"   )) return "attached";
-		else if (vmState.equalsIgnoreCase( "Starting"  )) return "attaching";
-		else if (vmState.equalsIgnoreCase( "Stopping"  )) return "attached";
-		else if (vmState.equalsIgnoreCase( "Error"     )) return "detached";
-		else return "detached";
-	}
+
 	
 	public static StopInstancesResponse toStopInstancesResponse(EC2StopInstancesResponse engineResponse) {
 	    StopInstancesResponse response = new StopInstancesResponse();
@@ -1765,14 +1748,18 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 		DescribeAvailabilityZonesResponse response = new DescribeAvailabilityZonesResponse();
 		DescribeAvailabilityZonesResponseType param1 = new DescribeAvailabilityZonesResponseType();
         AvailabilityZoneSetType param2 = new AvailabilityZoneSetType();
-        
-		String[] zones = engineResponse.getZoneSet();
-		for (String zone : zones) {
+
+        EC2AvailabilityZone[] zones = engineResponse.getAvailabilityZoneSet();
+        for (EC2AvailabilityZone zone : zones) {
             AvailabilityZoneItemType param3 = new AvailabilityZoneItemType(); 
-            AvailabilityZoneMessageSetType param4 = new AvailabilityZoneMessageSetType();
-            param3.setZoneName( zone );
+            param3.setZoneName( zone.getName() );
             param3.setZoneState( "available" );
             param3.setRegionName( "" );
+
+            AvailabilityZoneMessageSetType param4 = new AvailabilityZoneMessageSetType();
+            AvailabilityZoneMessageType param5 = new AvailabilityZoneMessageType();
+            param5.setMessage(zone.getMessage());
+            param4.addItem(param5);
             param3.setMessageSet( param4 );
             param2.addItem( param3 );
 		}
@@ -1793,10 +1780,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 		param1.setVolumeId( engineResponse.getId().toString());
 		param1.setInstanceId( engineResponse.getInstanceId().toString());
 		param1.setDevice( engineResponse.getDevice());
-		if ( null != engineResponse.getState())
-		     param1.setStatus( engineResponse.getState());
-		else param1.setStatus( "" );  // ToDo - throw an Soap Fault 
-		
+        param1.setStatus(engineResponse.getAttachmentState());
 		param1.setAttachTime( cal );
 			
 		param1.setRequestId( UUID.randomUUID().toString());
@@ -1813,10 +1797,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 		param1.setVolumeId( engineResponse.getId().toString());
 		param1.setInstanceId( (null == engineResponse.getInstanceId() ? "" : engineResponse.getInstanceId().toString()));
 		param1.setDevice( (null == engineResponse.getDevice() ? "" : engineResponse.getDevice()));
-		if ( null != engineResponse.getState())
-		     param1.setStatus( engineResponse.getState());
-		else param1.setStatus( "" );  // ToDo - throw an Soap Fault 
-		
+        param1.setStatus(engineResponse.getAttachmentState());
 		param1.setAttachTime( cal );
 			
 		param1.setRequestId( UUID.randomUUID().toString());
