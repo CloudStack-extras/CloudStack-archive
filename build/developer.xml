@@ -155,7 +155,15 @@
       </copy>
   </target>
 
-  <target name="deploy-server" depends="deploy-common, deploy-ovm, deploy-awsapi" >
+  <target name="deploy-ucs" >
+      <copy todir="${server.deploy.to.dir}/webapps/client/WEB-INF/lib/scripts">
+          <fileset dir="${base.dir}/ucs/resources/">
+              <include name="**/*"/>
+          </fileset>
+      </copy>
+  </target>
+
+  <target name="deploy-server" depends="deploy-common, deploy-ovm, deploy-awsapi, deploy-ucs" >
       <copy todir="${server.deploy.to.dir}/webapps/client/WEB-INF/lib/vms" file="${dist.dir}/systemvm.iso" />
   </target>
 

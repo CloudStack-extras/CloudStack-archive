@@ -1,5 +1,6 @@
 package com.cloud.ucs.manager;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
@@ -39,6 +41,7 @@ import com.cloud.utils.db.SearchCriteriaService;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.script.Script;
 
 @Local(value = {UcsManager.class})
 public class UcsManagerImpl implements UcsManager {
@@ -119,8 +122,9 @@ public class UcsManagerImpl implements UcsManager {
 
     private String getUcsApiTemplate(String name) {
         try {
-            InputStream is = this.getClass().getClassLoader().getSystemResourceAsStream(name);
-            return IOUtils.toString(is);
+            String prepareScript = String.format("scripts/%s", name);
+            String prepareScriptPath = Script.findScript("", prepareScript);
+            return FileUtils.readFileToString(new File(prepareScriptPath));
         } catch (Exception e) {
             throw new CloudRuntimeException(String.format("Cannot find api template[%s]", name), e);
         }
