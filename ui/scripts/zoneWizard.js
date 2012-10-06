@@ -242,7 +242,11 @@
         if (args.data['network-model'] == 'Basic') {
           $('.setup-guest-traffic').addClass('basic');
           $('.setup-guest-traffic').removeClass('advanced');
-					skipGuestTrafficStep = false; //set value
+										
+					if(args.data.hypervisor	== "ManagedHost")
+					  skipGuestTrafficStep = true;
+					else
+					  skipGuestTrafficStep = false; 
         } 
 				else {
           $('.setup-guest-traffic').removeClass('basic');
@@ -278,14 +282,35 @@
           return $.inArray('storage', network.trafficTypes) > -1;
         }).length;
       },
-
+			
+			addCluster: function(args) {		
+			  if(args.data.hypervisor	== "ManagedHost")
+				  return false;
+				
+				return true;
+      },
+			
       addHost: function(args) {		
+			  if(args.data.hypervisor	== "ManagedHost")
+				  return false;
+			
         return (args.groupedData.zone.hypervisor != "VMware");
       },
 						
 			addPrimaryStorage: function(args) {
+			  if(args.data.hypervisor	== "ManagedHost")
+				  return false;
+			
         return args.data.localstorageenabled != 'on';
-      }	
+      },
+
+      addSecondaryStorage: function(args) {		
+			  if(args.data.hypervisor	== "ManagedHost")
+				  return false;
+				
+				return true;
+      }      
+			
     },
 
     forms: {
@@ -2565,7 +2590,14 @@
           return true;
         },
 
-        configureGuestTraffic: function(args) {		
+        configureGuestTraffic: function(args) {	
+					if(args.data.zone.hypervisor ==	"ManagedHost") {					 
+						complete({
+							data: args.data
+						});										
+					  return;
+					}
+					
 					if(skipGuestTrafficStep == true) {
 					  stepFns.addCluster({
 							data: args.data

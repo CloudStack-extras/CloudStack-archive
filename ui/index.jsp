@@ -644,7 +644,7 @@
             <div ui-custom="storageTrafficIPRange"></div>
           </div>
           <!-- Step 4.1: Add cluster -->
-          <div class="add-cluster" zone-wizard-form="cluster"
+          <div class="add-cluster" zone-wizard-form="cluster" zone-wizard-prefilter="addCluster"
                zone-wizard-step-id="addCluster">
             <ul class="subnav">
               <li class="cluster active"><fmt:message key="label.cluster"/></li>
@@ -693,7 +693,7 @@
             </div>
           </div>
           <!-- Step 4.4: Add secondary storage -->
-          <div class="add-cluster" zone-wizard-form="secondaryStorage"
+          <div class="add-cluster" zone-wizard-form="secondaryStorage"  zone-wizard-prefilter="addSecondaryStorage"
                zone-wizard-step-id="addSecondaryStorage">
             <ul class="subnav">
               <li class="cluster"><fmt:message key="label.cluster"/></li>
