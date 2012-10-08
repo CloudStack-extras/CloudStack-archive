@@ -10289,6 +10289,12 @@ div.ui-dialog div.autoscaler div.field-group div.form-container form div.form-it
   border-bottom: 1px solid #FF9F9F;
 }
 
+.list-view .body tr.selected td.item-state-on,
+.list-view .body tr.selected td.item-state-off {
+  background-color: inherit;
+  border-color: inherit;
+}
+
 /*Action icons*/
 .action.edit .icon {
   background-position: 1px -1px;
