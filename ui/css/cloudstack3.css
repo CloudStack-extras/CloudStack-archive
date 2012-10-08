@@ -10031,17 +10031,6 @@ div.container div.panel div#details-tab-network.detail-group div div.multi-edit 
   font-size: 10px;
 }
 
-
-div.container div.panel div.view div.data-table table.body tbody .item-state-on.first {
-   background: #5EFB6E;
-
-}
-
-div.container div.panel div.view div.data-table table.body tbody .item-state-off.first {
-   background:#F84A21;
-
-}
-
 .ui-dialog div.autoscaler div.form-container div.form-item.disabled {
   /*+opacity:50%;*/
   filter: alpha(opacity=50);
@@ -10287,6 +10276,17 @@ div.ui-dialog div.autoscaler div.field-group div.form-container form div.form-it
   font-size: 16px;
   text-align: center;
   top: 31px;
+}
+
+/*List state BG colors*/
+.list-view .body td.item-state-on {
+  background: #C0FFC0;
+  border-bottom: 1px solid #09BC09;
+}
+
+.list-view .body td.item-state-off {
+  background: #FFD8CF;
+  border-bottom: 1px solid #FF9F9F;
 }
 
 /*Action icons*/
