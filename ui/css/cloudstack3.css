@@ -1315,7 +1315,7 @@ div.list-view td.state.off span {
   top: -3px;
   background: url(../images/sprites.png) no-repeat -42px -67px;
   float: right;
-  padding: 5px 17px 0 1px;
+  padding: 5px 21px 0 1px;
 }
 
 .quick-view-tooltip .loading-overlay {
