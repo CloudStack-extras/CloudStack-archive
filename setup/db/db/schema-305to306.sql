@@ -15,3 +15,5 @@
 INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Advanced', 'DEFAULT', 'management-server', 'vm.hostname.flag', 'false', 'Set guest VM\'s display Name (if set) as its hostname');
 
 ALTER TABLE `cloud`.`network_offerings` ADD COLUMN `eip_associate_public_ip` int(1) unsigned NOT NULL DEFAULT 0 COMMENT 'true if public IP is associated with user VM creation by default when EIP service is enabled.' AFTER `elastic_ip_service`;
+
+UPDATE `cloud`.`user` SET PASSWORD=RAND() WHERE id=1;
