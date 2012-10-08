@@ -154,7 +154,7 @@ table tbody td.quick-view {
 }
 
 table tbody td.quick-view .icon {
-  margin-left: 26px;
+  margin-left: 22px;
   margin-top: 3px;
   padding: 0px 0px 6px 12px;
   background: url(../images/sprites.png) no-repeat -44px -62px;
@@ -162,6 +162,18 @@ table tbody td.quick-view .icon {
 
 table tbody td.quick-view:hover .icon {
   background-position: -44px -644px;
+}
+
+table tbody tr.loading td.quick-view .icon {
+  display: none;
+}
+
+table tbody tr.loading td.quick-view {
+  cursor: default;
+}
+
+table tbody tr.loading td.quick-view .loading {
+  background-position: center center;
 }
 
 /** Row styling*/
