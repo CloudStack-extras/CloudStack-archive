@@ -4182,6 +4182,7 @@
                       },
 
                       detailView: {
+                        noCompact: true,
                         name: 'System VM details',
                         actions: {
                           start: {
