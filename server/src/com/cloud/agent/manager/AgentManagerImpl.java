@@ -1431,7 +1431,7 @@ public class AgentManagerImpl implements AgentManager, HandlerFactory, Manager {
 				status_logger.debug("Cannot transit agent status with event " + e + " for host " + host.getId() + ", name=" + host.getName()
 				        + ", mangement server id is " + msId);
 				throw new CloudRuntimeException("Cannot transit agent status with event " + e + " for host " + host.getId() + ", mangement server id is "
-				        + msId + "," + e1.getMessage());
+				        + msId + "," + e1.getMessage(), e1);
 			}
 		} finally {
 			_agentStatusLock.unlock();

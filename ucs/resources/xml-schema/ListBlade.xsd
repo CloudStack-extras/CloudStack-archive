@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://org.cloudstack/schema/cloudstack"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:beans="http://www.springframework.org/schema/beans"
+	targetNamespace="http://org.cloudstack/schema/cloudstack"
+	elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+	<xsd:complexType name="ComputeBlade">
+		<xsd:attribute name="dn" type="xsd:string"></xsd:attribute>
+		<xsd:attribute name="association" type="xsd:string"></xsd:attribute>
+	</xsd:complexType>
+
+	<xsd:element name="configResolveDn">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="outConfig">
+					<xsd:complexType>
+						<xsd:sequence maxOccurs="unbounded" minOccurs="0">
+							<xsd:element name="computeBlade" type="ComputeBlade" />
+						</xsd:sequence>
+					</xsd:complexType>
+				</xsd:element>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+</xsd:schema>

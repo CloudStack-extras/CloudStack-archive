@@ -6468,6 +6468,10 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
         dcId = dc.getId();
         HypervisorType hypervisorType = startup.getHypervisorType();
+        //TODO:UCSCOMMENT
+        if (hypervisorType == HypervisorType.ManagedHost) {
+            return;
+        }
 
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Host's hypervisorType is: " + hypervisorType);

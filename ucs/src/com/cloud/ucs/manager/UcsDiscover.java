@@ -4,22 +4,35 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
+import javax.ejb.Local;
+import javax.naming.ConfigurationException;
 
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
+import com.cloud.api.ApiConstants;
 import com.cloud.exception.DiscoveryException;
 import com.cloud.host.HostVO;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.resource.Discoverer;
 import com.cloud.resource.DiscovererBase;
 import com.cloud.resource.ResourceManager;
 import com.cloud.resource.ResourceStateAdapter;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.UnableDeleteHostException;
 import com.cloud.utils.component.Inject;
-
+@Local(value = Discoverer.class)
 public class UcsDiscover extends DiscovererBase implements ResourceStateAdapter{
     @Inject
     private ResourceManager resourceMgr;
+    
+    @Override
+    public boolean configure(String name, Map<String, Object> params) throws ConfigurationException {
+        super.configure(name, params);
+        resourceMgr.registerResourceStateAdapter("UcsDiscover", this);
+        return true;
+    }
     
     @Override
     public Map<? extends ServerResource, Map<String, String>> find(long dcId, Long podId, Long clusterId, URI uri, String username, String password,
@@ -27,12 +40,19 @@ public class UcsDiscover extends DiscovererBase implements ResourceStateAdapter{
         try {
             Map<UcsResourceBase, Map<String, String>> ret = new HashMap<UcsResourceBase, Map<String, String>>();
             UcsResourceBase resource = new UcsResourceBase();
-            Map<String, Object> params = new HashMap<String, Object>();
-            params.putAll(_params);
+            Map params = new HashMap();
+            params.put(ApiConstants.ZONE_ID, String.valueOf(dcId));
+            params.put(ApiConstants.POD_ID, String.valueOf(podId));
+            params.put(ApiConstants.CLUSTER_ID, String.valueOf(clusterId));
+            params.put(ApiConstants.UUID, UUID.randomUUID().toString());
+            params.put(ApiConstants.PRIVATE_IP, "0.0.0.0");
+            params.put(ApiConstants.PASSWORD, password);
             resource.configure("UcsResource", params);
             resource.start();
             
-            ret.put(resource, new HashMap<String, String>());
+            Map<String, String> details = new HashMap<String, String>(params.size());
+            details.putAll(params);
+            ret.put(resource, details);
             return ret;
         } catch (Exception e) {
             throw new DiscoveryException(e.getMessage(), e);

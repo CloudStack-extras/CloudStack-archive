@@ -3,6 +3,7 @@ package com.cloud.ucs.manager;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +13,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -34,6 +37,9 @@ import com.cloud.resource.ResourceManager;
 import com.cloud.resource.ResourceService;
 import com.cloud.ucs.database.UcsManagerDao;
 import com.cloud.ucs.database.UcsManagerVO;
+import com.cloud.ucs.schema.computeBlade.ConfigResolveClass;
+import com.cloud.ucs.schema.listBlade.ComputeBlade;
+import com.cloud.ucs.schema.listBlade.ConfigResolveDn;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.SearchCriteria2;
@@ -43,10 +49,10 @@ import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.script.Script;
 
-@Local(value = {UcsManager.class})
+@Local(value = { UcsManager.class })
 public class UcsManagerImpl implements UcsManager {
     public static final Logger s_logger = Logger.getLogger(UcsManagerImpl.class);
-    
+
     @Inject
     private UcsManagerDao ucsDao;
     @Inject
@@ -85,7 +91,7 @@ public class UcsManagerImpl implements UcsManager {
         vo.setUuid(UUID.randomUUID().toString());
         vo.setPassword(cmd.getPassword());
         vo.setUrl(cmd.getUrl());
-        vo.setUsername(vo.getUsername());
+        vo.setUsername(cmd.getUsername());
         vo.setZoneId(cmd.getZoneId());
         vo.setName(cmd.getName());
 
@@ -102,7 +108,7 @@ public class UcsManagerImpl implements UcsManager {
     }
 
     @DB
-    private void saveProfileToCluster(AddUcsClusterCmd cmd, Cluster cluster) {
+    public void saveProfileToCluster(AddUcsClusterCmd cmd, Cluster cluster) {
         Map<String, String> details = new HashMap<String, String>(1);
         details.put(ApiConstants.UCS_PROFILE, cmd.getUcsProfile());
         Transaction txn = Transaction.currentTxn();
@@ -138,7 +144,7 @@ public class UcsManagerImpl implements UcsManager {
                 String res = client.call(login);
                 cookie = XmlFieldHelper.getField(res, "outCookie");
             }
-            
+
             return cookie;
         } catch (Exception e) {
             throw new CloudRuntimeException("Cannot get cookie", e);
@@ -154,18 +160,16 @@ public class UcsManagerImpl implements UcsManager {
         String res = client.call(cmd);
         return UcsBlade.valueOf(res);
     }
-    
+
     private void discoverBladesToCluster(Cluster cluster) {
         for (UcsBlade b : listBlades()) {
             AddUcsHostCmd cmd = new AddUcsHostCmd();
-            cmd.setAllocationState("Enabled");
             cmd.setClusterId(cluster.getId());
-            cmd.setClusterName(cluster.getName());
             cmd.setHostTags(new ArrayList<String>(0));
             cmd.setHypervisor(HypervisorType.ManagedHost.toString());
-            cmd.setPassword("");
+            cmd.setPassword(b.getDn());
             cmd.setPodId(cluster.getPodId());
-            cmd.setUrl("");
+            cmd.setUrl(String.format("http://%s", b.getDn()));
             cmd.setUsername(b.getDn());
             cmd.setZoneId(cluster.getDataCenterId());
             cmd.execute();
@@ -195,8 +199,7 @@ public class UcsManagerImpl implements UcsManager {
         }
     }
 
-    @Override
-    public ListResponse<ListUcsProfileResponse> listUcsProfiles(ListUcsProfileCmd cmd) {
+    private List<UcsProfile> getUcsProfiles() {
         cookie = getCookie();
         Map<String, String> tokens = new HashMap<String, String>(1);
         tokens.put("cookie", cookie);
@@ -204,6 +207,12 @@ public class UcsManagerImpl implements UcsManager {
         UcsClient client = new UcsClient(getUcsManagerIp());
         String res = client.call(ucsCmd);
         List<UcsProfile> profiles = UcsProfile.valueOf(res);
+        return profiles;
+    }
+
+    @Override
+    public ListResponse<ListUcsProfileResponse> listUcsProfiles(ListUcsProfileCmd cmd) {
+        List<UcsProfile> profiles = getUcsProfiles();
         ListResponse<ListUcsProfileResponse> response = new ListResponse<ListUcsProfileResponse>();
         List<ListUcsProfileResponse> rs = new ArrayList<ListUcsProfileResponse>();
         for (UcsProfile p : profiles) {
@@ -213,6 +222,49 @@ public class UcsManagerImpl implements UcsManager {
         }
         response.setResponses(rs);
         return response;
+    }
+
+    private String cloneProfile(String srcDn, String newProfileName) {
+        UcsClient client = new UcsClient(getUcsManagerIp());
+        cookie = getCookie();
+        Map<String, String> tokens = new HashMap<String, String>();
+        tokens.put("cookie", cookie);
+        tokens.put("srcDn", srcDn);
+        tokens.put("newName", newProfileName);
+        String ucsCmd = XmlFieldHelper.replaceTokens(getUcsApiTemplate("cloneProfile.xml"), tokens);
+        String res = client.call(ucsCmd);
+
+        List<UcsProfile> profiles = getUcsProfiles();
+        for (UcsProfile p : profiles) {
+            if (p.getDn().contains(newProfileName)) {
+                return p.getDn();
+            }
+        }
+
+        throw new CloudRuntimeException(String.format("Cannot find new profile named after %s", newProfileName));
+    }
+
+    private String buildProfileNameForHost(HostVO vo) {
+        return String.format("z%sp%sc%sh%s", vo.getDataCenterId(), vo.getPodId(), vo.getClusterId(), vo.getId());
+    }
+
+    private boolean isBladeAssociated(String dn) {
+        try {
+            UcsClient client = new UcsClient(getUcsManagerIp());
+            cookie = getCookie();
+            Map<String, String> tokens = new HashMap<String, String>();
+            tokens.put("cookie", cookie);
+            tokens.put("dn", dn);
+            String ucsCmd = XmlFieldHelper.replaceTokens(getUcsApiTemplate("getBladeStatus.xml"), tokens);
+            String res = client.call(ucsCmd);
+
+            JAXBContext context = JAXBContext.newInstance("com.cloud.ucs.schema.listBlade");
+            Unmarshaller unmarshaller = context.createUnmarshaller();
+            ConfigResolveDn cc = (ConfigResolveDn) unmarshaller.unmarshal(new StringReader(res));
+            return cc.getOutConfig().getComputeBlade().get(0).getAssociation().equals("associated");
+        } catch (Exception e) {
+            throw new CloudRuntimeException(e.getMessage(), e);
+        }
     }
 
     @Override
@@ -229,26 +281,27 @@ public class UcsManagerImpl implements UcsManager {
         Map<String, String> tokens = new HashMap<String, String>();
         tokens.put("cookie", cookie);
         for (HostVO h : hosts) {
-            String ucsCmd = XmlFieldHelper.replaceTokens(getUcsApiTemplate("AssociateProfile.xml"), tokens);
-            tokens.put("pdn", profileDn);
+            String dn = cloneProfile(profileDn, buildProfileNameForHost(h));
+            tokens.put("kdn", dn);
+            tokens.put("pdn", dn);
             tokens.put("cdn", h.getName());
-            client.call(ucsCmd);
+            String ucsCmd = XmlFieldHelper.replaceTokens(getUcsApiTemplate("AssociateProfile.xml"), tokens);
+            String res = client.call(ucsCmd);
+            if (res.contains("errorCode")) {
+                throw new CloudRuntimeException(String.format("Unable to associate profile[%s] to blade[%s], because: %s", dn, h.getName(), res));
+            }
             status.put(h.getName(), false);
         }
-        
+
         tokens = new HashMap<String, String>();
         tokens.put("cookie", cookie);
         while (true) {
             for (Map.Entry<String, Boolean> e : status.entrySet()) {
-                tokens.put("dn", e.getKey());
-                String ucsCmd = XmlFieldHelper.replaceTokens(getUcsApiTemplate("getBladeStatus.xml"), tokens);
-                String res = client.call(ucsCmd);
-                String val = XmlFieldHelper.getField(res, "association");
-                if (val.equals("associated")) {
+                if (isBladeAssociated(e.getKey())) {
                     e.setValue(true);
                 }
             }
-            
+
             boolean isAllAssociated = true;
             for (Map.Entry<String, Boolean> e : status.entrySet()) {
                 if (!e.getValue()) {
@@ -256,14 +309,14 @@ public class UcsManagerImpl implements UcsManager {
                     break;
                 }
             }
-            
+
             if (isAllAssociated) {
                 break;
             }
-            
+
             TimeUnit.SECONDS.sleep(2);
         }
-        
+
         s_logger.debug(String.format("all blades in cluster[%s] are associated", cmd.getClusterId()));
     }
 }

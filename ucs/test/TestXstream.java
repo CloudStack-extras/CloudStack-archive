@@ -10,6 +10,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import com.cloud.ucs.manager.UcsBlade;
+import com.cloud.ucs.manager.XmlFieldHelper;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 
@@ -40,5 +41,8 @@ public class TestXstream {
         for (UcsBlade b : blades) {
             System.out.println(b.getDn());
         }
+        
+        String fxml = XmlFieldHelper.formatXml(xml);
+        System.out.println(fxml);
     }
 }

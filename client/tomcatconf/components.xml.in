@@ -118,6 +118,7 @@
             <adapter name="Bare Metal Agent" class="com.cloud.baremetal.BareMetalDiscoverer"/>
             <adapter name="SCVMMServer" class="com.cloud.hypervisor.hyperv.HypervServerDiscoverer"/>            
 			<adapter name="Ovm Discover" class="com.cloud.ovm.hypervisor.OvmDiscoverer" />
+			<adapter name="Ucs Discover" class="com.cloud.ucs.manager.UcsDiscover" />
         </adapters>
         <adapters key="com.cloud.deploy.DeploymentPlanner">
             <adapter name="First Fit" class="com.cloud.deploy.FirstFitPlanner"/>

@@ -613,6 +613,7 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
             if (cluster == null) {
                 throw new InvalidParameterValueException("can not find cluster", null);
             } else {
+                /*TODO: UCSCOMMENT
                 if (cluster.getGuid() == null) {
                     List<HostVO> hosts = listAllHostsInCluster(clusterId);
                     if (!hosts.isEmpty()) {
@@ -621,6 +622,7 @@ public class ResourceManagerImpl implements ResourceManager, ResourceService, Ma
                         throw ex;
                     }
                 }
+                */
             }
         }
 
