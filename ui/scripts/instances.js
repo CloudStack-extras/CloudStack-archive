@@ -192,7 +192,9 @@
 					  hostid: args.context.hosts[0].id
 					});
 				}
-
+							
+        delete data.details;	//remove "details: 'min'" from data	
+								
         $.ajax({
           url: createURL('listVirtualMachines'),
           data: data,          
@@ -225,7 +227,7 @@
           if(zoneNetworktype == "Basic") { //Basic zone has only one guest network (only one NIC)
             var includingSecurityGroupService = false;
             $.ajax({
-              url: createURL("listNetworks&listAll=true"),
+              url: createURL("listNetworks&id=" + args.context.instances[0].nic[0].networkid),
               dataType: "json",
               async: false,
               success: function(json) {
@@ -1139,18 +1141,7 @@
               }
             ],
             dataProvider: function(args) {
-              $.ajax({
-                url: createURL('listSecurityGroups'),
-                data: {
-                  listAll: true,
-                  virtualmachineid: args.context.instances[0].id
-                },
-                success: function(json) {
-                  args.response.success({
-                    data: json.listsecuritygroupsresponse.securitygroup
-                  });
-                }
-              });
+              args.response.success({data: args.context.instances[0].securitygroup});
             }
           },
 

@@ -70,16 +70,11 @@ import com.cloud.network.IpAddress;
 import com.cloud.network.NetworkManager;
 import com.cloud.network.NetworkVO;
 import com.cloud.network.RemoteAccessVpnVO;
-import com.cloud.network.Site2SiteCustomerGatewayVO;
-import com.cloud.network.Site2SiteVpnConnectionVO;
 import com.cloud.network.VpnUserVO;
 import com.cloud.network.as.AutoScaleManager;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.RemoteAccessVpnDao;
-import com.cloud.network.dao.Site2SiteCustomerGatewayDao;
-import com.cloud.network.dao.Site2SiteVpnConnectionDao;
-import com.cloud.network.dao.Site2SiteVpnGatewayDao;
 import com.cloud.network.dao.VpnUserDao;
 import com.cloud.network.security.SecurityGroupManager;
 import com.cloud.network.security.dao.SecurityGroupDao;
@@ -821,6 +816,10 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             idList.add(new IdentityProxy(domain, domainId, "domainId"));
             throw new InvalidParameterValueException("Unable to find account " + accountName + " in domain with specified id to create user", idList);
         }
+        
+        if (account.getId() == Account.ACCOUNT_ID_SYSTEM) {
+            throw new PermissionDeniedException("Account id : " + account.getId() + " is a system account, can't add a user to it");
+        }
 
         if (!_userAccountDao.validateUsernameInDomain(userName, domainId)) {
             throw new CloudRuntimeException("The user " + userName + " already exists in domain " + domainId);
@@ -863,6 +862,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             throw new InvalidParameterValueException("unable to find user by id", null);
         }
 
+        //don't allow updating system account
         if (account != null && (account.getId() == Account.ACCOUNT_ID_SYSTEM)) {
             throw new PermissionDeniedException("user id : " + id + " is system account, update is not allowed");
         }
@@ -1149,9 +1149,8 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             throw new InvalidParameterValueException("Unable to find account by accountId: " + accountId + " OR by name: " + accountName + " in domain with specified id", idList);
         }
 
-        // Don't allow to modify system account
         if (account.getId() == Account.ACCOUNT_ID_SYSTEM) {
-            throw new InvalidParameterValueException("Can not modify system account", null);
+            throw new PermissionDeniedException("Account id : " + accountId + " is a system account, enable is not allowed");
         }
 
         // Check if user performing the action is allowed to modify this account
@@ -1183,13 +1182,12 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             idList.add(new IdentityProxy("domain", domainId, "domainId"));
             throw new InvalidParameterValueException("Unable to find active account by accountId: " + accountId + " OR by name: " + accountName + " in domain with specified id", idList);
         }
+        
+        if (account.getId() == Account.ACCOUNT_ID_SYSTEM) {
+            throw new PermissionDeniedException("Account id : " + accountId + " is a system account, lock is not allowed");
+        }
 
         checkAccess(caller, null, true, account);
-
-        // don't allow modify system account
-        if (account.getId() == Account.ACCOUNT_ID_SYSTEM) {
-            throw new InvalidParameterValueException("can not lock system account", null);
-        }
 
         if (lockAccount(account.getId())) {
             return _accountDao.findById(account.getId());
@@ -1214,6 +1212,10 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             List<IdentityProxy> idList = new ArrayList<IdentityProxy>();
             idList.add(new IdentityProxy("domain", domainId, "domainId"));
             throw new InvalidParameterValueException("Unable to find account by accountId: " + accountId + " OR by name: " + accountName + " in domain with specified id", idList);
+        }
+        
+        if (account.getId() == Account.ACCOUNT_ID_SYSTEM) {
+            throw new PermissionDeniedException("Account id : " + accountId + " is a system account, disable is not allowed");
         }
 
         checkAccess(caller, null, true, account);
@@ -1717,7 +1719,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             String singleSignOnTolerance = _configDao.getValue("security.singlesignon.tolerance.millis");
             if (singleSignOnTolerance == null) {
                 // the SSO tolerance is gone (how much time before/after system time we'll allow the login request to be
-// valid),
+                // valid),
                 // don't authenticate
                 return null;
             }
@@ -1802,6 +1804,12 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
         }
 
         if (user != null) {
+            //don't allow to authenticate system user
+            if (user.getId() == User.UID_SYSTEM) {
+                s_logger.error("Failed to authenticate user: " + username + " in domain " + domainId);
+                return null;
+            }
+            
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("User: " + username + " in domain " + domainId + " has successfully logged in");
             }
@@ -1873,8 +1881,14 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
     public String[] createApiKeyAndSecretKey(RegisterCmd cmd) {
         Long userId = cmd.getId();
 
-        if (getUserIncludingRemoved(userId) == null) {            
+        User user = getUserIncludingRemoved(userId);
+        if (user == null) {            
             throw new InvalidParameterValueException("unable to find user by id", null);
+        }
+        
+        //don't allow updating system user
+        if (user.getId() == User.UID_SYSTEM) {
+            throw new PermissionDeniedException("user id : " + user.getId() + " is system account, update is not allowed");
         }
 
         // generate both an api key and a secret key, update the user table with the keys, return the keys to the user
