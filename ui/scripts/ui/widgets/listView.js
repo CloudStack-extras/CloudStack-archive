@@ -1466,7 +1466,8 @@
         listViewData.actions,
         {
           context: $listView.data('view-args').context,
-          reorder: listViewData.reorder
+          reorder: listViewData.reorder,
+          detailView: listViewData.detailView
         }
       );
     };
@@ -1515,7 +1516,8 @@
         listViewData.actions,
         {
           context: $listView.data('view-args').context,
-          reorder: listViewData.reorder
+          reorder: listViewData.reorder,
+          detailView: listViewData.detailView
         }
       );
     };
@@ -1561,12 +1563,17 @@
 					  filterBy.advSearch = $listView.data('advSearch');
 					}
 					
-          loadBody($table, listViewData.dataProvider, listViewData.preFilter, listViewData.fields, true, {
+          loadBody(
+            $table,
+            listViewData.dataProvider,
+            listViewData.preFilter,
+            listViewData.fields, true, {
             context: context,
             page: page,
             filterBy: filterBy
           }, actions, {
-            reorder: listViewData.reorder
+            reorder: listViewData.reorder,
+            detailView: listViewData.detailView
           });
         }
       }, 500);
