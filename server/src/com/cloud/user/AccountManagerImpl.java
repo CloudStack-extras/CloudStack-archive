@@ -816,6 +816,10 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             idList.add(new IdentityProxy(domain, domainId, "domainId"));
             throw new InvalidParameterValueException("Unable to find account " + accountName + " in domain with specified id to create user", idList);
         }
+        
+        if (account.getId() == Account.ACCOUNT_ID_SYSTEM) {
+            throw new PermissionDeniedException("Account id : " + account.getId() + " is a system account, can't add a user to it");
+        }
 
         if (!_userAccountDao.validateUsernameInDomain(userName, domainId)) {
             throw new CloudRuntimeException("The user " + userName + " already exists in domain " + domainId);
@@ -1145,9 +1149,8 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             throw new InvalidParameterValueException("Unable to find account by accountId: " + accountId + " OR by name: " + accountName + " in domain with specified id", idList);
         }
 
-        // Don't allow to modify system account
         if (account.getId() == Account.ACCOUNT_ID_SYSTEM) {
-            throw new InvalidParameterValueException("Can not modify system account", null);
+            throw new PermissionDeniedException("Account id : " + accountId + " is a system account, enable is not allowed");
         }
 
         // Check if user performing the action is allowed to modify this account
@@ -1179,13 +1182,12 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             idList.add(new IdentityProxy("domain", domainId, "domainId"));
             throw new InvalidParameterValueException("Unable to find active account by accountId: " + accountId + " OR by name: " + accountName + " in domain with specified id", idList);
         }
+        
+        if (account.getId() == Account.ACCOUNT_ID_SYSTEM) {
+            throw new PermissionDeniedException("Account id : " + accountId + " is a system account, lock is not allowed");
+        }
 
         checkAccess(caller, null, true, account);
-
-        // don't allow modify system account
-        if (account.getId() == Account.ACCOUNT_ID_SYSTEM) {
-            throw new InvalidParameterValueException("can not lock system account", null);
-        }
 
         if (lockAccount(account.getId())) {
             return _accountDao.findById(account.getId());
@@ -1210,6 +1212,10 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             List<IdentityProxy> idList = new ArrayList<IdentityProxy>();
             idList.add(new IdentityProxy("domain", domainId, "domainId"));
             throw new InvalidParameterValueException("Unable to find account by accountId: " + accountId + " OR by name: " + accountName + " in domain with specified id", idList);
+        }
+        
+        if (account.getId() == Account.ACCOUNT_ID_SYSTEM) {
+            throw new PermissionDeniedException("Account id : " + accountId + " is a system account, disable is not allowed");
         }
 
         checkAccess(caller, null, true, account);
