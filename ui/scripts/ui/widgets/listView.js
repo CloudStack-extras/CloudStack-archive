@@ -611,9 +611,11 @@
     var $thead = $('<thead>').prependTo($table).append($('<tr>'));
     var reorder = options.reorder;
     var detailView = options.detailView;
-
+    var viewArgs = $table.closest('.list-view').data('view-args');
+    var uiCustom = viewArgs.uiCustom;
     var hiddenFields = [];
-    if(preFilter != null)
+    
+    if (preFilter != null)
       hiddenFields = preFilter();
 
     $.each(fields, function(key) {
@@ -646,7 +648,7 @@
     }
 
     // Quick view
-    if (detailView) {
+    if (detailView && !uiCustom) {
       $thead.find('tr').append(
         $('<th></th>')
           .html('Quickview')
@@ -824,6 +826,7 @@
     var rows = [];
     var reorder = options.reorder;
     var detailView = options.detailView;
+    var uiCustom = $tbody.closest('.list-view').data('view-args').uiCustom;
 
     if (!data || ($.isArray(data) && !data.length)) {
       if (!$tbody.find('tr').size()) {
@@ -1017,7 +1020,7 @@
       }
 
       // Add quick view
-      if (detailView) {
+      if (detailView && !uiCustom) {
         $quickView = $('<td>').addClass('quick-view reduced-hide')
           .append(
             $('<span>').addClass('icon').html('&nbsp;')
@@ -1807,7 +1810,8 @@
         null,
         listViewArgs.actions,
         {
-          context: this.data('view-args').context
+          context: this.data('view-args').context,
+          detailView: listViewArgs.detailView
         }
       );
     } else {
