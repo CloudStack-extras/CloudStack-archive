@@ -648,7 +648,7 @@
     }
 
     // Quick view
-    if (detailView && !uiCustom) {
+    if (detailView && !detailView.noCompact && !uiCustom) {
       $thead.find('tr').append(
         $('<th></th>')
           .html('Quickview')
@@ -1020,7 +1020,7 @@
       }
 
       // Add quick view
-      if (detailView && !uiCustom) {
+      if (detailView && !detailView.noCompact && !uiCustom) {
         $quickView = $('<td>').addClass('quick-view reduced-hide')
           .append(
             $('<span>').addClass('icon').html('&nbsp;')
