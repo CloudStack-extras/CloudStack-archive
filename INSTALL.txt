@@ -1,4 +1,3 @@
-#pradeep
 This document describes how to set up and configure a single server CloudStack development environment. If you aren't looking for a development environment The easiest way is to deploy CloudStack from RPM package, building CloudStack from source is for developers. This guide is all about building CloudStack from the source and installing directly from there . This guide is suitable for you if you want to develop the CloudStack.
 
 I have tested this procedure on Fedora Core 14 
