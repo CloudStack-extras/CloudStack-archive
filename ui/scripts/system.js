@@ -4101,7 +4101,10 @@
                         },
                         success: function(json) {
                           selectedZoneObj = json.listzonesresponse.zone[0];
-                          args.response.success({ data: json.listzonesresponse.zone[0] });
+                          args.response.success({
+                            data: json.listzonesresponse.zone[0],
+                            actionFilter: zoneActionfilter
+                          });
                         }
                       });
                     }
