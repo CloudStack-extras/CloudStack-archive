@@ -16,3 +16,5 @@
 
 DELETE FROM `cloud`.`configuration` where `cloud`.`configuration`.`name`="vm.hostname.flag";
 
+ALTER TABLE `cloud`.`sync_queue` DROP COLUMN queue_proc_msid;
+ALTER TABLE `cloud`.`sync_queue` DROP COLUMN queue_proc_time;

@@ -16,4 +16,9 @@ INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Advanced', 'DEFAULT', 'manag
 
 ALTER TABLE `cloud`.`network_offerings` ADD COLUMN `eip_associate_public_ip` int(1) unsigned NOT NULL DEFAULT 0 COMMENT 'true if public IP is associated with user VM creation by default when EIP service is enabled.' AFTER `elastic_ip_service`;
 
+
 UPDATE `cloud`.`user` SET PASSWORD=RAND() WHERE id=1;
+
+ALTER TABLE `cloud`.`sync_queue` ADD COLUMN `queue_size` smallint DEFAULT 0 COMMENT 'number of items being processed by the queue';
+ALTER TABLE `cloud`.`sync_queue` ADD COLUMN `queue_size_limit` smallint DEFAULT 1 COMMENT 'max number of items the queue can process concurrently';
+ALTER TABLE sync_queue_item ADD COLUMN `queue_proc_time` datetime COMMENT 'when processing started for the item';
