@@ -427,6 +427,8 @@
               $formContainer.remove();
               $(this).dialog('destroy');
 
+              $('.hovered-elem').trigger('mouseleave');
+
               return true;
             }
           },
@@ -437,6 +439,8 @@
               $('div.overlay').remove();
               $formContainer.remove();
               $(this).dialog('destroy');
+
+              $('.hovered-elem').trigger('mouseleave');
             }
           }
         ]
@@ -505,6 +509,7 @@
               $(this).dialog('destroy');
               $('div.overlay').remove();
               if (args.cancelAction) { args.cancelAction(); }
+              $('.hovered-elem').trigger('mouseleave');
             }
           },
           {
@@ -514,6 +519,7 @@
               args.action();
               $(this).dialog('destroy');
               $('div.overlay').remove();
+              $('.hovered-elem').trigger('mouseleave');
             }
           }
         ]
@@ -540,6 +546,7 @@
             click: function() {
               $(this).dialog('destroy');
               if (args.clickAction) args.clickAction();
+              $('.hovered-elem').trigger('mouseleave');
             }
           }
         ]
