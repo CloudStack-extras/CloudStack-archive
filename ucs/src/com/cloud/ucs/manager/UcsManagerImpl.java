@@ -331,7 +331,9 @@ public class UcsManagerImpl implements UcsManager {
         for (UcsManagerVO vo : vos) {
             ListUcsManagerResponse rsp = new ListUcsManagerResponse();
             rsp.setObjectName("ucsmanager");
-            rsp.setId(rsp.getId());
+            rsp.setId(vo.getId());
+            rsp.setName(vo.getName());
+            rsp.setZoneId(vo.getZoneId());
             rsps.add(rsp);
         }
         ListResponse<ListUcsManagerResponse> response = new ListResponse<ListUcsManagerResponse>();
