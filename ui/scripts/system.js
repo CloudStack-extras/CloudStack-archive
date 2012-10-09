@@ -6714,17 +6714,61 @@
                           } else {
                             $vsmFields.css('display', 'none'); 
                           }
-                        } else {
+													
+													$form.find('.form-item[rel=ucsProfile]').css('display', 'none');
+                        }
+                        else if ($(this).val() == "ManagedHost") {
+                          $form.find('.form-item[rel=ucsProfile]').css('display', 'inline-block');
+                        }												
+												else {
                           $form.find('.form-item[rel=vCenterHost]').css('display', 'none');
                           $form.find('.form-item[rel=vCenterUsername]').css('display', 'none');
                           $form.find('.form-item[rel=vCenterPassword]').css('display', 'none');
                           $form.find('.form-item[rel=vCenterDatacenter]').css('display', 'none');
                           $form.find('.form-item[rel=enableNexusVswitch]').css('display', 'none');
                           $vsmFields.css('display', 'none');
+													
+													$form.find('.form-item[rel=ucsProfile]').css('display', 'none');
                         }
                       });
                     }
                   },
+																		
+									ucsProfile: {
+									  label: 'profile',
+										dependsOn: 'zoneid',
+										select: function(args) {										  
+										  $.ajax({
+											  url: createURL('listUcsManager'),
+												data: {
+												  zoneid: args.zoneid
+												},
+												success: function(json) {
+												  var ucsmanagers = json.listucsmanagerreponse.ucsmanager;	                     								
+													if(ucsmanagers == null || ucsmanagers.length == 0) {
+													  cloudStack.dialog.error('Please add UCS Manager first');
+														return;
+													}
+																								 									
+													$.ajax({
+														url: createURL('listUcsProfiles'),  
+														data: {
+														  id: ucsmanagers[0].id
+														},
+														success: function(json) {															
+															var ucsprofiles = json.listucsprofileresponse.ucsprofile;
+															var items = [];
+															for(var i = 0; i < ucsprofiles.length; i++) {
+																items.push({id: ucsprofiles[i].dn, description: ucsprofiles[i].dn});
+															}	
+															args.response.success({data: items});
+														}
+													});													
+												}											
+											});										
+										}
+									},
+																		
                   podId: {
                     label: 'label.pod',
                     dependsOn: 'zoneid',
