@@ -297,6 +297,7 @@ CREATE TABLE `cloud`.`network_offerings` (
   `state` char(32) COMMENT 'state of the network offering that has Disabled value by default',
   `guest_type` char(32) COMMENT 'type of guest network that can be shared or isolated',
   `elastic_ip_service` int(1) unsigned NOT NULL DEFAULT 0 COMMENT 'true if the network offering provides elastic ip service',
+  `eip_associate_public_ip` int(1) unsigned NOT NULL DEFAULT 0 COMMENT 'true if public IP is associated with user VM creation by default when EIP service is enabled.',
   `elastic_lb_service` int(1) unsigned NOT NULL DEFAULT 0 COMMENT 'true if the network offering provides elastic lb service',
   `specify_ip_ranges` int(1) unsigned NOT NULL DEFAULT 0 COMMENT 'true if the network offering provides an ability to define ip ranges',
   PRIMARY KEY (`id`),
@@ -833,6 +834,7 @@ CREATE TABLE `cloud`.`host_details` (
   `value` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_host_details__host_id` FOREIGN KEY (`host_id`) REFERENCES `host`(`id`) ON DELETE CASCADE,
+  INDEX `fk_host_details__host_id`(`host_id`),
   CONSTRAINT UNIQUE KEY `uk_host_id_name` (`host_id`, `name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -1363,16 +1365,15 @@ CREATE TABLE `cloud`.`sync_queue` (
   `id` bigint unsigned NOT NULL auto_increment,
   `sync_objtype` varchar(64) NOT NULL, 
   `sync_objid` bigint unsigned NOT NULL,
-  `queue_proc_msid` bigint,
   `queue_proc_number` bigint COMMENT 'process number, increase 1 for each iteration',
-  `queue_proc_time` datetime COMMENT 'last time to process the queue',
   `created` datetime COMMENT 'date created',
   `last_updated` datetime COMMENT 'date created',
+  `queue_size` smallint DEFAULT 0 COMMENT 'number of items being processed by the queue',
+  `queue_size_limit` smallint DEFAULT 1 COMMENT 'max number of items the queue can process concurrently',
   PRIMARY KEY  (`id`),
   UNIQUE `i_sync_queue__objtype__objid`(`sync_objtype`, `sync_objid`),
   INDEX `i_sync_queue__created`(`created`),
-  INDEX `i_sync_queue__last_updated`(`last_updated`),
-  INDEX `i_sync_queue__queue_proc_time`(`queue_proc_time`)
+  INDEX `i_sync_queue__last_updated`(`last_updated`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `cloud`.`stack_maid` (
@@ -1393,13 +1394,15 @@ CREATE TABLE `cloud`.`sync_queue_item` (
   `content_id` bigint,
   `queue_proc_msid` bigint COMMENT 'owner msid when the queue item is being processed',
   `queue_proc_number` bigint COMMENT 'used to distinguish raw items and items being in process',
+  `queue_proc_time` datetime COMMENT 'when processing started for the item',
   `created` datetime COMMENT 'time created',
   PRIMARY KEY  (`id`),
   CONSTRAINT `fk_sync_queue_item__queue_id` FOREIGN KEY `fk_sync_queue_item__queue_id` (`queue_id`) REFERENCES `sync_queue` (`id`) ON DELETE CASCADE,
   INDEX `i_sync_queue_item__queue_id`(`queue_id`),
   INDEX `i_sync_queue_item__created`(`created`),
   INDEX `i_sync_queue_item__queue_proc_number`(`queue_proc_number`),
-  INDEX `i_sync_queue_item__queue_proc_msid`(`queue_proc_msid`)
+  INDEX `i_sync_queue_item__queue_proc_msid`(`queue_proc_msid`),
+  INDEX `i_sync_queue__queue_proc_time`(`queue_proc_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `cloud`.`disk_offering` (
@@ -2269,6 +2272,17 @@ CREATE TABLE  `cloud`.`vpc_offering_service_map` (
   UNIQUE (`vpc_offering_id`, `service`, `provider`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE  `vpc_service_map` (
+  `id` bigint unsigned NOT NULL auto_increment,
+  `vpc_id` bigint unsigned NOT NULL COMMENT 'vpc_id',
+  `service` varchar(255) NOT NULL COMMENT 'service',
+  `provider` varchar(255) COMMENT 'service provider',
+  `created` datetime COMMENT 'date created',
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_vpc_service_map__vpc_id` FOREIGN KEY(`vpc_id`) REFERENCES `vpc`(`id`) ON DELETE CASCADE,
+  UNIQUE (`vpc_id`, `service`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 CREATE TABLE `cloud`.`router_network_ref` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
@@ -2382,8 +2396,7 @@ CREATE TABLE `cloud`.`autoscale_vmprofiles` (
   `template_id` bigint unsigned NOT NULL,
   `other_deploy_params` varchar(1024) COMMENT 'other deployment parameters that is in addition to zoneid,serviceofferingid,domainid',
   `destroy_vm_grace_period` int unsigned COMMENT 'the time allowed for existing connections to get closed before a vm is destroyed',
-  `snmp_community` varchar(255) COMMENT 'the community string to be used to reach out to the VM deployed by this profile',
-  `snmp_port` int unsigned COMMENT 'the snmp port to be used to reach out to the VM deployed by this profile',
+  `counter_params` varchar(1024) COMMENT 'the parameters for the counter to be used to get metric information from VMs',
   `created` datetime NOT NULL COMMENT 'date created',
   `removed` datetime COMMENT 'date removed if not null',
   PRIMARY KEY  (`id`),

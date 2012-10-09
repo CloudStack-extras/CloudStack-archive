@@ -70,6 +70,7 @@ public class VMInstanceDaoImpl extends GenericDaoBase<VMInstanceVO, Long> implem
     protected final SearchBuilder<VMInstanceVO> HostIdTypesSearch;
     protected final SearchBuilder<VMInstanceVO> HostIdUpTypesSearch;
     protected final SearchBuilder<VMInstanceVO> HostUpSearch;
+    protected final SearchBuilder<VMInstanceVO> InstanceNameSearch;
     protected final GenericSearchBuilder<VMInstanceVO, Long> CountVirtualRoutersByAccount;
     protected GenericSearchBuilder<VMInstanceVO, Long> CountRunningByHost;
     protected GenericSearchBuilder<VMInstanceVO, Long> CountRunningByAccount;
@@ -93,6 +94,18 @@ public class VMInstanceDaoImpl extends GenericDaoBase<VMInstanceVO, Long> implem
             "SELECT host.id, SUM(IF(vm.state='Running' AND vm.account_id = ?, 1, 0)) FROM `cloud`.`host` host LEFT JOIN `cloud`.`vm_instance` vm ON host.id = vm.host_id WHERE host.data_center_id = ? " +
     		                                                            " AND host.pod_id = ? AND host.cluster_id = ? AND host.type = 'Routing' " +
     		                                                            " GROUP BY host.id ORDER BY 2 ASC ";
+    
+    private static final String TOTAL_RAM_AND_CPU_OF_VMS_FOR_HOST =
+        "SELECT SUM(so.ram_size * 1024 * 1024), SUM(so.cpu * so.speed) FROM `cloud`.`vm_instance` vm , `cloud`.`service_offering` so " +
+        															" WHERE vm.host_id = ? " +
+		                                                            " AND vm.service_offering_id = so.id AND vm.state in ( 'Starting', 'Running') " + 
+        															" AND vm.removed is null ";
+    private static final String TOTAL_RAM_AND_CPU_OF_VMS_FOR_LAST_HOST =
+        "SELECT SUM(so.ram_size * 1024 * 1024), SUM(so.cpu * so.speed) FROM `cloud`.`vm_instance` vm , `cloud`.`service_offering` so " +
+        															" WHERE vm.last_host_id = ? " +
+		                                                            " AND vm.service_offering_id = so.id AND vm.state in ('Stopped') " +
+        															" AND TIMESTAMPDIFF(SECOND, vm.update_time, (SELECT UTC_TIMESTAMP())) < ? " +
+        															" AND vm.removed is null ";
 
     protected final HostDaoImpl _hostDao = ComponentLocator.inject(HostDaoImpl.class);
     
@@ -173,7 +186,11 @@ public class VMInstanceDaoImpl extends GenericDaoBase<VMInstanceVO, Long> implem
         HostUpSearch.and("host", HostUpSearch.entity().getHostId(), Op.EQ);
         HostUpSearch.and("states", HostUpSearch.entity().getState(), Op.IN);
         HostUpSearch.done();
-        
+
+        InstanceNameSearch = createSearchBuilder();
+        InstanceNameSearch.and("instanceName", InstanceNameSearch.entity().getInstanceName(), Op.EQ);
+        InstanceNameSearch.done();
+
         CountVirtualRoutersByAccount = createSearchBuilder(Long.class);
         CountVirtualRoutersByAccount.select(null, Func.COUNT, null);
         CountVirtualRoutersByAccount.and("account", CountVirtualRoutersByAccount.entity().getAccountId(), SearchCriteria.Op.EQ);
@@ -295,7 +312,7 @@ public class VMInstanceDaoImpl extends GenericDaoBase<VMInstanceVO, Long> implem
         sc.setParameters("host", hostId);
         sc.setParameters("states", new Object[] {State.Starting, State.Running});
         return listBy(sc);
-    }
+    }    
     
     @Override
     public List<VMInstanceVO> listByTypes(Type... types) {
@@ -320,7 +337,13 @@ public class VMInstanceDaoImpl extends GenericDaoBase<VMInstanceVO, Long> implem
         return findOneIncludingRemovedBy(sc);
     }
 
-   
+    @Override
+    public VMInstanceVO findVMByInstanceName(String name) {
+        SearchCriteria<VMInstanceVO> sc = InstanceNameSearch.create();
+        sc.setParameters("instanceName", name);
+        return findOneBy(sc);
+    }
+
     @Override
     public void updateProxyId(long id, Long proxyId, Date time) {
         VMInstanceVO vo = createForUpdate();
@@ -520,6 +543,52 @@ public class VMInstanceDaoImpl extends GenericDaoBase<VMInstanceVO, Long> implem
             throw new CloudRuntimeException("DB Exception on: " + ORDER_PODS_NUMBER_OF_VMS_FOR_ACCOUNT, e);
         } catch (Throwable e) {
             throw new CloudRuntimeException("Caught: " + ORDER_PODS_NUMBER_OF_VMS_FOR_ACCOUNT, e);
+        }   
+    }
+    
+
+    @Override
+    public Pair<Long, Long> listComputeByHostId(long hostId) {
+        Transaction txn = Transaction.currentTxn();
+        PreparedStatement pstmt = null;
+        Pair<Long, Long> result = new Pair<Long, Long>(null, null);
+        try {
+            String sql = TOTAL_RAM_AND_CPU_OF_VMS_FOR_HOST;
+            pstmt = txn.prepareAutoCloseStatement(sql);
+            pstmt.setLong(1, hostId);     
+            
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                result.set(rs.getLong(1), rs.getLong(2));                
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new CloudRuntimeException("DB Exception on: " + TOTAL_RAM_AND_CPU_OF_VMS_FOR_HOST, e);
+        } catch (Throwable e) {
+            throw new CloudRuntimeException("Caught: " + TOTAL_RAM_AND_CPU_OF_VMS_FOR_HOST, e);
+        }   
+    }
+    
+    @Override
+    public Pair<Long, Long> listComputeByLastHostId(long hostId, int vmCapacityReleaseInterval) {
+        Transaction txn = Transaction.currentTxn();
+        PreparedStatement pstmt = null;
+        Pair<Long, Long> result = new Pair<Long, Long>(null, null);
+        try {
+            String sql = TOTAL_RAM_AND_CPU_OF_VMS_FOR_LAST_HOST;
+            pstmt = txn.prepareAutoCloseStatement(sql);
+            pstmt.setLong(1, hostId);            
+            pstmt.setInt(2, vmCapacityReleaseInterval);
+            
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                result.set(rs.getLong(1), rs.getLong(2));                
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new CloudRuntimeException("DB Exception on: " + TOTAL_RAM_AND_CPU_OF_VMS_FOR_LAST_HOST, e);
+        } catch (Throwable e) {
+            throw new CloudRuntimeException("Caught: " + TOTAL_RAM_AND_CPU_OF_VMS_FOR_LAST_HOST, e);
         }   
     }
     

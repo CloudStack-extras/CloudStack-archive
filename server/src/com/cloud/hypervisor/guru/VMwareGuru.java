@@ -185,6 +185,10 @@ public class VMwareGuru extends HypervisorGuruBase implements HypervisorGuru {
 
 	    	        Integer networkRate = _networkMgr.getNetworkRate(network.getId(), null);
 	    	        nicTo.setNetworkRateMbps(networkRate);
+
+                    // For these extra nics, set the physical network to the same
+                    // as the publicnic's.
+                    nicTo.setName(publicNicProfile.getName());
 	    	        
 	    	        expandedNics[i] = nicTo;
 	    		}

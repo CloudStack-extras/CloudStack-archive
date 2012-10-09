@@ -35,35 +35,40 @@
         _l(args.form.desc)
       );
       var $form = $('<form>').appendTo($formContainer)
-        .submit(function() {
-          $(this).closest('.ui-dialog').find('button.ok').click();
+            .submit(function() {
+              $(this).closest('.ui-dialog').find('button.ok').click();
 
-          return false;
-        });
+              return false;
+            });
 
       var createLabel = _l(args.form.createLabel);
       var $submit = $('<input>')
-        .attr({
-          type: 'submit'
-        })
-        .hide()
-        .appendTo($form);
+            .attr({
+              type: 'submit'
+            })
+            .hide()
+            .appendTo($form);
 
       // Render fields and events
       var fields = $.map(args.form.fields, function(value, key) {
         return key;
       })
-
+			
       $(fields).each(function() {
         var key = this;
         var field = args.form.fields[key];
 
         var $formItem = $('<div>')
-          .addClass('form-item')
-          .attr({ rel: key });
-
-        if (field.hidden || field.isHidden) $formItem.hide();
-
+              .addClass('form-item')
+              .attr({ rel: key });
+											
+        if(field.isHidden != null) {
+					if (typeof(field.isHidden) == 'boolean' && field.isHidden == true) 
+						$formItem.hide();
+					else if (typeof(field.isHidden) == 'function' && field.isHidden() == true) 
+						$formItem.hide();
+        }
+				
         $formItem.appendTo($form);
 
         //Handling Escape KeyPress events
@@ -87,20 +92,17 @@
          closeOnEscape: false
          }); */
         // Label field
-
-        //if( field.label == 'label.network.offering' || field.label == 'label.guest.gateway')
-        //  debugger;
-
+								
         var $name = $('<div>').addClass('name')
-          .appendTo($formItem)
-          .append(
-          $('<label>').html(_l(field.label) + ':')
-        );
+              .appendTo($formItem)
+              .append(
+                $('<label>').html(_l(field.label) + ':')
+              );
 
         // red asterisk
-        var $astersikSpan = $('<span>').addClass('field-required').html('*');
-        $name.find('label').prepend($astersikSpan);
-        if (field.validation == null || field.validation.required == false) {
+				var $astersikSpan = $('<span>').addClass('field-required').html('*');
+				$name.find('label').prepend($astersikSpan);        
+				if (field.validation == null || field.validation.required == false) {
           $astersikSpan.hide();
         }
 
@@ -109,14 +111,9 @@
           $formItem.attr({ title: _l(field.desc) });
         }
 
-        if(field.docID) {
-          $formItem.attr({ title: _l(field.docID) });
-
-        }
-
         // Input area
         var $value = $('<div>').addClass('value')
-          .appendTo($formItem);
+              .appendTo($formItem);
         var $input, $dependsOn, selectFn, selectArgs;
         var dependsOn = field.dependsOn;
 
@@ -136,7 +133,7 @@
               var $dependent = $target.closest('form').find('[depends-on=\'' + dependsOn + '\']');
 
               if (($target.is(':checked') && !isReverse) ||
-                ($target.is(':unchecked') && isReverse)) {
+                  ($target.is(':unchecked') && isReverse)) {
                 $dependent.css('display', 'inline-block');
                 $dependent.each(function() {
                   if ($(this).data('dialog-select-fn')) {
@@ -144,7 +141,7 @@
                   }
                 });
               } else if (($target.is(':unchecked') && !isReverse) ||
-                ($target.is(':checked') && isReverse)) {
+                         ($target.is(':checked') && isReverse)) {
                 $dependent.hide();
               }
 
@@ -182,9 +179,9 @@
                     description = this.description;
 
                   var $option = $('<option>')
-                    .appendTo($input)
-                    .val(_s(id))
-                    .html(_s(description));
+                        .appendTo($input)
+                        .val(_s(id))
+                        .html(_s(description));
                 });
 
                 if (field.defaultValue) {
@@ -199,9 +196,8 @@
           selectFn = field.select;
           $input = $('<select>')
             .attr({ name: key })
-            .data('dialog-select-fn', function(args) {
-              selectFn(args ?
-                $.extend(true, {}, selectArgs, args) : selectArgs);
+            .data('dialog-select-fn', function(args) {								
+              selectFn(args ? $.extend(true, {}, selectArgs, args) : selectArgs);
             })
             .appendTo($value);
 
@@ -221,20 +217,21 @@
               var dependsOnArgs = {};
 
               $input.find('option').remove();
-
+             
               if (!$target.children().size()) return true;
 
               dependsOnArgs[dependsOn] = $target.val();
-              selectFn($.extend(selectArgs, dependsOnArgs));
+							
+							selectFn($.extend(selectArgs, dependsOnArgs));
 
               return true;
             });
 
             if (!$dependsOn.is('select')) {
-              selectFn(selectArgs);
+						  selectFn(selectArgs);
             }
           } else {
-            selectFn(selectArgs);
+					  selectFn(selectArgs);
           }
         } else if (field.isBoolean) {
           if (field.multiArray) {
@@ -245,13 +242,13 @@
               $input.append(
                 $('<div>').addClass('item')
                   .append(
-                  $.merge(
-                    $('<div>').addClass('name').html(_l(itemValue.label)),
-                    $('<div>').addClass('value').append(
-                      $('<input>').attr({ name: itemKey, type: 'checkbox' }).appendTo($value)
+                    $.merge(
+                      $('<div>').addClass('name').html(_l(itemValue.label)),
+                      $('<div>').addClass('value').append(
+                        $('<input>').attr({ name: itemKey, type: 'checkbox' }).appendTo($value)
+                      )
                     )
                   )
-                )
               );
             });
 
@@ -262,7 +259,7 @@
             } else {
               // This is mainly for IE compatibility
               setTimeout(function() {
-                $input.attr('checked', false);
+                $input.attr('checked', false);                
               }, 100);
             }
           }
@@ -307,43 +304,56 @@
           if (field.defaultValue) {
             $input.val(field.defaultValue);
           }
-        } else {
-          // Text field
-          if (field.range) {
-            $input = $.merge(
-              // Range start
-              $('<input>').attr({
-                type: 'text',
-                name: field.range[0]
-              }),
+        } else if (field.isDatepicker) { //jQuery datepicker				
+				  $input = $('<input>').attr({
+						name: key,
+						type: 'text'
+					}).appendTo($value);
 
-              // Range end
-              $('<input>').attr({
-                type: 'text',
-                name: field.range[1]
-              })
-            ).appendTo(
-              $('<div>').addClass('range-edit').appendTo($value)
-            );
+					if (field.defaultValue) {
+						$input.val(field.defaultValue);
+					}
+					if (field.id) {
+						$input.attr('id', field.id);
+					}          
+          $input.addClass("disallowSpecialCharacters"); 										
+					$input.datepicker({dateFormat: 'yy-mm-dd'});	
+				
+				} else if(field.range) {	//2 text fields on the same line (e.g. port range: startPort - endPort)			
+				  $input = $.merge(
+						// Range start
+						$('<input>').attr({
+							type: 'text',
+							name: field.range[0]
+						}),
 
-            $input.wrap($('<div>').addClass('range-item'));
-          } else {
-            $input = $('<input>').attr({
-              name: key,
-              type: field.password || field.isPassword ? 'password' : 'text'
-            }).appendTo($value);
+						// Range end
+						$('<input>').attr({
+							type: 'text',
+							name: field.range[1]
+						})
+					).appendTo(
+						$('<div>').addClass('range-edit').appendTo($value)
+					);
+					$input.wrap($('<div>').addClass('range-item'));					
+					$input.addClass("disallowSpecialCharacters");
+				
+				} else { //text field                  
+					$input = $('<input>').attr({
+						name: key,
+						type: field.password || field.isPassword ? 'password' : 'text'
+					}).appendTo($value);
 
-            if (field.defaultValue) {
-              $input.val(field.defaultValue);
-            }
-            if (field.id) {
-              $input.attr('id', field.id);
-            }
-          }
+					if (field.defaultValue) {
+						$input.val(field.defaultValue);
+					}
+					if (field.id) {
+						$input.attr('id', field.id);
+					}          
           $input.addClass("disallowSpecialCharacters");
         }
 
-        if(field.validation != null)
+				if(field.validation != null)
           $input.data('validation-rules', field.validation);
         else
           $input.data('validation-rules', {});
@@ -360,7 +370,7 @@
          console.log('tooltip remove->' + $input.attr('name'));
          });*/
       });
-
+     
       var getFormValues = function() {
         var formValues = {};
         $.each(args.form.fields, function(key) {});
@@ -368,17 +378,17 @@
 
       // Setup form validation			
       $formContainer.find('form').validate();
-      $formContainer.find('input, select').each(function() {
+      $formContainer.find('input, select').each(function() {			  
         if ($(this).data('validation-rules')) {
           $(this).rules('add', $(this).data('validation-rules'));
         }
-        else {
-          $(this).rules('add', {});
-        }
-      });
-      $form.find('select').trigger('change');
-
-
+				else {
+				  $(this).rules('add', {});
+				}
+      });			
+      $form.find('select').trigger('change'); 
+			
+			
       var complete = function($formContainer) {
         var $form = $formContainer.find('form');
         var data = cloudStack.serializeForm($form);
@@ -446,47 +456,47 @@
       }).closest('.ui-dialog').overlay();
     },
 
-    /**
+		/**
      * to change a property(e.g. validation) of a createForm field after a createForm is rendered
      */
-    createFormField: {
-      validation: {
-        required: {
-          add: function($formField) {
+		createFormField: {
+			validation: {
+				required: {					
+					add: function($formField) {         
+            var $input = $formField.find('input, select');						
+						var validationRules = $input.data('validation-rules');		
+											
+					  if(validationRules == null || validationRules.required == null || validationRules.required == false) {					
+							$formField.find('.name').find('label').find('span.field-required').css('display', 'inline'); //show red asterisk
+																																
+							if(validationRules == null)
+								validationRules = {};										
+							validationRules.required = true;																				
+							$input.data('validation-rules', validationRules);		
+														
+							$input.rules('add', { required: true });					
+						}		
+            			
+					},
+					remove: function($formField) {      
             var $input = $formField.find('input, select');
-            var validationRules = $input.data('validation-rules');
+						var validationRules = $input.data('validation-rules');		
+											
+					  if(validationRules != null && validationRules.required != null && validationRules.required == true) {						
+							$formField.find('.name').find('label').find('span.field-required').hide(); //hide red asterisk
+																																	  														
+							delete validationRules.required;																				
+							$input.data('validation-rules', validationRules);	
 
-            if(validationRules == null || validationRules.required == null || validationRules.required == false) {
-              $formField.find('.name').find('label').find('span.field-required').css('display', 'inline'); //show red asterisk
-
-              if(validationRules == null)
-                validationRules = {};
-              validationRules.required = true;
-              $input.data('validation-rules', validationRules);
-
-              $input.rules('add', { required: true });
-            }
-
-          },
-          remove: function($formField) {
-            var $input = $formField.find('input, select');
-            var validationRules = $input.data('validation-rules');
-
-            if(validationRules != null && validationRules.required != null && validationRules.required == true) {
-              $formField.find('.name').find('label').find('span.field-required').hide(); //hide red asterisk
-
-              delete validationRules.required;
-              $input.data('validation-rules', validationRules);
-
-              $input.rules('remove', 'required');
-
-              $formField.find('.value').find('label.error').hide();
-            }
-          }
-        }
-      }
-    },
-
+              $input.rules('remove', 'required');									
+														
+							$formField.find('.value').find('label.error').hide();																		
+						}		            		
+					}
+				}
+			}  
+		},
+		
     /**
      * Confirmation dialog
      */
@@ -496,31 +506,31 @@
           _l(args.message)
         )
       ).dialog({
-          title: _l('label.confirmation'),
-          dialogClass: 'confirm',
-          closeOnEscape: false,
-          zIndex: 5000,
-          buttons: [
-            {
-              text: _l('label.no'),
-              'class': 'cancel',
-              click: function() {
-                $(this).dialog('destroy');
-                $('div.overlay').remove();
-                if (args.cancelAction) { args.cancelAction(); }
-              }
-            },
-            {
-              text: _l('label.yes'),
-              'class': 'ok',
-              click: function() {
-                args.action();
-                $(this).dialog('destroy');
-                $('div.overlay').remove();
-              }
+        title: _l('label.confirmation'),
+        dialogClass: 'confirm',
+        closeOnEscape: false,
+        zIndex: 5000,
+        buttons: [
+          {
+            text: _l('label.no'),
+            'class': 'cancel',
+            click: function() {
+              $(this).dialog('destroy');
+              $('div.overlay').remove();
+              if (args.cancelAction) { args.cancelAction(); }
             }
-          ]
-        }).closest('.ui-dialog').overlay();
+          },
+          {
+            text: _l('label.yes'),
+            'class': 'ok',
+            click: function() {
+              args.action();
+              $(this).dialog('destroy');
+              $('div.overlay').remove();
+            }
+          }
+        ]
+      }).closest('.ui-dialog').overlay();
     },
 
     /**
@@ -532,21 +542,21 @@
           _l(args.message)
         )
       ).dialog({
-          title: _l('label.status'),
-          dialogClass: 'notice',
-          closeOnEscape: false,
-          zIndex: 5000,
-          buttons: [
-            {
-              text: _l('Close'),
-              'class': 'close',
-              click: function() {
-                $(this).dialog('destroy');
-                if (args.clickAction) args.clickAction();
-              }
+        title: _l('label.status'),
+        dialogClass: 'notice',
+        closeOnEscape: false,
+        zIndex: 5000,
+        buttons: [
+          {
+            text: _l('Close'),
+            'class': 'close',
+            click: function() {
+              $(this).dialog('destroy');
+              if (args.clickAction) args.clickAction();
             }
-          ]
-        });
+          }
+        ]
+      });
     }
   };
 })(window.jQuery, window.cloudStack);

@@ -606,7 +606,7 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager, NetworkS
     }
 
     @Override
-    public List<? extends UserDataServiceProvider> getPasswordResetElements() {
+    public UserDataServiceProvider getPasswordResetProvider(Network network) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -1089,5 +1089,17 @@ public class MockNetworkManagerImpl implements NetworkManager, Manager, NetworkS
     public int getNetworkLockTimeout() {
         // TODO Auto-generated method stub
         return 0;
+    }
+
+    @Override
+    public UserDataServiceProvider getSSHKeyResetProvider(Network network) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public List<Provider> getProvidersForServiceInNetwork(Network network, Service service) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

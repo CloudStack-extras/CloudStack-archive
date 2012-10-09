@@ -60,6 +60,7 @@ import com.cloud.host.dao.HostDetailsDao;
 import com.cloud.network.ExternalLoadBalancerDeviceVO.LBDeviceAllocationState;
 import com.cloud.network.ExternalLoadBalancerDeviceVO.LBDeviceState;
 import com.cloud.network.ExternalNetworkDeviceManager.NetworkDevice;
+import com.cloud.network.Network.Provider;
 import com.cloud.network.Network.Service;
 import com.cloud.network.Networks.TrafficType;
 import com.cloud.network.addr.PublicIp;
@@ -75,6 +76,9 @@ import com.cloud.network.dao.NetworkServiceMapDao;
 import com.cloud.network.dao.PhysicalNetworkDao;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderDao;
 import com.cloud.network.dao.PhysicalNetworkServiceProviderVO;
+import com.cloud.network.element.IpDeployer;
+import com.cloud.network.element.NetworkElement;
+import com.cloud.network.element.StaticNatServiceProvider;
 import com.cloud.network.lb.LoadBalancingRule;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
 import com.cloud.network.resource.CreateLoadBalancerApplianceAnswer;
@@ -82,6 +86,8 @@ import com.cloud.network.resource.DestroyLoadBalancerApplianceAnswer;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.FirewallRule.Purpose;
 import com.cloud.network.rules.FirewallRuleVO;
+import com.cloud.network.rules.StaticNat;
+import com.cloud.network.rules.StaticNatImpl;
 import com.cloud.network.rules.StaticNatRule;
 import com.cloud.network.rules.StaticNatRuleImpl;
 import com.cloud.network.rules.dao.PortForwardingRulesDao;
@@ -732,30 +738,13 @@ public abstract class ExternalLoadBalancerDeviceManagerImpl extends AdapterBase 
     }
 
     private void applyStaticNatRuleForInlineLBRule(DataCenterVO zone, Network network, HostVO firewallHost, boolean revoked, String publicIp, String privateIp) throws ResourceUnavailableException {
-        List<StaticNatRuleTO> staticNatRules = new ArrayList<StaticNatRuleTO>();
+        List<StaticNat> staticNats = new ArrayList<StaticNat>();
         IPAddressVO ipVO = _ipAddressDao.listByDcIdIpAddress(zone.getId(), publicIp).get(0);
-        VlanVO vlan = _vlanDao.findById(ipVO.getVlanId());
-        FirewallRuleVO fwRule = new FirewallRuleVO(null, ipVO.getId(), -1, -1, "any", network.getId(), network.getAccountId(), network.getDomainId(), Purpose.StaticNat, null, null, null, null, null);
-        FirewallRule.State state = !revoked ? FirewallRule.State.Add : FirewallRule.State.Revoke;
-        fwRule.setState(state);
-        StaticNatRule rule = new StaticNatRuleImpl(fwRule, privateIp);
-        StaticNatRuleTO ruleTO = new StaticNatRuleTO(rule, vlan.getVlanTag(), publicIp, privateIp);
-        staticNatRules.add(ruleTO);
-
-        applyStaticNatRules(staticNatRules, network, firewallHost.getId());
-    }
-
-    protected void applyStaticNatRules(List<StaticNatRuleTO> staticNatRules, Network network, long firewallHostId) throws ResourceUnavailableException {
-        if (!staticNatRules.isEmpty()) {
-            SetStaticNatRulesCommand cmd = new SetStaticNatRulesCommand(staticNatRules, null);
-            Answer answer = _agentMgr.easySend(firewallHostId, cmd);
-            if (answer == null || !answer.getResult()) {
-                String details = (answer != null) ? answer.getDetails() : "details unavailable";
-                String msg = "firewall provider for the network was unable to apply static nat rules due to: " + details + ".";
-                s_logger.error(msg);
-                throw new ResourceUnavailableException(msg, Network.class, network.getId());
-            }
-        }
+        StaticNatImpl staticNat = new StaticNatImpl(ipVO.getAllocatedToAccountId(), ipVO.getAllocatedInDomainId(),
+                network.getId(), ipVO.getId(), privateIp, revoked);
+        staticNats.add(staticNat);
+        StaticNatServiceProvider element = getStaticNatProviderForInlineMode(network);
+        element.applyStaticNats(network, staticNats);
     }
 
     @Override
@@ -960,7 +949,7 @@ public abstract class ExternalLoadBalancerDeviceManagerImpl extends AdapterBase 
             selfIp = selfipNic.getIp4Address();
         }
 
-        IpAddressTO ip = new IpAddressTO(guestConfig.getAccountId(), null, add, false, true, String.valueOf(guestVlanTag), selfIp, guestVlanNetmask, null, null, networkRate, false);
+        IpAddressTO ip = new IpAddressTO(guestConfig.getAccountId(), null, add, false, true, String.valueOf(guestVlanTag), selfIp, guestVlanNetmask, null, networkRate, false);
         IpAddressTO[] ips = new IpAddressTO[1];
         ips[0] = ip;
         IpAssocCommand cmd = new IpAssocCommand(ips);
@@ -1041,4 +1030,44 @@ public abstract class ExternalLoadBalancerDeviceManagerImpl extends AdapterBase 
         return new DeleteHostAnswer(true);
     }
 
+
+    protected StaticNatServiceProvider getStaticNatProviderForInlineMode(Network network) {
+        List<Provider> providers = _networkMgr.getProvidersForServiceInNetwork(network, Service.StaticNat);
+        //Only support one provider now
+        if (providers == null)  {
+            s_logger.error("Cannot find firewall provider for network " + network.getId());
+            return null;
+        }
+        if (providers.size() != 1) {
+            s_logger.error("Found " + providers.size() + " firewall provider for network " + network.getId());
+            return null;
+        }
+
+        NetworkElement element = _networkMgr.getElementImplementingProvider(providers.get(0).getName());
+        assert element instanceof StaticNatServiceProvider;
+        s_logger.info("Let " + element.getName() + " handle static nat for " + getName() + " in network " + network.getId());
+        return (StaticNatServiceProvider)element;
+    }
+    
+    protected IpDeployer getIpDeployerForInlineMode(Network network) {
+        //We won't deploy IP, instead the firewall in front of us would do it
+        List<Provider> providers = _networkMgr.getProvidersForServiceInNetwork(network, Service.Firewall);
+        //Only support one provider now
+        if (providers == null)  {
+            s_logger.error("Cannot find firewall provider for network " + network.getId());
+            return null;
+        }
+        if (providers.size() != 1) {
+            s_logger.error("Found " + providers.size() + " firewall provider for network " + network.getId());
+            return null;
+        }
+
+        NetworkElement element = _networkMgr.getElementImplementingProvider(providers.get(0).getName());
+        if (!(element instanceof IpDeployer)) {
+            s_logger.error("The firewall provider for network " + network.getName() + " don't have ability to deploy IP address!");
+            return null;
+        }
+        s_logger.info("Let " + element.getName() + " handle ip association for " + getName() + " in network " + network.getId());
+        return (IpDeployer)element;
+    }
 }

@@ -136,8 +136,12 @@ public class NetworkACLManagerImpl implements Manager,NetworkACLManager{
 
         Vpc vpc = _vpcMgr.getVpc(network.getVpcId());
         Account aclOwner = _accountMgr.getAccount(vpc.getAccountId());
+        
+        //check if the caller can access vpc
+        _accountMgr.checkAccess(caller, null, false, vpc);
 
-        _accountMgr.checkAccess(caller, AccessType.UseNetwork, false, network);
+        //check if the acl can be created for this network
+        _accountMgr.checkAccess(aclOwner, AccessType.UseNetwork, false, network);
 
 
         if (!_networkMgr.areServicesSupportedInNetwork(networkId, Service.NetworkACL)) {
@@ -293,9 +297,9 @@ public class NetworkACLManagerImpl implements Manager,NetworkACLManager{
 
                 List<IdentityProxy> idList = new ArrayList<IdentityProxy>();
                 idList.add(new IdentityProxy(rule, rule.getId(), "ruleId"));
-                throw new NetworkRuleConflictException("The range specified, " + newRule.getSourcePortStart() + "-" 
-                        + newRule.getSourcePortEnd() + ", conflicts with rule with specified ruleId" + rule.getId()
-                        + " which has " + rule.getSourcePortStart() + "-" + rule.getSourcePortEnd(), idList);
+                throw new NetworkRuleConflictException("The port range specified, " + newRule.getSourcePortStart() + "-" 
+                        + newRule.getSourcePortEnd() + ", conflicts with rule with specified ruleId " +
+                        "which has the port range " + rule.getSourcePortStart() + "-" + rule.getSourcePortEnd(), idList);
 
             }
         }

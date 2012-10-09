@@ -127,6 +127,8 @@ case "$1" in
     status) status
  	  ;;
  restart) stop
+          echo "Stopping background watchdog process, service will be restarting in 10 secs ..."
+          sleep 10
           start
  	  ;;
        *) echo "Usage: $0 {start|stop|status|restart}"

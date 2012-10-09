@@ -3648,7 +3648,7 @@ Dialogs*/
 .dashboard.admin .dashboard-container .stats ul li div.value {
   float: left;
   background: url(../images/bg-gradients.png) 0px -51px;
-  width: 204px;
+  width: 295px;
   height: 100%;
   border-left: 1px solid #C8C2C2;
   border-right: 1px solid #C8C2C2;
@@ -4219,7 +4219,7 @@ Dialogs*/
 }
 
 .system-chart.dashboard.admin .dashboard-container .stats .chart {
-  width: 216px;
+  width: 136px;
 }
 
 /** Compute*/
@@ -8591,6 +8591,9 @@ div.panel.ui-dialog div.list-view div.fixed-header {
   position: relative;
   left: 5px;
   top: 8px;
+  display: inline-block;
+  padding-bottom: 13px;
+  max-width: 171px;
 }
 
 .info-boxes .info-box ul li .total span {
@@ -10030,6 +10033,15 @@ div.ui-dialog div.autoscaler div.scale-down-policy div.expand {
 
 div.ui-dialog div.autoscaler div.field-group div.form-container form div.form-item div.name label {
   font-size: 11px;
+}
+
+/*CS-16413: Disable infrastructure totals*/
+.system-dashboard.zone .status_box li span.header {
+  display: block;
+  width: 156px;
+  font-size: 16px;
+  text-align: center;
+  top: 31px;
 }
 
 /*Action icons*/

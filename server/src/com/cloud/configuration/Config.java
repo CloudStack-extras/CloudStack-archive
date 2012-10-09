@@ -101,6 +101,8 @@ public enum Config {
 	
 	SecurityGroupDefaultAdding("Network", ManagementServer.class, Boolean.class, "network.securitygroups.defaultadding", "true", "If true, the user VM would be added to the default security group by default", null),
 	
+	GuestOSNeedGatewayOnNonDefaultNetwork("Network", NetworkManager.class, String.class, "network.dhcp.nondefaultnetwork.setgateway.guestos", "Windows", "The guest OS's name start with this fields would result in DHCP server response gateway information even when the network it's on is not default network. Names are separated by comma.", null),
+	
 	//VPN
 	RemoteAccessVpnPskLength("Network", AgentManager.class, Integer.class, "remote.access.vpn.psk.length", "24", "The length of the ipsec preshared key (minimum 8, maximum 256)", null),
 	RemoteAccessVpnClientIpRange("Network", AgentManager.class, String.class, "remote.access.vpn.client.iprange", "10.1.2.1-10.1.2.8", "The range of ips to be allocated to remote access vpn clients. The first ip in the range is used by the VPN server", null),
@@ -135,8 +137,7 @@ public enum Config {
 	// Advanced
     JobExpireMinutes("Advanced", ManagementServer.class, String.class, "job.expire.minutes", "1440", "Time (in minutes) for async-jobs to be kept in system", null),
     JobCancelThresholdMinutes("Advanced", ManagementServer.class, String.class, "job.cancel.threshold.minutes", "60", "Time (in minutes) for async-jobs to be forcely cancelled if it has been in process for long", null),
- SwiftEnable(
-            "Advanced", ManagementServer.class, Boolean.class, "swift.enable", "false", "enable swift ", null),
+    SwiftEnable("Advanced", ManagementServer.class, Boolean.class, "swift.enable", "false", "enable swift ", null),
 	
 	AccountCleanupInterval("Advanced", ManagementServer.class, Integer.class, "account.cleanup.interval", "86400", "The interval (in seconds) between cleanup for removed accounts", null),
 	AllowPublicUserTemplates("Advanced", ManagementServer.class, Integer.class, "allow.public.user.templates", "true", "If false, users will not be able to create public templates.", null),
@@ -224,6 +225,7 @@ public enum Config {
     EnableEC2API("Advanced", ManagementServer.class, Boolean.class, "enable.ec2.api", "false", "enable EC2 API on CloudStack", null),
     EnableS3API("Advanced", ManagementServer.class, Boolean.class, "enable.s3.api", "false", "enable Amazon S3 API on CloudStack", null),
     RecreateSystemVmEnabled("Advanced", ManagementServer.class, Boolean.class, "recreate.systemvm.enabled", "false", "If true, will recreate system vm root disk whenever starting system vm", "true,false"),
+    SetVmHostnameAndInternalNameToDisplayName("Advanced", ManagementServer.class, Boolean.class, "vm.hostname.flag", "false", "If true, will set guest VM's display Name (if set) as its hostname and internal VM name", "true,false"),
     
     // Ovm
     OvmPublicNetwork("Hidden", ManagementServer.class, String.class, "ovm.public.network.device", null, "Specify the public bridge on host for public network", null),
@@ -289,6 +291,7 @@ public enum Config {
 	VmOpCleanupWait("Advanced", ManagementServer.class, Long.class, "vm.op.cleanup.wait", "3600", "Time (in seconds) to wait before cleanuping up any vm work items", "Seconds"),
 	VmOpCancelInterval("Advanced", ManagementServer.class, Long.class, "vm.op.cancel.interval", "3600", "Time (in seconds) to wait before cancelling a operation", "Seconds"),
 	
+	
 	DefaultPageSize("Advanced", ManagementServer.class, Long.class, "default.page.size", "500", "Default page size for API list* commands", null),
 	
 	TaskCleanupRetryInterval("Advanced", ManagementServer.class, Integer.class, "task.cleanup.retry.interval", "600", "Time (in seconds) to wait before retrying cleanup of tasks if the cleanup failed previously.  0 means to never retry.", "Seconds"),
@@ -345,7 +348,10 @@ public enum Config {
 	SecondaryStorageServiceOffering("Advanced", ManagementServer.class, Long.class, "secstorage.service.offering", null, "Service offering used by secondary storage; if NULL - system offering will be used", null),
 	HaTag("Advanced", ManagementServer.class, String.class, "ha.tag", null, "HA tag defining that the host marked with this tag can be used for HA purposes only", null),
 	VpcCleanupInterval("Advanced", ManagementServer.class, Integer.class, "vpc.cleanup.interval", "3600", "The interval (in seconds) between cleanup for Inactive VPCs", null),
-    VpcMaxNetworks("Advanced", ManagementServer.class, Integer.class, "vpc.max.networks", "3", "Maximum number of networks per vpc", null);
+    VpcMaxNetworks("Advanced", ManagementServer.class, Integer.class, "vpc.max.networks", "3", "Maximum number of networks per vpc", null),
+    
+	ConcurrentSnapshotsThresholdPerHost("Advanced", ManagementServer.class, String.class, "concurrent.snapshots.threshold.perhost",
+	                "10", "Limits number of snapshots that can be handled by the host concurrently", null);
 	
 	
 	private final String _category;

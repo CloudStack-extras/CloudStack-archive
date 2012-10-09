@@ -24,6 +24,7 @@ import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 
+import com.cloud.api.ApiConstants;
 import com.cloud.api.ApiDispatcher;
 import com.cloud.api.ApiGsonHelper;
 import com.cloud.api.commands.CreateSnapshotCmd;
@@ -31,6 +32,7 @@ import com.cloud.async.AsyncJobManager;
 import com.cloud.async.AsyncJobResult;
 import com.cloud.async.AsyncJobVO;
 import com.cloud.async.dao.AsyncJobDao;
+import com.cloud.configuration.Config;
 import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.event.EventTypes;
 import com.cloud.event.EventUtils;
@@ -42,9 +44,7 @@ import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.SnapshotDao;
 import com.cloud.storage.dao.SnapshotPolicyDao;
 import com.cloud.storage.dao.SnapshotScheduleDao;
-import com.cloud.storage.dao.StoragePoolHostDao;
 import com.cloud.storage.dao.VolumeDao;
-import com.cloud.user.Account;
 import com.cloud.user.User;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.DateUtil.IntervalType;
@@ -56,9 +56,7 @@ import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.db.SearchCriteria;
 
-/**
- *
- */
+
 @Local(value={SnapshotScheduler.class})
 public class SnapshotSchedulerImpl implements SnapshotScheduler {
     private static final Logger s_logger = Logger.getLogger(SnapshotSchedulerImpl.class);
@@ -69,8 +67,6 @@ public class SnapshotSchedulerImpl implements SnapshotScheduler {
     @Inject protected SnapshotScheduleDao     _snapshotScheduleDao;
     @Inject protected SnapshotPolicyDao       _snapshotPolicyDao;
     @Inject protected AsyncJobManager         _asyncMgr;
-    @Inject protected SnapshotManager         _snapshotManager;
-    @Inject protected StoragePoolHostDao      _poolHostDao;
     @Inject protected VolumeDao               _volsDao;
 
     private static final int ACQUIRE_GLOBAL_LOCK_TIMEOUT_FOR_COOPERATION = 5;    // 5 seconds
@@ -204,10 +200,6 @@ public class SnapshotSchedulerImpl implements SnapshotScheduler {
         List<SnapshotScheduleVO> snapshotsToBeExecuted = _snapshotScheduleDao.getSchedulesToExecute(_currentTimestamp);
         s_logger.debug("Got " + snapshotsToBeExecuted.size() + " snapshots to be executed at " + displayTime);
 
-        // This is done for recurring snapshots, which are executed by the system automatically
-        // Hence set user id to that of system
-        long userId = 1;
-
         for (SnapshotScheduleVO snapshotToBeExecuted : snapshotsToBeExecuted) {
             SnapshotScheduleVO tmpSnapshotScheduleVO = null;
             long snapshotScheId = snapshotToBeExecuted.getId();
@@ -229,17 +221,15 @@ public class SnapshotSchedulerImpl implements SnapshotScheduler {
                             + snapshotToBeExecuted.getId() + " at " + displayTime);
                 }
 
-
-
-                tmpSnapshotScheduleVO = _snapshotScheduleDao.acquireInLockTable(snapshotScheId);
-                Long eventId = EventUtils.saveScheduledEvent(User.UID_SYSTEM, Account.ACCOUNT_ID_SYSTEM,
+                tmpSnapshotScheduleVO = _snapshotScheduleDao.acquireInLockTable(snapshotScheId);               
+                Long eventId = EventUtils.saveScheduledEvent(User.UID_SYSTEM, volume.getAccountId(),
                         EventTypes.EVENT_SNAPSHOT_CREATE, "creating snapshot for volume Id:"+volumeId,0);
 
                 Map<String, String> params = new HashMap<String, String>();
-                params.put("volumeid", ""+volumeId);
-                params.put("policyid", ""+policyId);
+                params.put(ApiConstants.VOLUME_ID, "" + volumeId);
+                params.put(ApiConstants.POLICY_ID, "" + policyId);
                 params.put("ctxUserId", "1");
-                params.put("ctxAccountId", "1");
+                params.put("ctxAccountId", "" + volume.getAccountId());
                 params.put("ctxStartEventId", String.valueOf(eventId));
 
                 CreateSnapshotCmd cmd = new CreateSnapshotCmd();
@@ -247,15 +237,10 @@ public class SnapshotSchedulerImpl implements SnapshotScheduler {
                 params.put("id", ""+cmd.getEntityId());
                 params.put("ctxStartEventId", "1");
 
-                AsyncJobVO job = new AsyncJobVO();
-                job.setUserId(userId);
-                // Just have SYSTEM own the job for now.  Users won't be able to see this job, but
-                // it's an internal job so probably not a huge deal.
-                job.setAccountId(1L);
-                job.setCmd(CreateSnapshotCmd.class.getName());
-                job.setInstanceId(cmd.getEntityId());
-                job.setCmdInfo(ApiGsonHelper.getBuilder().create().toJson(params));
-
+                AsyncJobVO job = new AsyncJobVO(User.UID_SYSTEM, volume.getAccountId(), CreateSnapshotCmd.class.getName(),
+                        ApiGsonHelper.getBuilder().create().toJson(params), cmd.getEntityId(),
+                        cmd.getInstanceType());
+                
                 long jobId = _asyncMgr.submitAsyncJob(job);
 
                 tmpSnapshotScheduleVO.setAsyncJobId(jobId);
@@ -360,6 +345,7 @@ public class SnapshotSchedulerImpl implements SnapshotScheduler {
             _testTimerTask = new TestClock(this, minutesPerHour, hoursPerDay, daysPerWeek, daysPerMonth, weeksPerMonth, monthsPerYear);
         }
         _currentTimestamp = new Date();
+        
         s_logger.info("Snapshot Scheduler is configured.");
 
         return true;

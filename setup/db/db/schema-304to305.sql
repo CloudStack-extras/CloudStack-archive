@@ -216,8 +216,7 @@ CREATE TABLE `cloud`.`autoscale_vmprofiles` (
   `template_id` bigint unsigned NOT NULL,
   `other_deploy_params` varchar(1024) COMMENT 'other deployment parameters that is in addition to zoneid,serviceofferingid,domainid',
   `destroy_vm_grace_period` int unsigned COMMENT 'the time allowed for existing connections to get closed before a vm is destroyed',
-  `snmp_community` varchar(255) COMMENT 'the community string to be used to reach out to the VM deployed by this profile',
-  `snmp_port` int unsigned COMMENT 'the snmp port to be used to reach out to the VM deployed by this profile',
+  `counter_params` varchar(1024) COMMENT 'the parameters for the counter to be used to get metric information from VMs',
   `created` datetime NOT NULL COMMENT 'date created',
   `removed` datetime COMMENT 'date removed if not null',
   PRIMARY KEY  (`id`),
@@ -382,4 +381,4 @@ INSERT IGNORE INTO `cloud`.`configuration` VALUES ('Advanced', 'DEFAULT', 'manag
 
 DROP TABLE IF EXISTS `cloud`.`ovs_tunnel_account`;
 UPDATE `cloud`.`snapshots` set swift_id=null where swift_id=0;
-
+DELETE FROM `cloud`.`host_details` where name in ('storage.network.device1', 'storage.network.device2');

@@ -805,12 +805,14 @@ public class ApiResponseHelper implements ResponseGenerator {
 
         if (ipAddr.getAssociatedWithVmId() != null) {
             UserVm vm = ApiDBUtils.findUserVmById(ipAddr.getAssociatedWithVmId());
-            ipResponse.setVirtualMachineId(vm.getId());
-            ipResponse.setVirtualMachineName(vm.getHostName());
-            if (vm.getDisplayName() != null) {
-                ipResponse.setVirtualMachineDisplayName(vm.getDisplayName());
-            } else {
-                ipResponse.setVirtualMachineDisplayName(vm.getHostName());
+            if (vm != null) {
+                ipResponse.setVirtualMachineId(vm.getId());
+                ipResponse.setVirtualMachineName(vm.getHostName());
+                if (vm.getDisplayName() != null) {
+                    ipResponse.setVirtualMachineDisplayName(vm.getDisplayName());
+                } else {
+                    ipResponse.setVirtualMachineDisplayName(vm.getHostName());
+                }
             }
         }
 
@@ -1238,7 +1240,8 @@ public class ApiResponseHelper implements ResponseGenerator {
         }
 
         StorageStats stats = ApiDBUtils.getStoragePoolStatistics(pool.getId());
-        long allocatedSize = ApiDBUtils.getStorageCapacitybyPool(pool.getId(), Capacity.CAPACITY_TYPE_STORAGE_ALLOCATED);
+        short capacityType = pool.isShared() ? Capacity.CAPACITY_TYPE_STORAGE_ALLOCATED : Capacity.CAPACITY_TYPE_LOCAL_STORAGE;
+        long allocatedSize = ApiDBUtils.getStorageCapacitybyPool(pool.getId(), capacityType);
         poolResponse.setDiskSizeTotal(pool.getCapacityBytes());
         poolResponse.setDiskSizeAllocated(allocatedSize);
 
@@ -3841,8 +3844,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setServiceOfferingId(profile.getServiceOfferingId());
         response.setTemplateId(profile.getTemplateId());
         response.setOtherDeployParams(profile.getOtherDeployParams());
-        response.setSnmpCommunity(profile.getSnmpCommunity());
-        response.setSnmpPort(profile.getSnmpPort());
+        response.setCounterParams(profile.getCounterParams());
         response.setDestroyVmGraceperiod(profile.getDestroyVmGraceperiod());
         response.setAutoscaleUserId(profile.getAutoScaleUserId());
         response.setObjectName("autoscalevmprofile");

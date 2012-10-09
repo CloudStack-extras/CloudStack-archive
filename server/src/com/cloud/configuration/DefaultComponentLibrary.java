@@ -140,6 +140,7 @@ import com.cloud.network.vpc.dao.VpcDaoImpl;
 import com.cloud.network.vpc.dao.VpcGatewayDaoImpl;
 import com.cloud.network.vpc.dao.VpcOfferingDaoImpl;
 import com.cloud.network.vpc.dao.VpcOfferingServiceMapDaoImpl;
+import com.cloud.network.vpc.dao.VpcServiceMapDaoImpl;
 import com.cloud.network.vpn.RemoteAccessVpnManagerImpl;
 import com.cloud.network.vpn.Site2SiteVpnManagerImpl;
 import com.cloud.offerings.dao.NetworkOfferingDaoImpl;
@@ -357,6 +358,7 @@ public class DefaultComponentLibrary extends ComponentLibraryBase implements Com
         addDao("VpcDao", VpcDaoImpl.class);
         addDao("VpcOfferingDao", VpcOfferingDaoImpl.class);
         addDao("VpcOfferingServiceMapDao", VpcOfferingServiceMapDaoImpl.class);
+        addDao("VpcServiceMapDao", VpcServiceMapDaoImpl.class);
         addDao("PrivateIpDao", PrivateIpDaoImpl.class);
         addDao("VpcGatewayDao", VpcGatewayDaoImpl.class);
         addDao("StaticRouteDao", StaticRouteDaoImpl.class);

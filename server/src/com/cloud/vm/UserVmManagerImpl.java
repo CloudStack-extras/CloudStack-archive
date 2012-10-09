@@ -64,6 +64,7 @@ import com.cloud.api.commands.DetachVolumeCmd;
 import com.cloud.api.commands.ListVMsCmd;
 import com.cloud.api.commands.RebootVMCmd;
 import com.cloud.api.commands.RecoverVMCmd;
+import com.cloud.api.commands.ResetSSHKeyCmd;
 import com.cloud.api.commands.ResetVMPasswordCmd;
 import com.cloud.api.commands.RestoreVMCmd;
 import com.cloud.api.commands.StartVMCmd;
@@ -191,6 +192,7 @@ import com.cloud.user.AccountService;
 import com.cloud.user.AccountVO;
 import com.cloud.user.ResourceLimitService;
 import com.cloud.user.SSHKeyPair;
+import com.cloud.user.SSHKeyPairVO;
 import com.cloud.user.User;
 import com.cloud.user.UserContext;
 import com.cloud.user.UserVO;
@@ -359,6 +361,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
     protected String _name;
     protected String _instance;
     protected String _zone;
+    protected boolean _hostnameFlag;
 
     private ConfigurationDao _configDao;
     private int _createprivatetemplatefromvolumewait;
@@ -416,6 +419,8 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
                 userVm.setDetail("Encrypted.Password", encryptedPasswd);
                 _vmDao.saveDetails(userVm);
             }
+        } else {
+            throw new CloudRuntimeException("Failed to reset password for the virtual machine ");
         }
 
         return userVm;
@@ -445,14 +450,13 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             VirtualMachineProfile<VMInstanceVO> vmProfile = new VirtualMachineProfileImpl<VMInstanceVO>(vmInstance);
             vmProfile.setParameter(VirtualMachineProfile.Param.VmPassword, password);
 
-            List<? extends UserDataServiceProvider> elements = _networkMgr.getPasswordResetElements();
-
-            boolean result = true;
-            for (UserDataServiceProvider element : elements) {
-                if (!element.savePassword(defaultNetwork, defaultNicProfile, vmProfile)) {
-                    result = false;
-                }
+            UserDataServiceProvider element = _networkMgr.getPasswordResetProvider(defaultNetwork);
+            if (element == null) {
+                throw new CloudRuntimeException("Can't find network element for " + Service.UserData.getName() + 
+                        " provider needed for password reset");
             }
+
+            boolean result = element.savePassword(defaultNetwork, defaultNicProfile, vmProfile);
 
             // Need to reboot the virtual machine so that the password gets redownloaded from the DomR, and reset on the VM
             if (!result) {
@@ -479,6 +483,116 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             return false;
         }
     }
+
+    @Override
+    @ActionEvent(eventType = EventTypes.EVENT_VM_RESETSSHKEY, eventDescription = "resetting Vm SSHKey", async = true)
+    public UserVm resetSSHKey(ResetSSHKeyCmd cmd)
+            throws ResourceUnavailableException, InsufficientCapacityException {
+
+        Account caller = UserContext.current().getCaller();
+        Account owner = _accountMgr.finalizeOwner(caller, cmd.getAccountName(), cmd.getDomainId(), cmd.getProjectId());
+        Long vmId = cmd.getId();
+
+        UserVmVO userVm = _vmDao.findById(cmd.getId());
+        _vmDao.loadDetails(userVm);
+        VMTemplateVO template = _templateDao.findByIdIncludingRemoved(userVm.getTemplateId());
+
+        // Do parameters input validation
+
+        if (userVm == null) {
+            throw new InvalidParameterValueException("unable to find a virtual machine by id", null);
+        }
+
+        if (userVm.getState() == State.Error || userVm.getState() == State.Expunging) {
+            s_logger.error("vm is not in the right state: " + vmId);
+            List<IdentityProxy> idList = new ArrayList<IdentityProxy>();
+            idList.add(new IdentityProxy(userVm, vmId, "vmId"));
+            throw new InvalidParameterValueException("Vm with specified id is not in the right state", idList);
+        }
+        SSHKeyPairVO s = _sshKeyPairDao.findByName(owner.getAccountId(), owner.getDomainId(), cmd.getName());
+        if (s == null) {
+
+            List<IdentityProxy> idList = new ArrayList<IdentityProxy>();
+            idList.add(new IdentityProxy(owner, owner.getDomainId(), "domainId"));
+            throw new InvalidParameterValueException("A key pair with name '" + cmd.getName() + "' does not exist for account " + owner.getAccountName() + " in specified domain id", idList);
+        }
+
+        _accountMgr.checkAccess(caller, null, true, userVm);
+        String password = null;
+        String sshPublicKey = s.getPublicKey();
+        if (template != null && template.getEnablePassword()) {
+            password = generateRandomPassword();
+        }
+
+        boolean result = resetSSHKeyInternal(vmId, sshPublicKey, password);
+
+        if (result) {
+            userVm.setDetail("SSH.PublicKey", sshPublicKey );
+            if (template != null && template.getEnablePassword()) {
+                userVm.setPassword(password);
+                //update the encrypted password in vm_details table too
+                if (sshPublicKey != null && !sshPublicKey.equals("") && password != null && !password.equals("saved_password")) {
+                    String encryptedPasswd = RSAHelper.encryptWithSSHPublicKey(sshPublicKey, password);
+                    if (encryptedPasswd == null) {
+                        throw new CloudRuntimeException("Error encrypting password");
+                    }
+                    userVm.setDetail("Encrypted.Password", encryptedPasswd);
+                }
+            }
+            _vmDao.saveDetails(userVm);
+        } else {
+            throw new CloudRuntimeException("Failed to reset SSH Key for the virtual machine ");
+        }
+        return userVm;
+    }
+
+    private boolean resetSSHKeyInternal(Long vmId, String SSHPublicKey, String password) throws ResourceUnavailableException, InsufficientCapacityException {
+        Long userId = UserContext.current().getCallerUserId();
+        VMInstanceVO vmInstance = _vmDao.findById(vmId);
+
+        VMTemplateVO template = _templateDao.findByIdIncludingRemoved(vmInstance.getTemplateId());
+        Nic defaultNic = _networkMgr.getDefaultNic(vmId);
+        if (defaultNic == null) {
+            s_logger.error("Unable to reset SSH Key for vm " + vmInstance + " as the instance doesn't have default nic");
+            return false;
+        }
+
+        Network defaultNetwork = _networkDao.findById(defaultNic.getNetworkId());
+        NicProfile defaultNicProfile = new NicProfile(defaultNic, defaultNetwork, null, null, null,
+                _networkMgr.isSecurityGroupSupportedInNetwork(defaultNetwork),
+                _networkMgr.getNetworkTag(template.getHypervisorType(), defaultNetwork));
+
+        VirtualMachineProfile<VMInstanceVO> vmProfile = new VirtualMachineProfileImpl<VMInstanceVO>(vmInstance);
+
+        if (template != null && template.getEnablePassword()) {
+            vmProfile.setParameter(VirtualMachineProfile.Param.VmPassword, password);
+        }
+
+        UserDataServiceProvider element = _networkMgr.getSSHKeyResetProvider(defaultNetwork);
+        if (element == null) {
+            throw new CloudRuntimeException("Can't find network element for " + Service.UserData.getName() + " provider needed for SSH Key reset");
+        }
+        boolean result = element.saveSSHKey(defaultNetwork, defaultNicProfile, vmProfile, SSHPublicKey);
+
+        // Need to reboot the virtual machine so that the password gets redownloaded from the DomR, and reset on the VM
+        if (!result) {
+            s_logger.debug("Failed to reset SSH Key for the virutal machine; no need to reboot the vm");
+            return false;
+        } else {
+            if (vmInstance.getState() == State.Stopped) {
+                s_logger.debug("Vm " + vmInstance + " is stopped, not rebooting it as a part of SSH Key reset");
+                return true;
+            }
+            if (rebootVirtualMachine(userId, vmId) == null) {
+                s_logger.warn("Failed to reboot the vm " + vmInstance);
+                return false;
+            } else {
+                s_logger.debug("Vm " + vmInstance + " is rebooted successfully as a part of SSH Key reset");
+                return true;
+            }
+        }
+    }
+
 
     @Override
     public boolean stopVirtualMachine(long userId, long vmId) {
@@ -1151,18 +1265,27 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         String time = configs.get("expunge.interval");
         _expungeInterval = NumbersUtil.parseInt(time, 86400);
         if ( _expungeInterval < 600 ) {
-        	_expungeInterval = 600;
+            _expungeInterval = 600;
         }
         time = configs.get("expunge.delay");
         _expungeDelay = NumbersUtil.parseInt(time, _expungeInterval);
         if ( _expungeDelay < 600 ) {
-        	_expungeDelay = 600;
+            _expungeDelay = 600;
         }
         _executor = Executors.newScheduledThreadPool(wrks, new NamedThreadFactory("UserVm-Scavenger"));
 
         _itMgr.registerGuru(VirtualMachine.Type.User, this);
 
         VirtualMachine.State.getStateMachine().registerListener(new UserVmStateListener(_usageEventDao, _networkDao, _nicDao));
+
+        value = _configDao.getValue(Config.SetVmHostnameAndInternalNameToDisplayName.key());
+        if(value == null) {
+            _hostnameFlag = false;
+        }
+        else
+        {
+            _hostnameFlag = Boolean.parseBoolean(value);
+        }
 
         s_logger.info("User VM Manager is configured.");
 
@@ -1584,7 +1707,10 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             }
             try {
                 answer = (CreatePrivateTemplateAnswer) _storageMgr.sendToPool(pool, cmd);
-            } catch (StorageUnavailableException e) {
+            } catch (Exception e) {
+                String msg = "failed for command " + cmd + " due to " + e.toString();
+                s_logger.warn(msg, e);
+                throw new CloudRuntimeException(msg, e);
             } finally {
                 if (snapshotId != null) {
                     _snapshotDao.unlockFromLockTable(snapshotId.toString());
@@ -1634,6 +1760,10 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
                 _usageEventDao.persist(usageEvent);
                 txn.commit();
             }
+        } catch (Exception e) {
+            String msg = " failed to create a template for command " + command + " due to " + e.toString();
+            s_logger.warn(msg, e);
+            throw new CloudRuntimeException(msg, e);
         } finally {
             if (snapshot != null && snapshot.getSwiftId() != null && secondaryStorageURL != null && zoneId != null && accountId != null && volumeId != null) {
                 _snapshotMgr.deleteSnapshotsForVolume (secondaryStorageURL, zoneId, accountId, volumeId);
@@ -2084,7 +2214,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             }
         }
 
-        return createVirtualMachine(zone, serviceOffering, template, hostName, displayName, owner, diskOfferingId,
+        return createVirtualMachine(zone, serviceOffering, template, hostName, displayName, _hostnameFlag, owner, diskOfferingId,
                 diskSize, networkList, securityGroupIdList, group, userData, sshKeyPair, hypervisor, caller, requestedIps, defaultIp, keyboard);
     }
 
@@ -2193,7 +2323,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             }
         }
 
-        return createVirtualMachine(zone, serviceOffering, template, hostName, displayName, owner, diskOfferingId,
+        return createVirtualMachine(zone, serviceOffering, template, hostName, displayName, _hostnameFlag, owner, diskOfferingId,
                 diskSize, networkList, securityGroupIdList, group, userData, sshKeyPair, hypervisor, caller, requestedIps, defaultIp, keyboard);
     }
 
@@ -2267,7 +2397,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
                     }
 
                 }
-                
+
                 _networkMgr.checkNetworkPermissions(owner, network);
 
                 //don't allow to use system networks 
@@ -2281,11 +2411,11 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             }
         }
 
-        return createVirtualMachine(zone, serviceOffering, template, hostName, displayName, owner, diskOfferingId, diskSize, networkList, null, group, userData, sshKeyPair, hypervisor, caller, requestedIps, defaultIp, keyboard);
+        return createVirtualMachine(zone, serviceOffering, template, hostName, displayName, _hostnameFlag, owner, diskOfferingId, diskSize, networkList, null, group, userData, sshKeyPair, hypervisor, caller, requestedIps, defaultIp, keyboard);
     }
 
     @DB @ActionEvent(eventType = EventTypes.EVENT_VM_CREATE, eventDescription = "deploying Vm", create = true)
-    protected UserVm createVirtualMachine(DataCenter zone, ServiceOffering serviceOffering, VirtualMachineTemplate template, String hostName, String displayName, Account owner, Long diskOfferingId,
+    protected UserVm createVirtualMachine(DataCenter zone, ServiceOffering serviceOffering, VirtualMachineTemplate template, String hostName, String displayName, boolean nameFlag, Account owner, Long diskOfferingId,
             Long diskSize, List<NetworkVO> networkList, List<Long> securityGroupIdList, String group, String userData, String sshKeyPair, HypervisorType hypervisor, Account caller, Map<Long, String> requestedIps, String defaultNetworkIp, String keyboard) throws InsufficientCapacityException, ResourceUnavailableException, ConcurrentOperationException, StorageUnavailableException, ResourceAllocationException {
 
         _accountMgr.checkAccess(caller, null, true, owner);
@@ -2470,13 +2600,28 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
 
         long id = _vmDao.getNextInSequence(Long.class, "id");
 
-        String instanceName = VirtualMachineName.getVmName(id, owner.getId(), _instance);
+        String instanceName;
+        if (nameFlag && displayName != null) {
+            // Search whether there is already an instance with the same instance name
+            // that is not in the destroyed or expunging state.
+            VMInstanceVO vm = _vmInstanceDao.findVMByInstanceName(displayName);
+            if (vm != null && (vm.getState() != VirtualMachine.State.Destroyed || vm.getState() != VirtualMachine.State.Expunging)) {
+                throw new InvalidParameterValueException("There already exists a VM by the display name supplied", null);
+            }
+            instanceName = displayName;
+        } else {
+            instanceName = VirtualMachineName.getVmName(id, owner.getId(), _instance);
+        }
 
         String uuidName = UUID.randomUUID().toString();
 
         //verify hostname information
         if (hostName == null) {
-            hostName = uuidName;
+            if (displayName != null && nameFlag) {
+                hostName = displayName;
+            } else {
+                hostName = uuidName;
+            }
         } else {
             //1) check is hostName is RFC complient
             if (!NetUtils.verifyDomainNameLabel(hostName, true)) {
@@ -2825,6 +2970,11 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         if (ip != null && ip.getSystem()) {
             UserContext ctx = UserContext.current();
             try {
+            	long networkId = ip.getAssociatedWithNetworkId();
+            	Network guestNetwork = _networkMgr.getNetwork(networkId);
+            	NetworkOffering offering = _configMgr.getNetworkOffering(guestNetwork.getNetworkOfferingId());
+            	assert (offering.getAssociatePublicIP() == true) : "User VM should not have system owned public IP associated with it when offering configured not to associate public IP.";
+
                 _rulesMgr.disableStaticNat(ip.getId(), ctx.getCaller(), ctx.getCallerUserId(), true);
             } catch (Exception ex) {
                 s_logger.warn("Failed to disable static nat and release system ip " + ip + " as a part of vm " + profile.getVirtualMachine() + " stop due to exception ", ex);
@@ -3451,7 +3601,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             idList.add(new IdentityProxy(oldAccount, oldAccount.getAccountId(), "accountId"));
             throw new InvalidParameterValueException("The account with the specified id should be same domain for moving VM between two accounts.", idList);
         }
-        
+
         // don't allow to move the vm if there are existing PF/LB/Static Nat rules, or vm is assigned to static Nat ip
         List<PortForwardingRuleVO> pfrules = _portForwardingDao.listByVm(cmd.getVmId());
         if (pfrules != null && pfrules.size() > 0){
@@ -3521,10 +3671,10 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             //snapshots: mark these removed in db
             List<SnapshotVO> snapshots =  _snapshotDao.listByVolumeIdIncludingRemoved(volume.getId());
             for (SnapshotVO snapshot: snapshots){
-            	_snapshotDao.remove(snapshot.getId());
+                _snapshotDao.remove(snapshot.getId());
             }
         }
-        
+
         _resourceLimitMgr.incrementResourceCount(newAccount.getAccountId(), ResourceType.user_vm);
         //generate usage events to account for this change
         _usageEventDao.persist(new UsageEventVO(EventTypes.EVENT_VM_CREATE, vm.getAccountId(), vm.getDataCenterIdToDeployIn(), vm.getId(), 

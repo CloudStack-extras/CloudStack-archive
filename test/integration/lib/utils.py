@@ -149,12 +149,16 @@ def fetch_api_client(config_file='datacenterCfg'):
                                             )
 
 
-def get_process_status(hostip, port, username, password, linklocalip, process):
+def get_process_status(hostip, port, username, password, linklocalip, process, hypervisor=None):
     """Double hop and returns a process status"""
 
     #SSH to the machine
     ssh = remoteSSHClient(hostip, port, username, password)
-    ssh_command = "ssh -i ~/.ssh/id_rsa.cloud -ostricthostkeychecking=no "
+    if hypervisor.lower() == 'vmware':
+        ssh_command = "ssh -i /var/lib/cloud/management/.ssh/id_rsa -ostricthostkeychecking=no "
+    else:
+        ssh_command = "ssh -i ~/.ssh/id_rsa.cloud -ostricthostkeychecking=no "
+
     ssh_command = ssh_command + \
                     "-oUserKnownHostsFile=/dev/null -p 3922 %s %s" % (
                                                                 linklocalip,

@@ -114,6 +114,7 @@ public interface Network extends ControlledEntity {
         public static final Provider ElasticLoadBalancerVm = new Provider("ElasticLoadBalancerVm", false);
         public static final Provider SecurityGroupProvider = new Provider("SecurityGroupProvider", false);
         public static final Provider VPCVirtualRouter = new Provider("VpcVirtualRouter", false);
+        public static final Provider VPCJuniperSRX = new Provider("VPCJuniperSRX", true);
         public static final Provider None = new Provider("None", false);
 
         private String name;
@@ -160,6 +161,7 @@ public interface Network extends ControlledEntity {
         public static final Capability AllowDnsSuffixModification = new Capability("AllowDnsSuffixModification");
         public static final Capability RedundantRouter = new Capability("RedundantRouter");
         public static final Capability ElasticIp = new Capability("ElasticIp");
+        public static final Capability AssociatePublicIP = new Capability("AssociatePublicIP");
         public static final Capability ElasticLb = new Capability("ElasticLb");
         public static final Capability AutoScaleCounters = new Capability("AutoScaleCounters");
 
@@ -281,6 +283,8 @@ public interface Network extends ControlledEntity {
     Long getPhysicalNetworkId();
 
     void setPhysicalNetworkId(Long physicalNetworkId);
+
+    public void setTrafficType(TrafficType type);
 
 	ACLType getAclType();
 	

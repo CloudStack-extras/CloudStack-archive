@@ -181,7 +181,9 @@ public interface NetworkManager extends NetworkService {
 
     Nic getDefaultNic(long vmId);
 
-    List<? extends UserDataServiceProvider> getPasswordResetElements();
+    UserDataServiceProvider getPasswordResetProvider(Network network);
+
+    UserDataServiceProvider getSSHKeyResetProvider(Network network);
 
     boolean networkIsConfiguredForExternalNetworking(long zoneId, long networkId);
 
@@ -476,4 +478,5 @@ public interface NetworkManager extends NetworkService {
      */
     int getNetworkLockTimeout();
 
+    List<Provider> getProvidersForServiceInNetwork(Network network, Service service);
 }

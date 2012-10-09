@@ -269,13 +269,22 @@
             $.ajax({
               url: createURL('listRouters'),
               data: {
-                listAll: true
+                projectid: -1
               },
               success: function(json) {
-                dataFns.capacity($.extend(data, {
-                  virtualRouterCount: json.listroutersresponse.count ?
-                    json.listroutersresponse.count : 0
-                }));
+                var total1 = json.listroutersresponse.count ? json.listroutersresponse.count : 0;								
+								$.ajax({
+								  url: createURL('listRouters'),
+									data: {
+									  listAll: true
+									},
+									success: function(json) {
+									  var total2 = json.listroutersresponse.count ? json.listroutersresponse.count : 0;		
+										dataFns.capacity($.extend(data, {
+											virtualRouterCount: (total1 + total2)
+										}));																	
+									}									
+								});										
               }
             });
           },
@@ -323,6 +332,11 @@
             data: data
           });
         };
+
+        //  re: CS-16413 -- Disable API calls
+        return args.response.success({
+          data: {}
+        });
 
         dataFns.zoneCount({});
       }
@@ -1442,8 +1456,9 @@
 
 										//need to make 2 listNetworks API call to get all guest networks from one physical network in Advanced zone
 										var items = [];
+										//"listNetworks&projectid=-1": list guest networks under all projects (no matter who the owner is)
 										$.ajax({
-                      url: createURL("listNetworks&listAll=true&trafficType=Guest&zoneId=" + selectedZoneObj.id + "&physicalnetworkid=" + selectedPhysicalNetworkObj.id + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
+                      url: createURL("listNetworks&projectid=-1&trafficType=Guest&zoneId=" + selectedZoneObj.id + "&physicalnetworkid=" + selectedPhysicalNetworkObj.id + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
                       dataType: "json",
 											async: false,
                       success: function(json) {
@@ -1457,6 +1472,7 @@
 										  networkCollectionMap[this.id] = this.name;
 										});
 
+										//"listNetworks&listAll=true: list guest networks that are not under any project (no matter who the owner is)
 										$.ajax({
                       url: createURL("listNetworks&listAll=true&trafficType=Guest&zoneId=" + selectedZoneObj.id + "&physicalnetworkid=" + selectedPhysicalNetworkObj.id + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
                       dataType: "json",
@@ -1780,10 +1796,24 @@
 														project: { label: 'label.project' }
                           }
                         ],
-                        dataProvider: function(args) {			
+                        dataProvider: function(args) {	                         
+													var data = {
+													  id: args.context.networks[0].id
+													};
+													if(args.context.networks[0].projectid != null) {
+													  $.extend(data, {
+														  projectid: -1
+														});
+													}
+													else {
+													  $.extend(data, {
+														  listAll: true   //pass "&listAll=true" to "listNetworks&id=xxxxxxxx" for now before API gets fixed.
+														});
+													}
+												
 													$.ajax({
-														url: createURL("listNetworks&id=" + args.context.networks[0].id + "&listAll=true"), //pass "&listAll=true" to "listNetworks&id=xxxxxxxx" for now before API gets fixed.
-														dataType: "json",
+														url: createURL("listNetworks"), 
+														data: data,
 														async: false,
 														success: function(json) {														 
 															selectedGuestNetworkObj = json.listnetworksresponse.network[0];		
@@ -2251,6 +2281,7 @@
                             id: { label: 'label.id' },
                             projectid: { label: 'label.project.id' },
                             state: { label: 'label.state' },
+                            guestnetworkid: { label: 'label.network.id' },
                             publicip: { label: 'label.public.ip' },
                             guestipaddress: { label: 'label.guest.ip' },
                             linklocalip: { label: 'label.linklocal.ip' },
@@ -2281,6 +2312,47 @@
 															});
 														}
 													});		
+                        }
+                      },
+                      nics: {
+                        title: 'label.nics',
+                        multiple: true,
+                        fields: [
+                          {
+                            name: { label: 'label.name', header: true },
+                            type: { label: 'label.type' },
+                            traffictype: { label: 'label.traffic.type' },
+                            networkname: { label: 'label.network.name' },
+                            netmask: { label: 'label.netmask' },
+                            ipaddress: { label: 'label.ip.address' },
+                            id: { label: 'label.id' },
+                            networkid: { label: 'label.network.id' },
+                            isolationuri: { label: 'label.isolation.uri' },
+                            broadcasturi: { label: 'label.broadcast.uri' }
+                          }
+                        ],
+                        dataProvider: function(args) {
+                          $.ajax({
+                            url: createURL("listRouters&id=" + args.context.routers[0].id),
+                            dataType: 'json',
+                            async: true,
+                            success: function(json) {
+                              var jsonObj = json.listroutersresponse.router[0].nic;
+
+                              args.response.success({
+                                actionFilter: routerActionfilter,
+                                data: $.map(jsonObj, function(nic, index) {
+                                  var name = 'NIC ' + (index + 1);                    
+                                  if (nic.isdefault) {
+                                    name += ' (' + _l('label.default') + ')';
+                                  }
+                                  return $.extend(nic, {
+                                    name: name
+                                  });
+                                })
+                              });
+                            }
+                          });
                         }
                       }
                     }
@@ -5172,6 +5244,7 @@
                     id: { label: 'label.id' },
                     projectid: { label: 'label.project.id' },
                     state: { label: 'label.state' },
+                    guestnetworkid: { label: 'label.network.id' },
                     publicip: { label: 'label.public.ip' },
                     guestipaddress: { label: 'label.guest.ip' },
                     linklocalip: { label: 'label.linklocal.ip' },
@@ -5200,6 +5273,47 @@
                       args.response.success({
                         actionFilter: routerActionfilter,
                         data: jsonObj
+                      });
+                    }
+                  });
+                }
+              },
+              nics: {
+                title: 'label.nics',
+                multiple: true,
+                fields: [
+                  {
+                    name: { label: 'label.name', header: true },
+                    type: { label: 'label.type' },
+                    traffictype: { label: 'label.traffic.type' },
+                    networkname: { label: 'label.network.name' },
+                    netmask: { label: 'label.netmask' },
+                    ipaddress: { label: 'label.ip.address' },
+                    id: { label: 'label.id' },
+                    networkid: { label: 'label.network.id' },
+                    isolationuri: { label: 'label.isolation.uri' },
+                    broadcasturi: { label: 'label.broadcast.uri' }
+                  }
+                ],
+                dataProvider: function(args) {
+                  $.ajax({
+                    url: createURL("listRouters&id=" + args.context.routers[0].id),
+                    dataType: 'json',
+                    async: true,
+                    success: function(json) {
+                      var jsonObj = json.listroutersresponse.router[0].nic;
+
+                      args.response.success({
+                        actionFilter: routerActionfilter,
+                        data: $.map(jsonObj, function(nic, index) {
+                          var name = 'NIC ' + (index + 1);                    
+                          if (nic.isdefault) {
+                            name += ' (' + _l('label.default') + ')';
+                          }
+                          return $.extend(nic, {
+                            name: name
+                          });
+                        })
                       });
                     }
                   });

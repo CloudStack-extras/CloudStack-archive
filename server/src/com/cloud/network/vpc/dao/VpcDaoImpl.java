@@ -14,10 +14,14 @@ package com.cloud.network.vpc.dao;
 
 
 import java.util.List;
+import java.util.Map;
 
 import javax.ejb.Local;
 
+import com.cloud.network.Network.Provider;
+import com.cloud.network.Network.Service;
 import com.cloud.network.vpc.Vpc;
+import com.cloud.network.vpc.VpcServiceMapVO;
 import com.cloud.network.vpc.VpcVO;
 import com.cloud.server.ResourceTag.TaggedResourceType;
 import com.cloud.tags.dao.ResourceTagsDaoImpl;
@@ -42,6 +46,7 @@ public class VpcDaoImpl extends GenericDaoBase<VpcVO, Long> implements VpcDao{
     final SearchBuilder<VpcVO> AllFieldsSearch;
     final GenericSearchBuilder<VpcVO, Long> CountByAccountId;
     ResourceTagsDaoImpl _tagsDao = ComponentLocator.inject(ResourceTagsDaoImpl.class);
+    VpcServiceMapDaoImpl _vpcSvcMap = ComponentLocator.inject(VpcServiceMapDaoImpl.class);
 
     protected VpcDaoImpl() {
         super();
@@ -117,5 +122,29 @@ public class VpcDaoImpl extends GenericDaoBase<VpcVO, Long> implements VpcDao{
         List<Long> results = customSearch(sc, null);
         return results.get(0);
     }
+    
+    @Override
+    @DB
+    public VpcVO persist(VpcVO vpc, Map<String, String> serviceProviderMap) {
+        Transaction txn = Transaction.currentTxn();
+        txn.start();
+        VpcVO newVpc = super.persist(vpc);
+        persistVpcServiceProviders(vpc.getId(), serviceProviderMap);
+        txn.commit();
+        return newVpc;
+    }
+    
+    @Override
+    @DB
+    public void persistVpcServiceProviders(long vpcId, Map<String, String> serviceProviderMap) {
+        Transaction txn = Transaction.currentTxn();
+        txn.start();
+        for (String service : serviceProviderMap.keySet()) {
+            VpcServiceMapVO serviceMap = new VpcServiceMapVO(vpcId, Service.getService(service), Provider.getProvider(serviceProviderMap.get(service)));
+            _vpcSvcMap.persist(serviceMap);
+        }
+        txn.commit();
+    }
+
 }
 

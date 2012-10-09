@@ -104,7 +104,7 @@ class deployDataCenters():
             self.createClusters(pod.clusters, zoneId, podId)
 
     def createVlanIpRanges(self, mode, ipranges, zoneId, podId=None,\
-                           networkId=None):
+                           networkId=None, forvirtualnetwork=None):
         if ipranges is None:
             return
         for iprange in ipranges:
@@ -120,7 +120,10 @@ class deployDataCenters():
             vlanipcmd.zoneid = zoneId
             vlanipcmd.vlan = iprange.vlan
             if mode == "Basic":
-                vlanipcmd.forvirtualnetwork = "false"
+                if forvirtualnetwork:
+                    vlanipcmd.forvirtualnetwork = "true"
+                else:
+                    vlanipcmd.forvirtualnetwork = "false"
             else:
                 vlanipcmd.forvirtualnetwork = "true"
 
@@ -290,21 +293,30 @@ class deployDataCenters():
                         if len(filter(lambda x : x.typ == 'Public', zone.physical_networks[0].traffictypes)) > 0 \
                         else "DefaultSharedNetworkOfferingWithSGService"
 
+                listnetworkoffering.name = "DefaultSharedNetworkOfferingWithSGService" \
+                        if len(filter(lambda x : x.name == 'SecurityGroupProvider', zone.physical_networks[0].providers)) > 0 \
+                        else "DefaultSharedNetworkOffering"
+                
                 listnetworkofferingresponse = \
                 self.apiClient.listNetworkOfferings(listnetworkoffering)
-
+                    
                 guestntwrk = configGenerator.network()
                 guestntwrk.displaytext = "guestNetworkForBasicZone"
                 guestntwrk.name = "guestNetworkForBasicZone"
                 guestntwrk.zoneid = zoneId
-                guestntwrk.networkofferingid = \
+                if listnetworkoffering.name is "DefaultSharedNetworkOffering":
+                    guestntwrk.networkofferingid = \
+                        listnetworkofferingresponse[1].id
+                else:
+                    guestntwrk.networkofferingid = \
                         listnetworkofferingresponse[0].id
+                    
                         
                 networkid = self.createnetworks([guestntwrk], zoneId)
                 self.createpods(zone.pods, zoneId, networkid)
                 if self.isEipElbZone(zone):
                     self.createVlanIpRanges(zone.networktype, zone.ipranges, \
-                                        zoneId)
+                                        zoneId, forvirtualnetwork=True)
 
             if zone.networktype == "Advanced":
                 self.createpods(zone.pods, zoneId)

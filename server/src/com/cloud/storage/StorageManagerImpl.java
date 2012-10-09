@@ -413,7 +413,11 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
             }
             ClusterVO cluster = _clusterDao.findById(pool.getClusterId());
             if (type == cluster.getHypervisorType()) {
-                retPools.add(pool);
+                List<HostVO> hosts = _hostDao.listUpRoutingHostByZonePodCluster(cluster.getId(),
+            			cluster.getPodId(), cluster.getDataCenterId());
+                if( hosts != null && hosts.size() > 0 ) {
+            		retPools.add(pool);
+                }
             }
         }
         Collections.shuffle(retPools);
@@ -1073,9 +1077,10 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
         List<HostVO> storageHosts = _resourceMgr.listAllHostsInOneZoneByType(Host.Type.SecondaryStorage, dataCenterId);
         if (storageHosts != null) {
             for (HostVO storageHost : storageHosts) {
-                VMTemplateHostVO templateHostVO = _vmTemplateHostDao.findByHostTemplate(storageHost.getId(), templateId);
-                if (templateHostVO != null) {
-                    isoPath = storageHost.getStorageUrl() + "/" + templateHostVO.getInstallPath();
+                List<VMTemplateHostVO> templateHostVOs = _vmTemplateHostDao.listByTemplateHostStatus(templateId, storageHost.getId(), VMTemplateStorageResourceAssoc.Status.DOWNLOADED );
+                if (templateHostVOs != null && !templateHostVOs.isEmpty()) {
+                    VMTemplateHostVO tmpHostVO = templateHostVOs.get(0);
+                    isoPath = storageHost.getStorageUrl() + "/" + tmpHostVO.getInstallPath();
                     return new Pair<String, String>(isoPath, storageHost.getStorageUrl());
                 }
             }
@@ -2116,13 +2121,11 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
     public void createCapacityEntry(StoragePoolVO storagePool, short capacityType, long allocated) {
         SearchCriteria<CapacityVO> capacitySC = _capacityDao.createSearchCriteria();
 
-        List<CapacityVO> capacities = _capacityDao.search(capacitySC, null);
-        capacitySC = _capacityDao.createSearchCriteria();
         capacitySC.addAnd("hostOrPoolId", SearchCriteria.Op.EQ, storagePool.getId());
         capacitySC.addAnd("dataCenterId", SearchCriteria.Op.EQ, storagePool.getDataCenterId());
         capacitySC.addAnd("capacityType", SearchCriteria.Op.EQ, capacityType);
 
-        capacities = _capacityDao.search(capacitySC, null);
+        List<CapacityVO> capacities = _capacityDao.search(capacitySC, null);
 
         long totalOverProvCapacity;
         if (storagePool.getPoolType() == StoragePoolType.NetworkFilesystem) {
@@ -2374,13 +2377,15 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
                             if (snapshots == null) {
                                 continue;
                             }
-                            CleanupSnapshotBackupCommand cmd = new CleanupSnapshotBackupCommand(secondaryStorageHost.getStorageUrl(), secondaryStorageHost.getDataCenterId(), volume.getAccountId(),
-                                    volumeId, snapshots);
-
-                            Answer answer = _agentMgr.sendToSecStorage(secondaryStorageHost, cmd);
-                            if ((answer == null) || !answer.getResult()) {
-                                String details = "Failed to cleanup snapshots for volume " + volumeId + " due to " + (answer == null ? "null" : answer.getDetails());
-                                s_logger.warn(details);
+                            List<SnapshotVO> backingupSnapshots = _snapshotDao.listByStatus(volumeId, Snapshot.Status.BackingUp);                            
+                            if(backingupSnapshots == null) {
+	                            CleanupSnapshotBackupCommand cmd = new CleanupSnapshotBackupCommand(secondaryStorageHost.getStorageUrl(), secondaryStorageHost.getDataCenterId(), volume.getAccountId(),
+	                                    volumeId, snapshots);
+	                            Answer answer = _agentMgr.sendToSecStorage(secondaryStorageHost, cmd);
+	                            if ((answer == null) || !answer.getResult()) {
+	                                String details = "Failed to cleanup snapshots for volume " + volumeId + " due to " + (answer == null ? "null" : answer.getDetails());
+	                                s_logger.warn(details);
+	                            }
                             }
                         } catch (Exception e1) {
                             s_logger.warn("problem cleaning up snapshots in secondary storage " + secondaryStorageHost, e1);

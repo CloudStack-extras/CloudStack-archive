@@ -17,7 +17,10 @@ package com.cloud.bridge.service;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.codec.binary.Base64;
@@ -40,12 +43,14 @@ import com.cloud.bridge.service.core.ec2.EC2DescribeAvailabilityZones;
 import com.cloud.bridge.service.core.ec2.EC2DescribeAvailabilityZonesResponse;
 import com.cloud.bridge.service.core.ec2.EC2DescribeImageAttribute;
 
+import com.cloud.bridge.service.core.ec2.EC2AvailabilityZone;
 import com.cloud.bridge.service.core.ec2.EC2DescribeImages;
 import com.cloud.bridge.service.core.ec2.EC2DescribeImagesResponse;
 import com.cloud.bridge.service.core.ec2.EC2DescribeInstances;
 import com.cloud.bridge.service.core.ec2.EC2DescribeInstancesResponse;
 import com.cloud.bridge.service.core.ec2.EC2DescribeKeyPairs;
 import com.cloud.bridge.service.core.ec2.EC2DescribeKeyPairsResponse;
+import com.cloud.bridge.service.core.ec2.EC2ImageLaunchPermission;
 import com.cloud.bridge.service.core.ec2.EC2ResourceTag;
 import com.cloud.bridge.service.core.ec2.EC2DescribeSecurityGroups;
 import com.cloud.bridge.service.core.ec2.EC2DescribeSecurityGroupsResponse;
@@ -207,91 +212,105 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 
     public CreateTagsResponse createTags(CreateTags createTags) {
         EC2Tags request = new EC2Tags();
-        CreateTagsType ctt = createTags.getCreateTags();
+        ArrayList<String> resourceIdList = new ArrayList<String>();
+        Map<String, String> resourceTagList = new HashMap<String, String>();
 
+        CreateTagsType ctt = createTags.getCreateTags();
         ResourceIdSetType resourceIds = ctt.getResourcesSet();
         ResourceTagSetType resourceTags = ctt.getTagSet();
-        request = toResourceTypeAndIds(resourceIds);
-        //add resource tag's to the request
-        if (resourceTags != null) {
-            ResourceTagSetItemType[] items = resourceTags.getItem();
-            if (items != null) {
-                for( int i=0; i < items.length; i++ ) {
-                    EC2TagKeyValue param1 = new EC2TagKeyValue();
-                    param1.setKey(items[i].getKey());
-                    param1.setValue(items[i].getValue());
-                    request.addResourceTag(param1);
-                }
-            }
+
+        ResourceIdSetItemType[] resourceIdItems = resourceIds.getItem();
+        if (resourceIdItems != null) {
+            for( int i=0; i < resourceIdItems.length; i++ )
+            	resourceIdList.add(resourceIdItems[i].getResourceId());
         }
+        request = toResourceTypeAndIds(request, resourceIdList);
+
+        //add resource tag's to the request
+        ResourceTagSetItemType[] resourceTagItems = resourceTags.getItem();
+        if (resourceTagItems != null) {
+            for( int i=0; i < resourceTagItems.length; i++ )
+              	resourceTagList.put(resourceTagItems[i].getKey(), resourceTagItems[i].getValue());
+        }
+        request = toResourceTag(request, resourceTagList);
+
         return toCreateTagsResponse( engine.modifyTags( request, "create"));
     }
 
     public DeleteTagsResponse deleteTags(DeleteTags deleteTags) {
         EC2Tags request = new EC2Tags();
-        DeleteTagsType dtt = deleteTags.getDeleteTags();
+        ArrayList<String> resourceIdList = new ArrayList<String>();
+        Map<String, String> resourceTagList = new HashMap<String, String>();
 
+        DeleteTagsType dtt = deleteTags.getDeleteTags();
         ResourceIdSetType resourceIds = dtt.getResourcesSet();
         DeleteTagsSetType resourceTags = dtt.getTagSet();
-        request = toResourceTypeAndIds(resourceIds);
-        //add resource tag's to the request
-        if (resourceTags != null) {
-            DeleteTagsSetItemType[] items = resourceTags.getItem();
-            if (items != null) {
-                for( int i=0; i < items.length; i++ ) {
-                    EC2TagKeyValue param1 = new EC2TagKeyValue();
-                    param1.setKey(items[i].getKey());
-                    if (items[i].getValue() != null)
-                        param1.setValue(items[i].getValue());
-                    request.addResourceTag(param1);
-                }
-            }
+
+        ResourceIdSetItemType[] resourceIdItems = resourceIds.getItem();
+
+        if (resourceIdItems != null) {
+            for( int i=0; i < resourceIdItems.length; i++ )
+            	resourceIdList.add(resourceIdItems[i].getResourceId());
         }
+        request = toResourceTypeAndIds(request, resourceIdList);
+
+        //add resource tag's to the request
+        DeleteTagsSetItemType[] resourceTagItems = resourceTags.getItem();
+        if (resourceTagItems != null) {
+            for( int i=0; i < resourceTagItems.length; i++ )
+            	resourceTagList.put(resourceTagItems[i].getKey(), resourceTagItems[i].getValue());
+        }
+        request = toResourceTag(request, resourceTagList);
+
         return toDeleteTagsResponse( engine.modifyTags( request, "delete"));
     }
 
-    private EC2Tags toResourceTypeAndIds(ResourceIdSetType resourceIds) {
-    	EC2Tags request = new EC2Tags();
-        //add resource-type and resource-id's to the request
-        if (resourceIds != null) {
-            ResourceIdSetItemType[] items = resourceIds.getItem();
-            List<String> resourceTypeList = new ArrayList<String>();
-            if (items != null) {
-                for( int i=0; i < items.length; i++ ) {
-                    if (!items[i].getResourceId().contains(":") || items[i].getResourceId().split(":").length != 2) {
-                        throw new EC2ServiceException( ClientError.InvalidResourceId_Format,
-                                "Invalid Format. ResourceId format is resource-type:resource-uuid");
-                    }
-                    String resourceType = items[i].getResourceId().split(":")[0];
-                    if (resourceTypeList.isEmpty())
-                        resourceTypeList.add(resourceType);
-                    else {
-                        Boolean existsInList = false;
-                        for (String addedResourceType : resourceTypeList) {
-                            if (addedResourceType.equalsIgnoreCase(resourceType)) {
-                                existsInList = true;
-                                break;
-                            }
-                        }
-                        if (!existsInList)
-                            resourceTypeList.add(resourceType);
-                    }
-                }
-                for (String resourceType : resourceTypeList){
-                    EC2TagTypeId param1 = new EC2TagTypeId();
-                    param1.setResourceType(resourceType);
-                    for( int i=0; i < items.length; i++ ) {
-                        String[] resourceTag = items[i].getResourceId().split(":");
-                	    if (resourceType.equals(resourceTag[0]))
-                	        param1.addResourceId(resourceTag[1]);
-                    }
-                    request.addResourceType(param1);
-                }
+    public static EC2Tags toResourceTypeAndIds( EC2Tags request, ArrayList<String> resourceIdList ) {
+        List<String> resourceTypeList = new ArrayList<String>();
+        for (String resourceId : resourceIdList) {
+            if (!resourceId.contains(":") || resourceId.split(":").length != 2) {
+                throw new EC2ServiceException( ClientError.InvalidResourceId_Format,
+                        "Invalid Format. ResourceId format is resource-type:resource-uuid");
             }
+            String resourceType = resourceId.split(":")[0];
+            if (resourceTypeList.isEmpty())
+                resourceTypeList.add(resourceType);
+            else {
+                Boolean existsInList = false;
+                for (String addedResourceType : resourceTypeList) {
+                    if (addedResourceType.equalsIgnoreCase(resourceType)) {
+                        existsInList = true;
+                        break;
+                    }
+                }
+                if (!existsInList)
+                	resourceTypeList.add(resourceType);
+            }
+        }
+        for (String resourceType : resourceTypeList){
+            EC2TagTypeId param1 = new EC2TagTypeId();
+            param1.setResourceType(resourceType);
+            for (String resourceId : resourceIdList) {
+            	String[] resourceTag = resourceId.split(":");
+            	if (resourceType.equals(resourceTag[0]))
+            		param1.addResourceId(resourceTag[1]);
+            }
+            request.addResourceType(param1);
         }
         return request;
     }
-    
+
+    public static EC2Tags toResourceTag( EC2Tags request, Map<String, String> resourceTagList ) {
+        Set<String> resourceTagKeySet = resourceTagList.keySet();
+        for (String resourceTagKey : resourceTagKeySet) {
+            EC2TagKeyValue param1 = new EC2TagKeyValue();
+            param1.setKey(resourceTagKey);
+            param1.setValue(resourceTagList.get(resourceTagKey));
+            request.addResourceTag(param1);
+        }
+        return request;
+    }
+
 	public DeleteSecurityGroupResponse deleteSecurityGroup(DeleteSecurityGroup deleteSecurityGroup) {
         DeleteSecurityGroupType sgt = deleteSecurityGroup.getDeleteSecurityGroup();
 		return toDeleteSecurityGroupResponse( engine.deleteSecurityGroup( sgt.getGroupName()));
@@ -595,31 +614,32 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
             request.setImageId(miat.getImageId());
             request.setAttribute(ImageAttribute.launchPermission);
             if(launchPermOp.getAdd() != null){
-                request.setLaunchPermOperation(EC2ModifyImageAttribute.Operation.add);
-                setAccountOrGroupList(launchPermOp.getAdd().getItem(), request);
+                setAccountOrGroupList(launchPermOp.getAdd().getItem(), request, "add");
             }else if(launchPermOp.getRemove() != null){
-                request.setLaunchPermOperation(EC2ModifyImageAttribute.Operation.remove);
-                setAccountOrGroupList(launchPermOp.getRemove().getItem(), request);
+                setAccountOrGroupList(launchPermOp.getRemove().getItem(), request, "remove");
             }
             return toModifyImageAttributeResponse( engine.modifyImageAttribute( request ));
 		}
 		throw new EC2ServiceException( ClientError.Unsupported, "Unsupported - can only modify image description or launchPermission");
 	}	
 
-	private void setAccountOrGroupList(LaunchPermissionItemType[] items, EC2ModifyImageAttribute request){
-        
-        List<String>  launchPermissionAccountsOrGroupList = new ArrayList<String>();
-        
+    private void setAccountOrGroupList(LaunchPermissionItemType[] items, EC2ModifyImageAttribute request, String operation){
+        EC2ImageLaunchPermission launchPermission = new EC2ImageLaunchPermission();
+
+        if (operation.equalsIgnoreCase("add"))
+            launchPermission.setLaunchPermOp(EC2ImageLaunchPermission.Operation.add);
+        else
+            launchPermission.setLaunchPermOp(EC2ImageLaunchPermission.Operation.remove);
+
         for (LaunchPermissionItemType lpItem : items) {
             if(lpItem.getGroup() != null){
-                launchPermissionAccountsOrGroupList.add(lpItem.getGroup());
+                launchPermission.addLaunchPermission(lpItem.getGroup());
             }else if(lpItem.getUserId() != null){
-                launchPermissionAccountsOrGroupList.add(lpItem.getUserId());
+                launchPermission.addLaunchPermission(lpItem.getUserId());
             }
         }
-        
-        request.setLaunchPermissionAccountsOrGroupList(launchPermissionAccountsOrGroupList);
 
+        request.addLaunchPermission(launchPermission);
 	}
 	/**
 	 * Did not find a matching service offering so for now we just return disabled
@@ -702,7 +722,9 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 		if(elementType != null){
 		    request.setImageId( riat.getImageId());
 		    request.setAttribute(ImageAttribute.launchPermission);
-    		request.setLaunchPermOperation(EC2ModifyImageAttribute.Operation.reset);
+            EC2ImageLaunchPermission launchPermission = new EC2ImageLaunchPermission();
+            launchPermission.setLaunchPermOp(EC2ImageLaunchPermission.Operation.reset);
+            request.addLaunchPermission(launchPermission);
     		return toResetImageAttributeResponse( engine.modifyImageAttribute( request ));
 		}
 		throw new EC2ServiceException( ClientError.Unsupported, "Unsupported - can only reset image launchPermission" );
@@ -1258,7 +1280,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 	        	param5.setInstanceId(vol.getInstanceId().toString());
 	        	String devicePath = engine.cloudDeviceIdToDevicePath( vol.getHypervisor(), vol.getDeviceId());
 	        	param5.setDevice( devicePath );
-	        	param5.setStatus( toVolumeAttachmentState( vol.getInstanceId(), vol.getVMState()));
+                param5.setStatus(vol.getAttachmentState());
                 if (vol.getAttached() == null) {
                     param5.setAttachTime( cal );
                 } else {
@@ -1352,7 +1374,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 	        param7.setDnsName( "" );
 	        param7.setReason( "" );
             param7.setKeyName( inst.getKeyPairName());
-	        param7.setAmiLaunchIndex( "" );
+            param7.setAmiLaunchIndex( null );
 	        param7.setInstanceType( inst.getServiceOffering());
 	        
 	        ProductCodesSetType param9 = new ProductCodesSetType();
@@ -1514,25 +1536,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 		else if (cloudState.equalsIgnoreCase( "Expunging" )) return new String( "terminated");
 		else return new String( "running" );
 	}
-	
-	/**
-	 * We assume a state for the volume based on what its associated VM is doing.
-	 * 
-	 * @param vmId
-	 * @param vmState
-	 * @return
-	 */
-	public static String toVolumeAttachmentState(String instanceId, String vmState ) {
-		if (null == instanceId || null == vmState) return "detached";
-		
-		     if (vmState.equalsIgnoreCase( "Destroyed" )) return "detached";
-		else if (vmState.equalsIgnoreCase( "Stopped"   )) return "attached";
-		else if (vmState.equalsIgnoreCase( "Running"   )) return "attached";
-		else if (vmState.equalsIgnoreCase( "Starting"  )) return "attaching";
-		else if (vmState.equalsIgnoreCase( "Stopping"  )) return "attached";
-		else if (vmState.equalsIgnoreCase( "Error"     )) return "detached";
-		else return "detached";
-	}
+
 	
 	public static StopInstancesResponse toStopInstancesResponse(EC2StopInstancesResponse engineResponse) {
 	    StopInstancesResponse response = new StopInstancesResponse();
@@ -1674,7 +1678,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 	        param7.setDnsName( "" );
 	        param7.setReason( "" );
             param7.setKeyName( inst.getKeyPairName());
-	        param7.setAmiLaunchIndex( "" );
+            param7.setAmiLaunchIndex( null );
 	        
 	        ProductCodesSetType param9 = new ProductCodesSetType();
 	        ProductCodesSetItemType param10 = new ProductCodesSetItemType();
@@ -1744,14 +1748,18 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 		DescribeAvailabilityZonesResponse response = new DescribeAvailabilityZonesResponse();
 		DescribeAvailabilityZonesResponseType param1 = new DescribeAvailabilityZonesResponseType();
         AvailabilityZoneSetType param2 = new AvailabilityZoneSetType();
-        
-		String[] zones = engineResponse.getZoneSet();
-		for (String zone : zones) {
+
+        EC2AvailabilityZone[] zones = engineResponse.getAvailabilityZoneSet();
+        for (EC2AvailabilityZone zone : zones) {
             AvailabilityZoneItemType param3 = new AvailabilityZoneItemType(); 
-            AvailabilityZoneMessageSetType param4 = new AvailabilityZoneMessageSetType();
-            param3.setZoneName( zone );
+            param3.setZoneName( zone.getName() );
             param3.setZoneState( "available" );
             param3.setRegionName( "" );
+
+            AvailabilityZoneMessageSetType param4 = new AvailabilityZoneMessageSetType();
+            AvailabilityZoneMessageType param5 = new AvailabilityZoneMessageType();
+            param5.setMessage(zone.getMessage());
+            param4.addItem(param5);
             param3.setMessageSet( param4 );
             param2.addItem( param3 );
 		}
@@ -1772,10 +1780,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 		param1.setVolumeId( engineResponse.getId().toString());
 		param1.setInstanceId( engineResponse.getInstanceId().toString());
 		param1.setDevice( engineResponse.getDevice());
-		if ( null != engineResponse.getState())
-		     param1.setStatus( engineResponse.getState());
-		else param1.setStatus( "" );  // ToDo - throw an Soap Fault 
-		
+        param1.setStatus(engineResponse.getAttachmentState());
 		param1.setAttachTime( cal );
 			
 		param1.setRequestId( UUID.randomUUID().toString());
@@ -1792,10 +1797,7 @@ public class EC2SoapServiceImpl implements AmazonEC2SkeletonInterface  {
 		param1.setVolumeId( engineResponse.getId().toString());
 		param1.setInstanceId( (null == engineResponse.getInstanceId() ? "" : engineResponse.getInstanceId().toString()));
 		param1.setDevice( (null == engineResponse.getDevice() ? "" : engineResponse.getDevice()));
-		if ( null != engineResponse.getState())
-		     param1.setStatus( engineResponse.getState());
-		else param1.setStatus( "" );  // ToDo - throw an Soap Fault 
-		
+        param1.setStatus(engineResponse.getAttachmentState());
 		param1.setAttachTime( cal );
 			
 		param1.setRequestId( UUID.randomUUID().toString());

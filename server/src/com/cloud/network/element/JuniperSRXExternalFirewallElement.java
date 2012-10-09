@@ -72,6 +72,7 @@ import com.cloud.network.dao.PhysicalNetworkDao;
 import com.cloud.network.resource.JuniperSrxResource;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.PortForwardingRule;
+import com.cloud.network.rules.StaticNat;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.offerings.dao.NetworkOfferingDao;
 import com.cloud.server.api.response.ExternalFirewallResponse;
@@ -86,11 +87,11 @@ import com.cloud.vm.VirtualMachineProfile;
 
 @Local(value = NetworkElement.class)
 public class JuniperSRXExternalFirewallElement extends ExternalFirewallDeviceManagerImpl implements SourceNatServiceProvider, FirewallServiceProvider,
-PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer, JuniperSRXFirewallElementService {
+PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer, JuniperSRXFirewallElementService, StaticNatServiceProvider {
 
     private static final Logger s_logger = Logger.getLogger(JuniperSRXExternalFirewallElement.class);
 
-    private static final Map<Service, Map<Capability, String>> capabilities = setCapabilities();
+    protected static final Map<Service, Map<Capability, String>> capabilities = setCapabilities();
 
     @Inject
     NetworkManager _networkManager;
@@ -297,7 +298,7 @@ PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer, Junip
             return false;
         }
 
-        return applyFirewallRules(network, rules);
+        return applyPortForwardingRules(network, rules);
     }
 
     @Override
@@ -546,7 +547,17 @@ PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer, Junip
 
     @Override
     public boolean applyIps(Network network, List<? extends PublicIpAddress> ipAddress, Set<Service> service) throws ResourceUnavailableException {
-        // TODO Auto-generated method stub
-        return false;
+        // return true, as IP will be associated as part of static NAT/port forwarding rule configuration
+        return true;
+    }
+
+	@Override
+	public boolean applyStaticNats(Network config,
+        List<? extends StaticNat> rules)
+        throws ResourceUnavailableException {
+        if (!canHandle(config, Service.StaticNat)) {
+            return false;
+        }
+        return applyStaticNatRules(config, rules);
     }
 }

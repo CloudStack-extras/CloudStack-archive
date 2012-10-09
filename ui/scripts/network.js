@@ -187,7 +187,8 @@
           url: createURL('listNetworks', { ignoreProject: true }),
           data: {
             supportedServices: 'SecurityGroup',
-            listAll: true
+            listAll: true,
+						details: 'min'
           },
           async: false,
           success: function(data) {
@@ -197,10 +198,11 @@
           }
         });
 
-        var sectionsToShow = ['networks', 'vpnCustomerGateway'];
+        var sectionsToShow = ['networks'];
 
         if (havingAdvancedZones) {
           sectionsToShow.push('vpc');
+          sectionsToShow.push('vpnCustomerGateway');
         }
 
         if(havingSecurityGroupNetwork == true)
@@ -316,7 +318,8 @@
                         $.ajax({
                           url: createURL('listVPCs'),
                           data: {
-                            listAll: true
+                            listAll: true,
+														details: 'min'
                           },
                           success: function(json) {
                             var items = json.listvpcsresponse.vpc;
@@ -403,24 +406,90 @@
              }
              */
           },
-          dataProvider: function(args) {
-            var array1 = [];
-            if(args.filterBy != null) {
-              if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
-                switch(args.filterBy.search.by) {
-                case "name":
-                  if(args.filterBy.search.value.length > 0)
-                    array1.push("&keyword=" + args.filterBy.search.value);
-                  break;
-                }
-              }
-            }
-            $.ajax({
-              url: createURL("listNetworks&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
-              dataType: 'json',
-							data: {
-							  listAll: true
+          
+					advSearchFields: {					 
+						zoneid: { 
+						  label: 'Zone',							
+              select: function(args) {							  					
+								$.ajax({
+									url: createURL('listZones'),
+									data: {
+									  listAll: true
+									},
+									success: function(json) {									  
+										var zones = json.listzonesresponse.zone;
+
+										args.response.success({
+											data: $.map(zones, function(zone) {
+												return {
+													id: zone.id,
+													description: zone.name
+												};
+											})
+										});
+									}
+								});
+							}						
+						},	
+            						
+						domainid: {					
+							label: 'Domain',					
+							select: function(args) {
+								if(isAdmin() || isDomainAdmin()) {
+									$.ajax({
+										url: createURL('listDomains'),
+										data: { 
+											listAll: true,
+											details: 'min'
+										},
+										success: function(json) {
+											var array1 = [{id: '', description: ''}];
+											var domains = json.listdomainsresponse.domain;
+											if(domains != null && domains.length > 0) {
+												for(var i = 0; i < domains.length; i++) {
+													array1.push({id: domains[i].id, description: domains[i].path});
+												}
+											}
+											args.response.success({
+												data: array1
+											});
+										}
+									});
+								}
+								else {
+									args.response.success({
+										data: null
+									});
+								}
 							},
+							isHidden: function(args) {
+								if(isAdmin() || isDomainAdmin())
+									return false;
+								else
+									return true;
+							}
+						},		
+						
+						account: { 
+							label: 'Account',
+							isHidden: function(args) {
+								if(isAdmin() || isDomainAdmin())
+									return false;
+								else
+									return true;
+							}			
+						},						
+						tagKey: { label: 'Tag Key' },
+						tagValue: { label: 'Tag Value' }						
+					},
+					
+					dataProvider: function(args) {
+            var data = {};
+						listViewDataProvider(args, data);		
+						
+            $.ajax({
+              url: createURL('listNetworks'),
+              data: data,						
               async: false,
               success: function(data) {
                 args.response.success({
@@ -2784,14 +2853,16 @@
                       //'private-ports': {
                       privateport: {
                         edit: true,
-                        label: 'label.private.port'
+                        label: 'label.private.port',
                         //range: ['privateport', 'privateendport']  //Bug 13427 - Don't allow port forwarding ranges in the CreatePortForwardingRule API
+												range: ['privateport', 'privateendport']    //Bug 16344 (restore port range back) (http://bugs.cloudstack.org/browse/CS-16344)
                       },
                       //'public-ports': {
                       publicport: {
                         edit: true,
-                        label: 'label.public.port'
+                        label: 'label.public.port',
                         //range: ['publicport', 'publicendport']  //Bug 13427 - Don't allow port forwarding ranges in the CreatePortForwardingRule API
+												range: ['publicport', 'publicendport']    //Bug 16344 (restore port range back) (http://bugs.cloudstack.org/browse/CS-16344)
                       },
                       'protocol': {
                         label: 'label.protocol',
@@ -2818,7 +2889,9 @@
                         var data = {
                           ipaddressid: args.context.ipAddresses[0].id,
                           privateport: args.data.privateport,
+													privateendport: args.data.privateendport,
                           publicport: args.data.publicport,
+													publicendport: args.data.publicendport,
                           protocol: args.data.protocol,
                           virtualmachineid: args.itemData[0].id,
                           openfirewall: false
@@ -3156,23 +3229,18 @@
             }
           },
 
+					advSearchFields: {					  					
+						tagKey: { label: 'Tag Key' },
+						tagValue: { label: 'Tag Value' }						
+					},
+					
           dataProvider: function(args) {
-            var array1 = [];
-            if(args.filterBy != null) {
-              if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
-                switch(args.filterBy.search.by) {
-                case "name":
-                  if(args.filterBy.search.value.length > 0)
-                    array1.push("&keyword=" + args.filterBy.search.value);
-                  break;
-                }
-              }
-            }
+            var data = {};
+						listViewDataProvider(args, data);						
 
             $.ajax({
-              url: createURL("listSecurityGroups&listAll=true&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
-              dataType: "json",
-              async: true,
+              url: createURL('listSecurityGroups'),
+              data: data,              
               success: function(json) {
                 var items = json.listsecuritygroupsresponse.securitygroup;
                 args.response.success({
@@ -3634,23 +3702,91 @@
             cidr: { label: 'label.cidr' },
             state: {label: 'label.state', indicator: { 'Enabled': 'on', 'Disabled': 'off'}}
           },
-          dataProvider: function(args) {
-            var array1 = [];
-            if(args.filterBy != null) {
-              if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
-                switch(args.filterBy.search.by) {
-                case "name":
-                  if(args.filterBy.search.value.length > 0)
-                    array1.push("&keyword=" + args.filterBy.search.value);
-                  break;
-                }
-              }
-            }
+										
+					advSearchFields: {
+					  name: { label: 'Name' },
+						zoneid: { 
+						  label: 'Zone',							
+              select: function(args) {							  					
+								$.ajax({
+									url: createURL('listZones'),
+									data: {
+									  listAll: true
+									},
+									success: function(json) {									  
+										var zones = json.listzonesresponse.zone;
 
+										args.response.success({
+											data: $.map(zones, function(zone) {
+												return {
+													id: zone.id,
+													description: zone.name
+												};
+											})
+										});
+									}
+								});
+							}						
+						},
+            
+						domainid: {					
+							label: 'Domain',					
+							select: function(args) {
+								if(isAdmin() || isDomainAdmin()) {
+									$.ajax({
+										url: createURL('listDomains'),
+										data: { 
+											listAll: true,
+											details: 'min'
+										},
+										success: function(json) {
+											var array1 = [{id: '', description: ''}];
+											var domains = json.listdomainsresponse.domain;
+											if(domains != null && domains.length > 0) {
+												for(var i = 0; i < domains.length; i++) {
+													array1.push({id: domains[i].id, description: domains[i].path});
+												}
+											}
+											args.response.success({
+												data: array1
+											});
+										}
+									});
+								}
+								else {
+									args.response.success({
+										data: null
+									});
+								}
+							},
+							isHidden: function(args) {
+								if(isAdmin() || isDomainAdmin())
+									return false;
+								else
+									return true;
+							}
+						},		
+						
+						account: { 
+							label: 'Account',
+							isHidden: function(args) {
+								if(isAdmin() || isDomainAdmin())
+									return false;
+								else
+									return true;
+							}			
+						},						
+						tagKey: { label: 'Tag Key' },
+						tagValue: { label: 'Tag Value' }						
+					},					
+					
+          dataProvider: function(args) {
+            var data = {};
+						listViewDataProvider(args, data);				
+					
             $.ajax({
-              url: createURL("listVPCs&listAll=true&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
-              dataType: "json",
-              async: true,
+              url: createURL('listVPCs'),
+              data: data,              
               success: function(json) {
                 var items = json.listvpcsresponse.vpc;
                 args.response.success({data:items});
@@ -3900,7 +4036,7 @@
 
             tabFilter:function(args) {
                 var hiddenTabs=[];
-                var isRouterOwner = isAdmin() || isDomainAdmin();
+                var isRouterOwner = isAdmin();
                 if(!isRouterOwner)
                   hiddenTabs.push("router");
                return hiddenTabs;
@@ -3980,7 +4116,7 @@
                                   }
                               },
                           account: {label:'label.account'},
-                          domain: {label: 'label.domain'},
+                          domain: {label: 'label.domain'}
 
                         }
 

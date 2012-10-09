@@ -15,6 +15,7 @@ package com.cloud.network.guru;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import javax.ejb.Local;
@@ -194,7 +195,7 @@ public class GuestNetworkGuru extends AdapterBase implements NetworkGuru {
     public Ip4Address acquireIp4Address(Network network, Ip4Address requestedIp, String reservationId) {
         List<String> ips = _nicDao.listIpAddressInNetwork(network.getId());
         String[] cidr = network.getCidr().split("/");
-        Set<Long> usedIps = new TreeSet<Long>();
+        SortedSet<Long> usedIps = new TreeSet<Long>();
 
         if (requestedIp != null && requestedIp.equals(network.getGateway())) {
             s_logger.warn("Requested ip address " + requestedIp + " is used as a gateway address in network " + network);

@@ -67,7 +67,7 @@ public class MockVpcManagerImpl implements VpcManager, Manager{
      * @see com.cloud.network.vpc.VpcService#createVpcOffering(java.lang.String, java.lang.String, java.util.List)
      */
     @Override
-    public VpcOffering createVpcOffering(String name, String displayText, List<String> supportedServices) {
+    public VpcOffering createVpcOffering(String name, String displayText, List<String> supportedServices, Map<String, List<String>> serviceProviders) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -357,7 +357,7 @@ public class MockVpcManagerImpl implements VpcManager, Manager{
      * @see com.cloud.network.vpc.VpcManager#vpcProviderEnabledInZone(long)
      */
     @Override
-    public boolean vpcProviderEnabledInZone(long zoneId) {
+    public boolean vpcProviderEnabledInZone(long zoneId, String provider) {
         // TODO Auto-generated method stub
         return false;
     }

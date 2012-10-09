@@ -57,7 +57,14 @@ class Services:
                                         "username": "testuser",
                                         "password": "password",
                                         },
-                         "ostypeid":'01853327-513e-4508-9628-f1f55db1946f',
+                         "mgmt_server": {
+                                    "ipaddress": '192.168.100.173',
+                                    "username": 'root',
+                                    "password": 'fr3sca',
+                                    "port": 22,
+                                },
+                         "hypervisor": 'VMWARE',
+                         "ostypeid":'d0ca03a0-ae22-44e6-969e-78f362f4e8b4',
                          "sleep": 60,
                          "timeout": 10,
                          "mode": 'advanced', #Networking mode: Basic, Advanced
@@ -170,8 +177,18 @@ class TestRouterServices(cloudstackTestCase):
                             'Running',
                             "Check list router response for router state"
                         )
-
-        result = get_process_status(
+        if self.services["hypervisor"].lower() == 'vmware':
+            result = get_process_status(
+                                self.services["mgmt_server"]["ipaddress"],
+                                self.services['mgmt_server']["port"],
+                                self.services["mgmt_server"]["username"],
+                                self.services["mgmt_server"]["password"],
+                                router.linklocalip,
+                                "service dnsmasq status",
+                                hypervisor=self.services["hypervisor"]
+                                )
+        else:
+            result = get_process_status(
                                 host.ipaddress,
                                 self.services['virtual_machine']["publicport"],
                                 self.vm_1.username,
@@ -233,7 +250,18 @@ class TestRouterServices(cloudstackTestCase):
                             "Check list router response for router state"
                         )
 
-        result = get_process_status(
+        if self.services["hypervisor"].lower() == 'vmware':
+            result = get_process_status(
+                                self.services["mgmt_server"]["ipaddress"],
+                                self.services['mgmt_server']["port"],
+                                self.services["mgmt_server"]["username"],
+                                self.services["mgmt_server"]["password"],
+                                router.linklocalip,
+                                "service dnsmasq status",
+                                hypervisor=self.services["hypervisor"]
+                                )
+        else:
+            result = get_process_status(
                                 host.ipaddress,
                                 self.services['virtual_machine']["publicport"],
                                 self.vm_1.username,
@@ -250,7 +278,18 @@ class TestRouterServices(cloudstackTestCase):
                             "Check dnsmasq service is running or not"
                         )
 
-        result = get_process_status(
+        if self.services["hypervisor"].lower() == 'vmware':
+            result = get_process_status(
+                                self.services["mgmt_server"]["ipaddress"],
+                                self.services['mgmt_server']["port"],
+                                self.services["mgmt_server"]["username"],
+                                self.services["mgmt_server"]["password"],
+                                router.linklocalip,
+                                "service haproxy status",
+                                hypervisor=self.services["hypervisor"]
+                                )
+        else:
+            result = get_process_status(
                                 host.ipaddress,
                                 self.services['virtual_machine']["publicport"],
                                 self.vm_1.username,
@@ -414,7 +453,18 @@ class TestRouterServices(cloudstackTestCase):
                         )
         host = hosts[0]
 
-        res = get_process_status(
+        if self.services["hypervisor"].lower() == 'vmware':
+            res = get_process_status(
+                                self.services["mgmt_server"]["ipaddress"],
+                                self.services['mgmt_server']["port"],
+                                self.services["mgmt_server"]["username"],
+                                self.services["mgmt_server"]["password"],
+                                router.linklocalip,
+                                "uptime",
+                                hypervisor=self.services["hypervisor"]
+                                )
+        else:
+            res = get_process_status(
                                 host.ipaddress,
                                 self.services['virtual_machine']["publicport"],
                                 self.vm_1.username,

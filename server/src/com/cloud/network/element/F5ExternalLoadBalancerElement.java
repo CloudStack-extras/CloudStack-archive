@@ -465,11 +465,19 @@ public class F5ExternalLoadBalancerElement extends ExternalLoadBalancerDeviceMan
     @Override
     public boolean applyIps(Network network, List<? extends PublicIpAddress> ipAddress, Set<Service> service) throws ResourceUnavailableException {
         // return true, as IP will be associated as part of LB rule configuration
-        return false;
+        return true;
     }
 
     @Override
     public IpDeployer getIpDeployer(Network network) {
+        ExternalLoadBalancerDeviceVO lbDevice = getExternalLoadBalancerForNetwork(network);
+        if (lbDevice == null) {
+            s_logger.error("Cannot find external load balanacer for network " + network.getName());
+            return null;
+        }
+        if (lbDevice.getIsInLineMode()) {
+            return getIpDeployerForInlineMode(network);
+        }
         return this;
     }
 }

@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 
 import com.citrix.netscaler.nitro.exception.nitro_exception;
 import com.citrix.netscaler.nitro.resource.base.base_response;
+import com.citrix.netscaler.nitro.resource.base.configobjects;
 import com.citrix.netscaler.nitro.resource.config.autoscale.autoscalepolicy;
 import com.citrix.netscaler.nitro.resource.config.autoscale.autoscaleprofile;
 import com.citrix.netscaler.nitro.resource.config.basic.server_service_binding;
@@ -94,6 +95,8 @@ import com.cloud.utils.exception.ExecutionException;
 import com.cloud.utils.net.NetUtils;
 import com.google.gson.Gson;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
 class NitroError {
     static final int NS_RESOURCE_EXISTS = 273;
     static final int NS_RESOURCE_NOT_EXISTS=258;
@@ -104,6 +107,7 @@ class NitroError {
 
 public class NetscalerResource implements ServerResource {
 
+    public final static int DEFAULT_SNMP_PORT = 161;
     // deployment configuration
     private String _name;
     private String _zoneId;
@@ -464,6 +468,10 @@ public class NetscalerResource implements ServerResource {
                 String nsVirtualServerName  = generateNSVirtualServerName(srcIp, srcPort);
 
                 if(loadBalancer.isAutoScaleVmGroupTO()) {
+                    if(!isAutoScaleSupportedInNetScaler()) {
+                        return new Answer(cmd, false, "AutoScale not supported in this version of NetScaler");
+                    }
+
                     applyAutoScaleConfig(loadBalancer);
                     return new Answer(cmd);
                 }
@@ -1624,9 +1632,20 @@ public class NetscalerResource implements ServerResource {
         AutoScaleVmProfileTO profileTO = vmGroupTO.getProfile();
         List<AutoScalePolicyTO> policies = vmGroupTO.getPolicies();
         int interval = vmGroupTO.getInterval();
-        int snmpPort = profileTO.getSnmpPort();
-        String snmpCommunity = profileTO.getSnmpCommunity();
+        List<Pair<String, String>> counterParams = profileTO.getCounterParamList();
+        String snmpCommunity = null;
+        int snmpPort = DEFAULT_SNMP_PORT;
         long cur_prirotiy = 1;
+
+        // get the session persistence parameters
+        List<Pair<String, String>> paramsList = profileTO.getCounterParamList();
+        for(Pair<String,String> param : paramsList) {
+            if ("snmpcommunity".equalsIgnoreCase(param.first())) {
+                snmpCommunity = param.second();
+            } else if ("snmpport".equalsIgnoreCase(param.first())) {
+                snmpPort = Integer.parseInt(param.second());
+            }
+        }
 
         try
         {
@@ -1654,7 +1673,7 @@ public class NetscalerResource implements ServerResource {
             String secretKey = profileTO.getAutoScaleUserSecretKey();
             String url = profileTO.getCloudStackApiUrl();
 
-            com.citrix.netscaler.nitro.resource.config.autoscale.autoscaleprofile autoscaleProfile = new com.citrix.netscaler.nitro.resource.config.autoscale.autoscaleprofile();
+            autoscaleprofile autoscaleProfile = new autoscaleprofile();
             try {
                 autoscaleProfile.set_name(profileName);
                 autoscaleProfile.set_type("CLOUDSTACK");
@@ -1995,7 +2014,7 @@ public class NetscalerResource implements ServerResource {
             }
 
             // Delete AutoScale Profile
-            com.citrix.netscaler.nitro.resource.config.autoscale.autoscaleprofile autoscaleProfile = new com.citrix.netscaler.nitro.resource.config.autoscale.autoscaleprofile();
+            autoscaleprofile autoscaleProfile = new autoscaleprofile();
             try {
                 autoscaleProfile.set_name(profileName);
                 autoscaleProfile.delete(_netscalerService, autoscaleProfile);
@@ -2127,18 +2146,23 @@ public class NetscalerResource implements ServerResource {
     }
 
     private boolean isAutoScaleSupportedInNetScaler() throws ExecutionException {
-        autoscaleprofile autoscaleProfile = new autoscaleprofile();
         try {
-            autoscaleProfile.get(_netscalerService);
-        } catch (Exception ex) {
-            // Looks like autoscale is not supported in this netscaler.
-            // TODO: Config team has introduce a new command to check
-            // the list of entities supported in a NetScaler. Can use that
-            // once it is present in AutoScale branch.
-            s_logger.warn("AutoScale is not supported in NetScaler");
+            configobjects netscaler_entities = configobjects.get(_netscalerService);
+            String[] config_entities =  netscaler_entities.get_objects();
+            if(Arrays.asList(config_entities).contains("autoscaleprofile"))
+                return true;
             return false;
+        } catch (Exception ex) {
+            // configobjects.get() when run against olderversions of netscaler where autoscale is not supported throws
+            // an error with "Expecting object found"
+            if(ex.getMessage().contains("Expecting object found"))
+            {
+                /* config objects itself is not present, this netscaler should not have autoscale*/
+                s_logger.warn("AutoScale is not supported in NetScaler");
+                return false;
+            }
+            throw new ExecutionException("Exception while checking if autoscale is supported in netscaler ", ex);
         }
-        return true;
     }
 
     private boolean isScaleUpPolicy(AutoScalePolicyTO autoScalePolicyTO) {

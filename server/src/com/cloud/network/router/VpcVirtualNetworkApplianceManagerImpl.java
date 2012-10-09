@@ -497,7 +497,7 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
                 
                 IpAddressTO ip = new IpAddressTO(ipAddr.getAccountId(), ipAddr.getAddress().addr(), add, false, 
                         ipAddr.isSourceNat(), ipAddr.getVlanTag(), ipAddr.getGateway(), ipAddr.getNetmask(), macAddress,
-                        null, networkRate, ipAddr.isOneToOneNat());
+                        networkRate, ipAddr.isOneToOneNat());
 
                 ip.setTrafficType(network.getTrafficType());
                 ip.setNetworkName(_networkMgr.getNetworkTag(router.getHypervisorType(), network));
@@ -610,7 +610,7 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
             NetworkUsageCommand netUsageCmd = new NetworkUsageCommand(router.getPrivateIpAddress(), router.getInstanceName(), true, defaultNic.getIp4Address(), vpc.getCidr());
         	netUsagecmds.addCommand(netUsageCmd);
         	UserStatisticsVO stats = _userStatsDao.findBy(router.getAccountId(), router.getDataCenterIdToDeployIn(), 
-            		publicNtwk.getId(), publicNic.getIp4Address(), router.getId(), router.getType().toString());
+            		publicNtwk.getId(), publicNic.getIp4Address(), router.getId(), "VPC"+router.getType().toString());
             if (stats == null) {
                 stats = new UserStatisticsVO(router.getAccountId(), router.getDataCenterIdToDeployIn(), publicNic.getIp4Address(), router.getId(),
                         router.getType().toString(), publicNtwk.getId());
@@ -827,11 +827,12 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
                 VpcVO vpc = _vpcDao.findById(router.getVpcId());
                 NetworkUsageCommand netUsageCmd = new NetworkUsageCommand(router.getPrivateIpAddress(), router.getInstanceName(), true, publicNic.getIp4Address(), vpc.getCidr());
                 usageCmds.add(netUsageCmd);
+                String type = "VPC"+router.getType().toString();
                 UserStatisticsVO stats = _userStatsDao.findBy(router.getAccountId(), router.getDataCenterIdToDeployIn(), 
-                		publicNtwk.getId(), publicNic.getIp4Address(), router.getId(), router.getType().toString());
+                		publicNtwk.getId(), publicNic.getIp4Address(), router.getId(), type);
                 if (stats == null) {
                     stats = new UserStatisticsVO(router.getAccountId(), router.getDataCenterIdToDeployIn(), publicNic.getIp4Address(), router.getId(),
-                            router.getType().toString(), publicNtwk.getId());
+                    		type, publicNtwk.getId());
                     _userStatsDao.persist(stats);
                 }
             }
@@ -1182,7 +1183,7 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
                 Network network = _networkMgr.getNetwork(ipAddr.getNetworkId());
                 IpAddressTO ip = new IpAddressTO(Account.ACCOUNT_ID_SYSTEM, ipAddr.getIpAddress(), add, false, 
                         false, ipAddr.getVlanTag(), ipAddr.getGateway(), ipAddr.getNetmask(), ipAddr.getMacAddress(),
-                        null, null, false);
+                        null, false);
 
                 ip.setTrafficType(network.getTrafficType());
                 ip.setNetworkName(_networkMgr.getNetworkTag(router.getHypervisorType(), network));

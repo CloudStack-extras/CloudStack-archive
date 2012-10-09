@@ -74,4 +74,5 @@ public interface HostDao extends GenericDao<HostVO, Long>, StateDao<Status, Stat
      * @return
      */
     List<HostVO> listAllUpAndEnabledNonHAHosts(Type type, Long clusterId, Long podId, long dcId, String haTag);
+    List<HostVO> listUpRoutingHostByZonePodCluster( Long clusterId, Long podId, Long dcId);
 }

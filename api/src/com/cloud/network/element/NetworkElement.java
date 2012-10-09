@@ -135,4 +135,11 @@ public interface NetworkElement extends Adapter {
      * @return true/false
      */
     boolean verifyServicesCombination(Set<Service> services);
+
+    /**
+     * Would return the element can deploy IP for current element
+     * @param network
+     * @return IpDeployer object, or null if there is no deployer for this element
+     */
+    IpDeployer getIpDeployer(Network network);
 }

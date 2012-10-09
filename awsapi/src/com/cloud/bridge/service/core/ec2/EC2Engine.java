@@ -299,7 +299,7 @@ public class EC2Engine {
 				throw new EC2ServiceException(ClientError.InvalidGroup_NotFound, "Cannot find matching ruleid.");
 
 			CloudStackInfoResponse resp = getApi().revokeSecurityGroupIngress(ruleId);
-			if (resp != null && resp.getId() != null) {
+            if (resp != null) {
 				return resp.getSuccess();
 			}
 			return false;
@@ -330,7 +330,7 @@ public class EC2Engine {
 					pair.setKeyValue(group.getAccount(), group.getName());
 					secGroupList.add(pair);
 				}
-				CloudStackSecurityGroupIngress resp = null;
+                CloudStackSecurityGroup resp = null;
 				if (ipPerm.getProtocol().equalsIgnoreCase("icmp")) {
 					resp = getApi().authorizeSecurityGroupIngress(null, constructList(ipPerm.getIpRangeSet()), null, null, 
 							ipPerm.getIcmpCode(), ipPerm.getIcmpType(), ipPerm.getProtocol(), null, 
@@ -340,10 +340,13 @@ public class EC2Engine {
 							ipPerm.getToPort().longValue(), null, null, ipPerm.getProtocol(), null, request.getName(), 
 							ipPerm.getFromPort().longValue(), secGroupList);
 				}
-				if (resp != null && resp.getRuleId() != null) {
-					return true;
-				}
-				return false;
+                if (resp != null ){
+                    List<CloudStackIngressRule> ingressRules = resp.getIngressRules();
+                    for (CloudStackIngressRule ingressRule : ingressRules)
+                        if (ingressRule.getRuleId() == null) return false;
+                } else {
+                    return false;
+                }
 			}
 		} catch(Exception e) {
 			logger.error( "EC2 AuthorizeSecurityGroupIngress - ", e);
@@ -509,32 +512,6 @@ public class EC2Engine {
 	}
 	
 	
-	/** REST API calls this method.
-     * Modify an existing template
-     * 
-     * @param request
-     * @return
-     */
-    public boolean modifyImageAttribute( EC2Image request ) 
-    {
-        // TODO: This is incomplete
-        EC2DescribeImagesResponse images = new EC2DescribeImagesResponse();
-
-        try {
-            images = listTemplates( request.getId(), images );
-            EC2Image[] imageSet = images.getImageSet();
-            
-            CloudStackTemplate resp = getApi().updateTemplate(request.getId(), null, request.getDescription(), null, imageSet[0].getName(), null, null);
-            if (resp != null) {
-                return true;
-            }
-            return false;
-        } catch( Exception e ) {
-            logger.error( "EC2 ModifyImage - ", e);
-            throw new EC2ServiceException(ServerError.InternalError, e.getMessage());
-        }
-    }
-
 
 	/**
 	 * Modify an existing template
@@ -546,32 +523,35 @@ public class EC2Engine {
 	{
         try {
             if(request.getAttribute().equals(ImageAttribute.launchPermission)){
-                
-                String accounts = "";
-                Boolean isPublic = null;
-                EC2ModifyImageAttribute.Operation operation = request.getLaunchPermOperation();
-                
-                List<String> accountOrGroupList = request.getLaunchPermissionAccountsList();
-                if(accountOrGroupList != null && !accountOrGroupList.isEmpty()){
-                    boolean first = true;
-                    for(String accountOrGroup : accountOrGroupList){
-                        if("all".equalsIgnoreCase(accountOrGroup)){
-                            if(operation.equals(EC2ModifyImageAttribute.Operation.add)){
-                                isPublic = true;
+                EC2ImageLaunchPermission[] launchPermissions = request.getLaunchPermissionSet();
+                for (EC2ImageLaunchPermission launchPermission : launchPermissions) {
+                    String accounts = "";
+                    Boolean isPublic = null;
+                    EC2ImageLaunchPermission.Operation operation =  launchPermission.getLaunchPermOp();
+                    List<String> accountOrGroupList = launchPermission.getLaunchPermissionList();
+                    if(accountOrGroupList != null && !accountOrGroupList.isEmpty()){
+                        boolean first = true;
+                        for(String accountOrGroup : accountOrGroupList){
+                            if("all".equalsIgnoreCase(accountOrGroup)){
+                                if(operation.equals(EC2ImageLaunchPermission.Operation.add)){
+                                    isPublic = true;
+                                }else{
+                                    isPublic = false;
+                                }
                             }else{
-                                isPublic = false;
+                                if(!first){
+                                    accounts = accounts + ",";
+                                }
+                                accounts = accounts + accountOrGroup;
+                                first = false;
                             }
-                        }else{
-                            if(!first){
-                                accounts = accounts + ",";
-                            }
-                            accounts = accounts + accountOrGroup;
-                            first = false;
                         }
                     }
+                    CloudStackInfoResponse resp = getApi().updateTemplatePermissions(request.getImageId(), accounts, null, null, isPublic, operation.toString());
+                    if (!resp.getSuccess())
+                        return false;
                 }
-                CloudStackInfoResponse resp = getApi().updateTemplatePermissions(request.getImageId(), accounts, null, null, isPublic, operation.toString());
-                return resp.getSuccess();
+                return true;
             }else if(request.getAttribute().equals(ImageAttribute.description)){
                 CloudStackTemplate resp = getApi().updateTemplate(request.getImageId(), null, request.getDescription(), null, null, null, null);
                 if (resp != null) {
@@ -795,24 +775,13 @@ public class EC2Engine {
 	 */
 	public EC2DescribeAddressesResponse describeAddresses( EC2DescribeAddresses request ) {
 		try {
-			List<CloudStackIpAddress> addrList = getApi().listPublicIpAddresses(null, null, null, null, null, null, null, null, null);
+            EC2DescribeAddressesResponse response = listAddresses(request.getPublicIpsSet());
+            EC2AddressFilterSet afs = request.getFilterSet();
 
-			EC2AddressFilterSet filterSet = request.getFilterSet();
-			List<EC2Address> addressList = new ArrayList<EC2Address>();
-			if (addrList != null && addrList.size() > 0) {
-				for (CloudStackIpAddress addr: addrList) {
-					// remember, if no filters are set, request.inPublicIpSet always returns true
-					if (request.inPublicIpSet(addr.getIpAddress())) {
-						EC2Address ec2Address = new EC2Address();
-						ec2Address.setIpAddress(addr.getIpAddress());
-						if (addr.getVirtualMachineId() != null) 
-							ec2Address.setAssociatedInstanceId(addr.getVirtualMachineId().toString());
-						addressList.add(ec2Address);
-					}
-				}
-			}
-
-			return filterSet.evaluate(addressList);
+            if (afs ==null)
+                return response;
+            else
+                return afs.evaluate(response);
 		} catch(Exception e) {
 			logger.error("EC2 DescribeAddresses - ", e);
 			throw new EC2ServiceException(ServerError.InternalError, e.getMessage());
@@ -1101,12 +1070,8 @@ public class EC2Engine {
             EC2AvailabilityZonesFilterSet azfs = request.getFilterSet();
             if ( null == azfs )
                 return availableZones;
-            else {
-                List<String> matchedAvailableZones = azfs.evaluate(availableZones);
-                if (matchedAvailableZones.isEmpty())
-                    return new EC2DescribeAvailabilityZonesResponse();
-                return listZones(matchedAvailableZones.toArray(new String[0]), null);
-            }
+            else
+                return azfs.evaluate(availableZones);
 		} catch( EC2ServiceException error ) {
 			logger.error( "EC2 DescribeAvailabilityZones - ", error);
 			throw error;
@@ -1170,6 +1135,7 @@ public class EC2Engine {
 				resp.setState(vol.getState());
 				resp.setType(vol.getVolumeType());
 				resp.setVMState(vol.getVirtualMachineState());
+                resp.setAttachmentState(mapToAmazonVolumeAttachmentState(vol.getVirtualMachineState()));
 				resp.setZoneName(vol.getZoneName());
 				return resp;
 			}
@@ -1204,6 +1170,7 @@ public class EC2Engine {
 				resp.setState(vol.getState());
 				resp.setType(vol.getVolumeType());
 				resp.setVMState(vol.getVirtualMachineState());
+                resp.setAttachmentState("detached");
 				resp.setZoneName(vol.getZoneName());
 				return resp;
 			}
@@ -1680,11 +1647,15 @@ public class EC2Engine {
 				ec2Vol.setSize(vol.getSize());
 				ec2Vol.setType(vol.getVolumeType());
 
-				if(vol.getVirtualMachineId() != null)
-					ec2Vol.setInstanceId(vol.getVirtualMachineId());
+                if(vol.getVirtualMachineId() != null) {
+                    ec2Vol.setInstanceId(vol.getVirtualMachineId());
+                    if (vol.getVirtualMachineState() != null) {
+                        ec2Vol.setAttachmentState(mapToAmazonVolumeAttachmentState(vol.getVirtualMachineState()));
+                    }
+                } else {
+                	ec2Vol.setAttachmentState("detached");
+                }
 
-				if(vol.getVirtualMachineState() != null)
-					ec2Vol.setVMState(vol.getVirtualMachineState());
 				ec2Vol.setZoneName(vol.getZoneName());
 
                 List<CloudStackKeyValue> resourceTags = vol.getTags();
@@ -1728,10 +1699,12 @@ public class EC2Engine {
 
 		zones = listZones(interestedZones, domainId);
 
-		if (zones == null || zones.getZoneIdAt( 0 ) == null) 
+        if (zones == null || zones.getAvailabilityZoneSet().length == 0)
 			throw new EC2ServiceException(ClientError.InvalidParameterValue, "Unknown zoneName value - " + zoneName);
-		return zones.getZoneIdAt(0);
-	}
+
+        EC2AvailabilityZone[] zoneSet = zones.getAvailabilityZoneSet();
+        return zoneSet[0].getId();
+    }
 
 	
 	/**
@@ -1810,28 +1783,35 @@ public class EC2Engine {
 	 * 
 	 * @return EC2DescribeAvailabilityZonesResponse
 	 */
-	private EC2DescribeAvailabilityZonesResponse listZones(String[] interestedZones, String domainId) throws Exception 
-	{    
-		EC2DescribeAvailabilityZonesResponse zones = new EC2DescribeAvailabilityZonesResponse();
+    private EC2DescribeAvailabilityZonesResponse listZones(String[] interestedZones, String domainId)
+            throws Exception  {
+        EC2DescribeAvailabilityZonesResponse zones = new EC2DescribeAvailabilityZonesResponse();
 
-		List<CloudStackZone> cloudZones = getApi().listZones(true, domainId, null, null);
+        List<CloudStackZone> cloudZones = getApi().listZones(true, domainId, null, null);
+        if(cloudZones != null && cloudZones.size() > 0) {
+            for(CloudStackZone cloudZone : cloudZones) {
+                boolean matched = false;
+                if (interestedZones.length > 0) {
+                    for (String zoneName : interestedZones){
+                        if (zoneName.equalsIgnoreCase( cloudZone.getName())) {
+                            matched = true;
+                            break;
+                        }
+                    }
+                } else {
+                    matched = true;
+                }
+                if (!matched) continue;
+                EC2AvailabilityZone ec2Zone = new EC2AvailabilityZone();
+                ec2Zone.setId(cloudZone.getId().toString());
+                ec2Zone.setMessage(cloudZone.getAllocationState());
+                ec2Zone.setName(cloudZone.getName());
 
-		if(cloudZones != null) {
-			for(CloudStackZone cloudZone : cloudZones) {
-				if ( null != interestedZones && 0 < interestedZones.length ) {
-					for( int j=0; j < interestedZones.length; j++ ) {
-						if (interestedZones[j].equalsIgnoreCase( cloudZone.getName())) {
-							zones.addZone(cloudZone.getId().toString(), cloudZone.getName());
-							break;
-						}
-					}
-				} else { 
-					zones.addZone(cloudZone.getId().toString(), cloudZone.getName());
-				}
-			}
-		}
-		return zones;
-	}
+                zones.addAvailabilityZone(ec2Zone);
+            }
+        }
+        return zones;
+    }
 
 
 	/**
@@ -1991,7 +1971,7 @@ public class EC2Engine {
 	 * @throws ParserConfigurationException
 	 * @throws ParseException
 	 */
-	public EC2DescribeSecurityGroupsResponse listSecurityGroups( String[] interestedGroups ) throws Exception {
+    private EC2DescribeSecurityGroupsResponse listSecurityGroups( String[] interestedGroups ) throws Exception {
 		try {
 			EC2DescribeSecurityGroupsResponse groupSet = new EC2DescribeSecurityGroupsResponse();
 
@@ -2057,6 +2037,39 @@ public class EC2Engine {
             return keyPairSet;
         } catch(Exception e) {
             logger.error( "List Keypairs - ", e);
+            throw new EC2ServiceException(ServerError.InternalError, e.getMessage());
+        }
+    }
+
+    private EC2DescribeAddressesResponse listAddresses(String[] addressNames) throws Exception {
+        try {
+            EC2DescribeAddressesResponse addressSet = new EC2DescribeAddressesResponse();
+
+            List<CloudStackIpAddress> addresses = getApi().listPublicIpAddresses(null, null, null, null, null, null, null, null, null);
+            if (addresses != null && addresses.size() > 0) {
+                for (CloudStackIpAddress address : addresses) {
+                    boolean matched = false;
+                    if ( addressNames.length > 0) {
+                        for (String addressName : addressNames) {
+                            if (address.getIpAddress().equalsIgnoreCase(addressName)) {
+                                matched = true;
+                                break;
+                            }
+                        }
+                    } else matched = true;
+
+                    if (!matched) continue ;
+
+                    EC2Address ec2Address = new EC2Address();
+                    ec2Address.setIpAddress(address.getIpAddress());
+                    if (address.getVirtualMachineId() != null)
+                        ec2Address.setAssociatedInstanceId(address.getVirtualMachineId().toString());
+                    addressSet.addAddress(ec2Address);
+                }
+            }
+            return addressSet;
+        } catch(Exception e) {
+            logger.error( "List Addresses - ", e);
             throw new EC2ServiceException(ServerError.InternalError, e.getMessage());
         }
     }
@@ -2359,6 +2372,25 @@ public class EC2Engine {
 
 		return "error"; 
 	}
+
+    /**
+     * Map CloudStack VM state to Amazon volume attachment state
+     *
+     * @param CloudStack VM state
+     * @return Amazon Volume attachment state
+     */
+    private String mapToAmazonVolumeAttachmentState (String vmState) {
+        if ( vmState.equalsIgnoreCase("Running") || vmState.equalsIgnoreCase("Stopping") ||
+                vmState.equalsIgnoreCase("Stopped") ) {
+            return "attached";
+        }
+        else if (vmState.equalsIgnoreCase("Starting")) {
+            return "attaching";
+        }
+        else { // VM state is 'destroyed' or 'error' or other
+            return "detached";
+        }
+    }
 
     /**
      * Map Amazon resourceType to CloudStack resourceType

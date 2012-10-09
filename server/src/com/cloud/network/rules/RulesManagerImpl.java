@@ -249,6 +249,24 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
             } else {
                 dstIp = new Ip(guestNic.getIp4Address());
             }
+            
+            //if start port and end port are passed in, and they are not equal to each other, perform the validation
+            boolean validatePortRange = false;
+            if (rule.getSourcePortStart().intValue() != rule.getSourcePortEnd().intValue() 
+                    || rule.getDestinationPortStart() != rule.getDestinationPortEnd()) {
+                validatePortRange = true;
+            }
+            
+            if (validatePortRange) {
+                //source start port and source dest port should be the same. The same applies to dest ports
+                if (rule.getSourcePortStart().intValue() != rule.getDestinationPortStart()) {
+                    throw new InvalidParameterValueException("Private port start should be equal to public port start", null);
+                }
+                
+                if (rule.getSourcePortEnd().intValue() != rule.getDestinationPortEnd()) {
+                    throw new InvalidParameterValueException("Private port end should be equal to public port end", null);
+                }
+            }
 
             Transaction txn = Transaction.currentTxn();
             txn.start();
@@ -1406,6 +1424,13 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
             NetworkOffering offering = _configMgr.getNetworkOffering(guestNetwork.getNetworkOfferingId());
             if (offering.getElasticIp()) {
 
+                boolean isSystemVM = (vm.getType() == Type.ConsoleProxy || vm.getType() == Type.SecondaryStorageVm);
+
+                // for user VM's associate public IP only if offering is marked to associate a public IP by default on start of VM
+                if (!isSystemVM && !offering.getAssociatePublicIP()) {
+                	continue;
+                }
+
                 // check if there is already static nat enabled
                 if (_ipAddressDao.findByAssociatedVmId(vm.getId()) != null && !getNewIp) {
                     s_logger.debug("Vm " + vm + " already has ip associated with it in guest network " + guestNetwork);
@@ -1420,7 +1445,6 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
 
                 s_logger.debug("Allocated system ip " + ip + ", now enabling static nat on it for vm " + vm);
 
-                boolean isSystemVM = (vm.getType() == Type.ConsoleProxy || vm.getType() == Type.SecondaryStorageVm);
                 try {
                     success = enableStaticNat(ip.getId(), vm.getId(), guestNetwork.getId(), isSystemVM);
                 } catch (NetworkRuleConflictException ex) {

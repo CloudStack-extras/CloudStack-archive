@@ -105,7 +105,6 @@ import com.cloud.capacity.CapacityVO;
 import com.cloud.capacity.dao.CapacityDao;
 import com.cloud.capacity.dao.CapacityDaoImpl.SummedCapacity;
 import com.cloud.configuration.Config;
-import com.cloud.configuration.ConfigurationManager;
 import com.cloud.configuration.ConfigurationVO;
 import com.cloud.configuration.dao.ConfigurationDao;
 import com.cloud.consoleproxy.ConsoleProxyManagementState;
@@ -303,7 +302,6 @@ public class ManagementServerImpl implements ManagementServer {
     private final LoadBalancerDao _loadbalancerDao;
     private final HypervisorCapabilitiesDao _hypervisorCapabilitiesDao;
     private final Adapters<HostAllocator> _hostAllocators;
-    private final ConfigurationManager _configMgr;
     private final ResourceTagDao _resourceTagDao;
 
     @Inject
@@ -379,7 +377,6 @@ public class ManagementServerImpl implements ManagementServer {
         _itMgr = locator.getManager(VirtualMachineManager.class);
         _ksMgr = locator.getManager(KeystoreManager.class);
         _resourceMgr = locator.getManager(ResourceManager.class);
-        _configMgr = locator.getManager(ConfigurationManager.class);
         _resourceTagDao = locator.getDao(ResourceTagDao.class);
 
         _hypervisorCapabilitiesDao = locator.getDao(HypervisorCapabilitiesDao.class);
@@ -1249,7 +1246,13 @@ public class ManagementServerImpl implements ManagementServer {
         Account caller = UserContext.current().getCaller();
         Map<String, String> tags = cmd.getTags();
 
-        boolean listAll = (caller.getType() != Account.ACCOUNT_TYPE_NORMAL && (isoFilter != null && isoFilter == TemplateFilter.all));
+        boolean listAll = false;
+        if (isoFilter != null && isoFilter == TemplateFilter.all) {
+            if (caller.getType() == Account.ACCOUNT_TYPE_NORMAL) {
+                throw new InvalidParameterValueException("Filter " + TemplateFilter.all + " can be specified by admin only", null);
+            }
+            listAll = true;
+        }
         List<Long> permittedAccountIds = new ArrayList<Long>();
         Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean, ListProjectResourcesCriteria>(cmd.getDomainId(), cmd.isRecursive(), null);
         _accountMgr.buildACLSearchParameters(caller, cmd.getId(), cmd.getAccountName(), cmd.getProjectId(), permittedAccountIds, domainIdRecursiveListProject, listAll, false);
@@ -1271,8 +1274,15 @@ public class ManagementServerImpl implements ManagementServer {
         Long id = cmd.getId();
         Map<String, String> tags = cmd.getTags();
         Account caller = UserContext.current().getCaller();
-
-        boolean listAll = (caller.getType() != Account.ACCOUNT_TYPE_NORMAL && (templateFilter != null && templateFilter == TemplateFilter.all));
+        
+        boolean listAll = false;
+        if (templateFilter != null && templateFilter == TemplateFilter.all) {
+            if (caller.getType() == Account.ACCOUNT_TYPE_NORMAL) {
+                throw new InvalidParameterValueException("Filter " + TemplateFilter.all + " can be specified by admin only", null);
+            }
+            listAll = true;
+        }
+        
         List<Long> permittedAccountIds = new ArrayList<Long>();
         Ternary<Long, Boolean, ListProjectResourcesCriteria> domainIdRecursiveListProject = new Ternary<Long, Boolean, ListProjectResourcesCriteria>(cmd.getDomainId(), cmd.isRecursive(), null);
         _accountMgr.buildACLSearchParameters(caller, id, cmd.getAccountName(), cmd.getProjectId(), permittedAccountIds, domainIdRecursiveListProject, listAll, false);
@@ -1761,10 +1771,8 @@ public class ManagementServerImpl implements ManagementServer {
         vlanSearch.and("vlanType", vlanSearch.entity().getVlanType(), SearchCriteria.Op.EQ);
         sb.join("vlanSearch", vlanSearch, sb.entity().getVlanId(), vlanSearch.entity().getId(), JoinBuilder.JoinType.INNER);
 
-        boolean allocatedOnly = false;
         if ((isAllocated != null) && (isAllocated == true)) {
             sb.and("allocated", sb.entity().getAllocatedTime(), SearchCriteria.Op.NNULL);
-            allocatedOnly = true;
         }
 
         VlanType vlanType = null;
@@ -1790,9 +1798,6 @@ public class ManagementServerImpl implements ManagementServer {
                 count++;
             }
         }
-
-        // We should not display public IPs assigned to System VMs which is a case in Basic Zone with EIP/ELB
-        sc.setParameters("isSystem", false);
 
         if (zone != null) {
             sc.setParameters("dataCenterId", zone);
@@ -3268,7 +3273,7 @@ public class ManagementServerImpl implements ManagementServer {
             throw new InvalidParameterValueException("A key pair with name '" + cmd.getName() + "' does not exist for account " + owner.getAccountName() + " in specified domain id", idList);
         }
 
-        return _sshKeyPairDao.deleteByName(caller.getAccountId(), caller.getDomainId(), cmd.getName());
+        return _sshKeyPairDao.deleteByName(owner.getAccountId(), owner.getDomainId(), cmd.getName());
     }
 
     @Override

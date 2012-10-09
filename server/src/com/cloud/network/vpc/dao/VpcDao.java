@@ -13,6 +13,7 @@
 package com.cloud.network.vpc.dao;
 
 import java.util.List;
+import java.util.Map;
 
 import com.cloud.network.vpc.Vpc;
 import com.cloud.network.vpc.VpcVO;
@@ -36,5 +37,10 @@ public interface VpcDao extends GenericDao<VpcVO, Long>{
     List<VpcVO> listInactiveVpcs();
     
     long countByAccountId(long accountId);
+
+	VpcVO persist(VpcVO vpc, Map<String, String> serviceProviderMap);
+
+	void persistVpcServiceProviders(long vpcId,
+			Map<String, String> serviceProviderMap);
 
 }

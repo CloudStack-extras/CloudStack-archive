@@ -782,7 +782,6 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
                             return true;
                         }
                     } else if (dstTmpltHost != null && dstTmpltHost.getDownloadState() == Status.DOWNLOAD_ERROR){
-                        if (dstTmpltHost.getDestroyed() == true)  {
                             dstTmpltHost.setDestroyed(false);
                             dstTmpltHost.setDownloadState(Status.NOT_DOWNLOADED);
                             dstTmpltHost.setDownloadPercent(0);
@@ -790,7 +789,7 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
                             dstTmpltHost.setErrorString("");
                             dstTmpltHost.setJobId(null);
                             _tmpltHostDao.update(dstTmpltHost.getId(), dstTmpltHost);
-                        }
+
                     }
                 }
             } finally {
@@ -843,12 +842,6 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
             throw new InvalidParameterValueException("Unable to find template by id", null);
         }
 
-        HostVO dstSecHost = _storageMgr.getSecondaryStorageHost(destZoneId, templateId);
-        if ( dstSecHost != null ) {
-            s_logger.debug("There is template " + templateId + " in secondary storage " + dstSecHost.getId() + " in zone " + destZoneId + " , don't need to copy");
-            return template;
-        }
-
         HostVO srcSecHost = _storageMgr.getSecondaryStorageHost(sourceZoneId, templateId);
         if ( srcSecHost == null ) {
             List<IdentityProxy> idList = new ArrayList<IdentityProxy>();
@@ -857,6 +850,13 @@ public class TemplateManagerImpl implements TemplateManager, Manager, TemplateSe
         }
 
         _accountMgr.checkAccess(caller, AccessType.ModifyEntry, true, template);
+
+        VMTemplateHostVO dsttmpltHost = _storageMgr.getTemplateHostRef(destZoneId,templateId,true);
+        // Check if the template is not destroyed and is downloaded or being downloaded.
+        if (dsttmpltHost != null && !dsttmpltHost.getDestroyed() && (dsttmpltHost.getDownloadState() == VMTemplateStorageResourceAssoc.Status.DOWNLOADED || dsttmpltHost.getDownloadState() == VMTemplateStorageResourceAssoc.Status.DOWNLOAD_IN_PROGRESS ) ){
+            s_logger.debug(" The template " + templateId + " in secondary storage " + dsttmpltHost.getId() + " in zone " + destZoneId + "already exists");
+            return template;
+        }
 
         boolean success = copy(userId, template, srcSecHost, sourceZone, dstZone);
 

@@ -1243,8 +1243,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements
 				result = _virtRouterResource.assignPublicIpAddress(routerName,
 						routerIp, ip.getPublicIp(), ip.isAdd(), ip.isFirstIP(),
 						ip.isSourceNat(), ip.getVlanId(), ip.getVlanGateway(),
-						ip.getVlanNetmask(), ip.getVifMacAddress(),
-						ip.getGuestIp(), nicNum);
+						ip.getVlanNetmask(), ip.getVifMacAddress(), nicNum);
 
 				if (result != null) {
 					results[i++] = IpAssocAnswer.errorResult;

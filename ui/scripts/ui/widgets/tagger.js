@@ -15,11 +15,13 @@
     var value = $form.find('input[name=value]').val();
 
     if (!key || !value) {
-      cloudStack.dialog.notice({ message: 'Please specify a tag key and value' });
-      
+      cloudStack.dialog.notice({ message: 'Please specify a tag key and value' });      
       return false;
     }
-
+   
+    if($form.find('div.field.key').find('label.error').css('display') == 'block' || $form.find('div.field.value').find('label.error').css('display') == 'block')
+		  return false;
+		
     return true;
   };
   
@@ -27,11 +29,11 @@
     inputArea: function(args) {
       var $form = $('<form>').addClass('tag-input');
       var $keyField = $('<div>').addClass('field key');
-      var $keyLabel = $('<label>').attr('for', 'key').html('Key:');
-      var $key = $('<input>').addClass('key').attr('name', 'key');
+      var $keyLabel = $('<label>').attr('for', 'key').html(_l('label.key') + ':');
+      var $key = $('<input>').addClass('key disallowSpecialCharacters').attr('name', 'key');
       var $valueField = $('<div>').addClass('field value');
-      var $valueLabel = $('<label>').attr('for', 'value').html('Value:');
-      var $value = $('<input>').addClass('value').attr('name', 'value');
+      var $valueLabel = $('<label>').attr('for', 'value').html(_l('label.value') + ':');
+      var $value = $('<input>').addClass('value disallowSpecialCharacters').attr('name', 'value');
       var $submit = $('<input>').attr('type', 'submit').val('Add');
 
       $keyField.append($keyLabel, $key);
@@ -41,7 +43,7 @@
         $submit
       );
 
-      $form.validate({ onfocusout: false });
+      $form.validate();
 
       $form.submit(
         args.onSubmit ?
@@ -82,7 +84,7 @@
     },
     tagItem: function(title, onRemove, data) {
       var $li = $('<li>');
-      var $label = $('<span>').addClass('label').html(title);
+      var $label = $('<span>').addClass('label').html(_s(title));
       var $remove = $('<span>').addClass('remove').html('X');
 
       $remove.click(function() {
@@ -111,7 +113,7 @@
       var actions = this.options.actions;
       var $container = this.element.addClass('tagger');
       var $tagArea = $('<ul>').addClass('tags');
-      var $title = elems.info('Tags').addClass('title');
+      var $title = elems.info(_l('label.tags')).addClass('title');
       var $loading = $('<div>').addClass('loading-overlay');
 
       var onRemoveItem = function($item, data) {

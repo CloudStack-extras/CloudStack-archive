@@ -331,7 +331,8 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         } catch (SQLException ex) {
         }
         // insert system user
-        insertSql = "INSERT INTO `cloud`.`user` (id, username, password, account_id, firstname, lastname, created) VALUES (1, 'system', '', 1, 'system', 'cloud', now())";
+        insertSql = "INSERT INTO `cloud`.`user` (id, username, password, account_id, firstname, lastname, created)" +
+        		" VALUES (1, 'system', RAND(), 1, 'system', 'cloud', now())";
         txn = Transaction.currentTxn();
         try {
             PreparedStatement stmt = txn.prepareAutoCloseStatement(insertSql);
@@ -1006,7 +1007,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
                 "Offering for Shared networks with Elastic IP and Elastic LB capabilities",
                 TrafficType.Guest,
                 false, true, null, null, true, Availability.Optional,
-                null, Network.GuestType.Shared, true, false, false, false, true, true, true);
+                null, Network.GuestType.Shared, true, false, false, false, true, true, true, true);
 
         defaultNetscalerNetworkOffering.setState(NetworkOffering.State.Enabled);
         defaultNetscalerNetworkOffering = _networkOfferingDao.persistDefaultNetworkOffering(defaultNetscalerNetworkOffering);

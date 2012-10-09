@@ -132,7 +132,6 @@ import com.cloud.network.element.NetworkElement;
 import com.cloud.network.element.PortForwardingServiceProvider;
 import com.cloud.network.element.RemoteAccessVPNServiceProvider;
 import com.cloud.network.element.Site2SiteVpnServiceProvider;
-import com.cloud.network.element.SourceNatServiceProvider;
 import com.cloud.network.element.StaticNatServiceProvider;
 import com.cloud.network.element.UserDataServiceProvider;
 import com.cloud.network.element.VirtualRouterElement;
@@ -849,11 +848,11 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         if (services == null || services.isEmpty()) {
             return true;
         }
-        
+
         if (networkId == null) {
             networkId = publicIp.getAssociatedWithNetworkId();
         }
-        
+
         // We only support one provider for one service now
         Map<Service, Set<Provider>> serviceToProviders = getServiceProvidersMap(networkId);
         Set<Provider> oldProviders = serviceToProviders.get(services.toArray()[0]);
@@ -864,7 +863,10 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             throw new InvalidParameterException("There is no new provider for IP " + publicIp.getAddress() + " of service " + service.getName() + "!");
         }
         Provider newProvider = (Provider) newProviders.toArray()[0];
-        if (!oldProvider.equals(newProvider)) {
+        Network network = _networksDao.findById(networkId);
+        IpDeployer oldIpDeployer = getElementImplementingProvider(oldProvider.getName()).getIpDeployer(network);
+        IpDeployer newIpDeployer = getElementImplementingProvider(newProvider.getName()).getIpDeployer(network);
+        if (!oldIpDeployer.getProvider().getName().equals(newIpDeployer.getProvider().getName())) {
             throw new InvalidParameterException("There would be multiple providers for IP " + publicIp.getAddress() + "!");
         }
         return true;
@@ -876,7 +878,8 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         NetworkOffering offering = _networkOfferingDao.findById(network.getNetworkOfferingId());
         if (!offering.isConserveMode()) {
             for (PublicIp ip : ipToServices.keySet()) {
-                Set<Service> services = ipToServices.get(ip);
+                Set<Service> services = new HashSet<Service>() ;
+                services.addAll(ipToServices.get(ip));
                 if (services != null && services.contains(Service.Firewall)) {
                     services.remove(Service.Firewall);
                 }
@@ -936,17 +939,8 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 }
                 IpDeployer deployer = null;
                 NetworkElement element = getElementImplementingProvider(provider.getName());
-                if (element instanceof SourceNatServiceProvider) {
-                    deployer = ((SourceNatServiceProvider) element).getIpDeployer(network);
-                } else if (element instanceof StaticNatServiceProvider) {
-                    deployer = ((StaticNatServiceProvider) element).getIpDeployer(network);
-                } else if (element instanceof LoadBalancingServiceProvider) {
-                    deployer = ((LoadBalancingServiceProvider) element).getIpDeployer(network);
-                } else if (element instanceof PortForwardingServiceProvider) {
-                    deployer = ((PortForwardingServiceProvider) element).getIpDeployer(network);
-                } else if (element instanceof RemoteAccessVPNServiceProvider) {
-                    deployer = ((RemoteAccessVPNServiceProvider) element).getIpDeployer(network);
-                } else {
+                deployer = element.getIpDeployer(network);
+                if (deployer == null) {
                     throw new CloudRuntimeException("Fail to get ip deployer for element: " + element);
                 }
                 Set<Service> services = new HashSet<Service>();
@@ -1007,10 +1001,10 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     @Override
     @ActionEvent(eventType = EventTypes.EVENT_NET_IP_ASSIGN, eventDescription = "allocating Ip", create = true)
     public IpAddress allocateIP(Account ipOwner,  long zoneId)
-    		throws ResourceAllocationException, InsufficientAddressCapacityException, ConcurrentOperationException {
-    	    return allocateIP(ipOwner, false,  zoneId);
+            throws ResourceAllocationException, InsufficientAddressCapacityException, ConcurrentOperationException {
+        return allocateIP(ipOwner, false,  zoneId);
     }
-  
+
     private IpAddress allocateIP(Account ipOwner, boolean isSystem, long zoneId)
             throws ResourceAllocationException, InsufficientAddressCapacityException, ConcurrentOperationException {
         Account caller = UserContext.current().getCaller();
@@ -1090,7 +1084,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         return ip;
     }
 
-    
+
     protected IPAddressVO getExistingSourceNatInNetwork(long ownerId, Long networkId) {
 
         List<IPAddressVO> addrs = listPublicIpsAssignedToGuestNtwk(ownerId, networkId, true);
@@ -1138,7 +1132,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
 
         Network network = _networksDao.findById(networkId);
         if (network != null) {
-            _accountMgr.checkAccess(caller, AccessType.UseNetwork, false, network);
+            _accountMgr.checkAccess(owner, AccessType.UseNetwork, false, network);
         } else {
             s_logger.debug("Unable to find ip address by id: " + ipId);
             return null;
@@ -1921,7 +1915,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
             ex.addProxyObject("networks", networkId, "networkId");
             throw ex;
         }
-        
+
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Lock is acquired for network id " + networkId + " as a part of network implement");
         }
@@ -1970,7 +1964,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
 
                 shutdownNetwork(networkId, context, false);
             }
-            
+
             _networksDao.releaseFromLockTable(networkId);
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("Lock is released for network id " + networkId + " as a part of network implement");
@@ -2726,7 +2720,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
 
         return network;
     }
-    
+
 
     @Override
     @DB
@@ -2819,7 +2813,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                             "service disabled are allowed in security group enabled zone", null);
                 }
             }
-            
+
             //don't allow eip/elb networks in Advance zone
             if (ntwkOff.getElasticIp() || ntwkOff.getElasticLb()) {
                 throw new InvalidParameterValueException("Elastic IP and Elastic LB services are supported in zone of type " + NetworkType.Basic, null);
@@ -3063,7 +3057,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         } else {
             path = _domainDao.findById(caller.getDomainId()).getPath();
         } 
-        
+
         if (listAll && domainId == null) {
             isRecursive = true;
         }
@@ -3114,10 +3108,10 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         SearchBuilder<AccountVO> accountSearch = _accountDao.createSearchBuilder();
         accountSearch.and("typeNEQ", accountSearch.entity().getType(), SearchCriteria.Op.NEQ);
         accountSearch.and("typeEQ", accountSearch.entity().getType(), SearchCriteria.Op.EQ);
-        
-        
+
+
         sb.join("accountSearch", accountSearch, sb.entity().getAccountId(), accountSearch.entity().getId(), JoinBuilder.JoinType.INNER);
-        
+
 
         List<NetworkVO> networksToReturn = new ArrayList<NetworkVO>();
 
@@ -3258,7 +3252,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         } else {
             sc.setJoinParameters("accountSearch", "typeEQ", Account.ACCOUNT_TYPE_PROJECT);
         }
-        
+
         if (restartRequired != null) {
             sc.addAnd("restartRequired", SearchCriteria.Op.EQ, restartRequired);
         }
@@ -3338,7 +3332,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         sc.addAnd("id", SearchCriteria.Op.SC, accountSC);
         return _networksDao.search(sc, searchFilter);
     }
-    
+
     private List<NetworkVO> listDomainSpecificNetworksByDomainPath(SearchCriteria<NetworkVO> sc, Filter searchFilter,
             String path, boolean isRecursive) {
 
@@ -3351,9 +3345,9 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                 allowedDomains.add(domain.getId());
             }
         }
-        
+
         List<Long> networkIds = new ArrayList<Long>();
-        
+
         List<NetworkDomainVO> maps = _networkDomainDao.listDomainNetworkMapByDomain(allowedDomains.toArray());
 
         for (NetworkDomainVO map : maps) {
@@ -4316,15 +4310,15 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     }
 
     @Override
-    public List<? extends UserDataServiceProvider> getPasswordResetElements() {
-        List<UserDataServiceProvider> elements = new ArrayList<UserDataServiceProvider>();
-        for (NetworkElement element : _networkElements) {
-            if (element instanceof UserDataServiceProvider) {
-                UserDataServiceProvider e = (UserDataServiceProvider) element;
-                elements.add(e);
-            }
+    public UserDataServiceProvider getPasswordResetProvider(Network network) {
+        String passwordProvider = _ntwkSrvcDao.getProviderForServiceInNetwork(network.getId(), Service.UserData);
+
+        if (passwordProvider == null) {
+            s_logger.debug("Network " + network + " doesn't support service " + Service.UserData.getName());
+            return null;
         }
-        return elements;
+
+        return (UserDataServiceProvider)getElementImplementingProvider(passwordProvider);
     }
 
     @Override
@@ -4337,7 +4331,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
         return false;
     }
-    
+
 
     public boolean networkOfferingIsConfiguredForExternalNetworking(long networkOfferingId) {
         List<Provider> networkOffProviders = getNtwkOffDistinctProviders(networkOfferingId);
@@ -6594,7 +6588,15 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
 
         Long physicalNetworkId = null;
         if (effectiveTrafficType != TrafficType.Guest) {
+            TrafficType oldValue = network.getTrafficType();
+            if (hType == HypervisorType.VMware && effectiveTrafficType == TrafficType.Management) {
+                network.setTrafficType(effectiveTrafficType);
+            }
             physicalNetworkId = getNonGuestNetworkPhysicalNetworkId(network);
+            if (hType == HypervisorType.VMware && effectiveTrafficType == TrafficType.Management) {
+                network.setTrafficType(oldValue);
+            }
+
         } else {
             NetworkOffering offering = _configMgr.getNetworkOffering(network.getNetworkOfferingId());
             physicalNetworkId = network.getPhysicalNetworkId();
@@ -7145,11 +7147,11 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
     @ActionEvent(eventType = EventTypes.EVENT_NET_IP_ASSIGN, eventDescription = "associating Ip", async = true)
     public IpAddress associateIPToNetwork(long ipId, long networkId) throws InsufficientAddressCapacityException,
     ResourceAllocationException, ResourceUnavailableException, ConcurrentOperationException {
-    	    return associateIpToNetwork(ipId, networkId);
+        return associateIpToNetwork(ipId, networkId);
     }
 
-    	 private IpAddress associateIpToNetwork(long ipId, long networkId) throws InsufficientAddressCapacityException,
-    	    ResourceAllocationException, ResourceUnavailableException, ConcurrentOperationException {
+    private IpAddress associateIpToNetwork(long ipId, long networkId) throws InsufficientAddressCapacityException,
+    ResourceAllocationException, ResourceUnavailableException, ConcurrentOperationException {
         Network network = _networksDao.findById(networkId);
         if (network == null) {
             throw new InvalidParameterValueException("Invalid network id is given", null);
@@ -7160,7 +7162,7 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
                     " to VPC.Specify vpcId to associate ip address to VPC", null);
         }
         return associateIPToGuestNetwork(ipId, networkId, true);
-        
+
     }
 
     private PhysicalNetwork getOnePhysicalNetworkByZoneAndTrafficType(long zoneId, TrafficType trafficType) {
@@ -7350,10 +7352,28 @@ public class NetworkManagerImpl implements NetworkManager, NetworkService, Manag
         }
         return nic;
     }
-    
+
     @Override
     public int getNetworkLockTimeout() {
         return _networkLockTimeout;
+    }
+
+    @Override
+    public List<Provider> getProvidersForServiceInNetwork(Network network, Service service) {
+        Map<Service, Set<Provider>> service2ProviderMap = getServiceProvidersMap(network.getId());
+        List<Provider> providers = new ArrayList<Provider>(service2ProviderMap.get(service));
+        return providers;
+    }
+
+	@Override
+	public UserDataServiceProvider getSSHKeyResetProvider(Network network) {
+		String SSHKeyProvider = _ntwkSrvcDao.getProviderForServiceInNetwork(network.getId(), Service.UserData);
+    	
+    	if (SSHKeyProvider == null) {
+    		s_logger.debug("Network " + network + " doesn't support service " + Service.UserData.getName());
+    		return null;
+    	}
+    	return (UserDataServiceProvider)getElementImplementingProvider(SSHKeyProvider);
     }
 
 }
