@@ -41,6 +41,7 @@ public class ListUcsProfileCmd extends BaseCmd {
         try {
             ListResponse<ListUcsProfileResponse> response = mgr.listUcsProfiles(this);
             response.setResponseName(getCommandName());
+            response.setObjectName("ucsprofile");
             this.setResponseObject(response);
         } catch (Exception e) {
             s_logger.warn("Exception: ", e);
@@ -50,7 +51,7 @@ public class ListUcsProfileCmd extends BaseCmd {
 
     @Override
     public String getCommandName() {
-        return "listucsmanagerresponse";
+        return "listucsprofileresponse";
     }
 
     @Override

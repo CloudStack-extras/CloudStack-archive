@@ -9,6 +9,7 @@ import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.ServerApiException;
 import com.cloud.api.BaseCmd.CommandType;
+import com.cloud.api.response.ListResponse;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.NetworkRuleConflictException;
@@ -17,13 +18,13 @@ import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.server.ManagementService;
 import com.cloud.user.Account;
 import com.cloud.utils.component.ComponentLocator;
-@Implementation(description="associate a profile to blades in cluster", responseObject=AssociateUcsProfileToBladesInClusterResponse.class)
-public class AssociateUcsProfileToBladesInClusterCmd extends BaseCmd {
-    public static final Logger s_logger = Logger.getLogger(AssociateUcsProfileToBladesInClusterCmd.class);
+@Implementation(description="List ucs manager", responseObject=ListUcsManagerResponse.class)
+public class ListUcsManagerCmd extends BaseCmd {
+    public static final Logger s_logger = Logger.getLogger(ListUcsManagerCmd.class);
     
-    @IdentityMapper(entityTableName="cluster")
-    @Parameter(name=ApiConstants.CLUSTER_ID, type=CommandType.LONG, description="the ucs cluster id", required=true)
-    private Long clusterId;
+    @IdentityMapper(entityTableName="data_center")
+    @Parameter(name=ApiConstants.ZONE_ID, type=CommandType.LONG, description="the zone id", required=true)
+    private Long zoneId;
     
     @Override
     public void execute() throws ResourceUnavailableException, InsufficientCapacityException, ServerApiException, ConcurrentOperationException,
@@ -31,20 +32,19 @@ public class AssociateUcsProfileToBladesInClusterCmd extends BaseCmd {
         try {
             ComponentLocator locator = ComponentLocator.getLocator(ManagementService.Name);
             UcsManager mgr = locator.getManager(UcsManager.class);
-            mgr.associateProfileToBladesInCluster(this);
-            AssociateUcsProfileToBladesInClusterResponse rsp = new AssociateUcsProfileToBladesInClusterResponse();
-            rsp.setResponseName(getCommandName());
-            rsp.setObjectName("associateucsprofiletobaldesincluster");
-            this.setResponseObject(rsp);
+            ListResponse<ListUcsManagerResponse> response  = mgr.listUcsManager(this);            
+            response.setResponseName(getCommandName());
+            response.setObjectName("ucsmanager");
+            this.setResponseObject(response);
         } catch (Exception e) {
             s_logger.warn("Exception: ", e);
-            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, e.getMessage());   
+            throw new ServerApiException(BaseCmd.INTERNAL_ERROR, e.getMessage());  
         }
     }
 
     @Override
     public String getCommandName() {
-        return "associateucsprofiletobladesinclusterresponse";
+        return "listucsmanagerreponse";
     }
 
     @Override
@@ -52,11 +52,11 @@ public class AssociateUcsProfileToBladesInClusterCmd extends BaseCmd {
         return Account.ACCOUNT_ID_SYSTEM;
     }
 
-    public Long getClusterId() {
-        return clusterId;
+    public Long getZoneId() {
+        return zoneId;
     }
 
-    public void setClusterId(Long clusterId) {
-        this.clusterId = clusterId;
+    public void setZoneId(Long zoneId) {
+        this.zoneId = zoneId;
     }
 }

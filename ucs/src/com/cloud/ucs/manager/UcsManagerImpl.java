@@ -217,6 +217,7 @@ public class UcsManagerImpl implements UcsManager {
         List<ListUcsProfileResponse> rs = new ArrayList<ListUcsProfileResponse>();
         for (UcsProfile p : profiles) {
             ListUcsProfileResponse r = new ListUcsProfileResponse();
+            r.setObjectName("ucsprofile");
             r.setDn(p.getDn());
             rs.add(r);
         }
@@ -318,5 +319,23 @@ public class UcsManagerImpl implements UcsManager {
         }
 
         s_logger.debug(String.format("all blades in cluster[%s] are associated", cmd.getClusterId()));
+    }
+
+    @Override
+    public ListResponse<ListUcsManagerResponse> listUcsManager(ListUcsManagerCmd cmd) {
+        SearchCriteriaService<UcsManagerVO, UcsManagerVO> serv = SearchCriteria2.create(UcsManagerVO.class);
+        serv.addAnd(serv.getEntity().getZoneId(), Op.EQ, cmd.getZoneId());
+        List<UcsManagerVO> vos = serv.list();
+        
+        List<ListUcsManagerResponse> rsps = new ArrayList<ListUcsManagerResponse>(vos.size());
+        for (UcsManagerVO vo : vos) {
+            ListUcsManagerResponse rsp = new ListUcsManagerResponse();
+            rsp.setObjectName("ucsmanager");
+            rsp.setId(rsp.getId());
+            rsps.add(rsp);
+        }
+        ListResponse<ListUcsManagerResponse> response = new ListResponse<ListUcsManagerResponse>();
+        response.setResponses(rsps);
+        return response;
     }
 }

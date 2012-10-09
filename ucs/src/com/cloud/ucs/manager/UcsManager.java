@@ -12,5 +12,7 @@ public interface UcsManager extends Manager {
     
     ListResponse<ListUcsProfileResponse> listUcsProfiles(ListUcsProfileCmd cmd);
     
+    ListResponse<ListUcsManagerResponse> listUcsManager(ListUcsManagerCmd cmd);
+    
     void associateProfileToBladesInCluster(AssociateUcsProfileToBladesInClusterCmd cmd) throws InterruptedException;
 }
