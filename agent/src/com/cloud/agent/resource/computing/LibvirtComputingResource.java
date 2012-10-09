@@ -1122,6 +1122,8 @@ public class LibvirtComputingResource extends ServerResourceBase implements
 		long disksize;
 		try {
 			primaryPool = _storagePoolMgr.getStoragePool(pool.getUuid());
+			disksize = dskch.getSize();
+
 
 			if (cmd.getTemplateUrl() != null) {
 
@@ -1133,9 +1135,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements
 					return new Answer(cmd, false,
 							" Can't create storage volume on storage pool");
 				}
-				disksize = vol.getSize();
 			} else {
-				disksize = dskch.getSize();
 				vol = primaryPool.createPhysicalDisk(UUID.randomUUID()
 						.toString(), dskch.getSize());
 			}
