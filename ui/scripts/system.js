@@ -4455,7 +4455,102 @@
                         }
                       }
                     }
-                  }
+                  },
+									
+									//???
+									ucsManager: {
+                    title: 'UCS Manager',
+                    listView: {
+                      label: 'UCS Manager',
+                      id: 'systemVMs',
+                      fields: {
+											  id: { label: 'label.id' },
+                        name: { label: 'label.name' }                                               
+                      },		
+											actions: {            
+												add: {
+													label: 'Add UCS Manager',
+													messages: {                
+														notification: function(args) {
+															return 'Add UCS Manager';
+														}
+													},
+													createForm: {
+														title: 'Add UCS Manager',              
+														fields: {                 
+														  name: { 
+															  label: 'label.name',
+																validation: { required: true }
+															},
+															url: { 
+															  label: 'label.url',
+                                validation: { required: true }																
+															},
+															username: { 
+															  label: 'label.username',
+                                validation: { required: true }																
+															},
+															password: { 
+															  label: 'label.password', 
+																isPassword: true,
+                                validation: { required: true }																
+															}															
+														}
+													},														
+													action: function(args) {		
+														$.ajax({
+															url: createURL('addUcsManager'),
+															data: {
+																zoneid: args.context.physicalResources[0].id,
+																name: args.data.name,
+																url: args.data.url,
+																username: args.data.username,
+																password: args.data.password
+															},
+															success: function(json) {																								
+																var item = json.addUcsManagerResponse.ucsmanager;
+																args.response.success({data: item});										
+															}
+														});
+													},
+													notification: {
+														poll: function(args) {
+															args.complete();
+														}
+													}
+												}
+											},
+																						
+                      dataProvider: function(args) {
+                        var array1 = [];
+                        if(args.filterBy != null) {
+                          if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+                            switch(args.filterBy.search.by) {
+                              case "name":
+                                if(args.filterBy.search.value.length > 0)
+                                  array1.push("&keyword=" + args.filterBy.search.value);
+                                break;
+                            }
+                          }
+                        }
+
+                        var selectedZoneObj = args.context.physicalResources[0];
+                        $.ajax({
+                          url: createURL("listUcsManager&zoneid=" + selectedZoneObj.id + "&page=" + args.page + "&pagesize=" + pageSize + array1.join("")),
+                          dataType: "json",
+                          async: true,
+                          success: function(json) {
+                            var items = json.listucsmanagerreponse.ucsmanager;
+                            args.response.success({                             
+                              data: items
+                            });
+                          }
+                        });
+                      }
+										}
+									}
+									//???
+									
                 }
               }
             },
@@ -6758,9 +6853,11 @@
 														success: function(json) {															
 															var ucsprofiles = json.listucsprofileresponse.ucsprofile;
 															var items = [];
-															for(var i = 0; i < ucsprofiles.length; i++) {
-																items.push({id: ucsprofiles[i].dn, description: ucsprofiles[i].dn});
-															}	
+															if(ucsprofiles != null && ucsprofiles.length > 0 ) {
+																for(var i = 0; i < ucsprofiles.length; i++) {
+																	items.push({id: ucsprofiles[i].dn, description: ucsprofiles[i].dn});
+																}	
+															}
 															args.response.success({data: items});
 														}
 													});													
