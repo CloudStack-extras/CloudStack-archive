@@ -1065,11 +1065,27 @@
                   data: $.extend(true, {}, detailView, {
                     onLoad: function($detailView) {
                       $loading.remove();
-                      $detailView.slideToggle('fast');
+                      $listView.addClass('no-scroll-load');
+                      $detailView.slideToggle('fast', function() {
+                        var bottomLoc = $quickViewTooltip.offset().top + $quickViewTooltip.height();
+                        var bottomMax = 50 + $listView.height() + $listView.scrollTop();
+
+                        console.log([bottomLoc, bottomMax]);
+                        
+                        if (bottomLoc > bottomMax) {
+                          $tbody.closest('.data-table').height(bottomLoc);
+                          $listView.scrollTop(
+                            $quickViewTooltip.offset().top
+                          );
+                          $quickViewTooltip.css('top', $tr.offset().top - 50);
+                        }
+                      });
                     },
                     onPerformAction: function() {
                       $tr.addClass('loading').find('td:last').prepend($('<div>').addClass('loading'));
                       $quickViewTooltip.hide();
+                      $tbody.closest('.data-table').css('height', 'auto');
+                      $listView.removeClass('no-scroll-load');
                     },
                     onActionComplete: function() {
                       $tr.removeClass('loading').find('td:last .loading').remove();
@@ -1102,6 +1118,8 @@
             $quickViewTooltip.mouseleave(function() {
               if (!$('.overlay:visible').size()) {
                 $quickViewTooltip.remove();
+                $tbody.closest('.data-table').css('height', 'auto');
+                $listView.removeClass('no-scroll-load');
               }
             });
           }
@@ -1544,6 +1562,7 @@
     $listView.bind('scroll', function(event) {
       if (args.listView && args.listView.disableInfiniteScrolling) return false;
       if ($listView.find('tr.last, td.loading:visible').size()) return false;
+      if ($listView.hasClass('no-scroll-load')) return false;
 
       clearTimeout(infScrollTimer);
       infScrollTimer = setTimeout(function() {
