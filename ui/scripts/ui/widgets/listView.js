@@ -678,7 +678,7 @@
 
         $option.appendTo($filterSelect);
 
-        return true
+        return true;
       });
 
     return $filters.appendTo($toolbar);
@@ -873,8 +873,9 @@
 
         if (field.indicator) {
           $td.addClass('state').addClass(field.indicator[content]);
-          $tr.find('td:first').addClass('item-state-' + field.indicator[content]);
 
+          // Disabling indicator for now per new design
+          //$tr.find('td:first').addClass('item-state-' + field.indicator[content]);
         }
         
         if (field.id == true) id = field.id;
