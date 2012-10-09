@@ -49,7 +49,6 @@ public class ApiConstants {
     public static final String DISK_OFFERING_ID = "diskofferingid";
     public static final String DISK_SIZE = "disksize";
     public static final String DISPLAY_NAME = "displayname";
-    public static final String INTERNAL_NAME_FLAG = "internalnameflag";
     public static final String DISPLAY_TEXT = "displaytext";
     public static final String DNS1 = "dns1";
     public static final String DNS2 = "dns2";
@@ -352,18 +351,18 @@ public class ApiConstants {
     public static final String VSM_CONFIG_MODE = "vsmconfigmode";
     public static final String VSM_CONFIG_STATE = "vsmconfigstate";
     public static final String VSM_DEVICE_STATE = "vsmdevicestate";
-
+    
     public enum HostDetails {
         all, capacity, events, stats, min;
     }
-
+    
     public enum VMDetails {
         all, group, nics, stats, secgrp, tmpl, servoff, iso, volume, min;
     }
-
+    
     public enum LDAPParams {
         hostname, port, usessl, queryfilter, searchbase, dn, passwd, truststore, truststorepass;
-
+        
         @Override
         public String toString(){
             return "ldap." + name();

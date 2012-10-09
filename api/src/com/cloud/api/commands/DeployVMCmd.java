@@ -74,9 +74,6 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
     @Parameter(name=ApiConstants.DISPLAY_NAME, type=CommandType.STRING, description="an optional user generated name for the virtual machine")
     private String displayName;
 
-    @Parameter(name=ApiConstants.INTERNAL_NAME_FLAG, type=CommandType.BOOLEAN, required=false, description="an optional flag that if set to true, sets the VM's internal name to the VM's display name")
-    private Boolean internalNameFlag; 
-
     //Owner information
     @Parameter(name=ApiConstants.ACCOUNT, type=CommandType.STRING, description="an optional account for the virtual machine. Must be used with domainId.")
     private String accountName;
@@ -113,40 +110,39 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
     @IdentityMapper(entityTableName="host")
     @Parameter(name=ApiConstants.HOST_ID, type=CommandType.LONG, description="destination Host ID to deploy the VM to - parameter available for root admin only")
     private Long hostId;
-
+    
     @IdentityMapper(entityTableName="security_group")
     @Parameter(name=ApiConstants.SECURITY_GROUP_IDS, type=CommandType.LIST, collectionType=CommandType.LONG, description="comma separated list of security groups id that going to be applied to the virtual machine. Should be passed only when vm is created from a zone with Basic Network support. Mutually exclusive with securitygroupnames parameter")
     private List<Long> securityGroupIdList;
-
+    
     @Parameter(name=ApiConstants.SECURITY_GROUP_NAMES, type=CommandType.LIST, collectionType=CommandType.STRING, description="comma separated list of security groups names that going to be applied to the virtual machine. Should be passed only when vm is created from a zone with Basic Network support. Mutually exclusive with securitygroupids parameter")
     private List<String> securityGroupNameList;
-
+    
     @Parameter(name = ApiConstants.IP_NETWORK_LIST, type = CommandType.MAP, description = "ip to network mapping. Can't be specified with networkIds parameter. Example: iptonetworklist[0].ip=10.10.10.11&iptonetworklist[0].networkid=204 - requests to use ip 10.10.10.11 in network id=204")
     private Map ipToNetworkList;
-
+    
     @Parameter(name=ApiConstants.IP_ADDRESS, type=CommandType.STRING, description="the ip address for default vm's network")
     private String ipAddress;
-
+    
     @Parameter(name=ApiConstants.KEYBOARD, type=CommandType.STRING, description="an optional keyboard device type for the virtual machine. valid value can be one of de,de-ch,es,fi,fr,fr-be,fr-ch,is,it,jp,nl-be,no,pt,uk,us")
     private String keyboard;
-
+    
     @IdentityMapper(entityTableName="projects")
     @Parameter(name=ApiConstants.PROJECT_ID, type=CommandType.LONG, description="Deploy vm for the project")
     private Long projectId;
-
+    
     @Parameter(name=ApiConstants.START_VM, type=CommandType.BOOLEAN, description="true if network offering supports specifying ip ranges; defaulted to true if not specified")
     private Boolean startVm;
-
+    
 
     /////////////////////////////////////////////////////
     /////////////////// Accessors ///////////////////////
     /////////////////////////////////////////////////////
 
-    @Override
     public String getEntityTable() {
-        return "vm_instance";
+    	return "vm_instance";
     }
-
+    
     public String getAccountName() {
         if (accountName == null) {
             return UserContext.current().getCaller().getAccountName();
@@ -181,9 +177,9 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
         if (securityGroupNameList != null && securityGroupIdList != null) {
             throw new InvalidParameterValueException("securitygroupids parameter is mutually exclusive with securitygroupnames parameter");
         }
-
-        //transform group names to ids here
-        if (securityGroupNameList != null) {
+        
+       //transform group names to ids here
+       if (securityGroupNameList != null) {
             List<Long> securityGroupIds = new ArrayList<Long>();
             for (String groupName : securityGroupNameList) {
                 Long groupId = _responseGenerator.getSecurityGroupId(groupName, getEntityOwnerId());
@@ -220,15 +216,15 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
     }
 
     public List<Long> getNetworkIds() {
-        if (ipToNetworkList != null) {
-            if (networkIds != null || ipAddress != null) {
-                throw new InvalidParameterValueException("ipToNetworkMap can't be specified along with networkIds or ipAddress");
-            } else {
-                List<Long> networks = new ArrayList<Long>();
-                networks.addAll(getIpToNetworkMap().keySet());
-                return networks;
-            }
-        }
+       if (ipToNetworkList != null) {
+           if (networkIds != null || ipAddress != null) {
+               throw new InvalidParameterValueException("ipToNetworkMap can't be specified along with networkIds or ipAddress");
+           } else {
+               List<Long> networks = new ArrayList<Long>();
+               networks.addAll(getIpToNetworkMap().keySet());
+               return networks;
+           }
+       }
         return networkIds;
     }
 
@@ -243,15 +239,11 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
     public Long getHostId() {
         return hostId;
     }
-
+    
     public boolean getStartVm() {
         return startVm == null ? true : startVm;
     }
-
-    public boolean getInternalNameFlag() {
-        return internalNameFlag;
-    }
-
+    
     private Map<Long, String> getIpToNetworkMap() {
         if ((networkIds != null || ipAddress != null) && ipToNetworkList != null) {
             throw new InvalidParameterValueException("NetworkIds and ipAddress can't be specified along with ipToNetworkMap parameter");
@@ -264,11 +256,11 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
             while (iter.hasNext()) {
                 HashMap<String, String> ips = (HashMap<String, String>) iter.next();
                 Long networkId = Long.valueOf(_responseGenerator.getIdentiyId("networks", ips.get("networkid")));
-                String requestedIp = ips.get("ip");
+                String requestedIp = (String) ips.get("ip");
                 ipToNetworkMap.put(networkId, requestedIp);
             }
         }
-
+        
         return ipToNetworkMap;
     }
 
@@ -291,7 +283,7 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
         if (accountId == null) {
             return UserContext.current().getCaller().getId();
         }
-
+        
         return accountId;
     }
 
@@ -323,7 +315,7 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
     @Override
     public void execute(){
         UserVm result;
-
+        
         if (getStartVm()) {
             try {
                 UserContext.current().setEventDetails("Vm Id: "+getEntityId());
@@ -346,7 +338,7 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
         } else {
             result = _userVmService.getUserVm(getEntityId());
         }
-
+        
         if (result != null) {
             UserVmResponse response = _responseGenerator.createUserVmResponse("virtualmachine", result).get(0);
             response.setResponseName(getCommandName());
@@ -377,17 +369,12 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
             if (template == null) {
                 throw new InvalidParameterValueException("Unable to use template " + templateId);
             }
-
+            
             if (diskOfferingId != null) {
                 DiskOffering diskOffering = _configService.getDiskOffering(diskOfferingId);
                 if (diskOffering == null) {
                     throw new InvalidParameterValueException("Unable to find disk offering " + diskOfferingId);
                 }
-            }
-
-            if (internalNameFlag == null) {
-                s_logger.info("Ok.. internaNameFlag was found to be null.. so setting it to false..");
-                internalNameFlag = false;
             }
 
             UserVm vm = null;
@@ -398,22 +385,19 @@ public class DeployVMCmd extends BaseAsyncCreateCmd {
                     if (getNetworkIds() != null) {
                         throw new InvalidParameterValueException("Can't specify network Ids in Basic zone");
                     } else {
-                        s_logger.info("Ok!!! Here1, internalNameFlag is --> " + internalNameFlag);
                         vm = _userVmService.createBasicSecurityGroupVirtualMachine(zone, serviceOffering, template, getSecurityGroupIdList(), owner, name,
-                                displayName, internalNameFlag, diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, getIpToNetworkMap(), ipAddress, keyboard);
+                                displayName, diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, getIpToNetworkMap(), ipAddress, keyboard);
                     }
                 } else {
                     if (zone.isSecurityGroupEnabled())  {
-                        s_logger.info("Ok!!! Here2, internalNameFlag is --> " + internalNameFlag);
                         vm = _userVmService.createAdvancedSecurityGroupVirtualMachine(zone, serviceOffering, template, getNetworkIds(), getSecurityGroupIdList(),
-                                owner, name, displayName, internalNameFlag, diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, getIpToNetworkMap(), ipAddress, keyboard);
+                                owner, name, displayName, diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, getIpToNetworkMap(), ipAddress, keyboard);
                     } else {
                         if (getSecurityGroupIdList() != null && !getSecurityGroupIdList().isEmpty()) {
                             throw new InvalidParameterValueException("Can't create vm with security groups; security group feature is not enabled per zone");
                         }
-                        s_logger.info("Ok!!! Here3, internalNameFlag is --> " + internalNameFlag);
                         vm = _userVmService.createAdvancedVirtualMachine(zone, serviceOffering, template, getNetworkIds(), owner, name, displayName,
-                                internalNameFlag, diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, getIpToNetworkMap(), ipAddress, keyboard);
+                                diskOfferingId, size, group, getHypervisor(), userData, sshKeyPairName, getIpToNetworkMap(), ipAddress, keyboard);
                     }
                 }
             }
