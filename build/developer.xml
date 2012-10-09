@@ -194,6 +194,7 @@
   	
   	
     <copy overwrite="true" todir="${server.deploy.to.dir}/lib" file="${server.deploy.to.dir}/webapps/client/WEB-INF/lib/cloud-mysql-connector-java-5.1.7-bin.jar" />
+    <copy overwrite="true" todir="${server.deploy.to.dir}/webapps/client/WEB-INF/lib" file="${deps.dir}/cloud-commons-io-2.4.jar" />
     <delete file="${server.deploy.to.dir}/webapps/client/WEB-INF/lib/cloud-mysql-connector-java-5.1.7-bin.jar" />
   	
     <replace file="${server.deploy.to.dir}/conf/catalina.properties" summary="true">

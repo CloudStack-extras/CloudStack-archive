@@ -45,6 +45,7 @@ public class AddUcsManagerCmd extends BaseCmd {
         UcsManager mgr = locator.getManager(UcsManager.class);
         try {
             AddUcsManagerResponse rsp = mgr.addUcsManager(this);
+            rsp.setObjectName("ucsmanager");
             rsp.setResponseName(getCommandName());
             this.setResponseObject(rsp);
         } catch (Exception e) {
