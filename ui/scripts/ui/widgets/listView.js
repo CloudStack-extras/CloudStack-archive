@@ -610,9 +610,12 @@
 
     var $thead = $('<thead>').prependTo($table).append($('<tr>'));
     var reorder = options.reorder;
-
+    var detailView = options.detailView;
+    var viewArgs = $table.closest('.list-view').data('view-args');
+    var uiCustom = viewArgs.uiCustom;
     var hiddenFields = [];
-    if(preFilter != null)
+    
+    if (preFilter != null)
       hiddenFields = preFilter();
 
     $.each(fields, function(key) {
@@ -624,19 +627,32 @@
       if ($th.index()) $th.addClass('reduced-hide');
 
       $th.html(_l(field.label));
+
+      return true;
     });
 
+    // Re-order row buttons
     if (reorder) {
       $thead.find('tr').append(
         $('<th>').html(_l('label.order')).addClass('reorder-actions reduced-hide')
       );
     }
 
+    // Actions column
     if (actions && renderActionCol(actions)) {
       $thead.find('tr').append(
         $('<th></th>')
           .html(_l('label.actions'))
           .addClass('actions reduced-hide')
+      );
+    }
+
+    // Quick view
+    if (detailView && !detailView.noCompact && !uiCustom) {
+      $thead.find('tr').append(
+        $('<th></th>')
+          .html('Quickview')
+          .addClass('quick-view reduced-hide')
       );
     }
 
@@ -661,6 +677,8 @@
         }).html(_l(this.label));
 
         $option.appendTo($filterSelect);
+
+        return true;
       });
 
     return $filters.appendTo($toolbar);
@@ -761,7 +779,7 @@
   /**
    * Initialize detail view for specific ID from list view
    */
-  var createDetailView = function(args, complete, $row) {
+  var createDetailView = function(args, complete, $row, options) {
     var $panel = args.$panel;
     var title = args.title;
     var id = args.id;
@@ -771,9 +789,11 @@
       jsonObj: args.jsonObj,
       section: args.section,
       context: args.context,
-      $listViewRow: $row
+      $listViewRow: $row,
+      compact: options ? options.compact : false
     });
 
+    var noPanel = options ? options.noPanel : false;
     var $detailView, $detailsPanel;
     var panelArgs = {
       title: title,
@@ -794,14 +814,19 @@
       }
     };
 
-    // Create panel
-    $detailsPanel = data.$browser.cloudBrowser('addPanel', panelArgs);
+    if (noPanel) {
+      return $('<div>').detailView(data);
+    } else {
+      $detailsPanel = data.$browser.cloudBrowser('addPanel', panelArgs);
+    }
   };
 
   var addTableRows = function(preFilter, fields, data, $tbody, actions, options) {
     if (!options) options = {};
     var rows = [];
     var reorder = options.reorder;
+    var detailView = options.detailView;
+    var uiCustom = $tbody.closest('.list-view').data('view-args').uiCustom;
 
     if (!data || ($.isArray(data) && !data.length)) {
       if (!$tbody.find('tr').size()) {
@@ -820,6 +845,7 @@
     $(data).each(function() {
       var dataItem = this;
       var id = dataItem.id;
+      var $quickView;
 
       var $tr = $('<tr>');
       rows.push($tr);
@@ -847,7 +873,11 @@
 
         if (field.indicator) {
           $td.addClass('state').addClass(field.indicator[content]);
+
+          // Disabling indicator for now per new design
+          //$tr.find('td:first').addClass('item-state-' + field.indicator[content]);
         }
+        
         if (field.id == true) id = field.id;
         if ($td.index()) $td.addClass('reduced-hide');
         if (field.action) {
@@ -989,6 +1019,95 @@
           }
         );
       }
+
+      // Add quick view
+      if (detailView && !detailView.noCompact && !uiCustom) {
+        $quickView = $('<td>').addClass('quick-view reduced-hide')
+          .append(
+            $('<span>').addClass('icon').html('&nbsp;')
+          )
+          .appendTo($tr);
+        $quickView.mouseover(
+          // Show quick view
+          function() {
+            var $quickViewTooltip = $('<div>').addClass('quick-view-tooltip');
+            var $tr = $quickView.closest('tr');
+            var $listView = $tr.closest('.list-view');
+            var $title = $('<div>').addClass('title');
+            var $detailsContainer = $('<div>').addClass('container').appendTo($quickViewTooltip);
+            var context = $.extend(true, {}, options.context);
+            var activeSection = $listView.data('view-args').activeSection;
+            var itemID = $tr.data('list-view-item-id');
+            var jsonObj = $tr.data('json-obj');
+            var $loading = $('<div>').addClass('loading-overlay').appendTo($detailsContainer);
+
+            if ($tr.hasClass('loading')) return;
+
+            // Title
+            $title.append(
+              $('<span>').html('Quickview: '),
+              $('<span>').addClass('title').html(
+                cloudStack.concat(
+                  $tr.find('td:first span').html(), 30
+                )
+              ),
+              $('<span>').addClass('icon').html('&nbsp;')
+            );
+            $quickViewTooltip.append($title);
+
+            // Setup positioning
+            $quickViewTooltip.hide().appendTo('#container').fadeIn(200, function() {
+              if (!$quickViewTooltip.is(':visible')) return;
+              
+              // Init detail view
+              context[activeSection] = [jsonObj];
+              createDetailView(
+                {
+                  data: $.extend(true, {}, detailView, {
+                    onLoad: function($detailView) {
+                      $loading.remove();
+                      $detailView.slideToggle('fast');
+                    },
+                    onPerformAction: function() {
+                      $tr.addClass('loading').find('td:last').prepend($('<div>').addClass('loading'));
+                      $quickViewTooltip.hide();
+                    },
+                    onActionComplete: function() {
+                      $tr.removeClass('loading').find('td:last .loading').remove();
+                      $quickViewTooltip.remove();
+                    }
+                  }),
+                  id: itemID,
+                  jsonObj: jsonObj,
+                  section: activeSection,
+                  context: context,
+                  $listViewRow: $tr
+                },
+                function($detailView) { //complete(), callback funcion
+                  $detailView.data('list-view', $listView);
+                }, $tr,
+                {
+                  compact: true,
+                  noPanel: true
+                }
+              ).appendTo($detailsContainer).hide();
+            });
+            $quickViewTooltip.css({
+              position: 'absolute',
+              left: $tr.width() + ($quickViewTooltip.width() -
+                                   ($quickViewTooltip.width() / 2)),
+              top: $quickView.offset().top - 50,
+              zIndex: $tr.closest('.panel').zIndex() + 1
+            });
+            
+            $quickViewTooltip.mouseleave(function() {
+              if (!$('.overlay:visible').size()) {
+                $quickViewTooltip.remove();
+              }
+            });
+          }
+        );
+      }
     });
 
     return rows;
@@ -1049,7 +1168,8 @@
             addTableRows(preFilter, fields, args.data, $tbody, actions, {
               actionFilter: args.actionFilter,
               context: context,
-              reorder: reorder
+              reorder: reorder,
+              detailView: options.detailView
             });
             $table.dataTable(null, { noSelect: uiCustom });
 
@@ -1270,7 +1390,10 @@
                  listViewData.fields,
                  $table,
                  listViewData.actions,
-                 { reorder: reorder });
+                 {
+                   reorder: reorder,
+                   detailView: listViewData.detailView
+                 });
     createFilters($toolbar, listViewData.filters);
     createSearchBar($toolbar, listViewData);
 
@@ -1294,7 +1417,8 @@
       listViewData.actions,
       {
         context: args.context,
-        reorder: reorder
+        reorder: reorder,
+        detailView: listViewData.detailView
       }
     );
 
@@ -1346,7 +1470,8 @@
         listViewData.actions,
         {
           context: $listView.data('view-args').context,
-          reorder: listViewData.reorder
+          reorder: listViewData.reorder,
+          detailView: listViewData.detailView
         }
       );
     };
@@ -1395,7 +1520,8 @@
         listViewData.actions,
         {
           context: $listView.data('view-args').context,
-          reorder: listViewData.reorder
+          reorder: listViewData.reorder,
+          detailView: listViewData.detailView
         }
       );
     };
@@ -1441,12 +1567,17 @@
 					  filterBy.advSearch = $listView.data('advSearch');
 					}
 					
-          loadBody($table, listViewData.dataProvider, listViewData.preFilter, listViewData.fields, true, {
+          loadBody(
+            $table,
+            listViewData.dataProvider,
+            listViewData.preFilter,
+            listViewData.fields, true, {
             context: context,
             page: page,
             filterBy: filterBy
           }, actions, {
-            reorder: listViewData.reorder
+            reorder: listViewData.reorder,
+            detailView: listViewData.detailView
           });
         }
       }, 500);
@@ -1606,7 +1737,8 @@
       {
         prepend: true,
         actionFilter: actionFilter,
-        reorder: reorder
+        reorder: reorder,
+        detailView: targetArgs.detailView
       }
     )[0];
     listView.find('table').dataTable('refresh');
@@ -1637,7 +1769,8 @@
       targetArgs.actions,
       {
         actionFilter: actionFilter ? actionFilter : defaultActionFilter,
-        reorder: reorder
+        reorder: reorder,
+        detailView: targetArgs.detailView
       }
     )[0];
 
@@ -1678,7 +1811,8 @@
         null,
         listViewArgs.actions,
         {
-          context: this.data('view-args').context
+          context: this.data('view-args').context,
+          detailView: listViewArgs.detailView
         }
       );
     } else {

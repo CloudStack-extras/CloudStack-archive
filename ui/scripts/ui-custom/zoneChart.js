@@ -303,6 +303,7 @@
                     args.response.success({ actionFilter: actionFilter, data: data });
                   },
                   detailView: {
+                    noCompact: true,
                     tabs: {
                       network: {
                         title: 'Network',

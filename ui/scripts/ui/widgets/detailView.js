@@ -17,6 +17,9 @@
     if (!$row) return;
 
     var $listView = $row.closest('.list-view');
+
+    if (!$listView.parents('html').size()) return;
+
     var $newRow;
     var jsonObj = $row.data('json-obj');
 
@@ -90,6 +93,7 @@
         if (!options) options = {};
 
         var $form = options.$form;
+        var viewArgs = $detailView.data('view-args');
 
         if (customAction && !noAdd) {
           customAction({
@@ -115,7 +119,7 @@
 
                 // Success
                 function(args) {
-                  if (!$detailView.is(':visible')) return;
+                  if (!$detailView.parents('html').size()) return;
 
                   $loading.remove();
                   replaceListViewItem($detailView, args.data);
@@ -158,10 +162,10 @@
                 cloudStack.ui.notifications.add(
                   notification,
                   function(args2) { //name parameter as "args2" instead of "args" to avoid override "args" from success: function(args) {
-                    if ($detailView.is(':visible')) {
+                    if ($detailView.parents('html').size()) {
                       $loading.remove();
 
-                      if (!noRefresh) {
+                      if (!noRefresh && !viewArgs.compact) {
                         updateTabContent(args.data? args.data : args2.data);
                       }
                     }
@@ -176,6 +180,10 @@
                     }));
 
                     replaceListViewItem($detailView, args.data ? args.data : args2.data);
+
+                    if (viewArgs && viewArgs.onActionComplete) {
+                      viewArgs.onActionComplete();
+                    }
                   },
 
                   {},
@@ -196,6 +204,10 @@
               }
             }
           });
+
+          if (viewArgs && viewArgs.onPerformAction) {
+            viewArgs.onPerformAction();
+          }
         }
       };
 
@@ -640,11 +652,16 @@
         });
 
       $.each(actions, function(key, value) {
-        if ($.inArray(key, allowedActions) == -1) return true;
+        if ($.inArray(key, allowedActions) == -1 ||
+           (key == 'edit' && options.compact)) return true;
 
         var $action = $('<div></div>')
               .addClass('action').addClass(key)
-              .appendTo($actions.find('div.buttons'));
+              .appendTo($actions.find('div.buttons'))
+              .attr({
+                title: _l(value.label),
+                alt: _l(value.label)
+              });
         var $actionLink = $('<a></a>')
               .attr({
                 href: '#',
@@ -658,11 +675,17 @@
               )
               .appendTo($action);
 
-        if (value.textLabel) {
+        if (value.textLabel || options.compact) {
           $action
             .addClass('single text')
             .prepend(
-              $('<span>').addClass('label').html(_l(value.textLabel))
+              $('<span>').addClass('label').html(
+                _l(
+                  options.compact ?
+                    (value.compactLabel ?
+                     value.compactLabel : value.label) : value.textLabel
+                )
+              )
             );
         }
 
@@ -829,7 +852,8 @@
         $actions = makeActionButtons(detailViewArgs.actions, {
           actionFilter: actionFilter,
           data: data,
-          context: $detailView.data('view-args').context
+          context: $detailView.data('view-args').context,
+          compact: detailViewArgs.compact
         }).prependTo($firstRow.closest('div.detail-group').closest('.details'));
 
       // 'View all' button
@@ -903,9 +927,11 @@
       { activeTab: targetTabID }
     );
 
-    $tabContent.append(
-      $('<div>').addClass('loading-overlay')
-    );
+    if (!$detailView.data('view-args').compact) {
+      $tabContent.append(
+        $('<div>').addClass('loading-overlay')
+      );
+    }
 
     return dataProvider({
       tab: targetTabID,
@@ -959,6 +985,10 @@
             ).appendTo($detailView.find('.main-groups'));
           }
 
+          if ($detailView.data('view-args').onLoad) {
+            $detailView.data('view-args').onLoad($detailView);
+          }
+
           return true;
         },
         error: function() {
@@ -977,6 +1007,8 @@
     var tabFilter = options.tabFilter;
     var context = options.context ? options.context : {};
     var updateContext = $detailView.data('view-args').updateContext;
+    var compact = options.compact;
+    var tabTotal = 0;
 
     if (updateContext) {
       $.extend($detailView.data('view-args').context, updateContext({
@@ -1001,6 +1033,7 @@
     $.each(tabs, function(key, value) {
       // Don't render tab, if filtered out
       if ($.inArray(key, removedTabs) > -1) return true;
+      if (compact && tabTotal) return true;
 
       var propGroup = key;
       var prop = value;
@@ -1017,6 +1050,8 @@
 
       $tabContent.data('detail-view-tab-id', key);
       $tabContent.data('detail-view-tab-data', value);
+
+      tabTotal++;
 
       return true;
     });
@@ -1050,9 +1085,12 @@
 
   $.fn.detailView = function(args, options) {
     var $detailView = this;
-    
+    var compact = args.compact;
+    var $toolbar = makeToolbar();
+    var $tabs;
+
     if (options == 'refresh') {
-      var $tabs = replaceTabs($detailView, args.tabs, {
+      $tabs = replaceTabs($detailView, args.tabs, {
         context: args.context,
         tabFilter: args.tabFilter
       });
@@ -1064,18 +1102,22 @@
         $detailView.data('list-view-row', args.$listViewRow);
       }
 
-      // Create toolbar
-      var $toolbar = makeToolbar().appendTo($detailView);
-
-      // Create tabs
-      var $tabs = makeTabs($detailView, args.tabs, {
+      $tabs = makeTabs($detailView, args.tabs, {
+        compact: compact,
         context: args.context,
         tabFilter: args.tabFilter
-      }).appendTo($detailView);
+      });
+
+      $tabs.appendTo($detailView);
+      
+      // Create toolbar
+      if (!compact) {
+        $toolbar.appendTo($detailView);
+      }
     }
 
     $detailView.tabs();
-
+    
     return $detailView;
   };
 
