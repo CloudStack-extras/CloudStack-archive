@@ -2605,7 +2605,7 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
             // Search whether there is already an instance with the same instance name
             // that is not in the destroyed or expunging state.
             VMInstanceVO vm = _vmInstanceDao.findVMByInstanceName(displayName);
-            if (vm != null && (vm.getState() != VirtualMachine.State.Destroyed || vm.getState() != VirtualMachine.State.Expunging)) {
+            if (vm != null && vm.getState() != VirtualMachine.State.Expunging) {
                 throw new InvalidParameterValueException("There already exists a VM by the display name supplied", null);
             }
             instanceName = displayName;
@@ -2970,10 +2970,10 @@ public class UserVmManagerImpl implements UserVmManager, UserVmService, Manager 
         if (ip != null && ip.getSystem()) {
             UserContext ctx = UserContext.current();
             try {
-            	long networkId = ip.getAssociatedWithNetworkId();
-            	Network guestNetwork = _networkMgr.getNetwork(networkId);
-            	NetworkOffering offering = _configMgr.getNetworkOffering(guestNetwork.getNetworkOfferingId());
-            	assert (offering.getAssociatePublicIP() == true) : "User VM should not have system owned public IP associated with it when offering configured not to associate public IP.";
+                long networkId = ip.getAssociatedWithNetworkId();
+                Network guestNetwork = _networkMgr.getNetwork(networkId);
+                NetworkOffering offering = _configMgr.getNetworkOffering(guestNetwork.getNetworkOfferingId());
+                assert (offering.getAssociatePublicIP() == true) : "User VM should not have system owned public IP associated with it when offering configured not to associate public IP.";
 
                 _rulesMgr.disableStaticNat(ip.getId(), ctx.getCaller(), ctx.getCallerUserId(), true);
             } catch (Exception ex) {
