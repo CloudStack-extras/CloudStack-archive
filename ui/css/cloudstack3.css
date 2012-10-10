@@ -2523,6 +2523,7 @@ div.toolbar div.filters select {
 }
 
 div.toolbar div.text-search {
+  position: relative;
   float: right;
 }
 
@@ -2656,6 +2657,34 @@ div.toolbar div.button.add span {
 
 #browser div.panel.selected div.toolbar {
   border-right: 1px solid #43586B;
+}
+
+/*** Advanced search*/
+#advanced_search {
+  width: 15px;
+  position: absolute;
+  left: 139px;
+  top: 4px;
+  z-index: 4;
+  background: none;
+}
+
+#advanced_search .icon {
+  /*+opacity:56%;*/
+  filter: alpha(opacity=56);
+  -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=56);
+  -moz-opacity: 0.56;
+  opacity: 0.56;
+  background: url(../images/sprites.png) no-repeat -62px -162px;
+  padding: 10px;
+}
+
+#advanced_search:hover .icon {
+  /*+opacity:100%;*/
+  filter: alpha(opacity=100);
+  -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+  -moz-opacity: 1;
+  opacity: 1;
 }
 
 /*** Panel controls*/
