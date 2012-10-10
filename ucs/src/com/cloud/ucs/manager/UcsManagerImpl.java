@@ -188,6 +188,7 @@ public class UcsManagerImpl implements UcsManager {
                     discoverBladesToCluster(cluster);
                     ClusterResponse clusterResponse = responseGenerator.createClusterResponse(cluster, false);
                     clusterResponses.add(clusterResponse);
+                    clusterResponse.setObjectName("cluster");
                 }
             } else {
                 throw new ServerApiException(BaseCmd.INTERNAL_ERROR, "Failed to add cluster");
