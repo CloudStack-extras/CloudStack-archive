@@ -7160,6 +7160,39 @@
                 }
               },
 
+							convert: {
+                label: 'convert cluster',
+                messages: {
+                  confirm: function(args) {
+                    return 'Please confirm that you want to convert cluster';
+                  },
+                  notification: function(args) {
+                    return 'convert cluster';
+                  }
+                },
+                action: function(args) {
+                  $.ajax({
+                    url: createURL('associateProfileToBladesInCluster'),
+                    data: {
+										  clusterid: args.context.clusters[0].id
+										},
+                    success: function(json) {
+                      var item = json.associateucsprofiletobladesinclusterresponse.cluster;                      
+											//addExtraPropertiesToClusterObject(item);																				
+                      args.response.success({
+                        actionFilter: clusterActionfilter,
+                        data: item
+                      });
+                    }
+                  });
+                },
+                notification: {
+                  poll: function(args) {
+                    args.complete();
+                  }
+                }
+              },
+							
               'remove': {
                 label: 'label.action.delete.cluster' ,
                 messages: {
@@ -9711,6 +9744,9 @@
 			allowedActions.push("manage");
 		}
 
+		if(jsonObj.hypervisortype == "ManagedHost")
+		  allowedActions.push("convert");
+		
     allowedActions.push("remove");
 
     return allowedActions;
