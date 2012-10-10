@@ -6970,9 +6970,18 @@
                   clusterName = hostname + "/" + dcName + "/" + clusterName; //override clusterName
                 }
                 array1.push("&clustername=" + todb(clusterName));
-
+								
+								var apiCmd;								
+								if(args.$form.find('.form-item[rel=ucsProfile]').css("display") != "none" && args.data.ucsProfile != null && args.data.ucsProfile.length > 0) {
+								  array1.push("&ucsprofile=" + args.data.ucsProfile);
+									apiCmd = 'addUcsCluster';
+								}
+								else {
+								  apiCmd = 'addCluster';
+								}
+							
                 $.ajax({
-                  url: createURL("addCluster" + array1.join("")),
+                  url: createURL(apiCmd + array1.join("")),
                   dataType: "json",
                   async: true,
                   success: function(json) {
