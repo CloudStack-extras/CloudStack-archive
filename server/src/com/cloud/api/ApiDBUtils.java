@@ -5,7 +5,7 @@
 // to you under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
 // with the License.  You may obtain a copy of the License at
-//
+// 
 //   http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
@@ -756,6 +756,10 @@ public class ApiDBUtils {
         return _projectMgr.findByProjectAccountId(projectAccountId);
     }
     
+    public static Project findProjectByProjectAccountIdIncludingRemoved(long projectAccountId) {
+        return _projectMgr.findByProjectAccountIdIncludingRemoved(projectAccountId);
+    }
+    
     public static Project findProjectById(long projectId) {
         return _projectMgr.getProject(projectId);
     }
@@ -809,7 +813,7 @@ public class ApiDBUtils {
     public static String getHaTag() {
         return _haMgr.getHaTag();
     }
-
+    
     public static Map<Service, Set<Provider>> listVpcOffServices(long vpcOffId) {
         return _vpcMgr.getVpcOffSvcProvidersMap(vpcOffId);
     }
@@ -825,7 +829,7 @@ public class ApiDBUtils {
     public static String getUuid(String resourceId, TaggedResourceType resourceType) {
         return _taggedResourceService.getUuid(resourceId, resourceType);
     }
-
+    
     public static boolean isOfferingForVpc(NetworkOffering offering) {
         boolean vpcProvider = _configMgr.isOfferingForVpc(offering);
         return vpcProvider;
@@ -868,7 +872,7 @@ public class ApiDBUtils {
             else
                 scaleDownPolicyIds.add(autoScalePolicy.getId());
         }
-    }
+}
 
     public static void getAutoScaleVmGroupPolicies(long vmGroupId, List<AutoScalePolicy> scaleUpPolicies, List<AutoScalePolicy> scaleDownPolicies)
     {

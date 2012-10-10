@@ -95,6 +95,7 @@ Requires: nfs-utils
 Requires: wget
 # there is a fsimage.so in the source code, which adds xen-libs as a dependence, needs to supress it, as rhel doesn't have this pacakge
 AutoReqProv: no
+Provides: cloud-agent-scripts = %{version}-%{release}
 Obsoletes: cloud-agent-scripts < %{version}-%{release}
 Group:     System Environment/Libraries
 %description scripts
@@ -285,6 +286,7 @@ Summary:   CloudStack CloudBridge
 Group:     System Environment/Libraries
 Requires: java >= 1.6.0
 Requires: tomcat6
+Requires: %{name}-deps = %{version}
 %if 0%{?fedora} > 15
 Requires: apache-commons-lang
 %endif
@@ -330,15 +332,10 @@ if [ "$1" == "0" ] ; then
     /sbin/service %{name}-management stop > /dev/null 2>&1 || true
 fi
 
-%pre client
+%pre aws-api
 id %{name} > /dev/null 2>&1 || /usr/sbin/useradd -M -c "CloudStack unprivileged user" \
      -r -s /bin/sh -d %{_sharedstatedir}/%{name}/management %{name}|| true
 
-# set max file descriptors for cloud user to 4096
-sed -i /"cloud hard nofile"/d /etc/security/limits.conf
-sed -i /"cloud soft nofile"/d /etc/security/limits.conf
-echo "cloud hard nofile 4096" >> /etc/security/limits.conf
-echo "cloud soft nofile 4096" >> /etc/security/limits.conf
 rm -rf %{_localstatedir}/cache/%{name}
 # user harcoded here, also hardcoded on wscript
 
@@ -391,39 +388,29 @@ if [ -x /etc/sysconfig/modules/kvm.modules ] ; then
     /bin/sh /etc/sysconfig/modules/kvm.modules
 fi
 
-%post scripts
-rm -fr %{_libdir}/%{name}/agent
-ln -f -s %{_libdir}/%{name}/common %{_libdir}/%{name}/agent
-
-%postun scripts
-rm -fr %{_libdir}/%{name}/agent
-
 %post client
-if [ "$1" == "1" ] ; then
     /sbin/chkconfig --add %{name}-management > /dev/null 2>&1 || true
     /sbin/chkconfig --level 345 %{name}-management on > /dev/null 2>&1 || true
-fi
 
-if [ "$1" == "1" ] ; then
     root=/usr/share/cloud/bridge
-    target=/usr/share/cloud/management/
+    target=/usr/share/cloud/management
 
-    if [ ! -e $target/webapps/awsapi ]; then
-        ln -s $root/webapps/awsapi $target/webapps/awsapi
+    mkdir -p $target/webapps7080
+    if [ ! -h $target/webapps7080/awsapi ]; then
+        ln -sf $root/webapps7080/awsapi $target/webapps7080/awsapi
     fi
 
-    jars=`ls $root/lib`
-    for j in $jars
-    do
-        cp -f $root/lib/$j $root/webapps/awsapi/WEB-INF/lib/
-    done
+#    jars=`ls $root/lib`
+#    for j in $jars
+#    do
+#        cp -f $root/lib/$j $root/webapps/awsapi/WEB-INF/lib/
+#    done
 
     confs="cloud-bridge.properties ec2-service.properties"
     for c in $confs
     do
         cp -f $root/conf/$c $target/conf
     done
-fi
 
 %files utils
 %defattr(0644,root,root,0755)
@@ -473,6 +460,18 @@ fi
 
 %files deps
 %defattr(0644,root,root,0755)
+%{_javadir}/axiom-*.jar
+%{_javadir}/axis2-*.jar
+%{_javadir}/antlr*.jar
+%{_javadir}/XmlSchema-*.jar
+%{_javadir}/json-simple*.jar
+%{_javadir}/neethi*.jar
+%{_javadir}/woden*.jar
+%{_javadir}/xercesImpl*.jar
+%{_javadir}/xml-apis*.jar
+%{_javadir}/dom4j*.jar
+%{_javadir}/javassist*.jar
+%{_javadir}/commons-fileupload*.jar
 %{_javadir}/commons-codec-1.6.jar
 %{_javadir}/commons-dbcp-1.4.jar
 %{_javadir}/commons-pool-1.6.jar
