@@ -1533,8 +1533,15 @@
       );
     };
 				
-    $listView.find('.button.search#advanced_search').bind('click', function(event) {	
-			cloudStack.dialog.createForm({
+    $listView.find('.button.search#advanced_search .icon').bind('click', function(event) {
+      if ($('#advanced_search .form-container:visible').size()) {
+        $('#advanced_search .form-container:visible').remove();
+
+        return false;
+      }
+      
+			var form = cloudStack.dialog.createForm({
+        noDialog: true,
 				form: {
 					title: 'Advanced Search',					
 					fields: listViewData.advSearchFields
@@ -1544,6 +1551,8 @@
 					$listView.find('.button.search#basic_search').siblings('.search-bar').find('input').val(''); //clear basic search input field to avoid confusion of search result   
 				}
 			});
+
+      form.$formContainer.hide().appendTo('#advanced_search').fadeIn('fast');
 					
       return false;
     });		
