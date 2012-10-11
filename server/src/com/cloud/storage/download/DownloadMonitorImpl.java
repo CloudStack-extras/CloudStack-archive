@@ -166,6 +166,7 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
 
 	private String _name;
 	private Boolean _sslCopy = new Boolean(false);
+	String _ssvmUrlDomain;
 	private String _copyAuthPasswd;
 	private String _proxy = null;
     protected SearchBuilder<VMTemplateHostVO> ReadyTemplateStatesSearch;
@@ -187,11 +188,8 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
         _sslCopy = Boolean.parseBoolean(configs.get("secstorage.encrypt.copy"));
         _proxy = configs.get(Config.SecStorageProxy.key());
         
-        String cert = configs.get("secstorage.ssl.cert.domain");
-        if (!"realhostip.com".equalsIgnoreCase(cert)) {
-        	s_logger.warn("Only realhostip.com ssl cert is supported, ignoring self-signed and other certs");
-        }
-        
+        _ssvmUrlDomain = configs.get("secstorage.ssl.cert.domain");
+       
         _copyAuthPasswd = configs.get("secstorage.copy.password");
         
         _agentMgr.registerForHostEvents(new DownloadListener(this), true, false, false);
@@ -312,9 +310,15 @@ public class DownloadMonitorImpl implements  DownloadMonitor {
 		String hostname = ipAddress;
 		String scheme = "http";
 		if (_sslCopy) {
-			hostname = ipAddress.replace(".", "-");
-			hostname = hostname + ".realhostip.com";
-			scheme = "https";
+            hostname = ipAddress.replace(".", "-");
+            scheme = "https";
+            
+            // Code for putting in custom certificates.
+            if(_ssvmUrlDomain != null && _ssvmUrlDomain.length() > 0){
+                hostname = hostname + "." + _ssvmUrlDomain;
+            }else{
+                hostname = hostname + ".realhostip.com";
+            }	
 		}
 		return scheme + "://" + hostname + "/copy/SecStorage/" + dir + "/" + path; 
 	}
