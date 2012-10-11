@@ -364,7 +364,13 @@
         
         $browser.data('browser-panel-highlight-timer', setTimeout(function() {
           $('.overlay').remove();
-          $targetPanel.zIndex(10000).overlay();
+          $targetPanel
+            .data('panel-original-zindex', $targetPanel.zIndex())
+            .zIndex(10000)
+            .overlay();
+          $targetBreadcrumb.each(function() {
+            $(this).data('breadcrumb-original-zindex', $(this).zIndex());
+          });
           $targetBreadcrumb.zIndex(10001);
           
           $hiddenPanels.fadeOut('fast');
@@ -377,10 +383,18 @@
     'cloudBrowser',
     {
       'breadcrumb': function($target, $browser, data) {
-        var  $getHiddenPanels = $browser.find('.panel.mouseover-hidden');
+        var $getHiddenPanels = $browser.find('.panel.mouseover-hidden');
+        var $visiblePanels = $getHiddenPanels.siblings();
+        var $visibleBreadcrumbs = _breadcrumb.filter($visiblePanels);
 
         clearTimeout($browser.data('browser-panel-highlight-timer'));
         $getHiddenPanels.removeClass('mouseover-hidden').show();
+        $visiblePanels.zIndex(
+          $visiblePanels.data('panel-original-zindex')
+        );
+        $visibleBreadcrumbs.each(function() {
+          $(this).zIndex($(this).data('breadcrumb-original-zindex'));
+        });
         $('.overlay').remove();
       }
     }
