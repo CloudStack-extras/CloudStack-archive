@@ -689,10 +689,17 @@
     var $searchBar = $('<div></div>').addClass('search-bar reduced hide').appendTo($search);
     $searchBar.append('<input type="text" />');
     $search.append('<div id="basic_search" class="button search"></div>');
-		
-		if(listViewData.advSearchFields != null)
-		  $search.append('<div id="advanced_search" class="button search"></div>'); 
-		
+
+    if (listViewData.advSearchFields != null) {
+      $search.append(
+        $('<div>').attr({
+          id: 'advanced_search'
+        })
+          .addClass('button search')
+          .append($('<div>').addClass('icon'))
+      );
+    }
+
     return $search.appendTo($toolbar);
   };
 
@@ -1525,9 +1532,20 @@
         }
       );
     };
-				
-    $listView.find('.button.search#advanced_search').bind('click', function(event) {	
-			cloudStack.dialog.createForm({
+
+    var closeAdvancedSearch = function() {
+      $('#advanced_search .form-container:visible').remove();
+    };
+
+    $listView.find('.button.search#advanced_search .icon').bind('click', function(event) {
+      if ($('#advanced_search .form-container:visible').size()) {
+        closeAdvancedSearch();
+
+        return false;
+      }
+      
+			var form = cloudStack.dialog.createForm({
+        noDialog: true,
 				form: {
 					title: 'Advanced Search',					
 					fields: listViewData.advSearchFields
@@ -1535,8 +1553,30 @@
 				after: function(args) {				  
 					advancedSearch(args);	
 					$listView.find('.button.search#basic_search').siblings('.search-bar').find('input').val(''); //clear basic search input field to avoid confusion of search result   
+          closeAdvancedSearch();
 				}
 			});
+      var $formContainer = form.$formContainer;
+      var $form = $formContainer.find('form');
+
+      $formContainer.hide().appendTo('#advanced_search').show();
+      $form.find('.form-item:first input').focus();
+      $form.find('input[type=submit]')
+        .show()
+        .appendTo($form)
+        .val('Search');
+
+      // Cancel button
+      $form.append(
+        $('<div>').addClass('button cancel').html(_l('label.cancel'))
+          .click(function() {
+            closeAdvancedSearch();
+          })
+      );
+
+      $form.submit(function() {
+        form.completeAction($formContainer);
+      });
 					
       return false;
     });		

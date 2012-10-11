@@ -349,7 +349,7 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
     private int _customDiskOfferingMinSize = 1;
     private int _customDiskOfferingMaxSize = 1024;
 
-	private boolean _recreateSystemVmEnabled;
+    private boolean _recreateSystemVmEnabled;
 
     public boolean share(VMInstanceVO vm, List<VolumeVO> vols, HostVO host, boolean cancelPreviousShare) throws StorageUnavailableException {
 
@@ -414,9 +414,9 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
             ClusterVO cluster = _clusterDao.findById(pool.getClusterId());
             if (type == cluster.getHypervisorType()) {
                 List<HostVO> hosts = _hostDao.listUpRoutingHostByZonePodCluster(cluster.getId(),
-            			cluster.getPodId(), cluster.getDataCenterId());
+                        cluster.getPodId(), cluster.getDataCenterId());
                 if( hosts != null && hosts.size() > 0 ) {
-            		retPools.add(pool);
+                    retPools.add(pool);
                 }
             }
         }
@@ -575,7 +575,18 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
 
                 // Get the newly created VDI from the snapshot.
                 // This will return a null volumePath if it could not be created
-                Pair<String, String> volumeDetails = createVDIFromSnapshot(UserContext.current().getCallerUserId(), snapshot, pool);
+                Pair<String, String> volumeDetails = null;
+                try {
+                    volumeDetails = createVDIFromSnapshot(UserContext.current().getCallerUserId(), snapshot, pool);
+                } catch (CloudRuntimeException e) {
+                    try {
+                        stateTransitTo(volume, Volume.Event.OperationFailed);
+                        throw e;
+                    } catch (NoTransitionException ex) {
+                        s_logger.debug(ex.toString());
+                        return null;
+                    }
+                }
 
                 volumeUUID = volumeDetails.first();
                 details = volumeDetails.second();
@@ -646,9 +657,9 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
         Pair<VolumeVO, String> volumeDetails = createVolumeFromSnapshot(volume, snapshot);
         if (volumeDetails != null) {
             createdVolume = volumeDetails.first();
-        	UsageEventVO usageEvent = new UsageEventVO(EventTypes.EVENT_VOLUME_CREATE, createdVolume.getAccountId(), createdVolume.getDataCenterId(), createdVolume.getId(), createdVolume.getName(), 
-        			                                   createdVolume.getDiskOfferingId(), null, createdVolume.getSize());
-        	_usageEventDao.persist(usageEvent);
+            UsageEventVO usageEvent = new UsageEventVO(EventTypes.EVENT_VOLUME_CREATE, createdVolume.getAccountId(), createdVolume.getDataCenterId(), createdVolume.getId(), createdVolume.getName(),
+                    createdVolume.getDiskOfferingId(), null, createdVolume.getSize());
+            _usageEventDao.persist(usageEvent);
         }
         return createdVolume;
     }
@@ -708,6 +719,7 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
             if (!_snapshotDao.lockInLockTable(snapshotId.toString(), 10)) {
                 throw new CloudRuntimeException("failed to create volume from " + snapshotId + " due to this snapshot is being used, try it later ");
             }
+
             answer = (CreateVolumeFromSnapshotAnswer) sendToPool(pool, createVolumeFromSnapshotCommand);
             if (answer != null && answer.getResult()) {
                 vdiUUID = answer.getVdi();
@@ -963,7 +975,7 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
 
         value = configDao.getValue(Config.RecreateSystemVmEnabled.key());
         _recreateSystemVmEnabled = Boolean.parseBoolean(value);
-        
+
         s_logger.info("Storage cleanup enabled: " + _storageCleanupEnabled + ", interval: " + _storageCleanupInterval + ", template cleanup enabled: " + _templateCleanupEnabled);
 
         String workers = configs.get("expunge.workers");
@@ -1975,15 +1987,15 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
         if (!diskOffering.getUseLocalStorage()) {
             for (StoragePoolVO storagePool : storagePools) {
                 if (storagePool.isShared()) {
-                	appropriatePoolExists = true;
-                	break;
+                    appropriatePoolExists = true;
+                    break;
                 }
             }
         } else {
             for (StoragePoolVO storagePool : storagePools) {
                 if (storagePool.isLocal()) {
-                	appropriatePoolExists = true;
-                	break;
+                    appropriatePoolExists = true;
+                    break;
                 }
             }
         }
@@ -2024,9 +2036,9 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
 
         volume = _volsDao.persist(volume);
         if(cmd.getSnapshotId() == null){
-        	//for volume created from snapshot, create usage event after volume creation
-        	UsageEventVO usageEvent = new UsageEventVO(EventTypes.EVENT_VOLUME_CREATE, volume.getAccountId(), volume.getDataCenterId(), volume.getId(), volume.getName(), diskOfferingId, null, size);
-        	_usageEventDao.persist(usageEvent);
+            //for volume created from snapshot, create usage event after volume creation
+            UsageEventVO usageEvent = new UsageEventVO(EventTypes.EVENT_VOLUME_CREATE, volume.getAccountId(), volume.getDataCenterId(), volume.getId(), volume.getName(), diskOfferingId, null, size);
+            _usageEventDao.persist(usageEvent);
         }
 
         UserContext.current().setEventDetails("Volume Id: " + volume.getId());
@@ -2379,13 +2391,13 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
                             }
                             List<SnapshotVO> backingupSnapshots = _snapshotDao.listByStatus(volumeId, Snapshot.Status.BackingUp);                            
                             if(backingupSnapshots == null) {
-	                            CleanupSnapshotBackupCommand cmd = new CleanupSnapshotBackupCommand(secondaryStorageHost.getStorageUrl(), secondaryStorageHost.getDataCenterId(), volume.getAccountId(),
-	                                    volumeId, snapshots);
-	                            Answer answer = _agentMgr.sendToSecStorage(secondaryStorageHost, cmd);
-	                            if ((answer == null) || !answer.getResult()) {
-	                                String details = "Failed to cleanup snapshots for volume " + volumeId + " due to " + (answer == null ? "null" : answer.getDetails());
-	                                s_logger.warn(details);
-	                            }
+                                CleanupSnapshotBackupCommand cmd = new CleanupSnapshotBackupCommand(secondaryStorageHost.getStorageUrl(), secondaryStorageHost.getDataCenterId(), volume.getAccountId(),
+                                        volumeId, snapshots);
+                                Answer answer = _agentMgr.sendToSecStorage(secondaryStorageHost, cmd);
+                                if ((answer == null) || !answer.getResult()) {
+                                    String details = "Failed to cleanup snapshots for volume " + volumeId + " due to " + (answer == null ? "null" : answer.getDetails());
+                                    s_logger.warn(details);
+                                }
                             }
                         } catch (Exception e1) {
                             s_logger.warn("problem cleaning up snapshots in secondary storage " + secondaryStorageHost, e1);
@@ -3850,7 +3862,7 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
         vmSearch.and("type", vmSearch.entity().getType(), SearchCriteria.Op.NIN);
         vmSearch.or("nulltype", vmSearch.entity().getType(), SearchCriteria.Op.NULL);
         sb.join("vmSearch", vmSearch, sb.entity().getInstanceId(), vmSearch.entity().getId(), JoinBuilder.JoinType.LEFTOUTER);
-        
+
 
         if (tags != null && !tags.isEmpty()) {
             SearchBuilder<ResourceTagVO> tagSearch = _resourceTagDao.createSearchBuilder();
@@ -3912,7 +3924,7 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
         // Don't return DomR and ConsoleProxy volumes
         sc.setJoinParameters("vmSearch", "type", VirtualMachine.Type.ConsoleProxy, 
                 VirtualMachine.Type.SecondaryStorageVm, VirtualMachine.Type.DomainRouter);
-        
+
         //if caller is the regular user, don't return volumes of Destroyed vms
         if (caller.getType() == Account.ACCOUNT_TYPE_NORMAL) {
             sc.setJoinParameters("vmSearch", "state", VirtualMachine.State.Destroyed);
