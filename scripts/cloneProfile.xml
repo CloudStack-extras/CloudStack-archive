@@ -1,0 +1,6 @@
+<lsClone
+	dn="[srcDn]"
+	inTargetOrg="org-root"
+	inServerName="[newName]"
+	inHierarchical="false">
+</lsClone>

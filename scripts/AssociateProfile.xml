@@ -1,0 +1,36 @@
+<configConfMos
+inHierarchical="true">
+	<inConfigs>
+		<pair key="[kdn]">
+			<lsServer
+			agentPolicyName=""
+			biosProfileName=""
+			bootPolicyName=""
+			descr=""
+			dn="[pdn]"
+			dynamicConPolicyName=""
+			extIPState="none"
+			hostFwPolicyName=""
+			identPoolName=""
+			localDiskPolicyName=""
+			maintPolicyName=""
+			mgmtAccessPolicyName=""
+			mgmtFwPolicyName=""
+			powerPolicyName="default"
+			scrubPolicyName=""
+			solPolicyName=""
+			srcTemplName=""
+			statsPolicyName="default"
+			status="created,modified"
+			usrLbl=""
+			uuid="0"
+			vconProfileName="">
+				<lsBinding
+				pnDn="[cdn]"
+				restrictMigration="no"
+				rn="pn"
+				></lsBinding>
+			</lsServer>
+		</pair>
+	</inConfigs>
+</configConfMos>
