@@ -1650,6 +1650,7 @@ public class EC2Engine {
                 if(vol.getVirtualMachineId() != null) {
                     ec2Vol.setInstanceId(vol.getVirtualMachineId());
                     if (vol.getVirtualMachineState() != null) {
+                        ec2Vol.setVMState(vol.getVirtualMachineState());
                         ec2Vol.setAttachmentState(mapToAmazonVolumeAttachmentState(vol.getVirtualMachineState()));
                     }
                 } else {
