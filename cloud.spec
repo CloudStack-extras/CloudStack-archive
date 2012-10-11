@@ -606,10 +606,10 @@ fi
 %{_bindir}/%{name}-tool
 %{_bindir}/cloudvoladm
 %{_bindir}/cloud-grab-dependent-library-versions
-%config(noreplace) %{_sysconfdir}/%{name}/cli/commands.xml
-%dir %{_prefix}/lib*/python*/site-packages/%{name}tool
-%{_prefix}/lib*/python*/site-packages/%{name}tool/*
-%{_prefix}/lib*/python*/site-packages/%{name}apis.py
+#%config(noreplace) %{_sysconfdir}/%{name}/cli/commands.xml
+#%dir %{_prefix}/lib*/python*/site-packages/%{name}tool
+#%{_prefix}/lib*/python*/site-packages/%{name}tool/*
+#%{_prefix}/lib*/python*/site-packages/%{name}apis.py
 
 %files baremetal-agent
 %attr(0755,root,root) %{_bindir}/cloud-setup-baremetal
