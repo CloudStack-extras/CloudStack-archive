@@ -357,10 +357,17 @@
         var  $hiddenPanels = data.panel.siblings().filter(function(){
           return $(this).index() > data.panel.index();
         });
+        var $targetPanel = data.panel.filter(':first');
+        var $targetBreadcrumb = _breadcrumb.filter($targetPanel);
         
         $hiddenPanels.addClass('mouseover-hidden');
+        
         setTimeout(function() {
-          $('.mouseover-hidden').fadeOut('fast');
+          $('.overlay').remove();
+          $targetPanel.zIndex(10000).overlay();
+          $targetBreadcrumb.zIndex(10001);
+          
+          $hiddenPanels.fadeOut('fast');
         }, 1000);
       }
     }
@@ -373,6 +380,7 @@
         var  $getHiddenPanels = $browser.find('.panel.mouseover-hidden');
         
         $getHiddenPanels.removeClass('mouseover-hidden').show();
+        $('.overlay').remove();
       }
     }
   ));
