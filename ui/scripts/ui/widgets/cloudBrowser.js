@@ -362,13 +362,13 @@
         
         $hiddenPanels.addClass('mouseover-hidden');
         
-        setTimeout(function() {
+        $browser.data('browser-panel-highlight-timer', setTimeout(function() {
           $('.overlay').remove();
           $targetPanel.zIndex(10000).overlay();
           $targetBreadcrumb.zIndex(10001);
           
           $hiddenPanels.fadeOut('fast');
-        }, 1000);
+        }, 1000));
       }
     }
   ));
@@ -378,7 +378,8 @@
     {
       'breadcrumb': function($target, $browser, data) {
         var  $getHiddenPanels = $browser.find('.panel.mouseover-hidden');
-        
+
+        clearTimeout($browser.data('browser-panel-highlight-timer'));
         $getHiddenPanels.removeClass('mouseover-hidden').show();
         $('.overlay').remove();
       }
