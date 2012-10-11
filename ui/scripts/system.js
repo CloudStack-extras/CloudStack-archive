@@ -7158,40 +7158,7 @@
                     args.complete();
                   }
                 }
-              },
-
-							convert: {
-                label: 'convert cluster',
-                messages: {
-                  confirm: function(args) {
-                    return 'Please confirm that you want to convert cluster';
-                  },
-                  notification: function(args) {
-                    return 'convert cluster';
-                  }
-                },
-                action: function(args) {
-                  $.ajax({
-                    url: createURL('associateProfileToBladesInCluster'),
-                    data: {
-										  clusterid: args.context.clusters[0].id
-										},
-                    success: function(json) {
-                      var item = json.associateucsprofiletobladesinclusterresponse.cluster;                      
-											//addExtraPropertiesToClusterObject(item);																				
-                      args.response.success({
-                        actionFilter: clusterActionfilter,
-                        data: item
-                      });
-                    }
-                  });
-                },
-                notification: {
-                  poll: function(args) {
-                    args.complete();
-                  }
-                }
-              },
+              },						
 							
               'remove': {
                 label: 'label.action.delete.cluster' ,
@@ -7216,7 +7183,101 @@
                 notification: {
                   poll: function(args) { args.complete(); }
                 }
+              },
+														
+							//associateProfile: {
+							updateResourceLimits: { 
+                label: 'Associate Profile',
+                messages: {
+                  confirm: function(args) {
+                    return 'Please confirm that you want to associate profile';
+                  },
+                  notification: function(args) {
+                    return 'Associate Profile';
+                  }
+                },
+                action: function(args) {
+                  $.ajax({
+                    url: createURL('associateProfileToBladesInCluster'),
+                    data: {
+										  clusterid: args.context.clusters[0].id
+										},
+                    success: function(json) {
+                      //var item = json.associateucsprofiletobladesinclusterresponse.associateucsprofiletobaldesincluster;  //item is an empty object (by-design)
+                      args.response.success();
+                    }
+                  });
+                },
+                notification: {
+                  poll: function(args) {
+                    args.complete();
+                  }
+                }
+              },
+							
+							//provisionXenServerCluster: {
+							updateResourceCount: {
+                label: 'Provision XenServer Cluster',
+                messages: {
+                  confirm: function(args) {
+                    return 'Provision XenServer Cluster is not available yet. This is just for demo.';
+                  },
+                  notification: function(args) {
+                    return 'Provision XenServer Cluster';
+                  }
+                },
+                action: function(args) {
+								  args.response.success();
+                },
+                notification: {
+                  poll: function(args) {
+                    args.complete();
+                  }
+                }
+              },
+							
+							//provisionKvmCluster: {
+							changePassword: {
+                label: 'Provision KVM Cluster',
+                messages: {
+                  confirm: function(args) {
+                    return 'Provision KVM Cluster is not available yet. This is just for demo.';
+                  },
+                  notification: function(args) {
+                    return 'Provision KVM Cluster';
+                  }
+                },
+                action: function(args) {
+								  args.response.success();
+                },
+                notification: {
+                  poll: function(args) {
+                    args.complete();
+                  }
+                }
+              },
+							
+							//provisionVMwareCluster: {
+							changeService: {
+                label: 'Provision VMware Cluster',
+                messages: {
+                  confirm: function(args) {
+                    return 'Provision VMware Cluster is not available yet. This is just for demo.';
+                  },
+                  notification: function(args) {
+                    return 'Provision VMware Cluster';
+                  }
+                },
+                action: function(args) {
+								  args.response.success();
+                },
+                notification: {
+                  poll: function(args) {
+                    args.complete();
+                  }
+                }
               }
+							
             },
 
             tabs: {
@@ -9744,10 +9805,21 @@
 			allowedActions.push("manage");
 		}
 
-		if(jsonObj.hypervisortype == "ManagedHost")
-		  allowedActions.push("convert");
+		allowedActions.push("remove");
 		
-    allowedActions.push("remove");
+		if(jsonObj.hypervisortype == "ManagedHost") {
+		  //allowedActions.push("associateProfile");
+			allowedActions.push("updateResourceLimits");
+			
+			//allowedActions.push("provisionXenServerCluster");
+			allowedActions.push("updateResourceCount");
+			
+			//allowedActions.push("provisionKvmCluster");
+			allowedActions.push("changePassword");
+			
+			//allowedActions.push("provisionVMwareCluster");
+			allowedActions.push("changeService");
+		}  
 
     return allowedActions;
   }
