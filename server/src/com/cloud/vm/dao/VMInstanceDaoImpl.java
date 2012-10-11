@@ -243,14 +243,20 @@ public class VMInstanceDaoImpl extends GenericDaoBase<VMInstanceVO, Long> implem
 
         return listBy(sc);
     }
-    
+
+    @Override
+    public List<VMInstanceVO> listByPodId(long podId) {
+        SearchCriteria<VMInstanceVO> sc = AllFieldsSearch.create();
+        sc.setParameters("pod", podId);
+        return listBy(sc);
+    }
+
     @Override
     public List<VMInstanceVO> listByClusterId(long clusterId) {
         SearchCriteria<VMInstanceVO> sc = VMClusterSearch.create();
         sc.setJoinParameters("hostSearch", "clusterId", clusterId);
         return listBy(sc);
     }
-
     
     @Override
     public List<VMInstanceVO> listLHByClusterId(long clusterId) {
@@ -322,7 +328,7 @@ public class VMInstanceDaoImpl extends GenericDaoBase<VMInstanceVO, Long> implem
     }
     
     @Override
-    public List<VMInstanceVO> listByTypeAndState(State state, VirtualMachine.Type type) {
+    public List<VMInstanceVO> listByTypeAndState(VirtualMachine.Type type, State state) {
         SearchCriteria<VMInstanceVO> sc = AllFieldsSearch.create();
         sc.setParameters("type", type);
         sc.setParameters("state", state);
