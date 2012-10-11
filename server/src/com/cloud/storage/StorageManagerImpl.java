@@ -564,7 +564,19 @@ public class StorageManagerImpl implements StorageManager, Manager, ClusterManag
 
                 // Get the newly created VDI from the snapshot.
                 // This will return a null volumePath if it could not be created
-                Pair<String, String> volumeDetails = createVDIFromSnapshot(UserContext.current().getCallerUserId(), snapshot, pool);
+
+                Pair<String, String> volumeDetails = null;
+                try {
+                    volumeDetails = createVDIFromSnapshot(UserContext.current().getCallerUserId(), snapshot, pool);
+                } catch (CloudRuntimeException e) {
+                    try {
+                        stateTransitTo(volume, Volume.Event.OperationFailed);
+                        throw e;
+                    } catch (NoTransitionException ex) {
+                        s_logger.debug(ex.toString());
+                        return null;
+                    }
+                }
 
                 volumeUUID = volumeDetails.first();
                 details = volumeDetails.second();
