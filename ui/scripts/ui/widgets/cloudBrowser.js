@@ -363,17 +363,18 @@
         $hiddenPanels.addClass('mouseover-hidden');
         
         $browser.data('browser-panel-highlight-timer', setTimeout(function() {
+          $('#browser').addClass('panel-highlight');
           $('.overlay').remove();
           $targetPanel
             .data('panel-original-zindex', $targetPanel.zIndex())
             .zIndex(10000)
             .overlay();
+          $targetPanel.filter(':last').addClass('highlighted');
           $targetBreadcrumb.each(function() {
             $(this).data('breadcrumb-original-zindex', $(this).zIndex());
           });
           $targetBreadcrumb.zIndex(10001);
-          
-          $hiddenPanels.fadeOut('fast');
+          $hiddenPanels.hide();
         }, 1000));
       }
     }
@@ -388,10 +389,13 @@
         var $visibleBreadcrumbs = _breadcrumb.filter($visiblePanels);
 
         clearTimeout($browser.data('browser-panel-highlight-timer'));
+        $('#browser').removeClass('panel-highlight');
+        $('#browser .panel').removeClass('highlighted');
         $getHiddenPanels.removeClass('mouseover-hidden').show();
-        $visiblePanels.zIndex(
-          $visiblePanels.data('panel-original-zindex')
-        );
+        $visiblePanels
+          .zIndex(
+            $visiblePanels.data('panel-original-zindex')
+          );
         $visibleBreadcrumbs.each(function() {
           $(this).zIndex($(this).data('breadcrumb-original-zindex'));
         });

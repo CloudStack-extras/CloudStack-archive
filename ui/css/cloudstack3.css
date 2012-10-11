@@ -2426,6 +2426,13 @@ div.detail-group.actions td {
   overflow: hidden;
 }
 
+#browser.panel-highlight {
+  overflow: visible;
+}
+
+#browser.panel-highlight .panel {
+}
+
 #browser div.panel {
   height: 698px;
   background: #F7F7F7;
@@ -2453,6 +2460,29 @@ div.detail-group.actions td {
   left: -10px;
   position: absolute;
   background: url(../images/bg-panel-shadow.png) repeat-y 0px 0px;
+}
+
+#browser.panel-highlight {
+  overflow: visible;
+}
+
+#browser.panel-highlight .panel.highlighted {
+  /*+box-shadow:0px 10px 11px #5C5C5C;*/
+  -moz-box-shadow: 0px 10px 11px #5C5C5C;
+  -webkit-box-shadow: 0px 10px 11px #5C5C5C;
+  -o-box-shadow: 0px 10px 11px #5C5C5C;
+  box-shadow: 0px 10px 11px #5C5C5C;
+  border: 5px solid #FFFFFF;
+  /*+border-radius:6px;*/
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  -khtml-border-radius: 6px;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+#browser.panel-highlight .panel > .shadow {
+  display: none;
 }
 
 /*Toolbar*/
