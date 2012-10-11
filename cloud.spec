@@ -471,6 +471,7 @@ fi
 %{_javadir}/%{name}-server.jar
 %{_javadir}/%{name}-vmware-base.jar
 %{_javadir}/%{name}-ovm.jar
+%{_javadir}/%{name}-ucs.jar
 %config(noreplace) %{_sysconfdir}/%{name}/server/*
 
 %files agent-scripts
@@ -522,6 +523,7 @@ fi
 %{_javadir}/%{name}-jasypt-1.8.jar
 %{_javadir}/%{name}-commons-configuration-1.8.jar
 %{_javadir}/%{name}-commons-lang-2.6.jar
+%{_javadir}/%{name}-commons-io-2.4.jar
 
 
 %files core
