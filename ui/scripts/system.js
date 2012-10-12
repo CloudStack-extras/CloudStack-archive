@@ -7218,14 +7218,20 @@
 							//provisionXenServerCluster: {
 							updateResourceCount: {
                 label: 'Provision XenServer Cluster',
-                messages: {
-                  confirm: function(args) {
-                    return 'Provision XenServer Cluster is not available yet. This is just for demo.';
-                  },
+                messages: {                 
                   notification: function(args) {
                     return 'Provision XenServer Cluster';
                   }
-                },
+                },																
+								createForm: {
+									title: 'Provision XenServer Cluster',									
+									fields: {
+										name: {
+											label: 'cluster name',
+											validation: { required: true }
+										}  
+									}
+								},																
                 action: function(args) {
 								  args.response.success();
                 },
@@ -7239,14 +7245,20 @@
 							//provisionKvmCluster: {
 							changePassword: {
                 label: 'Provision KVM Cluster',
-                messages: {
-                  confirm: function(args) {
-                    return 'Provision KVM Cluster is not available yet. This is just for demo.';
-                  },
+                messages: {                 
                   notification: function(args) {
                     return 'Provision KVM Cluster';
                   }
                 },
+								createForm: {
+									title: 'Provision KVM Cluster',									
+									fields: {
+										name: {
+											label: 'cluster name',
+											validation: { required: true }
+										}  
+									}
+								},					
                 action: function(args) {
 								  args.response.success();
                 },
@@ -7260,14 +7272,20 @@
 							//provisionVMwareCluster: {
 							changeService: {
                 label: 'Provision VMware Cluster',
-                messages: {
-                  confirm: function(args) {
-                    return 'Provision VMware Cluster is not available yet. This is just for demo.';
-                  },
+                messages: {                 
                   notification: function(args) {
                     return 'Provision VMware Cluster';
                   }
                 },
+								createForm: {
+									title: 'Provision VMware Cluster',									
+									fields: {
+										name: {
+											label: 'cluster name',
+											validation: { required: true }
+										}  
+									}
+								},					
                 action: function(args) {
 								  args.response.success();
                 },
