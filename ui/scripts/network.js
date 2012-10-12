@@ -1726,6 +1726,10 @@
                     hiddenFields.push("issystem");
                     hiddenFields.push("purpose");
                   }
+									
+									if(!isAdmin()) {                   
+                    hiddenFields.push("vlanname");
+                  }									
                   return hiddenFields;
                 },
 
