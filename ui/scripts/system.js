@@ -7229,11 +7229,57 @@
 										name: {
 											label: 'cluster name',
 											validation: { required: true }
-										}  
+										},   
+										podId: {
+											label: 'label.pod',
+											validation: { required: true },											
+											select: function(args) {											  
+												$.ajax({
+													url: createURL("listPods&zoneid=" + args.context.zones[0].id),
+													dataType: "json",
+													async: true,
+													success: function(json) {													  
+														var pods = json.listpodsresponse.pod;
+														var items = [];
+														if(pods != null && pods.length > 0) {
+														  for(var i = 0; i < pods.length; i++) {
+															  items.push({id: pods[i].id, description: pods[i].name});
+															}
+														}														
+														args.response.success({data: items});
+													}
+												});
+											}
+										}										
 									}
 								},																
-                action: function(args) {
-								  args.response.success();
+                action: function(args) {								  
+									var array1 = [];								
+									array1.push("&zoneId=" + args.context.zones[0].id);
+									array1.push("&hypervisor=XenServer"); 
+
+									var clusterType = "CloudManaged";
+									array1.push("&clustertype=" + clusterType);
+
+									array1.push("&podId=" + args.data.podId);
+
+									var clusterName = args.data.name;                
+									array1.push("&clustername=" + todb(clusterName));
+																						
+									$.ajax({
+										url: createURL('addCluster' + array1.join("")),
+										dataType: "json",
+										async: true,
+										success: function(json) {										 
+											var item = json.addclusterresponse.cluster[0];											
+											args.response.success({
+												data: item
+											});
+										},
+										error: function(XMLHttpResponse) {                    
+											args.response.error(parseXMLHttpResponse(XMLHttpResponse));
+										}
+									});									
                 },
                 notification: {
                   poll: function(args) {
@@ -7256,11 +7302,57 @@
 										name: {
 											label: 'cluster name',
 											validation: { required: true }
-										}  
+										},   
+										podId: {
+											label: 'label.pod',
+											validation: { required: true },											
+											select: function(args) {											  
+												$.ajax({
+													url: createURL("listPods&zoneid=" + args.context.zones[0].id),
+													dataType: "json",
+													async: true,
+													success: function(json) {													  
+														var pods = json.listpodsresponse.pod;
+														var items = [];
+														if(pods != null && pods.length > 0) {
+														  for(var i = 0; i < pods.length; i++) {
+															  items.push({id: pods[i].id, description: pods[i].name});
+															}
+														}														
+														args.response.success({data: items});
+													}
+												});
+											}
+										}						  
 									}
 								},					
-                action: function(args) {
-								  args.response.success();
+                action: function(args) {								  
+									var array1 = [];								
+									array1.push("&zoneId=" + args.context.zones[0].id);
+									array1.push("&hypervisor=KVM"); 
+
+									var clusterType = "CloudManaged";
+									array1.push("&clustertype=" + clusterType);
+
+									array1.push("&podId=" + args.data.podId);
+
+									var clusterName = args.data.name;                
+									array1.push("&clustername=" + todb(clusterName));
+																						
+									$.ajax({
+										url: createURL('addCluster' + array1.join("")),
+										dataType: "json",
+										async: true,
+										success: function(json) {										 
+											var item = json.addclusterresponse.cluster[0];											
+											args.response.success({
+												data: item
+											});
+										},
+										error: function(XMLHttpResponse) {                    
+											args.response.error(parseXMLHttpResponse(XMLHttpResponse));
+										}
+									});									
                 },
                 notification: {
                   poll: function(args) {
@@ -7283,11 +7375,57 @@
 										name: {
 											label: 'cluster name',
 											validation: { required: true }
-										}  
+										},   
+										podId: {
+											label: 'label.pod',
+											validation: { required: true },											
+											select: function(args) {											  
+												$.ajax({
+													url: createURL("listPods&zoneid=" + args.context.zones[0].id),
+													dataType: "json",
+													async: true,
+													success: function(json) {													  
+														var pods = json.listpodsresponse.pod;
+														var items = [];
+														if(pods != null && pods.length > 0) {
+														  for(var i = 0; i < pods.length; i++) {
+															  items.push({id: pods[i].id, description: pods[i].name});
+															}
+														}														
+														args.response.success({data: items});
+													}
+												});
+											}
+										}						  
 									}
 								},					
-                action: function(args) {
-								  args.response.success();
+                action: function(args) {								  
+									var array1 = [];								
+									array1.push("&zoneId=" + args.context.zones[0].id);
+									array1.push("&hypervisor=VMware"); 
+
+									var clusterType = "ExternalManaged"; //clusterType of VMware is "ExternalManaged" instead of "CloudManaged"
+									array1.push("&clustertype=" + clusterType);
+
+									array1.push("&podId=" + args.data.podId);
+
+									var clusterName = args.data.name;                
+									array1.push("&clustername=" + todb(clusterName));
+																						
+									$.ajax({
+										url: createURL('addCluster' + array1.join("")),
+										dataType: "json",
+										async: true,
+										success: function(json) {										 
+											var item = json.addclusterresponse.cluster[0];											
+											args.response.success({
+												data: item
+											});
+										},
+										error: function(XMLHttpResponse) {                    
+											args.response.error(parseXMLHttpResponse(XMLHttpResponse));
+										}
+									});									
                 },
                 notification: {
                   poll: function(args) {
