@@ -28,6 +28,7 @@ import com.cloud.exception.PermissionDeniedException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceInUseException;
 import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.utils.Pair;
 
 public interface StorageService{
     /**
@@ -110,7 +111,7 @@ public interface StorageService{
 
     Volume migrateVolume(Long volumeId, Long storagePoolId) throws ConcurrentOperationException;
 
-    List<? extends Volume> searchForVolumes(ListVolumesCmd cmd);
+    Pair<List<? extends Volume>, Integer> searchForVolumes(ListVolumesCmd cmd);
 
     /**
      * Uploads the volume to secondary storage

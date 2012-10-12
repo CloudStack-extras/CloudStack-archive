@@ -320,7 +320,7 @@ public class TaggedResourceManagerImpl implements TaggedResourceService, Manager
     }
 
     @Override
-    public List<? extends ResourceTag> listTags(ListTagsCmd cmd) {
+    public Pair<List<? extends ResourceTag>, Integer> listTags(ListTagsCmd cmd) {
         Account caller = UserContext.current().getCaller();
         List<Long> permittedAccounts = new ArrayList<Long>();
         String key = cmd.getKey();
@@ -379,7 +379,8 @@ public class TaggedResourceManagerImpl implements TaggedResourceService, Manager
             sc.setParameters("customer", customerName);
         }
 
-        return _resourceTagDao.search(sc, searchFilter);
+        Pair<List<ResourceTagVO>, Integer> result = _resourceTagDao.searchAndCount(sc, searchFilter);
+        return new Pair<List<? extends ResourceTag>, Integer> (result.first(), result.second());
     }
 
     @Override

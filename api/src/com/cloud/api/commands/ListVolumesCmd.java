@@ -19,16 +19,17 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiConstants;
+import com.cloud.api.ApiConstants.VolumeDetails;
 import com.cloud.api.BaseListTaggedResourcesCmd;
 import com.cloud.api.IdentityMapper;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.response.ListResponse;
 import com.cloud.api.response.VolumeResponse;
-import com.cloud.api.ApiConstants.VolumeDetails;
 import com.cloud.async.AsyncJob;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.storage.Volume;
+import com.cloud.utils.Pair;
 
 @Implementation(description="Lists all volumes.", responseObject=VolumeResponse.class)
 public class ListVolumesCmd extends BaseListTaggedResourcesCmd {
@@ -139,17 +140,17 @@ public class ListVolumesCmd extends BaseListTaggedResourcesCmd {
     
     @Override
     public void execute(){
-        List<? extends Volume> volumes = _storageService.searchForVolumes(this);
+        Pair<List<? extends Volume>, Integer> volumes = _storageService.searchForVolumes(this);
 
         ListResponse<VolumeResponse> response = new ListResponse<VolumeResponse>();
         List<VolumeResponse> volResponses = new ArrayList<VolumeResponse>();
-        for (Volume volume : volumes) {
+        for (Volume volume : volumes.first()) {
             VolumeResponse volResponse = _responseGenerator.createVolumeResponse(volume, getDetails());
             volResponse.setObjectName("volume");
             volResponses.add(volResponse);
         }
 
-        response.setResponses(volResponses);
+        response.setResponses(volResponses, volumes.second());
         response.setResponseName(getCommandName());
         this.setResponseObject(response);
     }

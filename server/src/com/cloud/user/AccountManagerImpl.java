@@ -1958,7 +1958,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
     }
 
     @Override
-    public List<AccountVO> searchForAccounts(ListAccountsCmd cmd) {
+    public Pair<List<? extends Account>, Integer> searchForAccounts(ListAccountsCmd cmd) {
         Account caller = UserContext.current().getCaller();
         Long domainId = cmd.getDomainId();
         Long accountId = cmd.getId();
@@ -2079,11 +2079,12 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             }
         }
 
-        return _accountDao.search(sc, searchFilter);
+        Pair<List<AccountVO>, Integer> result = _accountDao.searchAndCount(sc, searchFilter);
+        return new Pair<List<? extends Account>, Integer>(result.first(), result.second());
     }
 
     @Override
-    public List<UserAccountVO> searchForUsers(ListUsersCmd cmd) throws PermissionDeniedException {
+    public Pair<List<? extends UserAccount>, Integer> searchForUsers(ListUsersCmd cmd) throws PermissionDeniedException {
         Account caller = UserContext.current().getCaller();
 
         Long domainId = cmd.getDomainId();
@@ -2113,7 +2114,7 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
         if (id != null && id == 1) {
             // system user should NOT be searchable
             List<UserAccountVO> emptyList = new ArrayList<UserAccountVO>();
-            return emptyList;
+            return new Pair<List<? extends UserAccount>, Integer>(emptyList, 0);
         } else if (id != null) {
             sb.and("id", sb.entity().getId(), SearchCriteria.Op.EQ);
         } else {
@@ -2176,7 +2177,8 @@ public class AccountManagerImpl implements AccountManager, AccountService, Manag
             sc.setParameters("state", state);
         }
 
-        return _userAccountDao.search(sc, searchFilter);
+        Pair<List<UserAccountVO>, Integer> result = _userAccountDao.searchAndCount(sc, searchFilter);
+        return new Pair<List<? extends UserAccount>, Integer>(result.first(), result.second());
     }
 
     @Override

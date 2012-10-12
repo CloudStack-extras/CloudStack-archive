@@ -94,6 +94,7 @@ import com.cloud.api.commands.UpdateVMGroupCmd;
 import com.cloud.api.commands.UpgradeSystemVMCmd;
 import com.cloud.api.commands.UploadCustomCertificateCmd;
 import com.cloud.api.response.ExtractResponse;
+import com.cloud.async.AsyncJob;
 import com.cloud.async.AsyncJobExecutor;
 import com.cloud.async.AsyncJobManager;
 import com.cloud.async.AsyncJobResult;
@@ -154,11 +155,13 @@ import com.cloud.hypervisor.dao.HypervisorCapabilitiesDao;
 import com.cloud.info.ConsoleProxyInfo;
 import com.cloud.keystore.KeystoreManager;
 import com.cloud.network.IPAddressVO;
+import com.cloud.network.IpAddress;
 import com.cloud.network.LoadBalancerVO;
 import com.cloud.network.NetworkVO;
 import com.cloud.network.dao.IPAddressDao;
 import com.cloud.network.dao.LoadBalancerDao;
 import com.cloud.network.dao.NetworkDao;
+import com.cloud.network.router.VirtualRouter;
 import com.cloud.org.Cluster;
 import com.cloud.org.Grouping.AllocationState;
 import com.cloud.projects.Project;
@@ -1596,7 +1599,7 @@ public class ManagementServerImpl implements ManagementServer {
     }
 
     @Override
-    public List<DomainRouterVO> searchForRouters(ListRoutersCmd cmd) {
+    public Pair<List<? extends VirtualRouter>, Integer> searchForRouters(ListRoutersCmd cmd) {
         Long id = cmd.getId();
         String name = cmd.getRouterName();
         String state = cmd.getState();
@@ -1691,11 +1694,12 @@ public class ManagementServerImpl implements ManagementServer {
             sc.setParameters("vpcId", vpcId);
         }
 
-        return _routerDao.search(sc, searchFilter);
+        Pair<List<DomainRouterVO>, Integer> result = _routerDao.searchAndCount(sc, searchFilter);
+        return new Pair<List<? extends VirtualRouter>, Integer>(result.first(), result.second());
     }
 
     @Override
-    public List<IPAddressVO> searchForIPAddresses(ListPublicIpAddressesCmd cmd) {
+    public Pair<List<? extends IpAddress>, Integer> searchForIPAddresses(ListPublicIpAddressesCmd cmd) {
         Object keyword = cmd.getKeyword();
         Long physicalNetworkId = cmd.getPhysicalNetworkId();
         Long associatedNetworkId = cmd.getAssociatedNetworkId();
@@ -1839,7 +1843,8 @@ public class ManagementServerImpl implements ManagementServer {
             sc.setParameters("associatedNetworkIdEq", associatedNetworkId);
         }
 
-        return _publicIpAddressDao.search(sc, searchFilter);
+        Pair<List<IPAddressVO>, Integer> result = _publicIpAddressDao.searchAndCount(sc, searchFilter);
+        return new Pair<List<? extends IpAddress>, Integer>(result.first(), result.second());
     }
 
     @Override
@@ -2055,7 +2060,7 @@ public class ManagementServerImpl implements ManagementServer {
     }
 
     @Override
-    public List<? extends Alert> searchForAlerts(ListAlertsCmd cmd) {
+    public Pair<List<? extends Alert>, Integer> searchForAlerts(ListAlertsCmd cmd) {
         Filter searchFilter = new Filter(AlertVO.class, "lastSent", false, cmd.getStartIndex(), cmd.getPageSizeVal());
         SearchCriteria<AlertVO> sc = _alertDao.createSearchCriteria();
 
@@ -2082,7 +2087,8 @@ public class ManagementServerImpl implements ManagementServer {
             sc.addAnd("type", SearchCriteria.Op.EQ, type);
         }
 
-        return _alertDao.search(sc, searchFilter);
+        Pair<List<AlertVO>, Integer> result =_alertDao.searchAndCount(sc, searchFilter);
+        return new Pair<List<? extends Alert>, Integer>(result.first(), result.second());
     }
 
     @Override
@@ -2518,7 +2524,7 @@ public class ManagementServerImpl implements ManagementServer {
     }
 
     @Override
-    public List<AsyncJobVO> searchForAsyncJobs(ListAsyncJobsCmd cmd) {
+    public Pair<List<? extends AsyncJob>, Integer> searchForAsyncJobs(ListAsyncJobsCmd cmd) {
 
         Account caller = UserContext.current().getCaller();
 
@@ -2588,7 +2594,8 @@ public class ManagementServerImpl implements ManagementServer {
             sc.addAnd("created", SearchCriteria.Op.GTEQ, startDate);
         }
 
-        return _jobDao.search(sc, searchFilter);
+        Pair<List<AsyncJobVO>, Integer> result = _jobDao.searchAndCount(sc, searchFilter);
+        return new Pair<List<? extends AsyncJob>, Integer> (result.first(), result.second());
     }
 
     @ActionEvent(eventType = EventTypes.EVENT_SSVM_START, eventDescription = "starting secondary storage Vm", async = true)

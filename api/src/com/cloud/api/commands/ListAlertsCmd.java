@@ -25,6 +25,7 @@ import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
 import com.cloud.api.response.AlertResponse;
 import com.cloud.api.response.ListResponse;
+import com.cloud.utils.Pair;
 
 @Implementation(description = "Lists all alerts.", responseObject = AlertResponse.class)
 public class ListAlertsCmd extends BaseListCmd {
@@ -67,10 +68,10 @@ public class ListAlertsCmd extends BaseListCmd {
 
     @Override
     public void execute() {
-        List<? extends Alert> result = _mgr.searchForAlerts(this);
+        Pair<List<? extends Alert>, Integer> result = _mgr.searchForAlerts(this);
         ListResponse<AlertResponse> response = new ListResponse<AlertResponse>();
         List<AlertResponse> alertResponseList = new ArrayList<AlertResponse>();
-        for (Alert alert : result) {
+        for (Alert alert : result.first()) {
             AlertResponse alertResponse = new AlertResponse();
             alertResponse.setId(alert.getId());
             alertResponse.setAlertType(alert.getType());
@@ -81,7 +82,7 @@ public class ListAlertsCmd extends BaseListCmd {
             alertResponseList.add(alertResponse);
         }
 
-        response.setResponses(alertResponseList);
+        response.setResponses(alertResponseList, result.second());
         response.setResponseName(getCommandName());
         this.setResponseObject(response);
     }

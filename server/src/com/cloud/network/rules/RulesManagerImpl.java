@@ -58,6 +58,7 @@ import com.cloud.user.DomainManager;
 import com.cloud.user.UserContext;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.IdentityProxy;
+import com.cloud.utils.Pair;
 import com.cloud.utils.Ternary;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.component.Manager;
@@ -729,7 +730,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
     }
 
     @Override
-    public List<? extends PortForwardingRule> listPortForwardingRules(ListPortForwardingRulesCmd cmd) {
+    public Pair<List<? extends PortForwardingRule>, Integer> listPortForwardingRules(ListPortForwardingRulesCmd cmd) {
         Long ipId = cmd.getIpAddressId();
         Long id = cmd.getId();
         Map<String, String> tags = cmd.getTags();
@@ -799,7 +800,8 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
 
         sc.setParameters("purpose", Purpose.PortForwarding);
 
-        return _portForwardingDao.search(sc, filter);
+        Pair<List<PortForwardingRuleVO>, Integer> result = _portForwardingDao.searchAndCount(sc, filter);
+        return new Pair<List<? extends PortForwardingRule>, Integer>(result.first(), result.second());
     }
 
     @Override
@@ -949,7 +951,7 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
     }
 
     @Override
-    public List<? extends FirewallRule> searchStaticNatRules(Long ipId, Long id, Long vmId, Long start, Long size, String accountName, Long domainId, Long projectId, boolean isRecursive, boolean listAll) {
+    public Pair<List<? extends FirewallRule>, Integer> searchStaticNatRules(Long ipId, Long id, Long vmId, Long start, Long size, String accountName, Long domainId, Long projectId, boolean isRecursive, boolean listAll) {
         Account caller = UserContext.current().getCaller();
         List<Long> permittedAccounts = new ArrayList<Long>();
 
@@ -999,7 +1001,8 @@ public class RulesManagerImpl implements RulesManager, RulesService, Manager {
             sc.setJoinParameters("ipSearch", "associatedWithVmId", vmId);
         }
 
-        return _firewallDao.search(sc, filter);
+        Pair<List<FirewallRuleVO>, Integer> result = _firewallDao.searchAndCount(sc, filter);
+        return new Pair<List<? extends FirewallRule>, Integer>(result.first(), result.second());
     }
 
     @Override

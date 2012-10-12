@@ -18,6 +18,8 @@ import java.util.Map;
 
 import javax.naming.ConfigurationException;
 
+import com.cloud.utils.Pair;
+
 /**
  * a uniform method for persisting and finding db entities.
  **/
@@ -256,4 +258,11 @@ public interface GenericDao<T, ID extends Serializable> {
      * @return
      */
     Class<T> getEntityBeanType();
+
+    /**
+     * @param sc
+     * @param filter
+     * @return
+     */
+    Pair<List<T>, Integer> searchAndCount(SearchCriteria<T> sc, Filter filter);
 }

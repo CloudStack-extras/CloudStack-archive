@@ -71,7 +71,7 @@ public class ApiResponseSerializer {
                 List<? extends ResponseObject> responses = ((ListResponse) result).getResponses();
                 if ((responses != null) && !responses.isEmpty()) {
 
-                    Integer count = ((ListResponse) result).getCount();
+                    Integer count = ((ListResponse) result).getResponses().size();
                     String jsonStr = gson.toJson(responses.get(0));                    
                     jsonStr = unescape(jsonStr);
 

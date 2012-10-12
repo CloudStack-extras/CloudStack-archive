@@ -25,6 +25,7 @@ import com.cloud.api.Parameter;
 import com.cloud.api.response.ListResponse;
 import com.cloud.api.response.PrivateGatewayResponse;
 import com.cloud.network.vpc.PrivateGateway;
+import com.cloud.utils.Pair;
 
 /**
  * @author Alena Prokharchyk
@@ -90,14 +91,14 @@ public class ListPrivateGatewaysCmd extends BaseListProjectAndAccountResourcesCm
     
     @Override
     public void execute() {
-        List<PrivateGateway> gateways = _vpcService.listPrivateGateway(this);
+        Pair<List<PrivateGateway>, Integer> gateways = _vpcService.listPrivateGateway(this);
         ListResponse<PrivateGatewayResponse> response = new ListResponse<PrivateGatewayResponse>();
         List<PrivateGatewayResponse> projectResponses = new ArrayList<PrivateGatewayResponse>();
-        for (PrivateGateway gateway : gateways) {
+        for (PrivateGateway gateway : gateways.first()) {
             PrivateGatewayResponse gatewayResponse = _responseGenerator.createPrivateGatewayResponse(gateway);
             projectResponses.add(gatewayResponse);
         }
-        response.setResponses(projectResponses);
+        response.setResponses(projectResponses, gateways.second());
         response.setResponseName(getCommandName());
         
         this.setResponseObject(response);

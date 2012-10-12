@@ -48,6 +48,7 @@ import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.UserContext;
 import com.cloud.utils.IdentityProxy;
+import com.cloud.utils.Pair;
 import com.cloud.utils.Ternary;
 import com.cloud.utils.component.Inject;
 import com.cloud.utils.component.Manager;
@@ -353,7 +354,7 @@ public class NetworkACLManagerImpl implements Manager,NetworkACLManager{
 
 
     @Override
-    public List<? extends FirewallRule> listNetworkACLs(ListNetworkACLsCmd cmd) {
+    public Pair<List<? extends FirewallRule>,Integer> listNetworkACLs(ListNetworkACLsCmd cmd) {
         Long networkId = cmd.getNetworkId();
         Long id = cmd.getId();
         String trafficType = cmd.getTrafficType();
@@ -418,7 +419,8 @@ public class NetworkACLManagerImpl implements Manager,NetworkACLManager{
 
         sc.setParameters("purpose", Purpose.NetworkACL);
 
-        return _firewallDao.search(sc, filter);
+        Pair<List<FirewallRuleVO>, Integer> result = _firewallDao.searchAndCount(sc, filter);
+        return new Pair<List<? extends FirewallRule>, Integer>(result.first(), result.second());
     }
 
 
