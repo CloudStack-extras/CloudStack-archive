@@ -71,14 +71,14 @@ public class ApiResponseSerializer {
                 List<? extends ResponseObject> responses = ((ListResponse) result).getResponses();
                 if ((responses != null) && !responses.isEmpty()) {
 
-                    Integer count = ((ListResponse) result).getResponses().size();
+                    Integer count = ((ListResponse) result).getCount();
                     String jsonStr = gson.toJson(responses.get(0));                    
                     jsonStr = unescape(jsonStr);
 
                     if (count != null && count != 0) {
-                        sb.append("{ \"" + ApiConstants.COUNT + "\":" + ((ListResponse) result).getCount() + " ,\"" + responses.get(0).getObjectName() + "\" : [  " + jsonStr);
+                        sb.append("{ \"" + ApiConstants.COUNT + "\":" + count + " ,\"" + responses.get(0).getObjectName() + "\" : [  " + jsonStr);
                     }
-                    for (int i = 1; i < count; i++) {
+                    for (int i = 1; i < ((ListResponse) result).getResponses().size(); i++) {
                         jsonStr = gson.toJson(responses.get(i));
                         jsonStr = unescape(jsonStr);
                         sb.append(", " + jsonStr);
