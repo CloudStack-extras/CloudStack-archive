@@ -2478,11 +2478,20 @@ div.detail-group.actions td {
   -webkit-border-radius: 6px;
   -khtml-border-radius: 6px;
   border-radius: 6px;
-  margin-top: 10px;
+  margin-top: 21px;
 }
 
 #browser.panel-highlight .panel > .shadow {
   display: none;
+}
+
+#browser .highlight-arrow {
+  width: 24px;
+  height: 19px;
+  background: url(../images/sprites.png) -590px -1295px;
+  position: absolute;
+  top: -22px;
+  left: 80px;
 }
 
 /*Toolbar*/

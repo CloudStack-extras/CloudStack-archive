@@ -369,7 +369,9 @@
             .data('panel-original-zindex', $targetPanel.zIndex())
             .zIndex(10000)
             .overlay();
-          $targetPanel.filter(':last').addClass('highlighted');
+          $targetPanel.filter(':last').addClass('highlighted').prepend(
+            $('<div>').addClass('highlight-arrow')
+          );
           $targetBreadcrumb.each(function() {
             $(this).data('breadcrumb-original-zindex', $(this).zIndex());
           });
@@ -400,6 +402,7 @@
           $(this).zIndex($(this).data('breadcrumb-original-zindex'));
         });
         $('.overlay').remove();
+        $('#browser .panel > .highlight-arrow').remove();
       }
     }
   ));
