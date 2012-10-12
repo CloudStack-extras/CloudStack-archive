@@ -7400,32 +7400,7 @@
 									}
 								},					
                 action: function(args) {								  
-									var array1 = [];								
-									array1.push("&zoneId=" + args.context.zones[0].id);
-									array1.push("&hypervisor=VMware"); 
-
-									var clusterType = "ExternalManaged"; //clusterType of VMware is "ExternalManaged" instead of "CloudManaged"
-									array1.push("&clustertype=" + clusterType);
-
-									array1.push("&podId=" + args.data.podId);
-
-									var clusterName = args.data.name;                
-									array1.push("&clustername=" + todb(clusterName));
-																						
-									$.ajax({
-										url: createURL('addCluster' + array1.join("")),
-										dataType: "json",
-										async: true,
-										success: function(json) {										 
-											var item = json.addclusterresponse.cluster[0];											
-											args.response.success({
-												data: item
-											});
-										},
-										error: function(XMLHttpResponse) {                    
-											args.response.error(parseXMLHttpResponse(XMLHttpResponse));
-										}
-									});									
+									args.response.success();					
                 },
                 notification: {
                   poll: function(args) {
