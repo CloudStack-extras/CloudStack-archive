@@ -6830,7 +6830,7 @@
                   },
 																		
 									ucsProfile: {
-									  label: 'profile',
+									  label: 'Profile template',
 										dependsOn: 'zoneid',
 										select: function(args) {										  
 										  $.ajax({
@@ -7227,7 +7227,7 @@
 									title: 'Provision XenServer Cluster',									
 									fields: {
 										name: {
-											label: 'cluster name',
+											label: 'Cluster name',
 											validation: { required: true }
 										},   
 										podId: {
@@ -7300,7 +7300,7 @@
 									title: 'Provision KVM Cluster',									
 									fields: {
 										name: {
-											label: 'cluster name',
+											label: 'Cluster name',
 											validation: { required: true }
 										},   
 										podId: {
@@ -7373,7 +7373,7 @@
 									title: 'Provision VMware Cluster',									
 									fields: {
 										name: {
-											label: 'cluster name',
+											label: 'Cluster name',
 											validation: { required: true }
 										},   
 										podId: {
