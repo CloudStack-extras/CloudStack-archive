@@ -32,11 +32,13 @@ import com.cloud.agent.api.routing.IpAssocCommand;
 import com.cloud.agent.api.routing.NetworkElementCommand;
 import com.cloud.agent.api.routing.RemoteAccessVpnCfgCommand;
 import com.cloud.agent.api.routing.SetFirewallRulesCommand;
+import com.cloud.agent.api.routing.SetNetworkACLCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesCommand;
 import com.cloud.agent.api.routing.SetStaticNatRulesCommand;
 import com.cloud.agent.api.routing.VpnUsersCfgCommand;
 import com.cloud.agent.api.to.FirewallRuleTO;
 import com.cloud.agent.api.to.IpAddressTO;
+import com.cloud.agent.api.to.NetworkACLTO;
 import com.cloud.agent.api.to.PortForwardingRuleTO;
 import com.cloud.agent.api.to.StaticNatRuleTO;
 import com.cloud.api.ApiConstants;
@@ -455,6 +457,45 @@ public abstract class ExternalFirewallDeviceManagerImpl extends AdapterBase impl
         return true;
     }
 
+    public boolean applyNetworkACLRules(Network network, List<? extends FirewallRule> rules) throws ResourceUnavailableException {
+        long zoneId = network.getDataCenterId();
+        DataCenterVO zone = _dcDao.findById(zoneId);
+        ExternalFirewallDeviceVO fwDeviceVO = getExternalFirewallForNetwork(network);
+        HostVO externalFirewall = _hostDao.findById(fwDeviceVO.getHostId());
+
+        assert(externalFirewall != null);
+
+        if (network.getState() == Network.State.Allocated) {
+            s_logger.debug("External firewall was asked to apply firewall rules for network with ID " + network.getId() + "; this network is not implemented. Skipping backend commands.");
+            return true;
+        }
+        String guestVlanTag = network.getBroadcastUri().getHost();
+        String guestCidr = network.getCidr();
+        List<NetworkACLTO> rulesTO = null;
+
+        if (rules != null) {
+            rulesTO = new ArrayList<NetworkACLTO>();
+            for (FirewallRule rule : rules) {
+                NetworkACLTO ruleTO = new NetworkACLTO(rule, guestVlanTag, guestCidr, rule.getTrafficType());
+                rulesTO.add(ruleTO);
+            }
+        }
+        sendNetworkACLRules(rulesTO, zone, externalFirewall.getId());
+        return true;
+    }
+
+    protected void sendNetworkACLRules(List<NetworkACLTO> networkAlcs, DataCenter zone, long externalFirewallId) throws ResourceUnavailableException {
+        if (!networkAlcs.isEmpty()) {
+            SetNetworkACLCommand cmd = new SetNetworkACLCommand(networkAlcs);
+            Answer answer = _agentMgr.easySend(externalFirewallId, cmd);
+            if (answer == null || !answer.getResult()) {
+                String details = (answer != null) ? answer.getDetails() : "details unavailable";
+                String msg = "External firewall was unable to apply NetworkACL rules to the SRX appliance in zone " + zone.getName() + " due to: " + details + ".";
+                s_logger.error(msg);
+                throw new ResourceUnavailableException(msg, DataCenter.class, zone.getId());
+            }
+        }
+    }
     @Override
     public boolean applyFirewallRules(Network network, List<? extends FirewallRule> rules) throws ResourceUnavailableException {
         // Find the external firewall in this zone

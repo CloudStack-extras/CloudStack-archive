@@ -5,7 +5,7 @@
 <application>           
 <name>%name%</name>     
 <protocol>%protocol%</protocol>    
-<destination-port>%dest-port%</destination-port>        
+%dest-port-icmp%        
 </application>   
 </applications>
 </configuration>

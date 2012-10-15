@@ -20,7 +20,7 @@ public class NetworkACLTO {
     private Integer icmpType;
     private Integer icmpCode;
     private FirewallRule.TrafficType trafficType;
-    
+    String  guestCidr;
 
     protected NetworkACLTO() {
     }
@@ -60,6 +60,13 @@ public class NetworkACLTO {
                 rule.getSourceCidrList() ,rule.getIcmpType(), rule.getIcmpCode(),trafficType);
     }
     
+    public NetworkACLTO(FirewallRule rule, String vlanTag, String guestCidr, FirewallRule.TrafficType  trafficType ) {
+        this(rule.getId(), vlanTag, rule.getProtocol(), rule.getSourcePortStart(), rule.getSourcePortEnd(), 
+                rule.getState() == FirewallRule.State.Revoke, rule.getState() == FirewallRule.State.Active,
+                rule.getSourceCidrList() ,rule.getIcmpType(), rule.getIcmpCode(),trafficType);
+        this.guestCidr = guestCidr;
+    }
+    
     public long getId() {
         return id;
     }
@@ -70,6 +77,9 @@ public class NetworkACLTO {
 
     public String getProtocol() {
         return protocol;
+    }
+    public String getGuestCidr() {
+        return guestCidr;
     }
 
     public int[] getSrcPortRange() {

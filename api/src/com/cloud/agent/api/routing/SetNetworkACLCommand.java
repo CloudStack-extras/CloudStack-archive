@@ -33,7 +33,11 @@ public class SetNetworkACLCommand extends NetworkElementCommand{
         this.rules = rules.toArray(new NetworkACLTO[rules.size()]); 
         this.nic = nic;
     }
+    public SetNetworkACLCommand(List<NetworkACLTO> rules) {
+        this.rules = rules.toArray(new NetworkACLTO[rules.size()]); 
+    }
     
+
     public NetworkACLTO[] getRules() {
         return rules;
     }

@@ -52,12 +52,14 @@ import com.cloud.agent.api.routing.IpAssocCommand;
 import com.cloud.agent.api.routing.NetworkElementCommand;
 import com.cloud.agent.api.routing.RemoteAccessVpnCfgCommand;
 import com.cloud.agent.api.routing.SetFirewallRulesCommand;
+import com.cloud.agent.api.routing.SetNetworkACLCommand;
 import com.cloud.agent.api.routing.SetPortForwardingRulesCommand;
 import com.cloud.agent.api.routing.SetStaticNatRulesCommand;
 import com.cloud.agent.api.routing.VpnUsersCfgCommand;
 import com.cloud.agent.api.routing.VpnUsersCfgCommand.UsernamePassword;
 import com.cloud.agent.api.to.FirewallRuleTO;
 import com.cloud.agent.api.to.IpAddressTO;
+import com.cloud.agent.api.to.NetworkACLTO;
 import com.cloud.agent.api.to.PortForwardingRuleTO;
 import com.cloud.agent.api.to.StaticNatRuleTO;
 import com.cloud.host.Host;
@@ -233,7 +235,7 @@ public class JuniperSrxResource implements ServerResource {
     }
 
     private enum Protocol {
-        tcp, udp, any;
+        tcp, udp, icmp, any;
     }
 
     private enum RuleMatchCondition {
@@ -250,7 +252,8 @@ public class JuniperSrxResource implements ServerResource {
     private enum SecurityPolicyType {
         STATIC_NAT("staticnat"),
         DESTINATION_NAT("destnat"),
-        VPN("vpn");
+        VPN("vpn"),
+        SECURITYPOLICY_EGRESS("egress");
 
         private String identifier;
 
@@ -276,6 +279,8 @@ public class JuniperSrxResource implements ServerResource {
             return execute((SetPortForwardingRulesCommand) cmd);
         } else if (cmd instanceof SetFirewallRulesCommand) {
             return execute((SetFirewallRulesCommand) cmd);
+        } else if (cmd instanceof SetNetworkACLCommand) {
+            return execute((SetNetworkACLCommand) cmd);
         } else if (cmd instanceof ExternalNetworkResourceUsageCommand) {
             return execute((ExternalNetworkResourceUsageCommand) cmd);
         } else if (cmd instanceof RemoteAccessVpnCfgCommand) {
@@ -632,10 +637,12 @@ public class JuniperSrxResource implements ServerResource {
             // Remove source, static, and destination NAT rules
             // Remove VPN 
             shutdownGuestNetwork(type, ip.getAccountId(), publicVlanTag, sourceNatIpAddress, guestVlanTag, guestVlanGateway, guestVlanSubnet, cidrSize);
+            delDefaultSecurityPolicy(_privateZone, _publicZone, Long.toString(guestVlanTag), cidr);
             
             if (ip.isAdd()) {                                       
                 // Implement the guest network for this VLAN
                 implementGuestNetwork(type, publicVlanTag, sourceNatIpAddress, guestVlanTag, guestVlanGateway, guestVlanSubnet, cidrSize);
+                addDefaultSecurityPolicy(_privateZone, _publicZone, Long.toString(guestVlanTag), cidr);
             } 
 
             commitConfiguration();
@@ -708,6 +715,54 @@ public class JuniperSrxResource implements ServerResource {
     
     
     /* security policies */
+    private synchronized Answer execute(SetNetworkACLCommand cmd) {
+        refreshSrxConnection();
+        return execute(cmd, _numRetries);
+    }
+
+    private Answer execute(SetNetworkACLCommand cmd, int numRetries) {
+        NetworkACLTO[] allRules = cmd.getRules();
+        Map<String, ArrayList<NetworkACLTO>> activeRules = getActiveNetworkAcls(allRules);
+        FirewallRule.TrafficType trafficType = allRules[0].getTrafficType();
+        String guestCidr = allRules[0].getGuestCidr();
+        String guestVlan = allRules[0].getSrcVlanTag();
+
+        try {
+            openConfiguration();
+            Set<String> networks = activeRules.keySet();
+            List<String> cidrs = new ArrayList();
+            removeEgressSecurityPolicyAndApplications(SecurityPolicyType.SECURITYPOLICY_EGRESS, guestVlan, cidrs, guestCidr);
+
+            for (String network : networks) {
+                List<NetworkACLTO> activeRulesForGuestNw = activeRules.get(network);
+
+                removeEgressSecurityPolicyAndApplications(SecurityPolicyType.SECURITYPOLICY_EGRESS, network, extractCidrs(activeRulesForGuestNw), guestCidr);
+                if (activeRulesForGuestNw.size() > 0) {
+                    addEgressSecurityPolicyAndApplications(SecurityPolicyType.SECURITYPOLICY_EGRESS, network, extractApplicationsForACL(activeRulesForGuestNw), extractCidrs(activeRulesForGuestNw), guestCidr);
+                } else {
+                 // add default policy
+                    addDefaultSecurityPolicy(_privateZone, _publicZone, guestVlan, guestCidr);
+                    s_logger.debug("Added the default Egress rule for the guest network " + guestVlan);
+                }
+            }
+
+            commitConfiguration();
+            return new Answer(cmd);
+
+        } catch (ExecutionException e) {
+            s_logger.error(e);
+            closeConfiguration();
+
+            if (numRetries > 0 && refreshSrxConnection()) {
+                int numRetriesRemaining = numRetries - 1;
+                s_logger.debug("Retrying SetNetworkACLCommand. Number of retries remaining: " + numRetriesRemaining);
+                return execute(cmd, numRetriesRemaining);
+            } else {
+                return new Answer(cmd, e);
+            }
+        }
+    }
+
     private synchronized Answer execute(SetFirewallRulesCommand cmd) {
         refreshSrxConnection();
         return execute(cmd, _numRetries);
@@ -926,7 +981,7 @@ public class JuniperSrxResource implements ServerResource {
 		
 		// Delete all security policies
 		for (String securityPolicyName : getVpnObjectNames(SrxXml.SECURITY_POLICY_GETALL, accountId)) {
-			manageSecurityPolicy(SecurityPolicyType.VPN, SrxCommand.DELETE, accountId, null, null, null, securityPolicyName);
+			manageSecurityPolicy(SecurityPolicyType.VPN, SrxCommand.DELETE, accountId, null, null, null, securityPolicyName, null, null);
 		}
 		
 		// Delete all address book entries 
@@ -998,7 +1053,7 @@ public class JuniperSrxResource implements ServerResource {
     			manageAddressBookEntry(srxCmd, _privateZone , guestNetworkCidr, ipsecVpnName);
     			
     			// Security policy
-    			manageSecurityPolicy(SecurityPolicyType.VPN, srxCmd, null, null, guestNetworkCidr, null, ipsecVpnName);
+    			manageSecurityPolicy(SecurityPolicyType.VPN, srxCmd, null, null, guestNetworkCidr, null, ipsecVpnName, null, null);
     		}
     		
     		commitConfiguration();
@@ -1155,6 +1210,29 @@ public class JuniperSrxResource implements ServerResource {
         removeStaticNatRules(privateVlanTag, publicVlanTags, staticNatRulesToRemove);
         removeDestinationNatRules(privateVlanTag, publicVlanTags, destNatRulesToRemove);
     }            
+
+    private Map<String, ArrayList<NetworkACLTO>> getActiveNetworkAcls(NetworkACLTO[] allRules) {
+        Map<String, ArrayList<NetworkACLTO>> activeRules = new HashMap<String, ArrayList<NetworkACLTO>>();
+
+        for (NetworkACLTO rule : allRules) {
+            String guestVlan;
+            guestVlan = rule.getSrcVlanTag();
+
+            ArrayList<NetworkACLTO> activeRulesForNetwork = activeRules.get(guestVlan);
+
+            if (activeRulesForNetwork == null) {
+                activeRulesForNetwork = new ArrayList<NetworkACLTO>();
+            }
+
+            if (!rule.revoked() || rule.isAlreadyAdded()) {
+                activeRulesForNetwork.add(rule);
+            }
+
+            activeRules.put(guestVlan, activeRulesForNetwork);
+        }
+
+        return activeRules;
+    }
 
     private Map<String, ArrayList<FirewallRuleTO>> getActiveRules(FirewallRuleTO[] allRules) {
         Map<String, ArrayList<FirewallRuleTO>> activeRules = new HashMap<String, ArrayList<FirewallRuleTO>>();
@@ -2412,25 +2490,32 @@ public class JuniperSrxResource implements ServerResource {
      * Applications
      */
 
-    private String genApplicationName(Protocol protocol, int startPort, int endPort) {
+    private String genApplicationName(SecurityPolicyType type, Protocol protocol, int startPort, int endPort) {
         if (protocol.equals(Protocol.any)) {
             return Protocol.any.toString();
         } else {
-            return genObjectName(protocol.toString(), String.valueOf(startPort), String.valueOf(endPort));
+          if (type.equals(SecurityPolicyType.SECURITYPOLICY_EGRESS)) {
+            	return genObjectName(type.getIdentifier(), protocol.toString(), String.valueOf(startPort), String.valueOf(endPort));
+          } else {
+              return genObjectName(protocol.toString(), String.valueOf(startPort), String.valueOf(endPort));
+          }
         }
     }
 
-    private Object[] parseApplicationName(String applicationName) throws ExecutionException {
+    private Object[] parseApplicationName(SecurityPolicyType type, String applicationName) throws ExecutionException {
         String errorMsg = "Invalid application: " + applicationName;
         String[] applicationComponents = applicationName.split("-");
 
         Protocol protocol;
         Integer startPort;
         Integer endPort;
+        int offset = 0;
         try {
-            protocol = getProtocol(applicationComponents[0]);			
-            startPort = Integer.parseInt(applicationComponents[1]);
-            endPort = Integer.parseInt(applicationComponents[2]);
+            offset = type.equals(SecurityPolicyType.SECURITYPOLICY_EGRESS) ? 1 : 0;
+            protocol = getProtocol(applicationComponents[offset + 0]);
+            startPort = Integer.parseInt(applicationComponents[offset + 1]);
+            endPort = Integer.parseInt(applicationComponents[offset + 2]);
+
         } catch (Exception e) {
             throw new ExecutionException(errorMsg);
         }
@@ -2438,12 +2523,12 @@ public class JuniperSrxResource implements ServerResource {
         return new Object[]{protocol, startPort, endPort};
     }
 
-    private boolean manageApplication(SrxCommand command, Protocol protocol, int startPort, int endPort) throws ExecutionException {
+    private boolean manageApplication(SecurityPolicyType type, SrxCommand command, Protocol protocol, int startPort, int endPort) throws ExecutionException {
         if (protocol.equals(Protocol.any)) {
             return true;
         }
 
-        String applicationName = genApplicationName(protocol, startPort, endPort);
+        String applicationName = genApplicationName(type, protocol, startPort, endPort);
         String xml;
 
         switch (command) {
@@ -2455,22 +2540,28 @@ public class JuniperSrxResource implements ServerResource {
             return sendRequestAndCheckResponse(command, xml, "name", applicationName);
 
         case ADD:
-            if (manageApplication(SrxCommand.CHECK_IF_EXISTS, protocol, startPort, endPort)) {
+            if (manageApplication(type, SrxCommand.CHECK_IF_EXISTS, protocol, startPort, endPort)) {
                 return true;
             }
 
+            String icmpOrDestPort;
             xml = SrxXml.APPLICATION_ADD.getXml();
             xml = replaceXmlValue(xml, "name", applicationName);
             xml = replaceXmlValue(xml, "protocol", protocol.toString());
-
-            String destPort;
-            if (startPort == endPort) {
-                destPort = String.valueOf(startPort);
+            
+            if (protocol.toString() == Protocol.icmp.toString()) {
+                icmpOrDestPort = "<icmp-type>" + startPort + "</icmp-type>";
+                icmpOrDestPort += "<icmp-code>" + endPort + "</icmp-code>";
             } else {
-                destPort = startPort + "-" + endPort;
+                String destPort;
+                if (startPort == endPort) {
+                    destPort = String.valueOf(startPort);
+                } else {
+                    destPort = startPort + "-" + endPort;
+                }
+                icmpOrDestPort = "<destination-port>" + destPort + "</destination-port>";
             }
-
-            xml = replaceXmlValue(xml, "dest-port", destPort);
+            xml = replaceXmlValue(xml, "dest-port-icmp", icmpOrDestPort);
 
             if (!sendRequestAndCheckResponse(command, xml)) {
                 throw new ExecutionException("Failed to add application " + applicationName);
@@ -2479,7 +2570,7 @@ public class JuniperSrxResource implements ServerResource {
             }
 
         case DELETE:
-            if (!manageApplication(SrxCommand.CHECK_IF_EXISTS, protocol, startPort, endPort)) {
+            if (!manageApplication(type, SrxCommand.CHECK_IF_EXISTS, protocol, startPort, endPort)) {
                 return true;
             }
 
@@ -2500,13 +2591,14 @@ public class JuniperSrxResource implements ServerResource {
 
     }
 
-    private List<String> getUnusedApplications(List<String> applications) throws ExecutionException {
+    private List<String> getUnusedApplications(List<String> applications, String fromZone, String toZone) throws ExecutionException {
         List<String> unusedApplications = new ArrayList<String>();
+
 
         // Check if any of the applications are unused by existing security policies
         String xml = SrxXml.SECURITY_POLICY_GETALL.getXml();
-        xml = replaceXmlValue(xml, "from-zone", _publicZone);
-        xml = replaceXmlValue(xml, "to-zone", _privateZone);
+        xml = replaceXmlValue(xml, "from-zone", fromZone);
+        xml = replaceXmlValue(xml, "to-zone", toZone);
         String allPolicies = sendRequest(xml);
 
         for (String application : applications) {
@@ -2518,9 +2610,7 @@ public class JuniperSrxResource implements ServerResource {
         return unusedApplications;
     }
     
-    private List<String> getApplicationsForSecurityPolicy(SecurityPolicyType type, String privateIp) throws ExecutionException {
-        String fromZone = _publicZone;
-        String toZone = _privateZone;
+    private List<String> getApplicationsForSecurityPolicy(SecurityPolicyType type, String privateIp, String fromZone, String toZone) throws ExecutionException {
         String policyName = genSecurityPolicyName(type, null, null, fromZone, toZone, privateIp);
         String xml = SrxXml.SECURITY_POLICY_GETONE.getXml();
         xml = setDelete(xml, false);
@@ -2555,7 +2645,48 @@ public class JuniperSrxResource implements ServerResource {
 
         return applications;
     }
-    
+
+        
+    private List<Object[]> extractApplicationsForACL(List<NetworkACLTO> rules) throws ExecutionException {
+        List<Object[]> applications = new ArrayList<Object[]>();
+
+        for (NetworkACLTO rule : rules) {
+            Object[] application = new Object[3];
+            application[0] = getProtocol(rule.getProtocol());
+            if (application[0] == Protocol.icmp) {
+                if (rule.getIcmpType() == -1) {
+                    application[1] = 255;
+                } else {
+                    application[1] = rule.getIcmpType();
+                }
+                if (rule.getIcmpCode() == -1) {
+                    application[2] = 255;
+                } else {
+                    application[2] = rule.getIcmpCode();
+                }
+            } else {
+                application[1] = rule.getSrcPortRange()[0];
+                application[2] = rule.getSrcPortRange()[1];
+            }
+            applications.add(application);
+        }
+        return applications;
+    }
+
+    private List<String> extractCidrs(List<NetworkACLTO> rules) throws ExecutionException {
+        List<String> allCidrs = new ArrayList<String>();
+        List<String> cidrs = new ArrayList<String>();
+
+        for (NetworkACLTO rule : rules) {
+            cidrs = (rule.getSourceCidrList());
+            for (String cidr: cidrs) {
+                if (!allCidrs.contains(cidr)) {
+                    allCidrs.add(cidr);
+                }
+            }
+        }
+        return allCidrs;
+    }
     /*
      * Security policies
      */
@@ -2568,20 +2699,22 @@ public class JuniperSrxResource implements ServerResource {
         }    		    
     }
 
-    private boolean manageSecurityPolicy(SecurityPolicyType type, SrxCommand command, Long accountId, String username, String privateIp, List<String> applicationNames, String ipsecVpnName) throws ExecutionException {
+    private boolean manageSecurityPolicy(SecurityPolicyType type, SrxCommand command, Long accountId, String username, String privateIp, List<String> applicationNames, String securityPolicyName, List<String> cidrs, String guestCidr) throws ExecutionException {
         String fromZone = _publicZone;
         String toZone = _privateZone;
         
-        String securityPolicyName;
-        String addressBookEntryName;
+        String addressBookEntryName = null;
         
-        if (type.equals(SecurityPolicyType.VPN) && ipsecVpnName != null) {
-        	securityPolicyName = ipsecVpnName;
-        	addressBookEntryName = ipsecVpnName;
+        if (type.equals(SecurityPolicyType.VPN) && securityPolicyName != null) {
+            addressBookEntryName = securityPolicyName;
+        } else if (type.equals(SecurityPolicyType.SECURITYPOLICY_EGRESS)) {
+            fromZone = _privateZone;
+            toZone = _publicZone;
+            securityPolicyName = genSecurityPolicyName(type, accountId, username, fromZone, toZone, privateIp);
         } else {
-        	securityPolicyName = genSecurityPolicyName(type, accountId, username, fromZone, toZone, privateIp);
+            securityPolicyName = genSecurityPolicyName(type, accountId, username, fromZone, toZone, privateIp);
             addressBookEntryName = genAddressBookEntryName(privateIp);
-        }        
+        }
 
         String xml;
 
@@ -2618,23 +2751,40 @@ public class JuniperSrxResource implements ServerResource {
             return false;
 
         case ADD:
-            if (!manageAddressBookEntry(SrxCommand.CHECK_IF_EXISTS, toZone, privateIp, ipsecVpnName)) {
-                throw new ExecutionException("No address book entry for policy: " + securityPolicyName);
+            if (!type.equals(SecurityPolicyType.SECURITYPOLICY_EGRESS)) {
+                if (!manageAddressBookEntry(SrxCommand.CHECK_IF_EXISTS, toZone, privateIp, addressBookEntryName)) {
+                    throw new ExecutionException("No address book entry for policy: " + securityPolicyName);
+                }
             }
-
-            xml = SrxXml.SECURITY_POLICY_ADD.getXml();            	            	
-            xml = replaceXmlValue(xml, "from-zone", fromZone);
-            xml = replaceXmlValue(xml, "to-zone", toZone);            
-            xml = replaceXmlValue(xml, "policy-name", securityPolicyName);            
-            xml = replaceXmlValue(xml, "src-address", "any");    
-            xml = replaceXmlValue(xml, "dest-address", addressBookEntryName);
             
-            if (type.equals(SecurityPolicyType.VPN) && ipsecVpnName != null) {
-            	xml = replaceXmlValue(xml, "tunnel", "<tunnel><ipsec-vpn>" + ipsecVpnName + "</ipsec-vpn></tunnel>");
-            } else {      	
-            	xml = replaceXmlValue(xml, "tunnel", "");
+            xml = SrxXml.SECURITY_POLICY_ADD.getXml();
+            String dstAddrs = "";
+            xml = replaceXmlValue(xml, "policy-name", securityPolicyName);
+            if (type.equals(SecurityPolicyType.SECURITYPOLICY_EGRESS)) {
+                xml = replaceXmlValue(xml, "from-zone", _privateZone);
+                xml = replaceXmlValue(xml, "to-zone", _publicZone);
+                xml = replaceXmlValue(xml, "src-address", genAddressBookEntryName(guestCidr));
+                if (cidrs == null) {
+                    dstAddrs = "<destination-address>any</destination-address>";
+                } else {
+                    for (String cidr : cidrs) {
+                        dstAddrs += "<destination-address>" + genAddressBookEntryName(cidr) + "</destination-address>";
+                    }
+                }
+            } else {
+                xml = replaceXmlValue(xml, "from-zone", fromZone);
+                xml = replaceXmlValue(xml, "to-zone", toZone);
+                xml = replaceXmlValue(xml, "src-address", "any");
+                dstAddrs = "<destination-address>" + addressBookEntryName + "</destination-address>";
             }
-                        
+                
+            if (type.equals(SecurityPolicyType.VPN) && securityPolicyName != null) {
+                    xml = replaceXmlValue(xml, "tunnel", "<tunnel><ipsec-vpn>" + securityPolicyName + "</ipsec-vpn></tunnel>");
+                } else {
+                    xml = replaceXmlValue(xml, "tunnel", "");
+                }
+            xml = replaceXmlValue(xml, "destination-address", dstAddrs);
+
             String applications;
             if (applicationNames == null) {
             	applications = "<application>any</application>";
@@ -2655,12 +2805,12 @@ public class JuniperSrxResource implements ServerResource {
 
         case DELETE:
         case DELETE_FORCE:
-            if (!manageSecurityPolicy(type, SrxCommand.CHECK_IF_EXISTS, null, null, privateIp, applicationNames, ipsecVpnName)) {
+            if (!manageSecurityPolicy(type, SrxCommand.CHECK_IF_EXISTS, null, null, privateIp, applicationNames, securityPolicyName, null, guestCidr)) {
                 return true;
             }
 
             if (command != SrxCommand.DELETE_FORCE ) {
-                if (manageSecurityPolicy(type, SrxCommand.CHECK_IF_IN_USE, null, null, privateIp, applicationNames, ipsecVpnName)) {
+                if (manageSecurityPolicy(type, SrxCommand.CHECK_IF_IN_USE, null, null, privateIp, applicationNames, securityPolicyName, null, guestCidr)) {
                 return true;
             	}
             }
@@ -2707,8 +2857,84 @@ public class JuniperSrxResource implements ServerResource {
             return false;
 
         }
-    }	
-    
+    }
+     private boolean addDefaultSecurityPolicy(String fromZone, String toZone, String guestVlan, String guestCidr) throws ExecutionException {
+        manageAddressBookEntry(SrxCommand.ADD, _privateZone, guestCidr, null);
+        manageSecurityPolicy(SecurityPolicyType.SECURITYPOLICY_EGRESS, SrxCommand.ADD, null, null, guestVlan, null, null, null, guestCidr);
+        return true;
+    }
+
+    private boolean delDefaultSecurityPolicy(String fromZone, String toZone, String guestVlan, String guestCidr) throws ExecutionException {
+        List<String> cidrs = new ArrayList();
+        removeEgressSecurityPolicyAndApplications(SecurityPolicyType.SECURITYPOLICY_EGRESS, guestVlan, cidrs, guestCidr);
+        return true;
+    }
+
+    private boolean removeEgressSecurityPolicyAndApplications(SecurityPolicyType type, String guestVlan, List <String> cidrs, String guestCidr) throws ExecutionException {
+        if (!manageSecurityPolicy(type, SrxCommand.CHECK_IF_EXISTS, null, null, guestVlan, null, null, null, guestCidr)) {
+            return true;
+        }
+        // Get a list of applications for this security policy
+        List<String> applications;
+        applications = getApplicationsForSecurityPolicy(type, guestVlan, _privateZone, _publicZone);
+
+        // Remove the security policy even if it is in use 
+        manageSecurityPolicy(type, SrxCommand.DELETE_FORCE, null, null, guestVlan, null, null, null, guestCidr);
+
+        // Remove any applications for the removed security policy that are no longer in use
+        List<String> unusedApplications;
+        unusedApplications = getUnusedApplications(applications, _privateZone, _publicZone);
+
+        for (String application : unusedApplications) {
+            Object[] applicationComponents;
+
+            try {
+                applicationComponents = parseApplicationName(type, application);
+            } catch (ExecutionException e) {
+                s_logger.error("Found an invalid application: " + application + ". Not attempting to clean up.");
+                continue;
+            }
+
+            Protocol protocol = (Protocol) applicationComponents[0];
+            Integer startPort = (Integer) applicationComponents[1];
+            Integer endPort = (Integer) applicationComponents[2];
+            manageApplication(type, SrxCommand.DELETE, protocol, startPort, endPort);
+        }
+        for (String cidr: cidrs) {
+            manageAddressBookEntry(SrxCommand.DELETE, _publicZone, cidr, null);
+            }
+
+        manageAddressBookEntry(SrxCommand.DELETE, _privateZone, guestCidr, null);
+        s_logger.debug("Removed Egress firewall rule for guest network " + guestVlan);
+        return true;
+    }
+
+    private boolean addEgressSecurityPolicyAndApplications(SecurityPolicyType type, String guestVlan, List<Object[]> applications, List <String> cidrs, String guestCidr) throws ExecutionException {
+        // Add all necessary applications
+        List<String> applicationNames = new ArrayList<String>();
+        for (Object[] application : applications) {
+            Protocol protocol = (Protocol) application[0];
+            int startPort = application[1] != null ? ((Integer) application[1]) : -1;
+            int endPort = application[2] != null ? ((Integer) application[2]) : -1;
+
+            String applicationName = genApplicationName(type, protocol, startPort, endPort);
+            if (!applicationNames.contains(applicationName)) {
+                applicationNames.add(applicationName);
+            }
+            manageApplication(type, SrxCommand.ADD, protocol, startPort, endPort);
+        }
+
+        for (String cidr: cidrs) {
+            manageAddressBookEntry(SrxCommand.ADD, _publicZone, cidr, null);
+            }
+        manageAddressBookEntry(SrxCommand.ADD, _privateZone, guestCidr, null);
+
+        // Add a new security policy
+        manageSecurityPolicy(type, SrxCommand.ADD, null, null, guestVlan, applicationNames, null, cidrs, guestCidr);
+        s_logger.debug("Added Egress firewall rule for guest network " + guestVlan);
+        return true;
+    }
+
     private boolean addSecurityPolicyAndApplications(SecurityPolicyType type, String privateIp, List<Object[]> applications) throws ExecutionException {
         // Add all necessary applications
         List<String> applicationNames = new ArrayList<String>();
@@ -2717,38 +2943,40 @@ public class JuniperSrxResource implements ServerResource {
             int startPort = application[1] != null ? ((Integer) application[1]) : -1;
             int endPort = application[2] != null ? ((Integer) application[2]) : -1;
 
-            String applicationName = genApplicationName(protocol, startPort, endPort);
+            String applicationName = genApplicationName(type, protocol, startPort, endPort);
             if (!applicationNames.contains(applicationName)) {
                 applicationNames.add(applicationName);
             }
 
-            manageApplication(SrxCommand.ADD, protocol, startPort, endPort);
+            manageApplication(type, SrxCommand.ADD, protocol, startPort, endPort);
         }
 
         // Add a new security policy
-        manageSecurityPolicy(type, SrxCommand.ADD, null, null, privateIp, applicationNames, null);
+        manageSecurityPolicy(type, SrxCommand.ADD, null, null, privateIp, applicationNames, null, null, null);
 
         return true;
     }
 
+      
+
     private boolean removeSecurityPolicyAndApplications(SecurityPolicyType type, String privateIp) throws ExecutionException {
-        if (!manageSecurityPolicy(type, SrxCommand.CHECK_IF_EXISTS, null, null, privateIp, null, null)) {
+        if (!manageSecurityPolicy(type, SrxCommand.CHECK_IF_EXISTS, null, null, privateIp, null, null, null, null)) {
             return true;
         }
 
         // Get a list of applications for this security policy
-        List<String> applications = getApplicationsForSecurityPolicy(type, privateIp);
+        List<String> applications = getApplicationsForSecurityPolicy(type, privateIp, _publicZone, _privateZone);
 
         // Remove the security policy even if it is in use 
-        manageSecurityPolicy(type, SrxCommand.DELETE_FORCE, null, null, privateIp, null, null);
+        manageSecurityPolicy(type, SrxCommand.DELETE_FORCE, null, null, privateIp, null, null, null, null);
 
         // Remove any applications for the removed security policy that are no longer in use
-        List<String> unusedApplications = getUnusedApplications(applications);
+        List<String> unusedApplications = getUnusedApplications(applications, _publicZone, _privateZone);
         for (String application : unusedApplications) {
             Object[] applicationComponents;
 
             try {
-                applicationComponents = parseApplicationName(application);
+                applicationComponents = parseApplicationName(type, application);
             } catch (ExecutionException e) {
                 s_logger.error("Found an invalid application: " + application + ". Not attempting to clean up.");
                 continue;
@@ -2757,7 +2985,7 @@ public class JuniperSrxResource implements ServerResource {
             Protocol protocol = (Protocol) applicationComponents[0];
             Integer startPort = (Integer) applicationComponents[1];
             Integer endPort = (Integer) applicationComponents[2];			
-            manageApplication(SrxCommand.DELETE, protocol, startPort, endPort);	
+            manageApplication(type, SrxCommand.DELETE, protocol, startPort, endPort);	
         }
 
         return true;

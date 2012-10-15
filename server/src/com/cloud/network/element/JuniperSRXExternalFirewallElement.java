@@ -87,7 +87,7 @@ import com.cloud.vm.VirtualMachineProfile;
 
 @Local(value = NetworkElement.class)
 public class JuniperSRXExternalFirewallElement extends ExternalFirewallDeviceManagerImpl implements SourceNatServiceProvider, FirewallServiceProvider,
-PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer, JuniperSRXFirewallElementService, StaticNatServiceProvider {
+PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer, JuniperSRXFirewallElementService, StaticNatServiceProvider, NetworkACLServiceProvider {
 
     private static final Logger s_logger = Logger.getLogger(JuniperSRXExternalFirewallElement.class);
 
@@ -268,6 +268,11 @@ PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer, Junip
         firewallCapabilities.put(Capability.MultipleIps, "true");
         firewallCapabilities.put(Capability.TrafficStatistics, "per public ip");
         capabilities.put(Service.Firewall, firewallCapabilities);
+
+        //add network ACL capability
+        Map<Capability, String> networkACLCapabilities = new HashMap<Capability, String>();
+        networkACLCapabilities.put(Capability.SupportedProtocols, "tcp,udp,icmp");
+        capabilities.put(Service.NetworkACL, networkACLCapabilities);
 
         // Disabling VPN for Juniper in Acton as it 1) Was never tested 2) probably just doesn't work
 // // Set VPN capabilities
@@ -559,5 +564,15 @@ PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer, Junip
             return false;
         }
         return applyStaticNatRules(config, rules);
+    }
+
+    @Override
+    public boolean applyNetworkACLs(Network config,
+            List<? extends FirewallRule> rules)
+            throws ResourceUnavailableException {
+        if (!canHandle(config, Service.NetworkACL)) {
+            return false;
+        }
+        return applyNetworkACLRules(config, rules);
     }
 }

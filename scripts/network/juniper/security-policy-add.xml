@@ -10,7 +10,7 @@
 <name>%policy-name%</name>
 <match>
 <source-address>%src-address%</source-address>
-<destination-address>%dest-address%</destination-address>
+%destination-address%
 %applications%
 </match>
 <then>

@@ -31,6 +31,8 @@ usage() {
 #FIXME: eating up the error code during execution of iptables
 
 acl_switch_to_new() {
+  if [ $vpcRouter -eq 1 ]
+  then
   sudo iptables -D FORWARD -o $dev -d $gcidr -j _ACL_INBOUND_$dev  2>/dev/null
   sudo iptables-save  | grep "\-j _ACL_INBOUND_$dev" | grep "\-A" | while read rule;
   do
@@ -41,24 +43,31 @@ acl_switch_to_new() {
   done
   sudo iptables -F _ACL_INBOUND_$dev 2>/dev/null
   sudo iptables -X _ACL_INBOUND_$dev 2>/dev/null
+  fi
   sudo iptables -t mangle -F _ACL_OUTBOUND_$dev 2>/dev/null
   sudo iptables -t mangle -D PREROUTING -m state --state NEW -i $dev -s $gcidr ! -d $ip -j _ACL_OUTBOUND_$dev  2>/dev/null
   sudo iptables -t mangle -X _ACL_OUTBOUND_$dev 2>/dev/null
 }
 
 acl_remove_backup() {
+  if [ $vpcRouter -eq 1 ]
+  then
   sudo iptables -F _ACL_INBOUND_$dev 2>/dev/null
   sudo iptables -D FORWARD -o $dev -d $gcidr -j _ACL_INBOUND_$dev  2>/dev/null
   sudo iptables -X _ACL_INBOUND_$dev 2>/dev/null
+  fi
   sudo iptables -t mangle -F _ACL_OUTBOUND_$dev 2>/dev/null
   sudo iptables -t mangle -D PREROUTING -m state --state NEW -i $dev -s $gcidr ! -d $ip -j _ACL_OUTBOUND_$dev  2>/dev/null
   sudo iptables -t mangle -X _ACL_OUTBOUND_$dev 2>/dev/null
 }
 
 acl_remove() {
+  if [ $vpcRouter -eq 1 ]
+  then
   sudo iptables -F ACL_INBOUND_$dev 2>/dev/null
   sudo iptables -D FORWARD -o $dev -d $gcidr -j ACL_INBOUND_$dev  2>/dev/null
   sudo iptables -X ACL_INBOUND_$dev 2>/dev/null
+  fi
   sudo iptables -t mangle -F ACL_OUTBOUND_$dev 2>/dev/null
   sudo iptables -t mangle -D PREROUTING -m state --state NEW -i $dev -s $gcidr ! -d $ip -j ACL_OUTBOUND_$dev  2>/dev/null
   sudo iptables -t mangle -X ACL_OUTBOUND_$dev 2>/dev/null
@@ -66,23 +75,33 @@ acl_remove() {
 
 acl_restore() {
   acl_remove
+  if [ $vpcRouter -eq 1 ]
+  then 
   sudo iptables -E _ACL_INBOUND_$dev ACL_INBOUND_$dev 2>/dev/null
+  fi
+
   sudo iptables -t mangle -E _ACL_OUTBOUND_$dev ACL_OUTBOUND_$dev 2>/dev/null
 }
 
 acl_save() {
   acl_remove_backup
+  if [ $vpcRouter -eq 1 ]
+  then 
   sudo iptables -E ACL_INBOUND_$dev _ACL_INBOUND_$dev 2>/dev/null
+  fi
   sudo iptables -t mangle -E ACL_OUTBOUND_$dev _ACL_OUTBOUND_$dev 2>/dev/null
 }
 
 acl_chain_for_guest_network () {
   acl_save
   # inbound
+  if [ $vpcRouter -eq 1 ]
+  then
   sudo iptables -N ACL_INBOUND_$dev 2>/dev/null
   # drop if no rules match (this will be the last rule in the chain)
   sudo iptables -A ACL_INBOUND_$dev -j DROP 2>/dev/null
   sudo iptables -A FORWARD -o $dev -d $gcidr -j ACL_INBOUND_$dev  2>/dev/null
+  fi
   # outbound
   sudo iptables -t mangle -N ACL_OUTBOUND_$dev 2>/dev/null
   sudo iptables -t mangle -A PREROUTING -m state --state NEW -i $dev -s $gcidr ! -d $ip -j ACL_OUTBOUND_$dev  2>/dev/null
@@ -157,7 +176,8 @@ rules=""
 rules_list=""
 ip=""
 dev=""
-while getopts 'd:i:m:a:' OPTION
+vpcRouter=0;
+while getopts 'd:i:m:a:v:' OPTION
 do
   case $OPTION in
   d)    dflag=1
@@ -171,6 +191,9 @@ do
                 ;;
   a)	aflag=1
 		rules="$OPTARG"
+                ;;
+  v)	vflag=1
+		vpcRouter=1
 		;;
   ?)	usage
                 unlock_exit 2 $lock $locked
