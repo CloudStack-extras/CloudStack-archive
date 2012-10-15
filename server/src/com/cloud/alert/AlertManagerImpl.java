@@ -737,7 +737,8 @@ public class AlertManagerImpl implements AlertManager {
                 (alertType != AlertManager.ALERT_TYPE_CONSOLE_PROXY) &&
                 (alertType != AlertManager.ALERT_TYPE_SSVM) &&
                 (alertType != AlertManager.ALERT_TYPE_STORAGE_MISC) &&
-                (alertType != AlertManager.ALERT_TYPE_MANAGMENT_NODE)) {
+                (alertType != AlertManager.ALERT_TYPE_MANAGMENT_NODE) &&
+                (alertType != AlertManager.ALERT_TYPE_HOST_UPDATES)) {
                 alert = _alertDao.getLastAlert(alertType, dataCenterId, podId, clusterId);
             }
 

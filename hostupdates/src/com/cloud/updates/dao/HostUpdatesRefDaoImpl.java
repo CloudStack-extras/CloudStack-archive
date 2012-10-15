@@ -1,6 +1,8 @@
 package com.cloud.updates.dao;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ejb.Local;
@@ -60,16 +62,19 @@ public class HostUpdatesRefDaoImpl extends GenericDaoBase<HostUpdatesRefVO, Long
     }
 
     @Override
-    public List<HostUpdatesRefVO> listHosts() {
-        /*Transaction txn = Transaction.currentTxn();
+    public List<Long> listHosts() {
+        List<Long> hostsList = new ArrayList<Long>();
+        Transaction txn = Transaction.currentTxn();
         try {
-            String checkSql = "SELECT * from host_updates_ref WHERE ";
+            String checkSql = "SELECT DISTINCT host_id from host_updates_ref WHERE update_applied='0'";
             PreparedStatement stmt = txn.prepareAutoCloseStatement(checkSql);
-            stmt.executeQuery();
+            ResultSet hosts = stmt.executeQuery();
+            while(hosts.next()) {
+                hostsList.add(hosts.getLong("host_id"));
+            }
         } catch (Exception ex) {
-            
-        }*/
-        return null;
+        }
+        return hostsList;
     }
 }
 

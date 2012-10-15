@@ -95,10 +95,8 @@ public class HostUpdatesManagerImpl implements HostUpdatesManager, HostUpdatesSe
     }
 
     @Override
-    public List<HostUpdatesRefVO> searchForHosts(ListHostsWithPendingUpdatesCmd cmd){
-        Long hostId = cmd.getHostId();
-        Boolean isApplied = cmd.isApplied();
-        return _hostUpdatesRefDao.searchByHostId(hostId, isApplied);
+    public List<Long> searchForHosts(ListHostsWithPendingUpdatesCmd cmd){
+        return _hostUpdatesRefDao.listHosts();
     }
 
     @Override
@@ -119,10 +117,10 @@ public class HostUpdatesManagerImpl implements HostUpdatesManager, HostUpdatesSe
         return hostUpdatesResponse;
     }
     @Override
-    public HostsWithPendingUpdatesResponse createHostsWithPendingUpdatesResponse(HostUpdatesRef update) {
+    public HostsWithPendingUpdatesResponse createHostsWithPendingUpdatesResponse(Long update) {
         HostsWithPendingUpdatesResponse hostWithPendingUpdatesResponse = new HostsWithPendingUpdatesResponse();
 
-        HostVO Detail = _hostDao.findById(update.getHostId());
+        HostVO Detail = _hostDao.findById(update.longValue());
         if(Detail != null)
         {
             hostWithPendingUpdatesResponse.setName(Detail.getName());

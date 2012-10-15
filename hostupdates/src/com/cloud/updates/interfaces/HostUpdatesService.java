@@ -16,8 +16,8 @@ public interface HostUpdatesService extends PluggableService {
      */
 	
     List<? extends HostUpdatesRef> searchForHostUpdates(ListHostUpdatesCmd cmd);
-    List<? extends HostUpdatesRef> searchForHosts(ListHostsWithPendingUpdatesCmd cmd);
+    List<Long> searchForHosts(ListHostsWithPendingUpdatesCmd cmd);
     
     HostUpdatesResponse createHostUpdatesResponse(HostUpdatesRef update);
-    HostsWithPendingUpdatesResponse createHostsWithPendingUpdatesResponse(HostUpdatesRef update);
+    HostsWithPendingUpdatesResponse createHostsWithPendingUpdatesResponse(Long update);
 }

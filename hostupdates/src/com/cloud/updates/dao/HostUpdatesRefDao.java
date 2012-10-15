@@ -25,6 +25,6 @@ public interface HostUpdatesRefDao extends GenericDao<HostUpdatesRefVO, Long>{
      * @param hostId
      * @return
      */
-    List<HostUpdatesRefVO> listHosts();
+    List<Long> listHosts();
     void deletePatchRef(long hostId);
 }
