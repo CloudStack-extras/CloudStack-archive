@@ -8051,7 +8051,7 @@
                                                                          {
                                                                                  name: {label:'' , header: true},
                                                                                  url: { label: 'URL' },
-                                                                                 timestamp: { label: 'Timestamp' },
+                                                                                 timestamp: { label: 'Timestamp' }
                                                                          }
                                                                          ],
                                                                          dataProvider: function(args) {
@@ -8069,7 +8069,6 @@
                                                                                         });
                                                                                 })
                                                                         });
-
                                                                 }
                                                                 });
                                                         }

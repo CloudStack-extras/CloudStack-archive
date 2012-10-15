@@ -1,4 +1,4 @@
-package com.cloud.host.updates;
+package com.cloud.updates.interfaces;
 
 public interface HostUpdatesRef {
     long getId();

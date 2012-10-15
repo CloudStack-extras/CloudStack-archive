@@ -34,7 +34,6 @@ import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.PermissionDeniedException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
-import com.cloud.host.updates.HostUpdatesService;
 import com.cloud.network.NetworkService;
 import com.cloud.network.StorageNetworkService;
 import com.cloud.network.VpcVirtualNetworkApplianceService;
@@ -136,7 +135,6 @@ public abstract class BaseCmd {
     public static VpcService _vpcService;
     public static NetworkACLService _networkACLService;
     public static Site2SiteVpnService _s2sVpnService;
-    public static HostUpdatesService _hostUpdatesService;
 
     static void setComponents(ResponseGenerator generator) {
         ComponentLocator locator = ComponentLocator.getLocator(ManagementService.Name);
@@ -169,7 +167,6 @@ public abstract class BaseCmd {
         _vpcService = locator.getManager(VpcService.class);
         _networkACLService = locator.getManager(NetworkACLService.class);
         _s2sVpnService = locator.getManager(Site2SiteVpnService.class);
-        _hostUpdatesService = locator.getManager(HostUpdatesService.class);
     }
 
     public abstract void execute() throws ResourceUnavailableException, InsufficientCapacityException, ServerApiException, ConcurrentOperationException, ResourceAllocationException, NetworkRuleConflictException;

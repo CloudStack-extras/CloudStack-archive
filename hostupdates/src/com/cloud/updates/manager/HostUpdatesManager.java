@@ -1,9 +1,8 @@
-package com.cloud.maint;
+package com.cloud.updates.manager;
 
-import com.cloud.utils.component.Adapter;
+import com.cloud.utils.component.Manager;
 
-public interface HostUpdatesMonitor extends Adapter {
-
+public interface HostUpdatesManager extends Manager {
     /**
      * Update the database with the updates available for hosts.
      * 

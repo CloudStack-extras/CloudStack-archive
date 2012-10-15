@@ -234,7 +234,6 @@ import com.xensource.xenapi.Network;
 import com.xensource.xenapi.PBD;
 import com.xensource.xenapi.PIF;
 import com.xensource.xenapi.Pool;
-import com.xensource.xenapi.PoolPatch;
 import com.xensource.xenapi.SR;
 import com.xensource.xenapi.Session;
 import com.xensource.xenapi.Task;

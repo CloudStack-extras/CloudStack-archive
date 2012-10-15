@@ -1,4 +1,4 @@
-package com.cloud.host.updates;
+package com.cloud.updates;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -7,6 +7,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import com.cloud.updates.interfaces.HostUpdatesRef;
 /**
  * Join table for updates hosts and patches
  */

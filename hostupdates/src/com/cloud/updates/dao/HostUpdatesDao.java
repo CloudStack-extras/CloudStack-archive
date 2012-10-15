@@ -1,6 +1,6 @@
-package com.cloud.host.updates.dao;
+package com.cloud.updates.dao;
 
-import com.cloud.host.updates.HostUpdatesVO;
+import com.cloud.updates.HostUpdatesVO;
 import com.cloud.utils.db.GenericDao;
 
 public interface HostUpdatesDao extends GenericDao<HostUpdatesVO, Long> {

@@ -55,7 +55,6 @@ import com.cloud.api.response.ExtractResponse;
 import com.cloud.api.response.FirewallResponse;
 import com.cloud.api.response.FirewallRuleResponse;
 import com.cloud.api.response.HostResponse;
-import com.cloud.api.response.HostUpdatesResponse;
 import com.cloud.api.response.HypervisorCapabilitiesResponse;
 import com.cloud.api.response.IPAddressResponse;
 import com.cloud.api.response.InstanceGroupResponse;
@@ -132,8 +131,6 @@ import com.cloud.event.Event;
 import com.cloud.host.Host;
 import com.cloud.host.HostStats;
 import com.cloud.host.HostVO;
-import com.cloud.host.updates.HostUpdatesVO;
-import com.cloud.host.updates.HostUpdatesRef;
 import com.cloud.hypervisor.HypervisorCapabilities;
 import com.cloud.network.IPAddressVO;
 import com.cloud.network.IpAddress;
@@ -4038,24 +4035,5 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setObjectName("condition");
         populateOwner(response, condition);
         return response;
-    }
-
-    @Override
-    public HostUpdatesResponse createHostUpdatesResponse(HostUpdatesRef update) {
-        // TODO Auto-generated method stub
-        HostUpdatesResponse hostUpdatesResponse = new HostUpdatesResponse();
-        hostUpdatesResponse.setUpdateApplied(update.getIsApplied());
-
-        HostUpdatesVO updateDetail = ApiDBUtils.findUpdateByPatchId(update.getPatchId());
-        if(updateDetail != null)
-        {
-            hostUpdatesResponse.setId(updateDetail.getId());
-            hostUpdatesResponse.setLable(updateDetail.getLabel());
-            hostUpdatesResponse.setDescription(updateDetail.getDescription());
-            hostUpdatesResponse.setAfterApplyGuidance(updateDetail.getAfterApplyGuidance());
-            hostUpdatesResponse.setURL(updateDetail.getURL());
-            hostUpdatesResponse.setTimestamp(updateDetail.getTimestamp());
-        }
-        return hostUpdatesResponse;
     }
 }
