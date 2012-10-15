@@ -17,7 +17,7 @@
     sectionSelect: {
       preFilter: function(args) {
         if(isAdmin())
-          return ["events", "alerts"];
+          return ["events", "alerts", "hostUpdates"];
         else
           return ["events"];
       },
@@ -146,6 +146,75 @@
             }
           }
         }
+      },
+      hostUpdates: {
+    	  type: 'select',
+    	  title: 'Host Updates',
+    	  listView: {
+    	  id: 'hostUpdates',
+    	  label: 'Host Updates',
+    	  fields: {
+    	  name: { label: 'label.host.name' }
+    	  //sent: { label: 'label.date', converter: cloudStack.converters.toLocalDate }
+      },
+      dataProvider: function(args) {
+    	  /*var array1 = [];
+                                                if(args.filterBy != null) {
+                                                        if(args.filterBy.search != null && args.filterBy.search.by != null && args.filterBy.search.value != null) {
+                                                                switch(args.filterBy.search.by) {
+                                                                case "name":
+                                                                        if(args.filterBy.search.value.length > 0)
+                                                                                array1.push("&keyword=" + args.filterBy.search.value);
+                                                                        break;
+                                                                }
+                                                        }
+                                                }*/
+    	  $.ajax({
+    		  url: createURL("listHostsWithPendingUpdates&page=" + args.page + "&pagesize=" + pageSize),
+    		  dataType: "json",
+    		  async: true,
+    		  success: function(json) {
+    		  var items = json.listhostswithpendingupdatesresponse.host;
+    		  args.response.success({data:items});
+    	  }
+    	  });
+      },
+      detailView: {
+    	  name: 'Updates detail',
+    	  tabs: {
+    	  Updates: {
+          title: 'Updates',
+          multiple: true,
+          cache:false,
+          fields: [
+                   {
+                           name: {label:'' , header: true},
+                           url: { label: 'URL' },
+                           timestamp: { label: 'Timestamp' }
+                   }
+                   ],
+                   dataProvider: function(args) {
+          $.ajax({
+                  url:createURL("listHostUpdates&hostid=" + args.context.hostUpdates[0].uuid + "&applied=false"),
+                  dataType: "json",
+                  success:function(json) {
+
+                  updates = json.listhostupdatesresponse.update? json.listhostupdatesresponse.update :[];
+                  args.response.success({
+                          data: $.map(updates, function(update, index) {
+                                  var name = update.description;
+                                  return $.extend(update, {
+                                          name: name
+                                  });
+                          })
+                  });
+          }
+          });
+  }
+}
+      }
+      }
+      }
       }
     }
   };

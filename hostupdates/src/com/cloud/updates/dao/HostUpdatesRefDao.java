@@ -1,8 +1,8 @@
-package com.cloud.host.updates.dao;
+package com.cloud.updates.dao;
 
 import java.util.List;
 
-import com.cloud.host.updates.HostUpdatesRefVO;
+import com.cloud.updates.HostUpdatesRefVO;
 import com.cloud.utils.db.GenericDao;
 
 public interface HostUpdatesRefDao extends GenericDao<HostUpdatesRefVO, Long>{
@@ -25,5 +25,6 @@ public interface HostUpdatesRefDao extends GenericDao<HostUpdatesRefVO, Long>{
      * @param hostId
      * @return
      */
+    List<HostUpdatesRefVO> listHosts();
     void deletePatchRef(long hostId);
 }

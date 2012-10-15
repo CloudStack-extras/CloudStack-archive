@@ -1,10 +1,10 @@
-package com.cloud.host.updates.dao;
+package com.cloud.updates.dao;
 
 import java.util.List;
 
 import javax.ejb.Local;
 
-import com.cloud.host.updates.HostUpdatesVO;
+import com.cloud.updates.HostUpdatesVO;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.GenericDaoBase;
 import com.cloud.utils.db.SearchCriteria;
@@ -12,7 +12,7 @@ import com.cloud.utils.db.SearchCriteria;
 @Local(value = { HostUpdatesDao.class })
 public class HostUpdatesDaoImpl extends GenericDaoBase<HostUpdatesVO, Long> implements HostUpdatesDao {
 
-    @Override
+    //@Override
     public HostUpdatesVO searchForUpdates(Long id,Long hostId) {
         Filter searchFilter = new Filter(HostUpdatesVO.class, "timestamp", Boolean.FALSE, Long.valueOf(0), Long.valueOf(1));
         SearchCriteria<HostUpdatesVO> sc = createSearchCriteria();
@@ -30,7 +30,7 @@ public class HostUpdatesDaoImpl extends GenericDaoBase<HostUpdatesVO, Long> impl
         return null;
     }
 
-    @Override
+    //@Override
     public HostUpdatesVO findByUUID(String uuid) {
         SearchCriteria<HostUpdatesVO> sc = createSearchCriteria();
         sc.addAnd("uuid", SearchCriteria.Op.EQ, String.valueOf(uuid));

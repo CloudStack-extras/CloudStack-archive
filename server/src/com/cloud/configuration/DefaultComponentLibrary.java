@@ -62,9 +62,6 @@ import com.cloud.ha.dao.HighAvailabilityDaoImpl;
 import com.cloud.host.dao.HostDaoImpl;
 import com.cloud.host.dao.HostDetailsDaoImpl;
 import com.cloud.host.dao.HostTagsDaoImpl;
-import com.cloud.maint.HostUpdatesManagerImpl;
-import com.cloud.host.updates.dao.HostUpdatesDaoImpl;
-import com.cloud.host.updates.dao.HostUpdatesRefDaoImpl;
 import com.cloud.hypervisor.HypervisorGuruManagerImpl;
 import com.cloud.hypervisor.dao.HypervisorCapabilitiesDaoImpl;
 import com.cloud.keystore.KeystoreDaoImpl;
@@ -272,8 +269,6 @@ public class DefaultComponentLibrary extends ComponentLibraryBase implements Com
         addDao("SecurityGroupWorkDao", SecurityGroupWorkDaoImpl.class);
         addDao("VmRulesetLogDao", VmRulesetLogDaoImpl.class);
         addDao("AlertDao", AlertDaoImpl.class);
-        addDao("HostUpdatesDao", HostUpdatesDaoImpl.class);
-        addDao("HostUpdatesRefDao", HostUpdatesRefDaoImpl.class);
         addDao("CapacityDao", CapacityDaoImpl.class);
         addDao("DomainDao", DomainDaoImpl.class);
         addDao("AccountDao", AccountDaoImpl.class);
@@ -403,7 +398,6 @@ public class DefaultComponentLibrary extends ComponentLibraryBase implements Com
         addManager("upgrade manager", UpgradeManagerImpl.class);
         addManager("StorageManager", StorageManagerImpl.class);
         addManager("Alert Manager", AlertManagerImpl.class);
-        addManager("Host Update Manager", HostUpdatesManagerImpl.class);
         addManager("Template Manager", TemplateManagerImpl.class);
         addManager("Snapshot Manager", SnapshotManagerImpl.class);
         addManager("SnapshotScheduler", SnapshotSchedulerImpl.class);

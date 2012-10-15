@@ -22,16 +22,18 @@ import com.cloud.api.BaseListCmd;
 import com.cloud.api.IdentityMapper;
 import com.cloud.api.Implementation;
 import com.cloud.api.Parameter;
+import com.cloud.api.PlugService;
 import com.cloud.api.response.HostUpdatesResponse;
 import com.cloud.api.response.ListResponse;
-import com.cloud.host.updates.HostUpdatesRef;
+import com.cloud.updates.interfaces.HostUpdatesRef;
+import com.cloud.updates.interfaces.HostUpdatesService;
 
 @Implementation(description="Lists Host Updates.", responseObject=HostUpdatesResponse.class)
 public class ListHostUpdatesCmd extends BaseListCmd {
     public static final Logger s_logger = Logger.getLogger(ListHostUpdatesCmd.class.getName());
 
     private static final String s_name = "listhostupdatesresponse";
-
+    @PlugService HostUpdatesService _hostUpdatesService;
     /////////////////////////////////////////////////////
     //////////////// API parameters /////////////////////
     /////////////////////////////////////////////////////
@@ -78,7 +80,7 @@ public class ListHostUpdatesCmd extends BaseListCmd {
         ListResponse<HostUpdatesResponse> response = new ListResponse<HostUpdatesResponse>();
         List<HostUpdatesResponse> hostUpdatesResponseList = new ArrayList<HostUpdatesResponse>();
         for (HostUpdatesRef update : result) {
-            HostUpdatesResponse hostUpdatesResponse = _responseGenerator.createHostUpdatesResponse(update);
+            HostUpdatesResponse hostUpdatesResponse = _hostUpdatesService.createHostUpdatesResponse(update);
             hostUpdatesResponse.setObjectName("update");
             hostUpdatesResponseList.add(hostUpdatesResponse);
         }

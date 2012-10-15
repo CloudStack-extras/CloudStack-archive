@@ -79,6 +79,9 @@
   <property name="db.scripts.dir" location="${target.dir}/db"/>
   <property name="apidoc.scripts.dir" location="${base.dir}/setup/apidoc/"/>
 
+  <!-- directories for hostupdates compilation-->
+  <property name="hostupdates.dir" location="${base.dir}/hostupdates" />
+
   <!-- directories for core code compilation-->
   <property name="core.dir" location="${base.dir}/core" />
   <property name="core.test.dir" location="${core.dir}/test/" />
@@ -115,6 +118,7 @@
   <property name="console-proxy.jar" value="cloud-console-proxy.jar" />
   <property name="api.jar" value="cloud-api.jar"/>
   <property name="vmware-base.jar" value="cloud-vmware-base.jar" />
+  <property name="hostupdates.jar" value="cloud-hostupdates.jar" />
 
   <!--
 		Import information about the build version and company information
@@ -211,6 +215,16 @@
     <compile-java jar.name="${server.jar}" top.dir="${server.dir}" classpath="server.classpath" />
   </target>
 
+  <path id="hostupdates.classpath">
+    <path refid="deps.classpath" />
+    <path refid="dist.classpath" />
+  </path>
+
+  <target name="compile-hostupdates" description="Compile the hostupdates.">
+    <compile-java jar.name="${hostupdates.jar}" top.dir="${hostupdates.dir}" classpath="hostupdates.classpath" />
+  </target>
+
+
   <path id="client.classpath">
     <path refid="deps.classpath" />
     <path refid="dist.classpath" />
@@ -271,7 +285,10 @@
 
   <target name="build-ovm" depends="compile-ovm" />
 
+  <target name="build-hostupdates" depends="compile-hostupdates" />
+
   <target name="build-server" depends="compile-server">
+
     <mkdir dir="${server.dist.dir}" />
     <mkdir dir="${server.dist.dir}/lib" />
     <mkdir dir="${server.dist.dir}/conf" />
@@ -463,7 +480,7 @@
 
   <target name="build-servers" depends="-init, build-server" />
 
-  <target name="build-opensource" depends="-init, build-server, build-agent, build-console-proxy, build-scripts, build-ui, build-ovm, package-oss-systemvm-iso">
+  <target name="build-opensource" depends="-init, build-server, build-hostupdates, build-agent, build-console-proxy, build-scripts, build-ui, build-ovm, package-oss-systemvm-iso">
     <copy overwrite="true" todir="${dist.dir}">
       <fileset dir="${base.dir}/build/deploy/">
         <include name="deploy-agent.sh" />
@@ -582,7 +599,7 @@
     <compile-java jar.name="${ovm.jar}" top.dir="${ovm.dir}" classpath="ovm.classpath" />
   </target>
 
-  <target name="compile-all" description="Compile all of the jars" depends="compile-utils, compile-api, compile-core, compile-server, compile-ovm"/>
+  <target name="compile-all" description="Compile all of the jars" depends="compile-utils, compile-api, compile-core, compile-server, compile-ovm, compile-hostupdates"/>
 
   <target name="clean-all" depends="clean, clean-awsapi" description="Clean all of the generated files, including dependency cache and javadoc">
     <delete dir="${target.dir}" />
