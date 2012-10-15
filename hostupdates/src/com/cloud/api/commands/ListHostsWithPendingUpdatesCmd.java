@@ -17,15 +17,11 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import com.cloud.api.ApiConstants;
 import com.cloud.api.BaseListCmd;
-import com.cloud.api.IdentityMapper;
 import com.cloud.api.Implementation;
-import com.cloud.api.Parameter;
 import com.cloud.api.PlugService;
 import com.cloud.api.response.HostsWithPendingUpdatesResponse;
 import com.cloud.api.response.ListResponse;
-import com.cloud.updates.interfaces.HostUpdatesRef;
 import com.cloud.updates.interfaces.HostUpdatesService;
 
 @Implementation(description = "Lists Hosts with pending Updates.", responseObject = HostsWithPendingUpdatesResponse.class)
@@ -36,28 +32,7 @@ public class ListHostsWithPendingUpdatesCmd extends BaseListCmd {
     private static final String s_name = "listhostswithpendingupdatesresponse";
     @PlugService
     HostUpdatesService _hostUpdatesService;
-    /////////////////////////////////////////////////////
-    //////////////// API parameters /////////////////////
-    /////////////////////////////////////////////////////
 
-    @IdentityMapper(entityTableName="host")
-    @Parameter(name=ApiConstants.HOST_ID, type=CommandType.LONG, description="the id of the host")
-    private Long hostId;
-
-    @Parameter(name=ApiConstants.APPLIED, type=CommandType.BOOLEAN, description="update applied or not (true, false)")
-    private Boolean applied;
-
-    /////////////////////////////////////////////////////
-    /////////////////// Accessors ///////////////////////
-    /////////////////////////////////////////////////////
-
-    public Long getHostId() {
-        return hostId;
-    }
-
-    public Boolean isApplied() {
-        return applied;
-    }
     // ///////////////////////////////////////////////////
     // ///////////// API Implementation///////////////////
     // ///////////////////////////////////////////////////
@@ -69,10 +44,10 @@ public class ListHostsWithPendingUpdatesCmd extends BaseListCmd {
 
     @Override
  public void execute(){
-     List<? extends HostUpdatesRef> result = _hostUpdatesService.searchForHosts(this);
+     List<Long> result = _hostUpdatesService.searchForHosts(this);
      ListResponse<HostsWithPendingUpdatesResponse> response = new ListResponse<HostsWithPendingUpdatesResponse>();
      ArrayList<HostsWithPendingUpdatesResponse> hostsWithPendingUpdatesResponseList = new ArrayList<HostsWithPendingUpdatesResponse>();
-     for (HostUpdatesRef update : result) {
+     for (Long update : result) {
          
          HostsWithPendingUpdatesResponse hostWithPendingUpdatesResponse = _hostUpdatesService.createHostsWithPendingUpdatesResponse(update);
          hostWithPendingUpdatesResponse.setObjectName("host");
