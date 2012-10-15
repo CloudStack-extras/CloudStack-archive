@@ -131,18 +131,22 @@ public class NetworkACLManagerImpl implements Manager,NetworkACLManager{
             throw new InvalidParameterValueException("Can't find network by id", null);
         }
 
-        if (network.getVpcId() == null) {
-            throw new UnsupportedOperationException("Network ACL rules are supported just for VPC networks");
-        }
+        Account account;
 
-        Vpc vpc = _vpcMgr.getVpc(network.getVpcId());
-        Account aclOwner = _accountMgr.getAccount(vpc.getAccountId());
+        if (network.getVpcId() != null) {
+
+            Vpc vpc = _vpcMgr.getVpc(network.getVpcId());
+            account = _accountMgr.getAccount(vpc.getAccountId());
         
-        //check if the caller can access vpc
-        _accountMgr.checkAccess(caller, null, false, vpc);
+            //check if the caller can access vpc
+            _accountMgr.checkAccess(caller, null, false, vpc);
 
-        //check if the acl can be created for this network
-        _accountMgr.checkAccess(aclOwner, AccessType.UseNetwork, false, network);
+           //check if the acl can be created for this network
+           _accountMgr.checkAccess(account, AccessType.UseNetwork, false, network);
+        }
+         else {
+            account =_accountMgr.getAccount(network.getAccountId());
+        }
 
 
         if (!_networkMgr.areServicesSupportedInNetwork(networkId, Service.NetworkACL)) {
@@ -177,7 +181,7 @@ public class NetworkACLManagerImpl implements Manager,NetworkACLManager{
         txn.start();
 
         FirewallRuleVO newRule = new FirewallRuleVO(xId, null, portStart, portEnd, protocol.toLowerCase(), networkId,
-                aclOwner.getAccountId(), aclOwner.getDomainId(), Purpose.NetworkACL, sourceCidrList, icmpCode, icmpType, 
+                account.getAccountId(), account.getDomainId(), Purpose.NetworkACL, sourceCidrList, icmpCode, icmpType,
                 relatedRuleId, trafficType);
         newRule.setType(type);
         newRule = _firewallDao.persist(newRule);
@@ -210,11 +214,6 @@ public class NetworkACLManagerImpl implements Manager,NetworkACLManager{
         // start port can't be bigger than end port
         if (portStart != null && portEnd != null && portStart > portEnd) {
             throw new InvalidParameterValueException("Start port can't be bigger than end port", null);
-        }
-
-        if (network.getTrafficType() != Networks.TrafficType.Guest) {
-            throw new InvalidParameterValueException("Network ACL can be created just for networks of type " 
-                    + Networks.TrafficType.Guest, null);
         }
 
         // Verify that the network guru supports the protocol specified

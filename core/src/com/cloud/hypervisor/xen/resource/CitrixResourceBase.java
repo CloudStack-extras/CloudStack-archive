@@ -7455,12 +7455,12 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         Connection conn = getConnection();
         String routerName = cmd.getAccessDetail(NetworkElementCommand.ROUTER_NAME);
         String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
+        String provider = cmd.getAccessDetail(NetworkElementCommand.SERVICE_PROVIDER);
         try {
             VM router = getVM(conn, routerName);
             String [][] rules = cmd.generateFwRules();
             StringBuilder sb = new StringBuilder();
             String[] aclRules = rules[0];
-            
             for (int i = 0; i < aclRules.length; i++) {
                 sb.append(aclRules[i]).append(',');
             }
@@ -7471,6 +7471,9 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             args += " -d " + "eth" + vif.getDevice(conn);
             args += " -i " + nic.getIp();
             args += " -m " + Long.toString(NetUtils.getCidrSize(nic.getNetmask()));
+            if ("VPCVirtualRouter".equalsIgnoreCase(provider)) {
+                args += " -v ";
+            }
             args += " -a " + sb.toString();
             callResult = callHostPlugin(conn, "vmops", "routerProxy", "args", args);
             if (callResult == null || callResult.isEmpty()) {

@@ -27,10 +27,14 @@ import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.net.URI;
 
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
+import com.cloud.agent.api.routing.*;
+import com.cloud.agent.api.to.*;
+import org.apache.axis.encoding.ser.ArrayDeserializer;
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
@@ -54,25 +58,6 @@ import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StopAnswer;
 import com.cloud.agent.api.check.CheckSshAnswer;
 import com.cloud.agent.api.check.CheckSshCommand;
-import com.cloud.agent.api.routing.DhcpEntryCommand;
-import com.cloud.agent.api.routing.IpAssocCommand;
-import com.cloud.agent.api.routing.LoadBalancerConfigCommand;
-import com.cloud.agent.api.routing.NetworkElementCommand;
-import com.cloud.agent.api.routing.RemoteAccessVpnCfgCommand;
-import com.cloud.agent.api.routing.SavePasswordCommand;
-import com.cloud.agent.api.routing.SetFirewallRulesCommand;
-import com.cloud.agent.api.routing.SetPortForwardingRulesCommand;
-import com.cloud.agent.api.routing.SetPortForwardingRulesVpcCommand;
-import com.cloud.agent.api.routing.SetStaticNatRulesCommand;
-import com.cloud.agent.api.routing.VmDataCommand;
-import com.cloud.agent.api.routing.VpnUsersCfgCommand;
-import com.cloud.agent.api.to.FirewallRuleTO;
-import com.cloud.agent.api.to.IpAddressTO;
-import com.cloud.agent.api.to.LoadBalancerTO;
-import com.cloud.agent.api.to.NicTO;
-import com.cloud.agent.api.to.PortForwardingRuleTO;
-import com.cloud.agent.api.to.StaticNatRuleTO;
-import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.agent.manager.Commands;
 import com.cloud.alert.AlertManager;
 import com.cloud.api.commands.UpgradeRouterCmd;
@@ -2152,7 +2137,6 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         if (provider == null) {
             throw new CloudRuntimeException("Cannot find related provider of virtual router provider: " + vrProvider.getType().toString());
         }
-
         List<Long> routerGuestNtwkIds = _routerDao.getRouterNetworks(router.getId());
         for (Long guestNetworkId : routerGuestNtwkIds) {
             if (reprogramGuestNtwks) {
@@ -2227,6 +2211,7 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             List<FirewallRule> staticNatFirewallRules = new ArrayList<FirewallRule>();
             List<StaticNat> staticNats = new ArrayList<StaticNat>();
             List<FirewallRule> firewallRules = new ArrayList<FirewallRule>();
+            List <FirewallRule> NetworkACLRules = new ArrayList<FirewallRule>();
 
             // Get information about all the rules (StaticNats and StaticNatRules; PFVPN to reapply on domR start)
             for (PublicIpAddress ip : publicIps) {
@@ -2267,7 +2252,14 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
             if (!firewallRules.isEmpty()) {
                 createFirewallRulesCommands(firewallRules, router, cmds, guestNetworkId);
             }
-
+            //Re-apply Networkacl rules.
+            if (_networkMgr.isProviderSupportServiceInNetwork(guestNetworkId, Service.NetworkACL, Provider.VirtualRouter)) {
+                NetworkACLRules.addAll( _rulesDao.listByNetworkAndPurpose(guestNetworkId,Purpose.NetworkACL));
+            }
+            s_logger.debug("Found " + NetworkACLRules.size() + " network ACLs to apply as a part of VPC VR " + router + " start for guest network id=" + guestNetworkId);
+            if (!NetworkACLRules.isEmpty()) {
+                createNetworkACLsCommands(NetworkACLRules, router, cmds, guestNetworkId);
+            }
             // Re-apply port forwarding rules
             s_logger.debug("Found " + pfRules.size() + " port forwarding rule(s) to apply as a part of domR " + router + " start.");
             if (!pfRules.isEmpty()) {
@@ -3265,6 +3257,43 @@ public class VirtualNetworkApplianceManagerImpl implements VirtualNetworkApplian
         Commands cmds = new Commands(OnError.Continue);
         createFirewallRulesCommands(rules, router, cmds, guestNetworkId);
         return sendCommandsToRouter(router, cmds);
+    }
+
+
+    private void createNetworkACLsCommands(List<? extends FirewallRule> rules, VirtualRouter router, Commands cmds,
+                                           long guestNetworkId) {
+        List<NetworkACLTO> rulesTO = null;
+        String guestVlan = null;
+        Network guestNtwk = _networkDao.findById(guestNetworkId);
+        URI uri = guestNtwk.getBroadcastUri();
+        if (uri != null) {
+            guestVlan = guestNtwk.getBroadcastUri().getHost();
+        }
+
+        if (rules != null) {
+            rulesTO = new ArrayList<NetworkACLTO>();
+
+            for (FirewallRule rule : rules) {
+                NetworkACLTO ruleTO = new NetworkACLTO(rule, guestVlan, rule.getTrafficType());
+                rulesTO.add(ruleTO);
+            }
+        }
+
+        SetNetworkACLCommand cmd = new SetNetworkACLCommand(rulesTO, getNicTO(router, guestNetworkId, null));
+        cmd.setAccessDetail(NetworkElementCommand.ROUTER_IP, getRouterControlIp(router.getId()));
+        cmd.setAccessDetail(NetworkElementCommand.ROUTER_GUEST_IP, getRouterIpInNetwork(guestNetworkId, router.getId()));
+        cmd.setAccessDetail(NetworkElementCommand.GUEST_VLAN_TAG, guestVlan);
+        cmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
+        cmd.setAccessDetail(NetworkElementCommand.SERVICE_PROVIDER,"Virtualrouter");
+        DataCenterVO dcVo = _dcDao.findById(router.getDataCenterIdToDeployIn());
+        cmd.setAccessDetail(NetworkElementCommand.ZONE_NETWORK_TYPE, dcVo.getNetworkType().toString());
+        cmds.addCommand(cmd);
+    }
+
+    protected NicTO getNicTO(final VirtualRouter router, Long networkId, String broadcastUri) {
+        NicProfile nicProfile = _networkMgr.getNicProfile(router, networkId, broadcastUri);
+
+        return _itMgr.toNicTO(nicProfile, router.getHypervisorType());
     }
 
     @Override

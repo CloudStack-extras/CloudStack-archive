@@ -88,7 +88,7 @@ import com.google.gson.Gson;
 @Local(value = NetworkElement.class)
 public class VirtualRouterElement extends AdapterBase implements VirtualRouterElementService, DhcpServiceProvider, 
 UserDataServiceProvider, SourceNatServiceProvider, StaticNatServiceProvider, FirewallServiceProvider,
-LoadBalancingServiceProvider, PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer {
+LoadBalancingServiceProvider, PortForwardingServiceProvider, RemoteAccessVPNServiceProvider, IpDeployer, NetworkACLServiceProvider {
     private static final Logger s_logger = Logger.getLogger(VirtualRouterElement.class);
 
     protected static final Map<Service, Map<Capability, String>> capabilities = setCapabilities();
@@ -563,6 +563,11 @@ LoadBalancingServiceProvider, PortForwardingServiceProvider, RemoteAccessVPNServ
 
         capabilities.put(Service.Lb, lbCapabilities);
 
+        //add network ACL capability
+        Map<Capability, String> networkACLCapabilities = new HashMap<Capability, String>();
+        networkACLCapabilities.put(Capability.SupportedProtocols, "tcp,udp,icmp");
+        capabilities.put(Service.NetworkACL, networkACLCapabilities);
+
         // Set capabilities for Firewall service
         Map<Capability, String> firewallCapabilities = new HashMap<Capability, String>();
         firewallCapabilities.put(Capability.TrafficStatistics, "per public ip");
@@ -912,5 +917,24 @@ LoadBalancingServiceProvider, PortForwardingServiceProvider, RemoteAccessVPNServ
 		return _routerMgr.saveSSHPublicKeyToRouter(network, nic, uservm, routers, SSHPublicKey);
 	}
 
+    @Override
+    public boolean applyNetworkACLs(Network config, List<? extends FirewallRule> rules) throws ResourceUnavailableException {
+        if (canHandle(config, Service.NetworkACL)) {
+            List<DomainRouterVO> routers = _routerDao.listByNetworkAndRole(config.getId(), Role.VIRTUAL_ROUTER);
+            if (routers == null || routers.isEmpty()) {
+                s_logger.debug("Virtual router elemnt doesn't need to apply firewall rules on the backend; virtual " +
+                        "router doesn't exist in the network " + config.getId());
+                return true;
+            }
+
+            if (!_routerMgr.applyNetworkACLs(config, rules, routers)) {
+                throw new CloudRuntimeException("Failed to apply firewall rules in network " + config.getId());
+            } else {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
 }
 

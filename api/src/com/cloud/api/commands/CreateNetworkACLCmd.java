@@ -4,6 +4,7 @@ package com.cloud.api.commands;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.thoughtworks.xstream.converters.basic.StringBufferConverter;
 import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiConstants;
@@ -67,6 +68,7 @@ public class CreateNetworkACLCmd extends BaseAsyncCreateCmd implements FirewallR
             "can be Ingress or Egress, defaulted to Ingress if not specified")
     private String trafficType;
 
+    private final String  egress = "Egress";
     // ///////////////////////////////////////////////////
     // ///////////////// Accessors ///////////////////////
     // ///////////////////////////////////////////////////
@@ -96,17 +98,13 @@ public class CreateNetworkACLCmd extends BaseAsyncCreateCmd implements FirewallR
         }
     }
 
-    public long getVpcId() {
+    public Long getVpcId() {
         Network network = _networkService.getNetwork(getNetworkId());
         if (network == null) {
             throw new InvalidParameterValueException("Invalid networkId is given", null);
         }
 
         Long vpcId = network.getVpcId();
-        if (vpcId == null) {
-            throw new InvalidParameterValueException("Can create network ACL only for the network belonging to the VPC", null);
-        }
-
         return vpcId;
     }
 
@@ -114,6 +112,9 @@ public class CreateNetworkACLCmd extends BaseAsyncCreateCmd implements FirewallR
     public FirewallRule.TrafficType getTrafficType() {
         if (trafficType == null) {
             return FirewallRule.TrafficType.Ingress;
+        }
+        else if (egress.equalsIgnoreCase(trafficType)){
+            return TrafficType.Egress;
         }
         for (FirewallRule.TrafficType type : FirewallRule.TrafficType.values()) {
             if (type.toString().equalsIgnoreCase(trafficType)) {
@@ -214,19 +215,24 @@ public class CreateNetworkACLCmd extends BaseAsyncCreateCmd implements FirewallR
 
     @Override
     public long getEntityOwnerId() {
-        Vpc vpc = _vpcService.getVpc(getVpcId());
-        if (vpc == null) {
-            throw new InvalidParameterValueException("Invalid vpcId is given", null);
+        if (getVpcId() != null ) {
+           Vpc vpc = _vpcService.getVpc(getVpcId());
+           if (vpc == null) {
+               throw new InvalidParameterValueException("Invalid vpcId is given", null);
+           }
+           Account account = _accountService.getAccount(vpc.getAccountId());
+           return account.getId();
         }
-
-        Account account = _accountService.getAccount(vpc.getAccountId());
-        return account.getId();
+        return  _networkService.getNetwork(networkId).getAccountId();
     }
 
     @Override
     public long getDomainId() {
-        Vpc vpc = _vpcService.getVpc(getVpcId());
-        return vpc.getDomainId();
+        if (getVpcId() != null) {
+           Vpc vpc = _vpcService.getVpc(getVpcId());
+           return vpc.getDomainId();
+        }
+        return _networkService.getNetwork(networkId).getDomainId();
     }
 
     @Override
@@ -238,7 +244,11 @@ public class CreateNetworkACLCmd extends BaseAsyncCreateCmd implements FirewallR
                 }
             }
         }
-
+        if (getVpcId() == null ){
+            if (getTrafficType() == TrafficType.Ingress ){
+               throw new    ServerApiException(BaseCmd.PARAM_ERROR, "Networkacl ingress rules are not supported for non vpc networks.");
+            }
+        }
         try {
             FirewallRule result = _networkACLService.createNetworkACL(this);
             setEntityId(result.getId());
@@ -262,8 +272,11 @@ public class CreateNetworkACLCmd extends BaseAsyncCreateCmd implements FirewallR
 
     @Override
     public long getAccountId() {
+        if (getVpcId() != null){
         Vpc vpc = _vpcService.getVpc(getVpcId());
         return vpc.getAccountId();
+        }
+        return  _networkService.getNetwork(networkId).getAccountId();
     }
 
     @Override

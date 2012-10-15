@@ -918,6 +918,7 @@ public class ConfigurationServerImpl implements ConfigurationServer {
         defaultIsolatedSourceNatEnabledNetworkOfferingProviders.put(Service.StaticNat, Provider.VirtualRouter);
         defaultIsolatedSourceNatEnabledNetworkOfferingProviders.put(Service.PortForwarding, Provider.VirtualRouter);
         defaultIsolatedSourceNatEnabledNetworkOfferingProviders.put(Service.Vpn, Provider.VirtualRouter);
+        defaultIsolatedSourceNatEnabledNetworkOfferingProviders.put(Service.NetworkACL, Provider.VirtualRouter);
 
         Map<Network.Service, Network.Provider> netscalerServiceProviders = new HashMap<Network.Service, Network.Provider>();
         netscalerServiceProviders.put(Service.Dhcp, Provider.VirtualRouter);

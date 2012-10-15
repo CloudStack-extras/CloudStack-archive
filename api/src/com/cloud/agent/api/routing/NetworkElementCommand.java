@@ -15,6 +15,7 @@ package com.cloud.agent.api.routing;
 import java.util.HashMap;
 
 import com.cloud.agent.api.Command;
+import com.thoughtworks.xstream.converters.basic.StringBufferConverter;
 
 public abstract class NetworkElementCommand extends Command {
     HashMap<String, String> accessDetails = new HashMap<String, String>(0);
@@ -28,6 +29,7 @@ public abstract class NetworkElementCommand extends Command {
     public static final String ROUTER_GUEST_IP = "router.guest.ip";
     public static final String ZONE_NETWORK_TYPE = "zone.network.type";
     public static final String GUEST_BRIDGE = "guest.bridge";
+    public static final String SERVICE_PROVIDER = "service.provider";
     
     protected NetworkElementCommand() {
         super();

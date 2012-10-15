@@ -120,6 +120,7 @@ import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.VirtualMachineProfile;
 import com.cloud.vm.VirtualMachineProfile.Param;
 import com.cloud.vm.dao.VMInstanceDao;
+import org.mortbay.util.StringMap;
 
 /**
  * @author Alena Prokharchyk
@@ -744,6 +745,15 @@ public class VpcVirtualNetworkApplianceManagerImpl extends VirtualNetworkApplian
         cmd.setAccessDetail(NetworkElementCommand.ROUTER_GUEST_IP, getRouterIpInNetwork(guestNetworkId, router.getId()));
         cmd.setAccessDetail(NetworkElementCommand.GUEST_VLAN_TAG, guestVlan);
         cmd.setAccessDetail(NetworkElementCommand.ROUTER_NAME, router.getInstanceName());
+        Long VpcID = router.getVpcId();
+        String provider;
+        if (VpcID == null){
+            provider = "Virtualrouter";
+        }
+        else {
+            provider = "VPCVirtualRouter";
+        }
+        cmd.setAccessDetail(NetworkElementCommand.SERVICE_PROVIDER,provider);
         DataCenterVO dcVo = _dcDao.findById(router.getDataCenterIdToDeployIn());
         cmd.setAccessDetail(NetworkElementCommand.ZONE_NETWORK_TYPE, dcVo.getNetworkType().toString());
         cmds.addCommand(cmd);
