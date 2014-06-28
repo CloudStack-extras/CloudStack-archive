@@ -15,13 +15,13 @@ package com.cloud.agent.manager;
 import java.nio.channels.ClosedChannelException;
 
 import org.apache.log4j.Logger;
+import org.jboss.netty.buffer.ChannelBuffers;
 
-import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Command;
 import com.cloud.agent.transport.Request;
 import com.cloud.exception.AgentUnavailableException;
 import com.cloud.host.Status;
-import com.cloud.utils.nio.Link;
+import com.cloud.utils.netty.Link;
 
 /**
  * ConnectedAgentAttache implements an direct connection to this management server.
@@ -38,11 +38,7 @@ public class ConnectedAgentAttache extends AgentAttache {
 
     @Override
     public synchronized void send(Request req) throws AgentUnavailableException {
-        try {
-            _link.send(req.toBytes());
-        } catch (ClosedChannelException e) {
-            throw new AgentUnavailableException("Channel is closed", _id);
-        }
+        _link.send(ChannelBuffers.wrappedBuffer(req.toBytes()));
     }
 
     @Override
@@ -56,7 +52,6 @@ public class ConnectedAgentAttache extends AgentAttache {
             s_logger.debug("Processing Disconnect.");
             if (_link != null) {
                 _link.close();
-                _link.terminated();
             }
             _link = null;
         }
